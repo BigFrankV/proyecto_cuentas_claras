@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: .
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://host.docker.internal:3000}
+    image: cuentas-claras-frontend:latest
+    ports:
+      - '5173:80'
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://host.docker.internal:3000}
+    restart: unless-stopped
+
+  # optional backend service placeholder - remove if you run backend separately
+  # backend:
+  #   image: your-backend-image
+  #   ports:
+  #     - '3000:3000'

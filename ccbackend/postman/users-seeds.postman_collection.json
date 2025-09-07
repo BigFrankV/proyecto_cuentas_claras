@@ -1,0 +1,154 @@
+{
+  "info": {
+    "_postman_id": "b6f8e2a8-0000-4a6b-9d3b-0a1b2c3d4e5f",
+    "name": "Edificio - User seeds",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Colección rápida para crear personas, registrar usuarios y asignar membresías (usar variables: {{baseUrl}}, {{token}}, {{personaId}}, {{comunidadId}})"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "personaId", "value": "" },
+    { "key": "comunidadId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Crear persona - Juan Perez (propietario)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rut\": \"12345678\",\n  \"dv\": \"5\",\n  \"nombres\": \"Juan\",\n  \"apellidos\": \"Pérez\",\n  \"email\": \"juan.perez@example.com\",\n  \"telefono\": \"+56961234567\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/personas", "host": ["{{baseUrl}}"], "path": ["personas"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear persona - Maria Gomez (residente)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rut\": \"87654321\",\n  \"dv\": \"K\",\n  \"nombres\": \"María\",\n  \"apellidos\": \"Gómez\",\n  \"email\": \"maria.gomez@example.com\",\n  \"telefono\": \"+56961234568\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/personas", "host": ["{{baseUrl}}"], "path": ["personas"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear persona - Conserje Carlos",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rut\": \"11111111\",\n  \"dv\": \"1\",\n  \"nombres\": \"Carlos\",\n  \"apellidos\": \"Ruiz\",\n  \"email\": \"carlos.ruiz@example.com\",\n  \"telefono\": \"+56961234569\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/personas", "host": ["{{baseUrl}}"], "path": ["personas"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear persona - Ana Torres (contador)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rut\": \"22222222\",\n  \"dv\": \"2\",\n  \"nombres\": \"Ana\",\n  \"apellidos\": \"Torres\",\n  \"email\": \"ana.torres@example.com\",\n  \"telefono\": \"+56961234570\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/personas", "host": ["{{baseUrl}}"], "path": ["personas"] }
+      },
+      "response": []
+    },
+
+    {
+      "name": "Registrar usuario - admin.juan",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin.juan\",\n  \"password\": \"Admin#2025\",\n  \"email\": \"admin.juan@example.com\",\n  \"persona_id\": {{personaId}}\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth","register"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Registrar usuario - residente.maria",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"residente.maria\",\n  \"password\": \"Resi#2025\",\n  \"email\": \"maria.gomez@example.com\",\n  \"persona_id\": {{personaId}}\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth","register"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Registrar usuario - conserje.carlos",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"conserje.carlos\",\n  \"password\": \"Conserje#2025\",\n  \"email\": \"carlos.ruiz@example.com\",\n  \"persona_id\": {{personaId}}\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth","register"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Registrar usuario - invitado1 (sin persona)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"invitado1\",\n  \"password\": \"Invitado#2025\",\n  \"email\": \"invitado1@example.com\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth","register"] }
+      },
+      "response": []
+    },
+
+    {
+      "name": "Asignar membresía - admin",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"persona_id\": {{personaId}},\n  \"rol\": \"admin\",\n  \"activo\": true,\n  \"desde\": \"2025-08-30\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/membresias", "host": ["{{baseUrl}}"], "path": ["comunidades","{{comunidadId}}","membresias"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Asignar membresía - conserje",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"persona_id\": {{personaId}},\n  \"rol\": \"conserje\",\n  \"activo\": true,\n  \"desde\": \"2025-08-30\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/membresias", "host": ["{{baseUrl}}"], "path": ["comunidades","{{comunidadId}}","membresias"] }
+      },
+      "response": []
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "info": {
+    "name": "Edificio API (complete)",
+    "_postman_id": "edificio-api-collection-complete",
+    "description": "Colección Postman completa generada a partir de los endpoints en src/routes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "id", "value": "1" },
+    { "key": "comunidadId", "value": "1" },
+    { "key": "edificioId", "value": "1" },
+    { "key": "unidadId", "value": "1" },
+    { "key": "personaId", "value": "1" },
+    { "key": "proveedorId", "value": "1" },
+    { "key": "documentoId", "value": "1" },
+    { "key": "gastoId", "value": "1" },
+    { "key": "emisionId", "value": "1" },
+    { "key": "cargoId", "value": "1" },
+    { "key": "pagoId", "value": "1" },
+    { "key": "medidorId", "value": "1" },
+    { "key": "tarifaId", "value": "1" },
+    { "key": "multaId", "value": "1" },
+    { "key": "conciliacionId", "value": "1" },
+    { "key": "amenidadId", "value": "1" },
+    { "key": "reservaId", "value": "1" },
+    { "key": "ticketId", "value": "1" },
+    { "key": "notificacionId", "value": "1" },
+    { "key": "centroCostoId", "value": "1" },
+    { "key": "categoriaId", "value": "1" },
+    { "key": "membresiaId", "value": "1" },
+    { "key": "lecturaId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Util",
+      "item": [
+        { "name": "Health", "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/health" } } },
+        { "name": "Version", "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/version" } } },
+        { "name": "UF by fecha", "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/util/uf?fecha=2025-08-01" } } },
+        { "name": "UTM by mes", "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/util/utm?fecha=2025-08" } } }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        { "name": "Register", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"username\": \"tester1\",\n  \"password\": \"Secret#123\",\n  \"email\": \"tester1@example.com\",\n  \"persona_id\": 1\n}" }, "url": { "raw": "{{baseUrl}}/auth/register" }, "description": "Registra un usuario; normalmente devuelve el usuario creado." } },
+        { "name": "Login", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"username\": \"tester1\",\n  \"password\": \"Secret#123\"\n}" }, "url": { "raw": "{{baseUrl}}/auth/login" } , "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "// Guardar token de acceso en variable de entorno (intenta varias claves comunes)", "try {", "  var json = pm.response.json();", "  var token = json.token || json.accessToken || json.access_token || (json.data && (json.data.token || json.data.accessToken));", "  if (token) { pm.environment.set('token', token); console.log('token saved'); } else { console.log('token not found in response'); }", "} catch (e) { console.log('response not json', e); }" ] } } ] } },
+        { "name": "Refresh token", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/auth/refresh" } } },
+        { "name": "Logout", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/auth/logout" } } },
+        { "name": "Forgot password", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"tester1@example.com\"\n}" }, "url": { "raw": "{{baseUrl}}/auth/forgot-password" } } },
+        { "name": "Reset password", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"token\": \"REPLACEME\",\n  \"password\": \"NewPass#123\"\n}" }, "url": { "raw": "{{baseUrl}}/auth/reset-password" } } },
+        { "name": "Me", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/auth/me" } } }
+      ]
+    },
+    {
+      "name": "Comunidades",
+      "item": [
+        { "name": "List Comunidades", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades?page=1&limit=50" } } },
+  { "name": "Create Comunidad", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"razon_social\": \"Comunidad Demo\",\n  \"rut\": \"11111111\",\n  \"dv\": \"1\"\n}" }, "url": { "raw": "{{baseUrl}}/comunidades" }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "try {", "  var json = pm.response.json();", "  var id = json.id || (json.data && json.data.id) || json.insertId;", "  if (id) pm.environment.set('comunidadId', id);", "  console.log('comunidadId ->', id);", "} catch (e) { console.log('no json response or id not found', e); }" ] } } ] } },
+        { "name": "Get Comunidad", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}" } } },
+        { "name": "Patch Comunidad", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"direccion\": \"Direccion nueva 123\"\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}" } } },
+        { "name": "Delete Comunidad", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}" } } }
+      ]
+    },
+    {
+      "name": "Edificios & Torres",
+      "item": [
+        { "name": "List Edificios (comunidad)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/edificios" } } },
+  { "name": "Create Edificio", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Edificio Central\",\n  \"direccion\": \"Calle Falsa 123\"\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/edificios" }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "try {", "  var json = pm.response.json();", "  var id = json.id || (json.data && json.data.id) || json.insertId;", "  if (id) pm.environment.set('edificioId', id);", "  console.log('edificioId ->', id);", "} catch (e) { console.log('no json response or id not found', e); }" ] } } ] } },
+        { "name": "Get Edificio", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/edificios/{{edificioId}}" } } },
+        { "name": "Patch Edificio", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Edificio Norte\"\n}" }, "url": { "raw": "{{baseUrl}}/edificios/{{edificioId}}" } } },
+        { "name": "Delete Edificio", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/edificios/{{edificioId}}" } } },
+        { "name": "List Torres (edificio)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/edificios/{{edificioId}}/torres" } } },
+        { "name": "Create Torre", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Torre A\"\n}" }, "url": { "raw": "{{baseUrl}}/edificios/{{edificioId}}/torres" } } },
+        { "name": "Get Torre", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/torres/{{id}}" } } },
+        { "name": "Patch Torre", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Torre B\"\n}" }, "url": { "raw": "{{baseUrl}}/torres/{{id}}" } } },
+        { "name": "Delete Torre", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/torres/{{id}}" } } }
+      ]
+    },
+    {
+      "name": "Unidades",
+      "item": [
+        { "name": "List Unidades (comunidad)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/unidades/comunidad/{{comunidadId}}" } } },
+  { "name": "Create Unidad", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"edificio_id\": {{edificioId}},\n  \"codigo\": \"A-101\",\n  \"alicuota\": 0.025\n}" }, "url": { "raw": "{{baseUrl}}/unidades/comunidad/{{comunidadId}}" }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "try {", "  var json = pm.response.json();", "  var id = json.id || (json.data && json.data.id) || json.insertId;", "  if (id) pm.environment.set('unidadId', id);", "  console.log('unidadId ->', id);", "} catch (e) { console.log('no json response or id not found', e); }" ] } } ] } },
+        { "name": "Get Unidad", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/unidades/{{unidadId}}" } } },
+        { "name": "Patch Unidad", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"codigo\": \"A-101-REN\"\n}" }, "url": { "raw": "{{baseUrl}}/unidades/{{unidadId}}" } } },
+        { "name": "Delete Unidad", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/unidades/{{unidadId}}" } } },
+        { "name": "List Tenencias", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/unidades/{{unidadId}}/tenencias" } } },
+        { "name": "Create Tenencia", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"persona_id\": {{personaId}},\n  \"tipo\": \"propietario\",\n  \"desde\": \"2025-01-01\"\n}" }, "url": { "raw": "{{baseUrl}}/unidades/{{unidadId}}/tenencias" } } },
+        { "name": "List Residentes", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/unidades/{{unidadId}}/residentes" } } }
+      ]
+    },
+    {
+      "name": "Personas",
+      "item": [
+        { "name": "List Personas", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/personas" } } },
+  { "name": "Create Persona", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"rut\": \"12345678\",\n  \"dv\": \"5\",\n  \"nombres\": \"Juan\",\n  \"apellidos\": \"Pérez\",\n  \"email\": \"juan.perez@example.com\"\n}" }, "url": { "raw": "{{baseUrl}}/personas" }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "try {", "  var json = pm.response.json();", "  var id = json.id || (json.data && json.data.id) || json.insertId;", "  if (id) pm.environment.set('personaId', id);", "  console.log('personaId ->', id);", "} catch (e) { console.log('no json response or id not found', e); }" ] } } ] } },
+        { "name": "Get Persona", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/personas/{{personaId}}" } } },
+        { "name": "Patch Persona", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"telefono\": \"+56960000000\"\n}" }, "url": { "raw": "{{baseUrl}}/personas/{{personaId}}" } } },
+        { "name": "Delete Persona", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/personas/{{personaId}}" } } }
+      ]
+    },
+    {
+      "name": "Membresias",
+      "item": [
+        { "name": "List Membresias (comunidad)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/membresias" } } },
+        { "name": "Create Membresia", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"persona_id\": {{personaId}},\n  \"rol\": \"admin\",\n  \"desde\": \"2025-08-30\"\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/membresias" } } },
+        { "name": "Patch Membresia", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"rol\": \"comite\"\n}" }, "url": { "raw": "{{baseUrl}}/membresias/{{membresiaId}}" } } },
+        { "name": "Delete Membresia", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/membresias/{{membresiaId}}" } } }
+      ]
+    },
+    {
+      "name": "Catálogos",
+      "item": [
+        { "name": "List Categorias Gasto", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/categorias-gasto" } } },
+        { "name": "Create Categoria", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Mantencion\",\n  \"tipo\": \"operacional\"\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/categorias-gasto" } } },
+        { "name": "List Centros Costo", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/centros-costo" } } },
+        { "name": "Create Centro Costo", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"CC Mantencion\"\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/centros-costo" } } }
+      ]
+    },
+    {
+      "name": "Proveedores & DocumentosCompra & Gastos",
+      "item": [
+        { "name": "List Proveedores", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/proveedores" } } },
+  { "name": "Create Proveedor", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"rut\": \"99999999\",\n  \"dv\": \"9\",\n  \"razon_social\": \"Proveedor Demo\"\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/proveedores" }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "try {", "  var json = pm.response.json();", "  var id = json.id || (json.data && json.data.id) || json.insertId;", "  if (id) pm.environment.set('proveedorId', id);", "  console.log('proveedorId ->', id);", "} catch (e) { console.log('no json response or id not found', e); }" ] } } ] } },
+        { "name": "List Documentos Compra", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/documentos-compra" } } },
+  { "name": "Create Documento Compra", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"proveedor_id\": {{proveedorId}},\n  \"tipo_doc\": \"factura\",\n  \"folio\": \"F001\",\n  \"fecha_emision\": \"2025-08-01\",\n  \"total\": 100000\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/documentos-compra" }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "try {", "  var json = pm.response.json();", "  var id = json.id || (json.data && json.data.id) || json.insertId;", "  if (id) pm.environment.set('documentoId', id);", "  console.log('documentoId ->', id);", "} catch (e) { console.log('no json response or id not found', e); }" ] } } ] } },
+        { "name": "List Gastos", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/gastos" } } },
+  { "name": "Create Gasto", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"categoria_id\": {{categoriaId}},\n  \"fecha\": \"2025-08-01\",\n  \"monto\": 50000\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/gastos" }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "try {", "  var json = pm.response.json();", "  var id = json.id || (json.data && json.data.id) || json.insertId;", "  if (id) pm.environment.set('gastoId', id);", "  console.log('gastoId ->', id);", "} catch (e) { console.log('no json response or id not found', e); }" ] } } ] } }
+      ]
+    },
+    {
+      "name": "Emisiones & Cargos",
+      "item": [
+        { "name": "List Emisiones", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/emisiones/comunidad/{{comunidadId}}" } } },
+  { "name": "Create Emision", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"periodo\": \"2025-09\",\n  \"fecha_vencimiento\": \"2025-09-10\"\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/emisiones" }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "try {", "  var json = pm.response.json();", "  var id = json.id || (json.data && json.data.id) || json.insertId;", "  if (id) pm.environment.set('emisionId', id);", "  console.log('emisionId ->', id);", "} catch (e) { console.log('no json response or id not found', e); }" ] } } ] } },
+        { "name": "Get Emision", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/emisiones/{{emisionId}}" } } },
+        { "name": "Patch Emision (estado)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"estado\": \"emitido\"\n}" }, "url": { "raw": "{{baseUrl}}/emisiones/{{emisionId}}" } } },
+  { "name": "Add Emision Detalle", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"categoria_id\": {{categoriaId}},\n  \"monto\": 100000,\n  \"regla_prorrateo\": \"partes_iguales\"\n}" }, "url": { "raw": "{{baseUrl}}/emisiones/{{emisionId}}/detalles" }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "try {", "  var json = pm.response.json();", "  // algunos endpoints devuelven detalleId u objeto; intentamos guardar detalleId si existe", "  var id = json.id || (json.data && json.data.id) || json.insertId || json.detalleId;", "  if (id) pm.environment.set('emisionDetalleId', id);", "  console.log('emisionDetalleId ->', id);", "} catch (e) { console.log('no json response or id not found', e); }" ] } } ] } },
+        { "name": "Preview Prorrateo", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/emisiones/{{emisionId}}/previsualizar-prorrateo" } } },
+        { "name": "Generar Cargos", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/emisiones/{{emisionId}}/generar-cargos" } } }
+      ]
+    },
+    {
+      "name": "Cargos",
+      "item": [
+        { "name": "List Cargos (comunidad)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/cargos/comunidad/{{comunidadId}}" } } },
+        { "name": "Get Cargo", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/cargos/{{cargoId}}" } } },
+        { "name": "List Cargos (unidad)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/cargos/unidad/{{unidadId}}" } } },
+        { "name": "Recalcular Interes", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/cargos/{{cargoId}}/recalcular-interes" } } },
+        { "name": "Notificar Cargo", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/cargos/{{cargoId}}/notificar" } } }
+      ]
+    },
+    {
+      "name": "Pagos & Conciliacion & Webhooks",
+      "item": [
+        { "name": "List Pagos (comunidad)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/pagos" } } },
+  { "name": "Create Pago", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"unidad_id\": {{unidadId}},\n  \"monto\": 120000,\n  \"medio\": \"transferencia\"\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/pagos" }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "try {", "  var json = pm.response.json();", "  var id = json.id || (json.data && json.data.id) || json.insertId;", "  if (id) pm.environment.set('pagoId', id);", "  console.log('pagoId ->', id);", "} catch (e) { console.log('no json response or id not found', e); }" ] } } ] } },
+        { "name": "Get Pago", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/pagos/{{pagoId}}" } } },
+        { "name": "Apply Pago (assignments)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"assignments\": [{ \"cargo_unidad_id\": {{cargoId}}, \"monto\": 50000 }]\n}" }, "url": { "raw": "{{baseUrl}}/pagos/{{pagoId}}/aplicar" } } },
+        { "name": "Reverse Pago", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/pagos/{{pagoId}}/reversar" } } },
+        { "name": "List Conciliaciones", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/conciliaciones" } } },
+        { "name": "Create Conciliacion", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"fecha_mov\": \"2025-08-15\",\n  \"monto\": 120000\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/conciliaciones" } } },
+        { "name": "Webhook Webpay", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"tx\": {}\n}" }, "url": { "raw": "{{baseUrl}}/webhooks/pagos/webpay" } } },
+        { "name": "Webhook Khipu", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"event\": {}\n}" }, "url": { "raw": "{{baseUrl}}/webhooks/pagos/khipu" } } }
+      ]
+    },
+    {
+      "name": "Medidores & Tarifas",
+      "item": [
+        { "name": "List Medidores (comunidad)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/medidores/comunidad/{{comunidadId}}" } } },
+  { "name": "Create Medidor", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"unidad_id\": {{unidadId}},\n  \"tipo\": \"agua\",\n  \"codigo\": \"M-100\"\n}" }, "url": { "raw": "{{baseUrl}}/medidores/comunidad/{{comunidadId}}" }, "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [ "try {", "  var json = pm.response.json();", "  var id = json.id || (json.data && json.data.id) || json.insertId;", "  if (id) pm.environment.set('medidorId', id);", "  console.log('medidorId ->', id);", "} catch (e) { console.log('no json response or id not found', e); }" ] } } ] } },
+        { "name": "Get Medidor", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/medidores/{{medidorId}}" } } },
+        { "name": "Add Lectura", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"fecha\": \"2025-08-01\",\n  \"lectura\": 1234.56,\n  \"periodo\": \"2025-08\"\n}" }, "url": { "raw": "{{baseUrl}}/medidores/{{medidorId}}/lecturas" } } },
+        { "name": "Get Consumos (stub)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/medidores/{{medidorId}}/consumos?desde=2025-07&hasta=2025-08" } } },
+        { "name": "List Tarifas", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/tarifas-consumo" } } },
+        { "name": "Create Tarifa", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"tipo\": \"agua\",\n  \"periodo_desde\": \"2025-08\",\n  \"precio_por_unidad\": 0.123\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/tarifas-consumo" } } }
+      ]
+    },
+    {
+      "name": "Multas",
+      "item": [
+        { "name": "List Multas (unidad)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/unidades/{{unidadId}}/multas" } } },
+        { "name": "Create Multa", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"motivo\": \"Estacionamiento indebido\",\n  \"monto\": 20000,\n  \"fecha\": \"2025-08-15\"\n}" }, "url": { "raw": "{{baseUrl}}/unidades/{{unidadId}}/multas" } } },
+        { "name": "Get Multa", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/multas/{{multaId}}" } } },
+        { "name": "Patch Multa", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"estado\": \"pagada\"\n}" }, "url": { "raw": "{{baseUrl}}/multas/{{multaId}}" } } }
+      ]
+    },
+    {
+      "name": "Amenidades & Reservas & Soporte",
+      "item": [
+        { "name": "List Amenidades", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/amenidades" } } },
+        { "name": "Create Amenidad", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Sala Eventos\"\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/amenidades" } } },
+        { "name": "List Reservas (amenidad)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/amenidades/{{amenidadId}}/reservas" } } },
+        { "name": "Create Reserva", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"unidad_id\": {{unidadId}},\n  \"persona_id\": {{personaId}},\n  \"inicio\": \"2025-09-01T10:00:00\",\n  \"fin\": \"2025-09-01T12:00:00\"\n}" }, "url": { "raw": "{{baseUrl}}/amenidades/{{amenidadId}}/reservas" } } },
+        { "name": "List Tickets", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/tickets" } } },
+        { "name": "Create Ticket", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Luz fuera\",\n  \"unidad_id\": {{unidadId}}\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/tickets" } } },
+        { "name": "List Notificaciones", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/notificaciones" } } },
+        { "name": "Create Notificacion", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" },{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Aviso importante\",\n  \"mensaje\": \"Corte de agua programado\"\n}" }, "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/notificaciones" } } },
+        { "name": "Get Bitacora", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/comunidades/{{comunidadId}}/bitacora" } } }
+      ]
+    }
+  ]
+}

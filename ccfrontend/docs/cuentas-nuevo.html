@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>cuentas-nuevo.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="cuentas-claras-20--dise%C3%B1o-t%C3%A9cnico-de-api-y-modelo-de-datos-chile">Cuentas Claras 2.0 — Diseño técnico de API y Modelo de Datos (Chile)</h1>
+<hr>
+<h2 id="1-alcance-y-contexto-chileno">1) Alcance y contexto chileno</h2>
+<p>Este documento propone un diseño de API y modelo de datos para administrar comunidades (condominios y edificios) en Chile, considerando:</p>
+<ul>
+<li>Ley N° 21.442 de Copropiedad Inmobiliaria (coeficientes de copropiedad, comité de administración, gastos comunes ordinarios/extraordinarios y fondos).</li>
+<li>Identificación mediante RUT (con dígito verificador), domicilios y contactos.</li>
+<li>Gasto común con prorrateo por coeficiente y/o por consumo (agua fría/caliente, gas, electricidad), intereses por mora, multas, descuentos, recargos.</li>
+<li>Fondos: fondo de reserva, fondo extraordinario, caja chica.</li>
+<li>Proveedores (RUT), documentos tributarios (facturas/boletas), IVA (19%), integración futura con SII.</li>
+<li>Pagos: transferencias, Webpay/Transbank, Khipu, Servipag; conciliación y webhooks.</li>
+<li>Operación: bitácora de conserjería, reservas de amenities, tickets de mantención, comunicaciones/ circulares, repositorio documental.</li>
+</ul>
+<hr>
+<h2 id="2-requisitos-y-principios-de-dise%C3%B1o">2) Requisitos y principios de diseño</h2>
+<ul>
+<li>Multi-tenant por comunidad (aislamiento lógico por <code>comunidad_id</code>).</li>
+<li>OLTP normalizado (3FN) para coherencia y consistencia, y un esquema analítico separado para reportería (estrella).</li>
+<li>Control de acceso por roles y membresías a nivel de comunidad y unidad.</li>
+<li>Auditabilidad: created_at/updated_at, soft delete opcional y bitácora de eventos.</li>
+<li>Configurabilidad: parámetros de cobranza (intereses por mora, días de gracia), política de redondeo, reglas de prorrateo.</li>
+<li>Interoperabilidad: IDs públicos inmutables, webhooks, paginación, filtros, ordenamiento y expansión selectiva de recursos.</li>
+</ul>
+<hr>
+<h2 id="3-modelo-de-datos-mysql-oltp-3fn">3) Modelo de datos (MySQL, OLTP 3FN)</h2>
+<p>Convenciones:</p>
+<ul>
+<li>Tipos: <code>BIGINT</code> como PK, <code>VARCHAR(…)</code>, <code>DECIMAL(12,2)</code>, <code>DECIMAL(8,6)</code> para coeficientes, <code>DATE</code>, <code>DATETIME</code>, <code>BOOLEAN</code> (TINYINT(1)), <code>JSON</code> para metadatos.</li>
+<li>Claves: <code>id</code> autoincrement, FK con <code>ON DELETE RESTRICT</code> salvo relaciones detalle <code>ON DELETE CASCADE</code>.</li>
+<li>Todas las tablas de negocio incluyen: <code>comunidad_id</code> (FK) salvo catálogos globales (UF/UTM, etc.), y trazabilidad (<code>created_at</code>, <code>updated_at</code>, <code>created_by</code>, <code>updated_by</code>).</li>
+</ul>
+<h3 id="31-n%C3%BAcleo-de-comunidades-y-unidades">3.1 Núcleo de comunidades y unidades</h3>
+<ol>
+<li>comunidad</li>
+</ol>
+<ul>
+<li>Propósito: Tenancy y configuración general.</li>
+<li>Campos principales: <code>id</code>, <code>razon_social</code>, <code>rut</code>, <code>giro</code>, <code>direccion</code>, <code>email_contacto</code>, <code>telefono_contacto</code>, <code>politica_mora_json</code>, <code>moneda</code> (CLP), <code>tz</code> (America/Santiago), timestamps.</li>
+<li>Índices: <code>rut</code> único; búsqueda por <code>razon_social</code>.</li>
+</ul>
+<ol start="2">
+<li>edificio</li>
+</ol>
+<ul>
+<li>FK: <code>comunidad_id</code>.</li>
+<li>Campos: <code>id</code>, <code>comunidad_id</code>, <code>nombre</code>, <code>direccion</code>, <code>codigo</code>.</li>
+</ul>
+<ol start="3">
+<li>torre (opcional si el edificio se subdivide)</li>
+</ol>
+<ul>
+<li>FK: <code>edificio_id</code>.</li>
+<li>Campos: <code>id</code>, <code>edificio_id</code>, <code>nombre</code>, <code>codigo</code>.</li>
+</ul>
+<ol start="4">
+<li>unidad</li>
+</ol>
+<ul>
+<li>FK: <code>edificio_id</code> o <code>torre_id</code> (una de ambas, con restricción), <code>comunidad_id</code>.</li>
+<li>Campos: <code>id</code>, <code>comunidad_id</code>, <code>edificio_id</code> (nullable), <code>torre_id</code> (nullable), <code>codigo</code> (p.e. A-101), <code>alicuota</code> DECIMAL(8,6) (coeficiente de copropiedad), <code>m2_utiles</code> DECIMAL(10,2), <code>m2_terrazas</code> DECIMAL(10,2), <code>nro_bodega</code>, <code>nro_estacionamiento</code>, <code>activa</code> BOOLEAN.</li>
+<li>Índices: únicos por (<code>comunidad_id</code>, <code>codigo</code>).</li>
+</ul>
+<ol start="5">
+<li>persona</li>
+</ol>
+<ul>
+<li>Campos: <code>id</code>, <code>rut</code> (único), <code>dv</code>, <code>nombres</code>, <code>apellidos</code>, <code>email</code>, <code>telefono</code>, <code>direccion</code>.</li>
+</ul>
+<ol start="6">
+<li>usuario</li>
+</ol>
+<ul>
+<li>Autenticación del sistema (si se gestiona localmente): <code>id</code>, <code>username</code> (único), <code>hash_password</code>, <code>email</code>, <code>activo</code> BOOLEAN.</li>
+<li>Relación con persona opcional: <code>persona_id</code>.</li>
+</ul>
+<ol start="7">
+<li>membresia_comunidad</li>
+</ol>
+<ul>
+<li>Relación persona–comunidad–rol: <code>id</code>, <code>comunidad_id</code>, <code>persona_id</code>, <code>rol</code> ENUM('admin','comite','conserje','contador','residente','propietario'), <code>desde</code>, <code>hasta</code> (nulable), <code>activo</code>.</li>
+<li>Índice único por (<code>comunidad_id</code>,<code>persona_id</code>,<code>rol</code>,<code>desde</code>).</li>
+</ul>
+<ol start="8">
+<li>tenencia_unidad</li>
+</ol>
+<ul>
+<li>Propiedad/arrendamiento en el tiempo.</li>
+<li>Campos: <code>id</code>, <code>comunidad_id</code>, <code>unidad_id</code>, <code>persona_id</code>, <code>tipo</code> ENUM('propietario','arrendatario'), <code>desde</code>, <code>hasta</code> (nulable), <code>porcentaje</code> DECIMAL(5,2) para copropiedad compartida.</li>
+<li>Reglas: al menos un propietario activo por unidad; múltiples arrendatarios posibles.</li>
+</ul>
+<h3 id="32-cat%C3%A1logos-y-configuraci%C3%B3n">3.2 Catálogos y configuración</h3>
+<ol start="9">
+<li>categoria_gasto</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>nombre</code>, <code>tipo</code> ENUM('operacional','extraordinario','fondo_reserva','multas','consumo'), <code>cta_contable</code> (opcional), <code>activa</code>.</li>
+</ul>
+<ol start="10">
+<li>centro_costo (opcional)</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>nombre</code>, <code>codigo</code>.</li>
+</ul>
+<ol start="11">
+<li>proveedor</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>rut</code>, <code>dv</code>, <code>razon_social</code>, <code>giro</code>, <code>email</code>, <code>telefono</code>, <code>direccion</code>.</li>
+</ul>
+<ol start="12">
+<li>parametros_cobranza</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>dias_gracia</code> INT, <code>tasa_mora_mensual</code> DECIMAL(5,2), <code>mora_calculo</code> ENUM('diaria','mensual'), <code>redondeo</code> ENUM('arriba','normal','abajo'), <code>interes_max_mensual</code> DECIMAL(5,2), <code>aplica_interes_sobre</code> ENUM('saldo','capital').</li>
+</ul>
+<h3 id="33-gastos-emisiones-y-cargos">3.3 Gastos, emisiones y cargos</h3>
+<ol start="13">
+<li>documento_compra</li>
+</ol>
+<ul>
+<li>Registro de facturas/boletas: <code>id</code>, <code>comunidad_id</code>, <code>proveedor_id</code>, <code>tipo_doc</code> ENUM('factura','boleta','nota_credito'), <code>folio</code>, <code>fecha_emision</code>, <code>neto</code> DECIMAL(12,2), <code>iva</code> DECIMAL(12,2), <code>exento</code> DECIMAL(12,2), <code>total</code> DECIMAL(12,2), <code>glosa</code>.</li>
+</ul>
+<ol start="14">
+<li>gasto</li>
+</ol>
+<ul>
+<li>Gasto registrado para prorrateo: <code>id</code>, <code>comunidad_id</code>, <code>categoria_id</code>, <code>centro_costo_id</code> (nullable), <code>documento_compra_id</code> (nullable), <code>fecha</code>, <code>monto</code> DECIMAL(12,2), <code>glosa</code>, <code>extraordinario</code> BOOLEAN.</li>
+</ul>
+<ol start="15">
+<li>emision_gasto_comun</li>
+</ol>
+<ul>
+<li>Corte mensual (o periodo): <code>id</code>, <code>comunidad_id</code>, <code>periodo</code> (YYYY-MM), <code>fecha_vencimiento</code>, <code>estado</code> ENUM('borrador','emitido','cerrado','anulado'), <code>observaciones</code>.</li>
+<li>Único por (<code>comunidad_id</code>,<code>periodo</code>) con estados no anulados.</li>
+</ul>
+<ol start="16">
+<li>emision_gasto_detalle</li>
+</ol>
+<ul>
+<li>Items a prorratear en una emisión: <code>id</code>, <code>emision_id</code>, <code>gasto_id</code> (nullable), <code>categoria_id</code>, <code>monto</code> DECIMAL(12,2), <code>regla_prorrateo</code> ENUM('coeficiente','partes_iguales','consumo','fijo_por_unidad'), <code>metadata_json</code>.</li>
+</ul>
+<ol start="17">
+<li>cargo_unidad</li>
+</ol>
+<ul>
+<li>Resultado del prorrateo por unidad: <code>id</code>, <code>emision_id</code>, <code>comunidad_id</code>, <code>unidad_id</code>, <code>monto_total</code> DECIMAL(12,2), <code>saldo</code> DECIMAL(12,2), <code>estado</code> ENUM('pendiente','pagado','vencido','parcial'), <code>interes_acumulado</code> DECIMAL(12,2).</li>
+<li>Índices por <code>unidad_id</code>, <code>estado</code>.</li>
+</ul>
+<ol start="18">
+<li>cargo_unidad_detalle</li>
+</ol>
+<ul>
+<li>Detalle de conceptos: <code>id</code>, <code>cargo_unidad_id</code>, <code>categoria_id</code>, <code>glosa</code>, <code>monto</code> DECIMAL(12,2), <code>origen</code> ENUM('gasto','multa','consumo','ajuste'), <code>origen_id</code> (nullable), <code>iva_incluido</code> BOOLEAN.</li>
+</ul>
+<h3 id="34-consumos-medidores">3.4 Consumos (medidores)</h3>
+<ol start="19">
+<li>medidor</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>unidad_id</code> (nullable si es general), <code>tipo</code> ENUM('agua','gas','electricidad'), <code>codigo</code>, <code>es_compartido</code> BOOLEAN.</li>
+</ul>
+<ol start="20">
+<li>lectura_medidor</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>medidor_id</code>, <code>fecha</code>, <code>lectura</code> DECIMAL(12,3), <code>periodo</code> (YYYY-MM), único por (<code>medidor_id</code>,<code>periodo</code>).</li>
+</ul>
+<ol start="21">
+<li>tarifa_consumo</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>tipo</code> ENUM('agua','gas','electricidad'), <code>periodo_desde</code>, <code>periodo_hasta</code> (nullable), <code>precio_por_unidad</code> DECIMAL(12,6), <code>cargo_fijo</code> DECIMAL(12,2).</li>
+</ul>
+<p>19b) medidor_unidad (consumos compartidos)</p>
+<ul>
+<li>Mapea un medidor a múltiples unidades con porcentaje de reparto: <code>id</code>, <code>medidor_id</code>, <code>unidad_id</code>, <code>porcentaje</code> DECIMAL(5,2) con CHECK 0–100, único (<code>medidor_id</code>,<code>unidad_id</code>).</li>
+</ul>
+<h3 id="35-multas-e-intereses">3.5 Multas e intereses</h3>
+<ol start="22">
+<li>multa</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>unidad_id</code>, <code>persona_id</code> (opcional), <code>motivo</code>, <code>descripcion</code>, <code>monto</code> DECIMAL(12,2), <code>estado</code> ENUM('pendiente','pagada','anulada'), <code>fecha</code>, <code>fecha_pago</code> (nullable).</li>
+</ul>
+<ol start="23">
+<li>configuracion_interes</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>aplica_desde</code> DATE, <code>tasa_mensual</code> DECIMAL(5,2), <code>metodo</code> ENUM('simple','compuesto'), <code>tope_mensual</code> DECIMAL(5,2).</li>
+</ul>
+<h3 id="36-cobranzas-y-pagos">3.6 Cobranzas y pagos</h3>
+<ol start="24">
+<li>pago</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>unidad_id</code> (opcional), <code>persona_id</code> (opcional), <code>fecha</code>, <code>monto</code> DECIMAL(12,2), <code>medio</code> ENUM('transferencia','webpay','khipu','servipag','efectivo'), <code>referencia</code>, <code>estado</code> ENUM('pendiente','aplicado','reversado'), <code>comprobante_num</code> (opcional).</li>
+</ul>
+<ol start="25">
+<li>pago_aplicacion</li>
+</ol>
+<ul>
+<li>Aplicación del pago a cargos: <code>id</code>, <code>pago_id</code>, <code>cargo_unidad_id</code>, <code>monto</code> DECIMAL(12,2), <code>prioridad</code> INT.</li>
+</ul>
+<ol start="26">
+<li>conciliacion_bancaria (opcional)</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>fecha_mov</code>, <code>monto</code>, <code>glosa</code>, <code>referencia</code>, <code>estado</code> ENUM('pendiente','conciliado','descartado'), <code>pago_id</code> (nullable), <code>extracto_id</code> (nullable).</li>
+</ul>
+<ol start="27">
+<li>webhook_pago</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>proveedor</code> ENUM('webpay','khipu','otro'), <code>payload_json</code>, <code>fecha_recepcion</code>, <code>procesado</code> BOOLEAN, <code>pago_id</code> (nullable).</li>
+</ul>
+<h3 id="37-operaci%C3%B3n-y-soporte">3.7 Operación y soporte</h3>
+<ol start="28">
+<li>amenidad</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>nombre</code>, <code>reglas</code>, <code>capacidad</code>, <code>requiere_aprobacion</code> BOOLEAN, <code>tarifa</code> DECIMAL(12,2) (opcional).</li>
+</ul>
+<ol start="29">
+<li>reserva_amenidad</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>amenidad_id</code>, <code>unidad_id</code>, <code>persona_id</code>, <code>inicio</code> DATETIME, <code>fin</code> DATETIME, <code>estado</code> ENUM('solicitada','aprobada','rechazada','cancelada','cumplida').</li>
+</ul>
+<ol start="30">
+<li>ticket</li>
+</ol>
+<ul>
+<li>Incidencias/mantención: <code>id</code>, <code>comunidad_id</code>, <code>unidad_id</code> (nullable), <code>categoria</code>, <code>titulo</code>, <code>descripcion</code>, <code>estado</code> ENUM('abierto','en_progreso','resuelto','cerrado'), <code>prioridad</code> ENUM('baja','media','alta'), <code>asignado_a</code> (usuario/persona), <code>attachments_json</code>.</li>
+</ul>
+<ol start="31">
+<li>notificacion</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>persona_id</code> (nullable), <code>tipo</code>, <code>titulo</code>, <code>mensaje</code>, <code>leida</code> BOOLEAN, <code>objeto_tipo</code>, <code>objeto_id</code>, <code>fecha_creacion</code>.</li>
+</ul>
+<ol start="32">
+<li>documento</li>
+</ol>
+<ul>
+<li>Repositorio: <code>id</code>, <code>comunidad_id</code>, <code>tipo</code> ENUM('circular','acta','reglamento','boletin','otro'), <code>titulo</code>, <code>url</code>, <code>periodo</code> (opcional), <code>visibilidad</code> ENUM('publico','privado')</li>
+</ul>
+<ol start="33">
+<li>bitacora_conserjeria</li>
+</ol>
+<ul>
+<li><code>id</code>, <code>comunidad_id</code>, <code>fecha_hora</code>, <code>usuario_id</code>, <code>evento</code>, <code>detalle</code>.</li>
+</ul>
+<h3 id="38-tablas-de-soporte-nacionales">3.8 Tablas de soporte nacionales</h3>
+<ol start="34">
+<li>uf_valor, utm_valor</li>
+</ol>
+<ul>
+<li><code>fecha</code>, <code>valor</code> DECIMAL(12,2). Índice por <code>fecha</code>.</li>
+</ul>
+<h3 id="39-m%C3%B3dulos-financieros-y-cross-cutting-pro">3.9 Módulos financieros y cross-cutting (PRO)</h3>
+<ul>
+<li>Fondos: <code>fondo</code> (reserva/extraordinario/caja) y <code>movimiento_fondo</code> (ingresos/egresos/ajustes, conciliables).</li>
+<li>Contabilidad (doble partida): <code>catalogo_cuenta</code> (plan de cuentas por comunidad), <code>asiento</code>, <code>asiento_detalle</code>.</li>
+<li>Presupuesto: <code>presupuesto_periodo</code> (YYYY-MM) y <code>presupuesto_detalle</code> por categoría.</li>
+<li>Archivos/adjuntos: <code>archivo</code> polimórfico (<code>objeto_tipo</code>, <code>objeto_id</code>, <code>url</code>, <code>mime</code>, <code>size_bytes</code>).</li>
+<li>Auditoría: <code>audit_event</code> (quién, cuándo, qué; before/after JSON) para cambios sensibles.</li>
+<li>Idempotencia: <code>idempotency_key</code> (scope, key_hash) para evitar reprocesos.</li>
+<li>Outbox: <code>outbox_event</code> para integraciones/webhooks con reintentos y estado.</li>
+</ul>
+<hr>
+<h2 id="4-api-rest--recursos-y-endpoints">4) API REST — Recursos y Endpoints</h2>
+<p>Convenciones: JSON, JWT (Bearer), paginación <code>page/limit</code>, filtros por query, orden <code>sort=campo,-otro</code>, inclusión <code>include=</code>.</p>
+<h3 id="41-autenticaci%C3%B3n-y-cuentas">4.1 Autenticación y cuentas</h3>
+<ul>
+<li>POST /auth/register</li>
+<li>POST /auth/login</li>
+<li>POST /auth/refresh</li>
+<li>POST /auth/logout</li>
+<li>GET  /auth/me</li>
+<li>POST /auth/forgot-password</li>
+<li>POST /auth/reset-password</li>
+</ul>
+<h3 id="42-comunidades-edificios-y-unidades">4.2 Comunidades, edificios y unidades</h3>
+<ul>
+<li>GET  /comunidades</li>
+<li>POST /comunidades</li>
+<li>GET  /comunidades/{id}</li>
+<li>PATCH/PUT /comunidades/{id}</li>
+<li>DELETE /comunidades/{id}</li>
+<li>GET  /comunidades/{id}/edificios</li>
+<li>POST /comunidades/{id}/edificios</li>
+<li>GET  /edificios/{id}</li>
+<li>PATCH/PUT /edificios/{id}</li>
+<li>DELETE /edificios/{id}</li>
+<li>GET  /edificios/{id}/torres</li>
+<li>POST /edificios/{id}/torres</li>
+<li>GET  /torres/{id}</li>
+<li>PATCH/PUT /torres/{id}</li>
+<li>DELETE /torres/{id}</li>
+<li>GET  /comunidades/{id}/unidades</li>
+<li>POST /comunidades/{id}/unidades</li>
+<li>GET  /unidades/{id}</li>
+<li>PATCH/PUT /unidades/{id}</li>
+<li>DELETE /unidades/{id}</li>
+<li>GET  /unidades/{id}/tenencias</li>
+<li>POST /unidades/{id}/tenencias</li>
+</ul>
+<h3 id="43-personas-usuarios-y-membres%C3%ADas">4.3 Personas, usuarios y membresías</h3>
+<ul>
+<li>GET  /personas?rut=…</li>
+<li>POST /personas</li>
+<li>GET  /personas/{id}</li>
+<li>PATCH/PUT /personas/{id}</li>
+<li>DELETE /personas/{id}</li>
+<li>GET  /comunidades/{id}/membresias</li>
+<li>POST /comunidades/{id}/membresias</li>
+<li>PATCH/PUT /membresias/{id}</li>
+<li>DELETE /membresias/{id}</li>
+<li>GET  /unidades/{id}/residentes (vista unificada propietarios/arrendatarios activos)</li>
+</ul>
+<h3 id="44-cat%C3%A1logos-y-par%C3%A1metros">4.4 Catálogos y parámetros</h3>
+<ul>
+<li>GET/POST /comunidades/{id}/categorias-gasto</li>
+<li>GET/PATCH/DELETE /categorias-gasto/{id}</li>
+<li>GET/POST /comunidades/{id}/centros-costo</li>
+<li>GET/PATCH/DELETE /centros-costo/{id}</li>
+<li>GET/PATCH /comunidades/{id}/parametros-cobranza</li>
+</ul>
+<h3 id="45-proveedores-y-documentos-de-compra">4.5 Proveedores y documentos de compra</h3>
+<ul>
+<li>GET/POST /comunidades/{id}/proveedores</li>
+<li>GET/PATCH/DELETE /proveedores/{id}</li>
+<li>GET/POST /comunidades/{id}/documentos-compra</li>
+<li>GET/PATCH/DELETE /documentos-compra/{id}</li>
+</ul>
+<h3 id="46-gastos-y-emisiones">4.6 Gastos y emisiones</h3>
+<ul>
+<li>GET/POST /comunidades/{id}/gastos</li>
+<li>GET/PATCH/DELETE /gastos/{id}</li>
+<li>GET/POST /comunidades/{id}/emisiones</li>
+<li>GET  /emisiones/{id}</li>
+<li>PATCH /emisiones/{id} (emitir/cerrar/anular)</li>
+<li>POST /emisiones/{id}/detalles (agrega item prorrateable)</li>
+<li>GET  /emisiones/{id}/previsualizar-prorrateo</li>
+<li>POST /emisiones/{id}/generar-cargos</li>
+</ul>
+<h3 id="47-cargos-por-unidad-y-cobranzas">4.7 Cargos por unidad y cobranzas</h3>
+<ul>
+<li>GET  /comunidades/{id}/cargos?estado=pending&amp;unidad=…&amp;periodo=…</li>
+<li>GET  /cargos/{id}</li>
+<li>GET  /unidades/{id}/cargos</li>
+<li>POST /cargos/{id}/recalcular-interes</li>
+<li>POST /cargos/{id}/notificar</li>
+</ul>
+<h3 id="48-multas-e-intereses">4.8 Multas e intereses</h3>
+<ul>
+<li>GET/POST /unidades/{id}/multas</li>
+<li>GET/PATCH/DELETE /multas/{id}</li>
+<li>POST /comunidades/{id}/configuracion-interes (o PATCH)</li>
+</ul>
+<h3 id="49-medidores-y-consumos">4.9 Medidores y consumos</h3>
+<ul>
+<li>GET/POST /comunidades/{id}/medidores</li>
+<li>GET/PATCH/DELETE /medidores/{id}</li>
+<li>GET/POST /medidores/{id}/lecturas</li>
+<li>GET  /medidores/{id}/consumos?desde=YYYY-MM&amp;hasta=YYYY-MM</li>
+<li>GET/POST /comunidades/{id}/tarifas-consumo</li>
+<li>GET/PATCH/DELETE /tarifas-consumo/{id}</li>
+</ul>
+<h3 id="410-pagos-conciliaci%C3%B3n-y-webhooks">4.10 Pagos, conciliación y webhooks</h3>
+<ul>
+<li>GET/POST /comunidades/{id}/pagos</li>
+<li>GET  /pagos/{id}</li>
+<li>POST /pagos/{id}/aplicar (payload con asignaciones a cargos)</li>
+<li>POST /pagos/{id}/reversar</li>
+<li>GET/POST /comunidades/{id}/conciliaciones</li>
+<li>PATCH /conciliaciones/{id}</li>
+<li>POST /webhooks/pagos/webpay</li>
+<li>POST /webhooks/pagos/khipu</li>
+</ul>
+<h3 id="411-operaci%C3%B3n">4.11 Operación</h3>
+<ul>
+<li>GET/POST /comunidades/{id}/amenidades</li>
+<li>GET/PATCH/DELETE /amenidades/{id}</li>
+<li>GET/POST /amenidades/{id}/reservas</li>
+<li>PATCH/DELETE /reservas/{id}</li>
+<li>GET/POST /comunidades/{id}/tickets</li>
+<li>GET/PATCH/DELETE /tickets/{id}</li>
+<li>GET/POST /comunidades/{id}/notificaciones</li>
+<li>PATCH/DELETE /notificaciones/{id}</li>
+<li>GET/POST /comunidades/{id}/documentos</li>
+<li>DELETE /documentos/{id}</li>
+<li>GET/POST /comunidades/{id}/bitacora</li>
+</ul>
+<h3 id="412-utilidades-chile">4.12 Utilidades Chile</h3>
+<ul>
+<li>GET  /util/uf?fecha=YYYY-MM-DD</li>
+<li>GET  /util/utm?fecha=YYYY-MM</li>
+<li>GET  /util/validar-rut?rut=XXXXXXXX-D</li>
+</ul>
+<h3 id="413-fondos">4.13 Fondos</h3>
+<ul>
+<li>GET/POST /comunidades/{id}/fondos</li>
+<li>GET/PATCH/DELETE /fondos/{id}</li>
+<li>GET/POST /fondos/{id}/movimientos</li>
+</ul>
+<h3 id="414-contabilidad-doble-partida">4.14 Contabilidad (doble partida)</h3>
+<ul>
+<li>GET/POST /comunidades/{id}/cuentas</li>
+<li>GET/PATCH/DELETE /cuentas/{id}</li>
+<li>GET/POST /comunidades/{id}/asientos</li>
+<li>GET  /asientos/{id}</li>
+</ul>
+<h3 id="415-presupuesto">4.15 Presupuesto</h3>
+<ul>
+<li>GET/POST /comunidades/{id}/presupuestos</li>
+<li>GET/PATCH /presupuestos/{id}</li>
+<li>GET/POST /presupuestos/{id}/detalles</li>
+</ul>
+<h3 id="416-archivos-y-auditor%C3%ADa">4.16 Archivos y auditoría</h3>
+<ul>
+<li>POST /archivos (multipart)</li>
+<li>GET  /archivos/{id}</li>
+<li>DELETE /archivos/{id}</li>
+<li>GET  /audit?entidad=...&amp;entidad_id=...</li>
+</ul>
+<h3 id="417-salud-y-observabilidad">4.17 Salud y observabilidad</h3>
+<ul>
+<li>GET  /healthz</li>
+<li>GET  /readyz</li>
+<li>GET  /metrics</li>
+</ul>
+<hr>
+<h2 id="5-seguridad-permisos-y-auditor%C3%ADa">5) Seguridad, permisos y auditoría</h2>
+<ul>
+<li>Roles por membresía de comunidad: admin, comité, conserje, contador, propietario, residente.</li>
+<li>Regla general: acceso restringido por <code>comunidad_id</code>; residentes ven solo sus unidades/cargos/pagos.</li>
+<li>Auditoría: cabeceras <code>X-Request-Id</code>, tabla de bitácora, retención de eventos, soft delete con <code>deleted_at</code> opcional.</li>
+<li>Webhooks firmados (HMAC o mTLS) + validación de repetición con <code>Idempotency-Key</code>.</li>
+<li>Rate limiting por IP/usuario/endpoint; CORS restrictivo; headers de seguridad (Helmet).</li>
+<li>Gestión de secretos fuera del repo (Vault/Secrets Manager); rotación de tokens (refresh) y 2FA opcional para roles sensibles.</li>
+</ul>
+<hr>
+<h2 id="6-ejemplos-m%C3%ADnimos-de-payload">6) Ejemplos mínimos de payload</h2>
+<p>Crear multa</p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-attr">"unidad_id"</span>: <span class="hljs-number">123</span>,
+  <span class="hljs-attr">"persona_id"</span>: <span class="hljs-number">456</span>,
+  <span class="hljs-attr">"motivo"</span>: <span class="hljs-string">"Ruidos molestos"</span>,
+  <span class="hljs-attr">"descripcion"</span>: <span class="hljs-string">"Incumplimiento reglamento interno"</span>,
+  <span class="hljs-attr">"monto"</span>: <span class="hljs-number">50000</span>
+}
+</div></code></pre>
+<p>Aplicar pago a cargos</p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-attr">"fecha"</span>: <span class="hljs-string">"2025-08-30"</span>,
+  <span class="hljs-attr">"monto"</span>: <span class="hljs-number">120000</span>,
+  <span class="hljs-attr">"medio"</span>: <span class="hljs-string">"webpay"</span>,
+  <span class="hljs-attr">"referencia"</span>: <span class="hljs-string">"TBK-12345"</span>,
+  <span class="hljs-attr">"aplicaciones"</span>: [
+    { <span class="hljs-attr">"cargo_id"</span>: <span class="hljs-number">987</span>, <span class="hljs-attr">"monto"</span>: <span class="hljs-number">80000</span> },
+    { <span class="hljs-attr">"cargo_id"</span>: <span class="hljs-number">988</span>, <span class="hljs-attr">"monto"</span>: <span class="hljs-number">40000</span> }
+  ]
+}
+</div></code></pre>
+<hr>
+<h2 id="7-normalizaci%C3%B3n-y-reglas-clave-3fn">7) Normalización y reglas clave (3FN)</h2>
+<ul>
+<li>Entidades separadas por dominios (personas vs. usuarios; gastos vs. documentos).</li>
+<li>Relaciones históricas con intervalos [desde, hasta] (tenencias, membresías, tarifas) para trazabilidad temporal.</li>
+<li>Evitar duplicidad: categorías parametrizadas, coeficientes almacenados en <code>unidad.alicuota</code> y usados en prorrateo.</li>
+<li>Integridad: restricciones únicas por comunidad, FKs con cascadas prudentes, checks (donde aplique) y validación DV de RUT a nivel de aplicación.</li>
+</ul>
+<hr>
+<h2 id="8-recomendaciones-de-reporter%C3%ADa-futuro">8) Recomendaciones de reportería (futuro)</h2>
+<h3 id="81-capa-anal%C3%ADtica-data-warehouse">8.1 Capa analítica (Data Warehouse)</h3>
+<ul>
+<li>Modelo estrella con hechos y dimensiones:
+<ul>
+<li>Hechos: <code>fact_cargos_unidad</code>, <code>fact_pagos</code>, <code>fact_multas</code>, <code>fact_consumos</code>, <code>fact_gastos</code>.</li>
+<li>Dimensiones: <code>dim_fecha</code>, <code>dim_unidad</code>, <code>dim_persona</code>, <code>dim_comunidad</code>, <code>dim_categoria</code>, <code>dim_proveedor</code>, <code>dim_medio_pago</code>.</li>
+</ul>
+</li>
+<li>Cargas ETL incrementales (daily/hourly) desde OLTP; CDC si es posible.</li>
+<li>Manejo de SCD Tipo 2 en <code>dim_unidad</code> y <code>dim_persona</code> (cambios de atributos relevantes).</li>
+</ul>
+<h3 id="82-materializaciones-y-vistas">8.2 Materializaciones y vistas</h3>
+<ul>
+<li>Vistas agregadas por periodo/unidad/comunidad para saldos, morosidad, rotación de gastos, aging de deuda, cumplimiento de pagos.</li>
+<li>Materialized views o tablas resumen mensuales para acelerar dashboard.</li>
+</ul>
+<h3 id="83-herramientas-bi">8.3 Herramientas BI</h3>
+<ul>
+<li>Compatibilidad con Power BI / Metabase / Superset.</li>
+<li>Exponer endpoint <code>/reportes/export</code> (CSV/Parquet) con límites y jobs asíncronos.</li>
+</ul>
+<h3 id="84-m%C3%A9tricas-clave-sugeridas">8.4 Métricas clave sugeridas</h3>
+<ul>
+<li>Morosidad por comunidad y por tramo (0-30, 31-60, 61-90, &gt;90 días).</li>
+<li>Recuperación de deuda (cobranza) mensual y acumulada.</li>
+<li>Composición del gasto: operacional vs extraordinario vs consumo.</li>
+<li>Uso de amenities (ocupación, peak times), SLA de tickets.</li>
+</ul>
+<hr>
+<h2 id="9-notas-de-implementaci%C3%B3n-api-nodejs">9) Notas de implementación (API Node.js)</h2>
+<h3 id="91-stack-sugerido">9.1 Stack sugerido</h3>
+<ul>
+<li>Node.js + TypeScript</li>
+<li>Framework: NestJS o Express.js</li>
+<li>ORM/ODM: TypeORM o Sequelize (driver: mysql2)</li>
+<li>Cache/colas: Redis (BullMQ para jobs)</li>
+<li>Documentación: OpenAPI 3.1/Swagger</li>
+<li>Contenedores: Docker (Dockerfile, docker-compose)</li>
+<li>Despliegue: a elección (Vercel, Render, ECS, etc.)</li>
+</ul>
+<p>Buenas prácticas base</p>
+<ul>
+<li>Migraciones y seeds versionadas.</li>
+<li>Validación de RUT + DV en capa de dominio.</li>
+<li>Idempotencia en webhooks (claves de idempotencia y deduplicación en Redis) y clave persistida en BD (<code>idempotency_key</code>).</li>
+<li>Patrón Outbox para integraciones/webhooks con reintentos backoff.</li>
+<li>Tareas programadas para cierres mensuales (cron).</li>
+</ul>
+<h3 id="92-tecnolog%C3%ADas-y-utilidades-referencia-consolidada">9.2 Tecnologías y utilidades (referencia consolidada)</h3>
+<p>Principales</p>
+<ul>
+<li>Node.js (v18.x o superior)</li>
+<li>Express.js o NestJS</li>
+<li>Sequelize o TypeORM</li>
+<li>mysql2</li>
+<li>Redis</li>
+<li>Swagger (swagger-jsdoc, swagger-ui-express, swagger-autogen)</li>
+<li>Docker (Dockerfile, docker-compose.yml)</li>
+<li>Vercel (vercel.json) si aplica</li>
+</ul>
+<p>Seguridad y utilidades</p>
+<ul>
+<li>bcrypt</li>
+<li>cors</li>
+<li>helmet</li>
+<li>dotenv</li>
+<li>jsonwebtoken</li>
+<li>multer (subida de archivos)</li>
+<li>nodemailer (correo)</li>
+<li>morgan (HTTP logging)</li>
+<li>winston (logging estructurado)</li>
+</ul>
+<p>Validación</p>
+<ul>
+<li>express-validator (Express)</li>
+<li>joi o zod (esquemas compartidos)</li>
+</ul>
+<p>Desarrollo y calidad de código</p>
+<ul>
+<li>ESLint (con reglas para TS/Node)</li>
+<li>Prettier (formato consistente)</li>
+<li>Husky (ganchos de git)</li>
+<li>lint-staged (lint/format en staged files)</li>
+<li>Nodemon (reload en desarrollo)</li>
+<li>Babel (si necesitas compatibilidad específica: @babel/cli, @babel/core, @babel/node, @babel/preset-env)</li>
+</ul>
+<p>Pruebas</p>
+<ul>
+<li>Jest (unitarias y de integración)</li>
+<li>Supertest (pruebas HTTP)</li>
+<li>Pruebas de contrato con OpenAPI (ej. schemathesis o dredd) [opcional]</li>
+</ul>
+<p>Scripts y automatización</p>
+<ul>
+<li>sequelize-cli o typeorm migration:generate/run (migraciones y seeders)</li>
+<li>Scripts batch (.bat) para Windows cuando aplique</li>
+</ul>
+<p>Otros</p>
+<ul>
+<li>Postman/Insomnia (colecciones en /postman)</li>
+</ul>
+<h3 id="93-cicd-y-comprobaciones">9.3 CI/CD y comprobaciones</h3>
+<ul>
+<li>GitHub Actions (o GitLab CI) con jobs para:
+<ul>
+<li>Lint + Typecheck (ESLint, tsc --noEmit)</li>
+<li>Pruebas (Jest + cobertura)</li>
+<li>Validación OpenAPI (breaking changes)</li>
+<li>Seguridad: npm audit, Snyk (dependencias), CodeQL (análisis estático)</li>
+<li>Docker build &amp; push; escaneo de imagen (Trivy)</li>
+</ul>
+</li>
+<li>SonarCloud/SonarQube para calidad (coverage, code smells, duplicaciones)</li>
+<li>Pre-commit: Husky + lint-staged (eslint --fix, prettier --write, pruebas rápidas opcionales)</li>
+</ul>
+<hr>
+<h2 id="10-anexo--%C3%ADndices-sugeridos">10) Anexo — Índices sugeridos</h2>
+<ul>
+<li>Unicos: (<code>comunidad_id</code>,<code>codigo</code>) en <code>unidad</code>, (<code>comunidad_id</code>,<code>periodo</code>) en <code>emision_gasto_comun</code>.</li>
+<li>Búsqueda: <code>cargo_unidad(estado, unidad_id)</code>, <code>pago(comunidad_id, fecha)</code>, <code>multa(comunidad_id, estado)</code>.</li>
+<li>FK habituales con ON DELETE RESTRICT; CASCADE en detalles (<code>*_detalle</code>).</li>
+</ul>
+<hr>
+<h2 id="11-observabilidad-y-sre-pro">11) Observabilidad y SRE (PRO)</h2>
+<ul>
+<li>Logs JSON estructurados con <code>request_id</code>, <code>user_id</code>, <code>comunidad_id</code>, latencias y resultado.</li>
+<li>Métricas Prometheus: HTTP (p95/p99), DB (pool y lentas), colas/jobs, webhooks/outbox, memoria/CPU.</li>
+<li>Trazas distribuidas (OpenTelemetry) y correlación por <code>X-Request-Id</code>.</li>
+<li>Healthchecks: <code>healthz</code> (liveness) y <code>readyz</code> (dependencias: DB, Redis, colas, migraciones up-to-date).</li>
+</ul>
+<h2 id="12-pruebas-y-calidad-cicd">12) Pruebas y calidad (CI/CD)</h2>
+<ul>
+<li>Unitarias, integración (DB real/Testcontainers), contrato (OpenAPI), e2e.</li>
+<li>Umbral de cobertura ≥ 80% en módulos críticos.</li>
+<li>Pipeline: lint, typecheck, test, cobertura, validación OpenAPI, npm audit/Snyk, CodeQL, build Docker + Trivy.</li>
+<li>Pre-commit: Husky + lint-staged.</li>
+</ul>
+<h2 id="13-variables-de-configuraci%C3%B3n-sugeridas">13) Variables de configuración sugeridas</h2>
+<ul>
+<li>DB: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS.</li>
+<li>Cache/colas: REDIS_URL.</li>
+<li>Auth: JWT_SECRET, JWT_EXP, REFRESH_EXP, ENABLE_2FA.</li>
+<li>Mail: SMTP_HOST, SMTP_USER, SMTP_PASS, MAIL_FROM.</li>
+<li>Chile: UF_SOURCE_URL, UTM_SOURCE_URL.</li>
+<li>Seguridad: CORS_ORIGINS, RATE_LIMIT_*.</li>
+</ul>
+<h2 id="14-referencia-al-blueprint-pro">14) Referencia al blueprint PRO</h2>
+<p>Para una versión extendida y completamente desarrollada de estas mejoras, ver <code>cuentas-claras-pro.md</code> (incluye DDL delta, módulos financieros y patrones de confiabilidad detallados).</p>
+
+</body>
+</html>
