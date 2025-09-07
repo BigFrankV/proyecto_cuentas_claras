@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: cuentasclaras_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-cuentasclaras}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_USER: ${DB_USER:-api_admin}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-apipassword}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./ccbackend/base:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3306:3306"
+
+  api:
+    build:
+      context: ./ccbackend
+      dockerfile: Dockerfile
+    container_name: cuentasclaras_api
+    restart: unless-stopped
+    depends_on:
+      - db
+    env_file:
+      - ./ccbackend/.env.example
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${DB_USER:-api_admin}
+      DB_PASSWORD: ${DB_PASSWORD:-apipassword}
+      DB_NAME: ${DB_NAME:-cuentasclaras}
+      JWT_SECRET: ${JWT_SECRET:-change_me}
+      PORT: ${PORT:-3000}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./ccbackend:/usr/src/app:cached
+    command: npm start
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: cuentasclaras_phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_USER: ${DB_USER:-api_admin}
+      PMA_PASSWORD: ${DB_PASSWORD:-apipassword}
+    ports:
+      - "8080:80"
+
+  frontend:
+    build:
+      context: ./ccfrontend
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://host.docker.internal:3000}
+    image: cuentas-claras-frontend:latest
+    ports:
+      - '5173:80'
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://host.docker.internal:3000}
+    restart: unless-stopped
+
+volumes:
+  db_data:
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,250 @@
+
+:root {
+  --cc-font: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --cc-primary: #004aad;
+  --cc-secondary: #ff6f20;
+  --cc-success: #00b894;
+  --cc-info: #1e90ff;
+  --cc-warning: #f6c31c;
+  --cc-danger: #e64e4e;
+  --cc-light: #f8f9fa;
+  --cc-dark: #111827;
+}
+:root, [data-bs-theme=light] {
+  --bs-body-font-family: var(--cc-font);
+  --bs-primary: var(--cc-primary);
+  --bs-secondary: var(--cc-secondary);
+  --bs-success: var(--cc-success);
+  --bs-info: var(--cc-info);
+  --bs-warning: var(--cc-warning);
+  --bs-danger: var(--cc-danger);
+  --bs-light: var(--cc-light);
+  --bs-dark: var(--cc-dark);
+}
+/* previous styles backed up: small bootstrap theme vars */
+/*
+  :root {
+    --cc-font: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    --cc-primary: #004aad;
+    --cc-secondary: #ff6f20;
+    --cc-success: #00b894;
+    --cc-info: #1e90ff;
+    --cc-warning: #f6c31c;
+    --cc-danger: #e64e4e;
+    --cc-light: #f8f9fa;
+    --cc-dark: #111827;
+  }
+*/
+
+/* Global brand and theme variables */
+:root{
+  --brand-50: #f4f7fb;
+  --brand-100: #e9f0fb;
+  --brand-300: #9fb7e8;
+  --brand-500: #2b55a8; /* primary */
+  --brand-700: #1e3f7a;
+  --accent: #f2b95c; /* warm gold */
+  --muted: #6c757d;
+  --bg: #f7f9fc;
+  --card-bg: #ffffff;
+  --glass: rgba(255,255,255,0.6);
+  --shadow: 0 6px 18px rgba(23,38,69,0.08);
+}
+
+/* Dark theme variables */
+:root[data-theme='dark']{
+  --bg: #0b1220;
+  --card-bg: linear-gradient(180deg,#091127,#0f1724);
+  --brand-500: #7ea7ff;
+  --brand-700: #5b82d6;
+  --muted: #9aa6bf;
+  --shadow: 0 10px 30px rgba(2,6,23,0.6);
+}
+
+html,body{height:100%;}
+
+body{
+  font-family: Inter, 'Segoe UI', Roboto, system-ui, -apple-system, 'Helvetica Neue', Arial;
+  background: var(--bg);
+  color: var(--brand-700);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.6;
+  font-size:16px;
+}
+
+/* Headings: Poppins for a crisp, European editorial feel */
+h1,h2,h3,h4,h5{font-family:'Poppins', Inter, sans-serif;color:var(--brand-700)}
+
+/* Layout spacing for a calmer, grid-based feel */
+.container{max-width:1140px}
+
+/* Subtle borders and thinner card styling */
+.card{border:1px solid rgba(16,24,40,0.04);border-radius:10px;background:var(--card-bg)}
+
+/* Clean hero: reduce heavy gradients, use soft left alignment */
+.hero{background:linear-gradient(90deg, rgba(43,85,168,0.06), transparent);padding:2rem;border-radius:10px}
+.hero .display-6{font-size:1.6rem}
+
+/* Hero visual: replace with neutral architectural SVG background via radial subtle */
+.hero-visual{width:220px;height:140px;margin:0 auto;border-radius:10px;background:linear-gradient(180deg,#eef5ff,#f8fbff);box-shadow:none;border:1px solid rgba(43,85,168,0.04);display:flex;align-items:center;justify-content:center}
+
+/* Buttons: flatter, refined */
+.btn{border-radius:8px;padding:.6rem .9rem}
+.btn-primary{box-shadow:none}
+
+/* Navbar: thin border and lighter background */
+.navbar{background:linear-gradient(180deg,rgba(255,255,255,0.7),rgba(255,255,255,0.9));border-bottom:1px solid rgba(16,24,40,0.04)}
+
+/* Offcanvas: more refined, less bulky */
+.custom-offcanvas{width:260px;background:var(--card-bg);border-right:1px solid rgba(16,24,40,0.04)}
+.custom-offcanvas .nav-link{padding-left:8px}
+
+/* Animations: slower, more elegant curves */
+.animate-item{opacity:0;transform:translateY(8px);transition:opacity .48s cubic-bezier(.16,.84,.24,1), transform .48s cubic-bezier(.16,.84,.24,1)}
+.animate-item.is-visible{opacity:1;transform:none}
+
+/* Reduce motion preference respected */
+@media (prefers-reduced-motion: reduce){
+  .animate-item{transition:none}
+  .card:hover{transform:none}
+}
+
+/* Example-inspired professional UI rules */
+:root{
+  --example-primary: #0b5ed7;
+  --example-dark: #12263A;
+  --example-amber: #f59e0b;
+}
+
+body{background:#f6f8fb}
+
+.navbar-dark.bg-dark{background:var(--example-dark) !important}
+.navbar-brand .brand{font-weight:700;letter-spacing:.2px}
+.hero{background:linear-gradient(135deg, rgba(11,94,215,.08), rgba(13,202,240,.10));border-bottom:1px solid rgba(0,0,0,.05)}
+.card{border:none;box-shadow:0 6px 18px rgba(18,38,58,.08);transition:transform .2s ease, box-shadow .2s ease}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(18,38,58,.12)}
+.metric-badge{font-feature-settings:"tnum" on, "lnum" on}
+.offcanvas-header{border-bottom:1px solid rgba(0,0,0,.075)}
+.sidebar-link{color:#2c3e50;border-radius:.5rem;padding:.5rem .75rem;display:flex;align-items:center;gap:.5rem;text-decoration:none}
+.sidebar-link:hover{background:rgba(11,94,215,.08);color:var(--example-primary)}
+.sidebar-section{font-size:.8rem;text-transform:uppercase;color:#6b7280;margin-top:.5rem;margin-bottom:.25rem}
+.fade-slide-in{opacity:0;transform:translateY(8px);animation:fadeSlideIn .6s ease forwards}
+.fade-slide-in.delay-1{animation-delay:.1s}
+.fade-slide-in.delay-2{animation-delay:.2s}
+.fade-slide-in.delay-3{animation-delay:.3s}
+@keyframes fadeSlideIn{to{opacity:1;transform:translateY(0)}}
+
+/* Small utility tweaks for list-group icons */
+.list-group-item{border:none;padding:.6rem 1rem}
+.list-group-item .material-icons{font-size:18px}
+
+
+/* Smooth theme transition */
+html{transition:background .22s ease,color .22s ease}
+
+/* Navbar */
+.navbar-brand .material-icons{color:var(--brand-500);font-size:1.6rem}
+.brand-text{font-weight:600;color:var(--brand-700);letter-spacing:0.2px}
+.navbar{padding-top:.6rem;padding-bottom:.6rem}
+
+/* Hero */
+.hero{
+  background: linear-gradient(180deg, rgba(43,85,168,0.08), transparent 60%);
+  padding: 1.5rem 1rem;
+  border-radius: .6rem;
+}
+.hero-visual{
+  width:160px;height:120px;margin:0 auto;border-radius:8px;
+  background-image: linear-gradient(180deg, var(--brand-300), var(--brand-500));
+  box-shadow: var(--shadow);
+  position:relative;overflow:hidden;
+}
+.hero-visual::before{
+  content:'';position:absolute;left:18px;top:18px;right:18px;bottom:18px;background:linear-gradient(180deg, rgba(255,255,255,0.12), rgba(0,0,0,0.06));border-radius:6px;}
+
+/* Enhanced color accents */
+.brand-accent{background:linear-gradient(90deg,var(--brand-500),#466dc9);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* Reveal / entrance animations */
+.animate-item{opacity:0;transform:translateY(10px);transition:opacity .5s cubic-bezier(.2,.9,.2,1), transform .5s cubic-bezier(.2,.9,.2,1)}
+.animate-item.is-visible{opacity:1;transform:none}
+
+/* Card microinteractions */
+.card{transition:box-shadow .18s ease, transform .18s ease}
+.card:focus-within,.card:hover{box-shadow:0 10px 28px rgba(23,38,69,0.12);transform:translateY(-8px)}
+
+/* Buttons with subtle glass and accent */
+.btn-primary{background:linear-gradient(180deg,var(--brand-500),#25509a);box-shadow:0 6px 16px rgba(43,85,168,0.12)}
+.btn-outline-primary{border-radius:8px}
+.btn-primary:active{transform:translateY(1px)}
+
+/* Offcanvas bg blur when open (if browser supports) */
+.offcanvas-backdrop.show{backdrop-filter: blur(4px)}
+
+/* Subtle separators */
+.offcanvas .small.text-muted{opacity:.85}
+
+
+/* Cards */
+.card{background:var(--card-bg);border:0;border-radius:12px}
+.card .icon-wrap{width:64px;height:64px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--brand-100),var(--brand-300));color:var(--brand-700);font-size:32px}
+
+.card h5{margin-top:.25rem;margin-bottom:.5rem}
+.card p{font-size:.95rem}
+
+/* Footer */
+.site-footer{background:transparent;border-top:1px solid rgba(16,24,40,0.04);}
+
+/* Utility adjustments */
+.btn-primary{background:var(--brand-500);border-color:var(--brand-500);}
+.btn-primary:hover{background:var(--brand-700);border-color:var(--brand-700)}
+.btn-outline-primary{color:var(--brand-700);border-color:rgba(43,85,168,0.12)}
+
+/* Responsive spacing */
+@media(min-width:768px){
+  .hero{padding:2.5rem 2rem}
+  .hero-visual{width:220px;height:150px}
+}
+
+/* Accessibility focus states */
+a:focus,button:focus{outline:3px solid rgba(43,85,168,0.12);outline-offset:3px}
+
+/* Small tweaks for material icons alignment */
+.material-icons{vertical-align:middle}
+
+/* Provide subtle animation to cards on hover (desktop) */
+@media(prefers-reduced-motion: no-preference){
+  .card:hover{transform:translateY(-6px);transition:transform .18s ease-out}
+}
+
+/* Offcanvas side menu customizations */
+.custom-offcanvas{
+  width:280px;
+  max-width:80vw;
+  background: linear-gradient(180deg, var(--card-bg), #fbfdff);
+  border-right:1px solid rgba(16,24,40,0.04);
+}
+.custom-offcanvas .offcanvas-header{padding:1rem}
+.custom-offcanvas .offcanvas-body{padding-top:0.25rem}
+.custom-offcanvas .nav-link{color:var(--brand-700);font-weight:500;border-radius:8px}
+.custom-offcanvas .nav-link:hover{background:rgba(43,85,168,0.04)}
+.custom-offcanvas .btn-close{opacity:.6}
+
+/* Make sure the desktop inline nav looks elevated and compact */
+@media(min-width:992px){
+  .navbar .navbar-nav .nav-link{color:var(--muted)}
+  .navbar .navbar-nav .nav-link:hover{color:var(--brand-700)}
+}
+
+/* Megamenu styles */
+.megamenu{
+  min-width: 640px;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(23,38,69,0.12);
+}
+.megamenu .sidebar-section{margin-bottom:.5rem}
+.megamenu .dropdown-item{padding:.35rem .5rem;color:var(--brand-700)}
+.megamenu .dropdown-item:hover{background:rgba(43,85,168,0.04)}
+.megamenu h6{font-size:.85rem;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem}
+
