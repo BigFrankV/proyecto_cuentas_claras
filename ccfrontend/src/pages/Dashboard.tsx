@@ -33,7 +33,7 @@ export default function Dashboard() {
           <ul className="mb-0">
             <li>Configurar colores corporativos en <code>src/styles/index.css</code></li>
             <li>Ampliar módulos (Cargos, Pagos, Emisiones)</li>
-            <li>Proteger rutas por rol (si aplica)</li>
+            <li>crear ditar perfil</li>
           </ul>
         </div>
       </div>
