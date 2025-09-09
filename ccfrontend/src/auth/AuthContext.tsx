@@ -7,10 +7,11 @@ type User = { id: number; username?: string; email?: string; roles?: string[] } 
 type AuthCtx = {
   user: User
   isAuthenticated: boolean
-  login: (creds: {username?: string; email?: string; password: string}) => Promise<void>
+  login: (creds: {username?: string; email?: string; password: string}) => Promise<any>
   register: (data: any) => Promise<void>
   logout: () => void
   me: () => Promise<void>
+  completeTwoFactor?: (tempToken: string, code: string) => Promise<any>
 }
 
 const Ctx = createContext<AuthCtx>(null as any)
@@ -32,13 +33,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     user,
     isAuthenticated: !!user,
     async login(creds) {
+      // returns backend response directly so caller can handle two-factor flow
       const data = await authApi.login(creds)
-      // backend may return { token } or { accessToken }
       const token = data?.token ?? data?.accessToken
-      if (!token) throw new Error('No token returned from login')
+      if (token) {
+        setAccessToken(token)
+        const u = await authApi.me()
+        setUser(u)
+      }
+      return data
+    },
+    async completeTwoFactor(tempToken: string, code: string) {
+      // exchange tempToken + code for final token
+      const data = await authApi.verify2fa({ tempToken, code })
+      const token = data?.token ?? data?.accessToken
+      if (!token) throw new Error('No token returned from 2FA verification')
       setAccessToken(token)
       const u = await authApi.me()
       setUser(u)
+      return u
     },
     async register(data) { await authApi.register(data) },
     async me() { const u = await authApi.me(); setUser(u) },

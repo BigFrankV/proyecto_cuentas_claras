@@ -427,16 +427,3 @@ Ambos insertan el payload en tabla `webhook_pago` para procesamiento posterior.
   - Valida RUT chileno y devuelve { valid, dv }.
 
 ---
-
-## Notas y limitaciones actuales detectadas en el código
-
-- Algunas rutas implementan sólo stubs (marcadas en las descripciones):
-  - `cargos/:id/recalcular-interes` y `cargos/:id/notificar` son stubs.
-  - `pagos/:id/reversar` y algunos cálculos de consumos son stubs.
-  - Previsualización/prorrateo por `consumo` no está implementada (requiere lecturas medidor).
-
-- La mayoría de endpoints siguen un patrón REST sencillo y retornan objetos o listas. Muchas rutas usan paginación por `page` y `limit` query params.
-
-- Para obtener esquemas exactos de request/response revisa los JSDoc `@openapi` en la cabecera de cada archivo en `ccbackend/src/routes/` o usa `ccbackend/src/swagger.js` si expone OpenAPI en runtime.
-
----

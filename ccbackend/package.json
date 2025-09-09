@@ -8,8 +8,7 @@
     "dev": "nodemon src/index.js",
     "lint": "eslint . --ext .js",
     "format": "prettier --write .",
-    "test": "jest --runInBand",
-    "prepare": "husky install"
+  "test": "jest --runInBand"
   },
   "engines": {
     "node": ">=18"
@@ -22,8 +21,10 @@
     "express-validator": "^6.15.0",
     "helmet": "^6.0.1",
     "joi": "^17.10.1",
-    "jsonwebtoken": "^9.0.0",
-    "morgan": "^1.10.0",
+  "jsonwebtoken": "^9.0.0",
+  "qrcode": "^1.5.1",
+  "speakeasy": "^2.0.0",
+  "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.6.0",
     "nodemailer": "^6.9.4",

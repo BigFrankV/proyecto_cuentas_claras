@@ -20,3 +20,19 @@ export async function logout() {
   const res = await api.post('/auth/logout')
   return res.data
 }
+export async function verify2fa(data: { tempToken: string; code: string }) {
+  const res = await api.post('/auth/2fa/verify', data)
+  return res.data
+}
+export async function setup2fa() {
+  const res = await api.get('/auth/2fa/setup')
+  return res.data
+}
+export async function enable2fa(data: { base32: string; code: string }) {
+  const res = await api.post('/auth/2fa/enable', data)
+  return res.data
+}
+export async function disable2fa(data: { code: string }) {
+  const res = await api.post('/auth/2fa/disable', data)
+  return res.data
+}

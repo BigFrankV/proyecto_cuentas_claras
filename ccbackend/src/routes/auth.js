@@ -3,8 +3,10 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
-const { generateToken, authenticate } = require('../middleware/auth');
+const { generateToken, generateTempToken, authenticate } = require('../middleware/auth');
 const crypto = require('crypto');
+const speakeasy = require('speakeasy');
+const qrcode = require('qrcode');
 
 /**
  * @openapi
@@ -90,9 +92,98 @@ router.post('/login', [body('username').exists(), body('password').exists()], as
     const roles = membresias.map(m => m.rol);
     // choose a default comunidad_id if any
     const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
+  // If user has TOTP enabled, return a short-lived temp token and indicate 2FA required
+  const [userRow] = await db.query('SELECT totp_secret, totp_enabled FROM usuario WHERE id = ? LIMIT 1', [user.id]);
+  const totp_info = userRow[0] || { totp_secret: null, totp_enabled: 0 };
+  if (totp_info.totp_enabled) {
+    const tempPayload = { sub: user.id, username, persona_id: user.persona_id, twoFactor: true };
+    const tempToken = generateTempToken(tempPayload, '5m');
+    return res.json({ twoFactorRequired: true, tempToken });
+  }
+
   const payload = { sub: user.id, username, persona_id: user.persona_id, roles, comunidad_id, is_superadmin: !!user.is_superadmin };
     const token = generateToken(payload);
     res.json({ token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+// Verify TOTP using tempToken produced by /auth/login
+router.post('/2fa/verify', [body('tempToken').exists(), body('code').exists()], async (req, res) => {
+  const { tempToken, code } = req.body;
+  const jwt = require('jsonwebtoken');
+  const secret = process.env.JWT_SECRET || 'change_me';
+  try {
+    const data = jwt.verify(tempToken, secret);
+    if (!data || !data.twoFactor) return res.status(400).json({ error: 'invalid temp token' });
+    const userId = data.sub;
+    const [rows] = await db.query('SELECT id, persona_id, username, totp_secret FROM usuario WHERE id = ? LIMIT 1', [userId]);
+    if (!rows.length) return res.status(404).json({ error: 'user not found' });
+    const user = rows[0];
+    // verify code
+    const verified = speakeasy.totp.verify({ secret: user.totp_secret, encoding: 'base32', token: code, window: 1 });
+    if (!verified) return res.status(401).json({ error: 'invalid code' });
+    // create final token
+    const [membresias] = await db.query('SELECT comunidad_id, rol FROM membresia_comunidad WHERE persona_id = ? AND activo = 1', [user.persona_id]);
+    const roles = membresias.map(m => m.rol);
+    const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
+    const payload = { sub: user.id, username: user.username, persona_id: user.persona_id, roles, comunidad_id };
+    const token = generateToken(payload);
+    res.json({ token });
+  } catch (err) {
+    console.error(err);
+    return res.status(401).json({ error: 'invalid or expired temp token' });
+  }
+});
+
+// Protected: generate TOTP secret and otpauth URL for QR
+router.get('/2fa/setup', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.sub;
+    const [rows] = await db.query('SELECT id, username, email FROM usuario WHERE id = ? LIMIT 1', [userId]);
+    if (!rows.length) return res.status(404).json({ error: 'user not found' });
+    const user = rows[0];
+    const secret = speakeasy.generateSecret({ name: `CuentasClaras:${user.email || user.username}` });
+    const otpauth = secret.otpauth_url;
+    const qrData = await qrcode.toDataURL(otpauth);
+    // return secret.base32 and qr
+    res.json({ base32: secret.base32, otpauth, qr: qrData });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+// Protected: enable 2FA after verifying a code from user's authenticator app
+router.post('/2fa/enable', authenticate, [body('code').exists(), body('base32').exists()], async (req, res) => {
+  const { code, base32 } = req.body;
+  try {
+    const userId = req.user.sub;
+    const verified = speakeasy.totp.verify({ secret: base32, encoding: 'base32', token: code, window: 1 });
+    if (!verified) return res.status(400).json({ error: 'invalid code' });
+    // store secret encrypted (here stored plain for demo — in prod encrypt)
+    await db.query('UPDATE usuario SET totp_secret = ?, totp_enabled = 1 WHERE id = ?', [base32, userId]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+// Protected: disable 2FA
+router.post('/2fa/disable', authenticate, [body('code').exists()], async (req, res) => {
+  const { code } = req.body;
+  try {
+    const userId = req.user.sub;
+    const [rows] = await db.query('SELECT totp_secret FROM usuario WHERE id = ? LIMIT 1', [userId]);
+    if (!rows.length) return res.status(404).json({ error: 'user not found' });
+    const secret = rows[0].totp_secret;
+    const verified = speakeasy.totp.verify({ secret, encoding: 'base32', token: code, window: 1 });
+    if (!verified) return res.status(400).json({ error: 'invalid code' });
+    await db.query('UPDATE usuario SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?', [userId]);
+    res.json({ ok: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });

@@ -76,7 +76,11 @@ async function start() {
 		logger.info('Sequelize connected');
 	} catch (err) {
 		logger.error('Failed to connect to DB: %s', err && err.message);
-		process.exit(1);
+		if (process.env.SKIP_DB_CONNECT === 'true') {
+			logger.warn('SKIP_DB_CONNECT=true — continuing without DB connection (development only)');
+		} else {
+			process.exit(1);
+		}
 	}
 
 		// Redis removed; skipping cache setup

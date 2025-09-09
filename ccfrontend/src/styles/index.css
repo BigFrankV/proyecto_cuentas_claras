@@ -248,3 +248,88 @@ a:focus,button:focus{outline:3px solid rgba(43,85,168,0.12);outline-offset:3px}
 .megamenu .dropdown-item:hover{background:rgba(43,85,168,0.04)}
 .megamenu h6{font-size:.85rem;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem}
 
+/* Layout (merged from layout.css) */
+:root{
+  --kk-sidebar-w: 260px;
+  --kk-panel-w: 360px;
+  --kk-gap: 18px;
+  --kk-bg: #f6f8fb;
+  --kk-surface: #ffffff;
+  --kk-muted: #6b7280;
+  --kk-primary: #0b5ed7;
+}
+
+.kk-app{min-height:100vh;display:flex;flex-direction:column;background:var(--kk-bg);font-family:Inter,system-ui,Arial}
+.kk-topbar{height:56px;background:var(--kk-surface);display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid rgba(16,24,40,0.04);gap:12px}
+.kk-topbar .kk-brand{font-weight:600;color:var(--kk-primary);margin-left:8px}
+.kk-topbar-center{flex:1;display:flex;justify-content:center}
+.kk-search{width:60%;max-width:540px;padding:8px 12px;border-radius:8px;border:1px solid rgba(16,24,40,0.06);background:#fff}
+.kk-body{display:flex;flex:1;gap:var(--kk-gap);padding:20px}
+.kk-sidebar{width:var(--kk-sidebar-w);flex:0 0 var(--kk-sidebar-w);}
+.kk-main{flex:1;min-height:60vh}
+.kk-panel{width:var(--kk-panel-w);flex:0 0 var(--kk-panel-w);background:transparent}
+.kk-footer{text-align:center;padding:12px;color:var(--kk-muted);font-size:13px}
+
+.kk-section{margin-bottom:18px}
+.kk-section-title{font-size:12px;color:var(--kk-muted);text-transform:uppercase;margin:6px 0}
+.kk-nav{list-style:none;padding:0;margin:0}
+.kk-nav-link{display:block;padding:10px 12px;border-radius:8px;color:#111827;text-decoration:none;margin-bottom:6px}
+.kk-nav-link:hover{background:rgba(11,94,215,0.06);color:var(--kk-primary)}
+.kk-sidebar-footer{text-align:center;padding-top:18px;color:var(--kk-muted);font-size:12px}
+
+/* Kanban */
+.kk-kanban{display:flex;gap:12px;align-items:flex-start}
+.kk-kanban-column{width:280px;background:var(--kk-surface);border-radius:10px;padding:12px;border:1px solid rgba(16,24,40,0.04)}
+.kk-kanban-column header{font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.kk-pill{background:rgba(16,24,40,0.06);padding:4px 8px;border-radius:999px;font-size:12px}
+.kk-card{background:#fff;border-radius:8px;padding:10px;margin-bottom:8px;box-shadow:0 6px 14px rgba(18,38,58,0.06)}
+.kk-card-title{font-weight:600}
+.kk-card-sub{font-size:13px;color:var(--kk-muted);margin-top:6px}
+
+/* small screens */
+@media(max-width:900px){
+  .kk-body{padding:12px;flex-direction:column}
+  .kk-sidebar{width:100%;order:2}
+  .kk-panel{display:none}
+}
+
+/* GenericCrud helpers */
+.kk-toolbar .kk-search{border-radius:10px;padding:6px 10px}
+.kk-card{border-radius:12px;background:var(--card-bg);box-shadow:var(--shadow)}
+.kk-data-table thead th{font-weight:600}
+.kk-data-table td code{background:transparent;border-radius:6px;padding:4px 6px}
+.kk-data-table .btn{padding:.35rem .5rem}
+.kk-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px}
+.skeleton-row{height:48px;background:linear-gradient(90deg,#f3f6fb,#eef3fb,#f3f6fb);border-radius:8px}
+.kk-page h2{font-size:1.4rem}
+
+/* Actions */
+.kk-data-table td .material-icons{vertical-align:middle;font-size:18px}
+.kk-toolbar .btn{height:36px}
+
+/* Responsive tweaks */
+@media(max-width:768px){
+  .kk-toolbar{flex-direction:column;align-items:stretch}
+  .kk-toolbar .kk-search{width:100%;margin-bottom:8px}
+}
+
+/* Topbar polish */
+.kk-logo{gap:10px}
+.kk-logo-mark{color:var(--brand-500);font-size:28px}
+.kk-brand{font-weight:700;color:var(--brand-700)}
+.kk-brand-sub{font-size:11px;color:var(--muted)}
+.kk-search-wrapper{position:relative;width:100%;max-width:680px}
+.kk-search-wrapper .kk-search-icon{position:absolute;left:12px;top:8px;color:var(--muted)}
+.kk-search-wrapper .kk-search{padding-left:40px}
+.kk-topbar-right .kk-notif{position:relative}
+.kk-badge{position:absolute;top:-6px;right:-6px;background:var(--accent);color:#fff;border-radius:999px;padding:2px 6px;font-size:11px}
+.kk-user-btn{display:flex;align-items:center;gap:8px;border:0;background:transparent}
+.kk-avatar{width:36px;height:36px;border-radius:999px;background:linear-gradient(135deg,var(--brand-100),var(--brand-300));display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:var(--brand-700)}
+.kk-user-menu{position:absolute;right:12px;top:56px;z-index:50;min-width:160px}
+
+/* make topbar more compact on small screens */
+@media(max-width:900px){
+  .kk-topbar-center{display:none}
+  .kk-brand-sub{display:none}
+}
+
