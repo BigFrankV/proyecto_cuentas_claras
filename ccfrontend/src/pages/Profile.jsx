@@ -54,11 +54,11 @@ export default function Profile() {
             </div>
             <div className="col-12 mb-2">
               <strong>Comunidad ID:</strong>
-              <div className="text-muted">{(user as any).comunidad_id ?? ((user as any).comunidadId ?? '—')}</div>
+              <div className="text-muted">{user?.comunidad_id ?? user?.comunidadId ?? '—'}</div>
             </div>
             <div className="col-12">
               <strong>Super admin:</strong>
-              <div className="text-muted">{(user as any).is_superadmin ? 'Sí' : 'No'}</div>
+              <div className="text-muted">{user?.is_superadmin ? 'Sí' : 'No'}</div>
             </div>
           </div>
 
@@ -101,11 +101,11 @@ export default function Profile() {
 
 function TwoFactorCard() {
   const [loading, setLoading] = useState(false)
-  const [qr, setQr] = useState<string | null>(null)
-  const [secret, setSecret] = useState<string | null>(null)
+  const [qr, setQr] = useState(null)
+  const [secret, setSecret] = useState(null)
   const [code, setCode] = useState('')
   const [disableCode, setDisableCode] = useState('')
-  const [message, setMessage] = useState<string | null>(null)
+  const [message, setMessage] = useState(null)
 
   const onSetup = async () => {
     setLoading(true); setMessage(null)
@@ -113,7 +113,7 @@ function TwoFactorCard() {
       const res = await authApi.setup2fa()
       setQr(res.qr || null)
       setSecret(res.base32 || null)
-    } catch (err: any) {
+    } catch (err) {
       setMessage(err?.response?.data?.message || 'Error al generar secreto')
     } finally { setLoading(false) }
   }
@@ -125,7 +125,7 @@ function TwoFactorCard() {
       await authApi.enable2fa({ base32: secret, code })
       setMessage('2FA activado correctamente')
       setQr(null); setSecret(null); setCode('')
-    } catch (err: any) {
+    } catch (err) {
       setMessage(err?.response?.data?.message || 'Código inválido')
     } finally { setLoading(false) }
   }
@@ -171,7 +171,7 @@ function TwoFactorCard() {
               await authApi.disable2fa({ code: disableCode })
               setMessage('2FA desactivado')
               setDisableCode('')
-            } catch (err: any) {
+            } catch (err) {
               setMessage(err?.response?.data?.message || 'No se pudo desactivar')
             } finally { setLoading(false) }
           }}>Desactivar 2FA</button>

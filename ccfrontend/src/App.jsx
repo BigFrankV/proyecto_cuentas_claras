@@ -32,7 +32,7 @@ import UtilPage from './pages/domains/Util'
 
 import Layout from './layout/Layout'
 
-function Protected({ children }: { children: JSX.Element }) {
+function Protected({ children }) {
   const { isAuthenticated } = useAuth()
   if (!isAuthenticated) return <Navigate to="/login" replace />
   return <Layout>{children}</Layout>

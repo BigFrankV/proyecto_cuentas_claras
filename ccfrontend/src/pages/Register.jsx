@@ -7,15 +7,15 @@ export default function Register() {
   const { register } = useAuth()
   const [form, setForm] = useState({ username: '', email: '', password: '' })
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState(null)
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
     setError(null); setLoading(true)
     try {
       await register(form)
       nav('/login')
-    } catch (err: any) {
+    } catch (err) {
       setError(err?.response?.data?.message || 'No se pudo crear la cuenta')
     } finally {
       setLoading(false)

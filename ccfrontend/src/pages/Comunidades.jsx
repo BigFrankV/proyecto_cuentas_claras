@@ -31,7 +31,7 @@ export default function Comunidades() {
                 {isLoading && <tr><td colSpan={2} className="text-center py-4">Cargando…</td></tr>}
                 {error && <tr><td colSpan={2} className="text-center text-danger py-4">Error al cargar</td></tr>}
                 {!isLoading && !error && items?.length === 0 && <tr><td colSpan={2} className="text-center text-muted py-4">Sin comunidades</td></tr>}
-                {items?.map((c: any) => (
+                {items?.map(c => (
                   <tr key={c.id}>
                     <td><span className="badge text-bg-primary">{c.id}</span></td>
                     <td>{c.nombre || c.name || `Comunidad #${c.id}`}</td>

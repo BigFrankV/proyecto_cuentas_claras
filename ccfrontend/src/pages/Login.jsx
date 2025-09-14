@@ -8,12 +8,12 @@ export default function Login() {
   const { login, completeTwoFactor } = useAuth()
   const [form, setForm] = useState({ identifier: '', password: '' })
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [apiState, setApiState] = useState<{ status: 'idle' | 'loading' | 'success' | 'error'; message: string }>({ status: 'idle', message: '' })
-  const [twoFactor, setTwoFactor] = useState<{ required: boolean; tempToken?: string } | null>(null)
+  const [error, setError] = useState(null)
+  const [apiState, setApiState] = useState({ status: 'idle', message: '' })
+  const [twoFactor, setTwoFactor] = useState(null)
   const [code, setCode] = useState('')
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
     setError(null); setLoading(true)
     setApiState({ status: 'loading', message: 'Enviando credenciales...' })
@@ -22,7 +22,6 @@ export default function Login() {
         ? { email: form.identifier, password: form.password }
         : { username: form.identifier, password: form.password }
       const res = await login(payload)
-      // if backend requires 2FA, it should return { twoFactorRequired: true, tempToken }
       if (res?.twoFactorRequired) {
         setTwoFactor({ required: true, tempToken: res.tempToken })
         setApiState({ status: 'idle', message: 'Se requiere código de dos pasos' })
@@ -30,7 +29,7 @@ export default function Login() {
         setApiState({ status: 'success', message: 'Autenticado correctamente, redirigiendo…' })
         setTimeout(() => nav('/'), 400)
       }
-    } catch (err: any) {
+    } catch (err) {
       const msg = err?.response?.data?.message || 'No se pudo iniciar sesión'
       setError(msg)
       setApiState({ status: 'error', message: msg })
@@ -39,16 +38,16 @@ export default function Login() {
     }
   }
 
-  const submit2fa = async (e: React.FormEvent) => {
+  const submit2fa = async (e) => {
     e.preventDefault()
     if (!twoFactor?.tempToken) return
     setApiState({ status: 'loading', message: 'Verificando código…' })
     try {
       if (!completeTwoFactor) throw new Error('No 2FA handler')
-      await completeTwoFactor(twoFactor.tempToken!, code)
+      await completeTwoFactor(twoFactor.tempToken, code)
       setApiState({ status: 'success', message: 'Verificado — redirigiendo…' })
       setTimeout(() => nav('/'), 400)
-    } catch (err: any) {
+    } catch (err) {
       const msg = err?.response?.data?.message || err?.message || 'Código inválido'
       setApiState({ status: 'error', message: msg })
     }

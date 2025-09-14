@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { api } from '@/http/axios'
 
 export default function ApiExplorer() {
-  const [method, setMethod] = useState<'GET'|'POST'|'PATCH'|'DELETE'>('GET')
-  const [url, setUrl] = useState<string>('/util/health')
-  const [body, setBody] = useState<string>('{}')
-  const [resp, setResp] = useState<string>('')
+  const [method, setMethod] = useState('GET')
+  const [url, setUrl] = useState('/util/health')
+  const [body, setBody] = useState('{}')
+  const [resp, setResp] = useState('')
 
   const run = async () => {
     try {
@@ -19,7 +19,7 @@ export default function ApiExplorer() {
         data = r.data
       }
       setResp(JSON.stringify(data, null, 2))
-    } catch (e: any) {
+    } catch (e) {
       setResp(e?.response?.data?.message || e?.message || 'Error')
     }
   }
@@ -34,7 +34,7 @@ export default function ApiExplorer() {
           <div className="row g-3">
             <div className="col-12 col-md-3">
               <label className="form-label">Método</label>
-              <select className="form-select" value={method} onChange={(e) => setMethod(e.target.value as any)}>
+              <select className="form-select" value={method} onChange={(e) => setMethod(e.target.value)}>
                 <option>GET</option>
                 <option>POST</option>
                 <option>PATCH</option>
