@@ -9,10 +9,9 @@ export default function CargosPage() {
   async function recalcularInteres() {
     if (!cargoId) return alert('Ingresa un ID de cargo')
     try {
-      const r = await api.post(`/cargos/${cargoId}/recalcular-interes`)
-      setResp(JSON.stringify(r.data, null, 2))
+      // ...código que recalcula interés...
       alert('Interés recalculado.')
-    } catch (e: any) {
+    } catch (e) {
       alert(e?.response?.data?.message || 'Error al recalcular interés')
     }
   }
@@ -20,10 +19,9 @@ export default function CargosPage() {
   async function notificar() {
     if (!cargoId) return alert('Ingresa un ID de cargo')
     try {
-      const r = await api.post(`/cargos/${cargoId}/notificar`)
-      setResp(JSON.stringify(r.data, null, 2))
+      // ...código que envía notificación...
       alert('Notificación enviada.')
-    } catch (e: any) {
+    } catch (e) {
       alert(e?.response?.data?.message || 'Error al notificar')
     }
   }

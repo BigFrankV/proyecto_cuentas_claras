@@ -8,14 +8,64 @@
   --kk-primary: #0b5ed7;
 }
 
-.kk-app{min-height:100vh;display:flex;flex-direction:column;background:var(--kk-bg);font-family:Inter,system-ui,Arial}
+/* asegurar layout como flex para que el sidebar no se sobreponga */
+.kk-app {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* sidebar ocupa espacio en el layout (no overlay) */
+.kk-sidebar {
+  flex: 0 0 240px;
+  width: 240px;
+  position: relative; /* importante: no fixed/absolute */
+  z-index: 1;
+}
+
+/* variante colapsada (si se usa más adelante) */
+.kk-sidebar.collapsed {
+  flex: 0 0 56px;
+  width: 56px;
+  overflow: hidden;
+}
+
+/* main toma el espacio restante */
+.kk-main {
+  flex: 1 1 auto;
+  min-width: 0; /* evita overflow horizontal de columnas */
+  background: var(--bg-main, #fff);
+}
+
+/* topbar dentro del main, siempre visible encima del contenido */
+.kk-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--topbar-bg, #fff);
+}
+
+/* espacio interno para el contenedor principal */
+.kk-main > .p-3 {
+  padding-top: 1rem;
+}
+
+/* móvil: si quieres que el sidebar sea overlay en pantallas pequeñas */
+@media (max-width: 992px) {
+  .kk-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 1040;
+  }
+  .kk-main { margin-left: 0; }
+}
+
 .kk-topbar{height:56px;background:var(--kk-surface);display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid rgba(16,24,40,0.04);gap:12px}
 .kk-topbar .kk-brand{font-weight:600;color:var(--kk-primary);margin-left:8px}
 .kk-topbar-center{flex:1;display:flex;justify-content:center}
 .kk-search{width:60%;max-width:540px;padding:8px 12px;border-radius:8px;border:1px solid rgba(16,24,40,0.06);background:#fff}
 .kk-body{display:flex;flex:1;gap:var(--kk-gap);padding:20px}
-.kk-sidebar{width:var(--kk-sidebar-w);flex:0 0 var(--kk-sidebar-w);}
-.kk-main{flex:1;min-height:60vh}
 .kk-panel{width:var(--kk-panel-w);flex:0 0 var(--kk-panel-w);background:transparent}
 .kk-footer{text-align:center;padding:12px;color:var(--kk-muted);font-size:13px}
 

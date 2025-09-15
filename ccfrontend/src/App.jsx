@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
@@ -33,7 +33,9 @@ import UtilPage from './pages/domains/Util'
 import Layout from './layout/Layout'
 
 function Protected({ children }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, bootstrapped } = useAuth()
+  // esperar a que auth se inicialice
+  if (!bootstrapped) return <div className="text-center p-4">Cargando sesión…</div>
   if (!isAuthenticated) return <Navigate to="/login" replace />
   return <Layout>{children}</Layout>
 }

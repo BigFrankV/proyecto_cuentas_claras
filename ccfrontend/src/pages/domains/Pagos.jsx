@@ -7,26 +7,23 @@ export default function PagosPage() {
   const [body, setBody] = useState<string>('{"monto": 10000, "fecha": "2025-01-01"}')
   const [resp, setResp] = useState<string>('')
 
-  async function aplicar() {
-    if (!pagoId) return alert('Ingresa un ID de pago')
+  const onApplyPago = async () => {
     try {
       const payload = JSON.parse(body || '{}')
       const r = await api.post(`/pagos/${pagoId}/aplicar`, payload)
       setResp(JSON.stringify(r.data, null, 2))
       alert('Pago aplicado.')
-    } catch (e: any) {
+    } catch (e) {
       alert(e?.response?.data?.message || 'Error al aplicar pago')
     }
   }
 
-  async function reversar() {
-    if (!pagoId) return alert('Ingresa un ID de pago')
-    if (!confirm('¿Reversar este pago?')) return
+  const onReversePago = async () => {
     try {
       const r = await api.post(`/pagos/${pagoId}/reversar`)
       setResp(JSON.stringify(r.data, null, 2))
-      alert('Pago reversado.')
-    } catch (e: any) {
+      alert('Pago revertido.')
+    } catch (e) {
       alert(e?.response?.data?.message || 'Error al reversar')
     }
   }
@@ -52,10 +49,10 @@ export default function PagosPage() {
             <label className="form-label mt-3">Body (aplicar)</label>
             <textarea className="form-control" rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
             <div className="d-flex gap-2 mt-2 flex-wrap">
-              <button className="btn btn-primary btn-sm" onClick={aplicar}>
+              <button className="btn btn-primary btn-sm" onClick={onApplyPago}>
                 <span className="material-icons align-middle me-1">done_all</span> Aplicar
               </button>
-              <button className="btn btn-outline-danger btn-sm" onClick={reversar}>
+              <button className="btn btn-outline-danger btn-sm" onClick={onReversePago}>
                 <span className="material-icons align-middle me-1">undo</span> Reversar
               </button>
             </div>

@@ -21,9 +21,9 @@ export default function CategoriasGastoPage() {
           title="Categorías de Gasto"
           list={{ url: '/categorias-gasto/comunidad/1' }}
           create={{ url: '/categorias-gasto/comunidad/1' }}
-          getOne={{ url: (id: any) => `/categorias-gasto/${id}` }}
-          update={{ url: (id: any) => `/categorias-gasto/${id}` }}
-          remove={{ url: (id: any) => `/categorias-gasto/${id}` }}
+          getOne={{ url: (id) => `/categorias-gasto/${id}` }}
+          update={{ url: (id) => `/categorias-gasto/${id}` }}
+          remove={{ url: (id) => `/categorias-gasto/${id}` }}
           exampleCreateBody={{ nombre: 'Gastos Comunes' }}
           search={search}
         />

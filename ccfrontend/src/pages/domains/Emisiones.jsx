@@ -3,15 +3,15 @@ import { api } from '@/http/axios'
 import GenericCrud from '@/components/GenericCrud'
 
 export default function EmisionesPage() {
-  const [accionId, setAccionId] = useState<string>('')
-  const [preview, setPreview] = useState<string>('')
+  const [accionId, setAccionId] = useState('')
+  const [preview, setPreview] = useState('')
 
   async function previsualizar() {
     if (!accionId) return alert('Ingresa un ID de emisión')
     try {
       const r = await api.get(`/emisiones/${accionId}/previsualizar-prorrateo`)
       setPreview(JSON.stringify(r.data, null, 2))
-    } catch (e: any) {
+    } catch (e) {
       alert(e?.response?.data?.message || 'Error al previsualizar')
     }
   }
@@ -22,7 +22,7 @@ export default function EmisionesPage() {
     try {
       const r = await api.post(`/emisiones/${accionId}/generar-cargos`)
       alert('Cargos generados.')
-    } catch (e: any) {
+    } catch (e) {
       alert(e?.response?.data?.message || 'Error al generar cargos')
     }
   }
