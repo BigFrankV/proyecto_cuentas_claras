@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../auth/AuthContext'
+import './layout.css'
 
 export default function Topbar({ onToggleSidebar }) {
   const { isAuthenticated, logout, user } = useAuth()
@@ -16,17 +17,16 @@ export default function Topbar({ onToggleSidebar }) {
   }, [])
 
   return (
-    <header className="kk-topbar d-flex align-items-center p-2">
-      <button className="btn btn-ghost me-2" onClick={onToggleSidebar} aria-label="Toggle menu">
-        <span className="material-icons">menu</span>
+    <header className="topbar">
+      <button
+        type="button"
+        className="menu-toggle"
+        aria-label="Alternar menú"
+        onClick={onToggleSidebar}
+      >
+        ☰
       </button>
 
-      <div className="flex-grow-1" />
-
-      <div className="d-flex align-items-center gap-2" ref={userRef}>
-        <div className="small text-muted">{user?.username}</div>
-        {isAuthenticated && <button className="btn btn-sm btn-outline-danger" onClick={logout}>Salir</button>}
-      </div>
     </header>
   )
 }

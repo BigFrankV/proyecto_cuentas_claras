@@ -1,68 +1,58 @@
-import { useState } from 'react'
+// ...existing code...ect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { api } from '@/http/axios'
-import GenericCrud from '@/components/GenericCrud'
 
 export default function PagosPage() {
-  const [pagoId, setPagoId] = useState<string>('')
-  const [body, setBody] = useState<string>('{"monto": 10000, "fecha": "2025-01-01"}')
-  const [resp, setResp] = useState<string>('')
+  const [pagos, setPagos] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const onApplyPago = async () => {
-    try {
-      const payload = JSON.parse(body || '{}')
-      const r = await api.post(`/pagos/${pagoId}/aplicar`, payload)
-      setResp(JSON.stringify(r.data, null, 2))
-      alert('Pago aplicado.')
-    } catch (e) {
-      alert(e?.response?.data?.message || 'Error al aplicar pago')
-    }
-  }
+  useEffect(() => {
+    let mounted = true
 
-  const onReversePago = async () => {
-    try {
-      const r = await api.post(`/pagos/${pagoId}/reversar`)
-      setResp(JSON.stringify(r.data, null, 2))
-      alert('Pago revertido.')
-    } catch (e) {
-      alert(e?.response?.data?.message || 'Error al reversar')
+    const tryEndpoints = async (paths) => {
+      for (const p of paths) {
+        try {
+          const r = await api.get(p)
+          if (r && r.status >= 200 && r.status < 300) return { ok: true, data: r.data, path: p }
+        } catch (e) {
+          if (e?.response?.status === 404) continue
+          return { ok: false, err: e, tried: p }
+        }
+      }
+      return { ok: false, err: new Error('Ningún endpoint devolvió datos'), tried: paths }
     }
-  }
+
+    ;(async () => {
+      try {
+        const endpoints = ['/mod/pagos', '/pagos', '/mod/pagos/comunidad/1', '/pagos/comunidad/1']
+        const res = await tryEndpoints(endpoints)
+        if (!mounted) return
+        if (res.ok) setPagos(res.data)
+        else setError(res.err)
+      } catch (err) {
+        if (mounted) setError(err)
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    })()
+
+    return () => { mounted = false }
+  }, [])
+
+  if (loading) return <div>Cargando pagos…</div>
+  if (error) return <div className="text-danger">Error al cargar pagos: {error?.message || 'desconocido'}</div>
 
   return (
-    <div className="vstack gap-3">
-      <GenericCrud
-        title="Pagos"
-        list={{ url: '/pagos/comunidad/1' }}
-        create={{ url: '/pagos/comunidad/1' }}
-        getOne={{ url: (id) => `/pagos/${id}` }}
-        update={{ url: (id) => `/pagos/${id}` }}
-        remove={{ url: (id) => `/pagos/${id}` }}
-        exampleCreateBody={{"monto":10000,"fecha":"2025-01-01"}}
-      />
-
-      <div className="card p-3">
-        <h5 className="mb-3">Acciones</h5>
-        <div className="row g-3">
-          <div className="col-12 col-md-4">
-            <label className="form-label">ID de pago</label>
-            <input className="form-control" value={pagoId} onChange={(e) => setPagoId(e.target.value)} placeholder="ej: 321" />
-            <label className="form-label mt-3">Body (aplicar)</label>
-            <textarea className="form-control" rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
-            <div className="d-flex gap-2 mt-2 flex-wrap">
-              <button className="btn btn-primary btn-sm" onClick={onApplyPago}>
-                <span className="material-icons align-middle me-1">done_all</span> Aplicar
-              </button>
-              <button className="btn btn-outline-danger btn-sm" onClick={onReversePago}>
-                <span className="material-icons align-middle me-1">undo</span> Reversar
-              </button>
-            </div>
-          </div>
-          <div className="col-12 col-md-8">
-            <label className="form-label">Respuesta</label>
-            <pre className="bg-light p-3 rounded" style={{minHeight: 160}}>{resp || 'Ejecuta una acción para ver aquí la respuesta.'}</pre>
-          </div>
-        </div>
-      </div>
+    <div>
+      <h3>Pagos</h3>
+      {Array.isArray(pagos) ? (
+        <ul>
+          {pagos.map(p => <li key={p.id || JSON.stringify(p)}>{p.descripcion || p.nombre || JSON.stringify(p)}</li>)}
+        </ul>
+      ) : (
+        <pre>{JSON.stringify(pagos, null, 2)}</pre>
+      )}
     </div>
   )
 }

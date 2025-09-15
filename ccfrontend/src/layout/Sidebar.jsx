@@ -1,47 +1,58 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
+import './layout.css'
 
-// layout styles are loaded globally via styles/index.css
+const items = [
+  { section: 'PRINCIPAL', links: [
+    { to: '/', label: 'Panel' },
+    { to: '/comunidades', label: 'Comunidades' },
+    { to: '/profile', label: 'Perfil' }
+  ]},
+  { section: 'MÓDULOS', links: [
+    { to: '/mod/gastos', label: 'Gastos' },
+    { to: '/mod/multas', label: 'Multas' },
+    { to: '/mod/pagos',  label: 'Pagos' }
+  ]}
+]
 
-function Section({ title, children }) {
+const Sidebar = ({ open = true, onNavigate }) => {
+  const handleClick = () => {
+    if (typeof onNavigate === 'function' && window.innerWidth <= 900) onNavigate()
+  }
+
   return (
-    <div className="kk-section mb-3">
-      <div className="kk-section-title fw-semibold mb-2">{title}</div>
-      <ul className="kk-nav list-unstyled ps-0">{children}</ul>
-    </div>
-  )
-}
+    <aside className={`sidebar ${open ? 'open' : 'closed'}`}>
+      <div className="sidebar-inner">
+        <div className="sidebar-brand">
+          <span className="brand-icon">🏠</span>
+          <span className="brand-text">Cuentas Claras</span>
+        </div>
 
-export default function Sidebar({ collapsed }) {
-  return (
-    <aside className={`kk-sidebar p-3 ${collapsed ? 'collapsed' : ''}`}>
-      <div className="kk-sidebar-brand mb-3">
-        <Link to="/" className="text-decoration-none d-flex align-items-center gap-2">
-          <span className="material-icons kk-logo-mark">payments</span>
-          {!collapsed && (
-            <div>
-              <div className="kk-brand">Cuentas Claras</div>
-              <div className="kk-brand-sub small text-muted">Admin</div>
+        <nav className="sidebar-nav">
+          {items.map((block, i) => (
+            <div key={i}>
+              <h6 className="sidebar-section">{block.section}</h6>
+              <ul>
+                {block.links.map(l => (
+                  <li key={l.to}>
+                    <NavLink
+                      to={l.to}
+                      className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
+                      onClick={handleClick}
+                    >
+                      {l.label}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
             </div>
-          )}
-        </Link>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">v0.1 • Cuentas Claras</div>
       </div>
-
-      <nav>
-        <Section title="Principal">
-          <li><Link to="/" className="kk-nav-link d-block py-1">Panel</Link></li>
-          <li><Link to="/comunidades" className="kk-nav-link d-block py-1">Comunidades</Link></li>
-          <li><Link to="/profile" className="kk-nav-link d-block py-1">Perfil</Link></li>
-        </Section>
-
-        <Section title="Módulos">
-          <li><Link to="/mod/gastos" className="kk-nav-link d-block py-1">Gastos</Link></li>
-          <li><Link to="/mod/multas" className="kk-nav-link d-block py-1">Multas</Link></li>
-          <li><Link to="/mod/pagos" className="kk-nav-link d-block py-1">Pagos</Link></li>
-        </Section>
-      </nav>
-
-      <div className="kk-sidebar-footer mt-4 small text-muted">{collapsed ? 'v0.1' : 'v0.1 • Cuentas Claras'}</div>
     </aside>
   )
 }
+
+export default Sidebar
