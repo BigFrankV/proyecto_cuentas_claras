@@ -76,7 +76,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="container my-5 kk-main">
+      <main className="container-fluid my-5 kk-main">
         <Routes>
           <Route path="/" element={<Protected><Dashboard /></Protected>} />
           <Route path="/comunidades" element={<Protected><Comunidades /></Protected>} />
