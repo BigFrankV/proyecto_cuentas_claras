@@ -39,12 +39,12 @@ export default function GastosPage() {
       ep.listAllMod
     ]
 
-    // endpoints para personas (usuarios) — probar primero sin /mod
+    // pedir personas: probar primero /personas (tu backend expone /personas)
     const personEndpoints = [
+      `/personas`, // <-- primera opción válida en tu backend
       `/personas/comunidad/${comunidadId}`,
-      `/mod/personas/comunidad/${comunidadId}`,
-      `/personas`,
-      `/mod/personas`
+      `/mod/personas`,
+      `/mod/personas/comunidad/${comunidadId}`
     ]
 
     try {
@@ -84,23 +84,41 @@ export default function GastosPage() {
 
       const [gastos, personas] = await Promise.all([gastosPromise, personasPromise])
 
-      // construir mapa id -> nombre para lookup rápido
+      // construir mapa id -> nombre para lookup rápido, normalizando campos reales del backend
       const personMap = {}
       personas.forEach(u => {
-        const id = u.id ?? u._id ?? u.persona_id
-        personMap[id] = u.nombre || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email || `#${id}`
+        const id = u.id ?? u._id ?? u.persona_id ?? u.personaId
+        const nombres = u.nombres ?? u.nombres ?? u.nombre ?? u.firstName
+        const apellidos = u.apellidos ?? u.apellido ?? u.lastName
+        const display =
+          (nombres && apellidos) ? `${nombres} ${apellidos}` :
+          (nombres || u.nombre || u.name || u.email) ||
+          `#${id}`
+        if (id !== undefined) personMap[String(id)] = display
       })
 
-      // adjuntar nombre_usuario en cada gasto usando prioridad:
-      // gasto.usuario || gasto.persona (objeto), luego campos id (usuario_id / persona_id)
+      // helper para extraer id / nombre desde el gasto (varias variantes)
+      const extractUserId = (g) => {
+        const usuarioObj = g.usuario ?? g.persona ?? g.user ?? g.beneficiario ?? g.owner
+        if (usuarioObj) return usuarioObj.id ?? usuarioObj._id ?? usuarioObj.persona_id ?? usuarioObj.personaId
+        return g.usuario_id ?? g.persona_id ?? g.user_id ?? g.owner_id ?? g.personaId ?? g.usuarioId ?? g.userId
+      }
+      const nameFromObj = (obj) => {
+        if (!obj) return null
+        const n = obj.nombres ?? obj.nombre ?? obj.name ?? obj.firstName
+        const a = obj.apellidos ?? obj.apellido ?? obj.lastName
+        if (n && a) return `${n} ${a}`
+        return n || obj.email || obj.username || null
+      }
+
       const withUserName = gastos.map(g => {
-        const usuarioObj = g.usuario ?? g.persona ?? g.user
-        const id = g.usuario_id ?? g.persona_id ?? g.user_id ?? (usuarioObj && (usuarioObj.id ?? usuarioObj._id))
-        const nombreFromObj = usuarioObj && (usuarioObj.nombre || usuarioObj.name || `${usuarioObj.firstName || ''} ${usuarioObj.lastName || ''}`.trim())
-        return {
-          ...g,
-          usuario_nombre: nombreFromObj || (id ? personMap[id] : undefined) || (g.usuario_nombre || g.usuarioName)
-        }
+        const usuarioObj = g.usuario ?? g.persona ?? g.user ?? g.beneficiario ?? g.owner
+        const id = extractUserId(g)
+        const nombreFromObj = nameFromObj(usuarioObj)
+        const lookup = id !== undefined ? personMap[String(id)] : undefined
+        const usuarioNombre = nombreFromObj || lookup || (g.usuario_nombre || g.usuarioName) || '—'
+        // console.debug('Gasto', g.id, 'resolved user id', id, 'name', usuarioNombre)
+        return { ...g, usuario_nombre: usuarioNombre }
       })
 
       setItems(withUserName)

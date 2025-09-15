@@ -235,11 +235,25 @@ export default function GastoForm ({ comunidadId: propComunidadId, onCreated, co
             <label className="form-label small">Usuario / Propietario</label>
             <select name="usuarioId" value={form.usuarioId || ''} onChange={handleChange} className="form-select">
               <option value="">{users.length ? '-- Seleccione usuario --' : 'No hay usuarios cargados'}</option>
-              {users.map(u => (
-                <option key={u.id || u._id} value={u.id ?? u._id}>
-                  {u.nombre || `${u.firstName || u.nombre} ${u.lastName || ''}` || u.email || `#${u.id ?? u._id}`}
-                </option>
-              ))}
+              {users
+                .filter(u => {
+                  const cid = comunidadId
+                  return (
+                    u.comunidadId === cid ||
+                    u.comunidad_id === cid ||
+                    (u.comunidad && (u.comunidad.id === cid || u.comunidad === cid)) ||
+                    (Array.isArray(u.comunidades) && u.comunidades.some(c => (c.id ?? c) === cid)) ||
+                    // fallback: incluir si no hay info de comunidades
+                    (typeof u.comunidadId === 'undefined' && typeof u.comunidad === 'undefined' && typeof u.comunidades === 'undefined')
+                  )
+                })
+                .map(u => {
+                  const id = u.id ?? u._id ?? u.persona_id
+                  const nombres = u.nombres ?? u.nombre ?? u.firstName
+                  const apellidos = u.apellidos ?? u.lastName
+                  const label = (nombres && apellidos) ? `${nombres} ${apellidos}` : (nombres || u.name || u.email || `#${id}`)
+                  return <option key={id} value={id}>{label}</option>
+                })}
             </select>
           </div>
         )}
