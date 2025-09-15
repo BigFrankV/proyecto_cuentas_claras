@@ -25,8 +25,38 @@ const { authorize } = require('../middleware/authorize');
  *         description: Lista de comunidades
  */
 router.get('/', authenticate, async (req, res) => {
-  const [rows] = await db.query('SELECT id, razon_social, rut, dv, direccion, email_contacto FROM comunidad LIMIT 200');
-  res.json(rows);
+  try {
+    const user = req.user || {}
+
+    if (user.is_superadmin) {
+      const [rows] = await db.query(
+        `SELECT id, razon_social, rut, dv, direccion, email_contacto, telefono_contacto
+         FROM comunidad ORDER BY id`
+      )
+      return res.json(rows)
+    }
+
+    // prefer persona_id en token, si no buscar en tabla usuario
+    let personaId = user.persona_id || user.personaId || null
+    if (!personaId && user.id) {
+      const [urows] = await db.query('SELECT persona_id FROM usuario WHERE id = ?', [user.id])
+      personaId = urows?.[0]?.persona_id || null
+    }
+    if (!personaId) return res.json([])
+
+    const [rows] = await db.query(
+      `SELECT DISTINCT c.id, c.razon_social, c.rut, c.dv, c.direccion, c.email_contacto, c.telefono_contacto
+       FROM comunidad c
+       JOIN membresia_comunidad m ON m.comunidad_id = c.id
+       WHERE m.persona_id = ? AND m.activo = 1
+       ORDER BY c.id`,
+      [personaId]
+    )
+    res.json(rows)
+  } catch (err) {
+    console.error('GET /comunidades error', err)
+    res.status(500).json({ error: 'server error' })
+  }
 });
 
 /**
