@@ -1,7 +1,6 @@
-// ...existing code...
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import * as authApi from './auth.api'
 import { api, setAccessToken, getAccessToken, clearAccessToken } from '@/http/axios'
+import * as authApi from './auth.api'
 
 const Ctx = createContext({})
 
@@ -12,36 +11,76 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     (async () => {
       try {
-        // Si hay token en storage, fijarlo primero para que axios lo use en las llamadas posteriores
         const token = getAccessToken()
         if (token) {
+          // Si hay token local, usarlo y pedir /auth/me
           setAccessToken(token)
-        } else {
-          // Intentar refresh por cookie (si el backend lo soporta).
-          // Forzar withCredentials aquí para enviar cookie aunque axios default no lo tenga.
+          const me = await authApi.me()
+          setUser(me)
+        } else if (import.meta.env.VITE_ENABLE_REFRESH === 'true') {
+          // Intentar refresh solo si explícitamente habilitado por env
           try {
             await api.post('/auth/refresh', null, { withCredentials: true })
+            const me = await authApi.me()
+            setUser(me)
           } catch (e) {
-            // Si refresh devuelve 401 (no hay sesión) simplemente continuar sin token.
-            if (e?.response?.status !== 401) {
-              // otros errores limpiamos token por seguridad
-              clearAccessToken()
-            }
-            // no lanzar para que el proceso continue y bootstrapping finalice
+            // manejar 404/400/401 sin romper el bootstrapping
+            console.debug('refresh skipped/failed', e?.response?.status)
+            clearAccessToken()
+            setUser(null)
           }
+        } else {
+          // no token y refresh deshabilitado -> anónimo
+          setUser(null)
         }
-
-        // Intentar obtener usuario; si falla se captura abajo
-        const userData = await authApi.me()
-        setUser(userData)
       } catch (err) {
-        // En caso de error (me falla o no hay sesión) asegurar estado limpio
         clearAccessToken()
         setUser(null)
       } finally {
         setBootstrapped(true)
       }
     })()
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        // intentamos refrescar token (si tu flow lo usa)
+        try {
+          await api.post('/auth/refresh') // si tu backend necesita body, ajusta
+        } catch (e) {
+          // refresh falló -> continuar, /auth/me devolverá 401 si no hay token válido
+          console.debug('auth refresh failed', e?.response?.status)
+        }
+
+        // obtener datos del usuario
+        const meRes = await api.get('/auth/me')
+        const me = meRes.data || {}
+
+        // cargar membresías si tenemos persona_id
+        try {
+          const pid = me.persona_id || me.personaId
+          if (pid) {
+            const mres = await api.get('/membresias', { params: { persona_id: pid } })
+            me.membresias = Array.isArray(mres.data) ? mres.data : (mres.data?.items || [])
+          } else {
+            me.membresias = []
+          }
+        } catch (e) {
+          console.warn('no se pudieron cargar membresías', e?.response?.status)
+          me.membresias = me.membresias || []
+        }
+
+        if (!mounted) return
+        setUser(me)
+      } catch (err) {
+        // token inválido / no autenticado
+        console.debug('/auth/me no autorizado', err?.response?.status)
+        setUser(null)
+      }
+    })()
+    return () => { mounted = false }
   }, [])
 
   const value = useMemo(() => ({
@@ -78,4 +117,3 @@ export const AuthProvider = ({ children }) => {
 }
 
 export const useAuth = () => useContext(Ctx)
-// ...existing code...

@@ -4,13 +4,16 @@ import { api } from '@/http/axios'
 import { useAuth } from '@/auth/AuthContext'
 import MultaForm from './MultaForm'
 
-export default function MultasPage() {
+export default function MultasPage({ comunidadId: propComunidadId }) {
+  const { user } = useAuth() || {}
+  const comunidadId = propComunidadId || user?.comunidadId || user?.comunidad?.id
+
+  const isAdmin = user?.is_superadmin || (Array.isArray(user?.membresias) && user.membresias.some(m => m.rol === 'admin' && (m.comunidad_id == comunidadId || m.comunidadId == comunidadId)))
+
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [showForm, setShowForm] = useState(false)
-  const { user } = useAuth()
-  const isAdmin = user?.roles?.includes('admin') || user?.is_superadmin
 
   // obtener unidadId desde el user (no tocar backend)
   const unidadId =

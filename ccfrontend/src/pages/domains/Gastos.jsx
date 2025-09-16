@@ -3,20 +3,19 @@ import { api } from '@/http/axios'
 import { useAuth } from '@/auth/AuthContext'
 import GastoForm from './GastoForm'
 
-export default function GastosPage() {
+export default function GastosPage({ comunidadId: propComunidadId }) {
+  const { user } = useAuth() || {}
+  const comunidadId = propComunidadId || user?.comunidadId || user?.membresias?.[0]?.comunidad_id
+
+  const isAdminInCommunity = Boolean(
+    user?.is_superadmin ||
+    (Array.isArray(user?.membresias) && user.membresias.some(m => String(m.comunidad_id) === String(comunidadId) && (m.rol === 'admin' || m.rol === 'propietario')))
+  )
+
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [showForm, setShowForm] = useState(false) // formulario oculto por defecto
-  const { user } = useAuth()
-  const isAdmin = user?.roles?.includes('admin') || user?.is_superadmin
-
-  // determinar comunidad del usuario (fallback a 1 si no existe)
-  const comunidadId =
-    user?.comunidadId ||
-    user?.comunidad?.id ||
-    (Array.isArray(user?.comunidades) && user.comunidades[0]?.id) ||
-    1
 
   const chooseEndpoint = (method = 'get') => {
     // Probar primero las rutas sin /mod (el backend usa /gastos/comunidad/:id)
@@ -143,7 +142,7 @@ export default function GastosPage() {
     <div>
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h3>Gastos</h3>
-        {isAdmin && (
+        {isAdminInCommunity && (
           <button
             className="btn btn-primary"
             onClick={() => setShowForm(s => !s)}
@@ -178,7 +177,7 @@ export default function GastosPage() {
       )}
 
       {/* Mostrar formulario externo (GastoForm) cuando corresponde */}
-      {isAdmin && showForm && (
+      {isAdminInCommunity && showForm && (
         <div className="mt-4">
           <GastoForm comunidadId={comunidadId} onCreated={handleCreated} />
         </div>

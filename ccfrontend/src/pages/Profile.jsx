@@ -20,6 +20,14 @@ export default function Profile() {
     </div>
   )
 
+  // derivar email desde varias claves posibles que pueda devolver el backend
+  const emailToShow = user?.email
+    ?? user?.correo
+    ?? user?.mail
+    ?? user?.email_address
+    ?? user?.persona?.email
+    ?? '—'
+
   return (
     <div className="row g-3">
       <div className="col-12">
@@ -46,7 +54,7 @@ export default function Profile() {
           <div className="row">
             <div className="col-12 mb-2">
               <strong>Email:</strong>
-              <div className="text-muted">{user.email ?? '—'}</div>
+              <div className="text-muted">{emailToShow}</div>
             </div>
             <div className="col-12 mb-2">
               <strong>Roles:</strong>
@@ -88,7 +96,7 @@ export default function Profile() {
             <dd className="col-8">{user.id}</dd>
 
             <dt className="col-4">Email</dt>
-            <dd className="col-8">{user.email ?? '—'}</dd>
+            <dd className="col-8">{emailToShow}</dd>
 
             <dt className="col-4">Roles</dt>
             <dd className="col-8">{(user.roles || []).join(', ') || '—'}</dd>
