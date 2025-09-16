@@ -1,19 +1,90 @@
 version: '3.8'
+
 services:
+  # Frontend Application
   frontend:
     build:
       context: .
-      args:
-        - VITE_API_URL=${VITE_API_URL:-http://host.docker.internal:3000}
-    image: cuentas-claras-frontend:latest
+      dockerfile: Dockerfile
     ports:
-      - '5173:80'
+      - '5173:5173'
     environment:
-      - VITE_API_URL=${VITE_API_URL:-http://host.docker.internal:3000}
+      - NODE_ENV=production
+      - API_BASE_URL=http://backend:8000
+      - NEXT_PUBLIC_APP_NAME=Cuentas Claras
+      - NEXT_PUBLIC_ENVIRONMENT=production
+    depends_on:
+      - backend
+    networks:
+      - cuentas-claras-network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+  # Backend API (placeholder for when you have it)
+  backend:
+    image: cuentas-claras-backend:latest # Replace with your backend image
+    ports:
+      - '8000:8000'
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://user:password@db:5432/cuentas_claras
+    depends_on:
+      - db
+    networks:
+      - cuentas-claras-network
+    restart: unless-stopped
+    volumes:
+      - ./backend-logs:/app/logs
+
+  # Database
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=cuentas_claras
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - cuentas-claras-network
     restart: unless-stopped
 
-  # optional backend service placeholder - remove if you run backend separately
-  # backend:
-  #   image: your-backend-image
-  #   ports:
-  #     - '3000:3000'
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - cuentas-claras-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - cuentas-claras-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  cuentas-claras-network:
+    driver: bridge
