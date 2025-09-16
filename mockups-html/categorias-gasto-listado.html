@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Categorías de Gasto - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      .filter-section {
+        border-radius: var(--radius);
+        background-color: #fff;
+        box-shadow: var(--shadow-sm);
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      
+      .card-stats {
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      
+      .card-stats:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
+      }
+      
+      .card-stats .icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .table-container {
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        background-color: #fff;
+        overflow: hidden;
+      }
+      
+      .table-container .table {
+        margin-bottom: 0;
+      }
+      
+      .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: var(--color-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+      }
+      
+      .table-toolbar {
+        padding: 0.75rem 1.25rem;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      
+      @media (max-width: 576px) {
+        .table-toolbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        
+        .table-toolbar .btn-group {
+          margin-top: 0.5rem;
+        }
+      }
+      
+      .category-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 16px;
+      }
+      
+      .category-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+      }
+      
+      .view-switch .btn {
+        padding: 0.25rem 0.5rem;
+      }
+      
+      .color-badge {
+        width: 18px;
+        height: 18px;
+        border-radius: 3px;
+        display: inline-block;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+      
+      .category-item {
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background-color: #fff;
+      }
+      
+      .category-item .icon-container {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <!-- Mobile Navigation Bar -->
+    <nav class="navbar navbar-dark bg-primary d-flex d-lg-none">
+      <div class="container-fluid">
+        <button class="navbar-toggler border-0" type="button" id="toggle-sidebar">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand me-auto" href="dashboard.html">
+          <span class="material-icons align-middle me-1">apartment</span>
+          Cuentas Claras
+        </a>
+        <div class="dropdown">
+          <button class="btn btn-link text-white p-0" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="avatar">PC</div>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    
+    <!-- Backdrop for mobile sidebar -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+    
+    <!-- Sidebar -->
+    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidebar" id="sidebar" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+      <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+        <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+        <span class="fs-4">Cuentas Claras</span>
+      </a>
+      
+      <div class="d-flex align-items-center mb-3 px-2">
+        <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+        <div>
+          <span class="d-block text-white">Patricia Contreras</span>
+          <span class="small text-white-50">Administradora</span>
+        </div>
+      </div>
+      
+      <hr>
+      
+      <ul class="nav nav-sidebar flex-column mb-auto">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">domain</span>
+            <span>Comunidades</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="edificios-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">business</span>
+            <span>Edificios</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">apartment</span>
+            <span>Unidades</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">people</span>
+            <span>Personas</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="membresias-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">card_membership</span>
+            <span>Membresías</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="categorias-gasto-listado.html" class="nav-link active px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">category</span>
+            <span>Categorías</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="centros-costo-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">account_balance_wallet</span>
+            <span>Centros de Costo</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">payments</span>
+            <span>Pagos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">shopping_cart</span>
+            <span>Gastos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">bar_chart</span>
+            <span>Reportes</span>
+          </a>
+        </li>
+      </ul>
+      
+      <hr>
+      
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <strong>Patricia</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+          <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+          <li><a class="dropdown-item" href="#">Configuración</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content px-3 py-4">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+        <h4 class="mb-3 mb-md-0">Categorías de Gasto</h4>
+        <div>
+          <a href="categoria-gasto-nueva.html" class="btn btn-primary">
+            <span class="material-icons align-middle me-1">add</span>
+            <span>Nueva Categoría</span>
+          </a>
+        </div>
+      </div>
+      
+      <!-- Filters -->
+      <div class="filter-section mb-4">
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <input type="text" class="form-control" placeholder="Buscar por nombre...">
+          </div>
+          <div class="col-12 col-md-3">
+            <select class="form-select">
+              <option selected>Todas las comunidades</option>
+              <option>Comunidad Parque Real</option>
+              <option>Edificio Central</option>
+              <option>Torre Norte</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-3">
+            <select class="form-select">
+              <option selected>Todos los estados</option>
+              <option>Activa</option>
+              <option>Inactiva</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-2">
+            <button class="btn btn-outline-primary w-100">
+              <span class="material-icons align-middle me-1">filter_list</span>
+              <span>Filtrar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Stats Cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+          <div class="card card-stats">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="card-title text-muted mb-0">Total Categorías</h6>
+                  <h3 class="mt-2 mb-0">15</h3>
+                </div>
+                <div class="icon-box bg-light-primary text-primary">
+                  <span class="material-icons">category</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="card card-stats">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="card-title text-muted mb-0">Categorías Activas</h6>
+                  <h3 class="mt-2 mb-0">12</h3>
+                </div>
+                <div class="icon-box bg-light-success text-success">
+                  <span class="material-icons">check_circle</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="card card-stats">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="card-title text-muted mb-0">Último Mes</h6>
+                  <h3 class="mt-2 mb-0">+3</h3>
+                </div>
+                <div class="icon-box bg-light-info text-info">
+                  <span class="material-icons">trending_up</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- View Toggle -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0">15 categorías encontradas</h6>
+        <div class="view-switch btn-group">
+          <button type="button" class="btn btn-outline-secondary active" data-view="table">
+            <span class="material-icons align-middle small">view_list</span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary" data-view="grid">
+            <span class="material-icons align-middle small">grid_view</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Table View -->
+      <div class="table-container mb-4" id="table-view">
+        <div class="table-toolbar">
+          <div>
+            <span class="fw-medium">Categorías de Gasto</span>
+          </div>
+          <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-outline-secondary">
+              <span class="material-icons align-middle small">file_download</span> Exportar
+            </button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th scope="col" class="ps-3">Nombre</th>
+                <th scope="col">Descripción</th>
+                <th scope="col">Comunidad</th>
+                <th scope="col">Estado</th>
+                <th scope="col" class="text-end pe-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="ps-3">
+                  <div class="d-flex align-items-center">
+                    <div class="category-icon me-2" style="background-color: #4CAF50;">
+                      <i class="fas fa-plug"></i>
+                    </div>
+                    <span>Electricidad</span>
+                  </div>
+                </td>
+                <td>Gastos relacionados con servicios eléctricos</td>
+                <td>Todas</td>
+                <td><span class="badge bg-success">Activa</span></td>
+                <td class="text-end pe-3">
+                  <button class="btn btn-sm btn-icon btn-outline-primary me-1">
+                    <span class="material-icons small">edit</span>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-outline-danger">
+                    <span class="material-icons small">delete</span>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-3">
+                  <div class="d-flex align-items-center">
+                    <div class="category-icon me-2" style="background-color: #2196F3;">
+                      <i class="fas fa-water"></i>
+                    </div>
+                    <span>Agua</span>
+                  </div>
+                </td>
+                <td>Gastos relacionados con servicios de agua</td>
+                <td>Todas</td>
+                <td><span class="badge bg-success">Activa</span></td>
+                <td class="text-end pe-3">
+                  <button class="btn btn-sm btn-icon btn-outline-primary me-1">
+                    <span class="material-icons small">edit</span>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-outline-danger">
+                    <span class="material-icons small">delete</span>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-3">
+                  <div class="d-flex align-items-center">
+                    <div class="category-icon me-2" style="background-color: #F44336;">
+                      <i class="fas fa-fire"></i>
+                    </div>
+                    <span>Gas</span>
+                  </div>
+                </td>
+                <td>Gastos relacionados con servicios de gas</td>
+                <td>Todas</td>
+                <td><span class="badge bg-success">Activa</span></td>
+                <td class="text-end pe-3">
+                  <button class="btn btn-sm btn-icon btn-outline-primary me-1">
+                    <span class="material-icons small">edit</span>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-outline-danger">
+                    <span class="material-icons small">delete</span>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-3">
+                  <div class="d-flex align-items-center">
+                    <div class="category-icon me-2" style="background-color: #9C27B0;">
+                      <i class="fas fa-broom"></i>
+                    </div>
+                    <span>Limpieza</span>
+                  </div>
+                </td>
+                <td>Servicios de limpieza y mantenimiento</td>
+                <td>Comunidad Parque Real</td>
+                <td><span class="badge bg-success">Activa</span></td>
+                <td class="text-end pe-3">
+                  <button class="btn btn-sm btn-icon btn-outline-primary me-1">
+                    <span class="material-icons small">edit</span>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-outline-danger">
+                    <span class="material-icons small">delete</span>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-3">
+                  <div class="d-flex align-items-center">
+                    <div class="category-icon me-2" style="background-color: #FF9800;">
+                      <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <span>Seguridad</span>
+                  </div>
+                </td>
+                <td>Servicios de vigilancia y sistemas de seguridad</td>
+                <td>Todas</td>
+                <td><span class="badge bg-success">Activa</span></td>
+                <td class="text-end pe-3">
+                  <button class="btn btn-sm btn-icon btn-outline-primary me-1">
+                    <span class="material-icons small">edit</span>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-outline-danger">
+                    <span class="material-icons small">delete</span>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-3">
+                  <div class="d-flex align-items-center">
+                    <div class="category-icon me-2" style="background-color: #795548;">
+                      <i class="fas fa-hammer"></i>
+                    </div>
+                    <span>Reparaciones</span>
+                  </div>
+                </td>
+                <td>Mantenimiento y reparaciones generales</td>
+                <td>Edificio Central</td>
+                <td><span class="badge bg-success">Activa</span></td>
+                <td class="text-end pe-3">
+                  <button class="btn btn-sm btn-icon btn-outline-primary me-1">
+                    <span class="material-icons small">edit</span>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-outline-danger">
+                    <span class="material-icons small">delete</span>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-3">
+                  <div class="d-flex align-items-center">
+                    <div class="category-icon me-2" style="background-color: #607D8B;">
+                      <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <span>Impuestos</span>
+                  </div>
+                </td>
+                <td>Pagos de impuestos y contribuciones</td>
+                <td>Todas</td>
+                <td><span class="badge bg-success">Activa</span></td>
+                <td class="text-end pe-3">
+                  <button class="btn btn-sm btn-icon btn-outline-primary me-1">
+                    <span class="material-icons small">edit</span>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-outline-danger">
+                    <span class="material-icons small">delete</span>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-3">
+                  <div class="d-flex align-items-center">
+                    <div class="category-icon me-2" style="background-color: #009688;">
+                      <i class="fas fa-seedling"></i>
+                    </div>
+                    <span>Jardinería</span>
+                  </div>
+                </td>
+                <td>Mantenimiento de jardines y áreas verdes</td>
+                <td>Comunidad Parque Real</td>
+                <td><span class="badge bg-success">Activa</span></td>
+                <td class="text-end pe-3">
+                  <button class="btn btn-sm btn-icon btn-outline-primary me-1">
+                    <span class="material-icons small">edit</span>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-outline-danger">
+                    <span class="material-icons small">delete</span>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-3">
+                  <div class="d-flex align-items-center">
+                    <div class="category-icon me-2" style="background-color: #673AB7;">
+                      <i class="fas fa-swimmer"></i>
+                    </div>
+                    <span>Piscina</span>
+                  </div>
+                </td>
+                <td>Mantenimiento y limpieza de piscinas</td>
+                <td>Comunidad Parque Real</td>
+                <td><span class="badge bg-secondary">Inactiva</span></td>
+                <td class="text-end pe-3">
+                  <button class="btn btn-sm btn-icon btn-outline-primary me-1">
+                    <span class="material-icons small">edit</span>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-outline-danger">
+                    <span class="material-icons small">delete</span>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-3">
+                  <div class="d-flex align-items-center">
+                    <div class="category-icon me-2" style="background-color: #E91E63;">
+                      <i class="fas fa-person-booth"></i>
+                    </div>
+                    <span>Conserjería</span>
+                  </div>
+                </td>
+                <td>Gastos relacionados con personal de conserjería</td>
+                <td>Edificio Central</td>
+                <td><span class="badge bg-success">Activa</span></td>
+                <td class="text-end pe-3">
+                  <button class="btn btn-sm btn-icon btn-outline-primary me-1">
+                    <span class="material-icons small">edit</span>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-outline-danger">
+                    <span class="material-icons small">delete</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+          <span class="text-muted small">Mostrando 1-10 de 15 categorías</span>
+          <nav aria-label="Paginación de categorías">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                  <span class="material-icons small">chevron_left</span>
+                </a>
+              </li>
+              <li class="page-item active"><a class="page-link" href="#">1</a></li>
+              <li class="page-item"><a class="page-link" href="#">2</a></li>
+              <li class="page-item">
+                <a class="page-link" href="#">
+                  <span class="material-icons small">chevron_right</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+      
+      <!-- Grid View (Hidden by default) -->
+      <div class="row g-3 mb-4 d-none" id="grid-view">
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="category-item">
+            <div class="d-flex align-items-center mb-3">
+              <div class="icon-container me-3" style="background-color: #4CAF50;">
+                <i class="fas fa-plug"></i>
+              </div>
+              <div>
+                <h6 class="mb-0">Electricidad</h6>
+                <div class="small text-muted">Todas las comunidades</div>
+              </div>
+              <div class="ms-auto">
+                <span class="badge bg-success">Activa</span>
+              </div>
+            </div>
+            <p class="small mb-3">Gastos relacionados con servicios eléctricos</p>
+            <div class="d-flex justify-content-end">
+              <button class="btn btn-sm btn-outline-primary me-1">
+                <span class="material-icons align-middle small">edit</span>
+              </button>
+              <button class="btn btn-sm btn-outline-danger">
+                <span class="material-icons align-middle small">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="category-item">
+            <div class="d-flex align-items-center mb-3">
+              <div class="icon-container me-3" style="background-color: #2196F3;">
+                <i class="fas fa-water"></i>
+              </div>
+              <div>
+                <h6 class="mb-0">Agua</h6>
+                <div class="small text-muted">Todas las comunidades</div>
+              </div>
+              <div class="ms-auto">
+                <span class="badge bg-success">Activa</span>
+              </div>
+            </div>
+            <p class="small mb-3">Gastos relacionados con servicios de agua</p>
+            <div class="d-flex justify-content-end">
+              <button class="btn btn-sm btn-outline-primary me-1">
+                <span class="material-icons align-middle small">edit</span>
+              </button>
+              <button class="btn btn-sm btn-outline-danger">
+                <span class="material-icons align-middle small">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="category-item">
+            <div class="d-flex align-items-center mb-3">
+              <div class="icon-container me-3" style="background-color: #F44336;">
+                <i class="fas fa-fire"></i>
+              </div>
+              <div>
+                <h6 class="mb-0">Gas</h6>
+                <div class="small text-muted">Todas las comunidades</div>
+              </div>
+              <div class="ms-auto">
+                <span class="badge bg-success">Activa</span>
+              </div>
+            </div>
+            <p class="small mb-3">Gastos relacionados con servicios de gas</p>
+            <div class="d-flex justify-content-end">
+              <button class="btn btn-sm btn-outline-primary me-1">
+                <span class="material-icons align-middle small">edit</span>
+              </button>
+              <button class="btn btn-sm btn-outline-danger">
+                <span class="material-icons align-middle small">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="category-item">
+            <div class="d-flex align-items-center mb-3">
+              <div class="icon-container me-3" style="background-color: #9C27B0;">
+                <i class="fas fa-broom"></i>
+              </div>
+              <div>
+                <h6 class="mb-0">Limpieza</h6>
+                <div class="small text-muted">Comunidad Parque Real</div>
+              </div>
+              <div class="ms-auto">
+                <span class="badge bg-success">Activa</span>
+              </div>
+            </div>
+            <p class="small mb-3">Servicios de limpieza y mantenimiento</p>
+            <div class="d-flex justify-content-end">
+              <button class="btn btn-sm btn-outline-primary me-1">
+                <span class="material-icons align-middle small">edit</span>
+              </button>
+              <button class="btn btn-sm btn-outline-danger">
+                <span class="material-icons align-middle small">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="category-item">
+            <div class="d-flex align-items-center mb-3">
+              <div class="icon-container me-3" style="background-color: #FF9800;">
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <div>
+                <h6 class="mb-0">Seguridad</h6>
+                <div class="small text-muted">Todas las comunidades</div>
+              </div>
+              <div class="ms-auto">
+                <span class="badge bg-success">Activa</span>
+              </div>
+            </div>
+            <p class="small mb-3">Servicios de vigilancia y sistemas de seguridad</p>
+            <div class="d-flex justify-content-end">
+              <button class="btn btn-sm btn-outline-primary me-1">
+                <span class="material-icons align-middle small">edit</span>
+              </button>
+              <button class="btn btn-sm btn-outline-danger">
+                <span class="material-icons align-middle small">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="category-item">
+            <div class="d-flex align-items-center mb-3">
+              <div class="icon-container me-3" style="background-color: #673AB7;">
+                <i class="fas fa-swimmer"></i>
+              </div>
+              <div>
+                <h6 class="mb-0">Piscina</h6>
+                <div class="small text-muted">Comunidad Parque Real</div>
+              </div>
+              <div class="ms-auto">
+                <span class="badge bg-secondary">Inactiva</span>
+              </div>
+            </div>
+            <p class="small mb-3">Mantenimiento y limpieza de piscinas</p>
+            <div class="d-flex justify-content-end">
+              <button class="btn btn-sm btn-outline-primary me-1">
+                <span class="material-icons align-middle small">edit</span>
+              </button>
+              <button class="btn btn-sm btn-outline-danger">
+                <span class="material-icons align-middle small">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/script.js"></script>
+    
+    <script>
+      // Toggle sidebar on mobile
+      document.addEventListener('DOMContentLoaded', function() {
+        const toggleSidebar = document.getElementById('toggle-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+        
+        if (toggleSidebar && sidebar && sidebarBackdrop) {
+          toggleSidebar.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+            sidebarBackdrop.classList.toggle('show');
+          });
+          
+          sidebarBackdrop.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            sidebarBackdrop.classList.remove('show');
+          });
+        }
+        
+        // View toggle functionality
+        const tableViewBtn = document.querySelector('[data-view="table"]');
+        const gridViewBtn = document.querySelector('[data-view="grid"]');
+        const tableView = document.getElementById('table-view');
+        const gridView = document.getElementById('grid-view');
+        
+        if (tableViewBtn && gridViewBtn && tableView && gridView) {
+          tableViewBtn.addEventListener('click', function() {
+            tableViewBtn.classList.add('active');
+            gridViewBtn.classList.remove('active');
+            tableView.classList.remove('d-none');
+            gridView.classList.add('d-none');
+          });
+          
+          gridViewBtn.addEventListener('click', function() {
+            gridViewBtn.classList.add('active');
+            tableViewBtn.classList.remove('active');
+            gridView.classList.remove('d-none');
+            tableView.classList.add('d-none');
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

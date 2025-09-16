@@ -1,0 +1,1543 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Conciliaciones Bancarias - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      .avatar {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--color-primary);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50%;
+      }
+      
+      /* Conciliations specific styles */
+      .conciliations-header {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+        border-radius: var(--radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .conciliations-header::before {
+        content: '';
+        position: absolute;
+        top: -20%;
+        right: -15%;
+        width: 180px;
+        height: 180px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        animation: rotate 10s linear infinite;
+      }
+      
+      @keyframes rotate {
+        0% { transform: rotate(0deg) scale(1); }
+        50% { transform: rotate(180deg) scale(1.1); }
+        100% { transform: rotate(360deg) scale(1); }
+      }
+      
+      .conciliations-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      
+      .conciliations-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+      }
+      
+      .header-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      
+      .stat-item {
+        background: rgba(255,255,255,0.15);
+        border-radius: var(--radius);
+        padding: 1rem;
+        text-align: center;
+        backdrop-filter: blur(10px);
+      }
+      
+      .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+      }
+      
+      .stat-label {
+        font-size: 0.75rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      /* Summary cards */
+      .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      
+      .summary-card {
+        background-color: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .summary-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #17a2b8, #138496);
+      }
+      
+      .summary-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: #17a2b8;
+        transform: translateY(-2px);
+      }
+      
+      .summary-card-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+        font-size: 1.5rem;
+      }
+      
+      .summary-card-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #17a2b8;
+        margin-bottom: 0.5rem;
+      }
+      
+      .summary-card-label {
+        color: #6c757d;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 1rem;
+      }
+      
+      .summary-card-description {
+        color: #495057;
+        font-size: 0.875rem;
+      }
+      
+      /* Filters */
+      .filters-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-sm);
+      }
+      
+      .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      
+      .filters-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .filters-title .material-icons {
+        margin-right: 0.5rem;
+        color: #17a2b8;
+      }
+      
+      .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+      }
+      
+      /* Conciliations table */
+      .conciliations-table {
+        background-color: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid #e9ecef;
+        overflow: hidden;
+        margin-bottom: 2rem;
+      }
+      
+      .table-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1rem 1.5rem;
+        border-bottom: 2px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .table-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #212529;
+        display: flex;
+        align-items: center;
+      }
+      
+      .table-title .material-icons {
+        margin-right: 0.5rem;
+        color: #17a2b8;
+      }
+      
+      .table-info {
+        color: #6c757d;
+        font-size: 0.875rem;
+      }
+      
+      .custom-table {
+        margin: 0;
+      }
+      
+      .custom-table thead th {
+        background-color: #17a2b8;
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 1rem 0.75rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      
+      .custom-table tbody tr {
+        transition: all 0.2s ease;
+      }
+      
+      .custom-table tbody tr:hover {
+        background-color: #e8f6f8;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(23, 162, 184, 0.1);
+      }
+      
+      .custom-table tbody td {
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+        border-color: #f8f9fa;
+      }
+      
+      /* Status badges */
+      .status-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      
+      .status-badge.draft {
+        background-color: #e2e3e5;
+        color: #383d41;
+        border: 1px solid #d1d3d5;
+      }
+      
+      .status-badge.in-progress {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      
+      .status-badge.completed {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      
+      .status-badge.with-differences {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f1aeb5;
+      }
+      
+      .status-badge .material-icons {
+        font-size: 0.875rem;
+      }
+      
+      /* Difference indicators */
+      .difference-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+      }
+      
+      .difference-indicator.zero {
+        color: #28a745;
+      }
+      
+      .difference-indicator.positive {
+        color: #007bff;
+      }
+      
+      .difference-indicator.negative {
+        color: #dc3545;
+      }
+      
+      /* Amount formatting */
+      .amount-cell {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        text-align: right;
+        color: #212529;
+      }
+      
+      .amount-cell.positive {
+        color: #28a745;
+      }
+      
+      .amount-cell.negative {
+        color: #dc3545;
+      }
+      
+      /* Progress bars */
+      .progress-container {
+        margin-bottom: 0.5rem;
+      }
+      
+      .progress {
+        height: 8px;
+        border-radius: 10px;
+        background-color: #e9ecef;
+      }
+      
+      .progress-bar {
+        border-radius: 10px;
+        transition: width 0.6s ease;
+      }
+      
+      .progress-text {
+        font-size: 0.75rem;
+        color: #6c757d;
+        text-align: center;
+      }
+      
+      /* Action buttons */
+      .action-btn {
+        border: none;
+        border-radius: var(--radius);
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        gap: 0.5rem;
+      }
+      
+      .action-btn .material-icons {
+        font-size: 1rem;
+      }
+      
+      .action-btn.primary {
+        background-color: #17a2b8;
+        color: white;
+      }
+      
+      .action-btn.primary:hover {
+        background-color: #138496;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+      
+      .action-btn.success {
+        background-color: #28a745;
+        color: white;
+      }
+      
+      .action-btn.success:hover {
+        background-color: #218838;
+        color: white;
+      }
+      
+      .action-btn.outline {
+        background-color: transparent;
+        color: #17a2b8;
+        border: 2px solid #17a2b8;
+      }
+      
+      .action-btn.outline:hover {
+        background-color: #17a2b8;
+        color: white;
+        transform: translateY(-2px);
+      }
+      
+      .action-btn.small {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+      }
+      
+      .action-btn.small .material-icons {
+        font-size: 0.875rem;
+      }
+      
+      /* Chart container */
+      .chart-container {
+        background-color: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-sm);
+      }
+      
+      .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f8f9fa;
+      }
+      
+      .chart-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .chart-title .material-icons {
+        margin-right: 0.5rem;
+        color: #17a2b8;
+      }
+      
+      /* Pagination */
+      .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        background-color: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+      }
+      
+      .pagination-info {
+        color: #6c757d;
+        font-size: 0.875rem;
+      }
+      
+      .pagination .page-link {
+        color: #17a2b8;
+        border-color: #dee2e6;
+      }
+      
+      .pagination .page-link:hover {
+        color: #138496;
+        background-color: #e8f6f8;
+        border-color: #17a2b8;
+      }
+      
+      .pagination .page-item.active .page-link {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+      }
+      
+      /* Responsive adjustments */
+      @media (max-width: 1200px) {
+        .summary-cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .filters-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      
+      @media (max-width: 992px) {
+        .main-content {
+          margin-left: 0;
+        }
+        
+        .summary-cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      
+      @media (max-width: 768px) {
+        .conciliations-header {
+          padding: 1.5rem 1rem;
+        }
+        
+        .conciliations-title {
+          font-size: 2rem;
+        }
+        
+        .header-stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .summary-cards {
+          grid-template-columns: 1fr;
+        }
+        
+        .filters-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .custom-table {
+          font-size: 0.875rem;
+        }
+        
+        .custom-table thead th,
+        .custom-table tbody td {
+          padding: 0.5rem 0.25rem;
+          font-size: 0.75rem;
+        }
+        
+        .table-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1rem;
+        }
+        
+        .pagination-container {
+          flex-direction: column;
+          gap: 1rem;
+        }
+        
+        .chart-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1rem;
+        }
+      }
+      
+      @media (max-width: 576px) {
+        .conciliations-header {
+          padding: 1rem;
+          margin-bottom: 1rem;
+        }
+        
+        .conciliations-title {
+          font-size: 1.5rem;
+        }
+        
+        .header-stats {
+          grid-template-columns: 1fr;
+          gap: 0.5rem;
+        }
+        
+        .summary-card {
+          padding: 1rem;
+        }
+        
+        .summary-card-icon {
+          width: 50px;
+          height: 50px;
+          font-size: 1.25rem;
+        }
+        
+        .summary-card-number {
+          font-size: 1.5rem;
+        }
+        
+        .filters-card,
+        .chart-container,
+        .conciliations-table {
+          margin-bottom: 1rem;
+          padding: 1rem;
+        }
+        
+        .table-responsive {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        
+        .custom-table {
+          min-width: 900px;
+        }
+        
+        /* Hide some columns on very small screens */
+        .custom-table th:nth-child(4),
+        .custom-table td:nth-child(4),
+        .custom-table th:nth-child(6),
+        .custom-table td:nth-child(6) {
+          display: none;
+        }
+      }
+      
+      /* Additional overflow and layout fixes */
+      body {
+        overflow-x: hidden;
+      }
+      
+      .main-content {
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      
+      .container-fluid {
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      
+      /* Empty state */
+      .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6c757d;
+      }
+      
+      .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        background-color: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: #adb5bd;
+        font-size: 2rem;
+      }
+      
+      .empty-state-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 1rem;
+      }
+      
+      .empty-state-description {
+        margin-bottom: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <ul class="nav nav-sidebar flex-column mb-auto">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">domain</span>
+              <span>Comunidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">apartment</span>
+              <span>Unidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">people</span>
+              <span>Personas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">receipt_long</span>
+              <span>Gastos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">payments</span>
+              <span>Pagos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="conciliaciones-listado.html" class="nav-link active px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">account_balance</span>
+              <span>Conciliaciones</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">bar_chart</span>
+              <span>Reportes</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="util-uf.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">calculate</span>
+              <span>Utilidades</span>
+            </a>
+          </li>
+        </ul>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+            <span class="material-icons me-2">settings</span>
+            <span>Configuración</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Sidebar backdrop for mobile -->
+      <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+      
+      <!-- Contenido principal -->
+      <div class="main-content flex-grow-1 bg-light">
+        <!-- Header con búsqueda y notificaciones -->
+        <header class="bg-white border-bottom shadow-sm p-3">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <div class="col-12 col-lg-6 mb-2 mb-lg-0">
+                <button class="btn toggle-sidebar d-lg-none me-2" onclick="toggleSidebar()">
+                  <span class="material-icons">menu</span>
+                </button>
+                <nav aria-label="breadcrumb">
+                  <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Conciliaciones</li>
+                  </ol>
+                </nav>
+                <h5 class="mb-0">Conciliaciones Bancarias</h5>
+              </div>
+              
+              <div class="col-12 col-lg-6">
+                <div class="d-flex justify-content-end align-items-center gap-2 flex-wrap">
+                  <button class="action-btn primary" onclick="createConciliation()">
+                    <span class="material-icons">add</span>
+                    <span class="d-none d-sm-inline">Nueva Conciliación</span>
+                  </button>
+                  
+                  <button class="action-btn outline small" onclick="importBankStatements()">
+                    <span class="material-icons">upload</span>
+                    <span class="d-none d-sm-inline">Importar Extractos</span>
+                  </button>
+                  
+                  <button class="action-btn outline small" onclick="exportConciliations()">
+                    <span class="material-icons">download</span>
+                    <span class="d-none d-sm-inline">Exportar</span>
+                  </button>
+                  
+                  <div>
+                    <button class="btn position-relative p-2" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons">notifications</span>
+                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        3
+                      </span>
+                    </button>
+                  </div>
+                  
+                  <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                      <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+                      <div class="d-none d-sm-block">
+                        <div class="fw-bold">Patricia Contreras</div>
+                        <small class="text-muted">Administradora</small>
+                      </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                      <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+                      <li><a class="dropdown-item" href="#">Configuración</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Contenido -->
+        <main class="container-fluid p-4 p-sm-3 p-md-4">
+          <!-- Conciliations Header -->
+          <div class="conciliations-header">
+            <div class="row align-items-center">
+              <div class="col-lg-8">
+                <h1 class="conciliations-title">Conciliaciones Bancarias</h1>
+                <div class="conciliations-subtitle">Gestión y control de reconciliación de movimientos bancarios</div>
+                <div style="opacity: 0.8;">
+                  Septiembre 2025 • 3 bancos • 12 conciliaciones activas
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div class="header-stats">
+                  <div class="stat-item">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Completadas</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">En Proceso</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Con Diferencias</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">$0</div>
+                    <div class="stat-label">Diferencia Total</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary Cards -->
+          <div class="summary-cards">
+            <div class="summary-card">
+              <div class="summary-card-icon">
+                <span class="material-icons">account_balance_wallet</span>
+              </div>
+              <div class="summary-card-number">$48.2M</div>
+              <div class="summary-card-label">Total Conciliado</div>
+              <div class="summary-card-description">
+                Monto total procesado en conciliaciones del período
+              </div>
+            </div>
+            
+            <div class="summary-card">
+              <div class="summary-card-icon">
+                <span class="material-icons">sync</span>
+              </div>
+              <div class="summary-card-number">98.7%</div>
+              <div class="summary-card-label">Tasa de Coincidencia</div>
+              <div class="summary-card-description">
+                Porcentaje de transacciones automáticamente reconciliadas
+              </div>
+            </div>
+            
+            <div class="summary-card">
+              <div class="summary-card-icon">
+                <span class="material-icons">error_outline</span>
+              </div>
+              <div class="summary-card-number">24</div>
+              <div class="summary-card-label">Diferencias Pendientes</div>
+              <div class="summary-card-description">
+                Transacciones que requieren revisión manual
+              </div>
+            </div>
+            
+            <div class="summary-card">
+              <div class="summary-card-icon">
+                <span class="material-icons">schedule</span>
+              </div>
+              <div class="summary-card-number">2.3</div>
+              <div class="summary-card-label">Días Promedio</div>
+              <div class="summary-card-description">
+                Tiempo promedio para completar una conciliación
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart -->
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3 class="chart-title">
+                <span class="material-icons">bar_chart</span>
+                Estado de Conciliaciones por Mes
+              </h3>
+              <div class="d-flex gap-2">
+                <button class="action-btn outline small" onclick="changeChartPeriod('month')">
+                  <span class="material-icons">calendar_month</span>
+                  Mes
+                </button>
+                <button class="action-btn outline small" onclick="changeChartPeriod('quarter')">
+                  <span class="material-icons">calendar_view_month</span>
+                  Trimestre
+                </button>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-lg-8 col-md-12">
+                <div style="position: relative; height: 300px; width: 100%;">
+                  <canvas id="conciliationsChart"></canvas>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-12">
+                <div class="chart-legend mt-3 mt-lg-0 p-3 bg-light rounded">
+                  <div class="d-flex align-items-center mb-2">
+                    <div style="width: 16px; height: 16px; background-color: #17a2b8; border-radius: 2px; margin-right: 8px;"></div>
+                    <span>Completadas</span>
+                  </div>
+                  <div class="d-flex align-items-center mb-2">
+                    <div style="width: 16px; height: 16px; background-color: #ffc107; border-radius: 2px; margin-right: 8px;"></div>
+                    <span>En Proceso</span>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <div style="width: 16px; height: 16px; background-color: #dc3545; border-radius: 2px; margin-right: 8px;"></div>
+                    <span>Con Diferencias</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="filters-card">
+            <div class="filters-header">
+              <h3 class="filters-title">
+                <span class="material-icons">filter_list</span>
+                Filtros
+              </h3>
+              <div class="d-flex gap-2">
+                <button class="action-btn outline small" onclick="clearFilters()">
+                  <span class="material-icons">clear</span>
+                  Limpiar Filtros
+                </button>
+              </div>
+            </div>
+            
+            <div class="filters-grid">
+              <div>
+                <label for="statusFilter" class="form-label">Estado</label>
+                <select class="form-select" id="statusFilter" onchange="applyFilters()">
+                  <option value="">Todos los estados</option>
+                  <option value="draft">Borrador</option>
+                  <option value="in-progress">En Proceso</option>
+                  <option value="completed">Completada</option>
+                  <option value="with-differences">Con Diferencias</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="bankFilter" class="form-label">Banco</label>
+                <select class="form-select" id="bankFilter" onchange="applyFilters()">
+                  <option value="">Todos los bancos</option>
+                  <option value="banco-chile">Banco de Chile</option>
+                  <option value="santander">Banco Santander</option>
+                  <option value="bci">Banco BCI</option>
+                  <option value="estado">BancoEstado</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="periodFilter" class="form-label">Período</label>
+                <select class="form-select" id="periodFilter" onchange="applyFilters()">
+                  <option value="">Todos los períodos</option>
+                  <option value="2025-09">Septiembre 2025</option>
+                  <option value="2025-08">Agosto 2025</option>
+                  <option value="2025-07">Julio 2025</option>
+                  <option value="2025-06">Junio 2025</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="dateFromFilter" class="form-label">Desde</label>
+                <input type="date" class="form-control" id="dateFromFilter" onchange="applyFilters()">
+              </div>
+              
+              <div>
+                <label for="dateToFilter" class="form-label">Hasta</label>
+                <input type="date" class="form-control" id="dateToFilter" onchange="applyFilters()">
+              </div>
+              
+              <div>
+                <label for="searchFilter" class="form-label">Buscar</label>
+                <input type="text" class="form-control" id="searchFilter" placeholder="Buscar por código o cuenta..." onchange="applyFilters()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Conciliations Table -->
+          <div class="conciliations-table">
+            <div class="table-header">
+              <h3 class="table-title">
+                <span class="material-icons">account_balance</span>
+                Lista de Conciliaciones
+              </h3>
+              <div class="table-info">
+                Mostrando <span id="showingCount">10</span> de <span id="totalCount">10</span> registros
+              </div>
+            </div>
+            
+            <div class="table-responsive">
+              <table class="table custom-table mb-0">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Banco</th>
+                    <th>Cuenta</th>
+                    <th>Período</th>
+                    <th>Fecha Creación</th>
+                    <th>Transacciones</th>
+                    <th>Monto Total</th>
+                    <th>Diferencia</th>
+                    <th>Progreso</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="conciliationsTableBody">
+                  <!-- Data will be populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination-container">
+              <div class="pagination-info">
+                Mostrando 1-10 de 10 registros
+              </div>
+              <nav aria-label="Paginación de conciliaciones">
+                <ul class="pagination mb-0">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">
+                      <span class="material-icons">chevron_left</span>
+                    </a>
+                  </li>
+                  <li class="page-item active">
+                    <a class="page-link" href="#">1</a>
+                  </li>
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#">
+                      <span class="material-icons">chevron_right</span>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/script.js"></script>
+    <script>
+      function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.querySelector('.sidebar-backdrop');
+        
+        sidebar.classList.toggle('show');
+        backdrop.classList.toggle('show');
+      }
+
+      // Sample conciliations data
+      const conciliationsData = [
+        {
+          id: 'CON-2025-001',
+          bank: 'Banco de Chile',
+          account: '65432187-9',
+          period: '2025-09',
+          createdDate: '2025-09-01',
+          transactions: 245,
+          totalAmount: 18245670,
+          difference: 0,
+          progress: 100,
+          status: 'completed'
+        },
+        {
+          id: 'CON-2025-002',
+          bank: 'Banco Santander',
+          account: '78965412-3',
+          period: '2025-09',
+          createdDate: '2025-09-02',
+          transactions: 189,
+          totalAmount: 15678920,
+          difference: -25000,
+          progress: 85,
+          status: 'with-differences'
+        },
+        {
+          id: 'CON-2025-003',
+          bank: 'Banco BCI',
+          account: '45123698-7',
+          period: '2025-09',
+          createdDate: '2025-09-03',
+          transactions: 156,
+          totalAmount: 12456789,
+          difference: 0,
+          progress: 95,
+          status: 'in-progress'
+        },
+        {
+          id: 'CON-2025-004',
+          bank: 'BancoEstado',
+          account: '12345678-9',
+          period: '2025-09',
+          createdDate: '2025-09-05',
+          transactions: 92,
+          totalAmount: 8965743,
+          difference: 15000,
+          progress: 75,
+          status: 'in-progress'
+        },
+        {
+          id: 'CON-2025-005',
+          bank: 'Banco de Chile',
+          account: '65432187-9',
+          period: '2025-08',
+          createdDate: '2025-08-01',
+          transactions: 234,
+          totalAmount: 17856423,
+          difference: 0,
+          progress: 100,
+          status: 'completed'
+        },
+        {
+          id: 'CON-2025-006',
+          bank: 'Banco Santander',
+          account: '78965412-3',
+          period: '2025-08',
+          createdDate: '2025-08-02',
+          transactions: 198,
+          totalAmount: 16234567,
+          difference: 0,
+          progress: 100,
+          status: 'completed'
+        },
+        {
+          id: 'CON-2025-007',
+          bank: 'Banco BCI',
+          account: '45123698-7',
+          period: '2025-08',
+          createdDate: '2025-08-03',
+          transactions: 167,
+          totalAmount: 13567890,
+          difference: 0,
+          progress: 100,
+          status: 'completed'
+        },
+        {
+          id: 'CON-2025-008',
+          bank: 'BancoEstado',
+          account: '12345678-9',
+          period: '2025-08',
+          createdDate: '2025-08-05',
+          transactions: 89,
+          totalAmount: 9123456,
+          difference: 0,
+          progress: 100,
+          status: 'completed'
+        },
+        {
+          id: 'CON-2025-009',
+          bank: 'Banco de Chile',
+          account: '65432187-9',
+          period: '2025-07',
+          createdDate: '2025-07-01',
+          transactions: 223,
+          totalAmount: 16789012,
+          difference: 8500,
+          progress: 90,
+          status: 'with-differences'
+        },
+        {
+          id: 'CON-2025-010',
+          bank: 'Banco Santander',
+          account: '78965412-3',
+          period: '2025-06',
+          createdDate: '2025-06-15',
+          transactions: 45,
+          totalAmount: 2345678,
+          difference: 0,
+          progress: 25,
+          status: 'draft'
+        }
+      ];
+
+      let filteredConciliations = [...conciliationsData];
+
+      // Populate conciliations table
+      function populateConciliationsTable(conciliations = filteredConciliations) {
+        const tbody = document.getElementById('conciliationsTableBody');
+        
+        if (conciliations.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="11">
+                <div class="empty-state">
+                  <div class="empty-state-icon">
+                    <span class="material-icons">account_balance</span>
+                  </div>
+                  <div class="empty-state-title">No se encontraron conciliaciones</div>
+                  <div class="empty-state-description">
+                    No hay conciliaciones que coincidan con los filtros aplicados.
+                  </div>
+                  <button class="action-btn primary" onclick="clearFilters()">
+                    <span class="material-icons">clear</span>
+                    Limpiar Filtros
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        tbody.innerHTML = conciliations.map(conciliation => {
+          const statusLabels = {
+            draft: 'Borrador',
+            'in-progress': 'En Proceso',
+            completed: 'Completada',
+            'with-differences': 'Con Diferencias'
+          };
+          
+          const statusIcons = {
+            draft: 'edit',
+            'in-progress': 'sync',
+            completed: 'check_circle',
+            'with-differences': 'error_outline'
+          };
+          
+          const progressColor = conciliation.progress === 100 ? 'bg-success' : 
+                               conciliation.progress >= 75 ? 'bg-info' : 
+                               conciliation.progress >= 50 ? 'bg-warning' : 'bg-danger';
+          
+          const differenceClass = conciliation.difference === 0 ? 'zero' : 
+                                 conciliation.difference > 0 ? 'positive' : 'negative';
+          
+          const differenceIcon = conciliation.difference === 0 ? 'check' : 
+                                conciliation.difference > 0 ? 'arrow_upward' : 'arrow_downward';
+          
+          return `
+            <tr>
+              <td>
+                <span style="font-family: 'Courier New', monospace; font-weight: 600; color: #17a2b8;">${conciliation.id}</span>
+              </td>
+              <td>${conciliation.bank}</td>
+              <td style="font-family: 'Courier New', monospace;">${conciliation.account}</td>
+              <td>${formatPeriod(conciliation.period)}</td>
+              <td>${new Date(conciliation.createdDate).toLocaleDateString('es-CL')}</td>
+              <td class="text-center">
+                <span class="badge bg-secondary">${conciliation.transactions}</span>
+              </td>
+              <td class="amount-cell">
+                $${conciliation.totalAmount.toLocaleString('es-CL')}
+              </td>
+              <td>
+                <div class="difference-indicator ${differenceClass}">
+                  <span class="material-icons">${differenceIcon}</span>
+                  $${Math.abs(conciliation.difference).toLocaleString('es-CL')}
+                </div>
+              </td>
+              <td>
+                <div class="progress-container">
+                  <div class="progress">
+                    <div class="progress-bar ${progressColor}" role="progressbar" 
+                         style="width: ${conciliation.progress}%" 
+                         aria-valuenow="${conciliation.progress}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                    </div>
+                  </div>
+                  <div class="progress-text">${conciliation.progress}%</div>
+                </div>
+              </td>
+              <td>
+                <span class="status-badge ${conciliation.status}">
+                  <span class="material-icons">${statusIcons[conciliation.status]}</span>
+                  ${statusLabels[conciliation.status]}
+                </span>
+              </td>
+              <td>
+                <div class="d-flex gap-1">
+                  <button class="action-btn small outline" onclick="viewConciliation('${conciliation.id}')" title="Ver detalles">
+                    <span class="material-icons">visibility</span>
+                  </button>
+                  ${conciliation.status !== 'completed' ? `
+                    <button class="action-btn small primary" onclick="editConciliation('${conciliation.id}')" title="Editar">
+                      <span class="material-icons">edit</span>
+                    </button>
+                  ` : ''}
+                  <button class="action-btn small outline" onclick="downloadConciliation('${conciliation.id}')" title="Descargar">
+                    <span class="material-icons">download</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        
+        updateTableInfo(conciliations.length);
+      }
+
+      function formatPeriod(period) {
+        const [year, month] = period.split('-');
+        const months = [
+          'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ];
+        return `${months[parseInt(month) - 1]} ${year}`;
+      }
+
+      // Filter functions
+      function applyFilters() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const bankFilter = document.getElementById('bankFilter').value;
+        const periodFilter = document.getElementById('periodFilter').value;
+        const dateFromFilter = document.getElementById('dateFromFilter').value;
+        const dateToFilter = document.getElementById('dateToFilter').value;
+        const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+        
+        filteredConciliations = conciliationsData.filter(conciliation => {
+          const matchesStatus = !statusFilter || conciliation.status === statusFilter;
+          const matchesBank = !bankFilter || conciliation.bank.toLowerCase().includes(bankFilter.toLowerCase());
+          const matchesPeriod = !periodFilter || conciliation.period === periodFilter;
+          const matchesSearch = !searchFilter || 
+                               conciliation.id.toLowerCase().includes(searchFilter) ||
+                               conciliation.account.includes(searchFilter);
+          
+          const conciliationDate = new Date(conciliation.createdDate);
+          const matchesDateFrom = !dateFromFilter || conciliationDate >= new Date(dateFromFilter);
+          const matchesDateTo = !dateToFilter || conciliationDate <= new Date(dateToFilter);
+          
+          return matchesStatus && matchesBank && matchesPeriod && 
+                 matchesSearch && matchesDateFrom && matchesDateTo;
+        });
+        
+        populateConciliationsTable();
+      }
+
+      function clearFilters() {
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('bankFilter').value = '';
+        document.getElementById('periodFilter').value = '';
+        document.getElementById('dateFromFilter').value = '';
+        document.getElementById('dateToFilter').value = '';
+        document.getElementById('searchFilter').value = '';
+        
+        filteredConciliations = [...conciliationsData];
+        populateConciliationsTable();
+      }
+
+      function updateTableInfo(count) {
+        document.getElementById('showingCount').textContent = count;
+        document.getElementById('totalCount').textContent = conciliationsData.length;
+      }
+
+      // Action functions
+      function createConciliation() {
+        window.location.href = 'conciliacion-nueva.html';
+      }
+
+      function importBankStatements() {
+        alert('Funcionalidad de importación de extractos bancarios disponible próximamente.');
+      }
+
+      function exportConciliations() {
+        alert('Exportando lista de conciliaciones... Esta funcionalidad estará disponible próximamente.');
+      }
+
+      function viewConciliation(id) {
+        alert(`Viendo detalles de la conciliación ${id}... Esta funcionalidad estará disponible próximamente.`);
+      }
+
+      function editConciliation(id) {
+        window.location.href = `conciliacion-nueva.html?edit=${id}`;
+      }
+
+      function downloadConciliation(id) {
+        alert(`Descargando conciliación ${id}... Esta funcionalidad estará disponible próximamente.`);
+      }
+
+      function changeChartPeriod(period) {
+        alert(`Cambiando vista del gráfico a: ${period}`);
+      }
+
+      // Initialize chart
+      function initializeChart() {
+        const ctx = document.getElementById('conciliationsChart').getContext('2d');
+        
+        const chartData = {
+          labels: ['Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre'],
+          datasets: [
+            {
+              label: 'Completadas',
+              data: [4, 5, 4, 4, 5],
+              backgroundColor: '#17a2b8',
+              borderColor: '#17a2b8',
+              borderWidth: 2
+            },
+            {
+              label: 'En Proceso',
+              data: [1, 0, 1, 0, 3],
+              backgroundColor: '#ffc107',
+              borderColor: '#ffc107',
+              borderWidth: 2
+            },
+            {
+              label: 'Con Diferencias',
+              data: [0, 1, 1, 0, 2],
+              backgroundColor: '#dc3545',
+              borderColor: '#dc3545',
+              borderWidth: 2
+            }
+          ]
+        };
+
+        new Chart(ctx, {
+          type: 'bar',
+          data: chartData,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // Initialize page
+      document.addEventListener('DOMContentLoaded', function() {
+        populateConciliationsTable();
+        initializeChart();
+      });
+    </script>
+  </body>
+</html>

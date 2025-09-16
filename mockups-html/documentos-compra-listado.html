@@ -1,0 +1,1363 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lista de Documentos de Compra - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      /* Estilos de vistas grid/tabla */
+      .view-toggle .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+      }
+
+      .view-toggle .btn.active {
+        background-color: var(--color-primary);
+        color: white;
+      }
+
+      .doc-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+      }
+
+      .doc-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+      }
+      
+      .doc-card .card-body {
+        padding: 1.25rem;
+      }
+      
+      .doc-status {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 0.5rem;
+      }
+      
+      .doc-status.status-draft {
+        background-color: var(--color-warning);
+      }
+      
+      .doc-status.status-pending {
+        background-color: var(--color-info);
+      }
+      
+      .doc-status.status-approved {
+        background-color: var(--color-success);
+      }
+      
+      .doc-status.status-rejected {
+        background-color: var(--color-danger);
+      }
+      
+      .doc-status.status-paid {
+        background-color: var(--color-secondary);
+      }
+      
+      .doc-card .doc-meta {
+        font-size: 0.75rem;
+        color: #6c757d;
+      }
+      
+      .doc-card .badge {
+        font-size: 0.675rem;
+        padding: 0.25rem 0.5rem;
+      }
+      
+      .doc-card .doc-amount {
+        font-size: 1.125rem;
+        font-weight: 500;
+        color: var(--color-primary);
+      }
+      
+      .filter-container {
+        background-color: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+        padding: 1.25rem;
+        transition: all 0.3s ease;
+      }
+      
+      .filter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+      
+      .filter-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+      
+      .filter-container.open .filter-body {
+        max-height: 1000px;
+      }
+      
+      .filter-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 1rem;
+        gap: 0.5rem;
+      }
+
+      /* Color de estado con texto */
+      .status-text {
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+      }
+      
+      .status-text.draft {
+        color: var(--color-warning);
+      }
+      
+      .status-text.pending {
+        color: var(--color-info);
+      }
+      
+      .status-text.approved {
+        color: var(--color-success);
+      }
+      
+      .status-text.rejected {
+        color: var(--color-danger);
+      }
+      
+      .status-text.paid {
+        color: var(--color-secondary);
+      }
+
+      /* Badge de tipo de documento */
+      .doc-type-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+      
+      .doc-type-invoice {
+        background-color: #E3F2FD;
+        color: #0D47A1;
+      }
+      
+      .doc-type-receipt {
+        background-color: #FFF8E1;
+        color: #F57F17;
+      }
+      
+      .doc-type-quote {
+        background-color: #E8F5E9;
+        color: #2E7D32;
+      }
+      
+      .doc-type-order {
+        background-color: #F3E5F5;
+        color: #7B1FA2;
+      }
+      
+      /* Tabla responsive */
+      .table-responsive {
+        overflow-x: auto;
+      }
+      
+      @media (max-width: 767.98px) {
+        .document-table th:nth-child(3),
+        .document-table th:nth-child(4),
+        .document-table td:nth-child(3),
+        .document-table td:nth-child(4) {
+          display: none;
+        }
+      }
+      
+      /* Hover en filas de tabla */
+      .document-table tbody tr {
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      
+      .document-table tbody tr:hover {
+        background-color: rgba(0,0,0,0.02);
+      }
+
+      /* Pill badges para el filtro */
+      .filter-pill {
+        display: inline-flex;
+        align-items: center;
+        background-color: #f1f3f5;
+        border-radius: 100px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.75rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        max-width: fit-content;
+      }
+      
+      .filter-pill .close {
+        margin-left: 0.5rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        opacity: 0.7;
+      }
+      
+      .filter-pill .close:hover {
+        opacity: 1;
+      }
+      
+      .filters-applied {
+        display: flex;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+      }
+
+      /* Botón de mostrar más */
+      .more-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      
+      .more-btn:hover {
+        background-color: #e9ecef;
+      }
+      
+      .more-btn .material-icons {
+        font-size: 18px;
+        color: #6c757d;
+      }
+      
+      /* Resumen de resultados */
+      .results-summary {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+      }
+      
+      .results-summary strong {
+        font-weight: 500;
+        color: var(--color-text);
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <!-- Mobile Navigation Bar -->
+    <nav class="navbar navbar-dark bg-primary d-flex d-lg-none">
+      <div class="container-fluid">
+        <button class="navbar-toggler border-0" type="button" id="toggle-sidebar">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand me-auto" href="dashboard.html">
+          <span class="material-icons align-middle me-1">apartment</span>
+          Cuentas Claras
+        </a>
+        <div class="dropdown">
+          <button class="btn btn-link text-white p-0" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="avatar">PC</div>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    
+    <!-- Backdrop for mobile sidebar -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+    
+    <!-- Sidebar -->
+    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidebar" id="sidebar" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+      <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+        <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+        <span class="fs-4">Cuentas Claras</span>
+      </a>
+      
+      <div class="d-flex align-items-center mb-3 px-2">
+        <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+        <div>
+          <span class="d-block text-white">Patricia Contreras</span>
+          <span class="small text-white-50">Administradora</span>
+        </div>
+      </div>
+      
+      <hr>
+      
+      <ul class="nav nav-sidebar flex-column mb-auto">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">domain</span>
+            <span>Comunidades</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="edificios-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">business</span>
+            <span>Edificios</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">apartment</span>
+            <span>Unidades</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">people</span>
+            <span>Personas</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="membresias-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">card_membership</span>
+            <span>Membresías</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="categorias-gasto-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">category</span>
+            <span>Categorías</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="centros-costo-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">account_balance_wallet</span>
+            <span>Centros de Costo</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="proveedores-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">inventory</span>
+            <span>Proveedores</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="documentos-compra-listado.html" class="nav-link active px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">receipt_long</span>
+            <span>Compras</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">payments</span>
+            <span>Pagos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">shopping_cart</span>
+            <span>Gastos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">bar_chart</span>
+            <span>Reportes</span>
+          </a>
+        </li>
+      </ul>
+      
+      <hr>
+      
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <strong>Patricia</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+          <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+          <li><a class="dropdown-item" href="#">Configuración</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content px-3 py-4">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Documentos de Compra</h4>
+        <a href="documento-compra-nuevo.html" class="btn btn-primary">
+          <span class="material-icons align-middle me-1">add</span>
+          Nuevo Documento
+        </a>
+      </div>
+      
+      <!-- Filtros -->
+      <div class="filter-container open" id="filter-container">
+        <div class="filter-header">
+          <h5 class="mb-0">Filtros</h5>
+          <button type="button" class="btn btn-link text-secondary p-0" id="toggle-filter">
+            <span class="material-icons">expand_less</span>
+          </button>
+        </div>
+        <div class="filter-body">
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-md-6">
+              <label for="filter-provider" class="form-label">Proveedor</label>
+              <select class="form-select" id="filter-provider">
+                <option value="" selected>Todos los proveedores</option>
+                <option value="1">Constructora Edificar</option>
+                <option value="2">Servicios Eléctricos S.A.</option>
+                <option value="3">Plomería y Mantención Express</option>
+                <option value="4">Distribuidora de Insumos ABC</option>
+                <option value="5">Seguridad Integral Ltda.</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="filter-doc-type" class="form-label">Tipo de Documento</label>
+              <select class="form-select" id="filter-doc-type">
+                <option value="" selected>Todos los tipos</option>
+                <option value="invoice">Factura</option>
+                <option value="receipt">Boleta</option>
+                <option value="quote">Cotización</option>
+                <option value="order">Orden de compra</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="filter-status" class="form-label">Estado</label>
+              <select class="form-select" id="filter-status">
+                <option value="" selected>Todos los estados</option>
+                <option value="draft">Borrador</option>
+                <option value="pending">Pendiente de aprobación</option>
+                <option value="approved">Aprobado</option>
+                <option value="rejected">Rechazado</option>
+                <option value="paid">Pagado</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="filter-community" class="form-label">Comunidad</label>
+              <select class="form-select" id="filter-community">
+                <option value="" selected>Todas las comunidades</option>
+                <option value="1">Comunidad Parque Real</option>
+                <option value="2">Edificio Central</option>
+                <option value="3">Torre Norte</option>
+                <option value="4">Condominio Las Palmas</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="filter-date-from" class="form-label">Fecha desde</label>
+              <input type="date" class="form-control" id="filter-date-from">
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="filter-date-to" class="form-label">Fecha hasta</label>
+              <input type="date" class="form-control" id="filter-date-to">
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="filter-amount-min" class="form-label">Monto mínimo</label>
+              <input type="number" class="form-control" id="filter-amount-min" placeholder="0">
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="filter-amount-max" class="form-label">Monto máximo</label>
+              <input type="number" class="form-control" id="filter-amount-max" placeholder="10000000">
+            </div>
+          </div>
+          <div class="filter-footer">
+            <button type="button" class="btn btn-outline-secondary" id="clear-filters">
+              Limpiar filtros
+            </button>
+            <button type="button" class="btn btn-primary" id="apply-filters">
+              Aplicar filtros
+            </button>
+          </div>
+        </div>
+        
+        <!-- Filtros aplicados -->
+        <div class="filters-applied mt-3 d-none" id="filters-applied">
+          <div class="filter-pill">
+            Proveedor: Constructora Edificar
+            <span class="close">&times;</span>
+          </div>
+          <div class="filter-pill">
+            Estado: Pendiente de aprobación
+            <span class="close">&times;</span>
+          </div>
+          <div class="filter-pill">
+            Tipo: Factura
+            <span class="close">&times;</span>
+          </div>
+          <div class="filter-pill">
+            Fecha: 01/08/2025 - 15/09/2025
+            <span class="close">&times;</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Resumen y controles -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <div class="results-summary mb-2 mb-sm-0">
+          Mostrando <strong>28</strong> de <strong>52</strong> documentos
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <div class="d-flex align-items-center">
+            <span class="me-2 text-muted small">Ordenar por:</span>
+            <select class="form-select form-select-sm" style="width: auto;">
+              <option value="date-desc" selected>Fecha (recientes primero)</option>
+              <option value="date-asc">Fecha (antiguos primero)</option>
+              <option value="amount-desc">Monto (mayor a menor)</option>
+              <option value="amount-asc">Monto (menor a mayor)</option>
+              <option value="provider">Proveedor</option>
+            </select>
+          </div>
+          <div class="view-toggle btn-group" role="group" aria-label="Cambiar vista">
+            <button type="button" class="btn btn-outline-secondary active" id="grid-view">
+              <span class="material-icons small">grid_view</span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="table-view">
+              <span class="material-icons small">view_list</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Vista de tarjetas (Grid) -->
+      <div class="grid-view-container" id="grid-view-container">
+        <div class="row g-3">
+          <!-- Documento 1 -->
+          <div class="col-12 col-md-6 col-xl-4">
+            <div class="card doc-card h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <div class="d-flex align-items-center">
+                      <span class="doc-status status-pending"></span>
+                      <h6 class="mb-0">Factura #F-2025-098</h6>
+                    </div>
+                    <div class="doc-meta mt-1">
+                      <span class="doc-type-badge doc-type-invoice">Factura</span>
+                    </div>
+                  </div>
+                  <div class="dropdown">
+                    <button class="more-btn" id="doc1-actions" data-bs-toggle="dropdown" aria-expanded="false">
+                      <span class="material-icons">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="doc1-actions">
+                      <li><a class="dropdown-item" href="documento-compra-detalle.html">
+                        <span class="material-icons align-middle me-2 small">visibility</span>Ver detalle
+                      </a></li>
+                      <li><a class="dropdown-item" href="#">
+                        <span class="material-icons align-middle me-2 small">edit</span>Editar
+                      </a></li>
+                      <li><a class="dropdown-item" href="#">
+                        <span class="material-icons align-middle me-2 small">assignment_turned_in</span>Aprobar
+                      </a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="#">
+                        <span class="material-icons align-middle me-2 small">delete</span>Eliminar
+                      </a></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                  <div>
+                    <div class="text-muted small">Proveedor</div>
+                    <div>Constructora Edificar</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Fecha</div>
+                    <div>15/09/2025</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Comunidad</div>
+                    <div>Comunidad Parque Real</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Estado</div>
+                    <div class="status-text pending">Pendiente de aprobación</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Descripción</div>
+                    <div>Reparación de techumbre</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Monto</div>
+                    <div class="doc-amount">$3.450.000</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Documento 2 -->
+          <div class="col-12 col-md-6 col-xl-4">
+            <div class="card doc-card h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <div class="d-flex align-items-center">
+                      <span class="doc-status status-approved"></span>
+                      <h6 class="mb-0">Factura #F-2025-095</h6>
+                    </div>
+                    <div class="doc-meta mt-1">
+                      <span class="doc-type-badge doc-type-invoice">Factura</span>
+                    </div>
+                  </div>
+                  <div class="dropdown">
+                    <button class="more-btn" id="doc2-actions" data-bs-toggle="dropdown" aria-expanded="false">
+                      <span class="material-icons">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="doc2-actions">
+                      <li><a class="dropdown-item" href="documento-compra-detalle.html">
+                        <span class="material-icons align-middle me-2 small">visibility</span>Ver detalle
+                      </a></li>
+                      <li><a class="dropdown-item" href="#">
+                        <span class="material-icons align-middle me-2 small">edit</span>Editar
+                      </a></li>
+                      <li><a class="dropdown-item" href="#">
+                        <span class="material-icons align-middle me-2 small">payments</span>Registrar pago
+                      </a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="#">
+                        <span class="material-icons align-middle me-2 small">delete</span>Eliminar
+                      </a></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                  <div>
+                    <div class="text-muted small">Proveedor</div>
+                    <div>Servicios Eléctricos S.A.</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Fecha</div>
+                    <div>12/09/2025</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Comunidad</div>
+                    <div>Edificio Central</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Estado</div>
+                    <div class="status-text approved">Aprobado</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Descripción</div>
+                    <div>Mantención sistema eléctrico</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Monto</div>
+                    <div class="doc-amount">$1.250.000</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Documento 3 -->
+          <div class="col-12 col-md-6 col-xl-4">
+            <div class="card doc-card h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <div class="d-flex align-items-center">
+                      <span class="doc-status status-paid"></span>
+                      <h6 class="mb-0">Boleta #B-2025-076</h6>
+                    </div>
+                    <div class="doc-meta mt-1">
+                      <span class="doc-type-badge doc-type-receipt">Boleta</span>
+                    </div>
+                  </div>
+                  <div class="dropdown">
+                    <button class="more-btn" id="doc3-actions" data-bs-toggle="dropdown" aria-expanded="false">
+                      <span class="material-icons">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="doc3-actions">
+                      <li><a class="dropdown-item" href="documento-compra-detalle.html">
+                        <span class="material-icons align-middle me-2 small">visibility</span>Ver detalle
+                      </a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="#">
+                        <span class="material-icons align-middle me-2 small">delete</span>Eliminar
+                      </a></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                  <div>
+                    <div class="text-muted small">Proveedor</div>
+                    <div>Plomería y Mantención Express</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Fecha</div>
+                    <div>05/09/2025</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Comunidad</div>
+                    <div>Torre Norte</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Estado</div>
+                    <div class="status-text paid">Pagado</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Descripción</div>
+                    <div>Reparación de cañerías</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Monto</div>
+                    <div class="doc-amount">$850.000</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Documento 4 -->
+          <div class="col-12 col-md-6 col-xl-4">
+            <div class="card doc-card h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <div class="d-flex align-items-center">
+                      <span class="doc-status status-draft"></span>
+                      <h6 class="mb-0">Orden #OC-2025-087</h6>
+                    </div>
+                    <div class="doc-meta mt-1">
+                      <span class="doc-type-badge doc-type-order">Orden de compra</span>
+                    </div>
+                  </div>
+                  <div class="dropdown">
+                    <button class="more-btn" id="doc4-actions" data-bs-toggle="dropdown" aria-expanded="false">
+                      <span class="material-icons">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="doc4-actions">
+                      <li><a class="dropdown-item" href="documento-compra-detalle.html">
+                        <span class="material-icons align-middle me-2 small">visibility</span>Ver detalle
+                      </a></li>
+                      <li><a class="dropdown-item" href="#">
+                        <span class="material-icons align-middle me-2 small">edit</span>Editar
+                      </a></li>
+                      <li><a class="dropdown-item" href="#">
+                        <span class="material-icons align-middle me-2 small">send</span>Enviar
+                      </a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="#">
+                        <span class="material-icons align-middle me-2 small">delete</span>Eliminar
+                      </a></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                  <div>
+                    <div class="text-muted small">Proveedor</div>
+                    <div>Distribuidora de Insumos ABC</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Fecha</div>
+                    <div>01/09/2025</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Comunidad</div>
+                    <div>Condominio Las Palmas</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Estado</div>
+                    <div class="status-text draft">Borrador</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Descripción</div>
+                    <div>Materiales de limpieza</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Monto</div>
+                    <div class="doc-amount">$425.000</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Documento 5 -->
+          <div class="col-12 col-md-6 col-xl-4">
+            <div class="card doc-card h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <div class="d-flex align-items-center">
+                      <span class="doc-status status-rejected"></span>
+                      <h6 class="mb-0">Factura #F-2025-089</h6>
+                    </div>
+                    <div class="doc-meta mt-1">
+                      <span class="doc-type-badge doc-type-invoice">Factura</span>
+                    </div>
+                  </div>
+                  <div class="dropdown">
+                    <button class="more-btn" id="doc5-actions" data-bs-toggle="dropdown" aria-expanded="false">
+                      <span class="material-icons">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="doc5-actions">
+                      <li><a class="dropdown-item" href="documento-compra-detalle.html">
+                        <span class="material-icons align-middle me-2 small">visibility</span>Ver detalle
+                      </a></li>
+                      <li><a class="dropdown-item" href="#">
+                        <span class="material-icons align-middle me-2 small">edit</span>Editar
+                      </a></li>
+                      <li><a class="dropdown-item" href="#">
+                        <span class="material-icons align-middle me-2 small">restart_alt</span>Reenviar
+                      </a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="#">
+                        <span class="material-icons align-middle me-2 small">delete</span>Eliminar
+                      </a></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                  <div>
+                    <div class="text-muted small">Proveedor</div>
+                    <div>Seguridad Integral Ltda.</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Fecha</div>
+                    <div>28/08/2025</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Comunidad</div>
+                    <div>Comunidad Parque Real</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Estado</div>
+                    <div class="status-text rejected">Rechazado</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Descripción</div>
+                    <div>Servicio de seguridad</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Monto</div>
+                    <div class="doc-amount">$1.875.000</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Documento 6 -->
+          <div class="col-12 col-md-6 col-xl-4">
+            <div class="card doc-card h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <div class="d-flex align-items-center">
+                      <span class="doc-status status-draft"></span>
+                      <h6 class="mb-0">Cotización #C-2025-045</h6>
+                    </div>
+                    <div class="doc-meta mt-1">
+                      <span class="doc-type-badge doc-type-quote">Cotización</span>
+                    </div>
+                  </div>
+                  <div class="dropdown">
+                    <button class="more-btn" id="doc6-actions" data-bs-toggle="dropdown" aria-expanded="false">
+                      <span class="material-icons">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="doc6-actions">
+                      <li><a class="dropdown-item" href="documento-compra-detalle.html">
+                        <span class="material-icons align-middle me-2 small">visibility</span>Ver detalle
+                      </a></li>
+                      <li><a class="dropdown-item" href="#">
+                        <span class="material-icons align-middle me-2 small">edit</span>Editar
+                      </a></li>
+                      <li><a class="dropdown-item" href="#">
+                        <span class="material-icons align-middle me-2 small">send</span>Enviar
+                      </a></li>
+                      <li><a class="dropdown-item" href="#">
+                        <span class="material-icons align-middle me-2 small">content_copy</span>Crear orden
+                      </a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="#">
+                        <span class="material-icons align-middle me-2 small">delete</span>Eliminar
+                      </a></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                  <div>
+                    <div class="text-muted small">Proveedor</div>
+                    <div>Constructora Edificar</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Fecha</div>
+                    <div>25/08/2025</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Comunidad</div>
+                    <div>Edificio Central</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Estado</div>
+                    <div class="status-text draft">Borrador</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Descripción</div>
+                    <div>Renovación áreas comunes</div>
+                  </div>
+                  <div>
+                    <div class="text-muted small">Monto</div>
+                    <div class="doc-amount">$5.750.000</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="d-flex justify-content-center mt-4">
+          <nav aria-label="Page navigation">
+            <ul class="pagination">
+              <li class="page-item disabled">
+                <a class="page-link" href="#" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+              <li class="page-item active"><a class="page-link" href="#">1</a></li>
+              <li class="page-item"><a class="page-link" href="#">2</a></li>
+              <li class="page-item"><a class="page-link" href="#">3</a></li>
+              <li class="page-item">
+                <a class="page-link" href="#" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+      
+      <!-- Vista de tabla -->
+      <div class="table-view-container d-none" id="table-view-container">
+        <div class="table-responsive">
+          <table class="table table-hover document-table">
+            <thead>
+              <tr>
+                <th scope="col">Número/Tipo</th>
+                <th scope="col">Proveedor</th>
+                <th scope="col">Comunidad</th>
+                <th scope="col">Descripción</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Monto</th>
+                <th scope="col">Estado</th>
+                <th scope="col" class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr onclick="window.location='documento-compra-detalle.html';" style="cursor: pointer;">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <span class="doc-status status-pending me-2"></span>
+                    <div>
+                      <div>F-2025-098</div>
+                      <div class="small text-muted">Factura</div>
+                    </div>
+                  </div>
+                </td>
+                <td>Constructora Edificar</td>
+                <td>Comunidad Parque Real</td>
+                <td>Reparación de techumbre</td>
+                <td>15/09/2025</td>
+                <td>$3.450.000</td>
+                <td>
+                  <span class="status-text pending">Pendiente</span>
+                </td>
+                <td class="text-end">
+                  <div class="dropdown" onclick="event.stopPropagation();">
+                    <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons small">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li><a class="dropdown-item" href="documento-compra-detalle.html">Ver detalle</a></li>
+                      <li><a class="dropdown-item" href="#">Editar</a></li>
+                      <li><a class="dropdown-item" href="#">Aprobar</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="#">Eliminar</a></li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              
+              <tr onclick="window.location='documento-compra-detalle.html';" style="cursor: pointer;">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <span class="doc-status status-approved me-2"></span>
+                    <div>
+                      <div>F-2025-095</div>
+                      <div class="small text-muted">Factura</div>
+                    </div>
+                  </div>
+                </td>
+                <td>Servicios Eléctricos S.A.</td>
+                <td>Edificio Central</td>
+                <td>Mantención sistema eléctrico</td>
+                <td>12/09/2025</td>
+                <td>$1.250.000</td>
+                <td>
+                  <span class="status-text approved">Aprobado</span>
+                </td>
+                <td class="text-end">
+                  <div class="dropdown" onclick="event.stopPropagation();">
+                    <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons small">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li><a class="dropdown-item" href="documento-compra-detalle.html">Ver detalle</a></li>
+                      <li><a class="dropdown-item" href="#">Editar</a></li>
+                      <li><a class="dropdown-item" href="#">Registrar pago</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="#">Eliminar</a></li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              
+              <tr onclick="window.location='documento-compra-detalle.html';" style="cursor: pointer;">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <span class="doc-status status-paid me-2"></span>
+                    <div>
+                      <div>B-2025-076</div>
+                      <div class="small text-muted">Boleta</div>
+                    </div>
+                  </div>
+                </td>
+                <td>Plomería y Mantención Express</td>
+                <td>Torre Norte</td>
+                <td>Reparación de cañerías</td>
+                <td>05/09/2025</td>
+                <td>$850.000</td>
+                <td>
+                  <span class="status-text paid">Pagado</span>
+                </td>
+                <td class="text-end">
+                  <div class="dropdown" onclick="event.stopPropagation();">
+                    <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons small">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li><a class="dropdown-item" href="documento-compra-detalle.html">Ver detalle</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="#">Eliminar</a></li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              
+              <tr onclick="window.location='documento-compra-detalle.html';" style="cursor: pointer;">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <span class="doc-status status-draft me-2"></span>
+                    <div>
+                      <div>OC-2025-087</div>
+                      <div class="small text-muted">Orden de compra</div>
+                    </div>
+                  </div>
+                </td>
+                <td>Distribuidora de Insumos ABC</td>
+                <td>Condominio Las Palmas</td>
+                <td>Materiales de limpieza</td>
+                <td>01/09/2025</td>
+                <td>$425.000</td>
+                <td>
+                  <span class="status-text draft">Borrador</span>
+                </td>
+                <td class="text-end">
+                  <div class="dropdown" onclick="event.stopPropagation();">
+                    <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons small">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li><a class="dropdown-item" href="documento-compra-detalle.html">Ver detalle</a></li>
+                      <li><a class="dropdown-item" href="#">Editar</a></li>
+                      <li><a class="dropdown-item" href="#">Enviar</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="#">Eliminar</a></li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              
+              <tr onclick="window.location='documento-compra-detalle.html';" style="cursor: pointer;">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <span class="doc-status status-rejected me-2"></span>
+                    <div>
+                      <div>F-2025-089</div>
+                      <div class="small text-muted">Factura</div>
+                    </div>
+                  </div>
+                </td>
+                <td>Seguridad Integral Ltda.</td>
+                <td>Comunidad Parque Real</td>
+                <td>Servicio de seguridad</td>
+                <td>28/08/2025</td>
+                <td>$1.875.000</td>
+                <td>
+                  <span class="status-text rejected">Rechazado</span>
+                </td>
+                <td class="text-end">
+                  <div class="dropdown" onclick="event.stopPropagation();">
+                    <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons small">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li><a class="dropdown-item" href="documento-compra-detalle.html">Ver detalle</a></li>
+                      <li><a class="dropdown-item" href="#">Editar</a></li>
+                      <li><a class="dropdown-item" href="#">Reenviar</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="#">Eliminar</a></li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              
+              <tr onclick="window.location='documento-compra-detalle.html';" style="cursor: pointer;">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <span class="doc-status status-draft me-2"></span>
+                    <div>
+                      <div>C-2025-045</div>
+                      <div class="small text-muted">Cotización</div>
+                    </div>
+                  </div>
+                </td>
+                <td>Constructora Edificar</td>
+                <td>Edificio Central</td>
+                <td>Renovación áreas comunes</td>
+                <td>25/08/2025</td>
+                <td>$5.750.000</td>
+                <td>
+                  <span class="status-text draft">Borrador</span>
+                </td>
+                <td class="text-end">
+                  <div class="dropdown" onclick="event.stopPropagation();">
+                    <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons small">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li><a class="dropdown-item" href="documento-compra-detalle.html">Ver detalle</a></li>
+                      <li><a class="dropdown-item" href="#">Editar</a></li>
+                      <li><a class="dropdown-item" href="#">Enviar</a></li>
+                      <li><a class="dropdown-item" href="#">Crear orden</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="#">Eliminar</a></li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="d-flex justify-content-center mt-4">
+          <nav aria-label="Page navigation">
+            <ul class="pagination">
+              <li class="page-item disabled">
+                <a class="page-link" href="#" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+              <li class="page-item active"><a class="page-link" href="#">1</a></li>
+              <li class="page-item"><a class="page-link" href="#">2</a></li>
+              <li class="page-item"><a class="page-link" href="#">3</a></li>
+              <li class="page-item">
+                <a class="page-link" href="#" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/script.js"></script>
+    
+    <script>
+      // Toggle sidebar on mobile
+      document.addEventListener('DOMContentLoaded', function() {
+        const toggleSidebar = document.getElementById('toggle-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+        
+        if (toggleSidebar && sidebar && sidebarBackdrop) {
+          toggleSidebar.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+            sidebarBackdrop.classList.toggle('show');
+          });
+          
+          sidebarBackdrop.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            sidebarBackdrop.classList.remove('show');
+          });
+        }
+        
+        // Toggle filter container
+        const toggleFilter = document.getElementById('toggle-filter');
+        const filterContainer = document.getElementById('filter-container');
+        
+        if (toggleFilter && filterContainer) {
+          toggleFilter.addEventListener('click', function() {
+            filterContainer.classList.toggle('open');
+            const icon = this.querySelector('.material-icons');
+            if (filterContainer.classList.contains('open')) {
+              icon.textContent = 'expand_less';
+            } else {
+              icon.textContent = 'expand_more';
+            }
+          });
+        }
+        
+        // Toggle grid/table view
+        const gridViewBtn = document.getElementById('grid-view');
+        const tableViewBtn = document.getElementById('table-view');
+        const gridViewContainer = document.getElementById('grid-view-container');
+        const tableViewContainer = document.getElementById('table-view-container');
+        
+        if (gridViewBtn && tableViewBtn && gridViewContainer && tableViewContainer) {
+          gridViewBtn.addEventListener('click', function() {
+            gridViewBtn.classList.add('active');
+            tableViewBtn.classList.remove('active');
+            gridViewContainer.classList.remove('d-none');
+            tableViewContainer.classList.add('d-none');
+          });
+          
+          tableViewBtn.addEventListener('click', function() {
+            tableViewBtn.classList.add('active');
+            gridViewBtn.classList.remove('active');
+            tableViewContainer.classList.remove('d-none');
+            gridViewContainer.classList.add('d-none');
+          });
+        }
+        
+        // Apply filters button
+        const applyFiltersBtn = document.getElementById('apply-filters');
+        const filtersApplied = document.getElementById('filters-applied');
+        
+        if (applyFiltersBtn && filtersApplied) {
+          applyFiltersBtn.addEventListener('click', function() {
+            filtersApplied.classList.remove('d-none');
+          });
+        }
+        
+        // Clear filters button
+        const clearFiltersBtn = document.getElementById('clear-filters');
+        
+        if (clearFiltersBtn && filtersApplied) {
+          clearFiltersBtn.addEventListener('click', function() {
+            filtersApplied.classList.add('d-none');
+            
+            // Reset all select elements to their first option
+            const filterSelects = document.querySelectorAll('.filter-container select');
+            filterSelects.forEach(select => {
+              select.selectedIndex = 0;
+            });
+            
+            // Clear all input elements
+            const filterInputs = document.querySelectorAll('.filter-container input');
+            filterInputs.forEach(input => {
+              input.value = '';
+            });
+          });
+        }
+        
+        // Close filter pill
+        const filterPills = document.querySelectorAll('.filter-pill .close');
+        filterPills.forEach(pill => {
+          pill.addEventListener('click', function() {
+            this.parentElement.remove();
+            
+            // If no pills left, hide the container
+            if (document.querySelectorAll('.filter-pill').length === 0) {
+              filtersApplied.classList.add('d-none');
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
