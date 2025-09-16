@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Detalle de Persona - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .content-section {
+        background-color: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+      }
+      
+      .content-header {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        background-color: #f9f9f9;
+      }
+      
+      .content-body {
+        padding: 1.5rem;
+      }
+      
+      .stat-card {
+        background-color: #fff;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow-sm);
+      }
+      
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--color-primary);
+      }
+      
+      .stat-label {
+        font-size: 0.875rem;
+        color: var(--color-secondary);
+      }
+      
+      .tab-header {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .quick-action {
+        display: flex;
+        align-items: center;
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+      }
+      
+      .quick-action:hover {
+        background-color: #e9ecef;
+        text-decoration: none;
+      }
+      
+      .avatar-stack {
+        display: flex;
+      }
+      
+      .avatar-stack .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: var(--color-secondary);
+        color: white;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: -10px;
+        border: 2px solid white;
+      }
+      
+      .avatar-stack .avatar:first-child {
+        margin-left: 0;
+      }
+      
+      .avatar-stack .avatar-more {
+        background-color: var(--color-muted);
+      }
+      
+      .profile-header {
+        position: relative;
+        background-color: var(--color-primary);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+      }
+      
+      .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #fff;
+        border: 4px solid white;
+        object-fit: cover;
+      }
+      
+      .profile-info {
+        padding-left: 1rem;
+      }
+      
+      .status-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+      }
+      
+      .info-item {
+        margin-bottom: 0.75rem;
+      }
+      
+      .info-item .label {
+        font-size: 0.85rem;
+        color: var(--color-muted);
+        margin-bottom: 0.25rem;
+      }
+      
+      .info-item .value {
+        font-weight: 500;
+      }
+      
+      .history-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+      }
+      
+      .history-item:last-child {
+        border-bottom: none;
+      }
+      
+      .history-date {
+        font-size: 0.85rem;
+        color: var(--color-muted);
+      }
+      
+      .timeline {
+        position: relative;
+        padding-left: 2rem;
+      }
+      
+      .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+      }
+      
+      .timeline-item::before {
+        content: "";
+        position: absolute;
+        left: -1.5rem;
+        top: 0.3rem;
+        height: 12px;
+        width: 12px;
+        border-radius: 50%;
+        background-color: var(--color-primary);
+        z-index: 1;
+      }
+      
+      .timeline-item::after {
+        content: "";
+        position: absolute;
+        left: -1rem;
+        top: 0.75rem;
+        height: 100%;
+        width: 2px;
+        background-color: #dee2e6;
+        z-index: 0;
+      }
+      
+      .timeline-item:last-child::after {
+        display: none;
+      }
+      
+      .timeline-date {
+        font-size: 0.85rem;
+        color: var(--color-muted);
+        margin-bottom: 0.25rem;
+      }
+      
+      .timeline-content {
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+        padding: 0.75rem;
+      }
+      
+      .unidad-card {
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+      }
+      
+      .unidad-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+      }
+      
+      .unidad-card-header {
+        padding: 0.75rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        background-color: #f8f9fa;
+      }
+      
+      .unidad-card-body {
+        padding: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 280px; min-height: 100vh; background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <ul class="nav nav-sidebar flex-column mb-auto">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">domain</span>
+              <span>Comunidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="edificios-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">business</span>
+              <span>Edificios</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">apartment</span>
+              <span>Unidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="personas-listado.html" class="nav-link active px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">people</span>
+              <span>Personas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="emisiones-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">receipt_long</span>
+              <span>Emisiones</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">payments</span>
+              <span>Pagos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">shopping_cart</span>
+              <span>Gastos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">bar_chart</span>
+              <span>Reportes</span>
+            </a>
+          </li>
+        </ul>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+            <strong>Patricia</strong>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+            <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="flex-grow-1 bg-light">
+        <!-- Header -->
+        <header class="bg-white shadow-sm py-3 px-4 d-flex justify-content-between align-items-center sticky-top">
+          <div class="d-flex align-items-center">
+            <a href="personas-listado.html" class="btn btn-link text-secondary p-0 me-3">
+              <span class="material-icons">arrow_back</span>
+            </a>
+            <h5 class="mb-0">Detalle de Persona</h5>
+          </div>
+          <div class="d-flex align-items-center">
+            <div class="dropdown me-2">
+              <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="actionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-ellipsis-v"></i> Acciones
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="actionDropdown">
+                <li><a class="dropdown-item" href="#"><i class="fas fa-envelope me-2"></i> Enviar email</a></li>
+                <li><a class="dropdown-item" href="#"><i class="fas fa-key me-2"></i> Restablecer acceso</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-ban me-2"></i> Desactivar</a></li>
+              </ul>
+            </div>
+            <button class="btn btn-primary">
+              <i class="fas fa-edit me-2"></i> Editar
+            </button>
+          </div>
+        </header>
+        
+        <!-- Profile Header -->
+        <div class="profile-header">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <div class="col-auto">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Foto de perfil" class="profile-avatar">
+              </div>
+              <div class="col profile-info">
+                <h3 class="mb-1">Juan Delgado</h3>
+                <div class="d-flex align-items-center mb-2">
+                  <span class="badge bg-success-soft text-success me-2">Propietario</span>
+                  <span class="small">DNI: 30.457.892</span>
+                </div>
+                <div class="d-flex align-items-center">
+                  <span class="material-icons me-2 small">email</span>
+                  <span class="small">juan.delgado@email.com</span>
+                  <span class="material-icons mx-3 small">phone</span>
+                  <span class="small">+54 11 5555-1234</span>
+                </div>
+              </div>
+              <div class="col-auto">
+                <span class="badge bg-success status-badge">Activo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="container-fluid py-3">
+          <div class="row">
+            <div class="col-12 col-lg-4">
+              <!-- Resumen -->
+              <div class="content-section mb-4">
+                <div class="content-header">
+                  <h6 class="mb-0">Resumen</h6>
+                </div>
+                <div class="content-body">
+                  <div class="row g-3">
+                    <div class="col-6">
+                      <div class="info-item">
+                        <div class="label">Unidades</div>
+                        <div class="value">2</div>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="info-item">
+                        <div class="label">Saldo Total</div>
+                        <div class="value text-success">$0.00</div>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="info-item">
+                        <div class="label">Último Pago</div>
+                        <div class="value">15/05/2023</div>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="info-item">
+                        <div class="label">Fecha Alta</div>
+                        <div class="value">10/01/2022</div>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="info-item">
+                        <div class="label">Dirección</div>
+                        <div class="value">Av. Libertador 1234, CABA</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Información de Cuenta -->
+              <div class="content-section mb-4">
+                <div class="content-header d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">Información de Cuenta</h6>
+                  <button class="btn btn-sm btn-outline-primary">Editar</button>
+                </div>
+                <div class="content-body">
+                  <div class="info-item">
+                    <div class="label">Usuario</div>
+                    <div class="value">juandelgado</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="label">Nivel de acceso</div>
+                    <div class="value">Usuario estándar</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="label">Estado</div>
+                    <div class="value">
+                      <span class="badge bg-success">Activo</span>
+                    </div>
+                  </div>
+                  <div class="info-item mb-0">
+                    <div class="label">Último acceso</div>
+                    <div class="value">12/05/2023 15:30</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Acciones Rápidas -->
+              <div class="content-section mb-4">
+                <div class="content-header">
+                  <h6 class="mb-0">Acciones Rápidas</h6>
+                </div>
+                <div class="content-body">
+                  <a href="#" class="quick-action text-decoration-none text-body">
+                    <span class="material-icons me-3 text-primary">email</span>
+                    <span>Enviar email</span>
+                  </a>
+                  <a href="#" class="quick-action text-decoration-none text-body">
+                    <span class="material-icons me-3 text-primary">receipt_long</span>
+                    <span>Ver estado de cuenta</span>
+                  </a>
+                  <a href="#" class="quick-action text-decoration-none text-body">
+                    <span class="material-icons me-3 text-primary">add_home</span>
+                    <span>Asignar nueva unidad</span>
+                  </a>
+                  <a href="#" class="quick-action text-decoration-none text-body">
+                    <span class="material-icons me-3 text-primary">key</span>
+                    <span>Restablecer contraseña</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-12 col-lg-8">
+              <!-- Tabs de Navegación -->
+              <ul class="nav nav-tabs mb-4" id="detailTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="unidades-tab" data-bs-toggle="tab" data-bs-target="#unidades" type="button" role="tab" aria-controls="unidades" aria-selected="true">
+                    <i class="fas fa-home me-1"></i> Unidades
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button" role="tab" aria-controls="pagos" aria-selected="false">
+                    <i class="fas fa-receipt me-1"></i> Pagos
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="actividad-tab" data-bs-toggle="tab" data-bs-target="#actividad" type="button" role="tab" aria-controls="actividad" aria-selected="false">
+                    <i class="fas fa-history me-1"></i> Actividad
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="documentos-tab" data-bs-toggle="tab" data-bs-target="#documentos" type="button" role="tab" aria-controls="documentos" aria-selected="false">
+                    <i class="fas fa-file me-1"></i> Documentos
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="notas-tab" data-bs-toggle="tab" data-bs-target="#notas" type="button" role="tab" aria-controls="notas" aria-selected="false">
+                    <i class="fas fa-sticky-note me-1"></i> Notas
+                  </button>
+                </li>
+              </ul>
+              
+              <!-- Tab Content -->
+              <div class="tab-content" id="detailTabContent">
+                <!-- Unidades Tab -->
+                <div class="tab-pane fade show active" id="unidades" role="tabpanel" aria-labelledby="unidades-tab">
+                  <div class="content-section">
+                    <div class="content-header d-flex justify-content-between align-items-center">
+                      <h6 class="mb-0">Unidades Asociadas</h6>
+                      <button class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i> Asignar Unidad
+                      </button>
+                    </div>
+                    <div class="content-body">
+                      <!-- Unidad Card 1 -->
+                      <div class="unidad-card">
+                        <div class="unidad-card-header d-flex justify-content-between align-items-center">
+                          <div>
+                            <h6 class="mb-0">Departamento 4B</h6>
+                            <div class="small text-muted">Edificio Torre Norte - Comunidad Parque Real</div>
+                          </div>
+                          <span class="badge bg-success-soft text-success">Propietario</span>
+                        </div>
+                        <div class="unidad-card-body">
+                          <div class="row">
+                            <div class="col-md-6">
+                              <div class="small text-muted mb-1">Dirección</div>
+                              <div class="fw-medium mb-2">Av. Libertador 1234, Piso 4, Dpto B</div>
+                              
+                              <div class="small text-muted mb-1">Metros Cuadrados</div>
+                              <div class="fw-medium">85 m²</div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="small text-muted mb-1">Estado</div>
+                              <div class="fw-medium mb-2">
+                                <span class="d-inline-flex align-items-center">
+                                  <span class="status-icon status-activo"></span> Activo
+                                </span>
+                              </div>
+                              
+                              <div class="small text-muted mb-1">Saldo Pendiente</div>
+                              <div class="fw-medium text-success">$0.00</div>
+                            </div>
+                            <div class="col-12 mt-3">
+                              <a href="unidad-detalle.html" class="btn btn-sm btn-outline-primary">Ver Unidad</a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Unidad Card 2 -->
+                      <div class="unidad-card mt-3">
+                        <div class="unidad-card-header d-flex justify-content-between align-items-center">
+                          <div>
+                            <h6 class="mb-0">Departamento 7A</h6>
+                            <div class="small text-muted">Edificio Torre Sur - Comunidad Parque Real</div>
+                          </div>
+                          <span class="badge bg-success-soft text-success">Propietario</span>
+                        </div>
+                        <div class="unidad-card-body">
+                          <div class="row">
+                            <div class="col-md-6">
+                              <div class="small text-muted mb-1">Dirección</div>
+                              <div class="fw-medium mb-2">Av. Libertador 1234, Piso 7, Dpto A</div>
+                              
+                              <div class="small text-muted mb-1">Metros Cuadrados</div>
+                              <div class="fw-medium">95 m²</div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="small text-muted mb-1">Estado</div>
+                              <div class="fw-medium mb-2">
+                                <span class="d-inline-flex align-items-center">
+                                  <span class="status-icon status-activo"></span> Activo
+                                </span>
+                              </div>
+                              
+                              <div class="small text-muted mb-1">Saldo Pendiente</div>
+                              <div class="fw-medium text-success">$0.00</div>
+                            </div>
+                            <div class="col-12 mt-3">
+                              <a href="unidad-detalle.html" class="btn btn-sm btn-outline-primary">Ver Unidad</a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Pagos Tab -->
+                <div class="tab-pane fade" id="pagos" role="tabpanel" aria-labelledby="pagos-tab">
+                  <div class="content-section">
+                    <div class="content-header d-flex justify-content-between align-items-center">
+                      <h6 class="mb-0">Historial de Pagos</h6>
+                      <button class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i> Registrar Pago
+                      </button>
+                    </div>
+                    <div class="content-body">
+                      <div class="table-responsive">
+                        <table class="table table-hover">
+                          <thead class="table-light">
+                            <tr>
+                              <th>#</th>
+                              <th>Fecha</th>
+                              <th>Unidad</th>
+                              <th>Periodo</th>
+                              <th>Importe</th>
+                              <th>Método</th>
+                              <th>Estado</th>
+                              <th>Acciones</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td>P-2023-0456</td>
+                              <td>15/05/2023</td>
+                              <td>Dpto 4B</td>
+                              <td>Mayo 2023</td>
+                              <td>$45.000</td>
+                              <td>Transferencia</td>
+                              <td><span class="badge bg-success">Pagado</span></td>
+                              <td>
+                                <button class="btn btn-sm btn-outline-primary">
+                                  <i class="fas fa-eye"></i>
+                                </button>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>P-2023-0398</td>
+                              <td>15/05/2023</td>
+                              <td>Dpto 7A</td>
+                              <td>Mayo 2023</td>
+                              <td>$52.000</td>
+                              <td>Transferencia</td>
+                              <td><span class="badge bg-success">Pagado</span></td>
+                              <td>
+                                <button class="btn btn-sm btn-outline-primary">
+                                  <i class="fas fa-eye"></i>
+                                </button>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>P-2023-0256</td>
+                              <td>15/04/2023</td>
+                              <td>Dpto 4B</td>
+                              <td>Abril 2023</td>
+                              <td>$42.000</td>
+                              <td>Transferencia</td>
+                              <td><span class="badge bg-success">Pagado</span></td>
+                              <td>
+                                <button class="btn btn-sm btn-outline-primary">
+                                  <i class="fas fa-eye"></i>
+                                </button>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>P-2023-0199</td>
+                              <td>15/04/2023</td>
+                              <td>Dpto 7A</td>
+                              <td>Abril 2023</td>
+                              <td>$49.000</td>
+                              <td>Transferencia</td>
+                              <td><span class="badge bg-success">Pagado</span></td>
+                              <td>
+                                <button class="btn btn-sm btn-outline-primary">
+                                  <i class="fas fa-eye"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- Paginación -->
+                      <nav class="mt-3">
+                        <ul class="pagination justify-content-center">
+                          <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                              <i class="fas fa-chevron-left"></i>
+                            </a>
+                          </li>
+                          <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                          <li class="page-item"><a class="page-link" href="#">2</a></li>
+                          <li class="page-item"><a class="page-link" href="#">3</a></li>
+                          <li class="page-item">
+                            <a class="page-link" href="#">
+                              <i class="fas fa-chevron-right"></i>
+                            </a>
+                          </li>
+                        </ul>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Actividad Tab -->
+                <div class="tab-pane fade" id="actividad" role="tabpanel" aria-labelledby="actividad-tab">
+                  <div class="content-section">
+                    <div class="content-header">
+                      <h6 class="mb-0">Registro de Actividad</h6>
+                    </div>
+                    <div class="content-body">
+                      <div class="timeline">
+                        <div class="timeline-item">
+                          <div class="timeline-date">Hoy, 10:30 AM</div>
+                          <div class="timeline-content">
+                            <div class="fw-medium">Inicio de sesión</div>
+                            <div class="small text-muted">El usuario inició sesión en el sistema</div>
+                          </div>
+                        </div>
+                        <div class="timeline-item">
+                          <div class="timeline-date">15/05/2023, 15:45</div>
+                          <div class="timeline-content">
+                            <div class="fw-medium">Pago registrado</div>
+                            <div class="small text-muted">Se registró el pago de expensas para Dpto 4B por $45.000</div>
+                          </div>
+                        </div>
+                        <div class="timeline-item">
+                          <div class="timeline-date">15/05/2023, 15:42</div>
+                          <div class="timeline-content">
+                            <div class="fw-medium">Pago registrado</div>
+                            <div class="small text-muted">Se registró el pago de expensas para Dpto 7A por $52.000</div>
+                          </div>
+                        </div>
+                        <div class="timeline-item">
+                          <div class="timeline-date">10/05/2023, 09:15</div>
+                          <div class="timeline-content">
+                            <div class="fw-medium">Inicio de sesión</div>
+                            <div class="small text-muted">El usuario inició sesión en el sistema</div>
+                          </div>
+                        </div>
+                        <div class="timeline-item">
+                          <div class="timeline-date">15/04/2023, 16:20</div>
+                          <div class="timeline-content">
+                            <div class="fw-medium">Pago registrado</div>
+                            <div class="small text-muted">Se registró el pago de expensas para Dpto 4B por $42.000</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Documentos Tab -->
+                <div class="tab-pane fade" id="documentos" role="tabpanel" aria-labelledby="documentos-tab">
+                  <div class="content-section">
+                    <div class="content-header d-flex justify-content-between align-items-center">
+                      <h6 class="mb-0">Documentos</h6>
+                      <button class="btn btn-sm btn-primary">
+                        <i class="fas fa-upload me-1"></i> Subir Documento
+                      </button>
+                    </div>
+                    <div class="content-body">
+                      <div class="table-responsive">
+                        <table class="table table-hover">
+                          <thead class="table-light">
+                            <tr>
+                              <th>Nombre</th>
+                              <th>Tipo</th>
+                              <th>Fecha</th>
+                              <th>Tamaño</th>
+                              <th>Acciones</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td>
+                                <div class="d-flex align-items-center">
+                                  <i class="fas fa-file-pdf text-danger me-2"></i>
+                                  <span>Contrato Compraventa.pdf</span>
+                                </div>
+                              </td>
+                              <td>Contrato</td>
+                              <td>10/01/2022</td>
+                              <td>2.4 MB</td>
+                              <td>
+                                <div class="btn-group">
+                                  <button class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                  </button>
+                                  <button class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-download"></i>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <div class="d-flex align-items-center">
+                                  <i class="fas fa-file-image text-info me-2"></i>
+                                  <span>Foto DNI.jpg</span>
+                                </div>
+                              </td>
+                              <td>Identificación</td>
+                              <td>10/01/2022</td>
+                              <td>1.2 MB</td>
+                              <td>
+                                <div class="btn-group">
+                                  <button class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                  </button>
+                                  <button class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-download"></i>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <div class="d-flex align-items-center">
+                                  <i class="fas fa-file-pdf text-danger me-2"></i>
+                                  <span>Comprobante Impositivo.pdf</span>
+                                </div>
+                              </td>
+                              <td>Impositivo</td>
+                              <td>15/03/2022</td>
+                              <td>0.8 MB</td>
+                              <td>
+                                <div class="btn-group">
+                                  <button class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                  </button>
+                                  <button class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-download"></i>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Notas Tab -->
+                <div class="tab-pane fade" id="notas" role="tabpanel" aria-labelledby="notas-tab">
+                  <div class="content-section">
+                    <div class="content-header d-flex justify-content-between align-items-center">
+                      <h6 class="mb-0">Notas Internas</h6>
+                      <button class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i> Nueva Nota
+                      </button>
+                    </div>
+                    <div class="content-body">
+                      <div class="card mb-3">
+                        <div class="card-body">
+                          <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="card-title mb-0">Actualización de contacto</h6>
+                            <div class="text-muted small">12/05/2023</div>
+                          </div>
+                          <p class="card-text">El propietario confirmó su nuevo número de teléfono: +54 11 5555-1234. Actualizar en todos los sistemas.</p>
+                          <div class="d-flex justify-content-between align-items-center">
+                            <div class="small text-muted">Creado por: Patricia Contreras</div>
+                            <div>
+                              <button class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="fas fa-edit"></i>
+                              </button>
+                              <button class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="card mb-3">
+                        <div class="card-body">
+                          <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="card-title mb-0">Recordatorio pago</h6>
+                            <div class="text-muted small">15/03/2023</div>
+                          </div>
+                          <p class="card-text">Recordar contactar a principios de junio para confirmar pago. Prefiere realizar transferencia temprano en el mes.</p>
+                          <div class="d-flex justify-content-between align-items-center">
+                            <div class="small text-muted">Creado por: Carlos Ramírez</div>
+                            <div>
+                              <button class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="fas fa-edit"></i>
+                              </button>
+                              <button class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- Form para agregar nota -->
+                      <div class="card mt-4 d-none">
+                        <div class="card-body">
+                          <h6 class="card-title mb-3">Agregar nueva nota</h6>
+                          <form>
+                            <div class="mb-3">
+                              <label for="notaTitulo" class="form-label">Título</label>
+                              <input type="text" class="form-control" id="notaTitulo">
+                            </div>
+                            <div class="mb-3">
+                              <label for="notaContenido" class="form-label">Contenido</label>
+                              <textarea class="form-control" id="notaContenido" rows="3"></textarea>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                              <button type="button" class="btn btn-outline-secondary me-2">Cancelar</button>
+                              <button type="submit" class="btn btn-primary">Guardar</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/script.js"></script>
+  </body>
+</html>

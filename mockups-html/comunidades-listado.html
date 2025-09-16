@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Comunidades — Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+
+    <style>
+      .app-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+      .app-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px rgba(0,0,0,0.1) !important; }
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .comunidad-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius);
+        height: 100%;
+      }
+      
+      .comunidad-card .badge-status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 2;
+      }
+      
+      .comunidad-card .card-img-overlay {
+        background: linear-gradient(0deg, rgba(3,14,39,0.85) 0%, rgba(3,14,39,0.6) 50%, rgba(3,14,39,0.2) 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      
+      .comunidad-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      
+      .comunidad-card:hover .comunidad-actions {
+        opacity: 1;
+      }
+      
+      .table tr {
+        vertical-align: middle;
+      }
+      
+      .table .actions-cell {
+        width: 120px;
+      }
+      
+      .filter-container {
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+        padding: 1rem;
+      }
+      
+      .search-icon-container {
+        position: relative;
+      }
+      
+      .search-icon {
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        transform: translateY(-50%);
+        color: var(--color-muted);
+      }
+      
+      .search-input {
+        padding-left: 35px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 280px; min-height: 100vh; background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <ul class="nav nav-sidebar flex-column mb-auto">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="comunidades-listado.html" class="nav-link active px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">domain</span>
+              <span>Comunidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">apartment</span>
+              <span>Unidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">people</span>
+              <span>Personas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="emisiones-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">receipt_long</span>
+              <span>Emisiones</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">payments</span>
+              <span>Pagos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">money_off</span>
+              <span>Gastos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">bar_chart</span>
+              <span>Reportes</span>
+            </a>
+          </li>
+        </ul>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+            <span class="material-icons me-2">settings</span>
+            <span>Configuración</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Preferencias</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Contenido principal -->
+      <div class="flex-grow-1 bg-light">
+        <!-- Header con búsqueda y notificaciones -->
+        <header class="bg-white border-bottom shadow-sm p-3">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <div class="col-lg-4">
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-0">
+                    <span class="material-icons text-muted">search</span>
+                  </span>
+                  <input type="text" class="form-control bg-light border-0" placeholder="Buscar...">
+                </div>
+              </div>
+              
+              <div class="col-lg-8">
+                <div class="d-flex justify-content-end align-items-center">
+                  <div class="me-3">
+                    <button class="btn position-relative p-0" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons">notifications</span>
+                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        3
+                      </span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-0" style="width: 320px;">
+                      <div class="p-3 border-bottom">
+                        <h6 class="mb-0">Notificaciones</h6>
+                      </div>
+                      <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action">
+                          <div class="d-flex align-items-center">
+                            <span class="material-icons text-warning me-3">payment</span>
+                            <div>
+                              <p class="mb-0">Nuevo pago registrado</p>
+                              <small class="text-muted">Hace 10 minutos</small>
+                            </div>
+                          </div>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                          <div class="d-flex align-items-center">
+                            <span class="material-icons text-success me-3">person_add</span>
+                            <div>
+                              <p class="mb-0">Nuevo residente registrado</p>
+                              <small class="text-muted">Hace 1 hora</small>
+                            </div>
+                          </div>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                          <div class="d-flex align-items-center">
+                            <span class="material-icons text-danger me-3">report_problem</span>
+                            <div>
+                              <p class="mb-0">Alerta: 5 pagos vencidos</p>
+                              <small class="text-muted">Hace 3 horas</small>
+                            </div>
+                          </div>
+                        </a>
+                      </div>
+                      <div class="p-2 border-top text-center">
+                        <a href="#" class="text-decoration-none text-accent small">Ver todas las notificaciones</a>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                      <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+                      <div class="d-none d-sm-block">
+                        <div class="fw-bold">Patricia Contreras</div>
+                        <small class="text-muted">Administradora</small>
+                      </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                      <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+                      <li><a class="dropdown-item" href="#">Configuración</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+        
+        <!-- Contenido del listado de comunidades -->
+        <main class="container-fluid py-4">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h1 class="h3 mb-0">Comunidades</h1>
+              <p class="text-muted mb-0">Administra tus comunidades y condominios</p>
+            </div>
+            
+            <a href="comunidad-nueva.html" class="btn btn-primary">
+              <span class="material-icons align-middle me-1">add</span>
+              Nueva Comunidad
+            </a>
+          </div>
+          
+          <!-- Filtros y búsqueda -->
+          <div class="filter-container mb-4">
+            <div class="row align-items-center">
+              <div class="col-md-4">
+                <div class="search-icon-container">
+                  <span class="material-icons search-icon">search</span>
+                  <input type="text" id="searchComunidad" class="form-control search-input" placeholder="Buscar comunidad...">
+                </div>
+              </div>
+              
+              <div class="col-md-3">
+                <select class="form-select" id="filterTipo">
+                  <option value="">Todos los tipos</option>
+                  <option value="edificio">Edificio</option>
+                  <option value="condominio">Condominio</option>
+                  <option value="conjunto">Conjunto Residencial</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              
+              <div class="col-md-3">
+                <select class="form-select" id="filterEstado">
+                  <option value="">Todos los estados</option>
+                  <option value="activo">Activo</option>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="inactivo">Inactivo</option>
+                </select>
+              </div>
+              
+              <div class="col-md-2">
+                <button class="btn btn-secondary w-100">
+                  <span class="material-icons align-middle me-1">filter_list</span>
+                  Filtrar
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Toggle de vista -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <span class="text-muted">15 comunidades encontradas</span>
+            </div>
+            
+            <div class="btn-group" role="group">
+              <button type="button" class="btn btn-outline-secondary active" id="viewCards">
+                <span class="material-icons">grid_view</span>
+              </button>
+              <button type="button" class="btn btn-outline-secondary" id="viewTable">
+                <span class="material-icons">view_list</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Vista de tarjetas -->
+          <div id="cardView" class="row g-4 mb-4">
+            <!-- Comunidad 1 -->
+            <div class="col-md-6 col-lg-4 col-xl-3">
+              <div class="card app-card comunidad-card">
+                <div class="badge-status">
+                  <span class="badge bg-success">Activo</span>
+                </div>
+                <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img" alt="Edificio Las Palmas" style="height: 200px; object-fit: cover;">
+                <div class="card-img-overlay">
+                  <div class="comunidad-actions">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="material-icons">more_vert</span>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="comunidad-detalle.html?id=1"><span class="material-icons align-middle me-2 small">visibility</span> Ver detalle</a></li>
+                        <li><a class="dropdown-item" href="comunidad-parametros.html?id=1"><span class="material-icons align-middle me-2 small">settings</span> Parámetros</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span> Eliminar</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <h5 class="card-title text-white">Edificio Las Palmas</h5>
+                  <div class="d-flex align-items-center text-white-50 small mb-1">
+                    <span class="material-icons me-1" style="font-size: 14px;">location_on</span>
+                    <span>Av. Las Condes 12345, Las Condes</span>
+                  </div>
+                  <div class="d-flex align-items-center text-white-50 small">
+                    <span class="material-icons me-1" style="font-size: 14px;">apartment</span>
+                    <span>45 unidades • 3 torres</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Comunidad 2 -->
+            <div class="col-md-6 col-lg-4 col-xl-3">
+              <div class="card app-card comunidad-card">
+                <div class="badge-status">
+                  <span class="badge bg-success">Activo</span>
+                </div>
+                <img src="https://images.unsplash.com/photo-1460317442991-0ec209397118?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img" alt="Condominio Los Pinos" style="height: 200px; object-fit: cover;">
+                <div class="card-img-overlay">
+                  <div class="comunidad-actions">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="material-icons">more_vert</span>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="comunidad-detalle.html?id=2"><span class="material-icons align-middle me-2 small">visibility</span> Ver detalle</a></li>
+                        <li><a class="dropdown-item" href="comunidad-parametros.html?id=2"><span class="material-icons align-middle me-2 small">settings</span> Parámetros</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span> Eliminar</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <h5 class="card-title text-white">Condominio Los Pinos</h5>
+                  <div class="d-flex align-items-center text-white-50 small mb-1">
+                    <span class="material-icons me-1" style="font-size: 14px;">location_on</span>
+                    <span>Av. Providencia 789, Providencia</span>
+                  </div>
+                  <div class="d-flex align-items-center text-white-50 small">
+                    <span class="material-icons me-1" style="font-size: 14px;">apartment</span>
+                    <span>28 unidades • 2 torres</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Comunidad 3 -->
+            <div class="col-md-6 col-lg-4 col-xl-3">
+              <div class="card app-card comunidad-card">
+                <div class="badge-status">
+                  <span class="badge bg-success">Activo</span>
+                </div>
+                <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img" alt="Edificio Central" style="height: 200px; object-fit: cover;">
+                <div class="card-img-overlay">
+                  <div class="comunidad-actions">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="material-icons">more_vert</span>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="comunidad-detalle.html?id=3"><span class="material-icons align-middle me-2 small">visibility</span> Ver detalle</a></li>
+                        <li><a class="dropdown-item" href="comunidad-parametros.html?id=3"><span class="material-icons align-middle me-2 small">settings</span> Parámetros</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span> Eliminar</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <h5 class="card-title text-white">Edificio Central</h5>
+                  <div class="d-flex align-items-center text-white-50 small mb-1">
+                    <span class="material-icons me-1" style="font-size: 14px;">location_on</span>
+                    <span>San Martín 500, Santiago</span>
+                  </div>
+                  <div class="d-flex align-items-center text-white-50 small">
+                    <span class="material-icons me-1" style="font-size: 14px;">apartment</span>
+                    <span>60 unidades • 1 torre</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Comunidad 4 -->
+            <div class="col-md-6 col-lg-4 col-xl-3">
+              <div class="card app-card comunidad-card">
+                <div class="badge-status">
+                  <span class="badge bg-warning text-dark">Pendiente</span>
+                </div>
+                <img src="https://images.unsplash.com/photo-1523192193543-6e7296d960e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img" alt="Condominio Vista Mar" style="height: 200px; object-fit: cover;">
+                <div class="card-img-overlay">
+                  <div class="comunidad-actions">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="material-icons">more_vert</span>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="comunidad-detalle.html?id=4"><span class="material-icons align-middle me-2 small">visibility</span> Ver detalle</a></li>
+                        <li><a class="dropdown-item" href="comunidad-parametros.html?id=4"><span class="material-icons align-middle me-2 small">settings</span> Parámetros</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span> Eliminar</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <h5 class="card-title text-white">Condominio Vista Mar</h5>
+                  <div class="d-flex align-items-center text-white-50 small mb-1">
+                    <span class="material-icons me-1" style="font-size: 14px;">location_on</span>
+                    <span>Av. Marina 1234, Viña del Mar</span>
+                  </div>
+                  <div class="d-flex align-items-center text-white-50 small">
+                    <span class="material-icons me-1" style="font-size: 14px;">apartment</span>
+                    <span>32 unidades • 2 torres</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Comunidad 5 -->
+            <div class="col-md-6 col-lg-4 col-xl-3">
+              <div class="card app-card comunidad-card">
+                <div class="badge-status">
+                  <span class="badge bg-success">Activo</span>
+                </div>
+                <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img" alt="Edificio Parque Norte" style="height: 200px; object-fit: cover;">
+                <div class="card-img-overlay">
+                  <div class="comunidad-actions">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="material-icons">more_vert</span>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="comunidad-detalle.html?id=5"><span class="material-icons align-middle me-2 small">visibility</span> Ver detalle</a></li>
+                        <li><a class="dropdown-item" href="comunidad-parametros.html?id=5"><span class="material-icons align-middle me-2 small">settings</span> Parámetros</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span> Eliminar</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <h5 class="card-title text-white">Edificio Parque Norte</h5>
+                  <div class="d-flex align-items-center text-white-50 small mb-1">
+                    <span class="material-icons me-1" style="font-size: 14px;">location_on</span>
+                    <span>Eliodoro Yáñez 2880, Providencia</span>
+                  </div>
+                  <div class="d-flex align-items-center text-white-50 small">
+                    <span class="material-icons me-1" style="font-size: 14px;">apartment</span>
+                    <span>40 unidades • 1 torre</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Comunidad 6 -->
+            <div class="col-md-6 col-lg-4 col-xl-3">
+              <div class="card app-card comunidad-card">
+                <div class="badge-status">
+                  <span class="badge bg-secondary">Inactivo</span>
+                </div>
+                <img src="https://images.unsplash.com/photo-1470723710355-95304d8aece4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="card-img" alt="Condominio Los Álamos" style="height: 200px; object-fit: cover;">
+                <div class="card-img-overlay">
+                  <div class="comunidad-actions">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="material-icons">more_vert</span>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="comunidad-detalle.html?id=6"><span class="material-icons align-middle me-2 small">visibility</span> Ver detalle</a></li>
+                        <li><a class="dropdown-item" href="comunidad-parametros.html?id=6"><span class="material-icons align-middle me-2 small">settings</span> Parámetros</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span> Eliminar</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <h5 class="card-title text-white">Condominio Los Álamos</h5>
+                  <div class="d-flex align-items-center text-white-50 small mb-1">
+                    <span class="material-icons me-1" style="font-size: 14px;">location_on</span>
+                    <span>Los Abedules 123, La Reina</span>
+                  </div>
+                  <div class="d-flex align-items-center text-white-50 small">
+                    <span class="material-icons me-1" style="font-size: 14px;">apartment</span>
+                    <span>18 unidades • 2 torres</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Vista de tabla -->
+          <div id="tableView" class="card app-card mb-4" style="display: none;">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Dirección</th>
+                    <th>Unidades</th>
+                    <th>Estado</th>
+                    <th class="actions-cell">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="me-3" style="width: 40px; height: 40px; border-radius: 4px; overflow: hidden;">
+                          <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Edificio" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div>Edificio Las Palmas</div>
+                      </div>
+                    </td>
+                    <td>Edificio</td>
+                    <td>Av. Las Condes 12345, Las Condes</td>
+                    <td>45 unidades</td>
+                    <td><span class="badge bg-success">Activo</span></td>
+                    <td>
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                          Acciones
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li><a class="dropdown-item" href="comunidad-detalle.html?id=1"><span class="material-icons align-middle me-2 small">visibility</span> Ver detalle</a></li>
+                          <li><a class="dropdown-item" href="comunidad-parametros.html?id=1"><span class="material-icons align-middle me-2 small">settings</span> Parámetros</a></li>
+                          <li><hr class="dropdown-divider"></li>
+                          <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span> Eliminar</a></li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="me-3" style="width: 40px; height: 40px; border-radius: 4px; overflow: hidden;">
+                          <img src="https://images.unsplash.com/photo-1460317442991-0ec209397118?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Condominio" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div>Condominio Los Pinos</div>
+                      </div>
+                    </td>
+                    <td>Condominio</td>
+                    <td>Av. Providencia 789, Providencia</td>
+                    <td>28 unidades</td>
+                    <td><span class="badge bg-success">Activo</span></td>
+                    <td>
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                          Acciones
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li><a class="dropdown-item" href="comunidad-detalle.html?id=2"><span class="material-icons align-middle me-2 small">visibility</span> Ver detalle</a></li>
+                          <li><a class="dropdown-item" href="comunidad-parametros.html?id=2"><span class="material-icons align-middle me-2 small">settings</span> Parámetros</a></li>
+                          <li><hr class="dropdown-divider"></li>
+                          <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span> Eliminar</a></li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="me-3" style="width: 40px; height: 40px; border-radius: 4px; overflow: hidden;">
+                          <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Edificio" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div>Edificio Central</div>
+                      </div>
+                    </td>
+                    <td>Edificio</td>
+                    <td>San Martín 500, Santiago</td>
+                    <td>60 unidades</td>
+                    <td><span class="badge bg-success">Activo</span></td>
+                    <td>
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                          Acciones
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li><a class="dropdown-item" href="comunidad-detalle.html?id=3"><span class="material-icons align-middle me-2 small">visibility</span> Ver detalle</a></li>
+                          <li><a class="dropdown-item" href="comunidad-parametros.html?id=3"><span class="material-icons align-middle me-2 small">settings</span> Parámetros</a></li>
+                          <li><hr class="dropdown-divider"></li>
+                          <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span> Eliminar</a></li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="me-3" style="width: 40px; height: 40px; border-radius: 4px; overflow: hidden;">
+                          <img src="https://images.unsplash.com/photo-1523192193543-6e7296d960e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Condominio" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div>Condominio Vista Mar</div>
+                      </div>
+                    </td>
+                    <td>Condominio</td>
+                    <td>Av. Marina 1234, Viña del Mar</td>
+                    <td>32 unidades</td>
+                    <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+                    <td>
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                          Acciones
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li><a class="dropdown-item" href="comunidad-detalle.html?id=4"><span class="material-icons align-middle me-2 small">visibility</span> Ver detalle</a></li>
+                          <li><a class="dropdown-item" href="comunidad-parametros.html?id=4"><span class="material-icons align-middle me-2 small">settings</span> Parámetros</a></li>
+                          <li><hr class="dropdown-divider"></li>
+                          <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span> Eliminar</a></li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="me-3" style="width: 40px; height: 40px; border-radius: 4px; overflow: hidden;">
+                          <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Edificio" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div>Edificio Parque Norte</div>
+                      </div>
+                    </td>
+                    <td>Edificio</td>
+                    <td>Eliodoro Yáñez 2880, Providencia</td>
+                    <td>40 unidades</td>
+                    <td><span class="badge bg-success">Activo</span></td>
+                    <td>
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                          Acciones
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li><a class="dropdown-item" href="comunidad-detalle.html?id=5"><span class="material-icons align-middle me-2 small">visibility</span> Ver detalle</a></li>
+                          <li><a class="dropdown-item" href="comunidad-parametros.html?id=5"><span class="material-icons align-middle me-2 small">settings</span> Parámetros</a></li>
+                          <li><hr class="dropdown-divider"></li>
+                          <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span> Eliminar</a></li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="me-3" style="width: 40px; height: 40px; border-radius: 4px; overflow: hidden;">
+                          <img src="https://images.unsplash.com/photo-1470723710355-95304d8aece4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Condominio" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div>Condominio Los Álamos</div>
+                      </div>
+                    </td>
+                    <td>Condominio</td>
+                    <td>Los Abedules 123, La Reina</td>
+                    <td>18 unidades</td>
+                    <td><span class="badge bg-secondary">Inactivo</span></td>
+                    <td>
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                          Acciones
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li><a class="dropdown-item" href="comunidad-detalle.html?id=6"><span class="material-icons align-middle me-2 small">visibility</span> Ver detalle</a></li>
+                          <li><a class="dropdown-item" href="comunidad-parametros.html?id=6"><span class="material-icons align-middle me-2 small">settings</span> Parámetros</a></li>
+                          <li><hr class="dropdown-divider"></li>
+                          <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span> Eliminar</a></li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Paginación -->
+          <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+              <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                  <span class="material-icons" style="font-size: 16px;">chevron_left</span>
+                </a>
+              </li>
+              <li class="page-item active"><a class="page-link" href="#">1</a></li>
+              <li class="page-item"><a class="page-link" href="#">2</a></li>
+              <li class="page-item"><a class="page-link" href="#">3</a></li>
+              <li class="page-item">
+                <a class="page-link" href="#">
+                  <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="bg-white border-top py-3 mt-auto">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <div class="col-md-6 text-center text-md-start">
+                <p class="mb-0 text-muted">Cuentas Claras &copy; 2025. Todos los derechos reservados.</p>
+              </div>
+              <div class="col-md-6 text-center text-md-end">
+                <span class="text-muted">Versión 1.0.0</span>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Toggle entre vista de tarjetas y tabla
+        const cardView = document.getElementById('cardView');
+        const tableView = document.getElementById('tableView');
+        const viewCardsBtn = document.getElementById('viewCards');
+        const viewTableBtn = document.getElementById('viewTable');
+        
+        viewCardsBtn.addEventListener('click', function() {
+          cardView.style.display = 'flex';
+          tableView.style.display = 'none';
+          viewCardsBtn.classList.add('active');
+          viewTableBtn.classList.remove('active');
+        });
+        
+        viewTableBtn.addEventListener('click', function() {
+          cardView.style.display = 'none';
+          tableView.style.display = 'block';
+          viewCardsBtn.classList.remove('active');
+          viewTableBtn.classList.add('active');
+        });
+        
+        // Filtrado básico por nombre
+        const searchInput = document.getElementById('searchComunidad');
+        if (searchInput) {
+          searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const comunidades = document.querySelectorAll('.comunidad-card');
+            
+            comunidades.forEach(card => {
+              const nombre = card.querySelector('.card-title').textContent.toLowerCase();
+              const direccion = card.querySelector('.text-white-50').textContent.toLowerCase();
+              
+              if (nombre.includes(searchTerm) || direccion.includes(searchTerm)) {
+                card.closest('.col-md-6').style.display = 'block';
+              } else {
+                card.closest('.col-md-6').style.display = 'none';
+              }
+            });
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

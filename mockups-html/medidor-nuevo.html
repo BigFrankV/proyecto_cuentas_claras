@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crear Nuevo Medidor - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      .avatar {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--color-primary);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50%;
+      }
+      
+      /* Form card */
+      .form-card {
+        background-color: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+      }
+      
+      .form-card-title {
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #dee2e6;
+      }
+      
+      /* Mobile action buttons */
+      @media (max-width: 991.98px) {
+        .mobile-action-buttons {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          padding: 1rem;
+          background-color: #fff;
+          box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+          z-index: 999;
+        }
+        
+        .main-content {
+          padding-bottom: 80px;
+        }
+      }
+      
+      /* Form input styles */
+      .input-with-icon {
+        position: relative;
+      }
+      
+      .input-with-icon .material-icons {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        cursor: pointer;
+      }
+      
+      .input-group-text {
+        background-color: #f8f9fa;
+      }
+      
+      /* File upload zone */
+      .upload-zone {
+        border: 2px dashed #dee2e6;
+        border-radius: var(--radius);
+        padding: 2rem 1rem;
+        text-align: center;
+        background-color: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .upload-zone:hover {
+        border-color: var(--color-primary);
+        background-color: #f0f0f0;
+      }
+      
+      .upload-icon {
+        font-size: 48px;
+        color: #6c757d;
+        margin-bottom: 1rem;
+      }
+      
+      /* Help text */
+      .form-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+      }
+      
+      /* Required indicator */
+      .required::after {
+        content: " *";
+        color: #dc3545;
+      }
+      
+      /* Custom switch styles */
+      .form-check-input:checked {
+        background-color: var(--color-primary);
+        border-color: var(--color-primary);
+      }
+      
+      /* Type selection cards */
+      .type-selection-card {
+        border: 2px solid #dee2e6;
+        border-radius: var(--radius);
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+      }
+      
+      .type-selection-card:hover {
+        border-color: var(--color-primary);
+        background-color: #f8f9fa;
+      }
+      
+      .type-selection-card.active {
+        border-color: var(--color-primary);
+        background-color: rgba(253,93,20,0.05);
+      }
+      
+      .type-selection-card .material-icons {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+        color: #6c757d;
+      }
+      
+      .type-selection-card.active .material-icons {
+        color: var(--color-primary);
+      }
+      
+      .type-selection-card.type-electric .material-icons {
+        color: #FFC107;
+      }
+      
+      .type-selection-card.type-water .material-icons {
+        color: #007BFF;
+      }
+      
+      .type-selection-card.type-gas .material-icons {
+        color: #DC3545;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <ul class="nav nav-sidebar flex-column mb-auto">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">domain</span>
+              <span>Comunidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">apartment</span>
+              <span>Unidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">people</span>
+              <span>Personas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="medidores-listado.html" class="nav-link active px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">speed</span>
+              <span>Medidores</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="emisiones-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">receipt_long</span>
+              <span>Emisiones</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">money_off</span>
+              <span>Gastos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">bar_chart</span>
+              <span>Reportes</span>
+            </a>
+          </li>
+        </ul>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+            <span class="material-icons me-2">settings</span>
+            <span>Configuración</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="tarifas-consumo-listado.html">Tarifas de Consumo</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Sidebar backdrop for mobile -->
+      <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+      
+      <!-- Contenido principal -->
+      <div class="main-content flex-grow-1 bg-light">
+        <!-- Header con búsqueda y notificaciones -->
+        <header class="bg-white border-bottom shadow-sm p-3">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <div class="col-lg-4">
+                <button class="btn toggle-sidebar d-lg-none me-2" onclick="toggleSidebar()">
+                  <span class="material-icons">menu</span>
+                </button>
+                <div class="d-flex align-items-center">
+                  <a href="medidores-listado.html" class="btn btn-outline-secondary me-2">
+                    <span class="material-icons">arrow_back</span>
+                  </a>
+                  <div>
+                    <h1 class="h5 mb-0">Nuevo Medidor</h1>
+                    <small class="text-muted">Registrar nuevo medidor de servicios</small>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-lg-8">
+                <div class="d-flex justify-content-end align-items-center">
+                  <div class="me-3">
+                    <button class="btn position-relative p-0" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons">notifications</span>
+                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        2
+                      </span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-0" style="width: 320px;">
+                      <div class="p-3 border-bottom">
+                        <h6 class="mb-0">Notificaciones</h6>
+                      </div>
+                      <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action">
+                          <div class="d-flex align-items-center">
+                            <span class="material-icons text-warning me-3">schedule</span>
+                            <div>
+                              <p class="mb-0">Lectura vencida - Medidor #1023</p>
+                              <small class="text-muted">Hace 2 días</small>
+                            </div>
+                          </div>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                      <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+                      <div class="d-none d-sm-block">
+                        <div class="fw-bold">Patricia Contreras</div>
+                        <small class="text-muted">Administradora</small>
+                      </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                      <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+                      <li><a class="dropdown-item" href="#">Configuración</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Contenido -->
+        <main class="container-fluid p-4">
+          <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+              <form id="meterForm">
+                <!-- Tipo de Medidor -->
+                <div class="form-card">
+                  <div class="form-card-title">
+                    <span class="material-icons me-2">category</span>
+                    Tipo de Medidor
+                  </div>
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <div class="type-selection-card type-electric" data-type="electric">
+                        <span class="material-icons">flash_on</span>
+                        <div class="fw-bold">Electricidad</div>
+                        <small class="text-muted">Medidor eléctrico</small>
+                      </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <div class="type-selection-card type-water" data-type="water">
+                        <span class="material-icons">water_drop</span>
+                        <div class="fw-bold">Agua</div>
+                        <small class="text-muted">Medidor de agua</small>
+                      </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <div class="type-selection-card type-gas" data-type="gas">
+                        <span class="material-icons">local_fire_department</span>
+                        <div class="fw-bold">Gas</div>
+                        <small class="text-muted">Medidor de gas</small>
+                      </div>
+                    </div>
+                  </div>
+                  <input type="hidden" id="meterType" name="meterType" required>
+                </div>
+
+                <!-- Información Básica -->
+                <div class="form-card">
+                  <div class="form-card-title">
+                    <span class="material-icons me-2">info</span>
+                    Información Básica
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="meterCode" class="form-label required">Código del Medidor</label>
+                      <div class="input-group">
+                        <span class="input-group-text">
+                          <span class="material-icons">qr_code</span>
+                        </span>
+                        <input type="text" class="form-control" id="meterCode" name="meterCode" placeholder="Ej: MED-001-2024" required>
+                      </div>
+                      <div class="form-text">Código único identificador del medidor</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="serialNumber" class="form-label required">Número de Serie</label>
+                      <div class="input-group">
+                        <span class="input-group-text">
+                          <span class="material-icons">tag</span>
+                        </span>
+                        <input type="text" class="form-control" id="serialNumber" name="serialNumber" placeholder="Ej: ELC001245" required>
+                      </div>
+                      <div class="form-text">Número de serie del fabricante</div>
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="brand" class="form-label required">Marca</label>
+                      <select class="form-select" id="brand" name="brand" required>
+                        <option value="">Seleccionar marca</option>
+                        <option value="siemens">Siemens</option>
+                        <option value="schneider">Schneider Electric</option>
+                        <option value="abb">ABB</option>
+                        <option value="general-electric">General Electric</option>
+                        <option value="landis">Landis+Gyr</option>
+                        <option value="elster">Elster</option>
+                        <option value="sensus">Sensus</option>
+                        <option value="otra">Otra</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="model" class="form-label">Modelo</label>
+                      <input type="text" class="form-control" id="model" name="model" placeholder="Ej: EM720">
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="installationDate" class="form-label required">Fecha de Instalación</label>
+                      <input type="date" class="form-control" id="installationDate" name="installationDate" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="status" class="form-label required">Estado</label>
+                      <select class="form-select" id="status" name="status" required>
+                        <option value="active">Activo</option>
+                        <option value="inactive">Inactivo</option>
+                        <option value="maintenance">En Mantenimiento</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Ubicación -->
+                <div class="form-card">
+                  <div class="form-card-title">
+                    <span class="material-icons me-2">location_on</span>
+                    Ubicación
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="community" class="form-label required">Comunidad</label>
+                      <select class="form-select" id="community" name="community" required>
+                        <option value="">Seleccionar comunidad</option>
+                        <option value="1">Residencial Vista Hermosa</option>
+                        <option value="2">Condominio Los Pinos</option>
+                        <option value="3">Edificio Central Park</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="building" class="form-label">Edificio/Torre</label>
+                      <select class="form-select" id="building" name="building">
+                        <option value="">Seleccionar edificio</option>
+                        <option value="torre-norte">Torre Norte</option>
+                        <option value="torre-sur">Torre Sur</option>
+                        <option value="edificio-a">Edificio A</option>
+                        <option value="edificio-b">Edificio B</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="unit" class="form-label required">Unidad</label>
+                      <select class="form-select" id="unit" name="unit" required>
+                        <option value="">Seleccionar unidad</option>
+                        <option value="A-101">Unidad A-101</option>
+                        <option value="A-102">Unidad A-102</option>
+                        <option value="B-201">Unidad B-201</option>
+                        <option value="B-202">Unidad B-202</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="location" class="form-label">Ubicación Específica</label>
+                      <input type="text" class="form-control" id="location" name="location" placeholder="Ej: Cuarto de medidores, Planta baja">
+                      <div class="form-text">Descripción específica de la ubicación física</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Configuración Técnica -->
+                <div class="form-card">
+                  <div class="form-card-title">
+                    <span class="material-icons me-2">settings</span>
+                    Configuración Técnica
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="initialReading" class="form-label">Lectura Inicial</label>
+                      <div class="input-group">
+                        <input type="number" class="form-control" id="initialReading" name="initialReading" placeholder="0" step="0.01">
+                        <span class="input-group-text" id="unitDisplay">kWh</span>
+                      </div>
+                      <div class="form-text">Lectura al momento de la instalación</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="readingFrequency" class="form-label required">Frecuencia de Lectura</label>
+                      <select class="form-select" id="readingFrequency" name="readingFrequency" required>
+                        <option value="monthly">Mensual</option>
+                        <option value="bimonthly">Bimestral</option>
+                        <option value="quarterly">Trimestral</option>
+                        <option value="custom">Personalizada</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="multiplier" class="form-label">Multiplicador</label>
+                      <input type="number" class="form-control" id="multiplier" name="multiplier" value="1" min="0.01" step="0.01">
+                      <div class="form-text">Factor de multiplicación para el cálculo del consumo</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="digits" class="form-label">Dígitos del Medidor</label>
+                      <select class="form-select" id="digits" name="digits">
+                        <option value="5">5 dígitos</option>
+                        <option value="6">6 dígitos</option>
+                        <option value="7">7 dígitos</option>
+                        <option value="8">8 dígitos</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="autoReading" name="autoReading">
+                      <label class="form-check-label" for="autoReading">
+                        Lectura Automática
+                      </label>
+                    </div>
+                    <div class="form-text">Habilitar si el medidor tiene capacidad de lectura remota</div>
+                  </div>
+                </div>
+
+                <!-- Documentación -->
+                <div class="form-card">
+                  <div class="form-card-title">
+                    <span class="material-icons me-2">description</span>
+                    Documentación
+                  </div>
+                  <div class="mb-3">
+                    <label for="notes" class="form-label">Notas y Observaciones</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Información adicional sobre el medidor..."></textarea>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="documents" class="form-label">Documentos</label>
+                    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                      <span class="material-icons upload-icon">cloud_upload</span>
+                      <div class="fw-bold mb-2">Arrastra archivos aquí o haz clic para seleccionar</div>
+                      <div class="text-muted">Certificados, fotos, manuales (PDF, JPG, PNG - Máx. 5MB)</div>
+                    </div>
+                    <input type="file" id="fileInput" name="documents" multiple accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                    <div id="fileList" class="mt-2"></div>
+                  </div>
+                </div>
+
+                <!-- Botones de acción para desktop -->
+                <div class="d-none d-lg-flex justify-content-end gap-2 mb-4">
+                  <a href="medidores-listado.html" class="btn btn-outline-secondary">
+                    <span class="material-icons me-1">cancel</span>
+                    Cancelar
+                  </a>
+                  <button type="button" class="btn btn-outline-primary" onclick="saveDraft()">
+                    <span class="material-icons me-1">save</span>
+                    Guardar Borrador
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    <span class="material-icons me-1">check</span>
+                    Crear Medidor
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Botones de acción para móvil -->
+    <div class="mobile-action-buttons d-lg-none">
+      <div class="d-flex gap-2">
+        <a href="medidores-listado.html" class="btn btn-outline-secondary flex-fill">Cancelar</a>
+        <button type="button" class="btn btn-outline-primary" onclick="saveDraft()">
+          <span class="material-icons">save</span>
+        </button>
+        <button type="submit" form="meterForm" class="btn btn-primary flex-fill">Crear Medidor</button>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/script.js"></script>
+    <script>
+      function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.querySelector('.sidebar-backdrop');
+        
+        sidebar.classList.toggle('show');
+        backdrop.classList.toggle('show');
+      }
+
+      // Type selection
+      document.querySelectorAll('.type-selection-card').forEach(card => {
+        card.addEventListener('click', function() {
+          // Remove active class from all cards
+          document.querySelectorAll('.type-selection-card').forEach(c => c.classList.remove('active'));
+          
+          // Add active class to clicked card
+          this.classList.add('active');
+          
+          // Set hidden input value
+          const type = this.dataset.type;
+          document.getElementById('meterType').value = type;
+          
+          // Update unit display based on type
+          const unitDisplay = document.getElementById('unitDisplay');
+          switch(type) {
+            case 'electric':
+              unitDisplay.textContent = 'kWh';
+              break;
+            case 'water':
+              unitDisplay.textContent = 'L';
+              break;
+            case 'gas':
+              unitDisplay.textContent = 'm³';
+              break;
+          }
+        });
+      });
+
+      // File upload handling
+      document.getElementById('fileInput').addEventListener('change', function(e) {
+        const fileList = document.getElementById('fileList');
+        fileList.innerHTML = '';
+        
+        Array.from(e.target.files).forEach(file => {
+          const fileItem = document.createElement('div');
+          fileItem.className = 'd-flex align-items-center justify-content-between p-2 border rounded mt-2';
+          fileItem.innerHTML = `
+            <div class="d-flex align-items-center">
+              <span class="material-icons me-2 text-muted">description</span>
+              <div>
+                <div class="fw-bold">${file.name}</div>
+                <small class="text-muted">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+              </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">
+              <span class="material-icons">delete</span>
+            </button>
+          `;
+          fileList.appendChild(fileItem);
+        });
+      });
+
+      // Form submission
+      document.getElementById('meterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validate meter type selection
+        const meterType = document.getElementById('meterType').value;
+        if (!meterType) {
+          alert('Por favor selecciona el tipo de medidor');
+          return;
+        }
+        
+        // Show success message
+        alert('Medidor creado exitosamente');
+        
+        // Redirect to meter list
+        window.location.href = 'medidores-listado.html';
+      });
+
+      function saveDraft() {
+        alert('Borrador guardado');
+      }
+
+      // Community change handler
+      document.getElementById('community').addEventListener('change', function() {
+        // Update building options based on community
+        const building = document.getElementById('building');
+        const unit = document.getElementById('unit');
+        
+        // Reset dependent selects
+        building.innerHTML = '<option value="">Seleccionar edificio</option>';
+        unit.innerHTML = '<option value="">Seleccionar unidad</option>';
+        
+        if (this.value) {
+          // Add building options based on community
+          // This would normally come from an API call
+          building.innerHTML += `
+            <option value="torre-norte">Torre Norte</option>
+            <option value="torre-sur">Torre Sur</option>
+          `;
+        }
+      });
+
+      // Building change handler
+      document.getElementById('building').addEventListener('change', function() {
+        const unit = document.getElementById('unit');
+        unit.innerHTML = '<option value="">Seleccionar unidad</option>';
+        
+        if (this.value) {
+          // Add unit options based on building
+          unit.innerHTML += `
+            <option value="A-101">Unidad A-101</option>
+            <option value="A-102">Unidad A-102</option>
+            <option value="B-201">Unidad B-201</option>
+          `;
+        }
+      });
+    </script>
+  </body>
+</html>

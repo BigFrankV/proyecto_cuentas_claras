@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Personas - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      .app-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+      .app-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px rgba(0,0,0,0.1) !important; }
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .persona-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius);
+        height: 100%;
+      }
+      
+      .persona-card .card-body {
+        padding: 1.25rem;
+      }
+      
+      .persona-card .badge-status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 2;
+      }
+      
+      .persona-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      
+      .persona-card:hover .persona-actions {
+        opacity: 1;
+      }
+      
+      .table tr {
+        vertical-align: middle;
+      }
+      
+      .table .actions-cell {
+        width: 120px;
+      }
+      
+      .filter-container {
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+        padding: 1rem;
+      }
+      
+      .search-icon-container {
+        position: relative;
+      }
+      
+      .search-icon {
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        transform: translateY(-50%);
+        color: var(--color-muted);
+      }
+      
+      .search-input {
+        padding-left: 35px;
+      }
+      
+      .persona-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: var(--color-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .status-icon {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        border-radius: 50%;
+        margin-right: 5px;
+      }
+      
+      .status-activo { background-color: var(--color-success); }
+      .status-inactivo { background-color: var(--color-muted); }
+      
+      .avatar-stack {
+        display: flex;
+      }
+      
+      .avatar-stack .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: var(--color-secondary);
+        color: white;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: -10px;
+        border: 2px solid white;
+      }
+      
+      .avatar-stack .avatar:first-child {
+        margin-left: 0;
+      }
+      
+      .avatar-stack .avatar-more {
+        background-color: var(--color-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 280px; min-height: 100vh; background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <ul class="nav nav-sidebar flex-column mb-auto">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">domain</span>
+              <span>Comunidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="edificios-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">business</span>
+              <span>Edificios</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">apartment</span>
+              <span>Unidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="personas-listado.html" class="nav-link active px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">people</span>
+              <span>Personas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="emisiones-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">receipt_long</span>
+              <span>Emisiones</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">payments</span>
+              <span>Pagos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">shopping_cart</span>
+              <span>Gastos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">bar_chart</span>
+              <span>Reportes</span>
+            </a>
+          </li>
+        </ul>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+            <strong>Patricia</strong>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+            <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="flex-grow-1 bg-light">
+        <!-- Header -->
+        <header class="bg-white shadow-sm py-3 px-4 d-flex justify-content-between align-items-center sticky-top">
+          <div>
+            <h5 class="mb-0">Personas</h5>
+          </div>
+          <div class="d-flex align-items-center">
+            <a href="persona-nueva.html" class="btn btn-primary d-flex align-items-center">
+              <span class="material-icons me-2">person_add</span>
+              <span>Nueva Persona</span>
+            </a>
+          </div>
+        </header>
+        
+        <!-- Content -->
+        <div class="container-fluid py-4">
+          <!-- Filters -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="filter-container">
+                <div class="row g-2">
+                  <div class="col-12 col-md-4 col-lg-3">
+                    <div class="search-icon-container">
+                      <i class="fas fa-search search-icon"></i>
+                      <input type="text" class="form-control search-input" placeholder="Buscar persona...">
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-3 col-lg-2">
+                    <select class="form-select">
+                      <option selected>Todos los tipos</option>
+                      <option>Propietarios</option>
+                      <option>Inquilinos</option>
+                      <option>Administradores</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md-3 col-lg-2">
+                    <select class="form-select">
+                      <option selected>Todos los estados</option>
+                      <option>Activos</option>
+                      <option>Inactivos</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md-2 col-lg-2">
+                    <button class="btn btn-outline-primary w-100">
+                      <i class="fas fa-filter me-2"></i>Filtrar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Vista Principal -->
+          <div class="row">
+            <div class="col-12">
+              <!-- Card de Conteo -->
+              <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                  <div class="row g-3">
+                    <div class="col-sm-6 col-md-3">
+                      <div class="d-flex align-items-center">
+                        <div class="persona-icon me-3">
+                          <span class="material-icons">people</span>
+                        </div>
+                        <div>
+                          <div class="text-muted small">Total Personas</div>
+                          <h4 class="mb-0">245</h4>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                      <div class="d-flex align-items-center">
+                        <div class="persona-icon me-3" style="background-color: var(--color-success);">
+                          <span class="material-icons">home_work</span>
+                        </div>
+                        <div>
+                          <div class="text-muted small">Propietarios</div>
+                          <h4 class="mb-0">156</h4>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                      <div class="d-flex align-items-center">
+                        <div class="persona-icon me-3" style="background-color: var(--color-info);">
+                          <span class="material-icons">night_shelter</span>
+                        </div>
+                        <div>
+                          <div class="text-muted small">Inquilinos</div>
+                          <h4 class="mb-0">89</h4>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                      <div class="d-flex align-items-center">
+                        <div class="persona-icon me-3" style="background-color: var(--color-warning);">
+                          <span class="material-icons">admin_panel_settings</span>
+                        </div>
+                        <div>
+                          <div class="text-muted small">Administradores</div>
+                          <h4 class="mb-0">12</h4>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Tab de Modos de Vista -->
+              <ul class="nav nav-tabs mb-3">
+                <li class="nav-item">
+                  <a class="nav-link active" href="#">
+                    <i class="fas fa-list me-1"></i> Lista
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#">
+                    <i class="fas fa-th-large me-1"></i> Tarjetas
+                  </a>
+                </li>
+              </ul>
+              
+              <!-- Vista de Tabla -->
+              <div class="card shadow-sm">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th scope="col" style="width: 50px">#</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Tipo</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Teléfono</th>
+                        <th scope="col">Unidades</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col" class="actions-cell">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>1</td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar me-2" style="background-color: var(--color-primary);">JD</div>
+                            <div>
+                              <div class="fw-semibold">Juan Delgado</div>
+                              <div class="small text-muted">DNI: 30.457.892</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge bg-success-soft text-success">Propietario</span>
+                        </td>
+                        <td>juan.delgado@email.com</td>
+                        <td>+54 11 5555-1234</td>
+                        <td>
+                          <span class="badge bg-primary">2 unidades</span>
+                        </td>
+                        <td>
+                          <span class="d-flex align-items-center">
+                            <span class="status-icon status-activo"></span> Activo
+                          </span>
+                        </td>
+                        <td>
+                          <div class="btn-group">
+                            <a href="persona-detalle.html" class="btn btn-sm btn-outline-primary">
+                              <i class="fas fa-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                              <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar me-2" style="background-color: var(--color-info);">ML</div>
+                            <div>
+                              <div class="fw-semibold">María López</div>
+                              <div class="small text-muted">DNI: 28.765.432</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge bg-info-soft text-info">Inquilino</span>
+                        </td>
+                        <td>maria.lopez@email.com</td>
+                        <td>+54 11 5555-5678</td>
+                        <td>
+                          <span class="badge bg-primary">1 unidad</span>
+                        </td>
+                        <td>
+                          <span class="d-flex align-items-center">
+                            <span class="status-icon status-activo"></span> Activo
+                          </span>
+                        </td>
+                        <td>
+                          <div class="btn-group">
+                            <a href="persona-detalle.html" class="btn btn-sm btn-outline-primary">
+                              <i class="fas fa-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                              <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>3</td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar me-2" style="background-color: var(--color-warning);">CR</div>
+                            <div>
+                              <div class="fw-semibold">Carlos Ramírez</div>
+                              <div class="small text-muted">DNI: 25.987.654</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge bg-warning-soft text-warning">Administrador</span>
+                        </td>
+                        <td>carlos.ramirez@email.com</td>
+                        <td>+54 11 5555-9012</td>
+                        <td>
+                          <span class="badge bg-secondary">No aplica</span>
+                        </td>
+                        <td>
+                          <span class="d-flex align-items-center">
+                            <span class="status-icon status-activo"></span> Activo
+                          </span>
+                        </td>
+                        <td>
+                          <div class="btn-group">
+                            <a href="persona-detalle.html" class="btn btn-sm btn-outline-primary">
+                              <i class="fas fa-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                              <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>4</td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar me-2" style="background-color: var(--color-secondary);">AG</div>
+                            <div>
+                              <div class="fw-semibold">Ana Gómez</div>
+                              <div class="small text-muted">DNI: 32.123.456</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge bg-success-soft text-success">Propietario</span>
+                        </td>
+                        <td>ana.gomez@email.com</td>
+                        <td>+54 11 5555-3456</td>
+                        <td>
+                          <span class="badge bg-primary">3 unidades</span>
+                        </td>
+                        <td>
+                          <span class="d-flex align-items-center">
+                            <span class="status-icon status-inactivo"></span> Inactivo
+                          </span>
+                        </td>
+                        <td>
+                          <div class="btn-group">
+                            <a href="persona-detalle.html" class="btn btn-sm btn-outline-primary">
+                              <i class="fas fa-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                              <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>5</td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar me-2" style="background-color: var(--color-primary);">PV</div>
+                            <div>
+                              <div class="fw-semibold">Pablo Vázquez</div>
+                              <div class="small text-muted">DNI: 27.654.321</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge bg-info-soft text-info">Inquilino</span>
+                        </td>
+                        <td>pablo.vazquez@email.com</td>
+                        <td>+54 11 5555-7890</td>
+                        <td>
+                          <span class="badge bg-primary">1 unidad</span>
+                        </td>
+                        <td>
+                          <span class="d-flex align-items-center">
+                            <span class="status-icon status-activo"></span> Activo
+                          </span>
+                        </td>
+                        <td>
+                          <div class="btn-group">
+                            <a href="persona-detalle.html" class="btn btn-sm btn-outline-primary">
+                              <i class="fas fa-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                              <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+              <!-- Paginación -->
+              <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                      <i class="fas fa-chevron-left"></i>
+                    </a>
+                  </li>
+                  <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                  <li class="page-item"><a class="page-link" href="#">2</a></li>
+                  <li class="page-item"><a class="page-link" href="#">3</a></li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">
+                      <i class="fas fa-chevron-right"></i>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/script.js"></script>
+  </body>
+</html>

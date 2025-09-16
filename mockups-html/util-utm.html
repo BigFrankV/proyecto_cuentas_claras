@@ -1,0 +1,1549 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Consulta Valor UTM - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      .avatar {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--color-primary);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50%;
+      }
+      
+      /* UTM specific styles */
+      .utm-hero {
+        background: linear-gradient(135deg, #6f42c1 0%, #9b59b6 100%);
+        color: white;
+        border-radius: var(--radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .utm-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        animation: pulse 8s ease-in-out infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.3; }
+        50% { transform: scale(1.1) rotate(180deg); opacity: 0.1; }
+      }
+      
+      .utm-current {
+        font-size: 3rem;
+        font-weight: bold;
+        margin: 1rem 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      
+      .utm-period {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+      
+      .utm-description {
+        margin-top: 1rem;
+        opacity: 0.8;
+      }
+      
+      /* Consultation card */
+      .consultation-card {
+        background-color: #fff;
+        border-radius: var(--radius);
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid #e9ecef;
+        margin-bottom: 2rem;
+        position: relative;
+      }
+      
+      .consultation-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f8f9fa;
+      }
+      
+      .consultation-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #6f42c1, #9b59b6);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: white;
+        font-size: 1.5rem;
+      }
+      
+      .consultation-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+      }
+      
+      .consultation-subtitle {
+        color: #6c757d;
+        margin: 0;
+      }
+      
+      /* Month/Year picker enhanced */
+      .period-picker-group {
+        position: relative;
+      }
+      
+      .period-picker-group .form-control {
+        padding-left: 3rem;
+        font-weight: 500;
+      }
+      
+      .period-picker-group .material-icons {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6f42c1;
+        z-index: 5;
+      }
+      
+      /* Result display */
+      .utm-result {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 2px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 2rem;
+        text-align: center;
+        margin: 2rem 0;
+        position: relative;
+        transition: all 0.3s ease;
+      }
+      
+      .utm-result.loading {
+        border-color: #6f42c1;
+        background: linear-gradient(135deg, #f8f4ff 0%, #f8f9fa 100%);
+      }
+      
+      .utm-result.success {
+        border-color: #28a745;
+        background: linear-gradient(135deg, #e8f5e9 0%, #f8f9fa 100%);
+      }
+      
+      .utm-result-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #6f42c1;
+        margin: 1rem 0;
+      }
+      
+      .utm-result-period {
+        font-size: 1.1rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+      }
+      
+      .utm-result-info {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+        color: #6c757d;
+      }
+      
+      /* Quick periods */
+      .quick-periods {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+      }
+      
+      .quick-period {
+        background-color: #fff;
+        border: 2px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+      }
+      
+      .quick-period:hover {
+        border-color: #6f42c1;
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+        color: inherit;
+      }
+      
+      .quick-period-icon {
+        width: 50px;
+        height: 50px;
+        background-color: #6f42c1;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+        font-size: 1.2rem;
+      }
+      
+      .quick-period-title {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 0.5rem;
+      }
+      
+      .quick-period-desc {
+        color: #6c757d;
+        font-size: 0.875rem;
+      }
+      
+      /* Annual table */
+      .annual-table-card {
+        background-color: #fff;
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid #e9ecef;
+        margin: 2rem 0;
+      }
+      
+      .annual-table-header {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      
+      .annual-table-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .annual-table-title .material-icons {
+        margin-right: 0.5rem;
+        color: #6f42c1;
+      }
+      
+      .year-selector {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .year-btn {
+        border: none;
+        background: none;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 0.25rem;
+        transition: all 0.2s ease;
+      }
+      
+      .year-btn:hover {
+        color: #6f42c1;
+        background-color: #f8f4ff;
+      }
+      
+      .current-year {
+        font-weight: 600;
+        color: #212529;
+        min-width: 60px;
+        text-align: center;
+      }
+      
+      .utm-annual-table {
+        width: 100%;
+        margin: 0;
+      }
+      
+      .utm-annual-table th {
+        background-color: #6f42c1;
+        color: white;
+        font-weight: 600;
+        border: 1px solid #5a2d91;
+        padding: 1rem 0.5rem;
+        text-align: center;
+        font-size: 0.875rem;
+      }
+      
+      .utm-annual-table td {
+        padding: 1rem 0.5rem;
+        border: 1px solid #e9ecef;
+        text-align: center;
+        vertical-align: middle;
+        position: relative;
+      }
+      
+      .utm-annual-table tbody tr:hover {
+        background-color: #f8f4ff;
+      }
+      
+      .utm-value-cell {
+        font-weight: 600;
+        color: #6f42c1;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .utm-value-cell:hover {
+        color: #5a2d91;
+        background-color: #f8f4ff;
+      }
+      
+      .current-month {
+        background-color: #fff3cd;
+        border-color: #ffc107;
+        position: relative;
+      }
+      
+      .current-month::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background-color: #ffc107;
+      }
+      
+      /* Chart container */
+      .chart-container {
+        background-color: #fff;
+        border-radius: var(--radius);
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid #e9ecef;
+        margin: 2rem 0;
+        position: relative;
+        height: 400px;
+      }
+      
+      .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      
+      .chart-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .chart-title .material-icons {
+        margin-right: 0.5rem;
+        color: #6f42c1;
+      }
+      
+      .chart-controls {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      
+      /* Calculator section */
+      .calculator-card {
+        background-color: #fff;
+        border-radius: var(--radius);
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid #e9ecef;
+        margin: 2rem 0;
+      }
+      
+      .calculator-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f8f9fa;
+      }
+      
+      .calculator-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #28a745, #20c997);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: white;
+        font-size: 1.2rem;
+      }
+      
+      .calculator-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+      }
+      
+      .calculator-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 1rem;
+        align-items: end;
+        margin-bottom: 1.5rem;
+      }
+      
+      .calculator-result {
+        background: linear-gradient(135deg, #f3e5f5 0%, #f8f9fa 100%);
+        border: 2px solid #6f42c1;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        text-align: center;
+      }
+      
+      .calculator-result-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .calculator-result-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #6f42c1;
+        margin: 0;
+      }
+      
+      /* Action buttons */
+      .action-btn {
+        border: none;
+        border-radius: var(--radius);
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        gap: 0.5rem;
+      }
+      
+      .action-btn .material-icons {
+        font-size: 1rem;
+      }
+      
+      .action-btn.primary {
+        background-color: #6f42c1;
+        color: white;
+      }
+      
+      .action-btn.primary:hover {
+        background-color: #5a2d91;
+        color: white;
+      }
+      
+      .action-btn.success {
+        background-color: #28a745;
+        color: white;
+      }
+      
+      .action-btn.success:hover {
+        background-color: #218838;
+        color: white;
+      }
+      
+      .action-btn.outline {
+        background-color: transparent;
+        color: #6f42c1;
+        border: 1px solid #6f42c1;
+      }
+      
+      .action-btn.outline:hover {
+        background-color: #6f42c1;
+        color: white;
+      }
+      
+      .action-btn.secondary {
+        background-color: #6c757d;
+        color: white;
+      }
+      
+      .action-btn.secondary:hover {
+        background-color: #545b62;
+        color: white;
+      }
+      
+      /* Info cards */
+      .info-card {
+        background: linear-gradient(135deg, #f8f4ff 0%, #fff 100%);
+        border: 1px solid #e0d4ff;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin: 2rem 0;
+      }
+      
+      .info-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+      
+      .info-icon {
+        width: 40px;
+        height: 40px;
+        background-color: #6f42c1;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: white;
+        font-size: 1.1rem;
+      }
+      
+      .info-title {
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+      }
+      
+      .info-content {
+        color: #6c757d;
+        line-height: 1.6;
+      }
+      
+      /* Loading spinner */
+      .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #6f42c1;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .utm-hero {
+          padding: 1.5rem;
+        }
+        
+        .utm-current {
+          font-size: 2rem;
+        }
+        
+        .consultation-card {
+          padding: 1rem;
+        }
+        
+        .consultation-header {
+          flex-direction: column;
+          text-align: center;
+        }
+        
+        .consultation-icon {
+          margin-right: 0;
+          margin-bottom: 1rem;
+        }
+        
+        .quick-periods {
+          grid-template-columns: 1fr;
+        }
+        
+        .calculator-inputs {
+          grid-template-columns: 1fr;
+        }
+        
+        .utm-annual-table {
+          font-size: 0.75rem;
+        }
+        
+        .utm-annual-table th,
+        .utm-annual-table td {
+          padding: 0.5rem 0.25rem;
+        }
+        
+        .chart-container {
+          height: 300px;
+          padding: 1rem;
+        }
+      }
+      
+      /* Print styles */
+      @media print {
+        .sidebar,
+        header,
+        .action-btn,
+        .quick-periods {
+          display: none !important;
+        }
+        
+        .main-content {
+          margin-left: 0 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <ul class="nav nav-sidebar flex-column mb-auto">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">domain</span>
+              <span>Comunidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">apartment</span>
+              <span>Unidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">people</span>
+              <span>Personas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">bar_chart</span>
+              <span>Reportes</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="tickets-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">support</span>
+              <span>Soporte</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="util-uf.html" class="nav-link active px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">calculate</span>
+              <span>Utilidades</span>
+            </a>
+          </li>
+        </ul>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+            <span class="material-icons me-2">settings</span>
+            <span>Configuración</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Sidebar backdrop for mobile -->
+      <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+      
+      <!-- Contenido principal -->
+      <div class="main-content flex-grow-1 bg-light">
+        <!-- Header con búsqueda y notificaciones -->
+        <header class="bg-white border-bottom shadow-sm p-3">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <div class="col-lg-6">
+                <button class="btn toggle-sidebar d-lg-none me-2" onclick="toggleSidebar()">
+                  <span class="material-icons">menu</span>
+                </button>
+                <h5 class="mb-0">Consulta Valor UTM</h5>
+                <small class="text-muted">Unidad Tributaria Mensual - Valores mensuales y calculadora</small>
+              </div>
+              
+              <div class="col-lg-6">
+                <div class="d-flex justify-content-end align-items-center">
+                  <div class="me-3">
+                    <a href="util-uf.html" class="action-btn outline">
+                      <span class="material-icons">show_chart</span>
+                      UF
+                    </a>
+                  </div>
+                  <div class="me-3">
+                    <a href="util-rut.html" class="action-btn outline">
+                      <span class="material-icons">verified_user</span>
+                      RUT
+                    </a>
+                  </div>
+                  
+                  <div class="me-3">
+                    <button class="btn position-relative p-0" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons">notifications</span>
+                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        3
+                      </span>
+                    </button>
+                  </div>
+                  
+                  <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                      <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+                      <div class="d-none d-sm-block">
+                        <div class="fw-bold">Patricia Contreras</div>
+                        <small class="text-muted">Administradora</small>
+                      </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                      <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+                      <li><a class="dropdown-item" href="#">Configuración</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Contenido -->
+        <main class="container-fluid p-4">
+          <!-- UTM Hero Section -->
+          <div class="utm-hero">
+            <h1 class="display-6 mb-2">Unidad Tributaria Mensual (UTM)</h1>
+            <div class="utm-current" id="currentUTM">$66.524</div>
+            <div class="utm-period" id="currentPeriod">Septiembre 2025</div>
+            <div class="utm-description">
+              La UTM es una unidad de medida reajustable mensualmente que equivale en pesos al valor que resulte de dividir por diez la suma de los Índices de Precios al Consumidor de los meses comprendidos en un período anual.
+            </div>
+          </div>
+
+          <!-- Consulta por mes/año -->
+          <div class="consultation-card">
+            <div class="consultation-header">
+              <div class="consultation-icon">
+                <span class="material-icons">search</span>
+              </div>
+              <div>
+                <h3 class="consultation-title">Consulta por Período</h3>
+                <p class="consultation-subtitle">Busca el valor de la UTM para un mes y año específico</p>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-lg-8">
+                <div class="row">
+                  <div class="col-md-3">
+                    <label for="consultaMes" class="form-label">Mes</label>
+                    <select class="form-select" id="consultaMes" name="consultaMes">
+                      <option value="1">Enero</option>
+                      <option value="2">Febrero</option>
+                      <option value="3">Marzo</option>
+                      <option value="4">Abril</option>
+                      <option value="5">Mayo</option>
+                      <option value="6">Junio</option>
+                      <option value="7">Julio</option>
+                      <option value="8">Agosto</option>
+                      <option value="9" selected>Septiembre</option>
+                      <option value="10">Octubre</option>
+                      <option value="11">Noviembre</option>
+                      <option value="12">Diciembre</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="consultaAno" class="form-label">Año</label>
+                    <div class="period-picker-group">
+                      <span class="material-icons">calendar_today</span>
+                      <input type="number" class="form-control" id="consultaAno" name="consultaAno" 
+                             value="2025" min="1990" max="2030">
+                    </div>
+                  </div>
+                  <div class="col-md-6 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" onclick="consultarUTM()">
+                      <span class="material-icons me-2">search</span>
+                      Consultar UTM
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Resultado de consulta -->
+            <div class="utm-result" id="resultadoConsulta" style="display: none;">
+              <div class="utm-result-period" id="resultPeriodo"></div>
+              <div class="utm-result-value" id="resultValor"></div>
+              <div class="utm-result-info" id="resultInfo"></div>
+            </div>
+          </div>
+
+          <!-- Períodos rápidos -->
+          <div class="quick-periods">
+            <div class="quick-period" onclick="consultarPeriodoEspecifico('current')">
+              <div class="quick-period-icon">
+                <span class="material-icons">today</span>
+              </div>
+              <div class="quick-period-title">Mes Actual</div>
+              <div class="quick-period-desc">Septiembre 2025</div>
+            </div>
+            
+            <div class="quick-period" onclick="consultarPeriodoEspecifico('previous')">
+              <div class="quick-period-icon">
+                <span class="material-icons">skip_previous</span>
+              </div>
+              <div class="quick-period-title">Mes Anterior</div>
+              <div class="quick-period-desc">Agosto 2025</div>
+            </div>
+            
+            <div class="quick-period" onclick="consultarPeriodoEspecifico('year-start')">
+              <div class="quick-period-icon">
+                <span class="material-icons">calendar_view_year</span>
+              </div>
+              <div class="quick-period-title">Inicio de Año</div>
+              <div class="quick-period-desc">Enero 2025</div>
+            </div>
+            
+            <div class="quick-period" onclick="consultarPeriodoEspecifico('same-last-year')">
+              <div class="quick-period-icon">
+                <span class="material-icons">history</span>
+              </div>
+              <div class="quick-period-title">Año Anterior</div>
+              <div class="quick-period-desc">Septiembre 2024</div>
+            </div>
+          </div>
+
+          <!-- Calculadora UTM -->
+          <div class="calculator-card">
+            <div class="calculator-header">
+              <div class="calculator-icon">
+                <span class="material-icons">calculate</span>
+              </div>
+              <div>
+                <h3 class="calculator-title">Calculadora UTM ⇄ Pesos</h3>
+                <p class="consultation-subtitle">Convierte entre UTM y pesos chilenos</p>
+              </div>
+            </div>
+            
+            <div class="calculator-inputs">
+              <div>
+                <label for="montoPesos" class="form-label">Pesos Chilenos (CLP)</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input type="number" class="form-control" id="montoPesos" placeholder="0" 
+                         oninput="calcularDesdePesos()">
+                </div>
+              </div>
+              
+              <div>
+                <label for="montoUTM" class="form-label">Unidades Tributarias Mensuales (UTM)</label>
+                <div class="input-group">
+                  <span class="input-group-text">UTM</span>
+                  <input type="number" class="form-control" id="montoUTM" placeholder="0" 
+                         step="0.01" oninput="calcularDesdeUTM()">
+                </div>
+              </div>
+              
+              <div>
+                <button class="btn btn-outline-secondary" onclick="limpiarCalculadora()">
+                  <span class="material-icons">clear</span>
+                </button>
+              </div>
+            </div>
+            
+            <div class="calculator-result">
+              <div class="calculator-result-label">Valor UTM utilizado para el cálculo</div>
+              <div class="calculator-result-value" id="valorUTMCalculadora">$66.524</div>
+            </div>
+          </div>
+
+          <!-- Información sobre UTM -->
+          <div class="info-card">
+            <div class="info-header">
+              <div class="info-icon">
+                <span class="material-icons">info</span>
+              </div>
+              <h4 class="info-title">¿Qué es la UTM?</h4>
+            </div>
+            <div class="info-content">
+              <p>La Unidad Tributaria Mensual (UTM) es una unidad de medida reajustable que se actualiza mensualmente. Su valor se determina dividiendo por diez la suma de los Índices de Precios al Consumidor (IPC) de un período anual específico.</p>
+              <p><strong>Características principales:</strong></p>
+              <ul>
+                <li>Se actualiza mensualmente</li>
+                <li>Utilizada principalmente para multas, sanciones y trámites</li>
+                <li>Base para el cálculo de diversos impuestos y tasas</li>
+                <li>Establecida por el Servicio de Impuestos Internos (SII)</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Gráfico anual -->
+          <div class="chart-container">
+            <div class="chart-header">
+              <h4 class="chart-title">
+                <span class="material-icons">bar_chart</span>
+                Evolución UTM - Últimos 12 meses
+              </h4>
+              <div class="chart-controls">
+                <button class="action-btn outline" onclick="cambiarPeriodoGrafico('12m')">12M</button>
+                <button class="action-btn primary" onclick="cambiarPeriodoGrafico('24m')">24M</button>
+                <button class="action-btn outline" onclick="cambiarPeriodoGrafico('36m')">36M</button>
+              </div>
+            </div>
+            <canvas id="utmChart"></canvas>
+          </div>
+
+          <!-- Tabla anual -->
+          <div class="annual-table-card">
+            <div class="annual-table-header">
+              <h4 class="annual-table-title">
+                <span class="material-icons">grid_view</span>
+                Valores UTM por Año
+              </h4>
+              <div class="year-selector">
+                <button class="year-btn" onclick="cambiarAno(-1)">
+                  <span class="material-icons">chevron_left</span>
+                </button>
+                <div class="current-year" id="currentYear">2025</div>
+                <button class="year-btn" onclick="cambiarAno(1)">
+                  <span class="material-icons">chevron_right</span>
+                </button>
+              </div>
+            </div>
+            
+            <div class="table-responsive">
+              <table class="table utm-annual-table">
+                <thead>
+                  <tr>
+                    <th>Mes</th>
+                    <th>Valor UTM</th>
+                    <th>Variación</th>
+                    <th>% Anual</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="annualTableBody">
+                  <tr>
+                    <td><strong>Enero</strong></td>
+                    <td class="utm-value-cell" onclick="usarEnCalculadora('65890')">$65.890</td>
+                    <td class="text-success">+$125</td>
+                    <td class="text-success">+1,89%</td>
+                    <td>
+                      <button class="action-btn outline" onclick="usarEnCalculadora('65890')">
+                        <span class="material-icons">calculate</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Febrero</strong></td>
+                    <td class="utm-value-cell" onclick="usarEnCalculadora('66001')">$66.001</td>
+                    <td class="text-success">+$111</td>
+                    <td class="text-success">+1,68%</td>
+                    <td>
+                      <button class="action-btn outline" onclick="usarEnCalculadora('66001')">
+                        <span class="material-icons">calculate</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Marzo</strong></td>
+                    <td class="utm-value-cell" onclick="usarEnCalculadora('66115')">$66.115</td>
+                    <td class="text-success">+$114</td>
+                    <td class="text-success">+1,72%</td>
+                    <td>
+                      <button class="action-btn outline" onclick="usarEnCalculadora('66115')">
+                        <span class="material-icons">calculate</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Abril</strong></td>
+                    <td class="utm-value-cell" onclick="usarEnCalculadora('66228')">$66.228</td>
+                    <td class="text-success">+$113</td>
+                    <td class="text-success">+1,71%</td>
+                    <td>
+                      <button class="action-btn outline" onclick="usarEnCalculadora('66228')">
+                        <span class="material-icons">calculate</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Mayo</strong></td>
+                    <td class="utm-value-cell" onclick="usarEnCalculadora('66342')">$66.342</td>
+                    <td class="text-success">+$114</td>
+                    <td class="text-success">+1,72%</td>
+                    <td>
+                      <button class="action-btn outline" onclick="usarEnCalculadora('66342')">
+                        <span class="material-icons">calculate</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Junio</strong></td>
+                    <td class="utm-value-cell" onclick="usarEnCalculadora('66451')">$66.451</td>
+                    <td class="text-success">+$109</td>
+                    <td class="text-success">+1,64%</td>
+                    <td>
+                      <button class="action-btn outline" onclick="usarEnCalculadora('66451')">
+                        <span class="material-icons">calculate</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Julio</strong></td>
+                    <td class="utm-value-cell" onclick="usarEnCalculadora('66456')">$66.456</td>
+                    <td class="text-success">+$5</td>
+                    <td class="text-success">+0,08%</td>
+                    <td>
+                      <button class="action-btn outline" onclick="usarEnCalculadora('66456')">
+                        <span class="material-icons">calculate</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Agosto</strong></td>
+                    <td class="utm-value-cell" onclick="usarEnCalculadora('66489')">$66.489</td>
+                    <td class="text-success">+$33</td>
+                    <td class="text-success">+0,50%</td>
+                    <td>
+                      <button class="action-btn outline" onclick="usarEnCalculadora('66489')">
+                        <span class="material-icons">calculate</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr class="current-month">
+                    <td><strong>Septiembre</strong></td>
+                    <td class="utm-value-cell" onclick="usarEnCalculadora('66524')">$66.524</td>
+                    <td class="text-success">+$35</td>
+                    <td class="text-success">+0,53%</td>
+                    <td>
+                      <button class="action-btn primary" onclick="usarEnCalculadora('66524')">
+                        <span class="material-icons">calculate</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Octubre</strong></td>
+                    <td class="text-muted">-</td>
+                    <td class="text-muted">-</td>
+                    <td class="text-muted">-</td>
+                    <td class="text-muted">-</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Noviembre</strong></td>
+                    <td class="text-muted">-</td>
+                    <td class="text-muted">-</td>
+                    <td class="text-muted">-</td>
+                    <td class="text-muted">-</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Diciembre</strong></td>
+                    <td class="text-muted">-</td>
+                    <td class="text-muted">-</td>
+                    <td class="text-muted">-</td>
+                    <td class="text-muted">-</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center p-3 border-top">
+              <div class="text-muted">
+                Fuente: Servicio de Impuestos Internos (SII)
+              </div>
+              <div class="d-flex gap-2">
+                <button class="action-btn outline" onclick="exportarTablaAnual('excel')">
+                  <span class="material-icons">table_chart</span>
+                  Excel
+                </button>
+                <button class="action-btn outline" onclick="exportarTablaAnual('pdf')">
+                  <span class="material-icons">picture_as_pdf</span>
+                  PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script src="assets/js/script.js"></script>
+    <script>
+      function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.querySelector('.sidebar-backdrop');
+        
+        sidebar.classList.toggle('show');
+        backdrop.classList.toggle('show');
+      }
+
+      // Simulated UTM data
+      const utmData = {
+        '2025': {
+          1: 65890, 2: 66001, 3: 66115, 4: 66228, 5: 66342, 6: 66451,
+          7: 66456, 8: 66489, 9: 66524, 10: null, 11: null, 12: null
+        },
+        '2024': {
+          1: 64648, 2: 64756, 3: 64864, 4: 64972, 5: 65080, 6: 65188,
+          7: 65296, 8: 65404, 9: 65512, 10: 65620, 11: 65728, 12: 65836
+        }
+      };
+
+      const monthNames = [
+        '', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      ];
+
+      // Initialize current year
+      let currentDisplayYear = 2025;
+
+      document.addEventListener('DOMContentLoaded', function() {
+        initializeChart();
+        updateCurrentYear();
+      });
+
+      // Consultar UTM por mes/año
+      function consultarUTM() {
+        const mes = parseInt(document.getElementById('consultaMes').value);
+        const ano = parseInt(document.getElementById('consultaAno').value);
+        const resultado = document.getElementById('resultadoConsulta');
+        
+        resultado.style.display = 'block';
+        resultado.className = 'utm-result loading';
+        
+        document.getElementById('resultPeriodo').textContent = 'Consultando...';
+        document.getElementById('resultValor').innerHTML = '<span class="loading-spinner"></span>';
+        document.getElementById('resultInfo').innerHTML = '';
+        
+        setTimeout(() => {
+          const valorUTM = utmData[ano] && utmData[ano][mes] ? utmData[ano][mes] : null;
+          
+          if (valorUTM) {
+            document.getElementById('resultPeriodo').textContent = `${monthNames[mes]} ${ano}`;
+            document.getElementById('resultValor').textContent = formatearPeso(valorUTM);
+            
+            // Calculate variation from previous month
+            let mesAnterior = mes - 1;
+            let anoAnterior = ano;
+            if (mesAnterior === 0) {
+              mesAnterior = 12;
+              anoAnterior = ano - 1;
+            }
+            
+            const valorAnterior = utmData[anoAnterior] && utmData[anoAnterior][mesAnterior] ? 
+                                 utmData[anoAnterior][mesAnterior] : null;
+            
+            if (valorAnterior) {
+              const variacion = valorUTM - valorAnterior;
+              const porcentaje = ((variacion / valorAnterior) * 100).toFixed(2);
+              
+              document.getElementById('resultInfo').innerHTML = `
+                <span class="material-icons me-1">trending_up</span>
+                Variación: ${formatearPeso(variacion)} (${porcentaje > 0 ? '+' : ''}${porcentaje}%)
+              `;
+            }
+            
+            resultado.className = 'utm-result success';
+          } else {
+            document.getElementById('resultPeriodo').textContent = `${monthNames[mes]} ${ano}`;
+            document.getElementById('resultValor').textContent = 'No disponible';
+            document.getElementById('resultInfo').innerHTML = `
+              <span class="material-icons me-1">info</span>
+              Valor no disponible para este período
+            `;
+            resultado.className = 'utm-result';
+          }
+        }, 1500);
+      }
+
+      // Consultas rápidas
+      function consultarPeriodoEspecifico(tipo) {
+        const hoy = new Date();
+        let mes, ano;
+        
+        switch(tipo) {
+          case 'current':
+            mes = hoy.getMonth() + 1;
+            ano = hoy.getFullYear();
+            break;
+          case 'previous':
+            mes = hoy.getMonth();
+            ano = hoy.getFullYear();
+            if (mes === 0) {
+              mes = 12;
+              ano = ano - 1;
+            }
+            break;
+          case 'year-start':
+            mes = 1;
+            ano = hoy.getFullYear();
+            break;
+          case 'same-last-year':
+            mes = hoy.getMonth() + 1;
+            ano = hoy.getFullYear() - 1;
+            break;
+        }
+        
+        document.getElementById('consultaMes').value = mes;
+        document.getElementById('consultaAno').value = ano;
+        consultarUTM();
+      }
+
+      // Calculadora UTM
+      function calcularDesdePesos() {
+        const pesos = parseFloat(document.getElementById('montoPesos').value) || 0;
+        const valorUTM = 66524; // Valor actual
+        const utm = pesos / valorUTM;
+        
+        document.getElementById('montoUTM').value = utm.toFixed(4);
+      }
+
+      function calcularDesdeUTM() {
+        const utm = parseFloat(document.getElementById('montoUTM').value) || 0;
+        const valorUTM = 66524; // Valor actual
+        const pesos = utm * valorUTM;
+        
+        document.getElementById('montoPesos').value = Math.round(pesos);
+      }
+
+      function limpiarCalculadora() {
+        document.getElementById('montoPesos').value = '';
+        document.getElementById('montoUTM').value = '';
+      }
+
+      // Usar valor en calculadora
+      function usarEnCalculadora(valor) {
+        document.getElementById('valorUTMCalculadora').textContent = formatearPeso(parseFloat(valor));
+        
+        // Scroll to calculator
+        document.querySelector('.calculator-card').scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        
+        // Recalcular si hay valores
+        if (document.getElementById('montoPesos').value) {
+          calcularDesdePesos();
+        }
+        if (document.getElementById('montoUTM').value) {
+          calcularDesdeUTM();
+        }
+      }
+
+      // Chart functionality
+      let utmChart;
+
+      function initializeChart() {
+        const ctx = document.getElementById('utmChart').getContext('2d');
+        
+        // Generate data for chart (last 12 months)
+        const labels = [];
+        const data = [];
+        const today = new Date();
+        
+        for (let i = 11; i >= 0; i--) {
+          const date = new Date(today);
+          date.setMonth(today.getMonth() - i);
+          const year = date.getFullYear();
+          const month = date.getMonth() + 1;
+          
+          labels.push(date.toLocaleDateString('es-CL', { month: 'short', year: '2-digit' }));
+          
+          if (utmData[year] && utmData[year][month]) {
+            data.push(utmData[year][month]);
+          } else {
+            data.push(null);
+          }
+        }
+        
+        utmChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Valor UTM',
+              data: data,
+              backgroundColor: 'rgba(111, 66, 193, 0.8)',
+              borderColor: 'rgb(111, 66, 193)',
+              borderWidth: 2,
+              borderRadius: 4,
+              borderSkipped: false,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return 'UTM: ' + formatearPeso(context.parsed.y);
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                ticks: {
+                  callback: function(value) {
+                    return formatearPeso(value);
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      function cambiarPeriodoGrafico(periodo) {
+        // Update active button
+        document.querySelectorAll('.chart-controls .action-btn').forEach(btn => {
+          btn.classList.remove('primary');
+          btn.classList.add('outline');
+        });
+        event.target.classList.remove('outline');
+        event.target.classList.add('primary');
+        
+        console.log('Changing chart period to:', periodo);
+      }
+
+      // Annual table functions
+      function cambiarAno(direction) {
+        currentDisplayYear += direction;
+        if (currentDisplayYear < 1990) currentDisplayYear = 1990;
+        if (currentDisplayYear > 2030) currentDisplayYear = 2030;
+        
+        updateCurrentYear();
+        updateAnnualTable();
+      }
+
+      function updateCurrentYear() {
+        document.getElementById('currentYear').textContent = currentDisplayYear;
+      }
+
+      function updateAnnualTable() {
+        const tbody = document.getElementById('annualTableBody');
+        const data = utmData[currentDisplayYear] || {};
+        
+        tbody.innerHTML = '';
+        
+        for (let mes = 1; mes <= 12; mes++) {
+          const valor = data[mes];
+          const valorAnterior = mes > 1 ? data[mes - 1] : 
+                               (utmData[currentDisplayYear - 1] ? utmData[currentDisplayYear - 1][12] : null);
+          
+          let variacion = '';
+          let porcentajeAnual = '';
+          let className = '';
+          
+          if (valor) {
+            if (valorAnterior) {
+              const diff = valor - valorAnterior;
+              const percent = ((diff / valorAnterior) * 100).toFixed(2);
+              variacion = `${diff > 0 ? '+' : ''}${formatearPeso(diff)}`;
+              porcentajeAnual = `${diff > 0 ? '+' : ''}${percent}%`;
+              className = diff > 0 ? 'text-success' : (diff < 0 ? 'text-danger' : 'text-muted');
+            }
+            
+            // Check if current month
+            const today = new Date();
+            const isCurrentMonth = mes === today.getMonth() + 1 && currentDisplayYear === today.getFullYear();
+            
+            tbody.innerHTML += `
+              <tr${isCurrentMonth ? ' class="current-month"' : ''}>
+                <td><strong>${monthNames[mes]}</strong></td>
+                <td class="utm-value-cell" onclick="usarEnCalculadora('${valor}')">${formatearPeso(valor)}</td>
+                <td class="${className}">${variacion || '-'}</td>
+                <td class="${className}">${porcentajeAnual || '-'}</td>
+                <td>
+                  <button class="action-btn ${isCurrentMonth ? 'primary' : 'outline'}" onclick="usarEnCalculadora('${valor}')">
+                    <span class="material-icons">calculate</span>
+                  </button>
+                </td>
+              </tr>
+            `;
+          } else {
+            tbody.innerHTML += `
+              <tr>
+                <td><strong>${monthNames[mes]}</strong></td>
+                <td class="text-muted">-</td>
+                <td class="text-muted">-</td>
+                <td class="text-muted">-</td>
+                <td class="text-muted">-</td>
+              </tr>
+            `;
+          }
+        }
+      }
+
+      // Export functions
+      function exportarTablaAnual(format) {
+        const btn = event.target.closest('.action-btn');
+        const originalContent = btn.innerHTML;
+        
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Exportando...';
+        btn.disabled = true;
+        
+        setTimeout(() => {
+          btn.innerHTML = originalContent;
+          btn.disabled = false;
+          alert(`Tabla anual exportada en formato ${format.toUpperCase()}`);
+        }, 2000);
+      }
+
+      // Utility functions
+      function formatearPeso(numero) {
+        return new Intl.NumberFormat('es-CL', {
+          style: 'currency',
+          currency: 'CLP',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        }).format(numero);
+      }
+
+      // Initialize with current month/year
+      document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date();
+        document.getElementById('consultaMes').value = today.getMonth() + 1;
+        document.getElementById('consultaAno').value = today.getFullYear();
+        
+        updateAnnualTable();
+      });
+    </script>
+  </body>
+</html>

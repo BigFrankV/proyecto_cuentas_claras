@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nueva Persona - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .form-section {
+        background-color: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+      }
+      
+      .form-section-header {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        background-color: #f9f9f9;
+      }
+      
+      .form-section-body {
+        padding: 1.5rem;
+      }
+      
+      .required:after {
+        content: " *";
+        color: var(--color-danger);
+      }
+      
+      /* Estilo para la selección de tipo de persona */
+      .persona-type-card {
+        border: 2px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        height: 100%;
+        text-align: center;
+      }
+      
+      .persona-type-card:hover {
+        border-color: #ced4da;
+        background-color: #f8f9fa;
+      }
+      
+      .persona-type-card.selected {
+        border-color: var(--color-primary);
+        background-color: rgba(3, 14, 39, 0.05);
+      }
+      
+      .persona-type-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: var(--color-primary);
+      }
+      
+      .avatar-upload {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 2px dashed #ced4da;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .avatar-upload:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+      }
+      
+      .avatar-upload input[type="file"] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+      
+      .avatar-upload-icon {
+        font-size: 2rem;
+        color: var(--color-muted);
+      }
+      
+      /* Selector de unidades asociadas */
+      .unidad-selection {
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+      
+      .unidad-selection:hover {
+        background-color: #f8f9fa;
+      }
+      
+      .unidad-selection.selected {
+        border-color: var(--color-primary);
+        background-color: rgba(3, 14, 39, 0.05);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 280px; min-height: 100vh; background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <ul class="nav nav-sidebar flex-column mb-auto">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">domain</span>
+              <span>Comunidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="edificios-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">business</span>
+              <span>Edificios</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">apartment</span>
+              <span>Unidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="personas-listado.html" class="nav-link active px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">people</span>
+              <span>Personas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="emisiones-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">receipt_long</span>
+              <span>Emisiones</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">payments</span>
+              <span>Pagos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">shopping_cart</span>
+              <span>Gastos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">bar_chart</span>
+              <span>Reportes</span>
+            </a>
+          </li>
+        </ul>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+            <strong>Patricia</strong>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+            <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="flex-grow-1 bg-light">
+        <!-- Header -->
+        <header class="bg-white shadow-sm py-3 px-4 d-flex justify-content-between align-items-center sticky-top">
+          <div class="d-flex align-items-center">
+            <a href="personas-listado.html" class="btn btn-link text-secondary p-0 me-3">
+              <span class="material-icons">arrow_back</span>
+            </a>
+            <h5 class="mb-0">Nueva Persona</h5>
+          </div>
+          <div class="d-flex align-items-center">
+            <button type="button" class="btn btn-outline-secondary me-2">Cancelar</button>
+            <button type="button" class="btn btn-primary">Guardar</button>
+          </div>
+        </header>
+        
+        <!-- Content -->
+        <div class="container-fluid py-4">
+          <div class="row">
+            <div class="col-12">
+              <!-- Tipo de Persona -->
+              <div class="form-section mb-4">
+                <div class="form-section-header">
+                  <h6 class="mb-0">Tipo de Persona</h6>
+                </div>
+                <div class="form-section-body">
+                  <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                      <div class="persona-type-card selected">
+                        <div class="persona-type-icon">
+                          <span class="material-icons">home_work</span>
+                        </div>
+                        <h6 class="mb-2">Propietario</h6>
+                        <p class="text-muted small mb-0">Dueño de una o más unidades</p>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <div class="persona-type-card">
+                        <div class="persona-type-icon">
+                          <span class="material-icons">night_shelter</span>
+                        </div>
+                        <h6 class="mb-2">Inquilino</h6>
+                        <p class="text-muted small mb-0">Habitante sin propiedad</p>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <div class="persona-type-card">
+                        <div class="persona-type-icon">
+                          <span class="material-icons">admin_panel_settings</span>
+                        </div>
+                        <h6 class="mb-2">Administrador</h6>
+                        <p class="text-muted small mb-0">Gestiona edificios o comunidades</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Información Personal -->
+              <div class="form-section mb-4">
+                <div class="form-section-header">
+                  <h6 class="mb-0">Información Personal</h6>
+                </div>
+                <div class="form-section-body">
+                  <div class="row g-3">
+                    <div class="col-12 col-md-3">
+                      <div class="d-flex justify-content-center mb-3">
+                        <div class="avatar-upload">
+                          <input type="file" accept="image/*">
+                          <span class="material-icons avatar-upload-icon">add_a_photo</span>
+                        </div>
+                      </div>
+                      <div class="text-center text-muted small">
+                        Foto de perfil (opcional)
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-9">
+                      <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                          <label for="nombre" class="form-label required">Nombre</label>
+                          <input type="text" class="form-control" id="nombre" placeholder="Ingrese nombre">
+                        </div>
+                        <div class="col-12 col-md-6">
+                          <label for="apellido" class="form-label required">Apellido</label>
+                          <input type="text" class="form-control" id="apellido" placeholder="Ingrese apellido">
+                        </div>
+                        <div class="col-12 col-md-6">
+                          <label for="tipoDoc" class="form-label required">Tipo de Documento</label>
+                          <select class="form-select" id="tipoDoc">
+                            <option selected>DNI</option>
+                            <option>Pasaporte</option>
+                            <option>CUIT/CUIL</option>
+                            <option>LC/LE</option>
+                          </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                          <label for="nroDoc" class="form-label required">Número de Documento</label>
+                          <input type="text" class="form-control" id="nroDoc" placeholder="Ingrese número de documento">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Información de Contacto -->
+              <div class="form-section mb-4">
+                <div class="form-section-header">
+                  <h6 class="mb-0">Información de Contacto</h6>
+                </div>
+                <div class="form-section-body">
+                  <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                      <label for="email" class="form-label required">Email</label>
+                      <input type="email" class="form-control" id="email" placeholder="Ingrese email">
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label for="telefono" class="form-label">Teléfono</label>
+                      <input type="tel" class="form-control" id="telefono" placeholder="Ingrese teléfono">
+                    </div>
+                    <div class="col-12 col-md-12">
+                      <label for="direccion" class="form-label">Dirección</label>
+                      <input type="text" class="form-control" id="direccion" placeholder="Ingrese dirección completa">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Unidades Relacionadas (solo para propietarios e inquilinos) -->
+              <div class="form-section mb-4">
+                <div class="form-section-header d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">Unidades Relacionadas</h6>
+                  <button type="button" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-plus me-1"></i> Añadir Unidad
+                  </button>
+                </div>
+                <div class="form-section-body">
+                  <div class="alert alert-info" role="alert">
+                    <div class="d-flex align-items-center">
+                      <span class="material-icons me-2">info</span>
+                      <div>
+                        <p class="mb-0">Seleccione las unidades que esta persona posee o habita.</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="unidad-selection selected">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="d-flex align-items-center">
+                        <span class="material-icons me-2 text-primary">apartment</span>
+                        <div>
+                          <div class="fw-medium">Departamento 4B</div>
+                          <div class="small text-muted">Edificio Torre Norte - Comunidad Parque Real</div>
+                        </div>
+                      </div>
+                      <div>
+                        <select class="form-select form-select-sm">
+                          <option selected>Propietario</option>
+                          <option>Inquilino</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="unidad-selection mt-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="d-flex align-items-center">
+                        <span class="material-icons me-2 text-primary">apartment</span>
+                        <div>
+                          <div class="fw-medium">Departamento 7A</div>
+                          <div class="small text-muted">Edificio Torre Sur - Comunidad Parque Real</div>
+                        </div>
+                      </div>
+                      <div>
+                        <select class="form-select form-select-sm">
+                          <option selected>Propietario</option>
+                          <option>Inquilino</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Configuración de Cuenta -->
+              <div class="form-section mb-4">
+                <div class="form-section-header">
+                  <h6 class="mb-0">Configuración de Cuenta</h6>
+                </div>
+                <div class="form-section-body">
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="crearCuenta" checked>
+                        <label class="form-check-label" for="crearCuenta">Crear cuenta de acceso</label>
+                      </div>
+                      <div class="small text-muted mt-1">La persona recibirá un email para establecer su contraseña</div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label for="username" class="form-label">Nombre de usuario</label>
+                      <input type="text" class="form-control" id="username" placeholder="usuario">
+                      <div class="form-text">Generado automáticamente a partir del nombre y apellido</div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label for="nivelAcceso" class="form-label">Nivel de Acceso</label>
+                      <select class="form-select" id="nivelAcceso">
+                        <option>Solo lectura</option>
+                        <option selected>Usuario Estándar</option>
+                        <option>Administrador</option>
+                        <option>Superadministrador</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Botones de acción -->
+              <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary">Cancelar</button>
+                <div>
+                  <button type="button" class="btn btn-outline-primary me-2">Guardar como Borrador</button>
+                  <button type="button" class="btn btn-primary">Guardar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/script.js"></script>
+    <script>
+      // Script para selección de tipo de persona
+      document.querySelectorAll('.persona-type-card').forEach(card => {
+        card.addEventListener('click', function() {
+          document.querySelectorAll('.persona-type-card').forEach(c => c.classList.remove('selected'));
+          this.classList.add('selected');
+        });
+      });
+      
+      // Script para selección de unidades
+      document.querySelectorAll('.unidad-selection').forEach(unidad => {
+        unidad.addEventListener('click', function() {
+          this.classList.toggle('selected');
+        });
+      });
+    </script>
+  </body>
+</html>
