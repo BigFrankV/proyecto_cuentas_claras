@@ -22,12 +22,24 @@ export interface User {
   is_superadmin?: boolean;
   roles?: string[];
   comunidad_id?: number;
+  totp_enabled?: boolean;
+  
+  // Campos adicionales de perfil
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  activo?: boolean;
+  created_at?: string;
 }
 
 export interface AuthResponse {
-  token: string;
-  user: User;
+  token?: string;
+  user?: User;
   expires_in?: number;
+  
+  // Campos para 2FA
+  twoFactorRequired?: boolean;
+  tempToken?: string;
 }
 
 export interface AuthError {
@@ -43,12 +55,13 @@ interface JWTPayload {
   roles?: string[];
   comunidad_id?: number;
   is_superadmin?: boolean;
+  twoFactor?: boolean;
   iat: number;
   exp: number;
 }
 
 class AuthService {
-  // Login del usuario
+  // Login del usuario (puede requerir 2FA)
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await apiClient.post('/auth/login', {
@@ -57,6 +70,15 @@ class AuthService {
       });
 
       console.log('🔍 Respuesta completa de la API:', response.data);
+
+      // Verificar si se requiere 2FA
+      if (response.data.twoFactorRequired) {
+        console.log('🔐 2FA requerido, devolviendo tempToken');
+        return {
+          twoFactorRequired: true,
+          tempToken: response.data.tempToken,
+        };
+      }
 
       const token = response.data.token;
 
@@ -72,14 +94,22 @@ class AuthService {
         const decodedToken = jwtDecode<JWTPayload>(token);
         console.log('🔍 Token decodificado:', decodedToken);
 
-        user = {
+        const userObj: Partial<User> = {
           id: decodedToken.sub.toString(),
           username: decodedToken.username,
-          persona_id: decodedToken.persona_id || undefined,
           is_superadmin: decodedToken.is_superadmin || false,
           roles: decodedToken.roles || [],
-          comunidad_id: decodedToken.comunidad_id || undefined,
         };
+
+        if (decodedToken.persona_id !== undefined) {
+          userObj.persona_id = decodedToken.persona_id;
+        }
+
+        if (decodedToken.comunidad_id !== undefined) {
+          userObj.comunidad_id = decodedToken.comunidad_id;
+        }
+
+        user = userObj as User;
 
         console.log('🔍 Usuario extraído del token:', user);
       } catch (jwtError) {
@@ -115,6 +145,68 @@ class AuthService {
         throw new Error(
           'No se pudo conectar con el servidor. Verifica que la API esté ejecutándose.'
         );
+      } else {
+        throw new Error('Error de conexión. Por favor intenta nuevamente.');
+      }
+    }
+  }
+
+  // Completar login con código 2FA
+  async complete2FALogin(tempToken: string, code: string): Promise<AuthResponse> {
+    try {
+      const response = await apiClient.post('/auth/2fa/verify', {
+        tempToken,
+        code,
+      });
+
+      const token = response.data.token;
+
+      if (!token) {
+        throw new Error('No se recibió token de autenticación');
+      }
+
+      // Decodificar el token para extraer los datos del usuario
+      let user: User;
+      try {
+        const decodedToken = jwtDecode<JWTPayload>(token);
+        console.log('🔍 Token 2FA decodificado:', decodedToken);
+
+        const userObj: Partial<User> = {
+          id: decodedToken.sub.toString(),
+          username: decodedToken.username,
+          is_superadmin: decodedToken.is_superadmin || false,
+          roles: decodedToken.roles || [],
+        };
+
+        if (decodedToken.persona_id !== undefined) {
+          userObj.persona_id = decodedToken.persona_id;
+        }
+
+        if (decodedToken.comunidad_id !== undefined) {
+          userObj.comunidad_id = decodedToken.comunidad_id;
+        }
+
+        user = userObj as User;
+
+        console.log('🔍 Usuario extraído del token 2FA:', user);
+      } catch (jwtError) {
+        console.error('❌ Error decodificando token 2FA:', jwtError);
+        throw new Error('Token de autenticación inválido');
+      }
+
+      // Guardar token y datos de usuario en localStorage
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user_data', JSON.stringify(user));
+
+      console.log('💾 Datos 2FA guardados en localStorage');
+
+      return { token, user };
+    } catch (error: any) {
+      console.error('❌ Error en login 2FA:', error);
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.response?.status === 401) {
+        throw new Error('Código 2FA inválido o expirado');
       } else {
         throw new Error('Error de conexión. Por favor intenta nuevamente.');
       }

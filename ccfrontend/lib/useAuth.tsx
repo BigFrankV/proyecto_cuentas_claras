@@ -6,14 +6,15 @@ import {
   ReactNode,
 } from 'react';
 import { useRouter } from 'next/router';
-import authService, { User } from '@/lib/auth';
+import authService, { User, AuthResponse } from '@/lib/auth';
 
 // Tipos para el contexto de autenticación
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<AuthResponse>;
+  complete2FALogin: (tempToken: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -74,11 +75,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authService.login({ username, password });
       console.log('✅ Login exitoso, datos recibidos:', response.user);
-      setUser(response.user);
-      console.log('✅ Usuario establecido en contexto:', response.user);
+      if (response.user) {
+        setUser(response.user);
+        console.log('✅ Usuario establecido en contexto:', response.user);
+      }
+      return response; // Devolver la respuesta para manejar 2FA
     } catch (error) {
       console.error('❌ Error en login:', error);
       throw error; // Re-lanzar para que el componente maneje el error
+    }
+  };
+
+  const complete2FALogin = async (tempToken: string, code: string) => {
+    console.log('🔐 Completando login 2FA');
+    try {
+      const response = await authService.complete2FALogin(tempToken, code);
+      console.log('✅ Login 2FA exitoso, datos recibidos:', response.user);
+      if (response.user) {
+        setUser(response.user);
+        console.log('✅ Usuario establecido en contexto:', response.user);
+      }
+    } catch (error) {
+      console.error('❌ Error en login 2FA:', error);
+      throw error;
     }
   };
 
@@ -109,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     isAuthenticated: !!user,
     login,
+    complete2FALogin,
     logout,
     refreshUser,
   };
