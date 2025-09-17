@@ -8,11 +8,18 @@ export default function Home() {
   const router = useRouter();
   const {
     login: authLogin,
+    complete2FALogin,
     isAuthenticated,
     isLoading: authLoading,
   } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Estados para 2FA
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [tempToken, setTempToken] = useState('');
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [username, setUsername] = useState('');
 
   // Redirigir si ya está autenticado
   useEffect(() => {
@@ -33,27 +40,73 @@ export default function Home() {
     setError('');
 
     const formData = new FormData(e.currentTarget);
-    const username = formData.get('username') as string;
+    const usernameValue = formData.get('username') as string;
     const password = formData.get('password') as string;
 
     // Validación básica
-    if (!username || !password) {
+    if (!usernameValue || !password) {
       setError('Por favor completa todos los campos');
+      return;
+    }
+
+    setIsLoading(true);
+    setUsername(usernameValue); // Guardar username para 2FA
+
+    try {
+      // Usar el login del contexto de autenticación
+      const response = await authLogin(usernameValue, password);
+
+      // Verificar si se requiere 2FA
+      if (response.twoFactorRequired && response.tempToken) {
+        setRequires2FA(true);
+        setTempToken(response.tempToken);
+        setIsLoading(false);
+        return;
+      }
+
+      // Si no requiere 2FA, la redirección se maneja en el useEffect cuando isAuthenticated cambie
+    } catch (err: any) {
+      setError(err.message || 'Error al iniciar sesión');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Manejar envío de código 2FA
+  const handle2FASubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError('');
+
+    if (!twoFactorCode || twoFactorCode.length !== 6) {
+      setError('Por favor ingresa un código de 6 dígitos');
+      return;
+    }
+
+    if (!tempToken) {
+      setError('Token temporal expirado. Por favor inicia sesión nuevamente.');
+      setRequires2FA(false);
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Usar el login del contexto de autenticación
-      await authLogin(username, password);
-
+      await complete2FALogin(tempToken, twoFactorCode);
       // La redirección se maneja en el useEffect cuando isAuthenticated cambie
     } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
+      setError(err.message || 'Código de verificación inválido');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Cancelar 2FA y volver al login normal
+  const cancel2FA = () => {
+    setRequires2FA(false);
+    setTempToken('');
+    setTwoFactorCode('');
+    setUsername('');
+    setError('');
   };
 
   // Pre-llenar los campos con las credenciales por defecto
@@ -215,8 +268,12 @@ export default function Home() {
                     </div>
                   </div>
 
+                  {/* Título dinámico */}
                   <p className='text-muted'>
-                    Ingresa con tu usuario y contraseña para acceder al panel.
+                    {requires2FA 
+                      ? 'Introduce el código de 6 dígitos de tu aplicación de autenticación.'
+                      : 'Ingresa con tu usuario y contraseña para acceder al panel.'
+                    }
                   </p>
 
                   {error && (
@@ -240,73 +297,173 @@ export default function Home() {
                     </div>
                   )}
 
-                  <form onSubmit={handleSubmit}>
-                    <div className='mb-3'>
-                      <label className='form-label'>Usuario</label>
-                      <input
-                        name='username'
-                        type='text'
-                        className='form-control'
-                        placeholder='Nombre de usuario'
-                        required
-                      />
-                    </div>
-                    <div className='mb-3'>
-                      <label className='form-label'>Contraseña</label>
-                      <input
-                        name='password'
-                        type='password'
-                        className='form-control'
-                        placeholder='********'
-                        required
-                      />
-                    </div>
-
-                    <div className='d-flex justify-content-between align-items-center mb-3'>
-                      <div className='form-check'>
+                  {/* Formulario normal de login */}
+                  {!requires2FA && (
+                    <form onSubmit={handleSubmit}>
+                      <div className='mb-3'>
+                        <label className='form-label'>Usuario</label>
                         <input
-                          className='form-check-input'
-                          type='checkbox'
-                          id='remember'
+                          name='username'
+                          type='text'
+                          className='form-control'
+                          placeholder='Nombre de usuario'
+                          required
                         />
-                        <label className='form-check-label' htmlFor='remember'>
-                          Recordarme
-                        </label>
                       </div>
-                      <Link
-                        href='/forgot-password'
-                        className='small text-decoration-none'
-                      >
-                        ¿Olvidaste tu contraseña?
-                      </Link>
-                    </div>
+                      <div className='mb-3'>
+                        <label className='form-label'>Contraseña</label>
+                        <input
+                          name='password'
+                          type='password'
+                          className='form-control'
+                          placeholder='********'
+                          required
+                        />
+                      </div>
 
-                    <div className='d-grid'>
+                      <div className='d-flex justify-content-between align-items-center mb-3'>
+                        <div className='form-check'>
+                          <input
+                            className='form-check-input'
+                            type='checkbox'
+                            id='remember'
+                          />
+                          <label className='form-check-label' htmlFor='remember'>
+                            Recordarme
+                          </label>
+                        </div>
+                        <Link
+                          href='/forgot-password'
+                          className='small text-decoration-none'
+                        >
+                          ¿Olvidaste tu contraseña?
+                        </Link>
+                      </div>
+
+                      <div className='d-grid'>
+                        <button
+                          className='btn btn-primary'
+                          type='submit'
+                          disabled={isLoading}
+                        >
+                          {isLoading ? 'Entrando...' : 'Entrar'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Formulario de verificación 2FA */}
+                  {requires2FA && (
+                    <form onSubmit={handle2FASubmit}>
+                      <div className='text-center mb-4'>
+                        <div 
+                          className='d-inline-flex align-items-center justify-content-center bg-light rounded-circle'
+                          style={{ width: '80px', height: '80px' }}
+                        >
+                          <span 
+                            className='material-icons' 
+                            style={{ 
+                              fontSize: '40px', 
+                              color: 'var(--color-primary)' 
+                            }}
+                          >
+                            verified_user
+                          </span>
+                        </div>
+                        <h5 className='mt-3 mb-1'>Verificación de Dos Factores</h5>
+                        <p className='text-muted small mb-0'>Usuario: <strong>{username}</strong></p>
+                      </div>
+
+                      <div className='mb-4'>
+                        <label className='form-label text-center d-block'>
+                          Código de Verificación
+                        </label>
+                        <input
+                          type='text'
+                          className='form-control text-center'
+                          style={{ 
+                            fontSize: '1.5rem', 
+                            letterSpacing: '0.5rem',
+                            height: '60px'
+                          }}
+                          placeholder='000000'
+                          value={twoFactorCode}
+                          onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          maxLength={6}
+                          required
+                          autoFocus
+                        />
+                        <div className='form-text text-center'>
+                          Ingresa el código de 6 dígitos de tu aplicación de autenticación
+                        </div>
+                      </div>
+
+                      <div className='d-grid gap-2'>
+                        <button
+                          className='btn btn-primary'
+                          type='submit'
+                          disabled={isLoading || twoFactorCode.length !== 6}
+                        >
+                          {isLoading ? (
+                            <>
+                              <span className='spinner-border spinner-border-sm me-2' role='status'></span>
+                              Verificando...
+                            </>
+                          ) : (
+                            'Verificar Código'
+                          )}
+                        </button>
+                        <button
+                          type='button'
+                          className='btn btn-outline-secondary'
+                          onClick={cancel2FA}
+                          disabled={isLoading}
+                        >
+                          <span className='material-icons me-2' style={{ fontSize: '18px' }}>
+                            arrow_back
+                          </span>
+                          Volver al Login
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Credenciales de desarrollo - solo mostrar en login normal */}
+                  {!requires2FA && (
+                    <div className='text-center mt-3 small text-muted'>
+                      Credenciales de desarrollo:{' '}
                       <button
-                        className='btn btn-primary'
-                        type='submit'
-                        disabled={isLoading}
+                        type='button'
+                        className='btn btn-link btn-sm p-0 text-decoration-none'
+                        onClick={fillDefaultCredentials}
+                        style={{ fontSize: 'inherit' }}
                       >
-                        {isLoading ? 'Entrando...' : 'Entrar'}
+                        <strong>patrick</strong> / <strong>patrick</strong>
                       </button>
+                      <br />
+                      <small className='text-muted'>
+                        Haz click para completar automáticamente
+                      </small>
                     </div>
-                  </form>
+                  )}
 
-                  <div className='text-center mt-3 small text-muted'>
-                    Credenciales de desarrollo:{' '}
-                    <button
-                      type='button'
-                      className='btn btn-link btn-sm p-0 text-decoration-none'
-                      onClick={fillDefaultCredentials}
-                      style={{ fontSize: 'inherit' }}
-                    >
-                      <strong>patrick</strong> / <strong>patrick</strong>
-                    </button>
-                    <br />
-                    <small className='text-muted'>
-                      Haz click para completar automáticamente
-                    </small>
-                  </div>
+                  {/* Información adicional para 2FA */}
+                  {requires2FA && (
+                    <div className='text-center mt-3'>
+                      <div className='alert alert-info border-0 bg-light'>
+                        <div className='d-flex align-items-start'>
+                          <span className='material-icons me-2 text-primary' style={{ fontSize: '20px' }}>
+                            info
+                          </span>
+                          <div className='text-start small'>
+                            <strong>¿No tienes acceso a tu aplicación de autenticación?</strong>
+                            <br />
+                            Contacta al administrador del sistema para desactivar temporalmente 2FA en tu cuenta.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

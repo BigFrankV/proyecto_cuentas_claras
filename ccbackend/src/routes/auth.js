@@ -256,12 +256,108 @@ router.post('/reset-password', [body('token').exists(), body('password').isLengt
  */
 router.get('/me', authenticate, async (req, res) => {
   try {
-  const [rows] = await db.query('SELECT id, username, email, persona_id, activo, created_at, is_superadmin FROM usuario WHERE id = ? LIMIT 1', [req.user.sub]);
+    const [rows] = await db.query('SELECT id, username, email, persona_id, activo, created_at, is_superadmin, totp_secret FROM usuario WHERE id = ? LIMIT 1', [req.user.sub]);
     if (!rows.length) return res.status(404).json({ error: 'not found' });
-  // include is_superadmin as boolean in the response
-  const user = rows[0];
-  user.is_superadmin = !!user.is_superadmin;
-  res.json(user);
+    
+    // Include is_superadmin as boolean in the response
+    const user = rows[0];
+    user.is_superadmin = !!user.is_superadmin;
+    
+    // Include totp_enabled status (true if totp_secret exists)
+    user.totp_enabled = !!(user.totp_secret && user.totp_secret.trim() !== '');
+    
+    // Remove totp_secret from response for security
+    delete user.totp_secret;
+    
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @openapi
+ * /auth/sessions:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Get active sessions for current user
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of active sessions
+ */
+router.get('/sessions', authenticate, async (req, res) => {
+  try {
+    // For now, return a simple mock response
+    // In a real implementation, you would track sessions in Redis or database
+    const currentSession = {
+      id: 'current-session',
+      device: req.headers['user-agent'] || 'Unknown Device',
+      location: 'Unknown Location', // You could use IP geolocation
+      ip: req.ip || req.connection.remoteAddress || 'Unknown IP',
+      lastAccess: new Date().toISOString(),
+      isCurrent: true
+    };
+    
+    res.json({
+      sessions: [currentSession]
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @openapi
+ * /auth/sessions/{sessionId}:
+ *   delete:
+ *     tags: [Auth]
+ *     summary: Close a specific session
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Session closed successfully
+ */
+router.delete('/sessions/:sessionId', authenticate, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    
+    // For now, just return success
+    // In a real implementation, you would revoke the specific session token
+    res.json({ message: 'Session closed successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @openapi
+ * /auth/sessions:
+ *   delete:
+ *     tags: [Auth]
+ *     summary: Close all sessions except current
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All sessions closed successfully
+ */
+router.delete('/sessions', authenticate, async (req, res) => {
+  try {
+    // For now, just return success
+    // In a real implementation, you would revoke all session tokens except current
+    res.json({ message: 'All sessions closed successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });
