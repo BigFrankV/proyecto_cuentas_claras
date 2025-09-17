@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { api } from '@/http/axios'
 import { useAuth } from '@/auth/AuthContext'
-import MultaForm from './MultaForm'
+import MultaCreate from '../MultaCreate' // usar el componente nuevo
 
 export default function MultasPage({ comunidadId: propComunidadId }) {
   const { user } = useAuth() || {}
@@ -23,25 +23,23 @@ export default function MultasPage({ comunidadId: propComunidadId }) {
     (Array.isArray(user?.unidades) && user.unidades[0]?.id) ||
     undefined
 
-  const chooseEndpoint = () => ({
-    // solo la ruta soportada por backend para listado por unidad
-    listByUnidad: unidadId ? `/multas/unidad/${unidadId}` : null
-  })
+  const chooseEndpoint = () => {
+    // probar por unidad primero, luego por comunidad y finalmente lista global
+    const endpoints = []
+    if (unidadId) endpoints.push(`/multas/unidad/${unidadId}`)
+    if (comunidadId) {
+      endpoints.push(`/multas/comunidad/${comunidadId}`)
+      endpoints.push(`/mod/multas/comunidad/${comunidadId}`)
+    }
+    endpoints.push('/multas', '/mod/multas')
+    return endpoints
+  }
 
   const load = async () => {
     setLoading(true)
     setError(null)
 
-    if (!unidadId) {
-      // Backend no ofrece listado global de multas: informar y salir
-      setItems([])
-      setError(new Error('No se encontró unidad en el usuario. No es posible listar multas sin unidad.'))
-      setLoading(false)
-      return
-    }
-
-    const ep = chooseEndpoint()
-    const attempts = [ep.listByUnidad].filter(Boolean)
+    const attempts = chooseEndpoint()
 
     const personEndpoints = ['/personas', `/personas/comunidad/${user?.comunidadId || 1}`, '/mod/personas']
 
@@ -70,6 +68,11 @@ export default function MultasPage({ comunidadId: propComunidadId }) {
             return Array.isArray(d) ? d : (d?.items || [])
           } catch (e) {
             if (e?.response?.status === 404) continue
+            // si no estamos autenticados, devolver lista vacía en vez de lanzar
+            if (e?.response?.status === 401) {
+              console.debug('Multas: personas endpoint requiere auth (401), se omite la carga de personas.')
+              return []
+            }
             throw e
           }
         }
@@ -161,14 +164,10 @@ export default function MultasPage({ comunidadId: propComunidadId }) {
         </table>
       )}
 
-      {isAdmin && showForm && unidadId && (
+      {isAdmin && showForm && (
         <div className="mt-4">
-          <MultaForm unidadId={unidadId} onCreated={handleCreated} />
+          <MultaCreate unidadId={unidadId} comunidadId={comunidadId} onCreated={handleCreated} />
         </div>
-      )}
-
-      {isAdmin && showForm && !unidadId && (
-        <div className="alert alert-warning">No se encontró unidad en el usuario. No es posible crear multa sin unidad.</div>
       )}
     </div>
   )

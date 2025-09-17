@@ -69,4 +69,62 @@ router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, 
 
 router.delete('/:id', authenticate, authorize('superadmin','admin'), async (req, res) => { const id = req.params.id; try { await db.query('DELETE FROM multa WHERE id = ?', [id]); res.status(204).end(); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
 
+// listar multas por comunidad (añadido)
+router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
+  const comunidadId = req.params.comunidadId;
+  try {
+    const [rows] = await db.query(
+      'SELECT id, unidad_id, persona_id, motivo, descripcion, monto, estado, fecha FROM multa WHERE comunidad_id = ? ORDER BY fecha DESC LIMIT 500',
+      [comunidadId]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+// listado global (opcional, útil para /multas y /mod/multas)
+router.get('/', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT id, comunidad_id, unidad_id, persona_id, motivo, monto, estado, fecha FROM multa ORDER BY fecha DESC LIMIT 500'
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+// listado global / unidad / etc.
+// Añadir: crear multa pasando persona_id (backend infiere unidad si es posible)
+router.post('/', [authenticate, authorize('admin','superadmin'), body('monto').isNumeric().withMessage('monto requerido')], async (req, res) => {
+  try {
+    const { persona_id, unidad_id, motivo, descripcion, monto, fecha } = req.body || {}
+    if (!persona_id && !unidad_id) return res.status(400).json({ error: 'persona_id o unidad_id requerido' })
+
+    // si sólo viene persona_id, intentar inferir unidad desde la persona
+    let targetUnidadId = unidad_id || null
+    if (!targetUnidadId && persona_id) {
+      const [prows] = await db.query('SELECT unidad_id FROM persona WHERE id = ? LIMIT 1', [persona_id])
+      if (prows && prows.length) targetUnidadId = prows[0].unidad_id || null
+    }
+
+    if (!targetUnidadId) {
+      return res.status(422).json({ error: 'No se pudo inferir unidad para la persona. Proveer unidad_id o asignar unidad a la persona.' })
+    }
+
+    const [result] = await db.query(
+      'INSERT INTO multa (comunidad_id, unidad_id, persona_id, motivo, descripcion, monto, fecha, creado_por) SELECT unidad.comunidad_id, ?, ?, ?, ?, ?, ?, ? FROM unidad WHERE id = ?',
+      [targetUnidadId, persona_id || null, motivo || null, descripcion || null, monto, fecha || new Date(), req.user?.id || null, targetUnidadId]
+    )
+    const [row] = await db.query('SELECT id, motivo, monto, estado, fecha FROM multa WHERE id = ? LIMIT 1', [result.insertId])
+    res.status(201).json(row[0])
+  } catch (err) {
+    console.error('POST /multas error', err)
+    res.status(500).json({ error: 'server error' })
+  }
+})
+
 module.exports = router;

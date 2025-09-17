@@ -1,54 +1,32 @@
 import axios from 'axios'
 
+const STORAGE_KEY = 'access_token'
+
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
-  withCredentials: true, // importante para enviar/recibir cookies de refresh
+  withCredentials: true, // enviar cookies (refresh_token) si el backend las usa
   headers: {
-    Accept: 'application/json',
     'Content-Type': 'application/json'
   }
 })
 
-// Helpers para token en localStorage + header default
-export const setAccessToken = (token) => {
-  try { localStorage.setItem('access_token', token) } catch (e) {}
-  api.defaults.headers.common['Authorization'] = token ? `Bearer ${token}` : undefined
-}
-
-export const getAccessToken = () => {
-  try { return localStorage.getItem('access_token') } catch (e) { return null }
-}
-
-export const clearAccessToken = () => {
-  try { localStorage.removeItem('access_token') } catch (e) {}
-  delete api.defaults.headers.common['Authorization']
-}
-
-// Interceptor simple: si 401 intentar refresh una vez y reintentar request
-api.interceptors.response.use(
-  res => res,
-  async err => {
-    const original = err.config
-    if (!original || original._retry) return Promise.reject(err)
-
-    if (err.response && err.response.status === 401) {
-      original._retry = true
-      try {
-        // Llama al endpoint de refresh; withCredentials ya está true en la instancia
-        const r = await api.post('/auth/refresh', null, { withCredentials: true })
-        // Si el backend devuelve token en body, guárdalo y reintenta
-        const newToken = r?.data?.accessToken || r?.data?.token
-        if (newToken) {
-          setAccessToken(newToken)
-          original.headers['Authorization'] = `Bearer ${newToken}`
-          return api(original)
-        }
-      } catch (e) {
-        // no pudo refrescar -> borrar token y propagar 401
-        clearAccessToken()
-        return Promise.reject(e)
-      }
-    }
-    return Promise.reject(err)
+export function setAccessToken(token) {
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    try { localStorage.setItem(STORAGE_KEY, token) } catch {}
+  } else {
+    delete api.defaults.headers.common['Authorization']
+    try { localStorage.removeItem(STORAGE_KEY) } catch {}
   }
-)
+}
+
+export function getAccessToken() {
+  try { return localStorage.getItem(STORAGE_KEY) } catch { return null }
+}
+
+export function clearAccessToken() {
+  delete api.defaults.headers.common['Authorization']
+  try { localStorage.removeItem(STORAGE_KEY) } catch {}
+}
+
+// opcional: si ya tienes interceptor de refresh, asegúrate que capture 400/404 y no repita indefinidamente

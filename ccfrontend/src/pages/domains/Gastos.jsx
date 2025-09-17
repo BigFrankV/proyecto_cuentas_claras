@@ -179,7 +179,7 @@ export default function GastosPage({ comunidadId: propComunidadId }) {
       {/* Mostrar formulario externo (GastoForm) cuando corresponde */}
       {isAdminInCommunity && showForm && (
         <div className="mt-4">
-          <GastoForm comunidadId={comunidadId} onCreated={handleCreated} />
+          <GastoForm comunidadId={comunidadId} isAdmin={true} onCreated={handleCreated} />
         </div>
       )}
     </div>
