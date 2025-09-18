@@ -127,7 +127,7 @@ export const dashboardService = {
         ([categoria, total], index) => ({
           categoria,
           total,
-          color: colores[index % colores.length],
+          color: colores[index % colores.length] || '#8E8E8E',
         })
       );
     } catch (error) {

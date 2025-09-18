@@ -59,7 +59,7 @@ export default function TendenciasEmisionesChart({
   // Formatear fechas para mostrar
   const formatearFecha = (fecha: string) => {
     const [year, month] = fecha.split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1);
+    const date = new Date(parseInt(year || '2024'), parseInt(month || '1') - 1);
     return date.toLocaleDateString('es-CL', {
       month: 'short',
       year: '2-digit',

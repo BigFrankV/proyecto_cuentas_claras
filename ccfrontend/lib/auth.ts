@@ -3,7 +3,7 @@ import { jwtDecode } from 'jwt-decode';
 
 // Tipos para la autenticación
 export interface LoginCredentials {
-  username: string;
+  identifier: string; // Email, RUT, DNI o username
   password: string;
 }
 
@@ -12,6 +12,16 @@ export interface RegisterData {
   password: string;
   email?: string;
   persona_id?: number;
+}
+
+export interface Persona {
+  rut?: string;
+  dv?: string;
+  nombres?: string;
+  apellidos?: string;
+  email?: string;
+  telefono?: string;
+  direccion?: string;
 }
 
 export interface User {
@@ -23,13 +33,16 @@ export interface User {
   roles?: string[];
   comunidad_id?: number;
   totp_enabled?: boolean;
+  activo?: boolean;
+  created_at?: string;
   
-  // Campos adicionales de perfil
+  // Datos de persona relacionados
+  persona?: Persona | null;
+  
+  // Campos adicionales de perfil (deprecated - usar persona)
   firstName?: string;
   lastName?: string;
   phone?: string;
-  activo?: boolean;
-  created_at?: string;
 }
 
 export interface AuthResponse {
@@ -65,7 +78,7 @@ class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await apiClient.post('/auth/login', {
-        username: credentials.username,
+        identifier: credentials.identifier,
         password: credentials.password,
       });
 
@@ -94,6 +107,7 @@ class AuthService {
         const decodedToken = jwtDecode<JWTPayload>(token);
         console.log('🔍 Token decodificado:', decodedToken);
 
+        // Crear objeto usuario básico desde el token
         const userObj: Partial<User> = {
           id: decodedToken.sub.toString(),
           username: decodedToken.username,
@@ -112,6 +126,18 @@ class AuthService {
         user = userObj as User;
 
         console.log('🔍 Usuario extraído del token:', user);
+        
+        // Intentar obtener información completa del usuario del servidor
+        try {
+          const fullUserData = await this.getCurrentUser();
+          if (fullUserData) {
+            // Combinar datos del token con datos completos del servidor
+            user = { ...user, ...fullUserData };
+            console.log('🔍 Usuario completo con datos del servidor:', user);
+          }
+        } catch (serverError) {
+          console.log('⚠️ No se pudo obtener datos completos del servidor, usando datos del token');
+        }
       } catch (jwtError) {
         console.error('❌ Error decodificando token:', jwtError);
         throw new Error('Token de autenticación inválido');
@@ -171,6 +197,7 @@ class AuthService {
         const decodedToken = jwtDecode<JWTPayload>(token);
         console.log('🔍 Token 2FA decodificado:', decodedToken);
 
+        // Crear objeto usuario básico desde el token
         const userObj: Partial<User> = {
           id: decodedToken.sub.toString(),
           username: decodedToken.username,
@@ -189,6 +216,18 @@ class AuthService {
         user = userObj as User;
 
         console.log('🔍 Usuario extraído del token 2FA:', user);
+        
+        // Intentar obtener información completa del usuario del servidor
+        try {
+          const fullUserData = await this.getCurrentUser();
+          if (fullUserData) {
+            // Combinar datos del token con datos completos del servidor
+            user = { ...user, ...fullUserData };
+            console.log('🔍 Usuario 2FA completo con datos del servidor:', user);
+          }
+        } catch (serverError) {
+          console.log('⚠️ No se pudo obtener datos completos del servidor en 2FA, usando datos del token');
+        }
       } catch (jwtError) {
         console.error('❌ Error decodificando token 2FA:', jwtError);
         throw new Error('Token de autenticación inválido');
@@ -265,9 +304,29 @@ class AuthService {
   async getCurrentUser(): Promise<User | null> {
     try {
       const response = await apiClient.get('/auth/me');
-      return response.data;
+      const userData = response.data;
+      
+      // Asegurar que tenemos el campo totp_enabled
+      const user: User = {
+        id: userData.id?.toString() || userData.sub?.toString(),
+        username: userData.username,
+        email: userData.email,
+        persona_id: userData.persona_id,
+        is_superadmin: userData.is_superadmin || false,
+        roles: userData.roles || [],
+        comunidad_id: userData.comunidad_id,
+        totp_enabled: userData.totp_enabled || false,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        phone: userData.phone,
+        activo: userData.activo,
+        created_at: userData.created_at,
+      };
+      
+      console.log('✅ Usuario actual obtenido del servidor:', user);
+      return user;
     } catch (error) {
-      console.error('Error obteniendo usuario actual:', error);
+      console.error('❌ Error obteniendo usuario actual:', error);
       return null;
     }
   }
@@ -275,7 +334,33 @@ class AuthService {
   // Verificar si el usuario está logueado
   isAuthenticated(): boolean {
     const token = localStorage.getItem('auth_token');
-    return !!token;
+    
+    if (!token) {
+      console.log('❌ No se encontró token en localStorage');
+      return false;
+    }
+
+    try {
+      // Verificar si el token es válido y no ha expirado
+      const decodedToken = jwtDecode<JWTPayload>(token);
+      const currentTime = Date.now() / 1000;
+      
+      if (decodedToken.exp < currentTime) {
+        console.log('❌ Token expirado, limpiando localStorage');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
+        return false;
+      }
+      
+      console.log('✅ Token válido y no expirado');
+      return true;
+    } catch (error) {
+      console.error('❌ Error validando token:', error);
+      // Si hay error decodificando, limpiar datos
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+      return false;
+    }
   }
 
   // Obtener token actual
@@ -294,6 +379,166 @@ class AuthService {
     } catch (error) {
       console.error('❌ Error parseando datos de usuario:', error);
       return null;
+    }
+  }
+
+  // Debug: Mostrar estado actual del localStorage
+  debugAuthState(): void {
+    const token = localStorage.getItem('auth_token');
+    const userData = localStorage.getItem('user_data');
+    
+    console.log('🔍 DEBUG - Estado de autenticación:');
+    console.log('  Token presente:', !!token);
+    console.log('  Token:', token ? `${token.substring(0, 20)}...` : 'null');
+    console.log('  Datos de usuario:', userData);
+    
+    if (token) {
+      try {
+        const decoded = jwtDecode<JWTPayload>(token);
+        const now = Date.now() / 1000;
+        console.log('  Token válido:', decoded.exp > now);
+        console.log('  Expira en:', Math.round(decoded.exp - now), 'segundos');
+      } catch (error) {
+        console.log('  Token inválido:', error);
+      }
+    }
+  }
+
+  // Cambiar contraseña
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    try {
+      await apiClient.post('/auth/change-password', {
+        currentPassword,
+        newPassword,
+      });
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      } else {
+        throw new Error('Error al cambiar la contraseña');
+      }
+    }
+  }
+
+  // Actualizar perfil de usuario
+  async updateProfile(data: { username?: string; email?: string }): Promise<User> {
+    try {
+      const response = await apiClient.patch('/auth/profile', data);
+      const updatedUser = response.data.user;
+      
+      // Actualizar datos en localStorage
+      localStorage.setItem('user_data', JSON.stringify(updatedUser));
+      
+      return updatedUser;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      } else {
+        throw new Error('Error al actualizar el perfil');
+      }
+    }
+  }
+
+  // Actualizar datos de persona
+  async updatePersona(data: Partial<Persona>): Promise<Persona> {
+    try {
+      const response = await apiClient.patch('/auth/profile/persona', data);
+      
+      // Actualizar datos de usuario en localStorage con la nueva información de persona
+      const currentUser = this.getUserData();
+      if (currentUser) {
+        currentUser.persona = response.data.persona;
+        localStorage.setItem('user_data', JSON.stringify(currentUser));
+      }
+      
+      return response.data.persona;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      } else {
+        throw new Error('Error al actualizar la información personal');
+      }
+    }
+  }
+
+  // Obtener preferencias del usuario
+  async getPreferences(): Promise<any> {
+    try {
+      const response = await apiClient.get('/auth/preferences');
+      return response.data;
+    } catch (error: any) {
+      console.error('Error obteniendo preferencias:', error);
+      // Devolver preferencias por defecto si hay error
+      return {
+        notifications: {
+          email_enabled: true,
+          payment_notifications: true,
+          weekly_summaries: true
+        },
+        display: {
+          timezone: 'America/Santiago',
+          date_format: 'DD/MM/YYYY',
+          language: 'es'
+        }
+      };
+    }
+  }
+
+  // Actualizar preferencias del usuario
+  async updatePreferences(preferences: any): Promise<void> {
+    try {
+      await apiClient.patch('/auth/preferences', preferences);
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      } else {
+        throw new Error('Error al actualizar las preferencias');
+      }
+    }
+  }
+
+  // Obtener sesiones activas
+  async getSessions(): Promise<any[]> {
+    try {
+      const response = await apiClient.get('/auth/sessions');
+      return response.data.sessions;
+    } catch (error: any) {
+      console.error('Error obteniendo sesiones:', error);
+      return [];
+    }
+  }
+
+  // Cerrar una sesión específica
+  async closeSession(sessionId: string): Promise<void> {
+    try {
+      await apiClient.delete(`/auth/sessions/${sessionId}`);
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else {
+        throw new Error('Error al cerrar la sesión');
+      }
+    }
+  }
+
+  // Cerrar todas las sesiones excepto la actual
+  async closeAllSessions(): Promise<void> {
+    try {
+      await apiClient.delete('/auth/sessions');
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else {
+        throw new Error('Error al cerrar las sesiones');
+      }
     }
   }
 

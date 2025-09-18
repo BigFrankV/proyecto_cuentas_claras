@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/useAuth';
 import Head from 'next/head';
 import profileService from '@/lib/profileService';
 import TwoFactorModal from '@/components/ui/TwoFactorModal';
+import { getUserRole, getRoleTagClass } from '@/lib/roles';
 import {
   UserExtended,
   ProfileFormData,
@@ -87,12 +88,12 @@ export default function Profile() {
         }
       }
       
-      // Mapear datos del perfil al formulario
+      // Mapear datos del perfil al formulario, priorizando datos de persona si existen
       setProfileForm({
-        firstName: profile.firstName || user?.username?.split(' ')[0] || '',
-        lastName: profile.lastName || user?.username?.split(' ')[1] || '',
-        email: profile.email || '',
-        phone: profile.phone || '',
+        firstName: user?.persona?.nombres || profile.firstName || user?.username?.split(' ')[0] || '',
+        lastName: user?.persona?.apellidos || profile.lastName || user?.username?.split(' ')[1] || '',
+        email: user?.email || profile.email || '',
+        phone: user?.persona?.telefono || profile.phone || '',
       });
 
       // Cargar sesiones activas
@@ -111,7 +112,32 @@ export default function Profile() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await profileService.updateProfile(profileForm);
+      // Si el usuario tiene persona vinculada, usar endpoints específicos
+      if (user?.persona_id) {
+        // Actualizar email del usuario si cambió
+        if (profileForm.email !== user?.email) {
+          const authService = (await import('@/lib/auth')).default;
+          await authService.updateProfile({ email: profileForm.email });
+        }
+        
+        // Actualizar datos de persona
+        const personaData: {
+          nombres?: string;
+          apellidos?: string;
+          telefono?: string;
+        } = {};
+        
+        if (profileForm.firstName) personaData.nombres = profileForm.firstName;
+        if (profileForm.lastName) personaData.apellidos = profileForm.lastName;
+        if (profileForm.phone) personaData.telefono = profileForm.phone;
+        
+        const authService = (await import('@/lib/auth')).default;
+        await authService.updatePersona(personaData);
+      } else {
+        // Usuario sin persona vinculada, usar servicio de perfil tradicional
+        await profileService.updateProfile(profileForm);
+      }
+      
       setMessage({ type: 'success', text: '¡Perfil actualizado correctamente!' });
       await refreshUser();
     } catch (error: any) {
@@ -287,8 +313,9 @@ export default function Profile() {
   };
 
   const getUserInitials = () => {
-    const firstName = profileForm.firstName?.trim();
-    const lastName = profileForm.lastName?.trim();
+    // Priorizar datos de persona si existen
+    const firstName = user?.persona?.nombres || profileForm.firstName?.trim();
+    const lastName = user?.persona?.apellidos || profileForm.lastName?.trim();
     
     if (firstName && lastName && firstName.length > 0 && lastName.length > 0) {
       return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -368,8 +395,8 @@ export default function Profile() {
                       {profileForm.firstName} {profileForm.lastName}
                     </h5>
                     <p className='meta mb-2'>{profileForm.email}</p>
-                    <span className={`tag ${user?.is_superadmin ? 'tag--success' : 'tag--primary'}`}>
-                      {user?.is_superadmin ? 'Superadministrador' : 'Administradora'}
+                    <span className={`tag ${getRoleTagClass(user)}`}>
+                      {getUserRole(user)}
                     </span>
                   </div>
 
@@ -521,10 +548,10 @@ export default function Profile() {
                         className='btn btn-outline-secondary me-2'
                         onClick={() => {
                           setProfileForm({
-                            firstName: userProfile?.firstName || '',
-                            lastName: userProfile?.lastName || '',
-                            email: userProfile?.email || '',
-                            phone: userProfile?.phone || '',
+                            firstName: user?.persona?.nombres || userProfile?.firstName || user?.username?.split(' ')[0] || '',
+                            lastName: user?.persona?.apellidos || userProfile?.lastName || user?.username?.split(' ')[1] || '',
+                            email: user?.email || userProfile?.email || '',
+                            phone: user?.persona?.telefono || userProfile?.phone || '',
                           });
                           setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
                         }}

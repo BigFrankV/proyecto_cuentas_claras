@@ -13,7 +13,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<AuthResponse>;
+  login: (identifier: string, password: string) => Promise<AuthResponse>;
   complete2FALogin: (tempToken: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -35,30 +35,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuthStatus = async () => {
     console.log('🔍 Verificando estado de autenticación...');
+    
+    // Debug del estado actual
+    authService.debugAuthState();
+    
     try {
-      if (authService.isAuthenticated()) {
-        console.log('✅ Token encontrado en localStorage');
-        const userData = authService.getUserData();
-        if (userData) {
-          console.log('✅ Datos de usuario encontrados:', userData);
-          setUser(userData);
-          // Opcionalmente, verificar con el servidor
-          try {
-            const currentUser = await authService.getCurrentUser();
-            if (currentUser) {
-              console.log('✅ Usuario verificado con servidor:', currentUser);
-              setUser(currentUser);
-            }
-          } catch (serverError) {
-            console.log(
-              '⚠️ Error verificando con servidor, usando datos locales'
-            );
+      // Primero verificar si tenemos un token válido
+      if (!authService.isAuthenticated()) {
+        console.log('❌ No hay token válido o está expirado');
+        setUser(null);
+        return;
+      }
+
+      console.log('✅ Token válido encontrado en localStorage');
+      
+      // Intentar obtener datos del usuario desde localStorage
+      const userData = authService.getUserData();
+      if (userData) {
+        console.log('✅ Datos de usuario encontrados en localStorage:', userData);
+        setUser(userData);
+        
+        // Verificar con el servidor para sincronizar datos
+        try {
+          const currentUser = await authService.getCurrentUser();
+          if (currentUser) {
+            console.log('✅ Usuario verificado con servidor:', currentUser);
+            // Actualizar datos con información completa del servidor
+            const updatedUserData = { ...userData, ...currentUser };
+            setUser(updatedUserData);
+            // Actualizar localStorage con datos completos
+            localStorage.setItem('user_data', JSON.stringify(updatedUserData));
+          } else {
+            console.log('⚠️ Servidor no reconoce el token, manteniendo datos locales');
           }
-        } else {
-          console.log('❌ No se encontraron datos de usuario');
+        } catch (serverError: any) {
+          console.log('⚠️ Error verificando con servidor:', serverError.message);
+          if (serverError.response?.status === 401) {
+            console.log('❌ Token inválido según servidor, limpiando sesión');
+            await logout();
+            return;
+          }
+          // Si es otro tipo de error, mantener datos locales
+          console.log('⚠️ Manteniendo sesión local por error de conectividad');
         }
       } else {
-        console.log('❌ No hay token de autenticación');
+        console.log('❌ No se encontraron datos de usuario en localStorage');
+        // Si hay token pero no datos de usuario, limpiar todo
+        await logout();
       }
     } catch (error) {
       console.error('❌ Error verificando autenticación:', error);
@@ -70,10 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (username: string, password: string) => {
-    console.log('🔐 Iniciando login para:', username);
+  const login = async (identifier: string, password: string) => {
+    console.log('🔐 Iniciando login para:', identifier);
     try {
-      const response = await authService.login({ username, password });
+      const response = await authService.login({ identifier, password });
       console.log('✅ Login exitoso, datos recibidos:', response.user);
       if (response.user) {
         setUser(response.user);
@@ -102,12 +125,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    console.log('🚪 Iniciando proceso de logout...');
     try {
       await authService.logout();
+      console.log('✅ Logout exitoso en servidor');
     } catch (error) {
-      console.error('Error en logout:', error);
+      console.error('❌ Error en logout del servidor:', error);
     } finally {
+      console.log('🧹 Limpiando estado local...');
       setUser(null);
+      console.log('🏠 Redirigiendo a página de inicio...');
       router.push('/');
     }
   };
