@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/lib/useAuth';
+import { validateIdentifier, formatIdentifier } from '@/lib/validators';
 
 export default function Home() {
   const router = useRouter();
@@ -20,6 +21,14 @@ export default function Home() {
   const [tempToken, setTempToken] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [username, setUsername] = useState('');
+  
+  // Estado para validación de identificador
+  const [identifierValue, setIdentifierValue] = useState('');
+  const [identifierValidation, setIdentifierValidation] = useState<{
+    isValid: boolean;
+    type: string;
+    message?: string | undefined;
+  } | null>(null);
 
   // Redirigir si ya está autenticado
   useEffect(() => {
@@ -35,26 +44,44 @@ export default function Home() {
     }
   }, [isAuthenticated, authLoading, router]);
 
+  // Validar identificador en tiempo real
+  useEffect(() => {
+    if (identifierValue.trim()) {
+      const validation = validateIdentifier(identifierValue);
+      setIdentifierValidation(validation);
+    } else {
+      setIdentifierValidation(null);
+    }
+  }, [identifierValue]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 
     const formData = new FormData(e.currentTarget);
-    const usernameValue = formData.get('username') as string;
     const password = formData.get('password') as string;
 
     // Validación básica
-    if (!usernameValue || !password) {
+    if (!identifierValue || !password) {
       setError('Por favor completa todos los campos');
       return;
     }
 
+    // Validar formato del identificador
+    if (identifierValidation && !identifierValidation.isValid) {
+      setError(identifierValidation.message || 'Formato de identificador inválido');
+      return;
+    }
+
     setIsLoading(true);
-    setUsername(usernameValue); // Guardar username para 2FA
+    setUsername(identifierValue); // Guardar identifier para 2FA
 
     try {
+      // Formatear el identificador antes de enviarlo
+      const formattedIdentifier = formatIdentifier(identifierValue);
+      
       // Usar el login del contexto de autenticación
-      const response = await authLogin(usernameValue, password);
+      const response = await authLogin(formattedIdentifier, password);
 
       // Verificar si se requiere 2FA
       if (response.twoFactorRequired && response.tempToken) {
@@ -272,7 +299,7 @@ export default function Home() {
                   <p className='text-muted'>
                     {requires2FA 
                       ? 'Introduce el código de 6 dígitos de tu aplicación de autenticación.'
-                      : 'Ingresa con tu usuario y contraseña para acceder al panel.'
+                      : 'Ingresa con tu correo, RUT, DNI o usuario para acceder al panel.'
                     }
                   </p>
 
@@ -301,14 +328,47 @@ export default function Home() {
                   {!requires2FA && (
                     <form onSubmit={handleSubmit}>
                       <div className='mb-3'>
-                        <label className='form-label'>Usuario</label>
+                        <label className='form-label'>Correo, RUT, DNI o Usuario</label>
                         <input
-                          name='username'
+                          name='identifier'
                           type='text'
-                          className='form-control'
-                          placeholder='Nombre de usuario'
+                          className={`form-control ${
+                            identifierValidation
+                              ? identifierValidation.isValid
+                                ? 'is-valid'
+                                : 'is-invalid'
+                              : ''
+                          }`}
+                          placeholder='ejemplo@correo.com, 12345678-9, 12345678 o usuario'
+                          value={identifierValue}
+                          onChange={(e) => setIdentifierValue(e.target.value)}
                           required
                         />
+                        {identifierValidation && (
+                          <div
+                            className={`${
+                              identifierValidation.isValid ? 'valid-feedback' : 'invalid-feedback'
+                            }`}
+                          >
+                            {identifierValidation.isValid
+                              ? `Tipo detectado: ${
+                                  identifierValidation.type === 'email'
+                                    ? 'Correo electrónico'
+                                    : identifierValidation.type === 'rut'
+                                    ? 'RUT chileno'
+                                    : identifierValidation.type === 'dni'
+                                    ? 'DNI'
+                                    : 'Nombre de usuario'
+                                }`
+                              : identifierValidation.message || 'Formato inválido'
+                            }
+                          </div>
+                        )}
+                        {!identifierValidation && (
+                          <div className='form-text'>
+                            Puedes usar tu correo electrónico, RUT (Chile), DNI o nombre de usuario
+                          </div>
+                        )}
                       </div>
                       <div className='mb-3'>
                         <label className='form-label'>Contraseña</label>

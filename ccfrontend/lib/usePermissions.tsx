@@ -80,7 +80,7 @@ export function usePermissions() {
 
     // Si tiene roles específicos, usar el primero (o implementar lógica más compleja)
     if (user.roles && user.roles.length > 0) {
-      const role = user.roles[0].toLowerCase();
+      const role = user?.roles?.[0]?.toLowerCase() || 'guest';
       switch (role) {
         case 'admin':
           return UserRole.ADMIN;

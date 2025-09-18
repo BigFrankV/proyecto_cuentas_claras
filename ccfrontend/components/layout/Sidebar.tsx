@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/lib/useAuth';
+import { getUserRole } from '@/lib/roles';
 import {
   usePermissions,
   PermissionGuard,
@@ -230,24 +231,28 @@ export default function Sidebar() {
               borderRadius: '50%',
             }}
           >
-            {user?.username ? user.username.substring(0, 2).toUpperCase() : 'U'}
+            {user?.persona?.nombres && user?.persona?.apellidos 
+              ? `${user.persona.nombres.charAt(0)}${user.persona.apellidos.charAt(0)}`.toUpperCase()
+              : user?.username ? user.username.substring(0, 2).toUpperCase() : 'U'}
           </div>
           <div>
             <span className='d-block text-white'>
-              {user?.username || 'Usuario'}
+              {user?.persona?.nombres && user?.persona?.apellidos 
+                ? `${user.persona.nombres} ${user.persona.apellidos}`
+                : user?.username || 'Usuario'}
               {isSuperUser() ? (
                 <span
                   className='badge bg-warning text-dark ms-1'
                   style={{ fontSize: '0.6rem' }}
                 >
-                  SUPERUSER
+                  SUPERADMIN
                 </span>
               ) : (
                 <span
                   className='badge bg-secondary ms-1'
                   style={{ fontSize: '0.6rem' }}
                 >
-                  {currentRole.toUpperCase()}
+                  {getUserRole(user).toUpperCase()}
                 </span>
               )}
             </span>

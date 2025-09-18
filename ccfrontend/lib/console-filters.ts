@@ -60,6 +60,7 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       event.stopPropagation();
       return false;
     }
+    return true;
   });
 
   // Interceptar promise rejections
@@ -68,6 +69,7 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       event.preventDefault();
       return false;
     }
+    return true;
   });
 }
 

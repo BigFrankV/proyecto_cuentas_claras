@@ -66,8 +66,39 @@ Tabla de contenidos
   - Body: { token, password }
   - Público.
 
+- POST /auth/change-password
+  - Cambiar contraseña del usuario autenticado.
+  - Body: { currentPassword, newPassword }
+  - Requiere autenticación.
+
+- PATCH /auth/profile
+  - Actualizar información del perfil de usuario (username, email).
+  - Body: { username?, email? }
+  - Requiere autenticación.
+
+- GET /auth/preferences
+  - Obtener preferencias del usuario actual.
+  - Requiere autenticación.
+
+- PATCH /auth/preferences
+  - Actualizar preferencias del usuario.
+  - Body: { notifications?, display? }
+  - Requiere autenticación.
+
 - GET /auth/me
   - Obtener usuario actual.
+  - Requiere autenticación.
+
+- GET /auth/sessions
+  - Obtener sesiones activas del usuario.
+  - Requiere autenticación.
+
+- DELETE /auth/sessions/:sessionId
+  - Cerrar una sesión específica.
+  - Requiere autenticación.
+
+- DELETE /auth/sessions
+  - Cerrar todas las sesiones excepto la actual.
   - Requiere autenticación.
 
 ---

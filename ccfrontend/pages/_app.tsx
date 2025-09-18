@@ -8,7 +8,7 @@ import { AuthProvider } from '@/lib/useAuth';
 export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
     // Dinamically import Bootstrap JS to avoid SSR issues
-    import('bootstrap/dist/js/bootstrap.bundle.min.js');
+    import('bootstrap/dist/js/bootstrap.bundle.min.js' as any);
   }, []);
 
   return (

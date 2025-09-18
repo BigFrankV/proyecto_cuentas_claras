@@ -8,6 +8,55 @@ const crypto = require('crypto');
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 
+// Helper function to determine identification type and build query
+function buildUserQuery(identifier) {
+  // Remove spaces and convert to uppercase for RUT comparison
+  const cleanIdentifier = identifier.replace(/\s+/g, '').toUpperCase();
+  
+  // Check if it's an email
+  if (cleanIdentifier.includes('@')) {
+    return {
+      query: 'SELECT u.id, u.persona_id, u.hash_password, u.is_superadmin, u.username FROM usuario u WHERE u.email = ? LIMIT 1',
+      param: identifier.toLowerCase()
+    };
+  }
+  
+  // Check if it's a Chilean RUT (format: 12345678-9 or 123456789)
+  const rutPattern = /^(\d{1,8})-?([0-9K])$/i;
+  const rutMatch = cleanIdentifier.match(rutPattern);
+  if (rutMatch) {
+    const rutNumber = rutMatch[1];
+    const dv = rutMatch[2];
+    return {
+      query: `SELECT u.id, u.persona_id, u.hash_password, u.is_superadmin, u.username 
+              FROM usuario u 
+              JOIN persona p ON u.persona_id = p.id 
+              WHERE p.rut = ? AND p.dv = ? LIMIT 1`,
+      param: [rutNumber, dv]
+    };
+  }
+  
+  // Check if it's a numeric DNI (Argentina, other countries)
+  const dniPattern = /^\d{7,9}$/;
+  if (dniPattern.test(cleanIdentifier)) {
+    // For DNI, we'll store it in a new field or use the rut field
+    // For now, let's check if it matches the rut field as numeric
+    return {
+      query: `SELECT u.id, u.persona_id, u.hash_password, u.is_superadmin, u.username 
+              FROM usuario u 
+              JOIN persona p ON u.persona_id = p.id 
+              WHERE p.rut = ? LIMIT 1`,
+      param: cleanIdentifier
+    };
+  }
+  
+  // Default: treat as username
+  return {
+    query: 'SELECT id, persona_id, hash_password, is_superadmin, username FROM usuario WHERE username = ? LIMIT 1',
+    param: identifier
+  };
+}
+
 /**
  * @openapi
  * tags:
@@ -63,7 +112,7 @@ router.post('/register', [body('username').isLength({ min: 3 }), body('password'
  * /auth/login:
  *   post:
  *     tags: [Auth]
- *     summary: Login and receive JWT token
+ *     summary: Login with email, RUT, DNI or username
  *     requestBody:
  *       required: true
  *       content:
@@ -71,41 +120,66 @@ router.post('/register', [body('username').isLength({ min: 3 }), body('password'
  *           schema:
  *             type: object
  *             properties:
- *               username:
+ *               identifier:
  *                 type: string
+ *                 description: Email, RUT, DNI or username
+ *                 example: "user@example.com or 12345678-9 or 12345678"
  *               password:
  *                 type: string
  *     responses:
  *       200:
- *         description: OK
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
  */
-router.post('/login', [body('username').exists(), body('password').exists()], async (req, res) => {
-  const { username, password } = req.body;
+router.post('/login', [
+  body('identifier').exists().withMessage('Identifier (email, RUT, DNI or username) is required'),
+  body('password').exists().withMessage('Password is required')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  
+  const { identifier, password } = req.body;
+  
   try {
-  const [rows] = await db.query('SELECT id, persona_id, hash_password, is_superadmin FROM usuario WHERE username = ? LIMIT 1', [username]);
+    // Build query based on identifier type
+    const { query, param } = buildUserQuery(identifier);
+    const params = Array.isArray(param) ? param : [param];
+    
+    const [rows] = await db.query(query, params);
     if (!rows.length) return res.status(401).json({ error: 'invalid credentials' });
+    
     const user = rows[0];
     const ok = await bcrypt.compare(password, user.hash_password);
     if (!ok) return res.status(401).json({ error: 'invalid credentials' });
-    // fetch roles from membresia_comunidad and tenencia_unidad
+    
+    // Fetch roles from membresia_comunidad
     const [membresias] = await db.query('SELECT comunidad_id, rol FROM membresia_comunidad WHERE persona_id = ? AND activo = 1', [user.persona_id]);
     const roles = membresias.map(m => m.rol);
-    // choose a default comunidad_id if any
     const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
-  // If user has TOTP enabled, return a short-lived temp token and indicate 2FA required
-  const [userRow] = await db.query('SELECT totp_secret, totp_enabled FROM usuario WHERE id = ? LIMIT 1', [user.id]);
-  const totp_info = userRow[0] || { totp_secret: null, totp_enabled: 0 };
-  if (totp_info.totp_enabled) {
-    const tempPayload = { sub: user.id, username, persona_id: user.persona_id, twoFactor: true };
-    const tempToken = generateTempToken(tempPayload, '5m');
-    return res.json({ twoFactorRequired: true, tempToken });
-  }
+    
+    // Check if user has TOTP enabled
+    const [userRow] = await db.query('SELECT totp_secret, totp_enabled FROM usuario WHERE id = ? LIMIT 1', [user.id]);
+    const totp_info = userRow[0] || { totp_secret: null, totp_enabled: 0 };
+    
+    if (totp_info.totp_enabled) {
+      const tempPayload = { sub: user.id, username: user.username, persona_id: user.persona_id, twoFactor: true };
+      const tempToken = generateTempToken(tempPayload, '5m');
+      return res.json({ twoFactorRequired: true, tempToken });
+    }
 
-  const payload = { sub: user.id, username, persona_id: user.persona_id, roles, comunidad_id, is_superadmin: !!user.is_superadmin };
+    const payload = { 
+      sub: user.id, 
+      username: user.username, 
+      persona_id: user.persona_id, 
+      roles, 
+      comunidad_id, 
+      is_superadmin: !!user.is_superadmin 
+    };
     const token = generateToken(payload);
     res.json({ token });
   } catch (err) {
-    console.error(err);
+    console.error('Login error:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -244,6 +318,161 @@ router.post('/reset-password', [body('token').exists(), body('password').isLengt
 
 /**
  * @openapi
+ * /auth/change-password:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Change user password
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: Current password
+ *               newPassword:
+ *                 type: string
+ *                 description: New password (minimum 6 characters)
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *       400:
+ *         description: Invalid current password or validation error
+ *       500:
+ *         description: Server error
+ */
+router.post('/change-password', authenticate, [
+  body('currentPassword').exists().withMessage('Current password is required'),
+  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.user.sub;
+  
+  try {
+    // Get current user data
+    const [rows] = await db.query('SELECT id, hash_password FROM usuario WHERE id = ? LIMIT 1', [userId]);
+    if (!rows.length) return res.status(404).json({ error: 'User not found' });
+    
+    const user = rows[0];
+    
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.hash_password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+    
+    // Hash new password
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update password in database
+    await db.query('UPDATE usuario SET hash_password = ? WHERE id = ?', [newHashedPassword, userId]);
+    
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * @openapi
+ * /auth/profile:
+ *   patch:
+ *     tags: [Auth]
+ *     summary: Update user profile information
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: New username (minimum 3 characters)
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: New email address
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       400:
+ *         description: Validation error or username/email already exists
+ *       500:
+ *         description: Server error
+ */
+router.patch('/profile', authenticate, [
+  body('username').optional().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+  body('email').optional().isEmail().withMessage('Invalid email format')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  
+  const userId = req.user.sub;
+  const { username, email } = req.body;
+  
+  // Check if at least one field is provided
+  if (!username && !email) {
+    return res.status(400).json({ error: 'At least one field (username or email) must be provided' });
+  }
+  
+  try {
+    const updates = [];
+    const values = [];
+    
+    // Check for username availability if provided
+    if (username) {
+      const [existingUsername] = await db.query('SELECT id FROM usuario WHERE username = ? AND id != ? LIMIT 1', [username, userId]);
+      if (existingUsername.length > 0) {
+        return res.status(400).json({ error: 'Username already exists' });
+      }
+      updates.push('username = ?');
+      values.push(username);
+    }
+    
+    // Check for email availability if provided
+    if (email) {
+      const [existingEmail] = await db.query('SELECT id FROM usuario WHERE email = ? AND id != ? LIMIT 1', [email, userId]);
+      if (existingEmail.length > 0) {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
+      updates.push('email = ?');
+      values.push(email);
+    }
+    
+    values.push(userId);
+    
+    // Update user profile
+    await db.query(`UPDATE usuario SET ${updates.join(', ')} WHERE id = ?`, values);
+    
+    // Get updated user data
+    const [updatedUser] = await db.query('SELECT id, username, email, persona_id, is_superadmin FROM usuario WHERE id = ? LIMIT 1', [userId]);
+    
+    res.json({ 
+      message: 'Profile updated successfully',
+      user: updatedUser[0]
+    });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * @openapi
  * /auth/me:
  *   get:
  *     tags: [Auth]
@@ -256,11 +485,34 @@ router.post('/reset-password', [body('token').exists(), body('password').isLengt
  */
 router.get('/me', authenticate, async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT id, username, email, persona_id, activo, created_at, is_superadmin, totp_secret FROM usuario WHERE id = ? LIMIT 1', [req.user.sub]);
+    // Join usuario with persona to get complete profile data
+    const [rows] = await db.query(`
+      SELECT 
+        u.id, 
+        u.username, 
+        u.email, 
+        u.persona_id, 
+        u.activo, 
+        u.created_at, 
+        u.is_superadmin, 
+        u.totp_secret,
+        p.rut,
+        p.dv,
+        p.nombres,
+        p.apellidos,
+        p.email as persona_email,
+        p.telefono,
+        p.direccion
+      FROM usuario u 
+      LEFT JOIN persona p ON u.persona_id = p.id 
+      WHERE u.id = ? LIMIT 1
+    `, [req.user.sub]);
+    
     if (!rows.length) return res.status(404).json({ error: 'not found' });
     
-    // Include is_superadmin as boolean in the response
     const user = rows[0];
+    
+    // Include is_superadmin as boolean in the response
     user.is_superadmin = !!user.is_superadmin;
     
     // Include totp_enabled status (true if totp_secret exists)
@@ -269,10 +521,142 @@ router.get('/me', authenticate, async (req, res) => {
     // Remove totp_secret from response for security
     delete user.totp_secret;
     
-    res.json(user);
+    // Structure the response to separate user and person data
+    const response = {
+      // User data
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      persona_id: user.persona_id,
+      activo: user.activo,
+      created_at: user.created_at,
+      is_superadmin: user.is_superadmin,
+      totp_enabled: user.totp_enabled,
+      
+      // Person data (if exists)
+      persona: user.persona_id ? {
+        rut: user.rut,
+        dv: user.dv,
+        nombres: user.nombres,
+        apellidos: user.apellidos,
+        email: user.persona_email,
+        telefono: user.telefono,
+        direccion: user.direccion
+      } : null
+    };
+    
+    res.json(response);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @openapi
+ * /auth/profile/persona:
+ *   patch:
+ *     tags: [Auth]
+ *     summary: Update persona information linked to the authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombres:
+ *                 type: string
+ *                 description: First names
+ *               apellidos:
+ *                 type: string
+ *                 description: Last names
+ *               telefono:
+ *                 type: string
+ *                 description: Phone number
+ *               direccion:
+ *                 type: string
+ *                 description: Address
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email address
+ *     responses:
+ *       200:
+ *         description: Persona information updated successfully
+ *       400:
+ *         description: Validation error or no persona linked
+ *       404:
+ *         description: User not found or no persona linked
+ *       500:
+ *         description: Server error
+ */
+router.patch('/profile/persona', authenticate, [
+  body('nombres').optional().isLength({ min: 1 }).withMessage('Names cannot be empty'),
+  body('apellidos').optional().isLength({ min: 1 }).withMessage('Last names cannot be empty'),
+  body('telefono').optional().isLength({ min: 1 }).withMessage('Phone cannot be empty'),
+  body('email').optional().isEmail().withMessage('Invalid email format')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  
+  const userId = req.user.sub;
+  const { nombres, apellidos, telefono, direccion, email } = req.body;
+  
+  try {
+    // Get user's persona_id
+    const [userRows] = await db.query('SELECT persona_id FROM usuario WHERE id = ? LIMIT 1', [userId]);
+    if (!userRows.length) return res.status(404).json({ error: 'User not found' });
+    
+    const personaId = userRows[0].persona_id;
+    if (!personaId) return res.status(400).json({ error: 'No persona linked to this user' });
+    
+    // Build update query
+    const updates = [];
+    const values = [];
+    
+    if (nombres !== undefined) {
+      updates.push('nombres = ?');
+      values.push(nombres);
+    }
+    if (apellidos !== undefined) {
+      updates.push('apellidos = ?');
+      values.push(apellidos);
+    }
+    if (telefono !== undefined) {
+      updates.push('telefono = ?');
+      values.push(telefono);
+    }
+    if (direccion !== undefined) {
+      updates.push('direccion = ?');
+      values.push(direccion);
+    }
+    if (email !== undefined) {
+      updates.push('email = ?');
+      values.push(email);
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+    
+    values.push(personaId);
+    
+    // Update persona data
+    await db.query(`UPDATE persona SET ${updates.join(', ')} WHERE id = ?`, values);
+    
+    // Get updated persona data
+    const [updatedPersona] = await db.query('SELECT rut, dv, nombres, apellidos, email, telefono, direccion FROM persona WHERE id = ? LIMIT 1', [personaId]);
+    
+    res.json({ 
+      message: 'Persona information updated successfully',
+      persona: updatedPersona[0]
+    });
+  } catch (err) {
+    console.error('Update persona error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -361,6 +745,125 @@ router.delete('/sessions', authenticate, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @openapi
+ * /auth/preferences:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Get user preferences
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User preferences
+ *       500:
+ *         description: Server error
+ */
+router.get('/preferences', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.sub;
+    
+    // Get user preferences from database
+    const [rows] = await db.query('SELECT preferences FROM user_preferences WHERE user_id = ? LIMIT 1', [userId]);
+    
+    if (rows.length > 0) {
+      return res.json(rows[0].preferences);
+    }
+    
+    // If no preferences found, return and create default preferences
+    const defaultPreferences = {
+      notifications: {
+        email_enabled: true,
+        payment_notifications: true,
+        weekly_summaries: true
+      },
+      display: {
+        timezone: 'America/Santiago',
+        date_format: 'DD/MM/YYYY',
+        language: 'es'
+      }
+    };
+    
+    // Create default preferences for user
+    await db.query(
+      'INSERT INTO user_preferences (user_id, preferences) VALUES (?, ?)',
+      [userId, JSON.stringify(defaultPreferences)]
+    );
+    
+    res.json(defaultPreferences);
+  } catch (err) {
+    console.error('Get preferences error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * @openapi
+ * /auth/preferences:
+ *   patch:
+ *     tags: [Auth]
+ *     summary: Update user preferences
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               notifications:
+ *                 type: object
+ *                 properties:
+ *                   email_enabled:
+ *                     type: boolean
+ *                   payment_notifications:
+ *                     type: boolean
+ *                   weekly_summaries:
+ *                     type: boolean
+ *               display:
+ *                 type: object
+ *                 properties:
+ *                   timezone:
+ *                     type: string
+ *                   date_format:
+ *                     type: string
+ *                   language:
+ *                     type: string
+ *     responses:
+ *       200:
+ *         description: Preferences updated successfully
+ *       400:
+ *         description: Validation error
+ *       500:
+ *         description: Server error
+ */
+router.patch('/preferences', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.sub;
+    const preferences = req.body;
+    
+    // Validate preferences structure
+    if (typeof preferences !== 'object') {
+      return res.status(400).json({ error: 'Invalid preferences format' });
+    }
+    
+    // Save preferences to database
+    await db.query(
+      'INSERT INTO user_preferences (user_id, preferences) VALUES (?, ?) ON DUPLICATE KEY UPDATE preferences = ?',
+      [userId, JSON.stringify(preferences), JSON.stringify(preferences)]
+    );
+    
+    res.json({ 
+      message: 'Preferences updated successfully',
+      preferences: preferences
+    });
+  } catch (err) {
+    console.error('Update preferences error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
