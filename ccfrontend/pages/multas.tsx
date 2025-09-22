@@ -198,28 +198,7 @@ export default function MultasListado() {
     );
   };
 
-  // Render de información de debug
-  const renderDebugInfo = () => {
-    if (process.env.NODE_ENV !== 'development') return null;
-    
-    return (
-      <div className="alert alert-info mb-4">
-        <h6>🔍 Debug Info - Multas:</h6>
-        <p><strong>Usuario:</strong> {user?.username}</p>
-        <p><strong>Es superadmin:</strong> {user?.is_superadmin ? '✅ Sí' : '❌ No'}</p>
-        <p><strong>Membresías:</strong> {user?.memberships?.length || 0}</p>
-        {user?.memberships && (
-          <ul>
-            {user.memberships.map((m, idx) => (
-              <li key={idx}>Comunidad ID: {m.comunidadId}, Rol: {m.rol}</li>
-            ))}
-          </ul>
-        )}
-        <p><strong>Multas visibles:</strong> {multasFiltradas.length}</p>
-        <p><strong>Filtros aplicados:</strong> {JSON.stringify(filtros)}</p>
-      </div>
-    );
-  };
+
 
   return (
     <ProtectedRoute>
@@ -229,8 +208,7 @@ export default function MultasListado() {
 
       <Layout title='Multas'>
         <div className='container-fluid py-4'>
-          {/* Debug info */}
-          {renderDebugInfo()}
+        
           
           {/* Header */}
           <div className='d-flex justify-content-between align-items-center mb-4'>
