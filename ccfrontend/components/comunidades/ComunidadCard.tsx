@@ -14,6 +14,11 @@ const ComunidadCard: React.FC<ComunidadCardProps> = ({ comunidad, onEdit, onDele
     ? (comunidad.unidadesOcupadas / comunidad.totalUnidades) * 100 
     : 0;
   
+  const morosidadPorcentaje = comunidad.morosidad || 0;
+  const ingresosMensuales = comunidad.ingresosMensuales || 0;
+  const gastosMensuales = comunidad.gastosMensuales || 0;
+  const saldoPendiente = comunidad.saldoPendiente || 0;
+  
   return (
     <div className="col-md-6 col-lg-4 col-xl-3">
       <div className="card comunidad-card app-card h-100">
@@ -27,22 +32,23 @@ const ComunidadCard: React.FC<ComunidadCardProps> = ({ comunidad, onEdit, onDele
           />
           
           {/* Badge de estado */}
-          <span className={`badge badge-status position-absolute top-0 end-0 m-2 ${comunidadesService.getEstadoBadgeClass(comunidad.estado)}`}>
+          <span className={`badge position-absolute top-0 end-0 m-2 ${comunidadesService.getEstadoBadgeClass(comunidad.estado)}`}>
             {comunidad.estado}
           </span>
           
           {/* Acciones flotantes */}
-          <div className="comunidad-actions">
+          <div className="comunidad-actions position-absolute top-0 start-0 m-2 opacity-0 transition-opacity">
             <div className="dropdown">
               <button
-                className="btn btn-sm btn-light btn-floating"
+                className="btn btn-sm btn-light btn-floating rounded-circle"
                 type="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
+                style={{ width: '32px', height: '32px', padding: '0' }}
               >
-                <span className="material-icons">more_vert</span>
+                <span className="material-icons" style={{ fontSize: '18px' }}>more_vert</span>
               </button>
-              <ul className="dropdown-menu dropdown-menu-end">
+              <ul className="dropdown-menu dropdown-menu-start">
                 <li>
                   <Link href={`/comunidades/${comunidad.id}`} className="dropdown-item">
                     <span className="material-icons me-2">visibility</span>
@@ -86,62 +92,55 @@ const ComunidadCard: React.FC<ComunidadCardProps> = ({ comunidad, onEdit, onDele
           
           {/* Estadísticas principales */}
           <div className="row g-2 mb-3">
-            <div className="col-6">
+            <div className="col-4">
               <div className="text-center">
                 <div className="h6 mb-0">{comunidad.totalUnidades}</div>
                 <small className="text-muted">Unidades</small>
               </div>
             </div>
-            <div className="col-6">
+            <div className="col-4">
               <div className="text-center">
                 <div className="h6 mb-0">{ocupacionPorcentaje.toFixed(0)}%</div>
                 <small className="text-muted">Ocupación</small>
               </div>
             </div>
-          </div>
-          
-          {/* Barra de progreso de ocupación */}
-          <div className="mb-3">
-            <div className="d-flex justify-content-between mb-1">
-              <small className="text-muted">Ocupación</small>
-              <small className="text-muted">{comunidad.unidadesOcupadas}/{comunidad.totalUnidades}</small>
-            </div>
-            <div className="progress" style={{ height: '4px' }}>
-              <div
-                className="progress-bar bg-primary"
-                role="progressbar"
-                style={{ width: `${ocupacionPorcentaje}%` }}
-                aria-valuenow={ocupacionPorcentaje}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              ></div>
-            </div>
-          </div>
-          
-          {/* Información financiera */}
-          <div className="row g-2 mb-3">
-            <div className="col-12">
-              <div className="d-flex justify-content-between">
-                <small className="text-muted">Saldo pendiente:</small>
-                <small className={`fw-bold ${comunidad.saldoPendiente > 0 ? 'text-warning' : 'text-success'}`}>
-                  {comunidadesService.formatCurrency(comunidad.saldoPendiente)}
-                </small>
+            <div className="col-4">
+              <div className="text-center">
+                <div className={`h6 mb-0 ${morosidadPorcentaje > 15 ? 'text-danger' : morosidadPorcentaje > 5 ? 'text-warning' : 'text-success'}`}>
+                  {morosidadPorcentaje.toFixed(1)}%
+                </div>
+                <small className="text-muted">Morosidad</small>
               </div>
             </div>
           </div>
-          
-          {/* Morosidad */}
+
+          {/* Estadísticas financieras */}
           <div className="row g-2 mb-3">
-            <div className="col-12">
-              <div className="d-flex justify-content-between">
-                <small className="text-muted">Morosidad:</small>
-                <small className={`fw-bold ${comunidad.morosidad > 10 ? 'text-danger' : comunidad.morosidad > 5 ? 'text-warning' : 'text-success'}`}>
-                  {comunidadesService.formatPercentage(comunidad.morosidad)}
-                </small>
+            <div className="col-6">
+              <div className="text-center p-2 bg-light rounded">
+                <div className="small text-success fw-bold">
+                  ${(ingresosMensuales / 1000000).toFixed(1)}M
+                </div>
+                <small className="text-muted">Ingresos</small>
+              </div>
+            </div>
+            <div className="col-6">
+              <div className="text-center p-2 bg-light rounded">
+                <div className="small text-danger fw-bold">
+                  ${(gastosMensuales / 1000000).toFixed(1)}M
+                </div>
+                <small className="text-muted">Gastos</small>
               </div>
             </div>
           </div>
-          
+
+          {/* Saldo pendiente */}
+          {saldoPendiente > 0 && (
+            <div className="alert alert-warning py-2 mb-3" style={{ fontSize: '0.8rem' }}>
+              <strong>Saldo pendiente:</strong> ${(saldoPendiente / 1000000).toFixed(1)}M
+            </div>
+          )}
+
           {/* Administrador */}
           <div className="mt-auto">
             <div className="d-flex align-items-center">

@@ -9,10 +9,8 @@ class ComunidadesService {
     try {
       const params = new URLSearchParams();
       
-      if (filtros?.busqueda) params.append('busqueda', filtros.busqueda);
-      if (filtros?.tipo) params.append('tipo', filtros.tipo);
-      if (filtros?.estado) params.append('estado', filtros.estado);
-      if (filtros?.administrador) params.append('administrador', filtros.administrador);
+      if (filtros?.busqueda) params.append('nombre', filtros.busqueda);
+      if (filtros?.direccion) params.append('direccion', filtros.direccion);
 
       const response = await apiClient.get(`${this.baseUrl}${params.toString() ? `?${params.toString()}` : ''}`);
       return response.data.map((comunidad: any) => this.normalizeComunidad(comunidad));
@@ -30,6 +28,94 @@ class ComunidadesService {
     } catch (error) {
       console.error(`Error fetching comunidad ${id}:`, error);
       return this.getMockComunidadDetalle(id);
+    }
+  }
+
+  // Nuevos métodos para endpoints específicos
+  async getAmenidadesByComunidad(id: number): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}/amenidades`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching amenidades for comunidad ${id}:`, error);
+      return [];
+    }
+  }
+
+  async getEdificiosByComunidad(id: number): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}/edificios`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching edificios for comunidad ${id}:`, error);
+      return [];
+    }
+  }
+
+  async getContactosByComunidad(id: number): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}/contactos`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching contactos for comunidad ${id}:`, error);
+      return [];
+    }
+  }
+
+  async getDocumentosByComunidad(id: number): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}/documentos`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching documentos for comunidad ${id}:`, error);
+      return [];
+    }
+  }
+
+  async getResidentesByComunidad(id: number): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}/residentes`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching residentes for comunidad ${id}:`, error);
+      return [];
+    }
+  }
+
+  async getParametrosByComunidad(id: number): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}/parametros`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching parametros for comunidad ${id}:`, error);
+      return null;
+    }
+  }
+
+  async getEstadisticasByComunidad(id: number): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}/estadisticas`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching estadisticas for comunidad ${id}:`, error);
+      return {
+        totalIngresos: 0,
+        ingresosPagados: 0,
+        ingresosPendientes: 0,
+        serviciosBasicos: 0,
+        mantenimiento: 0,
+        administracion: 0
+      };
+    }
+  }
+
+  async getFlujoCajaByComunidad(id: number): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}/flujo-caja`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching flujo-caja for comunidad ${id}:`, error);
+      return [];
     }
   }
 

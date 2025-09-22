@@ -103,8 +103,10 @@ const FilterContainer: React.FC<FilterContainerProps> = ({
             
             {/* Contador de resultados */}
             <div className="d-flex align-items-center">
-              <small className="text-muted">
-                {totalResultados} {totalResultados === 1 ? 'resultado' : 'resultados'}
+              <small className="text-muted fw-medium">
+                <span className="material-icons me-1" style={{ fontSize: '16px' }}>filter_list</span>
+                {totalResultados} {totalResultados === 1 ? 'comunidad' : 'comunidades'}
+                {tienesFiltrosActivos ? ' encontradas' : ' totales'}
               </small>
             </div>
           </div>

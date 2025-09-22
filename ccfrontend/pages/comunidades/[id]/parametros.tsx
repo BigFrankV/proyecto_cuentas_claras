@@ -9,7 +9,7 @@ import {
   MultaPredefinida, 
   HistorialParametros 
 } from '../../../types/comunidades';
-import { getComunidadById, getParametrosCobranza, updateParametrosCobranza } from '../../../lib/comunidadesService';
+import comunidadesService from '../../../lib/comunidadesService';
 
 interface ParametrosFormData {
   // Intereses y mora
@@ -133,11 +133,11 @@ export default function ParametrosCobranzaPage() {
     const cargarDatos = async () => {
       if (id) {
         try {
-          const comunidad = await getComunidadById(Number(id));
+          const comunidad = await comunidadesService.getComunidadById(Number(id));
           setComunidadNombre(comunidad.nombre);
           
           // Cargar parámetros existentes o usar defaults
-          const parametrosExistentes = await getParametrosCobranza(Number(id));
+          const parametrosExistentes = await comunidadesService.getParametrosCobranza(Number(id));
           if (parametrosExistentes) {
             setParametros(prev => ({ ...prev, ...parametrosExistentes }));
           }
@@ -174,7 +174,7 @@ export default function ParametrosCobranzaPage() {
     setSaving(true);
 
     try {
-      await updateParametrosCobranza(Number(id), parametros);
+      await comunidadesService.updateParametrosCobranza(Number(id), parametros);
       alert('Parámetros de cobranza actualizados correctamente');
     } catch (error) {
       console.error('Error guardando parámetros:', error);
