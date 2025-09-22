@@ -155,8 +155,10 @@ router.post('/login', [
     
     // Fetch roles from membresia_comunidad
     const [membresias] = await db.query('SELECT comunidad_id, rol FROM membresia_comunidad WHERE persona_id = ? AND activo = 1', [user.persona_id]);
-    const roles = membresias.map(m => m.rol);
+    // Normalizar roles (lowercase) y eliminar duplicados
+    const roles = Array.from(new Set(membresias.map(m => String(m.rol || '').toLowerCase())));
     const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
+    const memberships = membresias.map(m => ({ comunidadId: m.comunidad_id, rol: String(m.rol || '').toLowerCase() }));
     
     // Check if user has TOTP enabled
     const [userRow] = await db.query('SELECT totp_secret, totp_enabled FROM usuario WHERE id = ? LIMIT 1', [user.id]);
@@ -174,7 +176,8 @@ router.post('/login', [
       persona_id: user.persona_id, 
       roles, 
       comunidad_id, 
-      is_superadmin: !!user.is_superadmin 
+      is_superadmin: !!user.is_superadmin,
+      memberships
     };
     const token = generateToken(payload);
     res.json({ token });
@@ -201,9 +204,11 @@ router.post('/2fa/verify', [body('tempToken').exists(), body('code').exists()], 
     if (!verified) return res.status(401).json({ error: 'invalid code' });
     // create final token
     const [membresias] = await db.query('SELECT comunidad_id, rol FROM membresia_comunidad WHERE persona_id = ? AND activo = 1', [user.persona_id]);
-    const roles = membresias.map(m => m.rol);
+    // Normalizar roles (lowercase) y eliminar duplicados
+    const roles = Array.from(new Set(membresias.map(m => String(m.rol || '').toLowerCase())));
     const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
-    const payload = { sub: user.id, username: user.username, persona_id: user.persona_id, roles, comunidad_id };
+    const memberships = membresias.map(m => ({ comunidadId: m.comunidad_id, rol: String(m.rol || '').toLowerCase() }));
+    const payload = { sub: user.id, username: user.username, persona_id: user.persona_id, roles, comunidad_id, memberships, is_superadmin: !!user.is_superadmin };
     const token = generateToken(payload);
     res.json({ token });
   } catch (err) {
@@ -545,7 +550,14 @@ router.get('/me', authenticate, async (req, res) => {
       } : null
     };
     
-    res.json(response);
+    const [membresias] = await db.query(
+      'SELECT comunidad_id AS comunidadId, rol FROM membresia_comunidad WHERE persona_id = ? AND activo = 1',
+      [user.persona_id]
+    );
+    const memberships = (membresias || []).map(m => ({ comunidadId: m.comunidadId, rol: String(m.rol || '').toLowerCase() }));
+    // roles globales derivados de memberships
+    const roles = Array.from(new Set(memberships.map(m => m.rol)));
+    return res.json({ ...response, roles, memberships });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });

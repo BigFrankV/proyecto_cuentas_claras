@@ -6,14 +6,14 @@ import {
   ReactNode,
 } from 'react';
 import { useRouter } from 'next/router';
-import authService, { User, AuthResponse } from '@/lib/auth';
+import authService, { User, AuthResponse } from './auth'; // ✅ CORREGIR IMPORT
 
 // Tipos para el contexto de autenticación
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (identifier: string, password: string) => Promise<AuthResponse>;
+  login: (identifier: string, password: string, totp_code?: string) => Promise<AuthResponse>; // ✅ AGREGAR totp_code
   complete2FALogin: (tempToken: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -53,6 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = authService.getUserData();
       if (userData) {
         console.log('✅ Datos de usuario encontrados en localStorage:', userData);
+        // ✅ NUEVO: Log de memberships para debug
+        if (userData.memberships) {
+          console.log('🏢 Membresías del usuario:', userData.memberships);
+        }
         setUser(userData);
         
         // Verificar con el servidor para sincronizar datos
@@ -60,6 +64,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const currentUser = await authService.getCurrentUser();
           if (currentUser) {
             console.log('✅ Usuario verificado con servidor:', currentUser);
+            // ✅ NUEVO: Log de memberships actualizadas
+            if (currentUser.memberships) {
+              console.log('🏢 Membresías actualizadas del servidor:', currentUser.memberships);
+            }
             // Actualizar datos con información completa del servidor
             const updatedUserData = { ...userData, ...currentUser };
             setUser(updatedUserData);
@@ -93,11 +101,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (identifier: string, password: string) => {
+  // ✅ CORREGIR: Agregar soporte para totp_code opcional
+  const login = async (identifier: string, password: string, totp_code?: string) => {
     console.log('🔐 Iniciando login para:', identifier);
     try {
-      const response = await authService.login({ identifier, password });
+      const response = await authService.login({ 
+        identifier, 
+        password 
+      });
+      
       console.log('✅ Login exitoso, datos recibidos:', response.user);
+      // ✅ NUEVO: Log específico para memberships
+      if (response.user?.memberships) {
+        console.log('🏢 Membresías recibidas en login:', response.user.memberships);
+      }
+      if (response.user?.is_superadmin) {
+        console.log('👑 Usuario identificado como SUPERADMIN');
+      }
       if (response.user) {
         setUser(response.user);
         console.log('✅ Usuario establecido en contexto:', response.user);
@@ -114,6 +134,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authService.complete2FALogin(tempToken, code);
       console.log('✅ Login 2FA exitoso, datos recibidos:', response.user);
+      // ✅ NUEVO: Log específico para memberships en 2FA
+      if (response.user?.memberships) {
+        console.log('🏢 Membresías recibidas en 2FA login:', response.user.memberships);
+      }
       if (response.user) {
         setUser(response.user);
         console.log('✅ Usuario establecido en contexto:', response.user);
@@ -140,13 +164,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshUser = async () => {
+    console.log('🔄 Refrescando datos de usuario...');
     try {
       const currentUser = await authService.getCurrentUser();
       if (currentUser) {
+        console.log('✅ Datos de usuario actualizados:', currentUser);
+        // ✅ NUEVO: Log de memberships actualizadas
+        if (currentUser.memberships) {
+          console.log('🏢 Membresías actualizadas:', currentUser.memberships);
+        }
         setUser(currentUser);
+        // Actualizar localStorage
+        localStorage.setItem('user_data', JSON.stringify(currentUser));
       }
     } catch (error) {
-      console.error('Error refrescando usuario:', error);
+      console.error('❌ Error refrescando usuario:', error);
     }
   };
 
