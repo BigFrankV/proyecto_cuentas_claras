@@ -162,26 +162,7 @@ export default function ComunidadesListado() {
   };
 
   // ✅ AGREGAR: Mostrar información de debug en desarrollo
-  const renderDebugInfo = () => {
-    if (process.env.NODE_ENV !== 'development') return null;
-    
-    return (
-      <div className="alert alert-info mb-4">
-        <h6>🔍 Debug Info:</h6>
-        <p><strong>Usuario:</strong> {user?.username}</p>
-        <p><strong>Es superadmin:</strong> {user?.is_superadmin ? '✅ Sí' : '❌ No'}</p>
-        <p><strong>Membresías:</strong> {user?.memberships?.length || 0}</p>
-        {user?.memberships && (
-          <ul>
-            {user.memberships.map((m, idx) => (
-              <li key={idx}>Comunidad ID: {m.comunidadId}, Rol: {m.rol}</li>
-            ))}
-          </ul>
-        )}
-        <p><strong>Comunidades visibles:</strong> {comunidades.length}</p>
-      </div>
-    );
-  };
+
 
   return (
     <ProtectedRoute>
@@ -191,8 +172,7 @@ export default function ComunidadesListado() {
 
       <Layout title='Comunidades'>
         <div className='container-fluid py-4'>
-          {/* ✅ AGREGAR: Info de debug */}
-          {renderDebugInfo()}
+          
           
           {/* Header */}
           <div className='d-flex justify-content-between align-items-center mb-4'>
