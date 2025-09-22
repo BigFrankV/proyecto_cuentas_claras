@@ -12,34 +12,6 @@ const { authorize } = require('../middleware/authorize');
  *   - name: Comunidades
  *     description: Gestión de comunidades
  */
-
-// Listar comunidades (users may view list)
-router.get('/', authenticate, async (req, res) => {
-  try {
-    // ✅ Superadmin ve TODAS las comunidades
-    if (req.user.is_superadmin) {
-      const [rows] = await db.query('SELECT id, razon_social, rut, dv, direccion, email_contacto FROM comunidad LIMIT 200');
-      return res.json(rows);
-    }
-
-    // ✅ Usuarios normales solo ven SUS comunidades
-    const personaId = req.user.persona_id;
-    if (!personaId) {
-      return res.status(403).json({ error: 'forbidden' });
-    }
-
-    const [rows] = await db.query(`
-      SELECT DISTINCT c.id, c.razon_social, c.rut, c.dv, c.direccion, c.email_contacto 
-      FROM comunidad c
-      JOIN membresia_comunidad mc ON c.id = mc.comunidad_id 
-      WHERE mc.persona_id = ? AND mc.activo = 1
-      ORDER BY c.razon_social
-    `, [personaId]);
-
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
   }
 });
 
@@ -56,10 +28,68 @@ router.post('/', [authenticate, authorize('admin','superadmin'), body('razon_soc
 });
 
 router.get('/:id', authenticate, async (req, res) => {
-  const id = req.params.id;
-  const [rows] = await db.query('SELECT id, razon_social, rut, dv, giro, direccion, email_contacto, telefono_contacto FROM comunidad WHERE id = ? LIMIT 1', [id]);
-  if (!rows.length) return res.status(404).json({ error: 'not found' });
-  res.json(rows[0]);
+  try {
+    const id = req.params.id;
+    
+    const query = `
+      SELECT 
+          c.id,
+          c.razon_social as nombre,
+          c.rut,
+          c.dv,
+          c.giro,
+          c.direccion,
+          c.email_contacto as email,
+          c.telefono_contacto as telefono,
+          c.moneda,
+          c.tz as zona_horaria,
+          c.politica_mora_json,
+          c.created_at as fechaCreacion,
+          c.updated_at as fechaActualizacion,
+          
+          -- Contador de unidades
+          (SELECT COUNT(*) 
+           FROM unidad u 
+           WHERE u.comunidad_id = c.id) as totalUnidades,
+           
+          (SELECT COUNT(*) 
+           FROM unidad u 
+           WHERE u.comunidad_id = c.id AND u.activa = 1) as unidadesActivas,
+           
+          -- Contador de residentes activos
+          (SELECT COUNT(DISTINCT mc.persona_id) 
+           FROM membresia_comunidad mc 
+           WHERE mc.comunidad_id = c.id 
+           AND mc.activo = 1 
+           AND mc.rol IN ('residente', 'propietario')) as totalResidentes,
+           
+          -- Contador de edificios
+          (SELECT COUNT(*) 
+           FROM edificio e 
+           WHERE e.comunidad_id = c.id) as totalEdificios,
+           
+          -- Contador de amenidades
+          (SELECT COUNT(*) 
+           FROM amenidad a 
+           WHERE a.comunidad_id = c.id) as totalAmenidades,
+           
+          -- Saldo pendiente
+          (SELECT COALESCE(SUM(cu.saldo), 0) 
+           FROM cargo_unidad cu 
+           WHERE cu.comunidad_id = c.id 
+           AND cu.estado IN ('pendiente', 'parcial')) as saldoPendiente
+
+      FROM comunidad c
+      WHERE c.id = ?`;
+    
+    const [rows] = await db.query(query, [id]);
+    if (!rows.length) return res.status(404).json({ error: 'Comunidad no encontrada' });
+    
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Error fetching community:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
 
 router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => {
@@ -79,4 +109,3 @@ router.delete('/:id', authenticate, authorize('superadmin'), async (req, res) =>
   try { await db.query('DELETE FROM comunidad WHERE id = ?', [id]); res.status(204).end(); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
 });
 
-module.exports = router;

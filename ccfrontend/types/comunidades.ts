@@ -154,16 +154,22 @@ export interface ComunidadFormData {
   descripcion?: string;
   horarioAtencion?: string;
   imagen?: File | string;
+  totalUnidades?: number;
+  totalEdificios?: number;
+  areaComun?: number;
+  amenidades?: string[];
 }
 
 // Filtros para búsqueda de comunidades
 export interface ComunidadFiltros {
-  busqueda: string;
-  tipo: string;
-  estado: string;
-  administrador: string;
-  ordenarPor: 'nombre' | 'fechaCreacion' | 'totalUnidades' | 'morosidad';
-  orden: 'asc' | 'desc';
+  busqueda?: string;
+  nombre?: string;
+  direccion?: string;
+  tipo?: string;
+  estado?: string;
+  administrador?: string;
+  ordenarPor?: 'nombre' | 'fechaCreacion' | 'totalUnidades' | 'morosidad';
+  orden?: 'asc' | 'desc';
 }
 
 // Interfaces para vistas
