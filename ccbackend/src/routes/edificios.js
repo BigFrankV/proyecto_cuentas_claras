@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { body, validationResult, query } = require('express-validator');
-const { authenticate } = require('../middleware/auth-dev'); // Usando middleware de desarrollo
+const { authenticate } = require('../middleware/auth'); // Usando middleware de desarrollo
 const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 

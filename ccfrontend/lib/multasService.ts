@@ -5,44 +5,46 @@ import {
   CreateMultaData, 
   UpdateMultaData,
   MultasEstadisticas,
-  MultasResumen,
-  MultaActividad,
   TipoInfraccion
 } from '@/types/multas';
 
 class MultasService {
-  // ===== CRUD BÁSICO =====
+  // ===== OPCIONES PREDEFINIDAS (SIN BD) =====
+  
+  getTiposInfraccionPredefinidos(): TipoInfraccion[] {
+    return [
+      { id: 'ruidos_molestos', nombre: 'Ruidos molestos', monto_base: 50000, categoria: 'Convivencia' },
+      { id: 'mascotas_sin_correa', nombre: 'Mascotas sin correa', monto_base: 30000, categoria: 'Mascotas' },
+      { id: 'estacionamiento_indebido', nombre: 'Estacionamiento indebido', monto_base: 40000, categoria: 'Estacionamiento' },
+      { id: 'basura_fuera_horario', nombre: 'Basura fuera de horario', monto_base: 25000, categoria: 'Aseo' },
+      { id: 'uso_inadecuado_areas', nombre: 'Uso inadecuado áreas comunes', monto_base: 60000, categoria: 'Áreas Comunes' },
+      { id: 'no_recoger_desechos', nombre: 'No recoger desechos mascota', monto_base: 35000, categoria: 'Mascotas' },
+      { id: 'fumar_prohibido', nombre: 'Fumar en áreas prohibidas', monto_base: 45000, categoria: 'Salud' },
+      { id: 'trabajos_horario', nombre: 'Trabajos en horario no permitido', monto_base: 55000, categoria: 'Convivencia' },
+      { id: 'danos_propiedad', nombre: 'Daños menores propiedad común', monto_base: 80000, categoria: 'Daños' },
+      { id: 'normas_piscina', nombre: 'Incumplimiento normas piscina', monto_base: 40000, categoria: 'Áreas Comunes' }
+    ];
+  }
+
+  // ===== CRUD ADAPTADO A TU BACKEND =====
 
   async getMultas(filtros?: MultaFiltros): Promise<Multa[]> {
     try {
+      console.log('🔍 Obteniendo multas con filtros:', filtros);
+      
+      // ✅ Usar tu endpoint general
       const params = new URLSearchParams();
       
-      if (filtros?.search) params.append('search', filtros.search);
       if (filtros?.comunidad_id) params.append('comunidad_id', filtros.comunidad_id.toString());
-      if (filtros?.unidad_id) params.append('unidad_id', filtros.unidad_id.toString());
-      if (filtros?.torre_id) params.append('torre_id', filtros.torre_id.toString());
-      if (filtros?.edificio_id) params.append('edificio_id', filtros.edificio_id.toString());
       if (filtros?.estado) params.append('estado', filtros.estado);
-      if (filtros?.prioridad) params.append('prioridad', filtros.prioridad);
-      if (filtros?.tipo_infraccion) params.append('tipo_infraccion', filtros.tipo_infraccion);
-      if (filtros?.fecha_desde) params.append('fecha_desde', filtros.fecha_desde);
-      if (filtros?.fecha_hasta) params.append('fecha_hasta', filtros.fecha_hasta);
-      if (filtros?.monto_min) params.append('monto_min', filtros.monto_min.toString());
-      if (filtros?.monto_max) params.append('monto_max', filtros.monto_max.toString());
-      if (filtros?.propietario_id) params.append('propietario_id', filtros.propietario_id.toString());
-      if (filtros?.created_by_user_id) params.append('created_by', filtros.created_by_user_id.toString());
-      if (filtros?.assigned_to_user_id) params.append('assigned_to', filtros.assigned_to_user_id.toString());
-      if (filtros?.vencidas) params.append('vencidas', 'true');
-      if (filtros?.sin_notificar) params.append('sin_notificar', 'true');
-
-      const queryString = params.toString();
-      const url = queryString ? `/multas?${queryString}` : '/multas';
+      if (filtros?.search) params.append('search', filtros.search);
       
-      console.log('🔍 Obteniendo multas con filtros:', filtros);
-      const response = await apiClient.get(url);
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      
+      const response = await apiClient.get(`/multas${queryString}`);
       
       console.log(`📋 ${response.data.length} multas obtenidas`);
-      return response.data;
+      return this.adaptarMultasDelBackend(response.data);
     } catch (error) {
       console.error('❌ Error obteniendo multas:', error);
       throw error;
@@ -53,7 +55,7 @@ class MultasService {
     try {
       console.log(`🔍 Obteniendo multa ${id}`);
       const response = await apiClient.get(`/multas/${id}`);
-      return response.data;
+      return this.adaptarMultaDelBackend(response.data);
     } catch (error) {
       console.error(`❌ Error obteniendo multa ${id}:`, error);
       throw error;
@@ -63,9 +65,23 @@ class MultasService {
   async createMulta(data: CreateMultaData): Promise<Multa> {
     try {
       console.log('📝 Creando nueva multa:', data);
-      const response = await apiClient.post('/multas', data);
+      
+      // ✅ Adaptar datos para tu backend (estructura que espera)
+      const backendData = {
+        motivo: data.tipo_infraccion,
+        descripcion: data.descripcion,
+        monto: data.monto,
+        fecha: this.formatearFechaParaBackend(data.fecha_infraccion),
+        persona_id: null // Tu backend acepta null
+      };
+      
+      console.log('📤 Enviando al backend:', backendData);
+      
+      // ✅ Usar tu endpoint POST existente
+      const response = await apiClient.post(`/multas/unidad/${data.unidad_id}`, backendData);
+      
       console.log('✅ Multa creada exitosamente:', response.data);
-      return response.data;
+      return this.adaptarMultaDelBackend(response.data);
     } catch (error) {
       console.error('❌ Error creando multa:', error);
       throw error;
@@ -75,9 +91,19 @@ class MultasService {
   async updateMulta(id: number, data: UpdateMultaData): Promise<Multa> {
     try {
       console.log(`📝 Actualizando multa ${id}:`, data);
-      const response = await apiClient.put(`/multas/${id}`, data);
+      
+      // ✅ Adaptar para tu endpoint PATCH
+      const backendData: any = {};
+      
+      if (data.tipo_infraccion) backendData.motivo = data.tipo_infraccion;
+      if (data.descripcion) backendData.descripcion = data.descripcion;
+      if (data.monto) backendData.monto = data.monto;
+      if (data.estado) backendData.estado = data.estado;
+      if (data.fecha_pago) backendData.fecha_pago = data.fecha_pago;
+      
+      const response = await apiClient.patch(`/multas/${id}`, backendData);
       console.log('✅ Multa actualizada exitosamente');
-      return response.data;
+      return this.adaptarMultaDelBackend(response.data);
     } catch (error) {
       console.error(`❌ Error actualizando multa ${id}:`, error);
       throw error;
@@ -95,172 +121,177 @@ class MultasService {
     }
   }
 
-  // ===== ESTADÍSTICAS =====
-
+  // ✅ USAR tu endpoint de estadísticas
   async getEstadisticas(comunidadId?: number): Promise<MultasEstadisticas> {
     try {
-      const url = comunidadId 
-        ? `/multas/estadisticas?comunidad_id=${comunidadId}`
-        : '/multas/estadisticas';
+      console.log('📊 Obteniendo estadísticas');
       
-      console.log('📊 Obteniendo estadísticas de multas');
-      const response = await apiClient.get(url);
+      const params = comunidadId ? `?comunidad_id=${comunidadId}` : '';
+      const response = await apiClient.get(`/multas/estadisticas${params}`);
+      
+      console.log('✅ Estadísticas obtenidas:', response.data);
       return response.data;
     } catch (error) {
       console.error('❌ Error obteniendo estadísticas:', error);
-      throw error;
+      // Fallback con datos vacíos
+      return {
+        total: 0,
+        pendientes: 0,
+        pagadas: 0,
+        vencidas: 0,
+        apeladas: 0,
+        anuladas: 0,
+        monto_total: 0,
+        monto_pendiente: 0,
+        monto_recaudado: 0,
+        monto_vencido: 0
+      };
     }
   }
 
-  async getResumen(comunidadId?: number): Promise<MultasResumen> {
-    try {
-      const url = comunidadId 
-        ? `/multas/resumen?comunidad_id=${comunidadId}`
-        : '/multas/resumen';
+  // ===== ADAPTADORES PARA TU ESTRUCTURA DE BD =====
+  
+  private adaptarMultaDelBackend(multaBackend: any): Multa {
+    console.log('🔄 Adaptando multa del backend:', multaBackend);
+    
+    return {
+      // IDs
+      id: multaBackend.id,
+      numero: `M-${String(multaBackend.id).padStart(4, '0')}`,
       
-      console.log('📈 Obteniendo resumen de multas');
-      const response = await apiClient.get(url);
-      return response.data;
-    } catch (error) {
-      console.error('❌ Error obteniendo resumen:', error);
-      throw error;
-    }
-  }
-
-  // ===== GESTIÓN ESPECÍFICA =====
-
-  async pagarMulta(id: number, datos: {
-    monto_pagado: number;
-    fecha_pago: string;
-    metodo_pago: string;
-    referencia_pago?: string;
-    observaciones?: string;
-  }): Promise<Multa> {
-    try {
-      console.log(`💳 Registrando pago de multa ${id}:`, datos);
-      const response = await apiClient.post(`/multas/${id}/pagar`, datos);
-      console.log('✅ Pago registrado exitosamente');
-      return response.data;
-    } catch (error) {
-      console.error(`❌ Error registrando pago de multa ${id}:`, error);
-      throw error;
-    }
-  }
-
-  async apelarMulta(id: number, datos: {
-    motivo_apelacion: string;
-    evidencia_urls?: string[];
-  }): Promise<Multa> {
-    try {
-      console.log(`⚖️ Registrando apelación de multa ${id}:`, datos);
-      const response = await apiClient.post(`/multas/${id}/apelar`, datos);
-      console.log('✅ Apelación registrada exitosamente');
-      return response.data;
-    } catch (error) {
-      console.error(`❌ Error registrando apelación de multa ${id}:`, error);
-      throw error;
-    }
-  }
-
-  async resolverApelacion(id: number, datos: {
-    estado_apelacion: 'aprobada' | 'rechazada';
-    respuesta_apelacion: string;
-  }): Promise<Multa> {
-    try {
-      console.log(`⚖️ Resolviendo apelación de multa ${id}:`, datos);
-      const response = await apiClient.post(`/multas/${id}/resolver-apelacion`, datos);
-      console.log('✅ Apelación resuelta exitosamente');
-      return response.data;
-    } catch (error) {
-      console.error(`❌ Error resolviendo apelación de multa ${id}:`, error);
-      throw error;
-    }
-  }
-
-  async anularMulta(id: number, motivo: string): Promise<Multa> {
-    try {
-      console.log(`🚫 Anulando multa ${id}:`, motivo);
-      const response = await apiClient.post(`/multas/${id}/anular`, { motivo });
-      console.log('✅ Multa anulada exitosamente');
-      return response.data;
-    } catch (error) {
-      console.error(`❌ Error anulando multa ${id}:`, error);
-      throw error;
-    }
-  }
-
-  // ===== NOTIFICACIONES =====
-
-  async enviarNotificacion(id: number, tipo: 'email' | 'sms' | 'ambos'): Promise<void> {
-    try {
-      console.log(`📧 Enviando notificación ${tipo} para multa ${id}`);
-      await apiClient.post(`/multas/${id}/notificar`, { tipo });
-      console.log('✅ Notificación enviada exitosamente');
-    } catch (error) {
-      console.error(`❌ Error enviando notificación de multa ${id}:`, error);
-      throw error;
-    }
-  }
-
-  async enviarRecordatorio(ids: number[], tipo: 'email' | 'sms' | 'ambos'): Promise<void> {
-    try {
-      console.log(`📧 Enviando recordatorios ${tipo} para ${ids.length} multas`);
-      await apiClient.post('/multas/recordatorio-masivo', { ids, tipo });
-      console.log('✅ Recordatorios enviados exitosamente');
-    } catch (error) {
-      console.error('❌ Error enviando recordatorios:', error);
-      throw error;
-    }
-  }
-
-  // ===== ACTIVIDAD Y HISTORIAL =====
-
-  async getActividades(multaId: number): Promise<MultaActividad[]> {
-    try {
-      console.log(`📋 Obteniendo actividades de multa ${multaId}`);
-      const response = await apiClient.get(`/multas/${multaId}/actividades`);
-      return response.data;
-    } catch (error) {
-      console.error(`❌ Error obteniendo actividades de multa ${multaId}:`, error);
-      throw error;
-    }
-  }
-
-  // ===== TIPOS DE INFRACCIONES =====
-
-  async getTiposInfraccion(): Promise<TipoInfraccion[]> {
-    try {
-      console.log('📋 Obteniendo tipos de infracciones');
-      const response = await apiClient.get('/tipos-infraccion');
-      return response.data;
-    } catch (error) {
-      console.error('❌ Error obteniendo tipos de infracciones:', error);
-      throw error;
-    }
-  }
-
-  // ===== EXPORTACIÓN =====
-
-  async exportarMultas(filtros?: MultaFiltros, formato: 'excel' | 'pdf' = 'excel'): Promise<Blob> {
-    try {
-      const params = new URLSearchParams();
-      if (filtros?.comunidad_id) params.append('comunidad_id', filtros.comunidad_id.toString());
-      if (filtros?.estado) params.append('estado', filtros.estado);
-      if (filtros?.fecha_desde) params.append('fecha_desde', filtros.fecha_desde);
-      if (filtros?.fecha_hasta) params.append('fecha_hasta', filtros.fecha_hasta);
+      // Datos principales
+      tipo_infraccion: multaBackend.motivo,
+      descripcion: multaBackend.descripcion || '',
+      monto: parseFloat(multaBackend.monto || 0),
       
-      params.append('formato', formato);
+      // Fechas
+      fecha_infraccion: this.normalizarFechaFromDB(multaBackend.fecha),
+      fecha_vencimiento: this.calcularFechaVencimiento(multaBackend.fecha),
       
-      console.log(`📄 Exportando multas en formato ${formato}`);
-      const response = await apiClient.get(`/multas/exportar?${params.toString()}`, {
-        responseType: 'blob'
-      });
+      // ✅ Estados - usar tal como vienen de BD
+      estado: multaBackend.estado || 'pendiente', // Tu BD usa 'pagado'/'vencido' 
+      prioridad: 'media',
       
-      console.log('✅ Exportación completada');
-      return response.data;
+      // ✅ Relaciones (según tu BD)
+      unidad_id: multaBackend.unidad_id,
+      unidad_numero: multaBackend.unidad_numero || `Unidad ${multaBackend.unidad_id}`,
+      comunidad_id: multaBackend.comunidad_id,
+      comunidad_nombre: multaBackend.comunidad_nombre || `Comunidad ${multaBackend.comunidad_id}`,
+      
+      // ✅ Propietario (tu BD)
+      propietario_id: multaBackend.persona_id,
+      propietario_nombre: '',
+      
+      // Gestión (campos que tu BD no tiene - valores por defecto)
+      created_by_user_id: 1,
+      
+      // ✅ Pagos (según tu BD)
+      monto_pagado: parseFloat(multaBackend.monto_pagado || 0),
+      fecha_pago: multaBackend.fecha_pago ? this.normalizarFechaFromDB(multaBackend.fecha_pago) : undefined,
+      
+      // Notificaciones (tu BD no tiene - valores por defecto)
+      notificado_email: false,
+      notificado_sms: false,
+      
+      // ✅ Timestamps (según tu BD)
+      created_at: this.normalizarTimestampFromDB(multaBackend.created_at),
+      updated_at: this.normalizarTimestampFromDB(multaBackend.updated_at)
+    };
+  }
+
+  private adaptarMultasDelBackend(multasBackend: any[]): Multa[] {
+    return multasBackend.map(multa => this.adaptarMultaDelBackend(multa));
+  }
+
+  // ✅ Formatear fecha para tu backend (DATE field)
+  private formatearFechaParaBackend(fechaISO: string): string {
+    try {
+      if (!fechaISO) return new Date().toISOString().split('T')[0];
+      
+      // Si viene como '2024-12-22T14:30:00' del datetime-local
+      if (fechaISO.includes('T')) {
+        return fechaISO.split('T')[0]; // 'YYYY-MM-DD'
+      }
+      
+      // Si ya está en formato DATE
+      if (/^\d{4}-\d{2}-\d{2}$/.test(fechaISO)) {
+        return fechaISO;
+      }
+      
+      // Convertir otros formatos
+      const fecha = new Date(fechaISO);
+      return fecha.toISOString().split('T')[0];
     } catch (error) {
-      console.error('❌ Error exportando multas:', error);
-      throw error;
+      console.error('❌ Error formateando fecha para backend:', error);
+      return new Date().toISOString().split('T')[0];
+    }
+  }
+
+  // ✅ Normalizar fecha DATE de MySQL
+  private normalizarFechaFromDB(fecha: any): string {
+    try {
+      if (!fecha) return new Date().toISOString().split('T')[0];
+      
+      // Si viene como '2025-09-22' de MySQL DATE
+      if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        return fecha;
+      }
+      
+      // Si viene como timestamp
+      if (typeof fecha === 'string' && fecha.includes(' ')) {
+        return fecha.split(' ')[0];
+      }
+      
+      return new Date(fecha).toISOString().split('T')[0];
+    } catch (error) {
+      console.error('❌ Error normalizando fecha:', error);
+      return new Date().toISOString().split('T')[0];
+    }
+  }
+
+  // ✅ Normalizar timestamp DATETIME de MySQL
+  private normalizarTimestampFromDB(timestamp: any): string {
+    try {
+      if (!timestamp) return new Date().toISOString();
+      
+      if (typeof timestamp === 'string') {
+        const fechaObj = new Date(timestamp);
+        if (!isNaN(fechaObj.getTime())) {
+          return fechaObj.toISOString();
+        }
+      }
+      
+      return new Date().toISOString();
+    } catch (error) {
+      console.error('❌ Error normalizando timestamp:', error);
+      return new Date().toISOString();
+    }
+  }
+
+  // ✅ Calcular vencimiento (30 días)
+  private calcularFechaVencimiento(fechaInfraccion: string): string {
+    try {
+      let fecha: Date;
+      
+      if (!fechaInfraccion) {
+        fecha = new Date();
+      } else if (typeof fechaInfraccion === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaInfraccion)) {
+        fecha = new Date(fechaInfraccion + 'T00:00:00');
+      } else {
+        fecha = new Date(fechaInfraccion);
+      }
+      
+      if (isNaN(fecha.getTime())) {
+        fecha = new Date();
+      }
+      
+      fecha.setDate(fecha.getDate() + 30);
+      return fecha.toISOString().split('T')[0];
+    } catch (error) {
+      console.error('❌ Error calculando vencimiento:', error);
+      const fallback = new Date();
+      fallback.setDate(fallback.getDate() + 30);
+      return fallback.toISOString().split('T')[0];
     }
   }
 
@@ -276,8 +307,8 @@ class MultasService {
   getEstadoColor(estado: Multa['estado']): string {
     const colores = {
       'pendiente': 'warning',
-      'pagada': 'success',
-      'vencida': 'danger',
+      'pagado': 'success',    // ✅ Tu BD usa 'pagado'
+      'vencido': 'danger',    // ✅ Tu BD usa 'vencido' 
       'apelada': 'info',
       'anulada': 'secondary'
     };
@@ -306,6 +337,5 @@ class MultasService {
   }
 }
 
-// Exportar instancia única del servicio
 const multasService = new MultasService();
 export default multasService;

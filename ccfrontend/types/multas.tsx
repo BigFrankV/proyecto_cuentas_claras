@@ -6,7 +6,8 @@ export interface Multa {
   monto: number;
   fecha_infraccion: string;
   fecha_vencimiento: string;
-  estado: 'pendiente' | 'pagada' | 'vencida' | 'apelada' | 'anulada';
+  // ✅ ARREGLAR: Estados según tu BD
+  estado: 'pendiente' | 'pagado' | 'vencido' | 'apelada' | 'anulada'; // Cambiar 'pagada'/'vencida' por 'pagado'/'vencido'
   prioridad: 'baja' | 'media' | 'alta' | 'critica';
   
   // Relaciones
@@ -31,21 +32,11 @@ export interface Multa {
   assigned_to_user_id?: number;
   assigned_to_username?: string;
   
-  // Evidencia y documentos
-  evidencia_urls?: string[];
-  documento_notificacion_url?: string;
-  
   // Pagos
   monto_pagado?: number;
   fecha_pago?: string;
   metodo_pago?: string;
   referencia_pago?: string;
-  
-  // Apelación
-  fecha_apelacion?: string;
-  motivo_apelacion?: string;
-  estado_apelacion?: 'pendiente' | 'aprobada' | 'rechazada';
-  respuesta_apelacion?: string;
   
   // Notificaciones
   notificado_email: boolean;
@@ -57,22 +48,23 @@ export interface Multa {
   updated_at: string;
 }
 
+// ✅ AGREGAR: Interface que falta para el wizard
 export interface TipoInfraccion {
-  id: number;
+  id: string;
   nombre: string;
-  descripcion: string;
   monto_base: number;
   categoria: string;
-  activo: boolean;
-  created_at: string;
+}
+
+// ✅ MANTENER: Para compatibilidad
+export interface OpcionInfraccion extends TipoInfraccion {
+  // Mantener compatibilidad
 }
 
 export interface MultaFiltros {
   search?: string;
   comunidad_id?: number;
   unidad_id?: number;
-  torre_id?: number;
-  edificio_id?: number;
   estado?: Multa['estado'];
   prioridad?: Multa['prioridad'];
   tipo_infraccion?: string;
@@ -80,11 +72,6 @@ export interface MultaFiltros {
   fecha_hasta?: string;
   monto_min?: number;
   monto_max?: number;
-  propietario_id?: number;
-  created_by_user_id?: number;
-  assigned_to_user_id?: number;
-  vencidas?: boolean;
-  sin_notificar?: boolean;
 }
 
 export interface CreateMultaData {
@@ -95,72 +82,30 @@ export interface CreateMultaData {
   fecha_vencimiento: string;
   prioridad: Multa['prioridad'];
   unidad_id: number;
-  evidencia_urls?: string[];
+  observaciones?: string;
   notificar_email?: boolean;
   notificar_sms?: boolean;
-  observaciones?: string;
 }
 
 export interface UpdateMultaData extends Partial<CreateMultaData> {
   estado?: Multa['estado'];
-  assigned_to_user_id?: number;
   monto_pagado?: number;
   fecha_pago?: string;
   metodo_pago?: string;
   referencia_pago?: string;
-  motivo_apelacion?: string;
-  estado_apelacion?: Multa['estado_apelacion'];
-  respuesta_apelacion?: string;
 }
 
 export interface MultasEstadisticas {
   total: number;
   pendientes: number;
-  pagadas: number;
-  vencidas: number;
+  pagadas: number; // ✅ Mantener nombre genérico en stats
+  vencidas: number; // ✅ Mantener nombre genérico en stats
   apeladas: number;
   anuladas: number;
   monto_total: number;
   monto_pendiente: number;
   monto_recaudado: number;
   monto_vencido: number;
-}
-
-export interface MultasResumen {
-  estadisticas: MultasEstadisticas;
-  multas_recientes: Multa[];
-  infracciones_frecuentes: {
-    tipo: string;
-    cantidad: number;
-    monto_total: number;
-  }[];
-  unidades_con_mas_multas: {
-    unidad_numero: string;
-    unidad_id: number;
-    comunidad_nombre: string;
-    total_multas: number;
-    monto_total: number;
-  }[];
-}
-
-export interface MultaActividad {
-  id: number;
-  multa_id: number;
-  tipo: 'creada' | 'modificada' | 'pagada' | 'apelada' | 'anulada' | 'notificada';
-  descripcion: string;
-  usuario_id: number;
-  usuario_nombre: string;
-  fecha: string;
-  datos_adicionales?: any;
-}
-
-// Para el wizard de crear multa
-export interface MultaWizardStep {
-  numero: number;
-  titulo: string;
-  descripcion: string;
-  completado: boolean;
-  activo: boolean;
 }
 
 export interface MultaFormData {
@@ -171,21 +116,41 @@ export interface MultaFormData {
   unidad_id?: number;
   
   // Step 2: Tipo de infracción
-  tipo_infraccion_id?: number;
   tipo_infraccion?: string;
   monto?: number;
+  prioridad?: Multa['prioridad'];
   
   // Step 3: Detalles
   descripcion?: string;
   fecha_infraccion?: string;
   fecha_vencimiento?: string;
-  prioridad?: Multa['prioridad'];
-  evidencia_files?: File[];
-  evidencia_urls?: string[];
   
-  // Step 4: Notificaciones y configuración
+  // Step 4: Configuración
+  observaciones?: string;
   notificar_email?: boolean;
   notificar_sms?: boolean;
-  observaciones?: string;
   asignar_a_usuario_id?: number;
+}
+
+export interface MultaWizardStep {
+  numero: number;
+  titulo: string;
+  descripcion: string;
+  completado: boolean;
+  activo: boolean;
+}
+
+export interface MultaActividad {
+  id: number;
+  multa_id: number;
+  tipo: 'creada' | 'modificada' | 'pagada' | 'apelada' | 'anulada';
+  descripcion: string;
+  usuario_id: number;
+  usuario_nombre: string;
+  fecha: string;
+}
+
+export interface MultasResumen {
+  estadisticas: MultasEstadisticas;
+  multas_recientes: Multa[];
 }
