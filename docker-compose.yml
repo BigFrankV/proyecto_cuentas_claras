@@ -53,21 +53,6 @@ services:
     ports:
       - "8080:80"
 
-  frontend:
-    build:
-      context: ./ccfrontend
-      args:
-        - VITE_API_URL=${VITE_API_URL:-http://host.docker.internal:3000}
-    image: cuentas-claras-frontend:latest
-    ports:
-      - '5173:80'
-    environment:
-      - VITE_API_URL=${VITE_API_URL:-http://host.docker.internal:3000}
-    restart: unless-stopped
 
 volumes:
   db_data:
-
-networks:
-  default:
-    driver: bridge

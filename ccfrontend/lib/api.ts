@@ -1,11 +1,12 @@
 import axios from 'axios';
 
-// Configuración base de la API
-const API_BASE_URL = 'http://localhost:3000';
+// Configuración base de la API - usa la variable de entorno
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_FULL_URL = `${API_BASE_URL}`;
 
 // Crear instancia de axios
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_FULL_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

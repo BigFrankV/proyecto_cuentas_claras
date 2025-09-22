@@ -1,9 +1,11 @@
+// ...existing code...
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
+const { requireCommunity } = require('../middleware/tenancy');
 
 /**
  * @openapi
@@ -12,59 +14,18 @@ const { authorize } = require('../middleware/authorize');
  *     description: Gestión de medidores y lecturas
  */
 
-/**
- * @openapi
- * /medidores/comunidad/{comunidadId}:
- *   get:
- *     tags: [Medidores]
- *     summary: Listar medidores de una comunidad
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: comunidadId
- *         schema:
- *           type: integer
- *         required: true
- *     responses:
- *       200:
- *         description: Lista de medidores
- */
+// listar medidores por comunidad (miembros)
+router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const [rows] = await db.query('SELECT id, tipo, codigo, es_compartido FROM medidor WHERE comunidad_id = ? LIMIT 500', [comunidadId]);
+  res.json(rows);
+});
 
-router.get('/comunidad/:comunidadId', authenticate, async (req, res) => { const comunidadId = req.params.comunidadId; const [rows] = await db.query('SELECT id, tipo, codigo, es_compartido FROM medidor WHERE comunidad_id = ? LIMIT 500', [comunidadId]); res.json(rows); });
-
-/**
- * @openapi
- * /medidores/comunidad/{comunidadId}:
- *   post:
- *     tags: [Medidores]
- *     summary: Crear medidor en comunidad
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: comunidadId
- *         schema:
- *           type: integer
- *         required: true
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               unidad_id:
- *                 type: integer
- *               tipo:
- *                 type: string
- *               codigo:
- *                 type: string
- *     responses:
- *       201:
- *         description: Created
- */
-router.post('/comunidad/:comunidadId', [authenticate, authorize('admin','superadmin'), body('tipo').notEmpty(), body('codigo').notEmpty()], async (req, res) => { const comunidadId = req.params.comunidadId; const { unidad_id, tipo, codigo, es_compartido } = req.body; try { const [result] = await db.query('INSERT INTO medidor (comunidad_id, unidad_id, tipo, codigo, es_compartido) VALUES (?,?,?,?,?)', [comunidadId, unidad_id || null, tipo, codigo, es_compartido ? 1 : 0]); const [row] = await db.query('SELECT id, tipo, codigo FROM medidor WHERE id = ? LIMIT 1', [result.insertId]); res.status(201).json(row[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
+// crear medidor (admin de comunidad o superadmin)
+router.post('/comunidad/:comunidadId', [authenticate, requireCommunity('comunidadId', ['admin']), body('tipo').notEmpty(), body('codigo').notEmpty()], async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId); const { unidad_id, tipo, codigo, es_compartido } = req.body;
+  try { const [result] = await db.query('INSERT INTO medidor (comunidad_id, unidad_id, tipo, codigo, es_compartido) VALUES (?,?,?,?,?)', [comunidadId, unidad_id || null, tipo, codigo, es_compartido ? 1 : 0]); const [row] = await db.query('SELECT id, tipo, codigo FROM medidor WHERE id = ? LIMIT 1', [result.insertId]); res.status(201).json(row[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
+});
 
 router.get('/:id', authenticate, async (req, res) => { const id = req.params.id; const [rows] = await db.query('SELECT * FROM medidor WHERE id = ? LIMIT 1', [id]); if (!rows.length) return res.status(404).json({ error: 'not found' }); res.json(rows[0]); });
 
@@ -72,40 +33,9 @@ router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, 
 
 router.delete('/:id', authenticate, authorize('superadmin','admin'), async (req, res) => { const id = req.params.id; try { await db.query('DELETE FROM medidor WHERE id = ?', [id]); res.status(204).end(); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
 
-// lecturas
+// lecturas - list requires membership on the medidor's comunidad? keep authenticate for now; medidores/:id/lecturas for medidor owner/comm members
 router.get('/:id/lecturas', authenticate, async (req, res) => { const id = req.params.id; const [rows] = await db.query('SELECT id, fecha, lectura, periodo FROM lectura_medidor WHERE medidor_id = ? ORDER BY periodo DESC LIMIT 200', [id]); res.json(rows); });
 
-/**
- * @openapi
- * /medidores/{id}/lecturas:
- *   post:
- *     tags: [Medidores]
- *     summary: Agregar lectura a un medidor
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               fecha:
- *                 type: string
- *               lectura:
- *                 type: number
- *               periodo:
- *                 type: string
- *     responses:
- *       201:
- *         description: Created
- */
 router.post('/:id/lecturas', [authenticate, authorize('admin','superadmin'), body('fecha').notEmpty(), body('lectura').notEmpty(), body('periodo').notEmpty()], async (req, res) => { const id = req.params.id; const { fecha, lectura, periodo } = req.body; try { const [result] = await db.query('INSERT INTO lectura_medidor (medidor_id, fecha, lectura, periodo) VALUES (?,?,?,?)', [id, fecha, lectura, periodo]); const [row] = await db.query('SELECT id, fecha, lectura, periodo FROM lectura_medidor WHERE id = ? LIMIT 1', [result.insertId]); res.status(201).json(row[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
 
 // consumos stub

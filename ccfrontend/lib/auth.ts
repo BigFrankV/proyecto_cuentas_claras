@@ -24,25 +24,37 @@ export interface Persona {
   direccion?: string;
 }
 
+export interface Membership {
+  comunidadId: number;
+  rol: string;
+  desde?: string;
+  hasta?: string;
+  activo?: boolean;
+}
+
+// ✅ CORREGIR: Interfaz User con is_superadmin opcional inicialmente
 export interface User {
-  id: string;
+  id: number;
   username: string;
+  is_superadmin?: boolean; // ✅ CAMBIAR a opcional temporalmente
   email?: string;
   persona_id?: number;
-  is_superadmin?: boolean;
-  roles?: string[];
+  nombres?: string;
+  apellidos?: string;
   comunidad_id?: number;
-  totp_enabled?: boolean;
+  roles?: string[];
+  memberships?: Membership[];
+  is_2fa_enabled?: boolean;
+  
+  // Campos adicionales opcionales
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
   activo?: boolean;
   created_at?: string;
   
   // Datos de persona relacionados
   persona?: Persona | null;
-  
-  // Campos adicionales de perfil (deprecated - usar persona)
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
 }
 
 export interface AuthResponse {
@@ -68,6 +80,7 @@ interface JWTPayload {
   roles?: string[];
   comunidad_id?: number;
   is_superadmin?: boolean;
+  memberships?: Membership[]; // ✅ AGREGAR
   twoFactor?: boolean;
   iat: number;
   exp: number;
@@ -107,23 +120,18 @@ class AuthService {
         const decodedToken = jwtDecode<JWTPayload>(token);
         console.log('🔍 Token decodificado:', decodedToken);
 
-        // Crear objeto usuario básico desde el token
-        const userObj: Partial<User> = {
-          id: decodedToken.sub.toString(),
+        // ✅ CORREGIR: Crear objeto usuario con valores por defecto seguros
+        const userObj: User = {
+          id: decodedToken.sub,
           username: decodedToken.username,
-          is_superadmin: decodedToken.is_superadmin || false,
+          persona_id: decodedToken.persona_id,
+          is_superadmin: Boolean(decodedToken.is_superadmin), // ✅ Convertir a boolean explícitamente
           roles: decodedToken.roles || [],
+          comunidad_id: decodedToken.comunidad_id,
+          memberships: decodedToken.memberships || [],
         };
 
-        if (decodedToken.persona_id !== undefined) {
-          userObj.persona_id = decodedToken.persona_id;
-        }
-
-        if (decodedToken.comunidad_id !== undefined) {
-          userObj.comunidad_id = decodedToken.comunidad_id;
-        }
-
-        user = userObj as User;
+        user = userObj;
 
         console.log('🔍 Usuario extraído del token:', user);
         
@@ -148,15 +156,6 @@ class AuthService {
       localStorage.setItem('user_data', JSON.stringify(user));
 
       console.log('💾 Datos guardados en localStorage');
-      console.log(
-        '💾 Token en localStorage:',
-        localStorage.getItem('auth_token')
-      );
-      console.log(
-        '💾 Usuario en localStorage:',
-        localStorage.getItem('user_data')
-      );
-
       return { token, user };
     } catch (error: any) {
       console.error('Error en login:', error);
@@ -197,23 +196,18 @@ class AuthService {
         const decodedToken = jwtDecode<JWTPayload>(token);
         console.log('🔍 Token 2FA decodificado:', decodedToken);
 
-        // Crear objeto usuario básico desde el token
-        const userObj: Partial<User> = {
-          id: decodedToken.sub.toString(),
+        // ✅ CORREGIR: Crear objeto usuario con valores por defecto seguros
+        const userObj: User = {
+          id: decodedToken.sub,
           username: decodedToken.username,
-          is_superadmin: decodedToken.is_superadmin || false,
+          persona_id: decodedToken.persona_id,
+          is_superadmin: Boolean(decodedToken.is_superadmin), // ✅ Convertir a boolean explícitamente
           roles: decodedToken.roles || [],
+          comunidad_id: decodedToken.comunidad_id,
+          memberships: decodedToken.memberships || [],
         };
 
-        if (decodedToken.persona_id !== undefined) {
-          userObj.persona_id = decodedToken.persona_id;
-        }
-
-        if (decodedToken.comunidad_id !== undefined) {
-          userObj.comunidad_id = decodedToken.comunidad_id;
-        }
-
-        user = userObj as User;
+        user = userObj;
 
         console.log('🔍 Usuario extraído del token 2FA:', user);
         
@@ -306,21 +300,25 @@ class AuthService {
       const response = await apiClient.get('/auth/me');
       const userData = response.data;
       
-      // Asegurar que tenemos el campo totp_enabled
+      // ✅ CORREGIR: Mapear correctamente todos los campos
       const user: User = {
-        id: userData.id?.toString() || userData.sub?.toString(),
+        id: userData.id || userData.sub,
         username: userData.username,
         email: userData.email,
         persona_id: userData.persona_id,
+        nombres: userData.nombres,
+        apellidos: userData.apellidos,
         is_superadmin: userData.is_superadmin || false,
         roles: userData.roles || [],
         comunidad_id: userData.comunidad_id,
-        totp_enabled: userData.totp_enabled || false,
+        memberships: userData.memberships || [], // ✅ AGREGAR
+        is_2fa_enabled: userData.totp_enabled || userData.is_2fa_enabled || false,
         firstName: userData.firstName,
         lastName: userData.lastName,
         phone: userData.phone,
         activo: userData.activo,
         created_at: userData.created_at,
+        persona: userData.persona,
       };
       
       console.log('✅ Usuario actual obtenido del servidor:', user);
