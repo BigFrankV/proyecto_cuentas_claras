@@ -1,9 +1,11 @@
+// ...existing code...
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
+const { requireCommunity } = require('../middleware/tenancy');
 
 /**
  * @openapi
@@ -11,54 +13,15 @@ const { authorize } = require('../middleware/authorize');
  *   get:
  *     tags: [CentrosCosto]
  *     summary: Listar centros de costo por comunidad
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: comunidadId
- *         schema:
- *           type: integer
- *         required: true
- *     responses:
- *       200:
- *         description: Lista de centros de costo
  */
-router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
-  const comunidadId = req.params.comunidadId;
+router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
   const [rows] = await db.query('SELECT id, nombre FROM centro_costo WHERE comunidad_id = ? LIMIT 500', [comunidadId]);
   res.json(rows);
 });
 
-/**
- * @openapi
- * /comunidades/{comunidadId}/centros-costo:
- *   post:
- *     tags: [CentrosCosto]
- *     summary: Crear centro de costo
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: comunidadId
- *         schema:
- *           type: integer
- *         required: true
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               nombre:
- *                 type: string
- *     responses:
- *       201:
- *         description: Created
- */
-router.post('/comunidad/:comunidadId', [authenticate, authorize('admin','superadmin'), body('nombre').notEmpty()], async (req, res) => {
-  const errors = validationResult(req); if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const comunidadId = req.params.comunidadId; const { nombre } = req.body;
+router.post('/comunidad/:comunidadId', [authenticate, requireCommunity('comunidadId', ['admin']), body('nombre').notEmpty()], async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId); const { nombre } = req.body;
   try { const [result] = await db.query('INSERT INTO centro_costo (comunidad_id, nombre) VALUES (?,?)', [comunidadId, nombre]); const [row] = await db.query('SELECT id, nombre FROM centro_costo WHERE id = ? LIMIT 1', [result.insertId]); res.status(201).json(row[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
 });
 

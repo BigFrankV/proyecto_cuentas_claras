@@ -1,9 +1,11 @@
+// ...existing code...
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
+const { requireCommunity } = require('../middleware/tenancy');
 
 /**
  * @openapi
@@ -11,49 +13,12 @@ const { authorize } = require('../middleware/authorize');
  *   - name: Cargos
  *     description: Cargos por unidad y operaciones relacionadas
  */
-/**
- * @openapi
- * /cargos/comunidad/{comunidadId}:
- *   get:
- *     tags: [Cargos]
- *     summary: Listar cargos con filtros
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: comunidadId
- *         schema:
- *           type: integer
- *         required: true
- *       - in: query
- *         name: estado
- *         schema:
- *           type: string
- *       - in: query
- *         name: unidad
- *         schema:
- *           type: integer
- *       - in: query
- *         name: periodo
- *         schema:
- *           type: string
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Lista de cargos
- */
 
-// list cargos by comunidad with filters
-router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
-  const comunidadId = req.params.comunidadId; const { estado, unidad, periodo, page=1, limit=100 } = req.query; const offset=(page-1)*limit;
-  // basic filters
+// list cargos by comunidad with filters (members)
+router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { estado, unidad, periodo, page=1, limit=100 } = req.query;
+  const offset = (page-1)*limit;
   const conditions = ['comunidad_id = ?']; const params = [comunidadId];
   if (estado) { conditions.push('estado = ?'); params.push(estado); }
   if (unidad) { conditions.push('unidad_id = ?'); params.push(unidad); }
@@ -68,14 +33,8 @@ router.get('/:id', authenticate, async (req, res) => { const id = req.params.id;
 
 router.get('/unidad/:id', authenticate, async (req, res) => { const unidadId = req.params.id; const [rows] = await db.query('SELECT id, monto_total, saldo, estado FROM cargo_unidad WHERE unidad_id = ? ORDER BY created_at DESC LIMIT 500', [unidadId]); res.json(rows); });
 
-router.post('/:id/recalcular-interes', authenticate, authorize('admin','superadmin'), async (req, res) => { // stub
-  // In production recalculate intereses based on configuration
-  res.json({ ok: true, note: 'stub: recalculate interest' });
-});
+router.post('/:id/recalcular-interes', authenticate, authorize('admin','superadmin'), async (req, res) => { res.json({ ok: true, note: 'stub: recalculate interest' }); });
 
-router.post('/:id/notificar', authenticate, authorize('admin','superadmin'), async (req, res) => { // stub
-  // Notify responsible person(s) about charge
-  res.json({ ok: true, note: 'stub: notify about charge' });
-});
+router.post('/:id/notificar', authenticate, authorize('admin','superadmin'), async (req, res) => { res.json({ ok: true, note: 'stub: notify about charge' }); });
 
 module.exports = router;
