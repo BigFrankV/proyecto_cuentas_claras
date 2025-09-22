@@ -561,13 +561,13 @@ export default function ComunidadDetallePage() {
                       <strong>{comunidad?.totalUnidades || 0}</strong>
                     </div>
                     <div className="d-flex justify-content-between mb-3">
-                      <span>Unidades Activas:</span>
-                      <strong>{comunidad?.unidadesActivas || 0}</strong>
+                      <span>Unidades Ocupadas:</span>
+                      <strong>{comunidad?.unidadesOcupadas || 0}</strong>
                     </div>
                     <div className="d-flex justify-content-between">
-                      <span>Tasa de Actividad:</span>
+                      <span>Tasa de Ocupación:</span>
                       <strong className="text-primary">
-                        {comunidad?.totalUnidades ? ((comunidad?.unidadesActivas || 0) / comunidad.totalUnidades * 100).toFixed(1) : '0.0'}%
+                        {comunidad?.totalUnidades ? ((comunidad?.unidadesOcupadas || 0) / comunidad.totalUnidades * 100).toFixed(1) : '0.0'}%
                       </strong>
                     </div>
                   </div>
