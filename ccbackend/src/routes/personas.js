@@ -31,12 +31,55 @@ const { authorize, allowSelfOrRoles } = require('../middleware/authorize');
  */
 router.get('/', authenticate, async (req, res) => {
   const { rut } = req.query;
-  if (rut) {
-    const [rows] = await db.query('SELECT * FROM persona WHERE rut = ? LIMIT 1', [rut]);
-    return res.json(rows[0] || null);
+  
+  try {
+    // ✅ Superadmin ve TODAS las personas
+    if (req.user.is_superadmin) {
+      if (rut) {
+        const [rows] = await db.query('SELECT * FROM persona WHERE rut = ? LIMIT 1', [rut]);
+        return res.json(rows[0] || null);
+      }
+      const [rows] = await db.query('SELECT id, rut, dv, nombres, apellidos, email, telefono FROM persona LIMIT 500');
+      return res.json(rows);
+    }
+
+    // ✅ Usuarios normales solo ven personas de SUS comunidades
+    const personaId = req.user.persona_id;
+    if (!personaId) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+
+    if (rut) {
+      const [rows] = await db.query(`
+        SELECT DISTINCT p.* 
+        FROM persona p
+        JOIN membresia_comunidad mc ON p.id = mc.persona_id
+        WHERE p.rut = ? AND mc.comunidad_id IN (
+          SELECT comunidad_id FROM membresia_comunidad 
+          WHERE persona_id = ? AND activo = 1
+        )
+        LIMIT 1
+      `, [rut, personaId]);
+      return res.json(rows[0] || null);
+    }
+
+    const [rows] = await db.query(`
+      SELECT DISTINCT p.id, p.rut, p.dv, p.nombres, p.apellidos, p.email, p.telefono 
+      FROM persona p
+      JOIN membresia_comunidad mc ON p.id = mc.persona_id
+      WHERE mc.comunidad_id IN (
+        SELECT comunidad_id FROM membresia_comunidad 
+        WHERE persona_id = ? AND activo = 1
+      )
+      ORDER BY p.apellidos, p.nombres
+      LIMIT 500
+    `, [personaId]);
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
   }
-  const [rows] = await db.query('SELECT id, rut, dv, nombres, apellidos, email, telefono FROM persona LIMIT 500');
-  res.json(rows);
 });
 
 /**

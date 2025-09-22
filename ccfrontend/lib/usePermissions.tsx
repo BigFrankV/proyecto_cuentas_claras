@@ -1,3 +1,4 @@
+import React from 'react'; // ✅ AGREGAR ESTA LÍNEA
 import { useAuth } from './useAuth';
 
 // Definición de roles del sistema
@@ -78,21 +79,17 @@ export function usePermissions() {
       return UserRole.SUPERUSER;
     }
 
-    // Si tiene roles específicos, usar el primero (o implementar lógica más compleja)
+    // Si tiene roles específicos, usar el más alto
     if (user.roles && user.roles.length > 0) {
-      const role = user?.roles?.[0]?.toLowerCase() || 'guest';
-      switch (role) {
-        case 'admin':
-          return UserRole.ADMIN;
-        case 'manager':
-          return UserRole.MANAGER;
-        default:
-          return UserRole.USER;
-      }
+      const roles = user.roles.map((r: any) => r.toLowerCase()); // ✅ AGREGAR tipo any
+      
+      if (roles.includes('admin')) return UserRole.ADMIN;
+      if (roles.includes('manager') || roles.includes('comite')) return UserRole.MANAGER;
+      if (roles.includes('propietario') || roles.includes('residente')) return UserRole.USER;
     }
 
     // Patrick es superuser por defecto (fallback para compatibilidad)
-    if (user.username === 'patrick') {
+    if (user.username === 'patrick' || user.username === 'patricio.quintanilla') {
       return UserRole.SUPERUSER;
     }
 
@@ -103,10 +100,57 @@ export function usePermissions() {
 
   const currentRole = getUserRole();
 
-  // Verificar si el usuario tiene un permiso específico
-  const hasPermission = (permission: Permission): boolean => {
+  // ✅ NUEVO: Verificar acceso a comunidad específica
+  const hasAccessToCommunity = (communityId?: number): boolean => {
+    // Superadmin ve todas las comunidades
+    if (user?.is_superadmin) return true;
+    
+    // Si no hay comunidad específica, permitir
+    if (!communityId) return true;
+    
+    // Verificar si el usuario pertenece a esa comunidad
+    if (user?.memberships && Array.isArray(user.memberships)) {
+      return user.memberships.some((membership: any) => 
+        membership.comunidadId === communityId
+      );
+    }
+    
+    // Fallback: verificar comunidad_id principal
+    return user?.comunidad_id === communityId;
+  };
+
+  // ✅ NUEVO: Obtener comunidades del usuario
+  const getUserCommunities = (): Array<{comunidadId: number, rol: string}> => {
+    if (user?.is_superadmin) return []; // Superadmin ve todas
+    return user?.memberships || [];
+  };
+
+  // ✅ NUEVO: Verificar si tiene un rol específico en una comunidad
+  const hasRoleInCommunity = (communityId: number, roleToCheck: string): boolean => {
+    if (user?.is_superadmin) return true;
+    
+    return user?.memberships?.some((membership: any) => 
+      membership.comunidadId === communityId && 
+      membership.rol.toLowerCase() === roleToCheck.toLowerCase()
+    ) || false;
+  };
+
+  // ✅ MODIFICADO: Verificar permisos con contexto de comunidad
+  const hasPermission = (permission: Permission, communityId?: number): boolean => {
     const rolePermissions = ROLE_PERMISSIONS[currentRole] || [];
-    return rolePermissions.includes(permission);
+    const hasBasePermission = rolePermissions.includes(permission);
+    
+    // Si no tiene el permiso base, denegar
+    if (!hasBasePermission) return false;
+    
+    // Si es superadmin, permitir siempre
+    if (user?.is_superadmin) return true;
+    
+    // Si no se especifica comunidad, verificar solo el permiso base
+    if (!communityId) return true;
+    
+    // Verificar acceso a la comunidad específica
+    return hasAccessToCommunity(communityId);
   };
 
   // Verificar si el usuario tiene un rol específico o superior
@@ -138,6 +182,21 @@ export function usePermissions() {
     return ROLE_PERMISSIONS[currentRole] || [];
   };
 
+  // ✅ NUEVO: Verificar si puede administrar una comunidad específica
+  const canManageCommunity = (communityId?: number): boolean => {
+    return hasPermission(Permission.MANAGE_COMMUNITIES, communityId);
+  };
+
+  // ✅ NUEVO: Verificar si puede ver finanzas de una comunidad específica  
+  const canViewCommunityFinances = (communityId?: number): boolean => {
+    return hasPermission(Permission.VIEW_FINANCES, communityId);
+  };
+
+  // ✅ NUEVO: Verificar si puede gestionar usuarios de una comunidad específica
+  const canManageCommunityUsers = (communityId?: number): boolean => {
+    return hasPermission(Permission.MANAGE_USERS, communityId);
+  };
+
   return {
     currentRole,
     hasPermission,
@@ -145,7 +204,16 @@ export function usePermissions() {
     isSuperUser,
     isAdmin,
     getUserPermissions,
-    // Helpers para UI
+    
+    // ✅ NUEVAS FUNCIONES para multi-tenancy
+    hasAccessToCommunity,
+    getUserCommunities,
+    hasRoleInCommunity,
+    canManageCommunity,
+    canViewCommunityFinances,
+    canManageCommunityUsers,
+    
+    // Helpers para UI (actualizados para soportar comunidad específica)
     canManageCommunities: hasPermission(Permission.MANAGE_COMMUNITIES),
     canManageFinances: hasPermission(Permission.MANAGE_FINANCES),
     canManageUsers: hasPermission(Permission.MANAGE_USERS),
@@ -159,6 +227,7 @@ export function usePermissions() {
 interface PermissionGuardProps {
   permission?: Permission;
   role?: UserRole;
+  communityId?: number;
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }
@@ -166,13 +235,14 @@ interface PermissionGuardProps {
 export function PermissionGuard({
   permission,
   role,
+  communityId,
   children,
   fallback = null,
 }: PermissionGuardProps) {
   const { hasPermission, hasRole } = usePermissions();
 
   const hasAccess =
-    (permission && hasPermission(permission)) ||
+    (permission && hasPermission(permission, communityId)) ||
     (role && hasRole(role)) ||
     (!permission && !role); // Si no se especifica permiso/rol, mostrar siempre
 

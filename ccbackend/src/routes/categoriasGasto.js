@@ -1,68 +1,27 @@
+// ...existing code...
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
+const { requireCommunity } = require('../middleware/tenancy');
 
 /**
  * @openapi
  * /comunidades/{comunidadId}/categorias-gasto:
  *   get:
  *     tags: [CategoriasGasto]
- *     summary: Listar categorías de gasto por comunidad
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: comunidadId
- *         schema:
- *           type: integer
- *         required: true
- *     responses:
- *       200:
- *         description: Lista de categorías
  */
-router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
-  const comunidadId = req.params.comunidadId;
+router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
   const [rows] = await db.query('SELECT id, nombre FROM categoria_gasto WHERE comunidad_id = ? LIMIT 500', [comunidadId]);
   res.json(rows);
 });
 
-/**
- * @openapi
- * /comunidades/{comunidadId}/categorias-gasto:
- *   post:
- *     tags: [CategoriasGasto]
- *     summary: Crear categoría de gasto
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: comunidadId
- *         schema:
- *           type: integer
- *         required: true
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               nombre:
- *                 type: string
- *               tipo:
- *                 type: string
- *               cta_contable:
- *                 type: string
- *     responses:
- *       201:
- *         description: Created
- */
-router.post('/comunidad/:comunidadId', [authenticate, authorize('admin','superadmin'), body('nombre').notEmpty()], async (req, res) => {
+router.post('/comunidad/:comunidadId', [authenticate, requireCommunity('comunidadId', ['admin']), body('nombre').notEmpty()], async (req, res) => {
   const errors = validationResult(req); if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const comunidadId = req.params.comunidadId; const { nombre, tipo, cta_contable, activa } = req.body;
+  const comunidadId = Number(req.params.comunidadId); const { nombre, tipo, cta_contable, activa } = req.body;
   const allowedTipos = ['operacional','extraordinario','fondo_reserva','multas','consumo'];
   const tipoVal = allowedTipos.includes(tipo) ? tipo : 'operacional';
   try {
