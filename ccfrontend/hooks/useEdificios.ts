@@ -7,7 +7,6 @@ import {
   Torre,
   Unidad 
 } from '@/types/edificios';
-import api from '@/lib/api/edificios';
 
 // Hook para manejo de edificios
 export const useEdificios = () => {
@@ -15,12 +14,21 @@ export const useEdificios = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Función para importar API dinámicamente
+  const getApi = useCallback(async () => {
+    const { default: api } = await import('@/lib/api/edificios');
+    return api;
+  }, []);
+
   // Cargar todos los edificios
   const fetchEdificios = useCallback(async (filters?: EdificioFilters) => {
+    if (typeof window === 'undefined') return;
+    
     setLoading(true);
     setError(null);
     
     try {
+      const api = await getApi();
       const data = await api.edificios.getAll(filters);
       setEdificios(data);
     } catch (err) {
@@ -29,14 +37,17 @@ export const useEdificios = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getApi]);
 
   // Crear un nuevo edificio
   const createEdificio = useCallback(async (data: EdificioFormData): Promise<boolean> => {
+    if (typeof window === 'undefined') return false;
+    
     setLoading(true);
     setError(null);
     
     try {
+      const api = await getApi();
       const newEdificio = await api.edificios.create(data);
       if (newEdificio) {
         setEdificios(prev => [...prev, newEdificio]);
@@ -50,14 +61,17 @@ export const useEdificios = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getApi]);
 
   // Actualizar un edificio
   const updateEdificio = useCallback(async (id: string, data: Partial<EdificioFormData>): Promise<boolean> => {
+    if (typeof window === 'undefined') return false;
+    
     setLoading(true);
     setError(null);
     
     try {
+      const api = await getApi();
       const updatedEdificio = await api.edificios.update(id, data);
       if (updatedEdificio) {
         setEdificios(prev => 
@@ -75,14 +89,17 @@ export const useEdificios = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getApi]);
 
   // Eliminar un edificio
   const deleteEdificio = useCallback(async (id: string): Promise<boolean> => {
+    if (typeof window === 'undefined') return false;
+    
     setLoading(true);
     setError(null);
     
     try {
+      const api = await getApi();
       await api.edificios.delete(id);
       setEdificios(prev => prev.filter(edificio => edificio.id !== id));
       return true;
@@ -93,87 +110,82 @@ export const useEdificios = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getApi]);
 
-  // Obtener un edificio por ID
+  // Obtener edificio por ID
   const getEdificioById = useCallback(async (id: string): Promise<Edificio | null> => {
+    if (typeof window === 'undefined') return null;
+    
     setLoading(true);
     setError(null);
     
     try {
+      const api = await getApi();
       const edificio = await api.edificios.getById(id);
       return edificio;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar el edificio');
-      console.error('Error fetching edificio by id:', err);
+      console.error('Error getting edificio by id:', err);
       return null;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getApi]);
 
-  // Verificar dependencias antes de eliminar
+  // Verificar dependencias
   const checkDependencies = useCallback(async (id: string) => {
+    if (typeof window === 'undefined') return {};
+    
     try {
+      const api = await getApi();
       return await api.edificios.checkDependencies(id);
     } catch (err) {
       console.error('Error checking dependencies:', err);
+      return {};
+    }
+  }, [getApi]);
+
+  // Obtener estadísticas
+  const getStats = useCallback(async (): Promise<EdificioStats | null> => {
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      const api = await getApi();
+      return await api.stats.getStats();
+    } catch (err) {
+      console.error('Error getting stats:', err);
       return null;
     }
-  }, []);
+  }, [getApi]);
 
-  // Calcular estadísticas locales (fallback)
-  const getStats = useCallback((): EdificioStats => {
-    const totalEdificios = edificios.length;
-    const edificiosActivos = edificios.filter(e => e.estado === 'activo').length;
-    const totalUnidades = edificios.reduce((sum, e) => sum + e.totalUnidades, 0);
-    const unidadesOcupadas = edificios.reduce((sum, e) => sum + e.totalUnidadesOcupadas, 0);
-    const ocupacion = totalUnidades > 0 ? (unidadesOcupadas / totalUnidades) * 100 : 0;
+  // Filtrar edificios
+  const filterEdificios = useCallback((filters: EdificioFilters) => {
+    return edificios.filter(edificio => {
+      if (filters.busqueda) {
+        const search = filters.busqueda.toLowerCase();
+        if (
+          !edificio.nombre.toLowerCase().includes(search) &&
+          !edificio.codigo?.toLowerCase().includes(search) &&
+          !edificio.direccion.toLowerCase().includes(search)
+        ) {
+          return false;
+        }
+      }
 
-    return {
-      totalEdificios,
-      edificiosActivos,
-      totalUnidades,
-      unidadesOcupadas,
-      ocupacion
-    };
-  }, [edificios]);
+      if (filters.comunidadId && edificio.comunidadId !== filters.comunidadId) {
+        return false;
+      }
 
-  // Filtrar edificios localmente (usado cuando los filtros se manejan en frontend)
-  const filterEdificios = useCallback((filters: EdificioFilters): Edificio[] => {
-    let filtered = [...edificios];
+      if (filters.estado && edificio.estado !== filters.estado) {
+        return false;
+      }
 
-    if (filters.busqueda) {
-      const searchTerm = filters.busqueda.toLowerCase();
-      filtered = filtered.filter(edificio => 
-        edificio.nombre.toLowerCase().includes(searchTerm) ||
-        edificio.direccion.toLowerCase().includes(searchTerm) ||
-        edificio.codigo?.toLowerCase().includes(searchTerm) ||
-        edificio.comunidadNombre?.toLowerCase().includes(searchTerm)
-      );
-    }
+      if (filters.tipo && edificio.tipo !== filters.tipo) {
+        return false;
+      }
 
-    if (filters.estado) {
-      filtered = filtered.filter(edificio => edificio.estado === filters.estado);
-    }
-
-    if (filters.tipo) {
-      filtered = filtered.filter(edificio => edificio.tipo === filters.tipo);
-    }
-
-    if (filters.comunidadId) {
-      filtered = filtered.filter(edificio => edificio.comunidadId === filters.comunidadId);
-    }
-
-    if (filters.fechaDesde) {
-      filtered = filtered.filter(edificio => edificio.fechaCreacion >= filters.fechaDesde!);
-    }
-
-    if (filters.fechaHasta) {
-      filtered = filtered.filter(edificio => edificio.fechaCreacion <= filters.fechaHasta!);
-    }
-
-    return filtered;
+      return true;
+    });
   }, [edificios]);
 
   return {
@@ -198,23 +210,22 @@ export const useEdificiosStats = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchStats = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    
     setLoading(true);
     setError(null);
     
     try {
+      const { default: api } = await import('@/lib/api/edificios');
       const data = await api.stats.getStats();
       setStats(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar las estadísticas');
+      setError(err instanceof Error ? err.message : 'Error al cargar estadísticas');
       console.error('Error fetching stats:', err);
     } finally {
       setLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
 
   return {
     stats,
@@ -230,30 +241,32 @@ export const useTorres = (edificioId: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Cargar torres de un edificio
   const fetchTorres = useCallback(async () => {
-    if (!edificioId) return;
+    if (!edificioId || typeof window === 'undefined') return;
     
     setLoading(true);
     setError(null);
     
     try {
+      const { default: api } = await import('@/lib/api/edificios');
       const data = await api.torres.getByEdificio(edificioId);
       setTorres(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar las torres');
+      setError(err instanceof Error ? err.message : 'Error al cargar torres');
       console.error('Error fetching torres:', err);
     } finally {
       setLoading(false);
     }
   }, [edificioId]);
 
-  // Crear una nueva torre
-  const createTorre = useCallback(async (data: { nombre: string; codigo?: string; pisos: number; unidadesPorPiso: number; observaciones?: string }): Promise<boolean> => {
+  const createTorre = useCallback(async (data: any): Promise<boolean> => {
+    if (!edificioId || typeof window === 'undefined') return false;
+    
     setLoading(true);
     setError(null);
     
     try {
+      const { default: api } = await import('@/lib/api/edificios');
       const newTorre = await api.torres.create(edificioId, data);
       if (newTorre) {
         setTorres(prev => [...prev, newTorre]);
@@ -261,17 +274,13 @@ export const useTorres = (edificioId: string) => {
       }
       return false;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear la torre');
+      setError(err instanceof Error ? err.message : 'Error al crear torre');
       console.error('Error creating torre:', err);
       return false;
     } finally {
       setLoading(false);
     }
   }, [edificioId]);
-
-  useEffect(() => {
-    fetchTorres();
-  }, [fetchTorres]);
 
   return {
     torres,
@@ -283,37 +292,37 @@ export const useTorres = (edificioId: string) => {
 };
 
 // Hook para manejo de unidades
-export const useUnidades = (edificioId?: string, torreId?: string) => {
+export const useUnidades = (edificioId: string, torreId?: string) => {
   const [unidades, setUnidades] = useState<Unidad[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Cargar unidades
   const fetchUnidades = useCallback(async () => {
-    if (!edificioId) return;
+    if (!edificioId || typeof window === 'undefined') return;
     
     setLoading(true);
     setError(null);
     
     try {
+      const { default: api } = await import('@/lib/api/edificios');
       const data = await api.unidades.getByEdificio(edificioId, torreId);
       setUnidades(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar las unidades');
+      setError(err instanceof Error ? err.message : 'Error al cargar unidades');
       console.error('Error fetching unidades:', err);
     } finally {
       setLoading(false);
     }
   }, [edificioId, torreId]);
 
-  // Crear una nueva unidad
-  const createUnidad = useCallback(async (data: { numero: string; piso: number; torreId?: string; tipo: 'apartamento' | 'casa' | 'local' | 'oficina' | 'deposito' | 'parqueadero'; area: number; balcon?: boolean; parqueadero?: boolean; deposito?: boolean }): Promise<boolean> => {
-    if (!edificioId) return false;
+  const createUnidad = useCallback(async (data: any): Promise<boolean> => {
+    if (!edificioId || typeof window === 'undefined') return false;
     
     setLoading(true);
     setError(null);
     
     try {
+      const { default: api } = await import('@/lib/api/edificios');
       const newUnidad = await api.unidades.create(edificioId, data);
       if (newUnidad) {
         setUnidades(prev => [...prev, newUnidad]);
@@ -321,17 +330,13 @@ export const useUnidades = (edificioId?: string, torreId?: string) => {
       }
       return false;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear la unidad');
+      setError(err instanceof Error ? err.message : 'Error al crear unidad');
       console.error('Error creating unidad:', err);
       return false;
     } finally {
       setLoading(false);
     }
   }, [edificioId]);
-
-  useEffect(() => {
-    fetchUnidades();
-  }, [fetchUnidades]);
 
   return {
     unidades,
@@ -344,84 +349,78 @@ export const useUnidades = (edificioId?: string, torreId?: string) => {
 
 // Hook para utilidades de edificios
 export const useEdificiosUtils = () => {
-  const [loading, setLoading] = useState(false);
-
   const searchEdificios = useCallback(async (query: string, limit = 10) => {
-    setLoading(true);
+    if (typeof window === 'undefined') return [];
+    
     try {
+      const { default: api } = await import('@/lib/api/edificios');
       return await api.utils.search(query, limit);
     } catch (err) {
       console.error('Error searching edificios:', err);
       return [];
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   const getComunidadesOpciones = useCallback(async () => {
-    setLoading(true);
+    if (typeof window === 'undefined') return [];
+    
     try {
+      const { default: api } = await import('@/lib/api/edificios');
       return await api.utils.getComunidadesOpciones();
     } catch (err) {
-      console.error('Error fetching comunidades:', err);
+      console.error('Error getting comunidades opciones:', err);
       return [];
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   const validarCodigo = useCallback(async (edificioId: string, codigo: string, tipo: 'edificio' | 'torre' | 'unidad') => {
+    if (typeof window === 'undefined') return false;
+    
     try {
+      const { default: api } = await import('@/lib/api/edificios');
       return await api.utils.validarCodigo(edificioId, codigo, tipo);
     } catch (err) {
       console.error('Error validating codigo:', err);
-      return { disponible: false };
+      return false;
     }
   }, []);
 
   return {
-    loading,
     searchEdificios,
     getComunidadesOpciones,
     validarCodigo
   };
 };
 
-// Hook para manejo de formularios de edificios
-export const useEdificioForm = (initialData?: Partial<EdificioFormData>) => {
+// Hook para formularios de edificios
+export const useEdificioForm = () => {
   const [formData, setFormData] = useState<EdificioFormData>({
     nombre: '',
     direccion: '',
     comunidadId: '',
     tipo: 'residencial',
     numeroTorres: 1,
-    pisos: 1,
-    servicios: [],
-    amenidades: [],
-    ...initialData
+    pisos: 1
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof EdificioFormData, string>>>({});
+  const [touched, setTouched] = useState<Partial<Record<keyof EdificioFormData, boolean>>>({});
 
-  // Actualizar un campo del formulario
   const updateField = useCallback((field: keyof EdificioFormData, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-
-    // Limpiar error si existe
+    
+    // Limpiar error del campo cuando se actualiza
     if (errors[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined
+      }));
     }
   }, [errors]);
 
-  // Marcar un campo como tocado
   const touchField = useCallback((field: keyof EdificioFormData) => {
     setTouched(prev => ({
       ...prev,
@@ -429,39 +428,25 @@ export const useEdificioForm = (initialData?: Partial<EdificioFormData>) => {
     }));
   }, []);
 
-  // Validar el formulario
-  const validate = useCallback((): boolean => {
-    const newErrors: Record<string, string> = {};
+  const validate = useCallback(() => {
+    const newErrors: Partial<Record<keyof EdificioFormData, string>> = {};
 
-    if (!formData.nombre.trim()) {
-      newErrors.nombre = 'El nombre es requerido';
+    if (!formData.nombre?.trim()) {
+      newErrors.nombre = 'El nombre es obligatorio';
     }
 
-    if (!formData.direccion.trim()) {
-      newErrors.direccion = 'La dirección es requerida';
+    if (!formData.direccion?.trim()) {
+      newErrors.direccion = 'La dirección es obligatoria';
     }
 
-    if (!formData.comunidadId) {
-      newErrors.comunidadId = 'Debe seleccionar una comunidad';
-    }
-
-    if (formData.numeroTorres < 1) {
-      newErrors.numeroTorres = 'Debe tener al menos 1 torre';
-    }
-
-    if (formData.pisos < 1) {
-      newErrors.pisos = 'Debe tener al menos 1 piso';
-    }
-
-    if (formData.emailAdministrador && !isValidEmail(formData.emailAdministrador)) {
-      newErrors.emailAdministrador = 'Email inválido';
+    if (!formData.comunidadId?.trim()) {
+      newErrors.comunidadId = 'La comunidad es obligatoria';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  // Resetear el formulario
   const reset = useCallback(() => {
     setFormData({
       nombre: '',
@@ -469,19 +454,11 @@ export const useEdificioForm = (initialData?: Partial<EdificioFormData>) => {
       comunidadId: '',
       tipo: 'residencial',
       numeroTorres: 1,
-      pisos: 1,
-      servicios: [],
-      amenidades: [],
-      ...initialData
+      pisos: 1
     });
     setErrors({});
     setTouched({});
-  }, [initialData]);
-
-  const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  }, []);
 
   return {
     formData,

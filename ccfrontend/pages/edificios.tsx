@@ -480,7 +480,10 @@ export default function EdificiosListado() {
                           >
                             <i className='material-icons'>visibility</i>
                           </Link>
-                          <button className='btn btn-sm btn-outline-secondary'>
+                          <button 
+                            className='btn btn-sm btn-outline-secondary'
+                            onClick={() => router.push(`/edificios/${edificio.id}/editar`)}
+                          >
                             <i className='material-icons'>edit</i>
                           </button>
                         </div>

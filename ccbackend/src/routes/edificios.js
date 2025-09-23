@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { body, validationResult, query } = require('express-validator');
-const { authenticate } = require('../middleware/auth'); // Usando middleware de desarrollo
+const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
@@ -181,6 +181,37 @@ router.get('/stats', authenticate, async (req, res) => {
 
 /**
  * @openapi
+ * /edificios/comunidades-opciones:
+ *   get:
+ *     tags: [Edificios]
+ *     summary: Obtener lista de comunidades para formularios
+ *     responses:
+ *       200:
+ *         description: Lista de comunidades disponibles
+ */
+// GET /edificios/comunidades-opciones - Obtener comunidades para formularios
+router.get('/comunidades-opciones', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        id AS value, 
+        razon_social AS label,
+        direccion,
+        email_contacto,
+        telefono_contacto
+      FROM comunidad 
+      ORDER BY razon_social
+    `);
+    
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching comunidades:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * @openapi
  * /edificios/{id}:
  *   get:
  *     tags: [Edificios]
@@ -211,46 +242,81 @@ router.get('/:id', authenticate, async (req, res) => {
         e.direccion,
         e.created_at AS fecha_creacion,
         e.updated_at AS fecha_actualizacion,
+        e.tipo,
+        e.pisos,
+        e.ano_construccion,
+        e.area_comun,
+        e.area_privada,
+        e.parqueaderos,
+        e.depositos,
+        e.administrador,
+        e.telefono_administrador,
+        e.email_administrador,
+        e.servicios,
+        e.amenidades,
+        e.latitud,
+        e.longitud,
+        e.imagen,
+        e.observaciones,
+        e.estado,
         c.id AS comunidad_id,
         c.razon_social AS comunidad_nombre,
         c.direccion AS comunidad_direccion,
-        c.email_contacto AS email_administrador,
-        c.telefono_contacto AS telefono_administrador,
-        'María González' AS administrador,
-        2020 AS ano_construccion,
         COUNT(DISTINCT t.id) AS numero_torres,
         COUNT(DISTINCT u.id) AS total_unidades,
         COUNT(DISTINCT CASE WHEN u.activa = 1 THEN u.id END) AS total_unidades_ocupadas,
-        15 AS pisos,
-        'residencial' AS tipo,
-        -33.4103 AS latitud,
-        -70.5398 AS longitud,
-        '/images/edificio-placeholder.jpg' AS imagen,
-        'Edificio en excelente estado, con mantenimiento regular y buena administración.' AS observaciones,
-        1200.00 AS area_comun,
-        3500.00 AS area_privada,
-        45 AS parqueaderos,
-        30 AS depositos,
         CASE 
           WHEN COUNT(DISTINCT u.id) = 0 THEN 'construccion'
           WHEN COUNT(DISTINCT CASE WHEN u.activa = 1 THEN u.id END) = COUNT(DISTINCT u.id) THEN 'activo'
           WHEN COUNT(DISTINCT CASE WHEN u.activa = 1 THEN u.id END) = 0 THEN 'inactivo'
           ELSE 'mantenimiento'
-        END AS estado
+        END AS estado_calculado
       FROM edificio e
       INNER JOIN comunidad c ON e.comunidad_id = c.id
       LEFT JOIN torre t ON e.id = t.edificio_id
       LEFT JOIN unidad u ON e.id = u.edificio_id
       WHERE e.id = ?
       GROUP BY e.id, e.nombre, e.codigo, e.direccion, e.created_at, e.updated_at,
-               c.id, c.razon_social, c.direccion, c.email_contacto, c.telefono_contacto
+               e.tipo, e.pisos, e.ano_construccion, e.area_comun, e.area_privada,
+               e.parqueaderos, e.depositos, e.administrador, e.telefono_administrador,
+               e.email_administrador, e.servicios, e.amenidades, e.latitud, e.longitud,
+               e.imagen, e.observaciones, e.estado,
+               c.id, c.razon_social, c.direccion
     `, [id]);
     
     if (!rows.length) {
       return res.status(404).json({ error: 'Edificio no encontrado' });
     }
     
-    res.json(rows[0]);
+    // Procesar los datos del edificio
+    const edificio = rows[0];
+    
+    // Parsear servicios y amenidades JSON
+    if (edificio.servicios) {
+      try {
+        edificio.servicios = typeof edificio.servicios === 'string' 
+          ? JSON.parse(edificio.servicios) 
+          : edificio.servicios;
+      } catch (e) {
+        edificio.servicios = [];
+      }
+    } else {
+      edificio.servicios = [];
+    }
+    
+    if (edificio.amenidades) {
+      try {
+        edificio.amenidades = typeof edificio.amenidades === 'string' 
+          ? JSON.parse(edificio.amenidades) 
+          : edificio.amenidades;
+      } catch (e) {
+        edificio.amenidades = [];
+      }
+    } else {
+      edificio.amenidades = [];
+    }
+    
+    res.json(edificio);
   } catch (error) {
     console.error('Error fetching edificio:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -740,6 +806,230 @@ router.patch('/:id', [
 
 /**
  * @openapi
+ * /edificios/{id}:
+ *   put:
+ *     tags: [Edificios]
+ *     summary: Actualizar edificio completamente
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del edificio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *               codigo:
+ *                 type: string
+ *               direccion:
+ *                 type: string
+ *               comunidadId:
+ *                 type: integer
+ *               anoConstructccion:
+ *                 type: integer
+ *               pisos:
+ *                 type: integer
+ *               administrador:
+ *                 type: string
+ *               telefonoAdministrador:
+ *                 type: string
+ *               emailAdministrador:
+ *                 type: string
+ *               servicios:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               amenidades:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               latitud:
+ *                 type: number
+ *               longitud:
+ *                 type: number
+ *               observaciones:
+ *                 type: string
+ *               areaComun:
+ *                 type: number
+ *               areaPrivada:
+ *                 type: number
+ *               parqueaderos:
+ *                 type: integer
+ *               depositos:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Edificio actualizado exitosamente
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Edificio no encontrado
+ */
+// PUT /edificios/:id - Actualizar edificio completamente
+router.put('/:id', [
+  authenticate,
+  authorize('admin', 'superadmin'),
+  body('nombre').notEmpty().withMessage('El nombre es obligatorio').isLength({ max: 100 }).withMessage('El nombre debe tener máximo 100 caracteres'),
+  body('codigo').notEmpty().withMessage('El código es obligatorio').isLength({ max: 20 }).withMessage('El código debe tener máximo 20 caracteres'),
+  body('direccion').notEmpty().withMessage('La dirección es obligatoria').isLength({ max: 255 }).withMessage('La dirección debe tener máximo 255 caracteres'),
+  body('comunidadId').custom((value) => {
+    const numValue = parseInt(value);
+    if (isNaN(numValue) || numValue < 1) {
+      throw new Error('La comunidad es obligatoria y debe ser un ID válido');
+    }
+    return true;
+  }),
+  body('anoConstructccion').optional().isInt({ min: 1800, max: new Date().getFullYear() + 5 }).withMessage('Año de construcción inválido'),
+  body('pisos').optional().isInt({ min: 1 }).withMessage('El número de pisos debe ser mayor a 0'),
+  body('administrador').optional().isLength({ max: 100 }).withMessage('El nombre del administrador debe tener máximo 100 caracteres'),
+  body('telefonoAdministrador').optional().matches(/^[0-9+\-\s()]*$/).withMessage('Teléfono inválido').isLength({ max: 20 }).withMessage('El teléfono debe tener máximo 20 caracteres'),
+  body('emailAdministrador').optional().isEmail().withMessage('Email inválido').isLength({ max: 100 }).withMessage('El email debe tener máximo 100 caracteres'),
+  body('servicios').optional().isArray().withMessage('Los servicios deben ser un array'),
+  body('amenidades').optional().isArray().withMessage('Las amenidades deben ser un array'),
+  body('latitud').optional().isFloat({ min: -90, max: 90 }).withMessage('Latitud inválida'),
+  body('longitud').optional().isFloat({ min: -180, max: 180 }).withMessage('Longitud inválida'),
+  body('observaciones').optional().isLength({ max: 1000 }).withMessage('Las observaciones deben tener máximo 1000 caracteres'),
+  body('areaComun').optional().isFloat({ min: 0 }).withMessage('El área común debe ser mayor o igual a 0'),
+  body('areaPrivada').optional().isFloat({ min: 0 }).withMessage('El área privada debe ser mayor o igual a 0'),
+  body('parqueaderos').optional().isInt({ min: 0 }).withMessage('El número de parqueaderos debe ser mayor o igual a 0'),
+  body('depositos').optional().isInt({ min: 0 }).withMessage('El número de depósitos debe ser mayor o igual a 0'),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        error: 'Datos inválidos', 
+        details: errors.array() 
+      });
+    }
+
+    const id = req.params.id;
+    const {
+      nombre,
+      codigo,
+      direccion,
+      comunidadId,
+      anoConstructccion,
+      pisos,
+      administrador,
+      telefonoAdministrador,
+      emailAdministrador,
+      servicios,
+      amenidades,
+      latitud,
+      longitud,
+      observaciones,
+      areaComun,
+      areaPrivada,
+      parqueaderos,
+      depositos
+    } = req.body;
+
+    // Verificar que el edificio existe
+    const [existing] = await db.query('SELECT id FROM edificio WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return res.status(404).json({ error: 'Edificio no encontrado' });
+    }
+
+    // Verificar que la comunidad existe
+    const comunidadIdNumber = parseInt(comunidadId);
+    const [comunidad] = await db.query('SELECT id FROM comunidad WHERE id = ?', [comunidadIdNumber]);
+    if (comunidad.length === 0) {
+      return res.status(400).json({ error: 'La comunidad especificada no existe' });
+    }
+
+    // Verificar que el código sea único (excluyendo el edificio actual)
+    const [codeCheck] = await db.query('SELECT id FROM edificio WHERE codigo = ? AND id != ?', [codigo, id]);
+    if (codeCheck.length > 0) {
+      return res.status(400).json({ error: 'El código ya está en uso por otro edificio' });
+    }
+
+    // Preparar datos para actualización
+    const updateData = {
+      nombre,
+      codigo,
+      direccion,
+      comunidad_id: comunidadIdNumber,
+      ano_construccion: anoConstructccion || null,
+      pisos: pisos || null,
+      administrador: administrador || null,
+      telefono_administrador: telefonoAdministrador || null,
+      email_administrador: emailAdministrador || null,
+      servicios: servicios && Array.isArray(servicios) ? JSON.stringify(servicios) : null,
+      amenidades: amenidades && Array.isArray(amenidades) ? JSON.stringify(amenidades) : null,
+      latitud: latitud || null,
+      longitud: longitud || null,
+      observaciones: observaciones || null,
+      area_comun: areaComun || null,
+      area_privada: areaPrivada || null,
+      parqueaderos: parqueaderos || null,
+      depositos: depositos || null,
+      updated_at: new Date()
+    };
+
+    // Construir query de actualización dinámicamente
+    const fields = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
+    const values = Object.values(updateData);
+    values.push(id); // Para el WHERE
+
+    await db.query(`UPDATE edificio SET ${fields} WHERE id = ?`, values);
+
+    // Obtener el edificio actualizado con información de la comunidad
+    const [updated] = await db.query(`
+      SELECT 
+        e.*,
+        c.razon_social AS comunidad_nombre
+      FROM edificio e
+      INNER JOIN comunidad c ON e.comunidad_id = c.id
+      WHERE e.id = ?
+    `, [id]);
+
+    // Formatear respuesta
+    const edificioActualizado = {
+      id: updated[0].id.toString(),
+      nombre: updated[0].nombre,
+      codigo: updated[0].codigo,
+      direccion: updated[0].direccion,
+      comunidadId: updated[0].comunidad_id?.toString(),
+      comunidadNombre: updated[0].comunidad_nombre,
+      fechaCreacion: updated[0].created_at,
+      fechaActualizacion: updated[0].updated_at,
+      anoConstructccion: updated[0].ano_construccion,
+      pisos: updated[0].pisos,
+      administrador: updated[0].administrador,
+      telefonoAdministrador: updated[0].telefono_administrador,
+      emailAdministrador: updated[0].email_administrador,
+      servicios: updated[0].servicios ? (typeof updated[0].servicios === 'string' && updated[0].servicios.trim() !== '' ? JSON.parse(updated[0].servicios) : []) : [],
+      amenidades: updated[0].amenidades ? (typeof updated[0].amenidades === 'string' && updated[0].amenidades.trim() !== '' ? JSON.parse(updated[0].amenidades) : []) : [],
+      latitud: updated[0].latitud,
+      longitud: updated[0].longitud,
+      observaciones: updated[0].observaciones,
+      areaComun: updated[0].area_comun,
+      areaPrivada: updated[0].area_privada,
+      parqueaderos: updated[0].parqueaderos,
+      depositos: updated[0].depositos
+    };
+
+    res.json(edificioActualizado);
+  } catch (error) {
+    console.error('Error updating edificio:', error);
+    if (error.code === 'ER_DUP_ENTRY') {
+      res.status(400).json({ error: 'El código ya está en uso' });
+    } else {
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+});
+
+/**
+ * @openapi
  * /edificios/{id}/check-dependencies:
  *   get:
  *     tags: [Edificios]
@@ -1127,38 +1417,6 @@ router.get('/:id/filtros-opciones', authenticate, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching filter options:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-/**
- * @openapi
- * /edificios/comunidades-opciones:
- *   get:
- *     tags: [Edificios]
- *     summary: Obtener lista de comunidades para formularios
- *     responses:
- *       200:
- *         description: Lista de comunidades disponibles
- */
-// GET /edificios/comunidades-opciones - Obtener comunidades para formularios
-router.get('/comunidades-opciones', authenticate, async (req, res) => {
-  try {
-    const [rows] = await db.query(`
-      SELECT 
-        id AS value, 
-        razon_social AS label,
-        direccion,
-        email_contacto,
-        telefono_contacto
-      FROM comunidad 
-      WHERE activa = 1
-      ORDER BY razon_social
-    `);
-    
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching comunidades:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
