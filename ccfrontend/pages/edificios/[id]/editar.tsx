@@ -49,12 +49,41 @@ export default function EdificioEditar() {
             setEdificio(edificioData);
             
             // Llenar el formulario con los datos existentes
-            Object.keys(edificioData).forEach(key => {
-              const value = edificioData[key as keyof Edificio];
-              if (value !== undefined) {
-                updateField(key as keyof EdificioFormData, value);
-              }
-            });
+            console.log('Datos recibidos del edificio:', edificioData);
+            
+            // Cargar campos básicos
+            updateField('nombre', edificioData.nombre);
+            updateField('codigo', edificioData.codigo);
+            updateField('direccion', edificioData.direccion);
+            updateField('comunidadId', edificioData.comunidadId);
+            updateField('tipo', edificioData.tipo);
+            updateField('pisos', edificioData.pisos);
+            updateField('anoConstructccion', edificioData.anoConstructccion);
+            updateField('areaComun', edificioData.areaComun);
+            updateField('areaPrivada', edificioData.areaPrivada);
+            updateField('parqueaderos', edificioData.parqueaderos);
+            updateField('depositos', edificioData.depositos);
+            updateField('administrador', edificioData.administrador);
+            updateField('telefonoAdministrador', edificioData.telefonoAdministrador);
+            updateField('emailAdministrador', edificioData.emailAdministrador);
+            updateField('latitud', edificioData.latitud);
+            updateField('longitud', edificioData.longitud);
+            updateField('observaciones', edificioData.observaciones);
+            
+            // Manejar servicios y amenidades específicamente
+            if (edificioData.servicios) {
+              console.log('Servicios recibidos:', edificioData.servicios, typeof edificioData.servicios);
+              updateField('servicios', Array.isArray(edificioData.servicios) ? edificioData.servicios : []);
+            } else {
+              updateField('servicios', []);
+            }
+            
+            if (edificioData.amenidades) {
+              console.log('Amenidades recibidas:', edificioData.amenidades, typeof edificioData.amenidades);
+              updateField('amenidades', Array.isArray(edificioData.amenidades) ? edificioData.amenidades : []);
+            } else {
+              updateField('amenidades', []);
+            }
             
             // Establecer preview de imagen si existe
             if (edificioData.imagen) {
