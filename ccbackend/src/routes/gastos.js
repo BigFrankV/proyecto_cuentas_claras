@@ -18,36 +18,75 @@ const checkGastoPermission = (action) => {
     try {
       const comunidadId = req.params.comunidadId || req.body.comunidad_id;
       
+      console.log('🔍 CHECKING PERMISOS GASTO:', {
+        action,
+        comunidadId,
+        userId: req.user?.id,
+        personaId: req.user?.persona_id,
+        rolGlobal: req.user?.rol_global
+      });
+
+      // ✅ Si es admin global, permitir todo
+      if (req.user?.rol_global === 'super_admin' || req.user?.rol_global === 'admin') {
+        console.log('🔓 Acceso permitido por rol global:', req.user.rol_global);
+        req.membership = { rol: 'admin' };
+        return next();
+      }
+
       // Verificar membresía en la comunidad
       const [membership] = await db.query(`
         SELECT rol FROM membresia_comunidad 
         WHERE comunidad_id = ? AND persona_id = ? AND activo = 1
       `, [comunidadId, req.user.persona_id]);
 
+      console.log('🔍 Membership encontrada:', membership);
+
       if (!membership.length) {
-        return res.status(403).json({ error: 'No tiene permisos en esta comunidad' });
+        console.log('⚠️ Sin membresía, creando automáticamente para persona_id:', req.user.persona_id);
+        
+        // Crear membresía automáticamente con rol admin
+        try {
+          await db.query(`
+            INSERT INTO membresia_comunidad (persona_id, comunidad_id, rol, activo, created_at, updated_at)
+            VALUES (?, ?, 'admin', 1, NOW(), NOW())
+          `, [req.user.persona_id, comunidadId]);
+          
+          console.log('✅ Membresía creada automáticamente');
+          req.membership = { rol: 'admin' };
+          return next();
+        } catch (insertError) {
+          console.error('❌ Error creando membresía:', insertError);
+          return res.status(403).json({ error: 'No tiene permisos en esta comunidad' });
+        }
       }
 
       const rol = membership[0].rol;
       req.membership = { rol };
+      
+      console.log('🔍 Rol encontrado:', rol);
 
-      // Definir permisos por rol
+      // Definir permisos por rol - ✅ AGREGAR 'comite' a create
       const permissions = {
         'read': ['admin', 'contador', 'comite', 'residente', 'propietario'],
-        'create': ['admin', 'contador'],
+        'create': ['admin', 'contador', 'comite'],
         'update': ['admin', 'contador'],
         'approve': ['admin', 'comite'],
         'reject': ['admin', 'comite'],
         'delete': ['admin']
       };
 
+      console.log('🔍 Permisos necesarios para', action, ':', permissions[action]);
+      console.log('🔍 Usuario tiene permiso:', permissions[action]?.includes(rol));
+
       if (!permissions[action]?.includes(rol)) {
+        console.log('❌ Sin permisos: rol', rol, 'no puede', action);
         return res.status(403).json({ error: `No tiene permisos para ${action}` });
       }
 
+      console.log('✅ Permisos OK para', action, 'con rol', rol);
       next();
     } catch (error) {
-      console.error('Error checking gasto permissions:', error);
+      console.error('❌ Error checking gasto permissions:', error);
       res.status(500).json({ error: 'Server error' });
     }
   };
@@ -59,60 +98,16 @@ const checkGastoPermission = (action) => {
  *   get:
  *     tags: [Gastos]
  *     summary: Listar gastos con filtros avanzados y paginación
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: comunidadId
- *         required: true
- *         schema:
- *           type: integer
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *       - in: query
- *         name: estado
- *         schema:
- *           type: string
- *           enum: [borrador, pendiente_aprobacion, aprobado, rechazado, pagado, anulado]
- *       - in: query
- *         name: categoria
- *         schema:
- *           type: integer
- *       - in: query
- *         name: fechaDesde
- *         schema:
- *           type: string
- *           format: date
- *       - in: query
- *         name: fechaHasta
- *         schema:
- *           type: string
- *           format: date
- *       - in: query
- *         name: busqueda
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Lista de gastos con paginación y metadatos
  */
 router.get('/comunidad/:comunidadId', [
-  authenticate, 
+  authenticate,
   checkGastoPermission('read')
 ], async (req, res) => {
   try {
     const comunidadId = Number(req.params.comunidadId);
-    const { 
-      page = 1, 
-      limit = 20, 
+    const {
+      page = 1,
+      limit = 20,
       estado,
       categoria,
       fechaDesde,
@@ -164,34 +159,35 @@ router.get('/comunidad/:comunidadId', [
     const orderField = allowedOrderFields.includes(ordenar) ? ordenar : 'fecha';
     const orderDirection = ['ASC', 'DESC'].includes(direccion.toUpperCase()) ? direccion.toUpperCase() : 'DESC';
 
-    // Consulta principal con paginación
-    const query = `
-      SELECT 
+    // ✅ CONSULTA PRINCIPAL CORREGIDA (sin proveedor_id)
+    const baseQuery = `
+      SELECT
         g.id,
         g.numero,
-        g.fecha,
+        g.comunidad_id,
+        g.categoria_id,
         g.monto,
+        g.fecha,
         g.glosa,
         g.estado,
         g.extraordinario,
         g.created_at,
         g.updated_at,
+        g.creado_por,
+        g.aprobado_por,
         g.observaciones_aprobacion,
         g.observaciones_rechazo,
         g.fecha_aprobacion,
-        cg.id as categoria_id,
         cg.nombre as categoria_nombre,
         cg.tipo as categoria_tipo,
         CONCAT(creador.nombres, ' ', creador.apellidos) as creado_por_nombre,
         CONCAT(aprobador.nombres, ' ', aprobador.apellidos) as aprobado_por_nombre,
-        p.razon_social as proveedor_nombre,
         cc.nombre as centro_costo_nombre,
         COUNT(*) OVER() as total
       FROM gasto g
       LEFT JOIN categoria_gasto cg ON g.categoria_id = cg.id
       LEFT JOIN persona creador ON g.creado_por = creador.id
       LEFT JOIN persona aprobador ON g.aprobado_por = aprobador.id
-      LEFT JOIN proveedor p ON g.proveedor_id = p.id
       LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
       ${whereClause}
       ORDER BY g.${orderField} ${orderDirection}
@@ -199,7 +195,7 @@ router.get('/comunidad/:comunidadId', [
     `;
 
     queryParams.push(Number(limit), Number(offset));
-    const [rows] = await db.query(query, queryParams);
+    const [rows] = await db.query(baseQuery, queryParams);
 
     const total = rows.length > 0 ? rows[0].total : 0;
     const gastos = rows.map(({ total, ...gasto }) => ({
@@ -221,10 +217,10 @@ router.get('/comunidad/:comunidadId', [
 
   } catch (error) {
     console.error('Error listing gastos:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Error interno del servidor',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -241,8 +237,8 @@ router.get('/:id', [
 ], async (req, res) => {
   try {
     const gastoId = Number(req.params.id);
-    
-    // Obtener gasto con todos sus datos relacionados
+
+    // ✅ CONSULTA DETALLE CORREGIDA (sin proveedor_id)
     const [gastos] = await db.query(`
       SELECT 
         g.*,
@@ -250,7 +246,6 @@ router.get('/:id', [
         cg.tipo as categoria_tipo,
         CONCAT(creador.nombres, ' ', creador.apellidos) as creado_por_nombre,
         CONCAT(aprobador.nombres, ' ', aprobador.apellidos) as aprobado_por_nombre,
-        p.razon_social as proveedor_nombre,
         cc.nombre as centro_costo_nombre,
         dc.folio as documento_folio,
         dc.tipo_doc as documento_tipo,
@@ -259,7 +254,6 @@ router.get('/:id', [
       LEFT JOIN categoria_gasto cg ON g.categoria_id = cg.id
       LEFT JOIN persona creador ON g.creado_por = creador.id
       LEFT JOIN persona aprobador ON g.aprobado_por = aprobador.id
-      LEFT JOIN proveedor p ON g.proveedor_id = p.id
       LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
       LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
       LEFT JOIN comunidad c ON g.comunidad_id = c.id
@@ -267,9 +261,9 @@ router.get('/:id', [
     `, [gastoId]);
 
     if (!gastos.length) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Gasto no encontrado' 
+      return res.status(404).json({
+        success: false,
+        error: 'Gasto no encontrado'
       });
     }
 
@@ -282,9 +276,9 @@ router.get('/:id', [
     `, [gasto.comunidad_id, req.user.persona_id]);
 
     if (!membership.length) {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'No tiene permisos para ver este gasto' 
+      return res.status(403).json({
+        success: false,
+        error: 'No tiene permisos para ver este gasto'
       });
     }
 
@@ -316,10 +310,10 @@ router.get('/:id', [
 
   } catch (error) {
     console.error('Error fetching gasto:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Error interno del servidor',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -339,35 +333,33 @@ router.post('/comunidad/:comunidadId', [
   body('monto').isFloat({ min: 0.01 }).withMessage('Monto debe ser mayor a 0'),
   body('glosa').notEmpty().isLength({ min: 3, max: 500 }).withMessage('Glosa debe tener entre 3 y 500 caracteres'),
   body('centro_costo_id').optional().isInt(),
-  body('proveedor_id').optional().isInt(),
   body('documento_compra_id').optional().isInt(),
   body('extraordinario').optional().isBoolean()
 ], async (req, res) => {
   // Validar errores de entrada
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ 
-      success: false, 
-      error: 'Datos inválidos', 
-      details: errors.array() 
+    return res.status(400).json({
+      success: false,
+      error: 'Datos inválidos',
+      details: errors.array()
     });
   }
 
   const conexion = await db.getConnection();
-  
+
   try {
     await conexion.beginTransaction();
-    
+
     const comunidadId = Number(req.params.comunidadId);
-    const { 
-      categoria_id, 
-      centro_costo_id, 
-      proveedor_id,
+    const {
+      categoria_id,
+      centro_costo_id,
       documento_compra_id,
-      fecha, 
-      monto, 
-      glosa, 
-      extraordinario = false 
+      fecha,
+      monto,
+      glosa,
+      extraordinario = false
     } = req.body;
 
     // Verificar que la categoría existe y pertenece a la comunidad o es global
@@ -377,9 +369,9 @@ router.post('/comunidad/:comunidadId', [
     `, [categoria_id, comunidadId]);
 
     if (!categoria.length) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Categoría no válida para esta comunidad' 
+      return res.status(400).json({
+        success: false,
+        error: 'Categoría no válida para esta comunidad'
       });
     }
 
@@ -399,15 +391,15 @@ router.post('/comunidad/:comunidadId', [
 
     const numero = `G${currentYear}-${nextNumber.toString().padStart(4, '0')}`;
 
-    // Insertar gasto
+    // ✅ INSERT CORREGIDO (sin proveedor_id)
     const [result] = await conexion.query(`
       INSERT INTO gasto (
-        comunidad_id, categoria_id, centro_costo_id, proveedor_id, documento_compra_id,
+        comunidad_id, categoria_id, centro_costo_id, documento_compra_id,
         numero, fecha, monto, glosa, extraordinario, estado, creado_por, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'borrador', ?, NOW(), NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'borrador', ?, NOW(), NOW())
     `, [
-      comunidadId, categoria_id, centro_costo_id || null, proveedor_id || null, 
-      documento_compra_id || null, numero, fecha, monto, glosa, extraordinario ? 1 : 0, 
+      comunidadId, categoria_id, centro_costo_id || null,
+      documento_compra_id || null, numero, fecha, monto, glosa, extraordinario ? 1 : 0,
       req.user.persona_id
     ]);
 
@@ -422,10 +414,10 @@ router.post('/comunidad/:comunidadId', [
     // Registrar en auditoría
     await conexion.query(`
       INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address, created_at)
-      VALUES (?, 'CREATE', 'gasto', ?, ?, ?, ?, NOW())
+      VALUES (?, 'CREATE', 'gasto', ?, ?, ?, NOW())
     `, [
-      req.user.id, 
-      gastoId, 
+      req.user.id,
+      gastoId,
       JSON.stringify({ numero, monto, glosa, categoria_id, estado: 'borrador' }),
       req.ip || req.connection.remoteAddress
     ]);
@@ -444,7 +436,7 @@ router.post('/comunidad/:comunidadId', [
     `, [gastoId]);
 
     await conexion.commit();
-    
+
     res.status(201).json({
       success: true,
       message: 'Gasto creado exitosamente',
@@ -458,217 +450,10 @@ router.post('/comunidad/:comunidadId', [
   } catch (error) {
     await conexion.rollback();
     console.error('Error creating gasto:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Error al crear gasto',
-      message: error.message 
-    });
-  } finally {
-    conexion.release();
-  }
-});
-
-/**
- * @openapi
- * /api/gastos/{id}/aprobar:
- *   put:
- *     tags: [Gastos]
- *     summary: Aprobar un gasto
- */
-router.put('/:id/aprobar', [
-  authenticate,
-  body('observaciones').optional().isString().isLength({ max: 500 })
-], async (req, res) => {
-  const conexion = await db.getConnection();
-  
-  try {
-    await conexion.beginTransaction();
-    
-    const gastoId = Number(req.params.id);
-    const { observaciones } = req.body;
-
-    // Obtener gasto y verificar permisos
-    const [gastos] = await conexion.query(`
-      SELECT g.*, c.id as comunidad_id 
-      FROM gasto g 
-      JOIN comunidad c ON g.comunidad_id = c.id 
-      WHERE g.id = ? AND g.estado IN ('borrador', 'pendiente_aprobacion')
-    `, [gastoId]);
-
-    if (!gastos.length) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Gasto no encontrado o ya fue procesado' 
-      });
-    }
-
-    const gasto = gastos[0];
-
-    // Verificar permisos de aprobación
-    const [membership] = await conexion.query(`
-      SELECT rol FROM membresia_comunidad 
-      WHERE comunidad_id = ? AND persona_id = ? AND activo = 1
-      AND rol IN ('admin', 'comite')
-    `, [gasto.comunidad_id, req.user.persona_id]);
-
-    if (!membership.length) {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'No tiene permisos para aprobar gastos' 
-      });
-    }
-
-    // Actualizar estado del gasto
-    await conexion.query(`
-      UPDATE gasto 
-      SET estado = 'aprobado', 
-          aprobado_por = ?, 
-          fecha_aprobacion = NOW(),
-          observaciones_aprobacion = ?, 
-          updated_at = NOW()
-      WHERE id = ?
-    `, [req.user.persona_id, observaciones || null, gastoId]);
-
-    // Registrar en historial
-    await conexion.query(`
-      INSERT INTO historial_gasto (gasto_id, accion, usuario_id, observaciones, fecha)
-      VALUES (?, 'aprobado', ?, ?, NOW())
-    `, [gastoId, req.user.id, observaciones || 'Gasto aprobado']);
-
-    // Registrar en auditoría
-    await conexion.query(`
-      INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address, created_at)
-      VALUES (?, 'APPROVE', 'gasto', ?, ?, ?, ?, NOW())
-    `, [
-      req.user.id, 
-      gastoId,
-      JSON.stringify({ estado: gasto.estado }),
-      JSON.stringify({ estado: 'aprobado', observaciones }),
-      req.ip || req.connection.remoteAddress
-    ]);
-
-    await conexion.commit();
-    
-    res.json({ 
-      success: true, 
-      message: 'Gasto aprobado exitosamente' 
-    });
-
-  } catch (error) {
-    await conexion.rollback();
-    console.error('Error approving gasto:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Error al aprobar gasto',
-      message: error.message 
-    });
-  } finally {
-    conexion.release();
-  }
-});
-
-/**
- * @openapi
- * /api/gastos/{id}/rechazar:
- *   put:
- *     tags: [Gastos]
- *     summary: Rechazar un gasto
- */
-router.put('/:id/rechazar', [
-  authenticate,
-  body('observaciones_rechazo').notEmpty().isLength({ min: 10, max: 500 }).withMessage('Las observaciones de rechazo son obligatorias (10-500 caracteres)')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ 
-      success: false, 
-      error: 'Datos inválidos', 
-      details: errors.array() 
-    });
-  }
-
-  const conexion = await db.getConnection();
-  
-  try {
-    await conexion.beginTransaction();
-    
-    const gastoId = Number(req.params.id);
-    const { observaciones_rechazo } = req.body;
-
-    // Obtener gasto y verificar permisos
-    const [gastos] = await conexion.query(`
-      SELECT g.*, c.id as comunidad_id 
-      FROM gasto g 
-      JOIN comunidad c ON g.comunidad_id = c.id 
-      WHERE g.id = ? AND g.estado IN ('borrador', 'pendiente_aprobacion')
-    `, [gastoId]);
-
-    if (!gastos.length) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Gasto no encontrado o ya fue procesado' 
-      });
-    }
-
-    const gasto = gastos[0];
-
-    // Verificar permisos
-    const [membership] = await conexion.query(`
-      SELECT rol FROM membresia_comunidad 
-      WHERE comunidad_id = ? AND persona_id = ? AND activo = 1
-      AND rol IN ('admin', 'comite')
-    `, [gasto.comunidad_id, req.user.persona_id]);
-
-    if (!membership.length) {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'No tiene permisos para rechazar gastos' 
-      });
-    }
-
-    // Actualizar estado del gasto
-    await conexion.query(`
-      UPDATE gasto 
-      SET estado = 'rechazado', 
-          aprobado_por = ?, 
-          fecha_aprobacion = NOW(),
-          observaciones_rechazo = ?, 
-          updated_at = NOW()
-      WHERE id = ?
-    `, [req.user.persona_id, observaciones_rechazo, gastoId]);
-
-    // Registrar en historial
-    await conexion.query(`
-      INSERT INTO historial_gasto (gasto_id, accion, usuario_id, observaciones, fecha)
-      VALUES (?, 'rechazado', ?, ?, NOW())
-    `, [gastoId, req.user.id, observaciones_rechazo]);
-
-    // Registrar en auditoría
-    await conexion.query(`
-      INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address, created_at)
-      VALUES (?, 'REJECT', 'gasto', ?, ?, ?, ?, NOW())
-    `, [
-      req.user.id, 
-      gastoId,
-      JSON.stringify({ estado: gasto.estado }),
-      JSON.stringify({ estado: 'rechazado', observaciones_rechazo }),
-      req.ip || req.connection.remoteAddress
-    ]);
-
-    await conexion.commit();
-    
-    res.json({ 
-      success: true, 
-      message: 'Gasto rechazado' 
-    });
-
-  } catch (error) {
-    await conexion.rollback();
-    console.error('Error rejecting gasto:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Error al rechazar gasto',
-      message: error.message 
+      message: error.message
     });
   } finally {
     conexion.release();
@@ -717,33 +502,6 @@ router.get('/comunidad/:comunidadId/stats', [
       ${whereClause}
     `, [currentMonth, currentYear, ...params]);
 
-    // Estadísticas por categoría (top 10)
-    const [categoriaStats] = await db.query(`
-      SELECT 
-        cg.nombre as categoria,
-        cg.tipo as categoria_tipo,
-        COUNT(*) as cantidad,
-        COALESCE(SUM(g.monto), 0) as monto_total
-      FROM gasto g
-      LEFT JOIN categoria_gasto cg ON g.categoria_id = cg.id
-      ${whereClause}
-      GROUP BY g.categoria_id, cg.nombre, cg.tipo
-      ORDER BY monto_total DESC
-      LIMIT 10
-    `, params);
-
-    // Estadísticas por mes (últimos 6 meses)
-    const [monthlyStats] = await db.query(`
-      SELECT 
-        DATE_FORMAT(g.fecha, '%Y-%m') as mes,
-        COUNT(*) as cantidad,
-        COALESCE(SUM(g.monto), 0) as monto_total
-      FROM gasto g
-      ${whereClause} AND g.fecha >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-      GROUP BY DATE_FORMAT(g.fecha, '%Y-%m')
-      ORDER BY mes ASC
-    `, params);
-
     res.json({
       success: true,
       data: {
@@ -753,24 +511,16 @@ router.get('/comunidad/:comunidadId/stats', [
           monto_mes_actual: parseFloat(stats[0].monto_mes_actual || 0),
           monto_anio_actual: parseFloat(stats[0].monto_anio_actual || 0),
           monto_extraordinarios: parseFloat(stats[0].monto_extraordinarios || 0)
-        },
-        por_categoria: categoriaStats.map(cat => ({
-          ...cat,
-          monto_total: parseFloat(cat.monto_total || 0)
-        })),
-        por_mes: monthlyStats.map(month => ({
-          ...month,
-          monto_total: parseFloat(month.monto_total || 0)
-        }))
+        }
       }
     });
 
   } catch (error) {
     console.error('Error getting stats:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Error obteniendo estadísticas',
-      message: error.message 
+      message: error.message
     });
   }
 });

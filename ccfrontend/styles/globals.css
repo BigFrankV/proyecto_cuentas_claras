@@ -84,39 +84,43 @@ body {
 
 /* Estilos para el sidebar */
 .sidebar {
+  width: 280px;
+  min-height: 100vh;
   position: fixed;
   top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 1000;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease-in-out;
-  width: 280px;
+  left: -280px;
+  z-index: 1050;
+  transition: left 0.3s ease;
+  background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;
 }
 
 .sidebar.show {
-  transform: translateX(0);
+  left: 0;
 }
 
 @media (min-width: 992px) {
   .sidebar {
-    transform: translateX(0);
+    position: relative;
+    left: 0;
+  }
+  .main-content {
+    margin-left: 280px;
   }
 }
 
 .sidebar-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 999;
-  background-color: rgba(0, 0, 0, 0.5);
   display: none;
 }
 
 .sidebar-backdrop.show {
   display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1040;
 }
 
 /* Navegación sidebar */
@@ -130,55 +134,28 @@ body {
 }
 
 .nav-sidebar .nav-item .nav-link {
-  color: rgba(255, 255, 255, 0.8);
-  padding: 0.75rem 1rem;
-  border-radius: var(--border-radius-sm);
-  margin-bottom: 0.25rem;
-  transition: var(--transition-base);
+  color: rgba(255, 255, 255, 0.8) !important;
+  border-radius: var(--radius);
+  transition: all 0.2s;
 }
 
-.nav-sidebar .nav-item .nav-link:hover {
-  color: #fff;
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
+.nav-sidebar .nav-item .nav-link:hover,
 .nav-sidebar .nav-item .nav-link.active {
-  color: #fff;
-  background: rgba(253, 93, 20, 0.2);
-  border-left: 3px solid var(--color-accent);
-}
-
-.nav-sidebar .nav-item .nav-link.active .material-icons {
-  color: var(--color-accent);
-}
-
-.nav-section-header {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 1rem 1rem 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.nav-section-header:not(:first-child) {
-  margin-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 1.5rem;
+  background: rgba(255,255,255,0.1) !important;
+  color: white !important;
 }
 
 /* Avatar component */
 .avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-primary);
-  color: #fff;
+  color: white;
   font-weight: bold;
-  border-radius: 50%;
+  font-size: 14px;
 }
 
 /* Cards y componentes */
@@ -347,4 +324,197 @@ body {
   .container-fluid {
     max-width: none !important;
   }
+}
+
+/* === VARIABLES DEL MOCKUP === */
+:root {
+  --color-primary: #134e98;
+  --color-primary-rgb: 19, 78, 152;
+  --color-accent: #fd5d14;
+  --color-text: #212529;
+  --color-danger: #dc3545;
+  --radius: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  --shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+
+/* === SIDEBAR STYLES === */
+.sidebar {
+  width: 280px;
+  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: -280px;
+  z-index: 1050;
+  transition: left 0.3s ease;
+  background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;
+}
+
+.sidebar.show {
+  left: 0;
+}
+
+@media (min-width: 992px) {
+  .sidebar {
+    position: relative;
+    left: 0;
+  }
+  .main-content {
+    margin-left: 280px;
+  }
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+.sidebar-backdrop.show {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1040;
+}
+
+/* === NAVIGATION === */
+.nav-sidebar .nav-link {
+  color: rgba(255,255,255,0.8) !important;
+  border-radius: var(--radius);
+  transition: all 0.2s;
+}
+
+.nav-sidebar .nav-link:hover,
+.nav-sidebar .nav-link.active {
+  background: rgba(255,255,255,0.1) !important;
+  color: white !important;
+}
+
+/* === AVATAR === */
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* === DATA CARDS === */
+.data-card {
+  border: 1px solid #e9ecef;
+  border-radius: var(--radius);
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 1rem;
+}
+
+.data-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.data-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.data-card-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.data-card-subtitle {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.data-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.data-card-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.data-card-detail .material-icons {
+  font-size: 16px;
+}
+
+/* === STATUS BADGES === */
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-borrador { background: #e9ecef; color: #495057; }
+.status-pendiente_aprobacion { background: #fff3cd; color: #856404; }
+.status-aprobado { background: #d1e7dd; color: #0f5132; }
+.status-rechazado { background: #f8d7da; color: #842029; }
+.status-pagado { background: #cff4fc; color: #055160; }
+
+/* === CATEGORY BADGES === */
+.category-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.category-mantenimiento { background: #e3f2fd; color: #1565c0; }
+.category-administracion { background: #f3e5f5; color: #6a1b9a; }
+.category-extraordinario { background: #fff3e0; color: #ef6c00; }
+
+/* === AMOUNT STYLES === */
+.amount {
+  font-weight: 600;
+}
+
+.amount-high { color: var(--color-danger); }
+.amount-medium { color: #fd7e14; }
+.amount-low { color: #198754; }
+
+/* === TABLE STYLES === */
+.data-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.data-row:hover {
+  background-color: #f8f9fa !important;
+}
+
+/* === MOBILE FAB === */
+.mobile-fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.mobile-fab .btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

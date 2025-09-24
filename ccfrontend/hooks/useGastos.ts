@@ -1,7 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
-import { gastosService, type GastoFilters } from '../lib/gastosService';
-import type { Gasto, PaginatedResponse, GastoEstadisticas } from '../types/gastos';
 import { toast } from 'react-hot-toast';
+import { Gasto, GastoFilters } from '@/types/gastos';
+import { api } from '@/lib/api';
+
+// ✅ AGREGAR INTERFACES FALTANTES
+interface GastoEstadisticas {
+  total_gastos: number;
+  borradores: number;
+  pendientes: number;
+  aprobados: number;
+  rechazados: number;
+  pagados: number;
+  anulados: number;
+  monto_total: number;
+  monto_mes_actual: number;
+  monto_anio_actual: number;
+  monto_extraordinarios: number;
+}
 
 export function useGastos(comunidadId: number, initialFilters: GastoFilters = {}) {
   const [gastos, setGastos] = useState<Gasto[]>([]);
@@ -29,14 +44,31 @@ export function useGastos(comunidadId: number, initialFilters: GastoFilters = {}
       setLoading(true);
       setError(null);
 
-      const response: PaginatedResponse<Gasto> = await gastosService.getGastos(comunidadId, filters);
+      console.log('🔍 Cargando gastos para comunidad:', comunidadId, 'filtros:', filters);
       
-      setGastos(response.data);
-      setPagination(response.pagination);
+      // ✅ URL CORRECTA SEGÚN TU BACKEND
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+          params.append(key, value.toString());
+        }
+      });
+      
+      // ✅ USAR LA URL CORRECTA DEL BACKEND
+      const response = await api.get(`/gastos/comunidad/${comunidadId}?${params}`);
+      
+      console.log('📋 Respuesta del backend:', response.data);
+      
+      const gastos = response.data.data || [];
+      const paginationData = response.data.pagination || {};
+      
+      setGastos(gastos);
+      setPagination(paginationData);
+      
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || err.message || 'Error al cargar gastos';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      console.error('❌ Error cargando gastos:', err);
+      setError(err.response?.data?.error || 'Error al cargar gastos');
+      toast.error(err.response?.data?.error || 'Error al cargar gastos');
     } finally {
       setLoading(false);
     }
@@ -70,101 +102,7 @@ export function useGastos(comunidadId: number, initialFilters: GastoFilters = {}
   };
 }
 
-export function useGasto(id: number | null) {
-  const [gasto, setGasto] = useState<Gasto | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchGasto = useCallback(async () => {
-    if (!id) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const data = await gastosService.getGasto(id);
-      setGasto(data);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || err.message || 'Error al cargar gasto';
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    fetchGasto();
-  }, [fetchGasto]);
-
-  const refetch = useCallback(() => {
-    fetchGasto();
-  }, [fetchGasto]);
-
-  return {
-    gasto,
-    loading,
-    error,
-    refetch
-  };
-}
-
-export function useGastoActions() {
-  const [loading, setLoading] = useState(false);
-
-  const aprobarGasto = useCallback(async (id: number, observaciones?: string) => {
-    try {
-      setLoading(true);
-      await gastosService.aprobarGasto(id, observaciones);
-      toast.success('Gasto aprobado exitosamente');
-      return true;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al aprobar gasto';
-      toast.error(errorMessage);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const rechazarGasto = useCallback(async (id: number, observaciones: string) => {
-    try {
-      setLoading(true);
-      await gastosService.rechazarGasto(id, observaciones);
-      toast.success('Gasto rechazado');
-      return true;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al rechazar gasto';
-      toast.error(errorMessage);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const eliminarGasto = useCallback(async (id: number) => {
-    try {
-      setLoading(true);
-      await gastosService.deleteGasto(id);
-      toast.success('Gasto eliminado exitosamente');
-      return true;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al eliminar gasto';
-      toast.error(errorMessage);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return {
-    loading,
-    aprobarGasto,
-    rechazarGasto,
-    eliminarGasto
-  };
-}
-
+// ✅ HOOK PARA ESTADÍSTICAS
 export function useGastoEstadisticas(comunidadId: number) {
   const [estadisticas, setEstadisticas] = useState<GastoEstadisticas | null>(null);
   const [loading, setLoading] = useState(true);
@@ -177,12 +115,12 @@ export function useGastoEstadisticas(comunidadId: number) {
       setLoading(true);
       setError(null);
       
-      const data = await gastosService.getEstadisticas(comunidadId);
-      setEstadisticas(data);
+      // ✅ URL CORRECTA SEGÚN TU BACKEND
+      const response = await api.get(`/gastos/comunidad/${comunidadId}/stats`);
+      setEstadisticas(response.data.data.resumen);
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || 'Error al cargar estadísticas';
       setError(errorMessage);
-      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

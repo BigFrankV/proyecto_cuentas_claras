@@ -62,11 +62,12 @@ router.get('/comunidad/:comunidadId', [
     const comunidadId = Number(req.params.comunidadId);
     const { incluir_inactivas = false } = req.query;
     
-    let whereClause = 'WHERE (comunidad_id = ? OR comunidad_id IS NULL)';
+    // ✅ CONSULTA CORREGIDA - Arreglar ambigüedad
+    let baseWhereClause = 'WHERE (cg.comunidad_id = ? OR cg.comunidad_id IS NULL)';
     const params = [comunidadId];
 
     if (!incluir_inactivas || incluir_inactivas === 'false') {
-      whereClause += ' AND activa = 1';
+      baseWhereClause += ' AND cg.activa = 1';
     }
 
     const query = `
@@ -83,9 +84,9 @@ router.get('/comunidad/:comunidadId', [
         COALESCE(SUM(CASE WHEN g.estado IN ('aprobado', 'pagado') THEN g.monto ELSE 0 END), 0) as monto_total,
         COALESCE(SUM(CASE WHEN g.estado IN ('aprobado', 'pagado') AND YEAR(g.fecha) = YEAR(CURDATE()) THEN g.monto ELSE 0 END), 0) as monto_anio_actual
       FROM categoria_gasto cg
-      LEFT JOIN gasto g ON cg.id = g.categoria_id
-      ${whereClause}
-      GROUP BY cg.id
+      LEFT JOIN gasto g ON cg.id = g.categoria_id AND g.comunidad_id = cg.comunidad_id
+      ${baseWhereClause}
+      GROUP BY cg.id, cg.nombre, cg.tipo, cg.cta_contable, cg.activa, cg.comunidad_id, cg.created_at, cg.updated_at
       ORDER BY cg.nombre ASC
     `;
 
@@ -167,7 +168,7 @@ router.post('/comunidad/:comunidadId', [
     // Registrar en auditoría
     await conexion.query(`
       INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address, created_at)
-      VALUES (?, 'CREATE', 'categoria_gasto', ?, ?, ?, ?, NOW())
+      VALUES (?, 'CREATE', 'categoria_gasto', ?, ?, ?, NOW())
     `, [
       req.user.id, 
       result.insertId,
@@ -328,7 +329,7 @@ router.put('/:id', [
     // Registrar en auditoría
     await conexion.query(`
       INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address, created_at)
-      VALUES (?, 'UPDATE', 'categoria_gasto', ?, ?, ?, ?, NOW())
+      VALUES (?, 'UPDATE', 'categoria_gasto', ?, ?, ?, NOW())
     `, [
       req.user.id, 
       categoryId,
