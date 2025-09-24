@@ -7,7 +7,7 @@ const API_FULL_URL = `${API_BASE_URL}`;
 // Crear instancia de axios
 const apiClient = axios.create({
   baseURL: API_FULL_URL,
-  timeout: 10000,
+  timeout: 30000, // Aumentado a 30 segundos para operaciones de sincronización
   headers: {
     'Content-Type': 'application/json',
   },

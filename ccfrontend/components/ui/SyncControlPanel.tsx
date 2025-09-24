@@ -170,7 +170,7 @@ const SyncControlPanel: React.FC<SyncControlPanelProps> = ({
                 <div className="mb-2">
                   <small className="text-muted">Última sincronización:</small>
                   <div className="fw-medium">
-                    {formatDate(syncStatus.lastSync)}
+                    {syncStatus.lastSync ? formatDate(syncStatus.lastSync) : 'Nunca'}
                   </div>
                 </div>
               </div>
@@ -179,7 +179,7 @@ const SyncControlPanel: React.FC<SyncControlPanelProps> = ({
                 <div className="mb-2">
                   <small className="text-muted">Última actualización:</small>
                   <div className="fw-medium">
-                    {formatDate(syncStatus.stats.last_update)}
+                    {syncStatus.stats?.last_update ? formatDate(syncStatus.stats.last_update) : 'No disponible'}
                   </div>
                 </div>
               </div>
@@ -189,19 +189,19 @@ const SyncControlPanel: React.FC<SyncControlPanelProps> = ({
             <div className="row mb-3">
               <div className="col-4">
                 <div className="text-center">
-                  <div className="h5 mb-0 text-primary">{syncStatus.stats.uf_records}</div>
+                  <div className="h5 mb-0 text-primary">{syncStatus.stats?.uf_records || 0}</div>
                   <small className="text-muted">Registros UF</small>
                 </div>
               </div>
               <div className="col-4">
                 <div className="text-center">
-                  <div className="h5 mb-0 text-success">{syncStatus.stats.utm_records}</div>
+                  <div className="h5 mb-0 text-success">{syncStatus.stats?.utm_records || 0}</div>
                   <small className="text-muted">Registros UTM</small>
                 </div>
               </div>
               <div className="col-4">
                 <div className="text-center">
-                  <div className="h5 mb-0 text-info">{syncStatus.stats.otros_records}</div>
+                  <div className="h5 mb-0 text-info">{syncStatus.stats?.otros_records || 0}</div>
                   <small className="text-muted">Otros indicadores</small>
                 </div>
               </div>

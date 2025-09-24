@@ -151,6 +151,32 @@ router.post('/sync/init', async (req, res) => {
 
 /**
  * @openapi
+ * /util/sync/manual:
+ *   post:
+ *     tags: [Util]
+ *     summary: Ejecutar sincronización manual de indicadores
+ *     responses:
+ *       200:
+ *         description: Sincronización manual completada
+ */
+router.post('/sync/manual', async (req, res) => {
+  try {
+    await indicadoresService.sincronizacionInicial();
+    res.json({
+      success: true,
+      message: 'Sincronización manual completada exitosamente'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error en sincronización manual',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @openapi
  * /util/indicadores:
  *   get:
  *     tags: [Util]
@@ -303,5 +329,7 @@ router.get('/utm/historico', async (req, res) => {
     });
   }
 });
+
+console.log('📝 Rutas registradas en util.js:', router.stack.map(r => r.route?.path).filter(Boolean));
 
 module.exports = router;

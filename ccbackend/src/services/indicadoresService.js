@@ -49,11 +49,10 @@ class IndicadoresService {
     const valor = parseFloat(ufData.valor);
 
     const query = `
-      INSERT INTO uf_valor (fecha, valor, created_at, updated_at) 
-      VALUES (?, ?, NOW(), NOW())
+      INSERT INTO uf_valor (fecha, valor) 
+      VALUES (?, ?)
       ON DUPLICATE KEY UPDATE 
-        valor = VALUES(valor), 
-        updated_at = NOW()
+        valor = VALUES(valor)
     `;
 
     try {
@@ -78,11 +77,10 @@ class IndicadoresService {
     const valor = parseFloat(utmData.valor);
 
     const query = `
-      INSERT INTO utm_valor (fecha, valor, created_at, updated_at) 
-      VALUES (?, ?, NOW(), NOW())
+      INSERT INTO utm_valor (fecha, valor) 
+      VALUES (?, ?)
       ON DUPLICATE KEY UPDATE 
-        valor = VALUES(valor), 
-        updated_at = NOW()
+        valor = VALUES(valor)
     `;
 
     try {
@@ -110,13 +108,12 @@ class IndicadoresService {
           const valor = parseFloat(indicadorData.valor);
 
           const query = `
-            INSERT INTO otros_indicadores (codigo, nombre, fecha, valor, unidad_medida, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+            INSERT INTO otros_indicadores (codigo, nombre, fecha, valor, unidad_medida) 
+            VALUES (?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE 
               valor = VALUES(valor), 
               nombre = VALUES(nombre),
-              unidad_medida = VALUES(unidad_medida),
-              updated_at = NOW()
+              unidad_medida = VALUES(unidad_medida)
           `;
 
           await db.query(query, [

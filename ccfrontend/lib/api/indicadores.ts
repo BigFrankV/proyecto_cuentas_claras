@@ -80,7 +80,7 @@ export interface SyncStatusResponse {
  */
 export const getUfByDate = async (fecha: string): Promise<UfApiResponse> => {
   try {
-    const response = await api.get(`/util/uf/${fecha}`);
+    const response = await api.get(`/util/uf?fecha=${fecha}`);
     return response.data;
   } catch (error: any) {
     console.error('Error al obtener UF por fecha:', error);
@@ -140,7 +140,8 @@ export const getUfHistorico = async (
  */
 export const getUtmByPeriod = async (mes: number, ano: number): Promise<UtmApiResponse> => {
   try {
-    const response = await api.get(`/util/utm/${ano}/${mes}`);
+    const mesFormatted = mes.toString().padStart(2, '0');
+    const response = await api.get(`/util/utm?fecha=${ano}-${mesFormatted}`);
     return response.data;
   } catch (error: any) {
     console.error('Error al obtener UTM por período:', error);
@@ -178,7 +179,7 @@ export const getCurrentUtm = async (): Promise<UtmApiResponse> => {
  */
 export const getUtmHistorico = async (ano: number): Promise<HistoricoUtmResponse> => {
   try {
-    const response = await api.get(`/util/utm/historico/${ano}`);
+    const response = await api.get(`/util/utm/historico?ano=${ano}`);
     return response.data;
   } catch (error: any) {
     console.error('Error al obtener histórico UTM:', error);
@@ -214,7 +215,7 @@ export const getAllIndicadores = async (): Promise<IndicadoresResponse> => {
  */
 export const getIndicadorByCodigo = async (codigo: string): Promise<IndicadoresResponse> => {
   try {
-    const response = await api.get(`/util/indicadores/${codigo}`);
+    const response = await api.get(`/util/indicadores?codigo=${codigo}`);
     return response.data;
   } catch (error: any) {
     console.error(`Error al obtener indicador ${codigo}:`, error);
@@ -234,7 +235,20 @@ export const getIndicadorByCodigo = async (codigo: string): Promise<IndicadoresR
 export const getSyncStatus = async (): Promise<SyncStatusResponse> => {
   try {
     const response = await api.get('/util/sync/status');
-    return response.data;
+    const backendData = response.data;
+    
+    // Mapear datos del backend al formato esperado por el frontend
+    return {
+      success: backendData.success,
+      lastSync: null, // No disponible en el backend aún
+      isRunning: backendData.scheduler?.isRunning || false,
+      stats: {
+        uf_records: backendData.data?.uf_count || 0,
+        utm_records: backendData.data?.utm_count || 0,
+        otros_records: 0, // No disponible en el backend aún
+        last_update: backendData.data?.timestamp || null
+      }
+    };
   } catch (error: any) {
     console.error('Error al obtener estado de sincronización:', error);
     return {
