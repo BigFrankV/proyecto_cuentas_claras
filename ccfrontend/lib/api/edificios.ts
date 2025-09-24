@@ -23,16 +23,27 @@ const handleApiError = (error: any) => {
 
 // Helper para hacer peticiones autenticadas
 const apiRequest = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token'); // O desde donde manejes el auth
+  // Obtener token directamente de localStorage para evitar problemas de importación
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  
+  console.log('🔐 Token obtenido para API:', token ? 'Token presente' : 'No hay token');
+  console.log('🔐 URL de la petición:', `${API_BASE_URL}${url}`);
+  
+  if (!token) {
+    console.error('❌ No se pudo obtener token para la petición');
+    throw new Error('Missing token');
+  }
 
   const config: RequestInit = {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
+      'Authorization': `Bearer ${token}`,
       ...options.headers,
     },
   };
+
+  console.log('🔐 Headers de la petición:', config.headers);
 
   const response = await fetch(`${API_BASE_URL}${url}`, config);
 
@@ -84,8 +95,20 @@ export const edificiosApi = {
         administrador: edificio.administrador,
         telefonoAdministrador: edificio.telefono_administrador,
         emailAdministrador: edificio.email_administrador,
-        servicios: edificio.servicios ? JSON.parse(edificio.servicios) : [],
-        amenidades: edificio.amenidades ? JSON.parse(edificio.amenidades) : [],
+        servicios: (() => {
+          if (Array.isArray(edificio.servicios)) return edificio.servicios;
+          if (typeof edificio.servicios === 'string' && edificio.servicios.trim()) {
+            try { return JSON.parse(edificio.servicios); } catch { return []; }
+          }
+          return [];
+        })(),
+        amenidades: (() => {
+          if (Array.isArray(edificio.amenidades)) return edificio.amenidades;
+          if (typeof edificio.amenidades === 'string' && edificio.amenidades.trim()) {
+            try { return JSON.parse(edificio.amenidades); } catch { return []; }
+          }
+          return [];
+        })(),
         latitud: edificio.latitud,
         longitud: edificio.longitud,
         imagen: edificio.imagen,
@@ -125,8 +148,20 @@ export const edificiosApi = {
         administrador: data.administrador,
         telefonoAdministrador: data.telefono_administrador,
         emailAdministrador: data.email_administrador,
-        servicios: data.servicios ? JSON.parse(data.servicios) : [],
-        amenidades: data.amenidades ? JSON.parse(data.amenidades) : [],
+        servicios: (() => {
+          if (Array.isArray(data.servicios)) return data.servicios;
+          if (typeof data.servicios === 'string' && data.servicios.trim()) {
+            try { return JSON.parse(data.servicios); } catch { return []; }
+          }
+          return [];
+        })(),
+        amenidades: (() => {
+          if (Array.isArray(data.amenidades)) return data.amenidades;
+          if (typeof data.amenidades === 'string' && data.amenidades.trim()) {
+            try { return JSON.parse(data.amenidades); } catch { return []; }
+          }
+          return [];
+        })(),
         latitud: data.latitud,
         longitud: data.longitud,
         imagen: data.imagen,
@@ -197,34 +232,35 @@ export const edificiosApi = {
   // Actualizar edificio
   update: async (id: string, data: Partial<EdificioFormData>): Promise<Edificio | null> => {
     try {
-      const payload: any = {};
+      const payload: any = {
+        nombre: data.nombre,
+        codigo: data.codigo,
+        direccion: data.direccion,
+        comunidadId: data.comunidadId,
+      };
       
-      if (data.nombre) payload.nombre = data.nombre;
-      if (data.codigo) payload.codigo = data.codigo;
-      if (data.direccion) payload.direccion = data.direccion;
-      if (data.tipo) payload.tipo = data.tipo;
-      if (data.anoConstructccion) payload.anoConstructccion = data.anoConstructccion;
-      if (data.numeroTorres) payload.numeroTorres = data.numeroTorres;
-      if (data.pisos) payload.pisos = data.pisos;
-      if (data.administrador) payload.administrador = data.administrador;
-      if (data.telefonoAdministrador) payload.telefonoAdministrador = data.telefonoAdministrador;
-      if (data.emailAdministrador) payload.emailAdministrador = data.emailAdministrador;
-      if (data.servicios) payload.servicios = data.servicios;
-      if (data.amenidades) payload.amenidades = data.amenidades;
+      // Campos opcionales
+      if (data.anoConstructccion !== undefined) payload.anoConstructccion = data.anoConstructccion;
+      if (data.pisos !== undefined) payload.pisos = data.pisos;
+      if (data.administrador !== undefined) payload.administrador = data.administrador;
+      if (data.telefonoAdministrador !== undefined) payload.telefonoAdministrador = data.telefonoAdministrador;
+      if (data.emailAdministrador !== undefined) payload.emailAdministrador = data.emailAdministrador;
+      if (data.servicios !== undefined) payload.servicios = data.servicios;
+      if (data.amenidades !== undefined) payload.amenidades = data.amenidades;
       if (data.latitud !== undefined) payload.latitud = data.latitud;
       if (data.longitud !== undefined) payload.longitud = data.longitud;
-      if (data.observaciones) payload.observaciones = data.observaciones;
+      if (data.observaciones !== undefined) payload.observaciones = data.observaciones;
       if (data.areaComun !== undefined) payload.areaComun = data.areaComun;
       if (data.areaPrivada !== undefined) payload.areaPrivada = data.areaPrivada;
       if (data.parqueaderos !== undefined) payload.parqueaderos = data.parqueaderos;
       if (data.depositos !== undefined) payload.depositos = data.depositos;
 
       const result = await apiRequest(`/edificios/${id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         body: JSON.stringify(payload),
       });
 
-      return await edificiosApi.getById(id);
+      return result;
     } catch (error) {
       handleApiError(error);
       return null;

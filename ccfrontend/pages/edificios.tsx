@@ -12,7 +12,7 @@ import {
   ESTADOS_EDIFICIO,
   TIPOS_EDIFICIO 
 } from '@/types/edificios';
-import { useEdificios, useEdificiosStats } from '@/hooks/useEdificios';
+import { useEdificios } from '@/hooks/useEdificios';
 
 export default function EdificiosListado() {
   const router = useRouter();
@@ -28,8 +28,6 @@ export default function EdificiosListado() {
     filterEdificios 
   } = useEdificios();
   
-  const { stats } = useEdificiosStats();
-  
   // Estado local
   const [filters, setFilters] = useState<EdificioFilters>({});
   const [vista, setVista] = useState<VistaListado>('tabla');
@@ -44,6 +42,23 @@ export default function EdificiosListado() {
   useEffect(() => {
     fetchEdificios();
   }, [fetchEdificios]);
+
+  // Calcular estadísticas basadas en los edificios cargados
+  const statsCalculadas = {
+    totalEdificios: edificios.length,
+    edificiosActivos: edificios.filter(e => e.estado === 'activo').length,
+    totalUnidades: edificios.reduce((sum, e) => sum + (e.totalUnidades || 0), 0),
+    unidadesOcupadas: edificios.reduce((sum, e) => sum + (e.totalUnidadesOcupadas || 0), 0),
+    ocupacion: edificios.length > 0 
+      ? (edificios.reduce((sum, e) => sum + (e.totalUnidadesOcupadas || 0), 0) / 
+         edificios.reduce((sum, e) => sum + (e.totalUnidades || 1), 0)) * 100 
+      : 0
+  };
+
+  // Debug: log de estadísticas calculadas
+  console.log('Edificios cargados:', edificios.length);
+  console.log('Estadísticas calculadas:', statsCalculadas);
+  console.log('Muestra de edificios:', edificios.slice(0, 2));
 
   const handleFilterChange = (key: keyof EdificioFilters, value: string) => {
     setFilters(prev => ({
@@ -196,7 +211,7 @@ export default function EdificiosListado() {
                       <i className='material-icons text-primary'>business</i>
                     </div>
                     <div>
-                      <div className='stat-value'>{stats?.totalEdificios || 0}</div>
+                      <div className='stat-value'>{statsCalculadas.totalEdificios}</div>
                       <div className='stat-label text-muted'>Total Edificios</div>
                     </div>
                   </div>
@@ -211,7 +226,7 @@ export default function EdificiosListado() {
                       <i className='material-icons text-success'>check_circle</i>
                     </div>
                     <div>
-                      <div className='stat-value'>{stats?.edificiosActivos || 0}</div>
+                      <div className='stat-value'>{statsCalculadas.edificiosActivos}</div>
                       <div className='stat-label text-muted'>Edificios Activos</div>
                     </div>
                   </div>
@@ -226,7 +241,7 @@ export default function EdificiosListado() {
                       <i className='material-icons text-info'>apartment</i>
                     </div>
                     <div>
-                      <div className='stat-value'>{stats?.totalUnidades || 0}</div>
+                      <div className='stat-value'>{statsCalculadas.totalUnidades}</div>
                       <div className='stat-label text-muted'>Total Unidades</div>
                     </div>
                   </div>
@@ -241,7 +256,7 @@ export default function EdificiosListado() {
                       <i className='material-icons text-warning'>groups</i>
                     </div>
                     <div>
-                      <div className='stat-value'>{stats?.ocupacion?.toFixed(1) || '0.0'}%</div>
+                      <div className='stat-value'>{statsCalculadas.ocupacion.toFixed(1)}%</div>
                       <div className='stat-label text-muted'>Ocupación</div>
                     </div>
                   </div>
@@ -480,7 +495,10 @@ export default function EdificiosListado() {
                           >
                             <i className='material-icons'>visibility</i>
                           </Link>
-                          <button className='btn btn-sm btn-outline-secondary'>
+                          <button 
+                            className='btn btn-sm btn-outline-secondary'
+                            onClick={() => router.push(`/edificios/${edificio.id}/editar`)}
+                          >
                             <i className='material-icons'>edit</i>
                           </button>
                         </div>

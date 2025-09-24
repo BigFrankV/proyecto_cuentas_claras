@@ -279,10 +279,10 @@ export default function EdificioDetalle() {
                   <div className='content-section'>
                     <div className='content-section-header'>
                       <h5 className='mb-0'>Información Básica</h5>
-                      <button className='btn btn-sm btn-outline-primary'>
+                      <Link href={`/edificios/${id}/editar`} className='btn btn-sm btn-outline-primary'>
                         <i className='material-icons me-1'>edit</i>
                         Editar
-                      </button>
+                      </Link>
                     </div>
                     <div className='content-section-body'>
                       <div className='row'>
@@ -331,10 +331,10 @@ export default function EdificioDetalle() {
                   <div className='content-section'>
                     <div className='content-section-header'>
                       <h5 className='mb-0'>Detalles Técnicos</h5>
-                      <button className='btn btn-sm btn-outline-primary'>
+                      <Link href={`/edificios/${id}/editar`} className='btn btn-sm btn-outline-primary'>
                         <i className='material-icons me-1'>edit</i>
                         Editar
-                      </button>
+                      </Link>
                     </div>
                     <div className='content-section-body'>
                       <div className='row'>
@@ -370,10 +370,10 @@ export default function EdificioDetalle() {
                     <div className='content-section'>
                       <div className='content-section-header'>
                         <h5 className='mb-0'>Observaciones</h5>
-                        <button className='btn btn-sm btn-outline-primary'>
+                        <Link href={`/edificios/${id}/editar`} className='btn btn-sm btn-outline-primary'>
                           <i className='material-icons me-1'>edit</i>
                           Editar
-                        </button>
+                        </Link>
                       </div>
                       <div className='content-section-body'>
                         <p className='mb-0'>{edificio.observaciones}</p>
@@ -386,10 +386,10 @@ export default function EdificioDetalle() {
                   <div className='content-section'>
                     <div className='content-section-header'>
                       <h5 className='mb-0'>Contacto</h5>
-                      <button className='btn btn-sm btn-outline-primary'>
+                      <Link href={`/edificios/${id}/editar`} className='btn btn-sm btn-outline-primary'>
                         <i className='material-icons me-1'>edit</i>
                         Editar
-                      </button>
+                      </Link>
                     </div>
                     <div className='content-section-body'>
                       <div className='detail-item'>
@@ -506,7 +506,10 @@ export default function EdificioDetalle() {
                               <button className='btn btn-sm btn-outline-primary'>
                                 <i className='material-icons'>visibility</i>
                               </button>
-                              <button className='btn btn-sm btn-outline-secondary'>
+                              <button 
+                                className='btn btn-sm btn-outline-secondary'
+                                onClick={() => router.push(`/edificios/${id}/editar`)}
+                              >
                                 <i className='material-icons'>edit</i>
                               </button>
                               <button className='btn btn-sm btn-outline-danger'>
@@ -611,10 +614,10 @@ export default function EdificioDetalle() {
                   <div className='content-section'>
                     <div className='content-section-header'>
                       <h5 className='mb-0'>Servicios Disponibles</h5>
-                      <button className='btn btn-sm btn-outline-primary'>
+                      <Link href={`/edificios/${id}/editar`} className='btn btn-sm btn-outline-primary'>
                         <i className='material-icons me-1'>edit</i>
                         Editar
-                      </button>
+                      </Link>
                     </div>
                     <div className='content-section-body'>
                       <div className='row'>
@@ -650,10 +653,10 @@ export default function EdificioDetalle() {
                   <div className='content-section'>
                     <div className='content-section-header'>
                       <h5 className='mb-0'>Amenidades</h5>
-                      <button className='btn btn-sm btn-outline-primary'>
+                      <Link href={`/edificios/${id}/editar`} className='btn btn-sm btn-outline-primary'>
                         <i className='material-icons me-1'>edit</i>
                         Editar
-                      </button>
+                      </Link>
                     </div>
                     <div className='content-section-body'>
                       <div className='row'>
