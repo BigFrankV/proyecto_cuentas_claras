@@ -86,7 +86,18 @@ async function start() {
 		// Redis removed; skipping cache setup
 
 	const port = process.env.PORT || 3000;
-	app.listen(port, () => logger.info(`Server running on port ${port}`));
+	app.listen(port, () => {
+		logger.info(`Server running on port ${port}`);
+		
+		// Inicializar scheduler de indicadores
+		try {
+			const schedulerService = require('./services/schedulerService');
+			schedulerService.start();
+			logger.info('✅ Scheduler de indicadores iniciado');
+		} catch (error) {
+			logger.error('❌ Error iniciando scheduler:', error);
+		}
+	});
 }
 
 start();
