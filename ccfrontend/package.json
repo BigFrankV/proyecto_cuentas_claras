@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 5173",
-    "build": "next build && npm run export",
+    "build": "next build",
     "start": "next start -p 5173",
     "analyze": "cross-env ANALYZE=true npm run build",
     "lint": "eslint .",
@@ -17,7 +17,7 @@
     "test:ci": "jest --ci --coverage --watchAll=false",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "export": "next export",
+
     "prepare": "husky",
     "clean": "rimraf .next out coverage",
     "predeploy": "npm run clean && npm run build",
