@@ -3,14 +3,13 @@ const path = require('path');
 const fs = require('fs').promises;
 const { upload, validateUploadContext, getFileInfo } = require('../upload');
 const FileService = require('../services/fileService');
-const { authenticateToken } = require('../middleware/auth');
-const { checkTenancy } = require('../middleware/tenancy');
+const { authenticate: authenticateToken } = require('../middleware/auth');
+const { requireCommunity } = require('../middleware/tenancy');
 
 const router = express.Router();
 
 // Middleware de autenticación para todas las rutas
 router.use(authenticateToken);
-router.use(checkTenancy);
 
 // Inicializar tabla de archivos
 FileService.initializeFileTable().catch(console.error);
