@@ -32,19 +32,20 @@ export interface Membership {
   activo?: boolean;
 }
 
-// ✅ CORREGIR: Interfaz User con is_superadmin opcional inicialmente
+// ✅ CORREGIR: Interfaz User compatible con exactOptionalPropertyTypes
 export interface User {
   id: number;
   username: string;
   is_superadmin?: boolean; // ✅ CAMBIAR a opcional temporalmente
   email?: string;
-  persona_id?: number;
+  persona_id?: number | undefined; // ✅ Agregar undefined explícitamente
   nombres?: string;
   apellidos?: string;
-  comunidad_id?: number;
+  comunidad_id?: number | undefined; // ✅ Agregar undefined explícitamente
   roles?: string[];
   memberships?: Membership[];
   is_2fa_enabled?: boolean;
+  totp_enabled?: boolean;
   
   // Campos adicionales opcionales
   firstName?: string;
@@ -124,10 +125,10 @@ class AuthService {
         const userObj: User = {
           id: decodedToken.sub,
           username: decodedToken.username,
-          persona_id: decodedToken.persona_id,
           is_superadmin: Boolean(decodedToken.is_superadmin), // ✅ Convertir a boolean explícitamente
+          persona_id: decodedToken.persona_id, // Ahora acepta undefined
+          comunidad_id: decodedToken.comunidad_id, // Ahora acepta undefined
           roles: decodedToken.roles || [],
-          comunidad_id: decodedToken.comunidad_id,
           memberships: decodedToken.memberships || [],
         };
 
