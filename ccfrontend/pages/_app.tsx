@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '@/styles/globals.css';
 import '@/styles/comunidades.css';
 import '@/styles/map-section.css';
+import '@/styles/multas.css'
 import '@/lib/console-filters'; // Filtros para limpiar consola en desarrollo
 import { useEffect } from 'react';
 import { AuthProvider } from '@/lib/useAuth';

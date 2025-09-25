@@ -1,204 +1,151 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import Layout from '../components/layout/Layout';
+import { ProtectedRoute, useAuth } from '../lib/useAuth';
+import multasService from '../lib/multasService';
+import { Multa, MultaFiltros, MultasEstadisticas } from '../types/multas';
 import Head from 'next/head';
 import Link from 'next/link';
-
-// Tipos y servicios
-import { Multa, MultaFiltros, MultasEstadisticas } from '@/types/multas';
-import multasService from '@/lib/multasService';
 
 export default function MultasListado() {
   const router = useRouter();
   const { user } = useAuth();
   
-  // Estados principales
+  // Estados
   const [multas, setMultas] = useState<Multa[]>([]);
-  const [multasFiltradas, setMultasFiltradas] = useState<Multa[]>([]);
   const [estadisticas, setEstadisticas] = useState<MultasEstadisticas | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Estados de filtros
-  const [filtros, setFiltros] = useState<MultaFiltros>({});
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedEstado, setSelectedEstado] = useState<string>('');
-  const [selectedPrioridad, setSelectedPrioridad] = useState<string>('');
-  
-  // Estados de vista
-  const [vistaActual, setVistaActual] = useState<'cards' | 'table'>('cards');
+  const [filtroActivo, setFiltroActivo] = useState('all');
   const [multasSeleccionadas, setMultasSeleccionadas] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // ✅ Cargar multas según el rol del usuario
-  const loadMultas = async () => {
-    setIsLoading(true);
+  // Cargar datos
+  useEffect(() => {
+    loadData();
+  }, [user]);
+
+  const loadData = async () => {
+    setLoading(true);
     try {
-      console.log('👤 Usuario actual:', user);
-      console.log('👑 Es superadmin:', user?.is_superadmin);
-      console.log('🏢 Membresías:', user?.memberships);
-
-      let filtrosCompletos: MultaFiltros = { ...filtros };
-
-      // 🔒 APLICAR FILTROS POR ROL
-      if (!user?.is_superadmin && user?.memberships) {
-        // Admin de comunidad: solo ve multas de sus comunidades
-        const comunidadIds = user.memberships.map(m => m.comunidadId);
-        if (comunidadIds.length === 1) {
-          filtrosCompletos.comunidad_id = comunidadIds[0];
-        }
-        // Si tiene múltiples comunidades, el backend debe filtrar por todas
-      }
-
-      console.log('🔍 Filtros aplicados:', filtrosCompletos);
-      const data = await multasService.getMultas(filtrosCompletos);
+      const [multasData, statsData] = await Promise.all([
+        multasService.getMultas(),
+        multasService.getEstadisticas()
+      ]);
       
-      setMultas(data);
-      console.log(`📋 ${data.length} multas cargadas`);
-
-      // Cargar estadísticas
-      const statsData = await multasService.getEstadisticas(
-        filtrosCompletos.comunidad_id
-      );
+      setMultas(multasData);
       setEstadisticas(statsData);
-      
     } catch (error) {
-      console.error('❌ Error cargando multas:', error);
+      console.error('Error loading data:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // Cargar datos cuando el usuario esté disponible
-  useEffect(() => {
-    if (user) {
-      loadMultas();
-    }
-  }, [user, filtros]);
+  // Filtrar multas
+  const multasFiltradas = multas.filter(multa => {
+    const matchesFilter = filtroActivo === 'all' || multa.estado === filtroActivo;
+    const matchesSearch = !searchTerm || 
+      multa.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      multa.tipo_infraccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      multa.unidad_numero?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesFilter && matchesSearch;
+  });
 
-  // Filtrar multas localmente
-  useEffect(() => {
-    let multasFiltradas = [...multas];
-
-    // Filtro por búsqueda
-    if (searchTerm) {
-      multasFiltradas = multasFiltradas.filter(multa => 
-        multa.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        multa.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        multa.tipo_infraccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        multa.unidad_numero?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        multa.propietario_nombre?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filtro por estado
-    if (selectedEstado) {
-      multasFiltradas = multasFiltradas.filter(multa => multa.estado === selectedEstado);
-    }
-
-    // Filtro por prioridad
-    if (selectedPrioridad) {
-      multasFiltradas = multasFiltradas.filter(multa => multa.prioridad === selectedPrioridad);
-    }
-
-    setMultasFiltradas(multasFiltradas);
-  }, [multas, searchTerm, selectedEstado, selectedPrioridad]);
-
-  // Render de estadísticas
-  const renderEstadisticas = () => {
-    if (!estadisticas) return null;
-
-    return (
-      <div className="row mb-4">
-        <div className="col-md-2 col-6 mb-3">
-          <div className="card bg-primary text-white h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <span className="material-icons fs-1 me-3">receipt_long</span>
-                <div>
-                  <div className="fs-4 fw-bold">{estadisticas.total}</div>
-                  <div className="small">Total</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="col-md-2 col-6 mb-3">
-          <div className="card bg-warning text-white h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <span className="material-icons fs-1 me-3">pending</span>
-                <div>
-                  <div className="fs-4 fw-bold">{estadisticas.pendientes}</div>
-                  <div className="small">Pendientes</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-2 col-6 mb-3">
-          <div className="card bg-danger text-white h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <span className="material-icons fs-1 me-3">event_busy</span>
-                <div>
-                  <div className="fs-4 fw-bold">{estadisticas.vencidas}</div>
-                  <div className="small">Vencidas</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-2 col-6 mb-3">
-          <div className="card bg-success text-white h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <span className="material-icons fs-1 me-3">paid</span>
-                <div>
-                  <div className="fs-4 fw-bold">{estadisticas.pagadas}</div>
-                  <div className="small">Pagadas</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-2 col-6 mb-3">
-          <div className="card bg-info text-white h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <span className="material-icons fs-1 me-3">gavel</span>
-                <div>
-                  <div className="fs-4 fw-bold">{estadisticas.apeladas}</div>
-                  <div className="small">Apeladas</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-2 col-6 mb-3">
-          <div className="card bg-success text-white h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <span className="material-icons fs-1 me-3">attach_money</span>
-                <div>
-                  <div className="fs-4 fw-bold">
-                    {multasService.formatearMonto(estadisticas.monto_recaudado)}
-                  </div>
-                  <div className="small">Recaudado</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  // Manejar selección
+  const handleSelectMulta = (multaId: number) => {
+    setMultasSeleccionadas(prev => 
+      prev.includes(multaId) 
+        ? prev.filter(id => id !== multaId)
+        : [...prev, multaId]
     );
   };
 
+  const handleSelectAll = () => {
+    if (multasSeleccionadas.length === multasFiltradas.length) {
+      setMultasSeleccionadas([]);
+    } else {
+      setMultasSeleccionadas(multasFiltradas.map(m => m.id));
+    }
+  };
 
+  // Obtener label del filtro
+  const getFiltroLabel = (filtro: string): string => {
+    const labels = {
+      all: 'Todas',
+      pendiente: 'Pendientes',
+      pagado: 'Pagadas',
+      vencido: 'Vencidas',
+      apelada: 'Apeladas',
+      anulada: 'Anuladas'
+    };
+    return labels[filtro] || filtro;
+  };
+
+  const getFiltroCount = (filtro: string): number => {
+    if (filtro === 'all') return multas.length;
+    return multas.filter(m => m.estado === filtro).length;
+  };
+
+  // Handlers para las acciones
+  const handleRegistrarPago = (multaId: number) => {
+    // Por ahora solo mostrar alert, después se puede implementar modal
+    alert(`Función de registrar pago para multa ${multaId} - En desarrollo`);
+    // TODO: Implementar modal o página para registrar pago
+  };
+
+  const handleEditar = (multaId: number) => {
+    router.push(`/multas/${multaId}/editar`);
+  };
+
+  const handleEnviarRecordatorio = (multaId: number) => {
+    // Por ahora solo mostrar alert, después se puede implementar
+    alert(`Enviando recordatorio para multa ${multaId} - En desarrollo`);
+    // TODO: Implementar envío de notificación
+  };
+
+  const handleAnular = async (multaId: number) => {
+    const multa = multas.find(m => m.id === multaId);
+    if (!multa) return;
+    
+    const motivo = window.prompt(
+      `¿Está seguro que desea anular la multa ${multa.numero}?\n\nIngrese el motivo de anulación (opcional):`,
+      ''
+    );
+    
+    if (motivo === null) return;
+    
+    try {
+      console.log(`🚫 Anulando multa ${multaId} con motivo:`, motivo);
+      
+      await multasService.anularMulta(multaId, motivo || undefined);
+      
+      alert(`✅ Multa ${multa.numero} anulada exitosamente`);
+      
+      // Recargar los datos
+      await loadData();
+      
+    } catch (error) {
+      console.error('Error anulando multa:', error);
+      alert('❌ Error al anular la multa. Intente nuevamente.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <Layout title="Multas">
+          <div className="container-fluid py-4">
+            <div className="text-center py-5">
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Cargando multas...</span>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -206,276 +153,326 @@ export default function MultasListado() {
         <title>Multas — Cuentas Claras</title>
       </Head>
 
-      <Layout title='Multas'>
-        <div className='container-fluid py-4'>
-        
-          
+      <Layout title="Multas">
+        <div className="container-fluid py-4">
           {/* Header */}
-          <div className='d-flex justify-content-between align-items-center mb-4'>
+          <div className="d-flex justify-content-between align-items-center mb-4">
             <div>
-              <h1 className='h3 mb-0'>Multas</h1>
-              <p className='text-muted mb-0'>
-                {user?.is_superadmin 
-                  ? 'Gestión de multas de todas las comunidades' 
-                  : 'Gestión de multas de mis comunidades'
-                }
-              </p>
+              <h1 className="h3 mb-1">Gestión de Multas</h1>
+              <p className="text-muted mb-0">Administración de multas por infracciones</p>
             </div>
-            
             <div className="d-flex gap-2">
-              {/* Botón exportar */}
-              <button className="btn btn-outline-primary">
-                <span className="material-icons me-2">download</span>
+              {multasSeleccionadas.length > 0 && (
+                <button className="btn btn-outline-primary">
+                  <span className="material-icons me-1">checklist</span>
+                  Acciones ({multasSeleccionadas.length})
+                </button>
+              )}
+              <button className="btn btn-outline-secondary">
+                <span className="material-icons me-1">file_download</span>
                 Exportar
               </button>
-              
-              {/* Botón nueva multa */}
-              <Link href="/multas/nueva" className='btn btn-primary'>
-                <span className='material-icons me-2'>add</span>
+              <Link href="/multas/nueva" className="btn btn-primary">
+                <span className="material-icons me-1">add</span>
                 Nueva Multa
               </Link>
             </div>
           </div>
 
-          {/* Estadísticas */}
-          {renderEstadisticas()}
-
           {/* Filtros */}
-          <div className="card mb-4">
-            <div className="card-body">
-              <div className="row g-3">
-                {/* Búsqueda */}
-                <div className="col-md-4">
-                  <div className="input-group">
-                    <span className="input-group-text">
-                      <span className="material-icons">search</span>
-                    </span>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Buscar multas..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+          <div className="filters-panel">
+            <div className="d-flex flex-wrap align-items-center justify-content-between">
+              <div className="d-flex flex-wrap">
+                {['all', 'pendiente', 'pagado', 'vencido', 'apelada', 'anulada'].map(filtro => (
+                  <div 
+                    key={filtro}
+                    className={`filter-chip ${filtroActivo === filtro ? 'active' : ''}`}
+                    onClick={() => setFiltroActivo(filtro)}
+                  >
+                    <span>{getFiltroLabel(filtro)}</span>
+                    <span className="ms-1">({getFiltroCount(filtro)})</span>
                   </div>
-                </div>
-
-                {/* Filtro por estado */}
-                <div className="col-md-2">
-                  <select
-                    className="form-select"
-                    value={selectedEstado}
-                    onChange={(e) => setSelectedEstado(e.target.value)}
-                  >
-                    <option value="">Todos los estados</option>
-                    <option value="pendiente">Pendientes</option>
-                    <option value="pagada">Pagadas</option>
-                    <option value="vencida">Vencidas</option>
-                    <option value="apelada">Apeladas</option>
-                    <option value="anulada">Anuladas</option>
-                  </select>
-                </div>
-
-                {/* Filtro por prioridad */}
-                <div className="col-md-2">
-                  <select
-                    className="form-select"
-                    value={selectedPrioridad}
-                    onChange={(e) => setSelectedPrioridad(e.target.value)}
-                  >
-                    <option value="">Todas las prioridades</option>
-                    <option value="baja">Baja</option>
-                    <option value="media">Media</option>
-                    <option value="alta">Alta</option>
-                    <option value="critica">Crítica</option>
-                  </select>
-                </div>
-
-                {/* Toggle de vista */}
-                <div className="col-md-2">
-                  <div className="btn-group w-100" role="group">
-                    <button
-                      type="button"
-                      className={`btn ${vistaActual === 'cards' ? 'btn-primary' : 'btn-outline-primary'}`}
-                      onClick={() => setVistaActual('cards')}
-                    >
-                      <span className="material-icons">view_module</span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn ${vistaActual === 'table' ? 'btn-primary' : 'btn-outline-primary'}`}
-                      onClick={() => setVistaActual('table')}
-                    >
-                      <span className="material-icons">view_list</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Limpiar filtros */}
-                <div className="col-md-2">
-                  <button
-                    className="btn btn-outline-secondary w-100"
-                    onClick={() => {
-                      setSearchTerm('');
-                      setSelectedEstado('');
-                      setSelectedPrioridad('');
-                      setFiltros({});
-                    }}
-                  >
-                    <span className="material-icons me-2">clear</span>
-                    Limpiar
-                  </button>
-                </div>
+                ))}
+              </div>
+              
+              <div className="d-flex gap-2">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Buscar multas..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ width: '250px' }}
+                />
               </div>
             </div>
           </div>
 
-          {/* Contenido */}
-          {isLoading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border" role="status">
-                <span className="visually-hidden">Cargando...</span>
-              </div>
-              <p className="mt-3">Cargando multas...</p>
-            </div>
-          ) : multasFiltradas.length === 0 ? (
-            <div className="text-center py-5">
-              <span className="material-icons display-1 text-muted">receipt_long</span>
-              <h5 className="mt-3">No se encontraron multas</h5>
-              <p className="text-muted">
-                {searchTerm || selectedEstado || selectedPrioridad
-                  ? 'Intenta ajustar los filtros de búsqueda'
-                  : 'No hay multas registradas aún'
-                }
-              </p>
-            </div>
-          ) : (
-            <div className="row">
-              {multasFiltradas.map((multa) => (
-                <div key={multa.id} className={vistaActual === 'cards' ? 'col-md-6 col-lg-4 mb-3' : 'col-12 mb-2'}>
-                  {vistaActual === 'cards' ? (
-                    /* Card View */
-                    <div className="card h-100">
-                      <div className="card-header d-flex justify-content-between align-items-center">
-                        <div>
-                          <h6 className="card-title mb-0">Multa #{multa.numero}</h6>
-                          <small className="text-muted">{multa.unidad_numero}</small>
-                        </div>
-                        <div className="d-flex gap-1">
-                          <span className={`badge bg-${multasService.getEstadoColor(multa.estado)}`}>
-                            {multa.estado}
-                          </span>
-                          <span className={`badge bg-${multasService.getPrioridadColor(multa.prioridad)}`}>
-                            {multa.prioridad}
-                          </span>
+          {/* Stats cards */}
+          {estadisticas && (
+            <div className="row mb-4">
+              <div className="col-6 col-lg-3">
+                <div className="card border-0">
+                  <div className="card-body">
+                    <div className="d-flex align-items-center">
+                      <div className="flex-shrink-0">
+                        <div className="p-2 rounded" style={{backgroundColor: '#E3F2FD'}}>
+                          <span className="material-icons text-primary">gavel</span>
                         </div>
                       </div>
-                      <div className="card-body">
-                        <h6 className="text-primary">{multa.tipo_infraccion}</h6>
-                        <p className="card-text small text-muted mb-2">
-                          {multa.descripcion?.substring(0, 100)}
-                          {multa.descripcion && multa.descripcion.length > 100 && '...'}
-                        </p>
-                        <div className="row text-sm">
-                          <div className="col-6">
-                            <strong>Monto:</strong><br/>
-                            <span className="text-danger fw-bold">
-                              {multasService.formatearMonto(multa.monto)}
-                            </span>
-                          </div>
-                          <div className="col-6">
-                            <strong>Vence:</strong><br/>
-                            <span className={multasService.estaVencida(multa.fecha_vencimiento) ? 'text-danger' : 'text-muted'}>
-                              {new Date(multa.fecha_vencimiento).toLocaleDateString('es-CL')}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="card-footer">
-                        <div className="d-flex justify-content-between align-items-center">
-                          <small className="text-muted">
-                            {multa.propietario_nombre || 'Sin propietario'}
-                          </small>
-                          <Link
-                            href={`/multas/${multa.id}`}
-                            className="btn btn-sm btn-outline-primary"
-                          >
-                            Ver detalle
-                          </Link>
-                        </div>
+                      <div className="flex-grow-1 ms-3">
+                        <div className="text-muted small">Total</div>
+                        <div className="h4 mb-0">{estadisticas.total}</div>
                       </div>
                     </div>
-                  ) : (
-                    /* Table Row */
-                    <div className="card">
-                      <div className="card-body py-2">
-                        <div className="row align-items-center">
-                          <div className="col-1">
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              checked={multasSeleccionadas.includes(multa.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setMultasSeleccionadas([...multasSeleccionadas, multa.id]);
-                                } else {
-                                  setMultasSeleccionadas(multasSeleccionadas.filter(id => id !== multa.id));
-                                }
-                              }}
-                            />
-                          </div>
-                          <div className="col-2">
-                            <strong>#{multa.numero}</strong><br/>
-                            <small className="text-muted">{multa.unidad_numero}</small>
-                          </div>
-                          <div className="col-3">
-                            <div className="fw-bold text-primary">{multa.tipo_infraccion}</div>
-                            <small className="text-muted">{multa.propietario_nombre}</small>
-                          </div>
-                          <div className="col-2 text-center">
-                            <div className="fw-bold text-danger">{multasService.formatearMonto(multa.monto)}</div>
-                            <small className="text-muted">{new Date(multa.fecha_vencimiento).toLocaleDateString('es-CL')}</small>
-                          </div>
-                          <div className="col-2 text-center">
-                            <span className={`badge bg-${multasService.getEstadoColor(multa.estado)}`}>
-                              {multa.estado}
-                            </span>
-                          </div>
-                          <div className="col-2 text-end">
-                            <Link
-                              href={`/multas/${multa.id}`}
-                              className="btn btn-sm btn-outline-primary"
-                            >
-                              <span className="material-icons">visibility</span>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Acciones masivas */}
-          {multasSeleccionadas.length > 0 && (
-            <div className="card mt-3">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center">
-                  <span>{multasSeleccionadas.length} multas seleccionadas</span>
-                  <div className="d-flex gap-2">
-                    <button className="btn btn-sm btn-outline-primary">
-                      <span className="material-icons me-2">email</span>
-                      Enviar recordatorio
-                    </button>
-                    <button className="btn btn-sm btn-outline-success">
-                      <span className="material-icons me-2">download</span>
-                      Exportar seleccionadas
-                    </button>
                   </div>
                 </div>
               </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="card border-0">
+                  <div className="card-body">
+                    <div className="d-flex align-items-center">
+                      <div className="flex-shrink-0">
+                        <div className="p-2 rounded" style={{backgroundColor: '#FFF8E1'}}>
+                          <span className="material-icons text-warning">schedule</span>
+                        </div>
+                      </div>
+                      <div className="flex-grow-1 ms-3">
+                        <div className="text-muted small">Pendientes</div>
+                        <div className="h4 mb-0">{estadisticas.pendientes}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="card border-0">
+                  <div className="card-body">
+                    <div className="d-flex align-items-center">
+                      <div className="flex-shrink-0">
+                        <div className="p-2 rounded" style={{backgroundColor: '#E8F5E9'}}>
+                          <span className="material-icons text-success">check_circle</span>
+                        </div>
+                      </div>
+                      <div className="flex-grow-1 ms-3">
+                        <div className="text-muted small">Pagadas</div>
+                        <div className="h4 mb-0">{estadisticas.pagadas}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="card border-0">
+                  <div className="card-body">
+                    <div className="d-flex align-items-center">
+                      <div className="flex-shrink-0">
+                        <div className="p-2 rounded" style={{backgroundColor: '#FFEBEE'}}>
+                          <span className="material-icons text-danger">error</span>
+                        </div>
+                      </div>
+                      <div className="flex-grow-1 ms-3">
+                        <div className="text-muted small">Vencidas</div>
+                        <div className="h4 mb-0">{estadisticas.vencidas}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mobile cards */}
+          <div className="mobile-cards d-lg-none">
+            {multasFiltradas.map(multa => (
+              <div key={multa.id} className={`fine-card ${multa.estado}`}>
+                <div className="fine-header">
+                  <div className="flex-grow-1">
+                    <div className="fine-number">#{multa.numero}</div>
+                    <div className="fine-unit">{multa.unidad_numero}</div>
+                    <div className="fine-violation">{multa.tipo_infraccion}</div>
+                    <div className="mb-2">
+                      <span className={`status-badge status-${multa.estado} me-2`}>
+                        {multa.estado}
+                      </span>
+                      <span className={`priority-badge priority-${multa.prioridad}`}>
+                        {multa.prioridad}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-end">
+                    <div className="fine-amount">{multasService.formatearMonto(multa.monto)}</div>
+                    <small className="text-muted">
+                      Vence: {new Date(multa.fecha_vencimiento).toLocaleDateString('es-CL')}
+                    </small>
+                  </div>
+                </div>
+                <div className="d-flex justify-content-end gap-2">
+                  <button 
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => router.push(`/multas/${multa.id}`)}
+                  >
+                    Ver Detalle
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => handleRegistrarPago(multa.id)}
+                  >
+                    Registrar Pago
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="desktop-table d-none d-lg-block">
+            <div className="table-responsive">
+              <table className="table table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>
+                      <input 
+                        type="checkbox" 
+                        className="form-check-input"
+                        checked={multasSeleccionadas.length === multasFiltradas.length && multasFiltradas.length > 0}
+                        onChange={handleSelectAll}
+                      />
+                    </th>
+                    <th>Multa</th>
+                    <th>Unidad</th>
+                    <th>Infracción</th>
+                    <th>Monto</th>
+                    <th>Emisión</th>
+                    <th>Vencimiento</th>
+                    <th>Estado</th>
+                    <th>Prioridad</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {multasFiltradas.map(multa => (
+                    <tr key={multa.id}>
+                      <td>
+                        <input 
+                          type="checkbox" 
+                          className="form-check-input"
+                          checked={multasSeleccionadas.includes(multa.id)}
+                          onChange={() => handleSelectMulta(multa.id)}
+                        />
+                      </td>
+                      <td>
+                        <div className="fw-bold">#{multa.numero}</div>
+                        <small className="text-muted">ID: {multa.id}</small>
+                      </td>
+                      <td>
+                        <div className="fw-bold">{multa.unidad_numero}</div>
+                        <small className="text-muted">{multa.propietario_nombre || 'Sin propietario'}</small>
+                      </td>
+                      <td>{multa.tipo_infraccion}</td>
+                      <td className="fw-bold">{multasService.formatearMonto(multa.monto)}</td>
+                      <td>{new Date(multa.fecha_infraccion).toLocaleDateString('es-CL')}</td>
+                      <td>
+                        {new Date(multa.fecha_vencimiento).toLocaleDateString('es-CL')}
+                        {multasService.estaVencida(multa.fecha_vencimiento) && (
+                          <small className="text-danger d-block">¡Vencida!</small>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`status-badge status-${multa.estado}`}>
+                          {multa.estado}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`priority-badge priority-${multa.prioridad}`}>
+                          {multa.prioridad}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="dropdown">
+                          <button 
+                            className="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                            data-bs-toggle="dropdown"
+                          >
+                            Acciones
+                          </button>
+                          <ul className="dropdown-menu">
+                            <li>
+                              <button 
+                                className="dropdown-item"
+                                onClick={() => router.push(`/multas/${multa.id}`)}
+                              >
+                                <span className="material-icons me-2">visibility</span>
+                                Ver Detalle
+                              </button>
+                            </li>
+                            <li>
+                              <button 
+                                className="dropdown-item"
+                                onClick={() => handleRegistrarPago(multa.id)}
+                              >
+                                <span className="material-icons me-2">payment</span>
+                                Registrar Pago
+                              </button>
+                            </li>
+                            <li>
+                              <button 
+                                className="dropdown-item"
+                                onClick={() => handleEditar(multa.id)}
+                                disabled={multa.estado === 'anulada'}
+                              >
+                                <span className="material-icons me-2">edit</span>
+                                Editar
+                              </button>
+                            </li>
+                            <li><hr className="dropdown-divider" /></li>
+                            <li>
+                              <button 
+                                className="dropdown-item"
+                                onClick={() => handleEnviarRecordatorio(multa.id)}
+                              >
+                                <span className="material-icons me-2">email</span>
+                                Enviar Recordatorio
+                              </button>
+                            </li>
+                            <li><hr className="dropdown-divider" /></li>
+                            <li>
+                              <button 
+                                className="dropdown-item text-danger"
+                                onClick={() => handleAnular(multa.id)}
+                                disabled={multa.estado === 'anulada'}
+                              >
+                                <span className="material-icons me-2">cancel</span>
+                                Anular Multa
+                              </button>
+                            </li>
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Empty state */}
+          {multasFiltradas.length === 0 && (
+            <div className="text-center py-5">
+              <span className="material-icons display-1 text-muted">gavel</span>
+              <h4 className="mt-3">No hay multas</h4>
+              <p className="text-muted">
+                {filtroActivo === 'all' ? 'No hay multas creadas aún' : `No hay multas con estado "${getFiltroLabel(filtroActivo)}"`}
+              </p>
+              {filtroActivo === 'all' && (
+                <Link href="/multas/nueva" className="btn btn-primary">
+                  <span className="material-icons me-2">add</span>
+                  Crear Primera Multa
+                </Link>
+              )}
             </div>
           )}
         </div>

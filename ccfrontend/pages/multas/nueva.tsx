@@ -109,6 +109,12 @@ export default function NuevaMulta() {
     }
   }, [formData.torre_id]);
 
+  // Cargar tipos de infracción predefinidos
+  useEffect(() => {
+    const tipos = multasService.getTiposInfraccionPredefinidos();
+    setTiposInfraccion(tipos);
+  }, []);
+
   const loadInitialData = async () => {
     setIsLoading(true);
     try {
@@ -286,26 +292,40 @@ export default function NuevaMulta() {
         observaciones: formData.observaciones,
       };
 
-      // TODO: Subir archivos de evidencia si los hay
-      if (evidenciaFiles.length > 0) {
-        // Aquí subirías los archivos y obtendrías las URLs
-        // const urls = await uploadFiles(evidenciaFiles);
-        // submitData.evidencia_urls = urls;
-      }
-
+      console.log('🔄 Creando multa:', submitData);
+      
+      // ✅ Usar el servicio correctamente
       const nuevaMulta = await multasService.createMulta(submitData);
       
       console.log('✅ Multa creada exitosamente:', nuevaMulta);
       
-      // Redirigir a la página de detalle de la multa
+      // ✅ Redirigir al detalle de la multa recién creada
       router.push(`/multas/${nuevaMulta.id}`);
       
     } catch (error) {
       console.error('❌ Error creando multa:', error);
       // TODO: Mostrar mensaje de error al usuario
+      alert('Error al crear la multa. Por favor, inténtelo de nuevo.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Obtener icono para tipo de infracción
+  const getIconForType = (tipoId: string): string => {
+    const icons = {
+      'ruidos_molestos': 'volume_up',
+      'mascotas_sin_correa': 'pets',
+      'estacionamiento_indebido': 'local_parking',
+      'basura_fuera_horario': 'delete',
+      'uso_inadecuado_areas': 'home',
+      'no_recoger_desechos': 'pets',
+      'fumar_prohibido': 'smoke_free',
+      'trabajos_horario': 'construction',
+      'danos_propiedad': 'report_problem',
+      'normas_piscina': 'pool'
+    };
+    return icons[tipoId] || 'warning';
   };
 
   // Render del wizard header
@@ -469,105 +489,71 @@ export default function NuevaMulta() {
   );
 
   // Render Step 2: Tipo de Infracción
-  const renderStep2 = () => {
-    const tiposPredefinidos = multasService.getTiposInfraccionPredefinidos();
-    
-    return (
-      <div className="card">
-        <div className="card-header">
-          <h5 className="card-title mb-0">
-            <span className="material-icons me-2">gavel</span>
-            Paso 2: Tipo de Infracción
-          </h5>
-        </div>
-        <div className="card-body">
-          <div className="row g-3">
-            {/* Tipo de infracción - DROPDOWN PREDEFINIDO */}
-            <div className="col-12">
-              <label className="form-label">Tipo de Infracción *</label>
-              <select
-                className="form-select"
-                value={formData.tipo_infraccion || ''}
-                onChange={(e) => {
-                  const tipoSeleccionado = tiposPredefinidos.find(t => t.nombre === e.target.value);
-                  updateFormData('tipo_infraccion', e.target.value);
-                  if (tipoSeleccionado) {
-                    updateFormData('monto', tipoSeleccionado.monto_base);
-                  }
-                }}
+  const renderStep2 = () => (
+    <div className="card">
+      <div className="card-header">
+        <h5 className="card-title mb-0">
+          <span className="material-icons me-2">warning</span>
+          Paso 2: Tipo de Infracción
+        </h5>
+      </div>
+      <div className="card-body">
+        <div className="row">
+          {tiposInfraccion.map(tipo => (
+            <div key={tipo.id} className="col-md-6 col-lg-4 mb-3">
+              <div 
+                className={`violation-type-card ${formData.tipo_infraccion === tipo.nombre ? 'selected' : ''}`}
+                onClick={() => updateFormData('tipo_infraccion', tipo.nombre)}
               >
-                <option value="">Seleccionar tipo de infracción</option>
-                {tiposPredefinidos.map(tipo => (
-                  <option key={tipo.id} value={tipo.nombre}>
-                    {tipo.nombre} - {multasService.formatearMonto(tipo.monto_base)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Monto personalizado */}
-            <div className="col-md-6">
-              <label className="form-label">Monto *</label>
-              <div className="input-group">
-                <span className="input-group-text">$</span>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={formData.monto || ''}
-                  onChange={(e) => updateFormData('monto', e.target.value ? parseFloat(e.target.value) : undefined)}
-                  placeholder="0"
-                  min="0"
-                  step="1000"
-                />
+                <div className="violation-icon">
+                  <span className="material-icons">{getIconForType(tipo.id)}</span>
+                </div>
+                <div className="violation-title">{tipo.nombre}</div>
+                <div className="violation-description">{tipo.categoria}</div>
+                <div className="violation-amount">{multasService.formatearMonto(tipo.monto_base)}</div>
               </div>
-              <small className="text-muted">
-                Puedes modificar el monto base de la infracción
-              </small>
             </div>
-
-            {/* Prioridad */}
-            <div className="col-md-6">
-              <label className="form-label">Prioridad</label>
-              <select
-                className="form-select"
-                value={formData.prioridad || 'media'}
-                onChange={(e) => updateFormData('prioridad', e.target.value)}
-              >
-                <option value="baja">🟢 Baja</option>
-                <option value="media">🟡 Media</option>
-                <option value="alta">🟠 Alta</option>
-                <option value="critica">🔴 Crítica</option>
-              </select>
+          ))}
+        </div>
+        
+        {/* Monto personalizado */}
+        {formData.tipo_infraccion && (
+          <div className="mt-4">
+            <h6>Ajustar Monto</h6>
+            <div className="row">
+              <div className="col-md-6">
+                <label className="form-label">Monto de la Multa *</label>
+                <div className="input-group">
+                  <span className="input-group-text">$</span>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={formData.monto || ''}
+                    onChange={(e) => updateFormData('monto', parseFloat(e.target.value))}
+                    min="0"
+                    step="1000"
+                  />
+                </div>
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Prioridad</label>
+                <select
+                  className="form-select"
+                  value={formData.prioridad || 'media'}
+                  onChange={(e) => updateFormData('prioridad', e.target.value)}
+                >
+                  <option value="baja">Baja</option>
+                  <option value="media">Media</option>
+                  <option value="alta">Alta</option>
+                  <option value="critica">Crítica</option>
+                </select>
+              </div>
             </div>
           </div>
-
-          {/* Información del tipo seleccionado */}
-          {formData.tipo_infraccion && (
-            <div className="mt-4 p-3 bg-light rounded">
-              {(() => {
-                const tipoSeleccionado = tiposPredefinidos.find(t => t.nombre === formData.tipo_infraccion);
-                if (!tipoSeleccionado) return null;
-                
-                return (
-                  <div>
-                    <h6 className="text-primary">{tipoSeleccionado.nombre}</h6>
-                    <div className="row">
-                      <div className="col-md-6">
-                        <strong>Categoría:</strong> {tipoSeleccionado.categoria}
-                      </div>
-                      <div className="col-md-6">
-                        <strong>Monto base:</strong> {multasService.formatearMonto(tipoSeleccionado.monto_base)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-        </div>
+        )}
       </div>
-    );
-  };
+    </div>
+  );
 
   // Render Step 3: Detalles
   const renderStep3 = () => (
