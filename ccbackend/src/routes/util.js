@@ -330,6 +330,4 @@ router.get('/utm/historico', async (req, res) => {
   }
 });
 
-console.log('📝 Rutas registradas en util.js:', router.stack.map(r => r.route?.path).filter(Boolean));
-
 module.exports = router;
