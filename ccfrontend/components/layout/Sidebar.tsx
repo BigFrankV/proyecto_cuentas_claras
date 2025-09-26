@@ -58,7 +58,7 @@ const menuSections = [
         icon: 'account_balance_wallet',
       },
       { href: '/proveedores', label: 'Proveedores', icon: 'store' },
-      { href: '/compras', label: 'Compras', icon: 'inventory' },
+      { href: '/documentos-compra', label: 'Compras', icon: 'inventory' },
     ],
   },
   {
@@ -162,7 +162,7 @@ export default function Sidebar() {
       '/categorias-gasto': Permission.VIEW_FINANCES,
       '/centros-costo': Permission.VIEW_FINANCES,
       '/proveedores': Permission.VIEW_FINANCES,
-      '/compras': Permission.VIEW_FINANCES,
+      '/documentos-compra': Permission.VIEW_FINANCES,
       '/medidores': Permission.VIEW_COMMUNITIES,
       '/lecturas': Permission.VIEW_COMMUNITIES,
       '/consumos': Permission.VIEW_COMMUNITIES,

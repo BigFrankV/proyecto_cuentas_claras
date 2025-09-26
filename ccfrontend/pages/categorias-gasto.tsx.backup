@@ -1122,9 +1122,7 @@ export default function CategoriasGastoListado() {
             </div>
           </div>
         )}
-        );
-
-
+        </div>
       </Layout>
 
       <style jsx>{`
@@ -1145,6 +1143,6 @@ export default function CategoriasGastoListado() {
           transform: translateY(-1px);
         }
       `}</style>
-    </ProtectedRoute >
+    </ProtectedRoute>
   );
 }
