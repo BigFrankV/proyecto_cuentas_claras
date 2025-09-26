@@ -756,10 +756,10 @@ export default function CategoriasGastoListado() {
                       Exportar seleccionadas
                     </button>
                   </div>
-                </Card.Body>
-              </Card>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* View Options */}
           <div className="view-options">
@@ -885,6 +885,7 @@ export default function CategoriasGastoListado() {
             </div>
           </div>
         )}
+        </div>
       </Layout>
 
       <style jsx>{`
