@@ -27,6 +27,7 @@ const webhooksRoutes = require('./routes/webhooks');
 const amenidadesRoutes = require('./routes/amenidades');
 const soporteRoutes = require('./routes/soporte');
 const utilRoutes = require('./routes/util');
+const filesRoutes = require('./routes/files');
 const sequelize = require('./sequelize');
 const logger = require('./logger');
 const { setupSwagger } = require('./swagger');
@@ -67,6 +68,7 @@ app.use('/webhooks', webhooksRoutes);
 app.use('/amenidades', amenidadesRoutes);
 app.use('/', soporteRoutes); // soporte exposes varios paths: tickets, notificaciones, documentos, bitacora, parametros
 app.use('/util', utilRoutes);
+app.use('/files', filesRoutes);
 
 app.get('/healthz', (_, res) => res.json({ status: 'ok' }));
 
@@ -86,7 +88,18 @@ async function start() {
 		// Redis removed; skipping cache setup
 
 	const port = process.env.PORT || 3000;
-	app.listen(port, () => logger.info(`Server running on port ${port}`));
+	app.listen(port, () => {
+		logger.info(`Server running on port ${port}`);
+		
+		// Inicializar scheduler de indicadores
+		try {
+			const schedulerService = require('./services/schedulerService');
+			schedulerService.start();
+			logger.info('✅ Scheduler de indicadores iniciado');
+		} catch (error) {
+			logger.error('❌ Error iniciando scheduler:', error);
+		}
+	});
 }
 
 start();

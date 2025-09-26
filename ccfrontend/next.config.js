@@ -3,6 +3,7 @@ const nextConfig = {
   // Configuración esencial para Cuentas Claras
   reactStrictMode: true,
   swcMinify: true,
+  output: 'export',
 
   // Configuración de imágenes
   images: {

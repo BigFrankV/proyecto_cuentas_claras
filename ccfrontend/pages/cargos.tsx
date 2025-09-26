@@ -1,8 +1,9 @@
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import CargosListado from '@/components/cargos/CargosListadoSimple';
 import Head from 'next/head';
 
-export default function CargosListado() {
+export default function CargosPage() {
   return (
     <ProtectedRoute>
       <Head>
@@ -10,29 +11,7 @@ export default function CargosListado() {
       </Head>
 
       <Layout title='Lista de Cargos'>
-        <div className='container-fluid p-4'>
-          <div className='row'>
-            <div className='col-12'>
-              <div className='d-flex justify-content-between align-items-center mb-4'>
-                <h1 className='h3'>Lista de Cargos</h1>
-              </div>
-
-              <div className='card'>
-                <div className='card-body'>
-                  <p className='text-muted'>
-                    Esta página está en desarrollo...
-                  </p>
-
-                  {/* TODO: Implementar listado de cargos */}
-                  <div className='alert alert-info'>
-                    <i className='material-icons me-2'>info</i>
-                    Funcionalidad pendiente de implementación
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <CargosListado />
       </Layout>
     </ProtectedRoute>
   );

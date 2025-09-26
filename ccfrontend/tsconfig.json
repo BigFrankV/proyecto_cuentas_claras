@@ -44,5 +44,5 @@
     "types/**/*.d.ts",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "pages/comunidades/nueva_backup.tsx", "__tests__"]
 }

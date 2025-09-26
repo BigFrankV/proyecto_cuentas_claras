@@ -756,6 +756,35 @@ export default function CategoriasGastoListado() {
                       Exportar seleccionadas
                     </button>
                   </div>
+                </Card.Body>
+              </Card>
+            </div>
+          </div>
+
+          {/* View Options */}
+          <div className="view-options">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <span className="text-muted">
+                  {filteredCategories.length} categorías encontradas
+                </span>
+              </div>
+              <div className="d-flex align-items-center gap-3">
+                <div className="btn-group" role="group">
+                  <Button 
+                    variant={viewMode === 'table' ? 'primary' : 'outline-primary'}
+                    size="sm"
+                    onClick={() => setViewMode('table')}
+                  >
+                    <span className="material-icons">view_list</span>
+                  </Button>
+                  <Button 
+                    variant={viewMode === 'grid' ? 'primary' : 'outline-primary'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                  >
+                    <span className="material-icons">grid_view</span>
+                  </Button>
                 </div>
               </div>
             </div>

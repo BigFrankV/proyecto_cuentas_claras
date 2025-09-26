@@ -1,11 +1,13 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 
-// Configuración base de la API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+// Configuración base de la API - usa la variable de entorno
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_FULL_URL = `${API_BASE_URL}`;
+
 // Crear instancia de axios
 export const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000, // Aumentado a 30 segundos para operaciones de sincronización
   headers: {
     'Content-Type': 'application/json',
   },
