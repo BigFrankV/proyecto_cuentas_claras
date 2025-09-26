@@ -4,6 +4,7 @@ import '@/styles/globals.css';
 import '@/styles/components.css';
 import '@/styles/comunidades.css';
 import '@/styles/map-section.css';
+import '@/styles/compras.css';
 import '@/lib/console-filters'; // Filtros para limpiar consola en desarrollo
 import { useEffect } from 'react';
 import { AuthProvider } from '@/lib/useAuth';

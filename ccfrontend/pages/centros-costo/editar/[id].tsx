@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Form, Button, Card, Badge, Alert } from 'react-bootstrap';
 import Layout from '@/components/layout/Layout';
@@ -15,11 +15,14 @@ interface CostCenterForm {
   responsibilities: string[];
   icon: string;
   color: string;
+  status: string;
 }
 
-export default function CentroCostoNuevo() {
+export default function CentroCostoEditar() {
   const router = useRouter();
+  const { id } = router.query;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [newResponsibility, setNewResponsibility] = useState('');
   
   const [formData, setFormData] = useState<CostCenterForm>({
@@ -31,7 +34,8 @@ export default function CentroCostoNuevo() {
     community: '',
     responsibilities: [],
     icon: 'build',
-    color: '#2196F3'
+    color: '#2196F3',
+    status: 'active'
   });
 
   const departmentOptions = [
@@ -54,6 +58,41 @@ export default function CentroCostoNuevo() {
     '#03A9F4', '#FF5722', '#E91E63', '#673AB7', '#795548', '#607D8B',
     '#FFC107', '#8BC34A', '#CDDC39', '#FFEB3B', '#FF6F00', '#D32F2F'
   ];
+
+  useEffect(() => {
+    if (id) {
+      loadCostCenter();
+    }
+  }, [id]);
+
+  const loadCostCenter = async () => {
+    try {
+      setLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock data - En una app real, esto vendría de la API
+      const mockData = {
+        name: 'Mantenimiento Edificio A',
+        description: 'Centro de costo para mantenimiento general del edificio A, incluyendo reparaciones, pintura, plomería y electricidad.',
+        department: 'maintenance',
+        manager: 'Carlos Rodriguez',
+        budget: '50000',
+        community: 'Comunidad Parque Real',
+        responsibilities: ['Reparaciones menores', 'Pintura interior y exterior', 'Plomería general', 'Electricidad básica', 'Limpieza profunda', 'Mantenimiento preventivo'],
+        icon: 'build',
+        color: '#2196F3',
+        status: 'active'
+      };
+      
+      setFormData(mockData);
+    } catch (error) {
+      console.error('Error loading cost center:', error);
+      alert('Error al cargar el centro de costo');
+      router.push('/centros-costo');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (field: keyof CostCenterForm, value: string) => {
     setFormData(prev => ({
@@ -87,22 +126,37 @@ export default function CentroCostoNuevo() {
       // Simular API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      alert('Centro de costo creado exitosamente');
-      router.push('/centros-costo');
+      alert('Centro de costo actualizado exitosamente');
+      router.push(`/centros-costo/${id}`);
     } catch (error) {
-      console.error('Error creating cost center:', error);
-      alert('Error al crear el centro de costo');
+      console.error('Error updating cost center:', error);
+      alert('Error al actualizar el centro de costo');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+            <div className="text-center">
+              <div className="spinner-border text-primary mb-3" style={{ width: '3rem', height: '3rem' }} />
+              <p className="text-muted">Cargando centro de costo...</p>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   const selectedDepartment = departmentOptions.find(d => d.value === formData.department);
 
   return (
     <ProtectedRoute>
       <Head>
-        <title>Nuevo Centro de Costo — Cuentas Claras</title>
+        <title>Editar Centro de Costo — Cuentas Claras</title>
       </Head>
 
       <Layout>
@@ -114,17 +168,17 @@ export default function CentroCostoNuevo() {
                 <Button 
                   variant="link" 
                   className="p-0 mb-2 text-decoration-none"
-                  onClick={() => router.push('/centros-costo')}
+                  onClick={() => router.push(`/centros-costo/${id}`)}
                 >
                   <span className="material-icons me-1">arrow_back</span>
-                  Volver a Centros de Costo
+                  Volver al Centro de Costo
                 </Button>
                 <h1 className="cost-center-form-title">
-                  <span className="material-icons me-2">add_business</span>
-                  Nuevo Centro de Costo
+                  <span className="material-icons me-2">edit</span>
+                  Editar Centro de Costo
                 </h1>
                 <p className="cost-center-form-subtitle">
-                  Crea un nuevo centro de costo para organizar y controlar el presupuesto
+                  Modifica la información y configuración del centro de costo
                 </p>
               </div>
             </div>
@@ -185,7 +239,7 @@ export default function CentroCostoNuevo() {
                           />
                         </Form.Group>
                       </div>
-                      <div className="col-md-6">
+                      <div className="col-md-4">
                         <Form.Group>
                           <Form.Label className="required">Responsable</Form.Label>
                           <Form.Control
@@ -197,7 +251,7 @@ export default function CentroCostoNuevo() {
                           />
                         </Form.Group>
                       </div>
-                      <div className="col-md-6">
+                      <div className="col-md-4">
                         <Form.Group>
                           <Form.Label className="required">Comunidad</Form.Label>
                           <Form.Select
@@ -209,6 +263,19 @@ export default function CentroCostoNuevo() {
                             <option value="Todas">Todas las comunidades</option>
                             <option value="Comunidad Parque Real">Comunidad Parque Real</option>
                             <option value="Edificio Central">Edificio Central</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </div>
+                      <div className="col-md-4">
+                        <Form.Group>
+                          <Form.Label className="required">Estado</Form.Label>
+                          <Form.Select
+                            value={formData.status}
+                            onChange={(e) => handleInputChange('status', e.target.value)}
+                            required
+                          >
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
                           </Form.Select>
                         </Form.Group>
                       </div>
@@ -281,6 +348,10 @@ export default function CentroCostoNuevo() {
                     </h5>
                   </Card.Header>
                   <Card.Body className="form-section-body">
+                    <Alert variant="info" className="mb-3">
+                      <span className="material-icons me-2">info</span>
+                      Ten cuidado al modificar el presupuesto, esto podría afectar la planificación financiera existente.
+                    </Alert>
                     <div className="row g-3">
                       <div className="col-md-6">
                         <Form.Group>
@@ -388,13 +459,16 @@ export default function CentroCostoNuevo() {
                         </div>
                       </div>
 
-                      {selectedDepartment && (
-                        <div className="mb-3">
+                      <div className="d-flex align-items-center gap-2 mb-3">
+                        {selectedDepartment && (
                           <Badge bg={selectedDepartment.badge}>
                             {selectedDepartment.label}
                           </Badge>
-                        </div>
-                      )}
+                        )}
+                        <Badge bg={formData.status === 'active' ? 'success' : 'secondary'}>
+                          {formData.status === 'active' ? 'Activo' : 'Inactivo'}
+                        </Badge>
+                      </div>
 
                       {formData.manager && (
                         <div className="mb-3">
@@ -439,7 +513,7 @@ export default function CentroCostoNuevo() {
             <div className="d-flex justify-content-end mt-4 gap-2">
               <Button 
                 variant="outline-secondary"
-                onClick={() => router.push('/centros-costo')}
+                onClick={() => router.push(`/centros-costo/${id}`)}
                 disabled={isSubmitting}
               >
                 Cancelar
@@ -452,12 +526,12 @@ export default function CentroCostoNuevo() {
                 {isSubmitting ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2" />
-                    Creando...
+                    Guardando...
                   </>
                 ) : (
                   <>
                     <span className="material-icons me-2">save</span>
-                    Crear Centro de Costo
+                    Guardar Cambios
                   </>
                 )}
               </Button>
