@@ -17,7 +17,6 @@
     "test:ci": "jest --ci --coverage --watchAll=false",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-
     "prepare": "husky",
     "clean": "rimraf .next out coverage",
     "predeploy": "npm run clean && npm run build",
@@ -28,6 +27,7 @@
     "audit:fix": "npm audit fix"
   },
   "dependencies": {
+    "@mui/icons-material": "^7.3.2",
     "@popperjs/core": "^2.11.8",
     "@types/qrcode": "^1.5.5",
     "@types/speakeasy": "^2.0.10",
