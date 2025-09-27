@@ -87,9 +87,9 @@ export interface GastoEstadisticas {
 
 export interface GastoCreateRequest {
   categoria_id: number;
-  centro_costo_id?: number;
-  proveedor_id?: number;
-  documento_compra_id?: number;
+  centro_costo_id?: number | null;
+  proveedor_id?: number | null;
+  documento_compra_id?: number | null;
   fecha: string;
   monto: number;
   glosa: string;

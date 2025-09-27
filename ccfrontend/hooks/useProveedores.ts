@@ -1,219 +1,142 @@
-import { useState, useEffect } from 'react';
-import { proveedoresService, Proveedor, ProveedorCreateRequest, ProveedorUpdateRequest, ProveedoresEstadisticas, ProveedorFilters } from '../lib/proveedoresService';
+import { useState, useCallback } from 'react';
+import { proveedoresService, Proveedor, ProveedorEstadisticas } from '@/lib/proveedoresService';
 
-interface UseProveedoresState {
-  proveedores: Proveedor[];
-  loading: boolean;
-  error: string | null;
-  estadisticas: ProveedoresEstadisticas | null;
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  } | null;
-}
+export function useProveedores(comunidadId: number) {
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [estadisticas, setEstadisticas] = useState<ProveedorEstadisticas | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-interface UseProveedoresActions {
-  fetchProveedores: (filters?: ProveedorFilters) => Promise<void>;
-  createProveedor: (data: ProveedorCreateRequest) => Promise<Proveedor>;
-  updateProveedor: (id: number, data: ProveedorUpdateRequest) => Promise<Proveedor>;
-  deleteProveedor: (id: number) => Promise<void>;
-  cambiarEstado: (id: number, activo: boolean) => Promise<Proveedor>;
-  fetchEstadisticas: () => Promise<void>;
-  clearError: () => void;
-}
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
-export function useProveedores(comunidadId: number): UseProveedoresState & UseProveedoresActions {
-  const [state, setState] = useState<UseProveedoresState>({
-    proveedores: [],
-    loading: false,
-    error: null,
-    estadisticas: null,
-    pagination: null
-  });
-
-  const setLoading = (loading: boolean) => {
-    setState(prev => ({ ...prev, loading }));
-  };
-
-  const setError = (error: string | null) => {
-    setState(prev => ({ ...prev, error }));
-  };
-
-  const clearError = () => setError(null);
-
-  const fetchProveedores = async (filters: ProveedorFilters = {}) => {
+  const fetchProveedores = useCallback(async () => {
     if (!comunidadId) return;
-
+    
     setLoading(true);
     setError(null);
+    
     try {
-      const proveedores = await proveedoresService.getProveedores(comunidadId, filters);
-      setState(prev => ({ 
-        ...prev, 
-        proveedores,
-        pagination: null
-      }));
-    } catch (err: any) {
-      setError(err.message);
+      const response = await proveedoresService.getProveedores(comunidadId);
+      if (response.success) {
+        setProveedores(response.data);
+        if (response.estadisticas) {
+          setEstadisticas(response.estadisticas);
+        }
+      } else {
+        setError('Error al cargar proveedores');
+      }
+    } catch (error: any) {
+      console.error('Error fetching proveedores:', error);
+      setError(error.response?.data?.error || 'Error al cargar proveedores');
     } finally {
       setLoading(false);
     }
-  };
+  }, [comunidadId]);
 
-  const createProveedor = async (data: ProveedorCreateRequest): Promise<Proveedor> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const nuevoProveedor = await proveedoresService.createProveedor(comunidadId, data);
-      setState(prev => ({ 
-        ...prev, 
-        proveedores: [...prev.proveedores, nuevoProveedor] 
-      }));
-      return nuevoProveedor;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateProveedor = async (id: number, data: ProveedorUpdateRequest): Promise<Proveedor> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const proveedorActualizado = await proveedoresService.updateProveedor(id, data);
-      setState(prev => ({
-        ...prev,
-        proveedores: prev.proveedores.map(p => 
-          p.id === id ? proveedorActualizado : p
-        )
-      }));
-      return proveedorActualizado;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteProveedor = async (id: number): Promise<void> => {
-    setLoading(true);
-    setError(null);
-    try {
-      await proveedoresService.deleteProveedor(id);
-      setState(prev => ({
-        ...prev,
-        proveedores: prev.proveedores.filter(p => p.id !== id)
-      }));
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cambiarEstado = async (id: number, activo: boolean): Promise<Proveedor> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const proveedorActualizado = await proveedoresService.toggleEstado(id, activo);
-      setState(prev => ({
-        ...prev,
-        proveedores: prev.proveedores.map(p => 
-          p.id === id ? proveedorActualizado : p
-        )
-      }));
-      return proveedorActualizado;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchEstadisticas = async () => {
+  const fetchEstadisticas = useCallback(async () => {
     if (!comunidadId) return;
-
-    setLoading(true);
-    setError(null);
+    
     try {
-      const estadisticas = await proveedoresService.getEstadisticas(comunidadId);
-      setState(prev => ({ ...prev, estadisticas }));
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      const response = await proveedoresService.getEstadisticas(comunidadId);
+      if (response.success) {
+        setEstadisticas(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching estadisticas:', error);
     }
-  };
+  }, [comunidadId]);
+
+  const createProveedor = useCallback(async (proveedorData: any) => {
+    setError(null);
+    
+    try {
+      const response = await proveedoresService.createProveedor(comunidadId, proveedorData);
+      if (response.success) {
+        setProveedores(prev => [...prev, response.data]);
+        await fetchEstadisticas();
+        return response.data;
+      } else {
+        throw new Error('Error al crear proveedor');
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Error al crear proveedor';
+      setError(errorMsg);
+      throw error;
+    }
+  }, [comunidadId, fetchEstadisticas]);
+
+  const updateProveedor = useCallback(async (id: number, proveedorData: any) => {
+    setError(null);
+    
+    try {
+      const response = await proveedoresService.updateProveedor(id, proveedorData);
+      if (response.success) {
+        setProveedores(prev => 
+          prev.map(p => p.id === id ? response.data : p)
+        );
+        await fetchEstadisticas();
+        return response.data;
+      } else {
+        throw new Error('Error al actualizar proveedor');
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Error al actualizar proveedor';
+      setError(errorMsg);
+      throw error;
+    }
+  }, [fetchEstadisticas]);
+
+  const deleteProveedor = useCallback(async (id: number) => {
+    setError(null);
+    
+    try {
+      const response = await proveedoresService.deleteProveedor(id);
+      if (response.success) {
+        setProveedores(prev => prev.filter(p => p.id !== id));
+        await fetchEstadisticas();
+      } else {
+        throw new Error('Error al eliminar proveedor');
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Error al eliminar proveedor';
+      setError(errorMsg);
+      throw error;
+    }
+  }, [fetchEstadisticas]);
+
+  const cambiarEstado = useCallback(async (id: number, nuevoEstado: boolean) => {
+    setError(null);
+    
+    try {
+      const response = await proveedoresService.toggleEstado(id);
+      if (response.success) {
+        setProveedores(prev => 
+          prev.map(p => p.id === id ? { ...p, activo: response.data.activo } : p)
+        );
+        await fetchEstadisticas();
+      } else {
+        throw new Error('Error al cambiar estado');
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Error al cambiar estado';
+      setError(errorMsg);
+      throw error;
+    }
+  }, [fetchEstadisticas]);
 
   return {
-    ...state,
+    proveedores,
+    estadisticas,
+    loading,
+    error,
     fetchProveedores,
+    fetchEstadisticas,
     createProveedor,
     updateProveedor,
     deleteProveedor,
     cambiarEstado,
-    fetchEstadisticas,
-    clearError
-  };
-}
-
-interface UseProveedorState {
-  proveedor: Proveedor | null;
-  loading: boolean;
-  error: string | null;
-}
-
-interface UseProveedorActions {
-  fetchProveedor: () => Promise<void>;
-  clearError: () => void;
-}
-
-export function useProveedor(id: number): UseProveedorState & UseProveedorActions {
-  const [state, setState] = useState<UseProveedorState>({
-    proveedor: null,
-    loading: false,
-    error: null
-  });
-
-  const setLoading = (loading: boolean) => {
-    setState(prev => ({ ...prev, loading }));
-  };
-
-  const setError = (error: string | null) => {
-    setState(prev => ({ ...prev, error }));
-  };
-
-  const clearError = () => setError(null);
-
-  const fetchProveedor = async () => {
-    if (!id) return;
-
-    setLoading(true);
-    setError(null);
-    try {
-      const proveedor = await proveedoresService.getProveedor(id);
-      setState(prev => ({ ...prev, proveedor }));
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProveedor();
-  }, [id]);
-
-  return {
-    ...state,
-    fetchProveedor,
     clearError
   };
 }

@@ -1,11 +1,11 @@
 import api from './api'; // Cambio: import por defecto
-import type { 
-  Gasto, 
-  CategoriaGasto, 
-  GastoEstadisticas, 
+import type {
+  Gasto,
+  CategoriaGasto,
+  GastoEstadisticas,
   GastoCreateRequest,
   GastoUpdateRequest,
-  PaginatedResponse 
+  PaginatedResponse
 } from '../types/gastos';
 
 export interface GastoFilters {
@@ -28,7 +28,7 @@ class GastosService {
    */
   async getGastos(comunidadId: number, filters: GastoFilters = {}): Promise<PaginatedResponse<Gasto>> {
     const params = new URLSearchParams();
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         params.append(key, String(value));
@@ -37,7 +37,7 @@ class GastosService {
 
     const queryString = params.toString();
     const url = `${this.baseUrl}/comunidad/${comunidadId}${queryString ? `?${queryString}` : ''}`;
-    
+
     const response = await api.get(url);
     return response.data;
   }
@@ -53,9 +53,19 @@ class GastosService {
   /**
    * Crear nuevo gasto
    */
-  async createGasto(comunidadId: number, gasto: GastoCreateRequest): Promise<Gasto> {
-    const response = await api.post(`${this.baseUrl}/comunidad/${comunidadId}`, gasto);
-    return response.data.data;
+  async createGasto(comunidadId: number, gastoData: GastoCreateRequest): Promise<any> {
+    const response = await api.post(`/gastos/comunidad/${comunidadId}`, {
+      categoria_id: gastoData.categoria_id,
+      proveedor_id: gastoData.proveedor_id || null,  // ← AGREGAR ESTA LÍNEA
+      centro_costo_id: gastoData.centro_costo_id || null,
+      documento_compra_id: gastoData.documento_compra_id || null,
+      fecha: gastoData.fecha,
+      monto: gastoData.monto,
+      glosa: gastoData.glosa,
+      extraordinario: gastoData.extraordinario || false,
+    });
+
+    return response.data;
   }
 
   /**

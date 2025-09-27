@@ -1,100 +1,97 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';  // ← AGREGAR useEffect
 import { useRouter } from 'next/router';
-import { Button, Card, Form, Alert, Col, Row, InputGroup } from 'react-bootstrap';
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
-import Head from 'next/head';
-
-interface ExpenseFormData {
-  description: string;
-  category: string;
-  provider: string;
-  amount: string;
-  date: string;
-  dueDate: string;
-  documentType: string;
-  documentNumber: string;
-  isRecurring: boolean;
-  recurringPeriod: string;
-  costCenter: string;
-  tags: string[];
-  observations: string;
-  priority: 'low' | 'medium' | 'high';
-  requiredApprovals: number;
-  attachments: File[];
-}
+import { Form, Button, Alert, Card, Badge } from 'react-bootstrap';
+import { useAuth } from '@/lib/useAuth';
+import { gastosService } from '@/lib/gastosService';
+import { proveedoresService } from '@/lib/proveedoresService';  // ← AGREGAR
+import { GastoCreateRequest } from '@/types/gastos';
 
 export default function GastoNuevo() {
   const router = useRouter();
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const [formData, setFormData] = useState<ExpenseFormData>({
-    description: '',
-    category: '',
-    provider: '',
-    amount: '',
-    date: new Date().toISOString().split('T')[0] || '',
-    dueDate: '',
-    documentType: 'factura',
-    documentNumber: '',
-    isRecurring: false,
-    recurringPeriod: '',
-    costCenter: '',
-    tags: [],
-    observations: '',
-    priority: 'medium',
-    requiredApprovals: 1,
-    attachments: []
+
+  const [formData, setFormData] = useState<GastoCreateRequest>({
+    categoria_id: 0,
+    fecha: new Date().toISOString().split('T')[0],
+    monto: 0,
+    glosa: '',
+    extraordinario: false,
+    // ✅ AGREGAR ESTOS CAMPOS:
+    centro_costo_id: null,
+    proveedor_id: null,
+    documento_compra_id: null
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
 
-  const categories = [
-    { value: 'mantenimiento', label: 'Mantenimiento' },
-    { value: 'servicios', label: 'Servicios Básicos' },
-    { value: 'personal', label: 'Personal' },
-    { value: 'suministros', label: 'Suministros' },
-    { value: 'impuestos', label: 'Impuestos y Tasas' },
-    { value: 'seguros', label: 'Seguros' },
-    { value: 'legal', label: 'Legal y Notarial' },
-    { value: 'tecnologia', label: 'Tecnología' },
-    { value: 'otros', label: 'Otros' }
-  ];
+  // ✅ AGREGAR useState para proveedores
+  const [proveedores, setProveedores] = useState<any[]>([]);
+  const [loadingProveedores, setLoadingProveedores] = useState(false);
 
-  const documentTypes = [
-    { value: 'factura', label: 'Factura' },
-    { value: 'boleta', label: 'Boleta de Honorarios' },
-    { value: 'recibo', label: 'Recibo' },
-    { value: 'factura_electronica', label: 'Factura Electrónica' },
-    { value: 'nota_credito', label: 'Nota de Crédito' },
-    { value: 'nota_debito', label: 'Nota de Débito' },
-    { value: 'orden_compra', label: 'Orden de Compra' },
-    { value: 'cotizacion', label: 'Cotización' },
-    { value: 'contrato', label: 'Contrato' },
-    { value: 'otro', label: 'Otro' }
-  ];
+  // Validación del formulario
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
 
-  const costCenters = [
-    { value: 'administracion', label: 'Administración' },
-    { value: 'mantenimiento', label: 'Mantenimiento' },
-    { value: 'seguridad', label: 'Seguridad' },
-    { value: 'limpieza', label: 'Limpieza' },
-    { value: 'jardineria', label: 'Jardinería' },
-    { value: 'areas_comunes', label: 'Áreas Comunes' },
-    { value: 'servicios_basicos', label: 'Servicios Básicos' },
-    { value: 'emergencias', label: 'Emergencias' }
-  ];
+    if (!formData.glosa?.trim()) {
+      newErrors.glosa = 'La descripción es obligatoria';
+    }
 
-  const handleInputChange = (field: keyof ExpenseFormData, value: any) => {
+    if (!formData.categoria_id || formData.categoria_id === 0) {
+      newErrors.categoria_id = 'La categoría es obligatoria';
+    }
+
+    if (!formData.monto || formData.monto <= 0) {
+      newErrors.monto = 'El monto debe ser mayor a 0';
+    }
+
+    if (!formData.fecha) {
+      newErrors.fecha = 'La fecha es obligatoria';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Manejo del envío del formulario
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const comunidadId = 2; // Tu comunidad actual
+      await gastosService.createGasto(comunidadId, formData);
+
+      // Éxito
+      alert('Gasto creado exitosamente');
+      router.push('/gastos');
+
+    } catch (error) {
+      console.error('Error creating gasto:', error);
+      alert('Error al crear el gasto');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Manejo de cambios en inputs
+  const handleInputChange = (field: keyof GastoCreateRequest, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-    
-    // Clear error when user starts typing
+
+    // Limpiar error cuando el usuario empieza a escribir
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -103,40 +100,29 @@ export default function GastoNuevo() {
     }
   };
 
-  const handleFileUpload = (files: FileList | null) => {
-    if (!files) return;
-    
-    const newFiles = Array.from(files);
-    const validFiles = newFiles.filter(file => {
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf', 'image/jpg'];
-      
-      if (file.size > maxSize) {
-        alert(`El archivo ${file.name} es demasiado grande. Máximo 10MB.`);
-        return false;
-      }
-      
-      if (!allowedTypes.includes(file.type)) {
-        alert(`El archivo ${file.name} no es de un tipo permitido. Solo se permiten imágenes (JPG, PNG) y PDF.`);
-        return false;
-      }
-      
-      return true;
-    });
-    
+  // Manejo del monto con formato
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/[^\d]/g, '');
+    const numericValue = parseInt(rawValue) || 0;
     setFormData(prev => ({
       ...prev,
-      attachments: [...prev.attachments, ...validFiles]
+      monto: numericValue
     }));
+  };
+
+  // Manejo de archivos
+  const handleFiles = (files: FileList | null) => {
+    if (files) {
+      const newFiles = Array.from(files).filter(file => file.size <= 10 * 1024 * 1024); // 10MB límite
+      setAttachments(prev => [...prev, ...newFiles].slice(0, 5)); // máximo 5 archivos
+    }
   };
 
   const removeAttachment = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index)
-    }));
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Manejo de drag & drop
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -151,551 +137,355 @@ export default function GastoNuevo() {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileUpload(e.dataTransfer.files);
-    }
+    handleFiles(e.dataTransfer.files);
   };
 
+  // Manejo de tags
   const addTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim()]
-      }));
+    if (tagInput.trim() && !tags.includes(tagInput.trim()) && tags.length < 5) {
+      setTags(prev => [...prev, tagInput.trim()]);
       setTagInput('');
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
+    setTags(prev => prev.filter(tag => tag !== tagToRemove));
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'La descripción es obligatoria';
-    }
-
-    if (!formData.category) {
-      newErrors.category = 'La categoría es obligatoria';
-    }
-
-    if (!formData.provider.trim()) {
-      newErrors.provider = 'El proveedor es obligatorio';
-    }
-
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = 'El monto debe ser mayor a 0';
-    }
-
-    if (!formData.date) {
-      newErrors.date = 'La fecha es obligatoria';
-    }
-
-    if (!formData.documentNumber.trim()) {
-      newErrors.documentNumber = 'El número de documento es obligatorio';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      // Simular delay de guardado
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Aquí iría la lógica para enviar los datos al servidor
-      console.log('Expense data:', formData);
-      
-      // Mostrar mensaje de éxito y redirigir
-      alert('Gasto creado exitosamente');
-      router.push('/gastos');
-      
-    } catch (error) {
-      console.error('Error creating expense:', error);
-      alert('Error al crear el gasto');
-    } finally {
-      setLoading(false);
+  const handleTagKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag();
     }
   };
 
-  const formatCurrency = (value: string) => {
-    const number = value.replace(/[^\d]/g, '');
-    return number.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  // Formatear monto para display
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP'
+    }).format(amount);
   };
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCurrency(e.target.value);
-    handleInputChange('amount', formatted);
-  };
+  // ✅ CARGAR PROVEEDORES AL INICIAR
+  useEffect(() => {
+    const cargarProveedores = async () => {
+      setLoadingProveedores(true);
+      try {
+        // Aquí llamarías a tu servicio de proveedores
+        // const response = await proveedoresService.getProveedores(comunidadId);
+        // setProveedores(response.data);
+        
+        // Por ahora usamos datos mock:
+        setProveedores([
+          { id: 1, nombre: 'Empresa de Limpieza Central', activo: true },
+          { id: 2, nombre: 'Ferretería San José', activo: true },
+          { id: 3, nombre: 'Electricista López y Asociados', activo: true },
+          { id: 4, nombre: 'Jardinería Verde Limpio', activo: true },
+          { id: 5, nombre: 'Pinturas El Color', activo: true }
+        ]);
+      } catch (error) {
+        console.error('Error cargando proveedores:', error);
+      } finally {
+        setLoadingProveedores(false);
+      }
+    };
+
+    cargarProveedores();
+  }, []);
 
   return (
-    <ProtectedRoute>
-      <Head>
-        <title>Nuevo Gasto — Cuentas Claras</title>
-      </Head>
-
-      <Layout>
-        <div className="expense-form-container">
-          {/* Header */}
-          <div className="form-header mb-4">
-            <div className="d-flex align-items-center mb-3">
-              <Button 
-                variant="outline-secondary" 
-                onClick={() => router.push('/gastos')}
-                className="me-3"
-              >
-                <span className="material-icons">arrow_back</span>
-              </Button>
-              <div>
-                <h1 className="form-title mb-1">
-                  <span className="material-icons me-2">add_circle</span>
-                  Nuevo Gasto
-                </h1>
-                <p className="form-subtitle text-muted">
-                  Registra un nuevo gasto para la comunidad
-                </p>
+    <div className="container-fluid py-4">
+      <div className="row justify-content-center">
+        <div className="col-12 col-lg-8 col-xl-6">
+          <Card className="shadow-sm border-0">
+            <Card.Header className="bg-primary text-white">
+              <div className="d-flex justify-content-between align-items-center">
+                <h4 className="mb-0">
+                  <i className="fas fa-plus-circle me-2"></i>
+                  Registrar Nuevo Gasto
+                </h4>
+                <Button
+                  variant="outline-light"
+                  size="sm"
+                  onClick={() => router.back()}
+                  disabled={loading}
+                >
+                  <i className="fas fa-arrow-left me-1"></i>
+                  Volver
+                </Button>
               </div>
-            </div>
-          </div>
+            </Card.Header>
 
-          <Form onSubmit={handleSubmit}>
-            <Row>
-              <Col lg={8}>
-                {/* Información básica */}
-                <Card className="form-card mb-4">
-                  <Card.Body>
-                    <div className="card-header-custom mb-4">
-                      <h5 className="card-title-custom">
-                        <span className="material-icons me-2">info</span>
-                        Información Básica
-                      </h5>
-                    </div>
+            <Card.Body className="p-4">
+              <Form onSubmit={handleSubmit}>
+                {/* Descripción */}
+                <div className="mb-4">
+                  <Form.Label className="fw-semibold">
+                    Descripción del Gasto <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Ej: Mantenimiento de ascensores, Suministros de limpieza..."
+                    value={formData.glosa}
+                    onChange={(e) => handleInputChange('glosa', e.target.value)}
+                    isInvalid={!!errors.glosa}
+                    disabled={loading}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.glosa}
+                  </Form.Control.Feedback>
+                </div>
 
-                    <Row>
-                      <Col md={12} className="mb-3">
-                        <Form.Group>
-                          <Form.Label className="required">Descripción del Gasto</Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Ej: Mantenimiento de ascensores, Suministros de limpieza..."
-                            value={formData.description}
-                            onChange={(e) => handleInputChange('description', e.target.value)}
-                            isInvalid={!!errors.description}
-                          />
-                          <Form.Control.Feedback type="invalid">
-                            {errors.description}
-                          </Form.Control.Feedback>
-                        </Form.Group>
-                      </Col>
+                {/* Categoría */}
+                <div className="mb-4">
+                  <Form.Label className="fw-semibold">
+                    Categoría <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Select
+                    value={formData.categoria_id}
+                    onChange={(e) => handleInputChange('categoria_id', parseInt(e.target.value))}
+                    isInvalid={!!errors.categoria_id}
+                    disabled={loading}
+                  >
+                    <option value={0}>Selecciona una categoría</option>
+                    <option value={3}>Mantenimiento Edificios</option>
+                    <option value={4}>Seguros</option>
+                    <option value={1}>Gastos Generales</option>
+                  </Form.Select>
+                  <Form.Control.Feedback type="invalid">
+                    {errors.categoria_id}
+                  </Form.Control.Feedback>
+                </div>
 
-                      <Col md={6} className="mb-3">
-                        <Form.Group>
-                          <Form.Label className="required">Categoría</Form.Label>
-                          <Form.Select
-                            value={formData.category}
-                            onChange={(e) => handleInputChange('category', e.target.value)}
-                            isInvalid={!!errors.category}
-                          >
-                            <option value="">Selecciona una categoría</option>
-                            {categories.map(cat => (
-                              <option key={cat.value} value={cat.value}>
-                                {cat.label}
-                              </option>
-                            ))}
-                          </Form.Select>
-                          <Form.Control.Feedback type="invalid">
-                            {errors.category}
-                          </Form.Control.Feedback>
-                        </Form.Group>
-                      </Col>
-
-                      <Col md={6} className="mb-3">
-                        <Form.Group>
-                          <Form.Label className="required">Proveedor</Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Nombre del proveedor o empresa"
-                            value={formData.provider}
-                            onChange={(e) => handleInputChange('provider', e.target.value)}
-                            isInvalid={!!errors.provider}
-                          />
-                          <Form.Control.Feedback type="invalid">
-                            {errors.provider}
-                          </Form.Control.Feedback>
-                        </Form.Group>
-                      </Col>
-
-                      <Col md={6} className="mb-3">
-                        <Form.Group>
-                          <Form.Label className="required">Monto</Form.Label>
-                          <InputGroup>
-                            <InputGroup.Text>$</InputGroup.Text>
-                            <Form.Control
-                              type="text"
-                              placeholder="0"
-                              value={formData.amount}
-                              onChange={handleAmountChange}
-                              isInvalid={!!errors.amount}
-                            />
-                            <InputGroup.Text>CLP</InputGroup.Text>
-                          </InputGroup>
-                          <Form.Control.Feedback type="invalid">
-                            {errors.amount}
-                          </Form.Control.Feedback>
-                        </Form.Group>
-                      </Col>
-
-                      <Col md={6} className="mb-3">
-                        <Form.Group>
-                          <Form.Label>Centro de Costo</Form.Label>
-                          <Form.Select
-                            value={formData.costCenter}
-                            onChange={(e) => handleInputChange('costCenter', e.target.value)}
-                          >
-                            <option value="">Selecciona un centro de costo</option>
-                            {costCenters.map(cc => (
-                              <option key={cc.value} value={cc.value}>
-                                {cc.label}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-
-                {/* Información del documento */}
-                <Card className="form-card mb-4">
-                  <Card.Body>
-                    <div className="card-header-custom mb-4">
-                      <h5 className="card-title-custom">
-                        <span className="material-icons me-2">description</span>
-                        Información del Documento
-                      </h5>
-                    </div>
-
-                    <Row>
-                      <Col md={6} className="mb-3">
-                        <Form.Group>
-                          <Form.Label className="required">Tipo de Documento</Form.Label>
-                          <Form.Select
-                            value={formData.documentType}
-                            onChange={(e) => handleInputChange('documentType', e.target.value)}
-                          >
-                            {documentTypes.map(doc => (
-                              <option key={doc.value} value={doc.value}>
-                                {doc.label}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-
-                      <Col md={6} className="mb-3">
-                        <Form.Group>
-                          <Form.Label className="required">Número de Documento</Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Ej: F-2024-001, B-789"
-                            value={formData.documentNumber}
-                            onChange={(e) => handleInputChange('documentNumber', e.target.value)}
-                            isInvalid={!!errors.documentNumber}
-                          />
-                          <Form.Control.Feedback type="invalid">
-                            {errors.documentNumber}
-                          </Form.Control.Feedback>
-                        </Form.Group>
-                      </Col>
-
-                      <Col md={6} className="mb-3">
-                        <Form.Group>
-                          <Form.Label className="required">Fecha del Documento</Form.Label>
-                          <Form.Control
-                            type="date"
-                            value={formData.date}
-                            onChange={(e) => handleInputChange('date', e.target.value)}
-                            isInvalid={!!errors.date}
-                          />
-                          <Form.Control.Feedback type="invalid">
-                            {errors.date}
-                          </Form.Control.Feedback>
-                        </Form.Group>
-                      </Col>
-
-                      <Col md={6} className="mb-3">
-                        <Form.Group>
-                          <Form.Label>Fecha de Vencimiento</Form.Label>
-                          <Form.Control
-                            type="date"
-                            value={formData.dueDate}
-                            onChange={(e) => handleInputChange('dueDate', e.target.value)}
-                            min={formData.date}
-                          />
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-
-                {/* Archivos adjuntos */}
-                <Card className="form-card mb-4">
-                  <Card.Body>
-                    <div className="card-header-custom mb-4">
-                      <h5 className="card-title-custom">
-                        <span className="material-icons me-2">attach_file</span>
-                        Archivos Adjuntos
-                      </h5>
-                    </div>
-
-                    <div 
-                      className={`file-upload-area ${dragActive ? 'drag-active' : ''}`}
-                      onDragEnter={handleDrag}
-                      onDragLeave={handleDrag}
-                      onDragOver={handleDrag}
-                      onDrop={handleDrop}
-                      onClick={() => fileInputRef.current?.click()}
+                {/* Proveedor */}
+                <div className="mb-4">
+                  <Form.Label className="fw-semibold">
+                    Proveedor
+                  </Form.Label>
+                  <div className="d-flex gap-2">
+                    <Form.Select
+                      value={formData.proveedor_id || 0}
+                      onChange={(e) => handleInputChange('proveedor_id', e.target.value === '0' ? null : parseInt(e.target.value))}
+                      disabled={loading || loadingProveedores}
+                      className="flex-grow-1"
                     >
-                      <div className="file-upload-content">
-                        <span className="material-icons file-upload-icon">cloud_upload</span>
-                        <p className="file-upload-text">
-                          Arrastra archivos aquí o <strong>haz clic para seleccionar</strong>
-                        </p>
-                        <small className="text-muted">
-                          Formatos permitidos: JPG, PNG, PDF • Tamaño máximo: 10MB por archivo
-                        </small>
-                      </div>
-                      <Form.Control
-                        ref={fileInputRef}
-                        type="file"
-                        multiple
-                        accept="image/jpeg,image/png,image/jpg,application/pdf"
-                        onChange={(e) => handleFileUpload((e.target as HTMLInputElement).files)}
-                        style={{ display: 'none' }}
-                      />
-                    </div>
-
-                    {formData.attachments.length > 0 && (
-                      <div className="uploaded-files mt-3">
-                        <h6>Archivos Seleccionados ({formData.attachments.length})</h6>
-                        {formData.attachments.map((file, index) => (
-                          <div key={index} className="uploaded-file-item">
-                            <div className="d-flex align-items-center">
-                              <span className="material-icons file-icon me-2">
-                                {file.type.includes('pdf') ? 'picture_as_pdf' : 'image'}
-                              </span>
-                              <div className="flex-grow-1">
-                                <div className="file-name">{file.name}</div>
-                                <small className="text-muted">
-                                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                                </small>
-                              </div>
-                              <Button
-                                variant="outline-danger"
-                                size="sm"
-                                onClick={() => removeAttachment(index)}
-                              >
-                                <span className="material-icons">delete</span>
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col lg={4}>
-                {/* Panel lateral */}
-                <div className="sticky-sidebar">
-                  {/* Configuración adicional */}
-                  <Card className="form-card mb-4">
-                    <Card.Body>
-                      <div className="card-header-custom mb-3">
-                        <h6 className="card-title-custom">
-                          <span className="material-icons me-2">settings</span>
-                          Configuración Adicional
-                        </h6>
-                      </div>
-
-                      <Form.Group className="mb-3">
-                        <Form.Label>Prioridad</Form.Label>
-                        <Form.Select
-                          value={formData.priority}
-                          onChange={(e) => handleInputChange('priority', e.target.value)}
-                        >
-                          <option value="low">Baja</option>
-                          <option value="medium">Media</option>
-                          <option value="high">Alta</option>
-                        </Form.Select>
-                      </Form.Group>
-
-                      <Form.Group className="mb-3">
-                        <Form.Label>Aprobaciones Requeridas</Form.Label>
-                        <Form.Select
-                          value={formData.requiredApprovals}
-                          onChange={(e) => handleInputChange('requiredApprovals', parseInt(e.target.value))}
-                        >
-                          <option value={1}>1 Aprobación</option>
-                          <option value={2}>2 Aprobaciones</option>
-                          <option value={3}>3 Aprobaciones</option>
-                        </Form.Select>
-                      </Form.Group>
-
-                      <Form.Group className="mb-3">
-                        <Form.Check
-                          type="checkbox"
-                          label="Gasto recurrente"
-                          checked={formData.isRecurring}
-                          onChange={(e) => handleInputChange('isRecurring', e.target.checked)}
-                        />
-                      </Form.Group>
-
-                      {formData.isRecurring && (
-                        <Form.Group className="mb-3">
-                          <Form.Label>Período de Recurrencia</Form.Label>
-                          <Form.Select
-                            value={formData.recurringPeriod}
-                            onChange={(e) => handleInputChange('recurringPeriod', e.target.value)}
-                          >
-                            <option value="">Selecciona período</option>
-                            <option value="monthly">Mensual</option>
-                            <option value="quarterly">Trimestral</option>
-                            <option value="semiannual">Semestral</option>
-                            <option value="annual">Anual</option>
-                          </Form.Select>
-                        </Form.Group>
-                      )}
-                    </Card.Body>
-                  </Card>
-
-                  {/* Etiquetas */}
-                  <Card className="form-card mb-4">
-                    <Card.Body>
-                      <div className="card-header-custom mb-3">
-                        <h6 className="card-title-custom">
-                          <span className="material-icons me-2">label</span>
-                          Etiquetas
-                        </h6>
-                      </div>
-
-                      <Form.Group className="mb-3">
-                        <InputGroup>
-                          <Form.Control
-                            type="text"
-                            placeholder="Agregar etiqueta"
-                            value={tagInput}
-                            onChange={(e) => setTagInput(e.target.value)}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                addTag();
-                              }
-                            }}
-                          />
-                          <Button variant="outline-secondary" onClick={addTag}>
-                            <span className="material-icons">add</span>
-                          </Button>
-                        </InputGroup>
-                      </Form.Group>
-
-                      {formData.tags.length > 0 && (
-                        <div className="tags-container">
-                          {formData.tags.map((tag, index) => (
-                            <span key={index} className="tag-item">
-                              {tag}
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="tag-remove"
-                                onClick={() => removeTag(tag)}
-                              >
-                                <span className="material-icons">close</span>
-                              </Button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </Card.Body>
-                  </Card>
-
-                  {/* Observaciones */}
-                  <Card className="form-card mb-4">
-                    <Card.Body>
-                      <div className="card-header-custom mb-3">
-                        <h6 className="card-title-custom">
-                          <span className="material-icons me-2">note</span>
-                          Observaciones
-                        </h6>
-                      </div>
-                      <Form.Group>
-                        <Form.Control
-                          as="textarea"
-                          rows={4}
-                          placeholder="Observaciones adicionales sobre este gasto..."
-                          value={formData.observations}
-                          onChange={(e) => handleInputChange('observations', e.target.value)}
-                        />
-                      </Form.Group>
-                    </Card.Body>
-                  </Card>
-
-                  {/* Botones de acción */}
-                  <div className="form-actions">
+                      <option value={0}>Sin proveedor especificado</option>
+                      {proveedores.map(proveedor => (
+                        <option key={proveedor.id} value={proveedor.id}>
+                          {proveedor.nombre}
+                        </option>
+                      ))}
+                    </Form.Select>
                     <Button
-                      type="submit"
-                      variant="primary"
-                      size="lg"
+                      variant="outline-primary"
+                      size="sm"
                       disabled={loading}
-                      className="w-100 mb-2"
+                      onClick={() => {
+                        // Aquí podrías abrir modal para crear nuevo proveedor
+                        alert('Funcionalidad de crear proveedor - próximamente');
+                      }}
+                      title="Agregar nuevo proveedor"
                     >
-                      {loading ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" />
-                          Creando Gasto...
-                        </>
-                      ) : (
-                        <>
-                          <span className="material-icons me-2">save</span>
-                          Crear Gasto
-                        </>
-                      )}
-                    </Button>
-                    
-                    <Button
-                      type="button"
-                      variant="outline-secondary"
-                      size="lg"
-                      className="w-100"
-                      onClick={() => router.push('/gastos')}
-                      disabled={loading}
-                    >
-                      <span className="material-icons me-2">cancel</span>
-                      Cancelar
+                      <i className="fas fa-plus"></i>
                     </Button>
                   </div>
+                  <Form.Text className="text-muted">
+                    Selecciona el proveedor o deja en blanco si es un gasto interno
+                  </Form.Text>
                 </div>
-              </Col>
-            </Row>
-          </Form>
+
+                {/* Monto */}
+                <div className="mb-4">
+                  <Form.Label className="fw-semibold">
+                    Monto <span className="text-danger">*</span>
+                  </Form.Label>
+                  <div className="input-group">
+                    <span className="input-group-text">$</span>
+                    <Form.Control
+                      type="text"
+                      placeholder="0"
+                      value={formData.monto?.toString() || ''}
+                      onChange={handleAmountChange}
+                      isInvalid={!!errors.monto}
+                      disabled={loading}
+                    />
+                  </div>
+                  {formData.monto > 0 && (
+                    <Form.Text className="text-success fw-medium">
+                      {formatAmount(formData.monto)}
+                    </Form.Text>
+                  )}
+                  <Form.Control.Feedback type="invalid">
+                    {errors.monto}
+                  </Form.Control.Feedback>
+                </div>
+
+                {/* Fecha */}
+                <div className="mb-4">
+                  <Form.Label className="fw-semibold">
+                    Fecha del Gasto <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={formData.fecha}
+                    onChange={(e) => handleInputChange('fecha', e.target.value)}
+                    isInvalid={!!errors.fecha}
+                    disabled={loading}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.fecha}
+                  </Form.Control.Feedback>
+                </div>
+
+                {/* Gasto Extraordinario */}
+                <div className="mb-4">
+                  <Form.Check
+                    type="checkbox"
+                    id="extraordinario"
+                    label="Este es un gasto extraordinario"
+                    checked={formData.extraordinario}
+                    onChange={(e) => handleInputChange('extraordinario', e.target.checked)}
+                    disabled={loading}
+                  />
+                  <Form.Text className="text-muted">
+                    Los gastos extraordinarios requieren aprobación especial
+                  </Form.Text>
+                </div>
+
+                {/* Archivos Adjuntos */}
+                <div className="mb-4">
+                  <Form.Label className="fw-semibold">
+                    Documentos de Respaldo
+                  </Form.Label>
+                  <div
+                    className={`border-2 border-dashed p-4 text-center rounded ${dragActive ? 'border-primary bg-primary bg-opacity-10' : 'border-secondary'
+                      }`}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                  >
+                    <i className="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                    <p className="mb-2">
+                      Arrastra archivos aquí o{' '}
+                      <Button
+                        variant="link"
+                        className="p-0"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={loading}
+                      >
+                        selecciona archivos
+                      </Button>
+                    </p>
+                    <small className="text-muted">
+                      Máximo 5 archivos, 10MB cada uno (PDF, JPG, PNG, DOC)
+                    </small>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={(e) => handleFiles(e.target.files)}
+                    style={{ display: 'none' }}
+                  />
+
+                  {/* Lista de archivos */}
+                  {attachments.length > 0 && (
+                    <div className="mt-3">
+                      {attachments.map((file, index) => (
+                        <div key={index} className="d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                          <span className="small">
+                            <i className="fas fa-file me-2"></i>
+                            {file.name}
+                          </span>
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => removeAttachment(index)}
+                            disabled={loading}
+                          >
+                            <i className="fas fa-times"></i>
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Tags */}
+                <div className="mb-4">
+                  <Form.Label className="fw-semibold">
+                    Etiquetas (Opcional)
+                  </Form.Label>
+                  <div className="input-group mb-2">
+                    <Form.Control
+                      type="text"
+                      placeholder="Agregar etiqueta..."
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyPress={handleTagKeyPress}
+                      disabled={loading || tags.length >= 5}
+                    />
+                    <Button
+                      variant="outline-primary"
+                      onClick={addTag}
+                      disabled={loading || !tagInput.trim() || tags.length >= 5}
+                    >
+                      <i className="fas fa-plus"></i>
+                    </Button>
+                  </div>
+                  <div className="d-flex flex-wrap gap-2">
+                    {tags.map((tag) => (
+                      <Badge key={tag} bg="secondary" className="d-flex align-items-center">
+                        {tag}
+                        <button
+                          type="button"
+                          className="btn-close btn-close-white ms-2"
+                          style={{ fontSize: '0.75em' }}
+                          onClick={() => removeTag(tag)}
+                          disabled={loading}
+                        ></button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Botones */}
+                <div className="d-flex gap-2 justify-content-end">
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => router.back()}
+                    disabled={loading}
+                  >
+                    <i className="fas fa-times me-2"></i>
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="success"
+                    disabled={loading}
+                    className="px-4"
+                  >
+                    {loading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Guardando...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-save me-2"></i>
+                        Guardar Gasto
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Form>
+            </Card.Body>
+          </Card>
         </div>
-      </Layout>
-    </ProtectedRoute>
+      </div>
+    </div>
   );
 }

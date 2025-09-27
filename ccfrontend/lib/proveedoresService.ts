@@ -1,223 +1,143 @@
-import { api } from './api';
+import api from './api';
 
 export interface Proveedor {
   id: number;
+  razon_social: string;
   rut: string;
   dv: string;
-  razon_social: string;
   giro?: string;
-  email?: string;
   telefono?: string;
+  email?: string;
   direccion?: string;
   activo: boolean;
   calificacion?: number;
-  contactos?: ContactoProveedor[];
   categorias?: string[];
   comunidad_id: number;
   created_at: string;
-  updated_at: string;
-}
-
-export interface ContactoProveedor {
-  id?: number;
-  nombre: string;
-  cargo: string;
-  email?: string;
-  telefono?: string;
+  updated_at?: string;
 }
 
 export interface ProveedorCreateRequest {
+  razon_social: string;
   rut: string;
   dv: string;
-  razon_social: string;
   giro?: string;
-  email?: string;
   telefono?: string;
+  email?: string;
   direccion?: string;
-  contactos?: ContactoProveedor[];
   categorias?: string[];
-  calificacion?: number;
 }
 
-export interface ProveedorUpdateRequest extends Partial<ProveedorCreateRequest> {
-  activo?: boolean;
-}
-
-export interface ProveedoresEstadisticas {
+export interface ProveedorEstadisticas {
   total: number;
   activos: number;
   inactivos: number;
   nuevos_mes: number;
   calificacion_promedio: number;
-  categorias: { [key: string]: number };
-}
-
-export interface ProveedorFilters {
-  search?: string;
-  categoria?: string;
-  activo?: boolean;
-  calificacion_min?: number;
-  page?: number;
-  limit?: number;
 }
 
 class ProveedoresService {
+  
   /**
-   * Obtiene todos los proveedores de una comunidad con filtros
+   * Obtener proveedores de una comunidad
    */
-  async getProveedores(comunidadId: number, filters: ProveedorFilters = {}): Promise<Proveedor[]> {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      if (filters.search) queryParams.append('search', filters.search);
-      if (filters.categoria) queryParams.append('categoria', filters.categoria);
-      if (filters.activo !== undefined) queryParams.append('activo', filters.activo.toString());
-      if (filters.calificacion_min) queryParams.append('calificacion_min', filters.calificacion_min.toString());
-      if (filters.page) queryParams.append('page', filters.page.toString());
-      if (filters.limit) queryParams.append('limit', filters.limit.toString());
-
-      const response = await api.get(`/proveedores/comunidad/${comunidadId}?${queryParams}`);
-      return response.data;
-    } catch (error: any) {
-      console.error('Error obteniendo proveedores:', error);
-      throw new Error(error?.response?.data?.error || 'Error al obtener los proveedores');
-    }
+  async getProveedores(comunidadId: number): Promise<{ success: boolean; data: Proveedor[]; estadisticas: ProveedorEstadisticas }> {
+    const response = await api.get(`/proveedores/comunidad/${comunidadId}`);
+    return response.data;
   }
 
   /**
-   * Obtiene un proveedor por ID
+   * Obtener proveedor por ID
    */
-  async getProveedor(id: number): Promise<Proveedor> {
-    try {
-      const response = await api.get(`/proveedores/${id}`);
-      return response.data;
-    } catch (error: any) {
-      console.error('Error obteniendo proveedor:', error);
-      throw new Error(error?.response?.data?.error || 'Error al obtener el proveedor');
-    }
+  async getProveedorById(id: number): Promise<{ success: boolean; data: Proveedor }> {
+    const response = await api.get(`/proveedores/${id}`);
+    return response.data;
   }
 
   /**
-   * Crea un nuevo proveedor
+   * Crear nuevo proveedor
    */
-  async createProveedor(comunidadId: number, data: ProveedorCreateRequest): Promise<Proveedor> {
-    try {
-      const response = await api.post(`/proveedores/comunidad/${comunidadId}`, data);
-      return response.data;
-    } catch (error: any) {
-      console.error('Error creando proveedor:', error);
-      throw new Error(error?.response?.data?.error || 'Error al crear el proveedor');
-    }
+  async createProveedor(comunidadId: number, proveedorData: ProveedorCreateRequest): Promise<{ success: boolean; data: Proveedor }> {
+    const response = await api.post(`/proveedores/comunidad/${comunidadId}`, proveedorData);
+    return response.data;
   }
 
   /**
-   * Actualiza un proveedor
+   * Actualizar proveedor
    */
-  async updateProveedor(id: number, data: ProveedorUpdateRequest): Promise<Proveedor> {
-    try {
-      const response = await api.patch(`/proveedores/${id}`, data);
-      return response.data;
-    } catch (error: any) {
-      console.error('Error actualizando proveedor:', error);
-      throw new Error(error?.response?.data?.error || 'Error al actualizar el proveedor');
-    }
+  async updateProveedor(id: number, proveedorData: Partial<ProveedorCreateRequest>): Promise<{ success: boolean; data: Proveedor }> {
+    const response = await api.put(`/proveedores/${id}`, proveedorData);
+    return response.data;
   }
 
   /**
-   * Elimina un proveedor
+   * Eliminar proveedor
    */
-  async deleteProveedor(id: number): Promise<void> {
-    try {
-      await api.delete(`/proveedores/${id}`);
-    } catch (error: any) {
-      console.error('Error eliminando proveedor:', error);
-      throw new Error(error?.response?.data?.error || 'Error al eliminar el proveedor');
-    }
+  async deleteProveedor(id: number): Promise<{ success: boolean; message: string }> {
+    const response = await api.delete(`/proveedores/${id}`);
+    return response.data;
   }
 
   /**
-   * Obtiene estadísticas de proveedores
+   * Cambiar estado del proveedor
    */
-  async getEstadisticas(comunidadId: number): Promise<ProveedoresEstadisticas> {
-    try {
-      const response = await api.get(`/proveedores/comunidad/${comunidadId}/estadisticas`);
-      return response.data;
-    } catch (error: any) {
-      console.error('Error obteniendo estadísticas de proveedores:', error);
-      // Fallback: retornar estadísticas por defecto
-      return {
-        total: 0,
-        activos: 0,
-        inactivos: 0,
-        nuevos_mes: 0,
-        calificacion_promedio: 0,
-        categorias: {}
-      };
-    }
+  async toggleEstado(id: number): Promise<{ success: boolean; data: { id: number; activo: boolean } }> {
+    const response = await api.patch(`/proveedores/${id}/toggle`);
+    return response.data;
   }
 
   /**
-   * Cambia el estado activo/inactivo de un proveedor
+   * Buscar proveedores
    */
-  async toggleEstado(id: number, activo: boolean): Promise<Proveedor> {
-    return this.updateProveedor(id, { activo });
+  async searchProveedores(comunidadId: number, busqueda: string): Promise<{ success: boolean; data: Proveedor[] }> {
+    const response = await api.get(`/proveedores/comunidad/${comunidadId}/search?q=${encodeURIComponent(busqueda)}`);
+    return response.data;
   }
 
   /**
-   * Califica un proveedor
+   * Obtener estadísticas
    */
-  async calificarProveedor(id: number, calificacion: number): Promise<Proveedor> {
-    return this.updateProveedor(id, { calificacion });
+  async getEstadisticas(comunidadId: number): Promise<{ success: boolean; data: ProveedorEstadisticas }> {
+    const response = await api.get(`/proveedores/comunidad/${comunidadId}/estadisticas`);
+    return response.data;
   }
 
   /**
-   * Valida RUT chileno
-   */
-  validateRut(rut: string): { isValid: boolean; rut: string; dv: string } {
-    // Limpiar el RUT
-    const cleanRut = rut.replace(/[^0-9kK]/g, '').toUpperCase();
-    
-    if (cleanRut.length < 2) {
-      return { isValid: false, rut: '', dv: '' };
-    }
-
-    const rutNumber = cleanRut.slice(0, -1);
-    const dv = cleanRut.slice(-1);
-
-    // Calcular DV
-    let suma = 0;
-    let multiplicador = 2;
-
-    for (let i = rutNumber.length - 1; i >= 0; i--) {
-      const digit = rutNumber[i];
-      if (digit) {
-        suma += parseInt(digit) * multiplicador;
-      }
-      multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
-    }
-
-    const resto = suma % 11;
-    const dvCalculado = resto === 0 ? '0' : resto === 1 ? 'K' : (11 - resto).toString();
-
-    return {
-      isValid: dv === dvCalculado,
-      rut: rutNumber,
-      dv: dvCalculado
-    };
-  }
-
-  /**
-   * Formatea RUT para mostrar
+   * Formatear RUT
    */
   formatRut(rut: string, dv: string): string {
-    const cleanRut = rut.replace(/[^0-9]/g, '');
-    if (cleanRut.length === 0) return '';
+    if (!rut || !dv) return '';
     
-    // Agregar puntos al RUT
-    const rutConPuntos = cleanRut.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return `${rutConPuntos}-${dv}`;
+    // Limpiar RUT
+    const rutLimpio = rut.toString().replace(/\D/g, '');
+    
+    // Formatear con puntos
+    const rutFormateado = rutLimpio.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+    
+    return `${rutFormateado}-${dv.toUpperCase()}`;
+  }
+
+  /**
+   * Validar RUT
+   */
+  validateRut(rut: string, dv: string): boolean {
+    const rutLimpio = rut.toString().replace(/\D/g, '');
+    
+    if (rutLimpio.length < 7) return false;
+    
+    let suma = 0;
+    let multiplicador = 2;
+    
+    for (let i = rutLimpio.length - 1; i >= 0; i--) {
+      suma += parseInt(rutLimpio[i]) * multiplicador;
+      multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+    }
+    
+    const resto = suma % 11;
+    const dvCalculado = resto === 0 ? '0' : resto === 1 ? 'K' : (11 - resto).toString();
+    
+    return dvCalculado === dv.toUpperCase();
   }
 }
 
 export const proveedoresService = new ProveedoresService();
-export default proveedoresService;

@@ -17,7 +17,7 @@ const checkGastoPermission = (action) => {
   return async (req, res, next) => {
     try {
       const comunidadId = req.params.comunidadId || req.body.comunidad_id;
-      
+
       console.log('🔍 CHECKING PERMISOS GASTO:', {
         action,
         comunidadId,
@@ -43,14 +43,14 @@ const checkGastoPermission = (action) => {
 
       if (!membership.length) {
         console.log('⚠️ Sin membresía, creando automáticamente para persona_id:', req.user.persona_id);
-        
+
         // Crear membresía automáticamente con rol admin
         try {
           await db.query(`
             INSERT INTO membresia_comunidad (persona_id, comunidad_id, rol, activo, created_at, updated_at)
             VALUES (?, ?, 'admin', 1, NOW(), NOW())
           `, [req.user.persona_id, comunidadId]);
-          
+
           console.log('✅ Membresía creada automáticamente');
           req.membership = { rol: 'admin' };
           return next();
@@ -62,7 +62,7 @@ const checkGastoPermission = (action) => {
 
       const rol = membership[0].rol;
       req.membership = { rol };
-      
+
       console.log('🔍 Rol encontrado:', rol);
 
       // Definir permisos por rol - ✅ AGREGAR 'comite' a create
@@ -333,6 +333,7 @@ router.post('/comunidad/:comunidadId', [
   body('monto').isFloat({ min: 0.01 }).withMessage('Monto debe ser mayor a 0'),
   body('glosa').notEmpty().isLength({ min: 3, max: 500 }).withMessage('Glosa debe tener entre 3 y 500 caracteres'),
   body('centro_costo_id').optional().isInt(),
+  body('proveedor_id').optional().isInt(),
   body('documento_compra_id').optional().isInt(),
   body('extraordinario').optional().isBoolean()
 ], async (req, res) => {
@@ -356,6 +357,7 @@ router.post('/comunidad/:comunidadId', [
       categoria_id,
       centro_costo_id,
       documento_compra_id,
+      proveedor_id,
       fecha,
       monto,
       glosa,
@@ -394,12 +396,20 @@ router.post('/comunidad/:comunidadId', [
     // ✅ INSERT CORREGIDO (sin proveedor_id)
     const [result] = await conexion.query(`
       INSERT INTO gasto (
-        comunidad_id, categoria_id, centro_costo_id, documento_compra_id,
+        comunidad_id, categoria_id, centro_costo_id, documento_compra_id, proveedor_id,
         numero, fecha, monto, glosa, extraordinario, estado, creado_por, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'borrador', ?, NOW(), NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'borrador', ?, NOW(), NOW())
     `, [
-      comunidadId, categoria_id, centro_costo_id || null,
-      documento_compra_id || null, numero, fecha, monto, glosa, extraordinario ? 1 : 0,
+      comunidadId,
+      categoria_id,
+      centro_costo_id || null,
+      documento_compra_id || null,
+      proveedor_id || null,  // ← AGREGAR ESTA LÍNEA
+      numero,
+      fecha,
+      monto,
+      glosa,
+      extraordinario ? 1 : 0,
       req.user.persona_id
     ]);
 
