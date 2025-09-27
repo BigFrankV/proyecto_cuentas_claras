@@ -131,7 +131,8 @@ const estadoBadge = {
 export default function LecturasMedidor() {
   const router = useRouter();
   // Estado
-  const [selectedMeter, setSelectedMeter] = useState<Meter>(METERS[0]);
+  // METERS[0] could be undefined in some strict TS configs, provide a safe fallback
+  const [selectedMeter, setSelectedMeter] = useState<Meter>(METERS[0] as Meter);
   const [readingDate, setReadingDate] = useState<string>(() => new Date().toISOString().slice(0, 16));
   const [currentReading, setCurrentReading] = useState<string>("");
   const [readingType, setReadingType] = useState<string>("real");
