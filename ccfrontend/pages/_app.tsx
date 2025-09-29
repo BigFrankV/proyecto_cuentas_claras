@@ -5,6 +5,10 @@ import '@/styles/components.css';
 import '@/styles/comunidades.css';
 import '@/styles/map-section.css';
 import '@/styles/compras.css';
+import '@/styles/amenidades.css';
+import '@/styles/amenidades-reservas.css';
+import '@/styles/multas.css';
+import '@/styles/apelaciones.css';
 import '@/lib/console-filters'; // Filtros para limpiar consola en desarrollo
 import { useEffect } from 'react';
 import { AuthProvider } from '@/lib/useAuth';

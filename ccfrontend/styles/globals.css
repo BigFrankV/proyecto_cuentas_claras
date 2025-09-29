@@ -225,11 +225,34 @@ body {
 .table {
   border-radius: var(--border-radius);
   overflow: hidden;
+  width: 100%;
+  table-layout: auto; /* default auto for natural column widths */
 }
 
 .table thead th {
   border-bottom: 2px solid #dee2e6;
   font-weight: 600;
+}
+
+/* Ensure table cells don't force layout to expand uncontrollably */
+
+/* Mobile-first: allow wrapping and normal flow on small screens */
+.table td,
+.table th {
+  white-space: normal; /* allow wrapping on small devices */
+  word-break: break-word;
+  max-width: none;
+}
+
+@media (min-width: 768px) {
+  /* On tablets and up, prevent cells from expanding too much and use ellipsis */
+  .table td,
+  .table th {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px; /* reasonable cap for cells; override per-column if needed */
+  }
 }
 
 /* Utilities */

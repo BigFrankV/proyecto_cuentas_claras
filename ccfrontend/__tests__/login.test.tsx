@@ -1,4 +1,10 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+
+// Mock next/router before importing the page to provide a router for useRouter()
+jest.mock('next/router', () => ({
+  useRouter: () => ({ push: jest.fn(), pathname: '/login', query: {} }),
+}));
+
 import Login from '../pages/login';
 
 describe('Login Page', () => {
