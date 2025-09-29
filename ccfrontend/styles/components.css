@@ -2109,6 +2109,8 @@
   .table-responsive {
     border: 1px solid #dee2e6;
     border-radius: var(--border-radius);
+    overflow-x: auto; /* allow horizontal scrolling on small screens */
+    -webkit-overflow-scrolling: touch;
   }
   
   .custom-table thead {

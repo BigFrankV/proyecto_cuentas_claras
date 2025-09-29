@@ -7,6 +7,7 @@ Este repositorio contiene la aplicación "Cuentas Claras": un sistema para gesti
 - [x] Listar endpoints y rutas principales del backend
 - [x] Listar tecnologías utilizadas en frontend y backend
 - [x] Indicar estructura de carpetas y archivos relevantes
+- [x] Documentar mejoras recientes del frontend (diseño moderno, rutas dinámicas, UX/UI)
 
 ## Resumen rápido
 
@@ -38,13 +39,53 @@ Este repositorio contiene la aplicación "Cuentas Claras": un sistema para gesti
   - Docker (Dockerfile y docker-compose)
 
 - Frontend (carpeta `ccfrontend`):
-  - React + TypeScript
+  - React + TypeScript + Next.js Pages Router
   - Vite (bundler / dev server)
+  - Bootstrap 5 + CSS custom properties
+  - Material Icons para interfaz coherente
   - Axios (cliente HTTP, `src/http/axios.ts`)
   - Context API para autenticación (`src/auth/AuthContext.tsx`)
   - Componentes CRUD genéricos (`src/components/GenericCrud.tsx`)
-  - Estilos CSS simples en `src/styles/index.css`
+  - CSS Grid & Flexbox para layouts modernos
+  - Animaciones CSS con cubic-bezier transitions
+  - Diseño responsivo mobile-first
   - Docker (Dockerfile y docker-compose)
+
+## Mejoras Recientes del Frontend
+
+### 🎨 Sistema de Diseño Moderno
+- **Botones profesionales**: Implementación de sistema `fine-actions-panel` con gradientes lineales, sombras avanzadas y animaciones suaves
+- **Paleta de colores**: Variables CSS personalizadas (`--color-primary`, `--radius`) para consistencia visual
+- **Animaciones modernas**: Transiciones `cubic-bezier` y efectos hover con transformaciones 3D
+- **Iconos actualizados**: Migración a Material Icons más específicos (`credit_card`, `send`, `edit_document`, `delete_sweep`)
+
+### 🛣️ Rutas y Navegación
+- **Rutas dinámicas**: Implementación de Next.js Pages Router con rutas parametrizadas (`pages/multa-detalle/[id].tsx`)
+- **Navegación fluida**: Sistema de breadcrumbs y navegación contextual
+- **Protección de rutas**: Componentes de autenticación y autorización integrados
+
+### 📱 Diseño Responsivo
+- **Mobile-first**: Diseño adaptativo que funciona en todos los tamaños de pantalla
+- **Breakpoints inteligentes**: Adaptación automática para móviles (576px), tablets (768px) y desktop
+- **Componentes flexibles**: Layouts que se ajustan dinámicamente al contenido
+
+### 🧩 Componentes Mejorados
+- **Multas**: Página de detalle completamente rediseñada con paneles de acciones jerárquicas
+- **Estados visuales**: Badges de estado con colores semánticos (pendiente, pagada, vencida, apelada)
+- **Formularios modales**: Diálogos para registro de pagos y edición de multas
+- **Tabulación**: Sistema de pestañas para organización de información (Información General, Evidencia, Pagos, Apelaciones, Comunicaciones)
+
+### 🎯 Mejoras de UX/UI
+- **Jerarquía visual**: Botones primarios prominentes y secundarios diferenciados
+- **Feedback visual**: Estados hover, active y focus con animaciones sutiles
+- **Accesibilidad**: Contraste adecuado y navegación por teclado
+- **Legibilidad**: Corrección de problemas de contraste (botones outline → botones sólidos)
+
+### 🛠️ Tecnologías Adicionales
+- **Bootstrap 5**: Framework CSS integrado con clases personalizadas
+- **CSS Grid & Flexbox**: Layouts modernos y flexibles
+- **CSS Custom Properties**: Variables para temas y colores consistentes
+- **Material Icons**: Biblioteca de iconos para interfaz coherente
 
 ## Estructura principal del repositorio
 
@@ -56,6 +97,9 @@ Este repositorio contiene la aplicación "Cuentas Claras": un sistema para gesti
   - `Dockerfile`, `docker-compose.yml`, `package.json`
 - `ccfrontend/` - cliente React + TypeScript
   - `src/` - aplicación: `App.tsx`, `main.tsx`, `api/`, `auth/`, `pages/`, `components/`, `http/axios.ts`
+  - `pages/` - rutas Next.js incluyendo dinámicas (`multa-detalle/[id].tsx`)
+  - `components/` - componentes reutilizables (MultaDetallePage, Layout, etc.)
+  - `styles/` - CSS modular con variables personalizadas y animaciones
   - `Dockerfile`, `docker-compose.yml`, `package.json`, `vite.config.ts`
 - `docker-compose.yml` en la raíz para orquestar ambos servicios (si aplica)
 
