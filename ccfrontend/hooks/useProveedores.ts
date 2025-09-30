@@ -1,39 +1,47 @@
 import { useState, useCallback } from 'react';
 import { proveedoresService, Proveedor, ProveedorEstadisticas } from '@/lib/proveedoresService';
+import { useAuth } from '@/lib/useAuth';
 
-export function useProveedores(comunidadId: number) {
-  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
-  const [estadisticas, setEstadisticas] = useState<ProveedorEstadisticas | null>(null);
+export function useProveedores(comunidadId?: number) {
+  const { user } = useAuth();
+  const [proveedores, setProveedores] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
+  const [estadisticas, setEstadisticas] = useState<any>({});
 
   const fetchProveedores = useCallback(async () => {
-    if (!comunidadId) return;
-    
     setLoading(true);
     setError(null);
-    
+
     try {
-      const response = await proveedoresService.getProveedores(comunidadId);
-      if (response.success) {
-        setProveedores(response.data);
-        if (response.estadisticas) {
-          setEstadisticas(response.estadisticas);
-        }
+      let response;
+
+      // ✅ LÓGICA DE PERMISOS:
+      if (user?.is_superadmin) {
+        console.log('👑 Usuario superadmin - Cargando TODOS los proveedores');
+        response = await proveedoresService.getAllProveedores();
+      } else if (user?.memberships?.[0]?.comunidadId) {
+        const userComunidadId = user.memberships[0].comunidadId;
+        console.log('👤 Usuario admin - Cargando proveedores de comunidad:', userComunidadId);
+        response = await proveedoresService.getProveedores(userComunidadId);
       } else {
-        setError('Error al cargar proveedores');
+        throw new Error('Usuario sin permisos para ver proveedores');
       }
+
+      if (response.success) {
+        setProveedores(response.data || []);
+        setEstadisticas(response.estadisticas || {});
+      } else {
+        throw new Error('Error en la respuesta del servidor');
+      }
+
     } catch (error: any) {
-      console.error('Error fetching proveedores:', error);
-      setError(error.response?.data?.error || 'Error al cargar proveedores');
+      console.error('❌ Error cargando proveedores:', error);
+      setError(error.message || 'Error al cargar proveedores');
     } finally {
       setLoading(false);
     }
-  }, [comunidadId]);
+  }, [user?.is_superadmin, user?.memberships]);
 
   const fetchEstadisticas = useCallback(async () => {
     if (!comunidadId) return;
@@ -128,15 +136,15 @@ export function useProveedores(comunidadId: number) {
 
   return {
     proveedores,
-    estadisticas,
     loading,
     error,
+    estadisticas,
     fetchProveedores,
     fetchEstadisticas,
     createProveedor,
     updateProveedor,
     deleteProveedor,
     cambiarEstado,
-    clearError
+    clearError: () => setError(null)
   };
 }

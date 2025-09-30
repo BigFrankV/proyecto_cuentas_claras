@@ -37,12 +37,23 @@ export interface ProveedorEstadisticas {
 }
 
 class ProveedoresService {
-  
-  /**
-   * Obtener proveedores de una comunidad
-   */
+  // ✅ MÉTODO PARA SUPERADMIN - TODOS LOS PROVEEDORES:
+  async getAllProveedores(): Promise<{ success: boolean; data: Proveedor[]; estadisticas: ProveedorEstadisticas }> {
+    console.log('🔍 Obteniendo TODOS los proveedores (superadmin)');
+
+    const response = await api.get('/proveedores/all');
+
+    console.log('✅ Respuesta todos los proveedores:', response.data);
+    return response.data;
+  }
+
+  // ✅ MANTENER MÉTODO EXISTENTE PARA ADMIN POR COMUNIDAD:
   async getProveedores(comunidadId: number): Promise<{ success: boolean; data: Proveedor[]; estadisticas: ProveedorEstadisticas }> {
+    console.log('🔍 Obteniendo proveedores para comunidad:', comunidadId);
+
     const response = await api.get(`/proveedores/comunidad/${comunidadId}`);
+
+    console.log('✅ Respuesta proveedores por comunidad:', response.data);
     return response.data;
   }
 
@@ -66,7 +77,7 @@ class ProveedoresService {
    * Actualizar proveedor
    */
   async updateProveedor(id: number, proveedorData: Partial<ProveedorCreateRequest>): Promise<{ success: boolean; data: Proveedor }> {
-    const response = await api.put(`/proveedores/${id}`, proveedorData);
+    const response = await api.patch(`/proveedores/${id}`, proveedorData);  // ← CAMBIAR put por patch
     return response.data;
   }
 
@@ -107,13 +118,13 @@ class ProveedoresService {
    */
   formatRut(rut: string, dv: string): string {
     if (!rut || !dv) return '';
-    
+
     // Limpiar RUT
     const rutLimpio = rut.toString().replace(/\D/g, '');
-    
+
     // Formatear con puntos
     const rutFormateado = rutLimpio.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-    
+
     return `${rutFormateado}-${dv.toUpperCase()}`;
   }
 
@@ -122,20 +133,20 @@ class ProveedoresService {
    */
   validateRut(rut: string, dv: string): boolean {
     const rutLimpio = rut.toString().replace(/\D/g, '');
-    
+
     if (rutLimpio.length < 7) return false;
-    
+
     let suma = 0;
     let multiplicador = 2;
-    
+
     for (let i = rutLimpio.length - 1; i >= 0; i--) {
       suma += parseInt(rutLimpio[i]) * multiplicador;
       multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
     }
-    
+
     const resto = suma % 11;
     const dvCalculado = resto === 0 ? '0' : resto === 1 ? 'K' : (11 - resto).toString();
-    
+
     return dvCalculado === dv.toUpperCase();
   }
 }
