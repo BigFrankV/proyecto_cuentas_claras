@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';  // ← AGREGAR useEffect
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Form, Button, Alert, Card, Badge } from 'react-bootstrap';
 import { useAuth } from '@/lib/useAuth';
 import { gastosService } from '@/lib/gastosService';
-import { proveedoresService } from '@/lib/proveedoresService';  // ← AGREGAR
+import { proveedoresService } from '@/lib/proveedoresService'; // ✅ AGREGAR IMPORT
 import { GastoCreateRequest } from '@/types/gastos';
 
 export default function GastoNuevo() {
@@ -17,7 +17,6 @@ export default function GastoNuevo() {
     monto: 0,
     glosa: '',
     extraordinario: false,
-    // ✅ AGREGAR ESTOS CAMPOS:
     centro_costo_id: null,
     proveedor_id: null,
     documento_compra_id: null
@@ -30,9 +29,40 @@ export default function GastoNuevo() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
 
-  // ✅ AGREGAR useState para proveedores
+  // ✅ ESTADOS PARA PROVEEDORES REALES:
   const [proveedores, setProveedores] = useState<any[]>([]);
   const [loadingProveedores, setLoadingProveedores] = useState(false);
+
+  // ✅ CARGAR PROVEEDORES REALES AL INICIAR:
+  useEffect(() => {
+    const cargarProveedores = async () => {
+      if (!user?.memberships?.[0]?.comunidadId) return;
+      
+      setLoadingProveedores(true);
+      try {
+        const comunidadId = user.memberships[0].comunidadId;
+        console.log('🏪 Cargando proveedores para gastos, comunidad:', comunidadId);
+        
+        const response = await proveedoresService.getProveedores(comunidadId);
+        
+        if (response.success && response.data) {
+          setProveedores(response.data.filter(p => p.activo)); // Solo activos
+          console.log('✅ Proveedores cargados:', response.data.length);
+        } else {
+          console.warn('⚠️ No se pudieron cargar proveedores');
+          setProveedores([]);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error cargando proveedores:', error);
+        setProveedores([]); // Fallback a array vacío
+      } finally {
+        setLoadingProveedores(false);
+      }
+    };
+
+    cargarProveedores();
+  }, [user]);
 
   // Validación del formulario
   const validateForm = (): boolean => {
@@ -167,33 +197,6 @@ export default function GastoNuevo() {
     }).format(amount);
   };
 
-  // ✅ CARGAR PROVEEDORES AL INICIAR
-  useEffect(() => {
-    const cargarProveedores = async () => {
-      setLoadingProveedores(true);
-      try {
-        // Aquí llamarías a tu servicio de proveedores
-        // const response = await proveedoresService.getProveedores(comunidadId);
-        // setProveedores(response.data);
-        
-        // Por ahora usamos datos mock:
-        setProveedores([
-          { id: 1, nombre: 'Empresa de Limpieza Central', activo: true },
-          { id: 2, nombre: 'Ferretería San José', activo: true },
-          { id: 3, nombre: 'Electricista López y Asociados', activo: true },
-          { id: 4, nombre: 'Jardinería Verde Limpio', activo: true },
-          { id: 5, nombre: 'Pinturas El Color', activo: true }
-        ]);
-      } catch (error) {
-        console.error('Error cargando proveedores:', error);
-      } finally {
-        setLoadingProveedores(false);
-      }
-    };
-
-    cargarProveedores();
-  }, []);
-
   return (
     <div className="container-fluid py-4">
       <div className="row justify-content-center">
@@ -258,9 +261,10 @@ export default function GastoNuevo() {
                   </Form.Control.Feedback>
                 </div>
 
-                {/* Proveedor */}
+                {/* ✅ PROVEEDOR CON DATOS REALES */}
                 <div className="mb-4">
                   <Form.Label className="fw-semibold">
+                    <i className="fas fa-store me-2"></i>
                     Proveedor
                   </Form.Label>
                   <div className="d-flex gap-2">
@@ -271,27 +275,45 @@ export default function GastoNuevo() {
                       className="flex-grow-1"
                     >
                       <option value={0}>Sin proveedor especificado</option>
-                      {proveedores.map(proveedor => (
-                        <option key={proveedor.id} value={proveedor.id}>
-                          {proveedor.nombre}
-                        </option>
-                      ))}
+                      {loadingProveedores ? (
+                        <option disabled>Cargando proveedores...</option>
+                      ) : (
+                        proveedores.map(proveedor => (
+                          <option key={proveedor.id} value={proveedor.id}>
+                            {proveedor.razon_social} ({proveedor.rut}-{proveedor.dv})
+                          </option>
+                        ))
+                      )}
                     </Form.Select>
                     <Button
                       variant="outline-primary"
                       size="sm"
                       disabled={loading}
-                      onClick={() => {
-                        // Aquí podrías abrir modal para crear nuevo proveedor
-                        alert('Funcionalidad de crear proveedor - próximamente');
-                      }}
+                      onClick={() => router.push('/proveedores/nuevo')}
                       title="Agregar nuevo proveedor"
                     >
                       <i className="fas fa-plus"></i>
                     </Button>
                   </div>
                   <Form.Text className="text-muted">
-                    Selecciona el proveedor o deja en blanco si es un gasto interno
+                    {loadingProveedores ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin me-1"></i>
+                        Cargando proveedores disponibles...
+                      </>
+                    ) : proveedores.length === 0 ? (
+                      <>
+                        <i className="fas fa-info-circle me-1"></i>
+                        No hay proveedores disponibles. 
+                        <Button variant="link" className="p-0 ms-1" onClick={() => router.push('/proveedores/nuevo')}>
+                          Crear el primero aquí
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        Selecciona el proveedor del gasto. {proveedores.length} proveedor{proveedores.length !== 1 ? 'es' : ''} disponible{proveedores.length !== 1 ? 's' : ''}.
+                      </>
+                    )}
                   </Form.Text>
                 </div>
 
