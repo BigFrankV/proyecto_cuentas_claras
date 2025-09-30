@@ -73,14 +73,19 @@ const menuSections = [
   {
     title: 'Amenidades',
     items: [
-      { href: '/amenidades', label: 'Amenidades', icon: 'pool' },
-      { href: '/reservas', label: 'Reservas', icon: 'event_available' },
-      { href: '/calendario', label: 'Calendario', icon: 'calendar_month' },
+      { href: '/amenidades', label: 'Lista de Amenidades', icon: 'pool' },
+      { href: '/amenidades-reservas', label: 'Reservas', icon: 'event_available' },
+      { href: '/amenidades-calendario', label: 'Calendario', icon: 'calendar_month' },
     ],
   },
   {
     title: 'Sanciones',
-    items: [{ href: '/multas', label: 'Multas', icon: 'gavel' }],
+    items: [
+      { href: '/multas', label: 'Multas', icon: 'gavel' },
+      { href: '/multas-nueva', label: 'Nueva Multa', icon: 'add_circle' },
+      { href: '/apelaciones', label: 'Apelaciones', icon: 'gavel' },
+      { href: '/apelaciones-nueva', label: 'Nueva Apelación', icon: 'add_circle_outline' },
+    ],
   },
   {
     title: 'Comunicación',
@@ -168,6 +173,9 @@ export default function Sidebar() {
       '/consumos': Permission.VIEW_COMMUNITIES,
       '/tarifas': Permission.VIEW_COMMUNITIES,
       '/multas': Permission.VIEW_USERS,
+      '/multas-nueva': Permission.VIEW_USERS,
+      '/apelaciones': Permission.VIEW_USERS,
+      '/apelaciones-nueva': Permission.VIEW_USERS,
     };
 
     const requiredPermission = routePermissions[href];

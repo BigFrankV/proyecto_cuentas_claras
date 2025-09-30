@@ -2109,6 +2109,8 @@
   .table-responsive {
     border: 1px solid #dee2e6;
     border-radius: var(--border-radius);
+    overflow-x: auto; /* allow horizontal scrolling on small screens */
+    -webkit-overflow-scrolling: touch;
   }
   
   .custom-table thead {
@@ -5608,5 +5610,384 @@
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
+  }
+}
+
+/* === CENTROS DE COSTO MODULE STYLES === */
+.cost-centers-container, .cost-center-form-container, .cost-center-detail-container {
+  padding: 1.5rem;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.cost-centers-header, .cost-center-form-header, .cost-center-detail-header {
+  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+}
+
+.cost-centers-title, .cost-center-form-title, .cost-center-detail-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  color: white;
+}
+
+.cost-centers-subtitle, .cost-center-form-subtitle, .cost-center-detail-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  margin-bottom: 0;
+}
+
+.cost-centers-table {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.center-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* Form Section Styles */
+.form-section {
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.form-section-header {
+  background: #f8f9fa;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 0;
+}
+
+.form-section-body {
+  padding: 1.5rem;
+}
+
+.required::after {
+  content: " *";
+  color: #dc3545;
+}
+
+/* Icon and Color Picker Styles */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.icon-option {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+}
+
+.icon-option:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.icon-option.selected {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px #0d6efd;
+  transform: scale(1.05);
+}
+
+.color-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.color-option {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.color-option.selected {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px #0d6efd;
+  transform: scale(1.05);
+}
+
+/* Preview Card Styles */
+.preview-card {
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.icon-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: white;
+}
+
+/* Budget Styles */
+.budget-preview {
+  text-align: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.budget-amount {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #0d6efd;
+  margin-bottom: 0.5rem;
+}
+
+.budget-summary {
+  padding: 0;
+}
+
+.budget-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.budget-item:last-child {
+  border-bottom: none;
+}
+
+.budget-progress {
+  margin: 1rem 0;
+}
+
+.monthly-budget {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.monthly-budget .d-flex {
+  margin-bottom: 0.5rem;
+}
+
+.monthly-budget .d-flex:last-child {
+  margin-bottom: 0;
+}
+
+/* Department Badge Styles */
+.department-operations {
+  background-color: #e8f5e9 !important;
+  color: #2e7d32 !important;
+}
+
+.department-administration {
+  background-color: #e3f2fd !important;
+  color: #1565c0 !important;
+}
+
+.department-marketing {
+  background-color: #fff3e0 !important;
+  color: #e65100 !important;
+}
+
+.department-maintenance {
+  background-color: #f3e5f5 !important;
+  color: #7b1fa2 !important;
+}
+
+.department-security {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+}
+
+/* Info Item Styles */
+.info-item {
+  margin-bottom: 1rem;
+}
+
+.info-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+}
+
+.info-value {
+  font-size: 1rem;
+  color: #212529;
+  font-weight: 500;
+}
+
+/* Expense List Styles */
+.expenses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.expense-item {
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.expense-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.expense-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 0.5rem;
+}
+
+.expense-amount {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0d6efd;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #0d6efd;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+/* Budget Info Styles */
+.budget-info {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.budget-info .d-flex {
+  margin-bottom: 0.5rem;
+}
+
+.budget-info .d-flex:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive adjustments for cost centers */
+@media (max-width: 768px) {
+  .cost-centers-container, 
+  .cost-center-form-container, 
+  .cost-center-detail-container {
+    padding: 1rem;
+  }
+  
+  .cost-centers-header, 
+  .cost-center-form-header, 
+  .cost-center-detail-header {
+    padding: 1.5rem;
+  }
+  
+  .cost-centers-title, 
+  .cost-center-form-title, 
+  .cost-center-detail-title {
+    font-size: 1.5rem;
+  }
+  
+  .icon-grid {
+    grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+    gap: 8px;
+  }
+  
+  .icon-option {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+  }
+  
+  .color-picker {
+    grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
+    gap: 8px;
+  }
+  
+  .color-option {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .icon-preview {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .form-section-body {
+    padding: 1rem;
+  }
+  
+  .budget-amount {
+    font-size: 1.25rem;
+  }
+  
+  .expense-amount {
+    font-size: 1.1rem;
   }
 }

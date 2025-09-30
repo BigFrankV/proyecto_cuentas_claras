@@ -1,3 +1,6 @@
+import React, { useState } from 'react';
+import { useRouter } from 'next/router';
+import { Form, Button, Card, Badge, Alert } from 'react-bootstrap';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { centrosCostoService } from '@/lib/centrosCostoService';
