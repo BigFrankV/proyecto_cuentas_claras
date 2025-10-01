@@ -8,65 +8,46 @@ const options = {
       title: 'Cuentas Claras API',
       version: '1.0.0',
       description: `
-        ## Sistema de Gestión Integral para Comunidades Residenciales
+        ## API de Gestión para Comunidades Residenciales
         
-        La API **Cuentas Claras** constituye una solución tecnológica robusta y escalable diseñada para optimizar la administración integral de comunidades residenciales y edificios. El sistema proporciona un conjunto completo de herramientas que facilitan la gestión operativa y financiera de propiedades inmobiliarias.
+        Sistema completo para la administración de comunidades, edificios y condominios.
         
-        ### Funcionalidades Principales
+        ### 🏢 Módulos Principales
         
-        **Módulo de Gestión Inmobiliaria:**
-        - Administración centralizada de comunidades residenciales y estructuras edilicias
-        - Gestión de torres, unidades habitacionales y espacios comunes
-        - Control de amenidades y servicios complementarios
+        - **Comunidades y Edificios**: Gestión de estructuras, torres, unidades y amenidades
+        - **Usuarios y Roles**: Autenticación JWT con sistema jerárquico de 7 niveles
+        - **Finanzas**: Gastos comunes, pagos, conciliaciones y proveedores
+        - **Operaciones**: Multas, consumos, medidores y soporte técnico
         
-        **Módulo de Gestión de Usuarios:**
-        - Sistema de autenticación y autorización por roles
-        - Administración de perfiles de usuarios y membresías
-        - Control de accesos y permisos granulares
+        ### 🔐 Autenticación
         
-        **Módulo Financiero:**
-        - Control integral de gastos operativos y extraordinarios
-        - Gestión de proveedores y documentación comercial
-        - Procesamiento de pagos y transacciones financieras
-        - Conciliaciones bancarias automatizadas
+        La API usa **JSON Web Tokens (JWT)** para autenticación. Incluya el token en el header:
+        \`\`\`
+        Authorization: Bearer {token}
+        \`\`\`
         
-        **Módulo de Control y Cumplimiento:**
-        - Sistema de multas y sanciones administrativas
-        - Seguimiento de consumos y mediciones
-        - Generación de reportes y análisis estadísticos
+        ### ⚠️ Cambios Importantes (Breaking Changes)
         
-        **Integración Tecnológica:**
-        - APIs de pasarelas de pago certificadas
-        - Integración con servicios de terceros
-        - Arquitectura basada en microservicios
+        **Tablas Renombradas:**
+        - \`cargo_unidad\` → \`cuenta_cobro_unidad\`
+        - \`emision_gasto_comun\` → \`emision_gastos_comunes\`
+        - \`ticket\` → \`solicitud_soporte\`
+        - \`membresia_comunidad\` → \`usuario_comunidad_rol\`
         
-        ### Marco de Autenticación y Seguridad
+        **Sistema de Roles (1-7):**
+        1. Superadmin | 2. Admin | 3. Tesorero | 4. Secretario | 5. Directivo | 6. Propietario | 7. Residente
         
-        El sistema implementa un protocolo de seguridad basado en **JSON Web Tokens (JWT)** que garantiza la integridad y confidencialidad de las transacciones. La mayoría de los endpoints requieren autenticación mediante Bearer Token para acceder a los recursos protegidos.
+        **Endpoint /membresias:**
+        - ❌ Antes: \`persona_id\` + \`rol\` (string)
+        - ✅ Ahora: \`usuario_id\` + \`rol_id\` (integer)
         
-        ### Códigos de Estado HTTP Estándar
-        
-        La API adhiere a las convenciones del protocolo HTTP para la comunicación cliente-servidor:
-        
-        - **200 OK**: Solicitud procesada exitosamente
-        - **201 Created**: Recurso creado correctamente
-        - **400 Bad Request**: Solicitud malformada o parámetros inválidos
-        - **401 Unauthorized**: Credenciales de autenticación requeridas o inválidas
-        - **403 Forbidden**: Acceso denegado por insuficiencia de permisos
-        - **404 Not Found**: Recurso solicitado no encontrado
-        - **500 Internal Server Error**: Error interno del servidor
-        
-        ### Equipo de Desarrollo
-        
-        Este proyecto ha sido desarrollado por un equipo multidisciplinario de ingenieros especializados en arquitectura de software y desarrollo de aplicaciones empresariales:
-        
-        - **Patricio Quintanilla** - *Arquitecto de Software Senior*
-        - **Frank Vogt** - *Ingeniero de Desarrollo Full-Stack*
-        - **Matías Román** - *Especialista en Integración de Sistemas*
+        **JWT Token incluye:**
+        - \`memberships[]\` con \`nivel_acceso\` por comunidad
+        - \`roles[]\` con códigos de rol del usuario
         
         ---
         
-        *Documentación técnica generada automáticamente mediante OpenAPI 3.0 Specification*
+        **Desarrollado por:** Patricio Quintanilla, Frank Vogt, Matías Román
       `,
       contact: {
         name: 'Soporte Técnico',
@@ -196,19 +177,168 @@ const options = {
               type: 'integer',
               description: 'ID único del usuario'
             },
-            nombre: {
+            username: {
               type: 'string',
-              description: 'Nombre del usuario'
+              description: 'Nombre de usuario'
             },
             email: {
               type: 'string',
               format: 'email',
               description: 'Email del usuario'
             },
+            persona_id: {
+              type: 'integer',
+              description: 'ID de la persona asociada al usuario'
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha de creación'
+            }
+          }
+        },
+        Rol: {
+          type: 'object',
+          description: 'Rol del sistema con nivel de acceso jerárquico',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'ID único del rol'
+            },
+            codigo: {
+              type: 'string',
+              enum: ['superadmin', 'admin', 'comite', 'contador', 'conserje', 'propietario', 'residente'],
+              description: 'Código identificador del rol'
+            },
+            nombre: {
+              type: 'string',
+              description: 'Nombre descriptivo del rol'
+            },
+            nivel_acceso: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 7,
+              description: 'Nivel jerárquico (1=máximo acceso, 7=mínimo acceso)'
+            }
+          }
+        },
+        Membresia: {
+          type: 'object',
+          description: 'Asignación de rol de usuario en una comunidad',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'ID único de la membresía'
+            },
+            comunidad_id: {
+              type: 'integer',
+              description: 'ID de la comunidad'
+            },
+            usuario_id: {
+              type: 'integer',
+              description: 'ID del usuario'
+            },
+            persona_id: {
+              type: 'integer',
+              description: 'ID de la persona (derivado de usuario)'
+            },
             rol: {
               type: 'string',
-              enum: ['admin', 'user', 'moderator'],
-              description: 'Rol del usuario en el sistema'
+              description: 'Código del rol asignado'
+            },
+            rol_nombre: {
+              type: 'string',
+              description: 'Nombre del rol'
+            },
+            nivel_acceso: {
+              type: 'integer',
+              description: 'Nivel de acceso jerárquico'
+            },
+            desde: {
+              type: 'string',
+              format: 'date',
+              description: 'Fecha de inicio de la membresía'
+            },
+            hasta: {
+              type: 'string',
+              format: 'date',
+              nullable: true,
+              description: 'Fecha de fin de la membresía (null si indefinida)'
+            },
+            activo: {
+              type: 'boolean',
+              description: 'Si la membresía está activa'
+            }
+          }
+        },
+        JWTToken: {
+          type: 'object',
+          description: 'Token JWT con información del usuario autenticado',
+          properties: {
+            token: {
+              type: 'string',
+              description: 'Token JWT firmado'
+            }
+          }
+        },
+        JWTPayload: {
+          type: 'object',
+          description: 'Contenido decodificado del token JWT',
+          properties: {
+            sub: {
+              type: 'integer',
+              description: 'ID del usuario (subject)'
+            },
+            username: {
+              type: 'string',
+              description: 'Nombre de usuario'
+            },
+            persona_id: {
+              type: 'integer',
+              description: 'ID de la persona asociada'
+            },
+            roles: {
+              type: 'array',
+              description: 'Array de códigos de roles del usuario',
+              items: {
+                type: 'string'
+              }
+            },
+            comunidad_id: {
+              type: 'integer',
+              nullable: true,
+              description: 'ID de la primera comunidad del usuario'
+            },
+            memberships: {
+              type: 'array',
+              description: 'Lista de membresías del usuario por comunidad',
+              items: {
+                type: 'object',
+                properties: {
+                  comunidadId: {
+                    type: 'integer'
+                  },
+                  rol: {
+                    type: 'string'
+                  },
+                  nivel_acceso: {
+                    type: 'integer'
+                  }
+                }
+              }
+            },
+            is_superadmin: {
+              type: 'boolean',
+              description: 'DEPRECADO: usar sistema de roles en su lugar',
+              deprecated: true
+            },
+            iat: {
+              type: 'integer',
+              description: 'Timestamp de emisión del token'
+            },
+            exp: {
+              type: 'integer',
+              description: 'Timestamp de expiración del token'
             }
           }
         },

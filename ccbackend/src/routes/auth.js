@@ -69,25 +69,58 @@ function buildUserQuery(identifier) {
  * /auth/register:
  *   post:
  *     tags: [Auth]
- *     summary: Register a new user
+ *     summary: Registrar un nuevo usuario
+ *     description: Crea una nueva cuenta de usuario en el sistema. El usuario debe tener una persona_id válida.
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - username
+ *               - password
  *             properties:
  *               username:
  *                 type: string
+ *                 minLength: 3
+ *                 description: Nombre de usuario único
+ *                 example: "usuario123"
  *               password:
  *                 type: string
+ *                 minLength: 6
+ *                 description: Contraseña del usuario
+ *                 example: "MiPassword123!"
  *               email:
  *                 type: string
+ *                 format: email
+ *                 description: Correo electrónico del usuario
+ *                 example: "usuario@example.com"
  *               persona_id:
  *                 type: integer
+ *                 description: ID de la persona asociada al usuario
+ *                 example: 1
  *     responses:
  *       201:
- *         description: Created
+ *         description: Usuario creado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: ID del usuario creado
+ *                 username:
+ *                   type: string
+ *                   description: Nombre de usuario
+ *                 token:
+ *                   type: string
+ *                   description: Token JWT para autenticación
+ *       400:
+ *         description: Error de validación
+ *       409:
+ *         description: El nombre de usuario ya existe
  */
 router.post('/register', [body('username').isLength({ min: 3 }), body('password').isLength({ min: 6 })], async (req, res) => {
   const errors = validationResult(req);
@@ -112,25 +145,84 @@ router.post('/register', [body('username').isLength({ min: 3 }), body('password'
  * /auth/login:
  *   post:
  *     tags: [Auth]
- *     summary: Login with email, RUT, DNI or username
+ *     summary: Iniciar sesión en el sistema
+ *     description: |
+ *       Autentica un usuario y retorna un token JWT con información de roles y membresías.
+ *       
+ *       **El token JWT incluye:**
+ *       - Información básica del usuario (id, username, persona_id)
+ *       - Lista de roles del usuario
+ *       - Membresías por comunidad con nivel de acceso
+ *       - Información de 2FA si está habilitado
+ *       
+ *       **Tipos de identificadores aceptados:**
+ *       - Email: `usuario@example.com`
+ *       - RUT chileno: `12345678-9`
+ *       - DNI numérico: `12345678`
+ *       - Username: `usuario123`
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - identifier
+ *               - password
  *             properties:
  *               identifier:
  *                 type: string
- *                 description: Email, RUT, DNI or username
- *                 example: "user@example.com or 12345678-9 or 12345678"
+ *                 description: Email, RUT, DNI o nombre de usuario
+ *                 example: "usuario@example.com"
  *               password:
  *                 type: string
+ *                 description: Contraseña del usuario
+ *                 example: "MiPassword123!"
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: Login exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   description: Login exitoso sin 2FA
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                       description: Token JWT con roles y membresías
+ *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 - type: object
+ *                   description: Se requiere verificación 2FA
+ *                   properties:
+ *                     twoFactorRequired:
+ *                       type: boolean
+ *                       example: true
+ *                     tempToken:
+ *                       type: string
+ *                       description: Token temporal para completar 2FA
  *       401:
- *         description: Invalid credentials
+ *         description: Credenciales inválidas
+ *       500:
+ *         description: Error del servidor
+ *     x-codeSamples:
+ *       - lang: JavaScript
+ *         source: |
+ *           // Ejemplo de decodificación del token JWT
+ *           const token = response.token;
+ *           const decoded = jwt.decode(token);
+ *           console.log(decoded);
+ *           // {
+ *           //   sub: 1,
+ *           //   username: "usuario123",
+ *           //   persona_id: 1,
+ *           //   roles: ["admin", "propietario"],
+ *           //   comunidad_id: 1,
+ *           //   memberships: [
+ *           //     { comunidadId: 1, rol: "admin", nivel_acceso: 2 },
+ *           //     { comunidadId: 2, rol: "propietario", nivel_acceso: 6 }
+ *           //   ]
+ *           // }
  */
 router.post('/login', [
   body('identifier').exists().withMessage('Identifier (email, RUT, DNI or username) is required'),
@@ -153,12 +245,21 @@ router.post('/login', [
     const ok = await bcrypt.compare(password, user.hash_password);
     if (!ok) return res.status(401).json({ error: 'invalid credentials' });
     
-    // Fetch roles from membresia_comunidad
-    const [membresias] = await db.query('SELECT comunidad_id, rol FROM membresia_comunidad WHERE persona_id = ? AND activo = 1', [user.persona_id]);
+    // Fetch roles from usuario_comunidad_rol (nueva estructura)
+    const [membresias] = await db.query(`
+      SELECT ucr.comunidad_id, r.codigo as rol, r.nivel_acceso 
+      FROM usuario_comunidad_rol ucr
+      INNER JOIN rol r ON r.id = ucr.rol_id
+      WHERE ucr.usuario_id = ? AND ucr.activo = 1
+    `, [user.id]);
     // Normalizar roles (lowercase) y eliminar duplicados
     const roles = Array.from(new Set(membresias.map(m => String(m.rol || '').toLowerCase())));
     const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
-    const memberships = membresias.map(m => ({ comunidadId: m.comunidad_id, rol: String(m.rol || '').toLowerCase() }));
+    const memberships = membresias.map(m => ({ 
+      comunidadId: m.comunidad_id, 
+      rol: String(m.rol || '').toLowerCase(),
+      nivel_acceso: m.nivel_acceso 
+    }));
     
     // Check if user has TOTP enabled
     const [userRow] = await db.query('SELECT totp_secret, totp_enabled FROM usuario WHERE id = ? LIMIT 1', [user.id]);
@@ -203,11 +304,20 @@ router.post('/2fa/verify', [body('tempToken').exists(), body('code').exists()], 
     const verified = speakeasy.totp.verify({ secret: user.totp_secret, encoding: 'base32', token: code, window: 1 });
     if (!verified) return res.status(401).json({ error: 'invalid code' });
     // create final token
-    const [membresias] = await db.query('SELECT comunidad_id, rol FROM membresia_comunidad WHERE persona_id = ? AND activo = 1', [user.persona_id]);
+    const [membresias] = await db.query(`
+      SELECT ucr.comunidad_id, r.codigo as rol, r.nivel_acceso 
+      FROM usuario_comunidad_rol ucr
+      INNER JOIN rol r ON r.id = ucr.rol_id
+      WHERE ucr.usuario_id = ? AND ucr.activo = 1
+    `, [user.id]);
     // Normalizar roles (lowercase) y eliminar duplicados
     const roles = Array.from(new Set(membresias.map(m => String(m.rol || '').toLowerCase())));
     const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
-    const memberships = membresias.map(m => ({ comunidadId: m.comunidad_id, rol: String(m.rol || '').toLowerCase() }));
+    const memberships = membresias.map(m => ({ 
+      comunidadId: m.comunidad_id, 
+      rol: String(m.rol || '').toLowerCase(),
+      nivel_acceso: m.nivel_acceso 
+    }));
     const payload = { sub: user.id, username: user.username, persona_id: user.persona_id, roles, comunidad_id, memberships, is_superadmin: !!user.is_superadmin };
     const token = generateToken(payload);
     res.json({ token });

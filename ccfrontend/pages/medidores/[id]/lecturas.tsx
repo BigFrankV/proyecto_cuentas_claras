@@ -504,3 +504,8 @@ export default function LecturasMedidor() {
     </ProtectedRoute>
   );
 }
+
+// Disable static optimization for this page to avoid EMFILE errors with MUI icons
+export const config = {
+  unstable_runtimeJS: true,
+};
