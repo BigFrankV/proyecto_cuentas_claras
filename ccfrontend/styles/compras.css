@@ -286,6 +286,74 @@
   margin-bottom: 2rem;
 }
 
+/* Mobile-first adjustments for cards and form/detail sections
+   These defaults target small screens first. Larger, more spacious
+   layouts are applied in the min-width media query below. */
+.purchase-card,
+.stat-card,
+.purchase-form-section,
+.purchase-detail-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--purchases-shadow);
+  transition: all 0.2s ease;
+  overflow: hidden;
+  border: 1px solid rgba(142, 68, 173, 0.06);
+}
+
+/* Compact / mobile card specifics */
+.purchase-card {
+  display: block;
+  width: 100%;
+}
+
+.purchase-card::before { height: 3px; }
+.purchase-card-header { padding: 0.75rem 1rem 0; }
+.purchase-card-title { font-size: 1rem; margin-bottom: 0.25rem; }
+.purchase-card-meta { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+.purchase-card-body { padding: 0 1rem 1rem; }
+.purchase-card-description {
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.purchase-card-details { grid-template-columns: 1fr; gap: 0.75rem; }
+.purchase-card-detail { padding: 0.5rem; }
+.purchase-card-footer { padding-top: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+
+/* Desktop / larger screens overrides */
+@media (min-width: 768px) {
+  .purchase-card,
+  .stat-card,
+  .purchase-form-section,
+  .purchase-detail-section {
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(142, 68, 173, 0.1);
+  }
+
+  .purchases-grid { grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); }
+  .purchase-card-details { grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .purchase-card-footer { flex-direction: row; justify-content: space-between; align-items: center; }
+
+  .stat-value { font-size: 2.2rem; }
+  .stat-card { padding: 1.5rem; }
+}
+
+.stat-card { padding: 1rem; }
+.stat-card::before { height: 3px; }
+.stat-value { font-size: 1.6rem; }
+.stat-label { font-size: 0.85rem; }
+.stat-trend { font-size: 0.8rem; }
+
+.purchase-form-section,
+.purchase-detail-section { padding: 0.9rem; border-radius: 8px; }
+
+
 .stat-card {
   background: white;
   border-radius: 12px;

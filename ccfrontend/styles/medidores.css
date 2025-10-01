@@ -93,12 +93,29 @@
 .stat-card {
   background: white;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1rem 1rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   border-left: 4px solid transparent;
   transition: all 0.3s ease;
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 110px; /* ensure consistent card height */
 }
+
+/* Grid wrapper for stat cards to control spacing and equal heights */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+/* Make stat-card contents centered vertically and horizontally on small screens */
+.stats-grid { align-items: stretch; }
+.stats-grid .stat-card { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+.stats-grid .stat-card .stat-value { width: 100%; }
+
 
 .stat-card:hover {
   transform: translateY(-2px);
@@ -130,23 +147,45 @@
   font-size: 24px;
 }
 
+/* Mobile-first: smaller base size for stat numbers */
 .stat-value {
-  font-size: 2.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
   color: #212529;
+  line-height: 1;
+}
+
+/* Scale up on larger viewports */
+@media (min-width: 768px) {
+  .stat-value { font-size: 1.75rem; }
+}
+
+@media (min-width: 576px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 992px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .stats-grid .stat-card { align-items: flex-start; text-align: left; justify-content: space-between; }
+}
+
+@media (min-width: 1200px) {
+  .stat-value { font-size: 2rem; }
 }
 
 .stat-label {
   color: #6c757d;
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
 }
 
 .stat-change {
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
 }
 
 .stat-change.positive {
@@ -772,10 +811,6 @@
 }
 
 @media (max-width: 767.98px) {
-  .table-responsive {
-    display: none;
-  }
-
   .period-selector {
     flex-direction: column;
   }
@@ -892,4 +927,17 @@
   background-color: #667eea;
   border-color: #667eea;
   color: #fff;
+}
+
+/* Utility: force fixed table layout for predictable column widths */
+.table-fixed {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.table-fixed th,
+.table-fixed td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

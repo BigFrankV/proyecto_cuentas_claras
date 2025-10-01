@@ -8,12 +8,15 @@ const createJestConfig = nextJest({
 // Add any custom config to be passed to Jest
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  moduleNameMapping: {
+  moduleNameMapper: {
     // Handle module aliases (this will be automatically configured for you based on your tsconfig.json paths)
     '^@/components/(.*)$': '<rootDir>/components/$1',
     '^@/pages/(.*)$': '<rootDir>/pages/$1',
     '^@/lib/(.*)$': '<rootDir>/lib/$1',
     '^@/styles/(.*)$': '<rootDir>/styles/$1',
+    // Mock MUI icons to avoid importing MUI internal utils in Jest
+    '^@mui/icons-material$': '<rootDir>/__mocks__/@mui/icons-material/index.js',
+    '^@mui/icons-material/(.*)$': '<rootDir>/__mocks__/@mui/icons-material/index.js',
   },
   testEnvironment: 'jest-environment-jsdom',
 
