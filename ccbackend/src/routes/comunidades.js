@@ -89,8 +89,8 @@ router.get('/', authenticate, async (req, res) => {
               ), 0) as gastos_mensuales
           FROM comunidad com
           LEFT JOIN unidad u ON u.comunidad_id = com.id
-          LEFT JOIN membresia_comunidad mc ON mc.comunidad_id = com.id
-          LEFT JOIN cargo_unidad cu ON cu.comunidad_id = com.id
+          LEFT JOIN usuario_comunidad_rol ucr ON ucr.comunidad_id = com.id
+          LEFT JOIN cuenta_cobro_unidad cu ON cu.comunidad_id = com.id
           GROUP BY com.id
       ) stats ON stats.comunidad_id = c.id
       WHERE 1=1`;
@@ -207,11 +207,12 @@ router.get('/:id', authenticate, async (req, res) => {
            WHERE u.comunidad_id = c.id AND u.activa = 1) as unidadesActivas,
            
           -- Contador de residentes activos
-          (SELECT COUNT(DISTINCT mc.persona_id) 
-           FROM membresia_comunidad mc 
-           WHERE mc.comunidad_id = c.id 
-           AND mc.activo = 1 
-           AND mc.rol IN ('residente', 'propietario')) as totalResidentes,
+          (SELECT COUNT(DISTINCT ucr.usuario_id) 
+           FROM usuario_comunidad_rol ucr
+           INNER JOIN rol r ON r.id = ucr.rol_id
+           WHERE ucr.comunidad_id = c.id 
+           AND ucr.activo = 1 
+           AND r.codigo IN ('residente', 'propietario')) as totalResidentes,
            
           -- Contador de edificios
           (SELECT COUNT(*) 
@@ -225,7 +226,7 @@ router.get('/:id', authenticate, async (req, res) => {
            
           -- Saldo pendiente
           (SELECT COALESCE(SUM(cu.saldo), 0) 
-           FROM cargo_unidad cu 
+           FROM cuenta_cobro_unidad cu 
            WHERE cu.comunidad_id = c.id 
            AND cu.estado IN ('pendiente', 'parcial')) as saldoPendiente
 
@@ -520,12 +521,14 @@ router.get('/:id/residentes', authenticate, async (req, res) => {
               ELSE 'Inactivo'
           END as estado
       FROM persona p
-      INNER JOIN membresia_comunidad mc ON mc.persona_id = p.id
-      LEFT JOIN tenencia_unidad tu ON tu.persona_id = p.id AND tu.comunidad_id = mc.comunidad_id
+      INNER JOIN usuario u_table ON u_table.persona_id = p.id
+      INNER JOIN usuario_comunidad_rol ucr ON ucr.usuario_id = u_table.id
+      INNER JOIN rol r ON r.id = ucr.rol_id
+      LEFT JOIN titulares_unidad tu ON tu.persona_id = p.id AND tu.comunidad_id = ucr.comunidad_id
       LEFT JOIN unidad u ON u.id = tu.unidad_id
       LEFT JOIN edificio e ON e.id = u.edificio_id
-      WHERE mc.comunidad_id = ?
-      ORDER BY mc.rol, p.apellidos, p.nombres`;
+      WHERE ucr.comunidad_id = ?
+      ORDER BY r.nivel_acceso, p.apellidos, p.nombres`;
     
     const [rows] = await db.query(query, [id]);
     res.json(rows);
