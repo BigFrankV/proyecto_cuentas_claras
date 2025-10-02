@@ -14,6 +14,25 @@ const { requireCommunity } = require('../middleware/tenancy');
  *     tags: [Torres]
  */
 
+// Get torres by comunidad
+router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
+  try {
+    const comunidadId = Number(req.params.comunidadId);
+    const [rows] = await db.query(`
+      SELECT t.id, t.nombre, t.edificio_id, e.nombre as edificio_nombre
+      FROM torre t
+      INNER JOIN edificio e ON e.id = t.edificio_id
+      WHERE e.comunidad_id = ?
+      ORDER BY e.nombre, t.nombre
+      LIMIT 200
+    `, [comunidadId]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching torres:', error);
+    res.status(500).json({ error: 'Error fetching torres' });
+  }
+});
+
 // List torres for edificio (edificio belongs to comunidad, but request has edificioId)
 router.get('/edificio/:edificioId', authenticate, async (req, res) => {
   const edificioId = Number(req.params.edificioId);

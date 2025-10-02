@@ -69,7 +69,7 @@ router.get('/', authenticate, async (req, res) => {
               com.id as comunidad_id,
               COUNT(DISTINCT u.id) as total_unidades,
               COUNT(DISTINCT CASE WHEN u.activa = 1 THEN u.id END) as unidades_activas,
-              COUNT(DISTINCT CASE WHEN mc.rol IN ('residente', 'propietario') AND mc.activo = 1 THEN mc.persona_id END) as total_residentes,
+              COUNT(DISTINCT CASE WHEN r.codigo IN ('residente', 'propietario') AND ucr.activo = 1 THEN ucr.usuario_id END) as total_residentes,
               COALESCE(SUM(CASE WHEN cu.estado IN ('pendiente', 'parcial') THEN cu.saldo ELSE 0 END), 0) as saldo_pendiente,
               -- Ingresos del mes actual
               COALESCE((
@@ -90,6 +90,7 @@ router.get('/', authenticate, async (req, res) => {
           FROM comunidad com
           LEFT JOIN unidad u ON u.comunidad_id = com.id
           LEFT JOIN usuario_comunidad_rol ucr ON ucr.comunidad_id = com.id
+          LEFT JOIN rol r ON r.id = ucr.rol_id
           LEFT JOIN cuenta_cobro_unidad cu ON cu.comunidad_id = com.id
           GROUP BY com.id
       ) stats ON stats.comunidad_id = c.id
@@ -315,6 +316,193 @@ router.delete('/:id', authenticate, authorize('superadmin'), async (req, res) =>
 
 /**
  * @openapi
+ * /comunidades/{id}/dashboard:
+ *   get:
+ *     tags: [Comunidades]
+ *     summary: Obtener dashboard completo de una comunidad
+ *     description: Retorna información consolidada para el dashboard incluyendo estadísticas financieras, unidades, residentes y alertas
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Dashboard de la comunidad
+ */
+router.get('/:id/dashboard', authenticate, async (req, res) => {
+  try {
+    const id = req.params.id;
+    
+    // Obtener información básica de la comunidad
+    const [comunidad] = await db.query(`
+      SELECT 
+        c.id,
+        c.razon_social as nombre,
+        c.direccion,
+        c.email_contacto as email,
+        c.telefono_contacto as telefono,
+        c.moneda
+      FROM comunidad c
+      WHERE c.id = ?
+      LIMIT 1
+    `, [id]);
+    
+    if (!comunidad.length) {
+      return res.status(404).json({ error: 'Comunidad no encontrada' });
+    }
+    
+    // Obtener estadísticas de unidades
+    const [unidades] = await db.query(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(CASE WHEN activa = 1 THEN 1 END) as activas,
+        COUNT(CASE WHEN activa = 0 THEN 1 END) as inactivas
+      FROM unidad u
+      INNER JOIN edificio e ON e.id = u.edificio_id
+      WHERE e.comunidad_id = ?
+    `, [id]);
+    
+    // Obtener estadísticas de residentes
+    const [residentes] = await db.query(`
+      SELECT 
+        COUNT(DISTINCT ucr.usuario_id) as total,
+        COUNT(DISTINCT CASE WHEN r.codigo = 'propietario' AND ucr.activo = 1 THEN ucr.usuario_id END) as propietarios,
+        COUNT(DISTINCT CASE WHEN r.codigo = 'residente' AND ucr.activo = 1 THEN ucr.usuario_id END) as residentes,
+        COUNT(DISTINCT CASE WHEN r.codigo IN ('admin', 'comite') AND ucr.activo = 1 THEN ucr.usuario_id END) as administradores
+      FROM usuario_comunidad_rol ucr
+      INNER JOIN rol r ON r.id = ucr.rol_id
+      WHERE ucr.comunidad_id = ?
+    `, [id]);
+    
+    // Obtener estadísticas financieras del mes actual
+    const [finanzas] = await db.query(`
+      SELECT 
+        -- Ingresos del mes
+        COALESCE((
+          SELECT SUM(cu.monto_total)
+          FROM cargo_unidad cu
+          INNER JOIN unidad u ON u.id = cu.unidad_id
+          INNER JOIN edificio e ON e.id = u.edificio_id
+          WHERE e.comunidad_id = ?
+            AND MONTH(cu.created_at) = MONTH(CURDATE())
+            AND YEAR(cu.created_at) = YEAR(CURDATE())
+        ), 0) as ingresosMes,
+        
+        -- Ingresos cobrados
+        COALESCE((
+          SELECT SUM(cu.monto_total - cu.saldo)
+          FROM cargo_unidad cu
+          INNER JOIN unidad u ON u.id = cu.unidad_id
+          INNER JOIN edificio e ON e.id = u.edificio_id
+          WHERE e.comunidad_id = ?
+            AND MONTH(cu.created_at) = MONTH(CURDATE())
+            AND YEAR(cu.created_at) = YEAR(CURDATE())
+        ), 0) as ingresosCobrados,
+        
+        -- Gastos del mes
+        COALESCE((
+          SELECT SUM(g.monto)
+          FROM gasto g
+          WHERE g.comunidad_id = ?
+            AND MONTH(g.fecha) = MONTH(CURDATE())
+            AND YEAR(g.fecha) = YEAR(CURDATE())
+        ), 0) as gastosMes,
+        
+        -- Saldo pendiente total
+        COALESCE((
+          SELECT SUM(cu.saldo)
+          FROM cargo_unidad cu
+          INNER JOIN unidad u ON u.id = cu.unidad_id
+          INNER JOIN edificio e ON e.id = u.edificio_id
+          WHERE e.comunidad_id = ?
+            AND cu.estado IN ('pendiente', 'parcial')
+        ), 0) as saldoPendiente
+    `, [id, id, id, id]);
+    
+    // Obtener cargos pendientes (top 5)
+    const [cargosPendientes] = await db.query(`
+      SELECT 
+        cu.id,
+        CONCAT(e.nombre, ' - ', u.codigo) as unidad,
+        cu.monto_total as monto,
+        cu.saldo,
+        cu.estado,
+        cu.created_at as fechaEmision,
+        cu.updated_at as fechaActualizacion,
+        DATEDIFF(CURDATE(), cu.created_at) as diasDesdeCreacion
+      FROM cargo_unidad cu
+      INNER JOIN unidad u ON u.id = cu.unidad_id
+      INNER JOIN edificio e ON e.id = u.edificio_id
+      WHERE e.comunidad_id = ?
+        AND cu.estado IN ('pendiente', 'parcial')
+      ORDER BY cu.created_at DESC
+      LIMIT 5
+    `, [id]);
+    
+    // Obtener actividad reciente (últimos 5 pagos)
+    const [actividadReciente] = await db.query(`
+      SELECT 
+        p.id,
+        CONCAT(e.nombre, ' - ', u.codigo) as unidad,
+        p.monto,
+        p.fecha as fecha,
+        'Pago recibido' as tipo,
+        p.medio as metodo
+      FROM pago p
+      INNER JOIN unidad u ON u.id = p.unidad_id
+      INNER JOIN edificio e ON e.id = u.edificio_id
+      WHERE e.comunidad_id = ?
+      ORDER BY p.fecha DESC
+      LIMIT 5
+    `, [id]);
+    
+    // Construir respuesta del dashboard
+    const dashboard = {
+      comunidad: comunidad[0],
+      resumen: {
+        unidades: {
+          total: unidades[0]?.total || 0,
+          activas: unidades[0]?.activas || 0,
+          inactivas: unidades[0]?.inactivas || 0
+        },
+        residentes: {
+          total: residentes[0]?.total || 0,
+          propietarios: residentes[0]?.propietarios || 0,
+          residentes: residentes[0]?.residentes || 0,
+          administradores: residentes[0]?.administradores || 0
+        },
+        finanzas: {
+          ingresosMes: parseFloat(finanzas[0]?.ingresosMes || 0),
+          ingresosCobrados: parseFloat(finanzas[0]?.ingresosCobrados || 0),
+          gastosMes: parseFloat(finanzas[0]?.gastosMes || 0),
+          saldoPendiente: parseFloat(finanzas[0]?.saldoPendiente || 0),
+          balanceMes: parseFloat(finanzas[0]?.ingresosCobrados || 0) - parseFloat(finanzas[0]?.gastosMes || 0)
+        }
+      },
+      cargosPendientes: cargosPendientes.map(c => ({
+        ...c,
+        monto: parseFloat(c.monto),
+        saldo: parseFloat(c.saldo)
+      })),
+      actividadReciente: actividadReciente.map(a => ({
+        ...a,
+        monto: parseFloat(a.monto)
+      }))
+    };
+    
+    res.json(dashboard);
+  } catch (err) {
+    console.error('Error fetching dashboard:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * @openapi
  * /comunidades/{id}/amenidades:
  *   get:
  *     tags: [Comunidades]
@@ -503,6 +691,12 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de residentes
  */
+// Alias para compatibilidad
+router.get('/:id/miembros', authenticate, async (req, res) => {
+  req.url = req.url.replace('/miembros', '/residentes');
+  return router.handle(req, res);
+});
+
 router.get('/:id/residentes', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
@@ -512,12 +706,12 @@ router.get('/:id/residentes', authenticate, async (req, res) => {
           p.id,
           CONCAT(p.nombres, ' ', p.apellidos) as nombre,
           COALESCE(CONCAT(e.nombre, '-', u.codigo), 'Sin unidad') as unidad,
-          mc.rol as tipo,
+          r.codigo as tipo,
           tu.tipo as tipo_tenencia,
           p.telefono,
           p.email,
           CASE 
-              WHEN mc.activo = 1 THEN 'Activo'
+              WHEN ucr.activo = 1 THEN 'Activo'
               ELSE 'Inactivo'
           END as estado
       FROM persona p
