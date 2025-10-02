@@ -6,48 +6,85 @@ const options = {
     openapi: '3.0.0',
     info: {
       title: 'Cuentas Claras API',
-      version: '1.0.0',
+      version: '2.0.0',
       description: `
-        ## API de Gestión para Comunidades Residenciales
+        ## 🏢 API de Gestión para Comunidades Residenciales
         
-        Sistema completo para la administración de comunidades, edificios y condominios.
+        Sistema completo para la administración de comunidades, edificios y condominios con arquitectura REST.
         
-        ### 🏢 Módulos Principales
+        ### 📦 Módulos Principales
         
-        - **Comunidades y Edificios**: Gestión de estructuras, torres, unidades y amenidades
-        - **Usuarios y Roles**: Autenticación JWT con sistema jerárquico de 7 niveles
-        - **Finanzas**: Gastos comunes, pagos, conciliaciones y proveedores
-        - **Operaciones**: Multas, consumos, medidores y soporte técnico
+        - **🔐 Autenticación**: Login/Register con JWT, 2FA, recuperación de contraseña
+        - **🏘️ Comunidades**: CRUD, dashboard con estadísticas, flujo de caja
+        - **🏗️ Edificios y Torres**: Gestión de estructuras físicas y unidades
+        - **👥 Usuarios y Roles**: Sistema jerárquico de 7 niveles de acceso
+        - **💰 Finanzas**: Gastos comunes, pagos, cargos, conciliaciones
+        - **📋 Emisiones**: Generación de gastos comunes con prorrateo
+        - **⚡ Amenidades**: Reservas y gestión de espacios comunes
+        - **🔧 Soporte**: Tickets, notificaciones, bitácora de conserjería
+        - **💳 Payment Gateway**: Integración con Webpay y Khipu
+        - **📄 Files**: Upload y gestión de archivos
         
-        ### 🔐 Autenticación
+        ### 🔐 Autenticación JWT
         
-        La API usa **JSON Web Tokens (JWT)** para autenticación. Incluya el token en el header:
+        La API usa **JSON Web Tokens (JWT)**. Incluya el token en cada request:
         \`\`\`
-        Authorization: Bearer {token}
+        Authorization: Bearer {your-jwt-token}
         \`\`\`
         
-        ### ⚠️ Cambios Importantes (Breaking Changes)
+        **Obtener token:**
+        1. POST /auth/login con \`identifier\` + \`password\`
+        2. Copiar \`token\` de la respuesta
+        3. Usar en header \`Authorization: Bearer {token}\`
         
-        **Tablas Renombradas:**
-        - \`cargo_unidad\` → \`cuenta_cobro_unidad\`
-        - \`emision_gasto_comun\` → \`emision_gastos_comunes\`
-        - \`ticket\` → \`solicitud_soporte\`
-        - \`membresia_comunidad\` → \`usuario_comunidad_rol\`
+        ### 🎭 Sistema de Roles (nivel_acceso 1-7)
         
-        **Sistema de Roles (1-7):**
-        1. Superadmin | 2. Admin | 3. Tesorero | 4. Secretario | 5. Directivo | 6. Propietario | 7. Residente
+        | Nivel | Código | Permisos |
+        |-------|--------|----------|
+        | 1 | superadmin | Acceso total al sistema |
+        | 2 | admin | Gestión completa de comunidad |
+        | 3 | comite | Aprobación de gastos |
+        | 4 | contador | Gestión financiera |
+        | 5 | conserje | Bitácora y notificaciones |
+        | 6 | propietario | Visualización y pagos |
+        | 7 | residente | Solo consultas |
         
-        **Endpoint /membresias:**
-        - ❌ Antes: \`persona_id\` + \`rol\` (string)
-        - ✅ Ahora: \`usuario_id\` + \`rol_id\` (integer)
+        ### 📊 Endpoints Destacados
         
-        **JWT Token incluye:**
-        - \`memberships[]\` con \`nivel_acceso\` por comunidad
-        - \`roles[]\` con códigos de rol del usuario
+        **Dashboard:** \`GET /comunidades/{id}/dashboard\`
+        - Estadísticas de unidades, residentes, finanzas
+        - Top 5 cargos pendientes
+        - Actividad reciente (últimos pagos)
+        
+        **Miembros:** \`GET /comunidades/{id}/miembros\` o \`/residentes\`
+        - Lista de usuarios con roles por comunidad
+        
+        **Torres por Comunidad:** \`GET /torres/comunidad/{id}\`
+        - Obtener todas las torres de una comunidad
+        
+        **2FA:** \`POST /auth/verify-2fa\`
+        - Verificación de autenticación de dos factores
+        
+        ### ⚠️ Cambios Importantes v2.0
+        
+        **Tablas actualizadas:**
+        - Vista \`cargo_unidad\` (de \`cuenta_cobro_unidad\`)
+        - Tabla \`pago\` usa campos \`fecha\` y \`medio\` (no fecha_pago/medio_pago)
+        - Tabla \`comunidad\` usa IDs tipo BIGINT
+        
+        **Nuevos endpoints:**
+        - POST /auth/verify-2fa
+        - GET /comunidades/{id}/dashboard
+        - GET /comunidades/{id}/miembros
+        - GET /torres/comunidad/{id}
+        
+        **Credenciales de prueba:**
+        - Email: patricio@pquintanilla.cl
+        - Password: 123456
         
         ---
         
-        **Desarrollado por:** Patricio Quintanilla, Frank Vogt, Matías Román
+        **v2.0.0** | Última actualización: Octubre 2025 | **Desarrollado por:** Patricio Quintanilla, Frank Vogt, Matías Román
       `,
       contact: {
         name: 'Soporte Técnico',
@@ -393,44 +430,104 @@ const options = {
     security: [{ bearerAuth: [] }],
     tags: [
       {
-        name: 'Autenticación',
-        description: 'Endpoints para login y gestión de sesiones'
+        name: 'Auth',
+        description: '🔐 Autenticación y autorización (Login, Register, 2FA, Password Reset)'
       },
       {
         name: 'Comunidades',
-        description: 'Gestión de comunidades residenciales'
+        description: '🏘️ CRUD de comunidades + Dashboard con estadísticas + Flujo de caja'
       },
       {
         name: 'Edificios',
-        description: 'Gestión de edificios y torres'
+        description: '🏗️ Gestión de edificios, torres y unidades habitacionales'
       },
       {
-        name: 'Usuarios',
-        description: 'Gestión de usuarios y perfiles'
+        name: 'Torres',
+        description: '🗼 Gestión de torres por edificio o comunidad'
+      },
+      {
+        name: 'Unidades',
+        description: '🏠 Gestión de unidades, tenencias y residentes'
+      },
+      {
+        name: 'Personas',
+        description: '👤 CRUD de personas (propietarios, residentes, etc.)'
+      },
+      {
+        name: 'Membresias',
+        description: '👥 Asignación de roles de usuarios en comunidades'
+      },
+      {
+        name: 'Cargos',
+        description: '💸 Cuentas de cobro y cargos por unidad'
       },
       {
         name: 'Pagos',
-        description: 'Gestión de pagos y transacciones'
+        description: '💰 Registro y aplicación de pagos'
       },
       {
         name: 'Gastos',
-        description: 'Gestión de gastos y categorías'
+        description: '💵 Gestión de gastos operacionales'
+      },
+      {
+        name: 'Emisiones',
+        description: '📋 Emisión de gastos comunes con prorrateo'
+      },
+      {
+        name: 'Categorías de Gasto',
+        description: '📂 Categorías para clasificar gastos'
+      },
+      {
+        name: 'Centros de Costo',
+        description: '🎯 Centros de costo para contabilidad'
       },
       {
         name: 'Proveedores',
-        description: 'Gestión de proveedores y documentos'
+        description: '🏪 Gestión de proveedores y servicios'
+      },
+      {
+        name: 'Documentos de Compra',
+        description: '📄 Facturas y documentos tributarios'
+      },
+      {
+        name: 'Conciliaciones',
+        description: '🏦 Conciliación bancaria'
       },
       {
         name: 'Amenidades',
-        description: 'Gestión de amenidades y reservas'
+        description: '⚡ Gestión de amenidades y reservas'
       },
       {
         name: 'Multas',
-        description: 'Gestión de multas y sanciones'
+        description: '⚠️ Registro y gestión de multas'
+      },
+      {
+        name: 'Medidores',
+        description: '📊 Medidores de consumo (agua, luz, gas) y lecturas'
+      },
+      {
+        name: 'Tarifas de Consumo',
+        description: '💲 Tarifas para cálculo de consumos'
       },
       {
         name: 'Soporte',
-        description: 'Endpoints de soporte y utilidades'
+        description: '🔧 Tickets, notificaciones, bitácora y documentos'
+      },
+      {
+        name: 'Payment Gateway',
+        description: '💳 Integración con Webpay y Khipu'
+      },
+      {
+        name: 'Files',
+        description: '📁 Upload, descarga y gestión de archivos'
+      },
+      {
+        name: 'Webhooks',
+        description: '🔔 Webhooks para integraciones externas'
+      },
+      {
+        name: 'Utilidades',
+        description: '🛠️ Health check, UF, UTM, validación RUT, sync e indicadores'
       }
     ]
   },
