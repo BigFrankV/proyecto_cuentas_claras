@@ -390,11 +390,11 @@ router.post('/login', [
     const ok = await bcrypt.compare(password, user.hash_password);
     if (!ok) return res.status(401).json({ error: 'invalid credentials' });
     
-    // Fetch roles from usuario_comunidad_rol (nueva estructura)
+    // Fetch roles from usuario_rol_comunidad (nueva estructura)
     const [membresias] = await db.query(`
       SELECT ucr.comunidad_id, r.codigo as rol, r.nivel_acceso 
-      FROM usuario_comunidad_rol ucr
-      INNER JOIN rol r ON r.id = ucr.rol_id
+      FROM usuario_rol_comunidad ucr
+      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
       WHERE ucr.usuario_id = ? AND ucr.activo = 1
     `, [user.id]);
     // Normalizar roles (lowercase) y eliminar duplicados
@@ -451,8 +451,8 @@ router.post('/2fa/verify', [body('tempToken').exists(), body('code').exists()], 
     // create final token
     const [membresias] = await db.query(`
       SELECT ucr.comunidad_id, r.codigo as rol, r.nivel_acceso 
-      FROM usuario_comunidad_rol ucr
-      INNER JOIN rol r ON r.id = ucr.rol_id
+      FROM usuario_rol_comunidad ucr
+      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
       WHERE ucr.usuario_id = ? AND ucr.activo = 1
     `, [user.id]);
     // Normalizar roles (lowercase) y eliminar duplicados
@@ -806,7 +806,7 @@ router.get('/me', authenticate, async (req, res) => {
     };
     
     const [membresias] = await db.query(
-      'SELECT comunidad_id AS comunidadId, rol FROM membresia_comunidad WHERE persona_id = ? AND activo = 1',
+      'SELECT comunidad_id AS comunidadId, rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1',
       [user.persona_id]
     );
     const memberships = (membresias || []).map(m => ({ comunidadId: m.comunidadId, rol: String(m.rol || '').toLowerCase() }));

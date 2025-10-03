@@ -20,11 +20,11 @@ function requireCommunity(paramName = 'comunidadId', allowedRoles = []) {
       const usuarioId = req.user.sub;
       if (!usuarioId) return res.status(403).json({ error: 'forbidden' });
 
-      // buscar membresía activa en usuario_comunidad_rol (nueva estructura)
+      // buscar membresía activa en usuario_rol_comunidad (nueva estructura)
       const [rows] = await db.query(`
         SELECT r.codigo as rol, r.nivel_acceso 
-        FROM usuario_comunidad_rol ucr
-        INNER JOIN rol r ON r.id = ucr.rol_id
+        FROM usuario_rol_comunidad ucr
+        INNER JOIN rol_sistema r ON r.id = ucr.rol_id
         WHERE ucr.comunidad_id = ? AND ucr.usuario_id = ? AND ucr.activo = 1 
         LIMIT 1
       `, [comunidadId, usuarioId]);
