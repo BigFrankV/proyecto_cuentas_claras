@@ -129,7 +129,7 @@ router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, 
 router.post('/:id/detalles', [authenticate, authorize('admin','superadmin'), body('categoria_id').isInt(), body('monto').isNumeric(), body('regla_prorrateo').notEmpty()], async (req, res) => {
   const errors = validationResult(req); if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
   const emisionId = req.params.id; const { gasto_id, categoria_id, monto, regla_prorrateo, metadata_json } = req.body;
-  try { const [result] = await db.query('INSERT INTO detalle_emision (emision_id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json) VALUES (?,?,?,?,?,?)', [emisionId, gasto_id || null, categoria_id, monto, regla_prorrateo, metadata_json || null]); const [row] = await db.query('SELECT id, categoria_id, monto, regla_prorrateo FROM detalle_emision WHERE id = ? LIMIT 1', [result.insertId]); res.status(201).json(row[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
+  try { const [result] = await db.query('INSERT INTO detalle_emision_gastos (emision_id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json) VALUES (?,?,?,?,?,?)', [emisionId, gasto_id || null, categoria_id, monto, regla_prorrateo, metadata_json || null]); const [row] = await db.query('SELECT id, categoria_id, monto, regla_prorrateo FROM detalle_emision_gastos WHERE id = ? LIMIT 1', [result.insertId]); res.status(201).json(row[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
 });
 
 // preview prorrateo - stub: return example distribution
@@ -140,7 +140,7 @@ router.get('/:id/previsualizar-prorrateo', authenticate, async (req, res) => {
     const [emRows] = await db.query('SELECT comunidad_id, periodo FROM emision_gastos_comunes WHERE id = ? LIMIT 1', [emisionId]);
     if (!emRows.length) return res.status(404).json({ error: 'emision not found' });
     const comunidadId = emRows[0].comunidad_id;
-    const [detalles] = await db.query('SELECT id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json FROM detalle_emision WHERE emision_id = ?', [emisionId]);
+    const [detalles] = await db.query('SELECT id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json FROM detalle_emision_gastos WHERE emision_id = ?', [emisionId]);
 
     // load unidades for comunidad
     const [unidades] = await db.query('SELECT id, codigo, alicuota FROM unidad WHERE comunidad_id = ? AND activa = 1', [comunidadId]);
@@ -203,7 +203,7 @@ router.post('/:id/generar-cargos', authenticate, authorize('admin','superadmin')
     if (!emRows.length) { await conn.rollback(); return res.status(404).json({ error: 'emision not found' }); }
     const comunidadId = emRows[0].comunidad_id;
 
-    const [detalles] = await conn.query('SELECT id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json FROM detalle_emision WHERE emision_id = ?', [emisionId]);
+    const [detalles] = await conn.query('SELECT id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json FROM detalle_emision_gastos WHERE emision_id = ?', [emisionId]);
     const [unidades] = await conn.query('SELECT id, codigo, alicuota FROM unidad WHERE comunidad_id = ? AND activa = 1', [comunidadId]);
     if (!unidades.length) { await conn.rollback(); return res.status(400).json({ error: 'no active unidades' }); }
 

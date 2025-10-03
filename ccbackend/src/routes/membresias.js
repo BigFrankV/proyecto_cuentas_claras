@@ -74,8 +74,8 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
       ucr.desde,
       ucr.hasta,
       ucr.activo
-    FROM usuario_comunidad_rol ucr
-    INNER JOIN rol r ON r.id = ucr.rol_id
+    FROM usuario_rol_comunidad ucr
+    INNER JOIN rol_sistema r ON r.id = ucr.rol_id
     INNER JOIN usuario u ON u.id = ucr.usuario_id
     WHERE ucr.comunidad_id = ?
     ORDER BY r.nivel_acceso ASC
@@ -173,14 +173,14 @@ router.post('/comunidad/:comunidadId', [
   const { usuario_id, rol_id, activo, desde, hasta } = req.body;
   
   // Verificar que el rol existe
-  const [rolRows] = await db.query('SELECT id, codigo FROM rol WHERE id = ? LIMIT 1', [rol_id]);
+  const [rolRows] = await db.query('SELECT id, codigo FROM rol_sistema WHERE id = ? LIMIT 1', [rol_id]);
   if (!rolRows.length) return res.status(400).json({ error: 'invalid rol_id' });
   
   const desdeVal = desde || new Date().toISOString().slice(0,10); // YYYY-MM-DD
   
   try {
     const [result] = await db.query(
-      'INSERT INTO usuario_comunidad_rol (comunidad_id, usuario_id, rol_id, desde, hasta, activo) VALUES (?,?,?,?,?,?)', 
+      'INSERT INTO usuario_rol_comunidad (comunidad_id, usuario_id, rol_id, desde, hasta, activo) VALUES (?,?,?,?,?,?)', 
       [comunidadId, usuario_id, rol_id, desdeVal, hasta || null, typeof activo === 'undefined' ? 1 : (activo ? 1 : 0)]
     );
     
@@ -194,8 +194,8 @@ router.post('/comunidad/:comunidadId', [
         ucr.desde, 
         ucr.hasta, 
         ucr.activo 
-      FROM usuario_comunidad_rol ucr
-      INNER JOIN rol r ON r.id = ucr.rol_id
+      FROM usuario_rol_comunidad ucr
+      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
       INNER JOIN usuario u ON u.id = ucr.usuario_id
       WHERE ucr.id = ? 
       LIMIT 1
@@ -281,7 +281,7 @@ router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, 
   values.push(id);
   
   try { 
-    await db.query(`UPDATE usuario_comunidad_rol SET ${updates.join(', ')} WHERE id = ?`, values); 
+    await db.query(`UPDATE usuario_rol_comunidad SET ${updates.join(', ')} WHERE id = ?`, values); 
     const [rows] = await db.query(`
       SELECT 
         ucr.id, 
@@ -290,8 +290,8 @@ router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, 
         r.codigo as rol,
         r.nombre as rol_nombre,
         ucr.activo 
-      FROM usuario_comunidad_rol ucr
-      INNER JOIN rol r ON r.id = ucr.rol_id
+      FROM usuario_rol_comunidad ucr
+      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
       INNER JOIN usuario u ON u.id = ucr.usuario_id
       WHERE ucr.id = ? 
       LIMIT 1
@@ -337,7 +337,7 @@ router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, 
 router.delete('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => { 
   const id = req.params.id; 
   try { 
-    await db.query('DELETE FROM usuario_comunidad_rol WHERE id = ?', [id]); 
+    await db.query('DELETE FROM usuario_rol_comunidad WHERE id = ?', [id]); 
     res.status(204).end(); 
   } catch (err) { 
     console.error(err); 

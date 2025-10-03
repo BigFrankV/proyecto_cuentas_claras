@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { body, validationResult } = require('express-validator');
@@ -74,7 +74,7 @@ router.get('/', authenticate, async (req, res) => {
               -- Ingresos del mes actual
               COALESCE((
                   SELECT SUM(cu2.monto_total) 
-                  FROM cargo_unidad cu2 
+                  FROM cargo_financiero_unidad cu2 
                   WHERE cu2.comunidad_id = com.id 
                   AND MONTH(cu2.created_at) = MONTH(CURDATE()) 
                   AND YEAR(cu2.created_at) = YEAR(CURDATE())
@@ -89,8 +89,8 @@ router.get('/', authenticate, async (req, res) => {
               ), 0) as gastos_mensuales
           FROM comunidad com
           LEFT JOIN unidad u ON u.comunidad_id = com.id
-          LEFT JOIN usuario_comunidad_rol ucr ON ucr.comunidad_id = com.id
-          LEFT JOIN rol r ON r.id = ucr.rol_id
+          LEFT JOIN usuario_rol_comunidad ucr ON ucr.comunidad_id = com.id
+          LEFT JOIN rol_sistema r ON r.id = ucr.rol_id
           LEFT JOIN cuenta_cobro_unidad cu ON cu.comunidad_id = com.id
           GROUP BY com.id
       ) stats ON stats.comunidad_id = c.id
@@ -209,8 +209,8 @@ router.get('/:id', authenticate, async (req, res) => {
            
           -- Contador de residentes activos
           (SELECT COUNT(DISTINCT ucr.usuario_id) 
-           FROM usuario_comunidad_rol ucr
-           INNER JOIN rol r ON r.id = ucr.rol_id
+           FROM usuario_rol_comunidad ucr
+           INNER JOIN rol_sistema r ON r.id = ucr.rol_id
            WHERE ucr.comunidad_id = c.id 
            AND ucr.activo = 1 
            AND r.codigo IN ('residente', 'propietario')) as totalResidentes,
@@ -373,8 +373,8 @@ router.get('/:id/dashboard', authenticate, async (req, res) => {
         COUNT(DISTINCT CASE WHEN r.codigo = 'propietario' AND ucr.activo = 1 THEN ucr.usuario_id END) as propietarios,
         COUNT(DISTINCT CASE WHEN r.codigo = 'residente' AND ucr.activo = 1 THEN ucr.usuario_id END) as residentes,
         COUNT(DISTINCT CASE WHEN r.codigo IN ('admin', 'comite') AND ucr.activo = 1 THEN ucr.usuario_id END) as administradores
-      FROM usuario_comunidad_rol ucr
-      INNER JOIN rol r ON r.id = ucr.rol_id
+      FROM usuario_rol_comunidad ucr
+      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
       WHERE ucr.comunidad_id = ?
     `, [id]);
     
@@ -384,7 +384,7 @@ router.get('/:id/dashboard', authenticate, async (req, res) => {
         -- Ingresos del mes
         COALESCE((
           SELECT SUM(cu.monto_total)
-          FROM cargo_unidad cu
+          FROM cargo_financiero_unidad cu
           INNER JOIN unidad u ON u.id = cu.unidad_id
           INNER JOIN edificio e ON e.id = u.edificio_id
           WHERE e.comunidad_id = ?
@@ -395,7 +395,7 @@ router.get('/:id/dashboard', authenticate, async (req, res) => {
         -- Ingresos cobrados
         COALESCE((
           SELECT SUM(cu.monto_total - cu.saldo)
-          FROM cargo_unidad cu
+          FROM cargo_financiero_unidad cu
           INNER JOIN unidad u ON u.id = cu.unidad_id
           INNER JOIN edificio e ON e.id = u.edificio_id
           WHERE e.comunidad_id = ?
@@ -415,7 +415,7 @@ router.get('/:id/dashboard', authenticate, async (req, res) => {
         -- Saldo pendiente total
         COALESCE((
           SELECT SUM(cu.saldo)
-          FROM cargo_unidad cu
+          FROM cargo_financiero_unidad cu
           INNER JOIN unidad u ON u.id = cu.unidad_id
           INNER JOIN edificio e ON e.id = u.edificio_id
           WHERE e.comunidad_id = ?
@@ -434,7 +434,7 @@ router.get('/:id/dashboard', authenticate, async (req, res) => {
         cu.created_at as fechaEmision,
         cu.updated_at as fechaActualizacion,
         DATEDIFF(CURDATE(), cu.created_at) as diasDesdeCreacion
-      FROM cargo_unidad cu
+      FROM cargo_financiero_unidad cu
       INNER JOIN unidad u ON u.id = cu.unidad_id
       INNER JOIN edificio e ON e.id = u.edificio_id
       WHERE e.comunidad_id = ?
@@ -661,7 +661,7 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
           d.periodo,
           d.visibilidad,
           d.created_at as fechaSubida
-      FROM documento d
+      FROM documento_comunidad d
       WHERE d.comunidad_id = ?
       ORDER BY d.created_at DESC`;
     
@@ -716,8 +716,8 @@ router.get('/:id/residentes', authenticate, async (req, res) => {
           END as estado
       FROM persona p
       INNER JOIN usuario u_table ON u_table.persona_id = p.id
-      INNER JOIN usuario_comunidad_rol ucr ON ucr.usuario_id = u_table.id
-      INNER JOIN rol r ON r.id = ucr.rol_id
+      INNER JOIN usuario_rol_comunidad ucr ON ucr.usuario_id = u_table.id
+      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
       LEFT JOIN titulares_unidad tu ON tu.persona_id = p.id AND tu.comunidad_id = ucr.comunidad_id
       LEFT JOIN unidad u ON u.id = tu.unidad_id
       LEFT JOIN edificio e ON e.id = u.edificio_id
@@ -836,7 +836,7 @@ router.get('/:id/estadisticas', authenticate, async (req, res) => {
                     AND MONTH(g4.fecha) = MONTH(CURDATE()) 
                     AND YEAR(g4.fecha) = YEAR(CURDATE())), 0) as administracion
           
-      FROM cargo_unidad cu
+      FROM cargo_financiero_unidad cu
       WHERE cu.comunidad_id = ?
           AND MONTH(cu.created_at) = MONTH(CURDATE()) 
           AND YEAR(cu.created_at) = YEAR(CURDATE())`;
@@ -892,7 +892,7 @@ router.get('/:id/flujo-caja', authenticate, async (req, res) => {
           SELECT 
               DATE_FORMAT(cu.created_at, '%Y-%m') as mes,
               SUM(cu.monto_total) as total
-          FROM cargo_unidad cu
+          FROM cargo_financiero_unidad cu
           INNER JOIN unidad u ON u.id = cu.unidad_id
           INNER JOIN edificio e ON e.id = u.edificio_id
           WHERE e.comunidad_id = ?
