@@ -13,6 +13,7 @@ export interface Proveedor {
   calificacion?: number;
   categorias?: string[];
   comunidad_id: number;
+  comunidad_nombre?: string;
   created_at: string;
   updated_at?: string;
 }
@@ -76,9 +77,18 @@ class ProveedoresService {
   /**
    * Actualizar proveedor
    */
-  async updateProveedor(id: number, proveedorData: Partial<ProveedorCreateRequest>): Promise<{ success: boolean; data: Proveedor }> {
-    const response = await api.patch(`/proveedores/${id}`, proveedorData);  // ← CAMBIAR put por patch
-    return response.data;
+  async actualizarProveedor(id: number, proveedorData: Partial<ProveedorCreateRequest>): Promise<{ success: boolean; data: Proveedor }> {
+    console.log(`🔄 Actualizando proveedor ID: ${id}`, proveedorData);
+
+    try {
+      const response = await api.patch(`/proveedores/${id}`, proveedorData);
+      console.log('✅ Proveedor actualizado:', response.data);
+
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error actualizando proveedor:', error);
+      throw error;
+    }
   }
 
   /**
@@ -151,4 +161,96 @@ class ProveedoresService {
   }
 }
 
-export const proveedoresService = new ProveedoresService();
+export const proveedoresService = {
+  ...new ProveedoresService(),
+
+  // ✅ AGREGAR ESTA FUNCIÓN:
+  async getProveedor(id: number): Promise<{ success: boolean; data: Proveedor }> {
+    console.log(`🔍 Obteniendo proveedor ID: ${id}`);
+
+    try {
+      const response = await api.get(`/proveedores/${id}`);
+      console.log('✅ Proveedor obtenido:', response.data);
+
+      return {
+        success: true,
+        data: response.data.data
+      };
+    } catch (error: any) {
+      console.error('❌ Error obteniendo proveedor:', error);
+      throw error;
+    }
+  },
+
+  // ✅ AGREGAR FUNCIONES DE CAMBIAR ESTADO Y ELIMINAR:
+  async cambiarEstado(id: number, activo: boolean): Promise<{ success: boolean }> {
+    console.log(`🔄 Cambiando estado proveedor ID: ${id} a ${activo ? 'activo' : 'inactivo'}`);
+
+    try {
+      const response = await api.patch(`/proveedores/${id}/estado`, { activo });
+      console.log('✅ Estado cambiado exitosamente');
+
+      return {
+        success: true
+      };
+    } catch (error: any) {
+      console.error('❌ Error cambiando estado:', error);
+      throw error;
+    }
+  },
+
+  async eliminarProveedor(id: number): Promise<{ success: boolean }> {
+    console.log(`🗑️ Eliminando proveedor ID: ${id}`);
+
+    try {
+      const response = await api.delete(`/proveedores/${id}`);
+      console.log('✅ Proveedor eliminado exitosamente');
+
+      return {
+        success: true
+      };
+    } catch (error: any) {
+      console.error('❌ Error eliminando proveedor:', error);
+      throw error;
+    }
+  },
+
+  // ✅ AGREGAR ESTA FUNCIÓN FALTANTE:
+  async getAllProveedores(): Promise<{ success: boolean; data: Proveedor[]; estadisticas?: any }> {
+    console.log('🔍 Obteniendo todos los proveedores (Superadmin)');
+
+    try {
+      const response = await api.get('/proveedores/all');
+      console.log('✅ Todos los proveedores obtenidos:', response.data);
+
+      return {
+        success: true,
+        data: response.data.data || [],
+        estadisticas: response.data.estadisticas || null
+      };
+    } catch (error: any) {
+      console.error('❌ Error obteniendo todos los proveedores:', error);
+      throw error;
+    }
+  },
+
+  // ✅ TAMBIÉN AGREGAR FUNCIÓN PARA PROVEEDORES POR COMUNIDAD:
+  async getProveedoresByComunidad(comunidadId?: number): Promise<{ success: boolean; data: Proveedor[]; estadisticas?: any }> {
+    console.log('🔍 Obteniendo proveedores por comunidad:', comunidadId);
+
+    try {
+      // ✅ CORREGIR: Usar endpoint principal
+      const response = await api.get('/proveedores');
+      console.log('✅ Proveedores obtenidos:', response.data);
+
+      return {
+        success: true,
+        data: response.data.data || [],
+        estadisticas: response.data.estadisticas || null
+      };
+    } catch (error: any) {
+      console.error('❌ Error obteniendo proveedores por comunidad:', error);
+      throw error;
+    }
+  },
+};

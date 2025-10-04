@@ -10,7 +10,7 @@ import { proveedoresService, ProveedorCreateRequest } from '@/lib/proveedoresSer
 export default function NuevoProveedor() {
   const router = useRouter();
   const { user } = useAuth();
-  
+
   const [formData, setFormData] = useState<ProveedorCreateRequest>({
     razon_social: '',
     rut: '',
@@ -43,13 +43,13 @@ export default function NuevoProveedor() {
 
   const handleRutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
-    
+
     if (value.length > 8) {
       value = value.slice(0, 8);
     }
-    
+
     setFormData(prev => ({ ...prev, rut: value }));
-    
+
     if (errors.rut) {
       setErrors(prev => ({ ...prev, rut: '' }));
     }
@@ -57,13 +57,13 @@ export default function NuevoProveedor() {
 
   const handleDvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.toUpperCase().replace(/[^0-9K]/g, '');
-    
+
     if (value.length > 1) {
       value = value.slice(0, 1);
     }
-    
+
     setFormData(prev => ({ ...prev, dv: value }));
-    
+
     if (errors.dv) {
       setErrors(prev => ({ ...prev, dv: '' }));
     }
@@ -130,7 +130,13 @@ export default function NuevoProveedor() {
     setLoading(true);
 
     try {
-      const comunidadId = user?.comunidad_id || 2;
+      // ✅ CORREGIR - Usar memberships correctamente:
+      const comunidadId = user?.memberships?.[0]?.comunidadId;
+
+      if (!comunidadId) {
+        throw new Error('No se pudo obtener la comunidad del usuario');
+      }
+
       await proveedoresService.createProveedor(comunidadId, formData);
 
       alert('Proveedor creado exitosamente');
@@ -320,7 +326,7 @@ export default function NuevoProveedor() {
                           <i className="fas fa-plus"></i>
                         </Button>
                       </div>
-                      
+
                       <div className="d-flex flex-wrap gap-2">
                         {formData.categorias?.map((categoria) => (
                           <span key={categoria} className="badge bg-secondary d-flex align-items-center">
@@ -335,7 +341,7 @@ export default function NuevoProveedor() {
                           </span>
                         ))}
                       </div>
-                      
+
                       <Form.Text className="text-muted">
                         Máximo 10 categorías. Ej: Electricidad, Plomería, Jardinería, etc.
                       </Form.Text>
