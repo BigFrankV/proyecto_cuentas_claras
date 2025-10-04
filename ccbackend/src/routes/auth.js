@@ -8,6 +8,84 @@ const crypto = require('crypto');
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 
+/**
+ * @openapi
+ * /auth/verify-2fa:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Verificar código 2FA
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token JWT válido
+ *       401:
+ *         description: Código 2FA inválido
+ */
+router.post('/verify-2fa', [
+  body('userId').isInt(),
+  body('token').isString().isLength({ min: 6, max: 6 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { userId, token } = req.body;
+
+    // Obtener el secret 2FA del usuario
+    const [rows] = await db.query(
+      'SELECT two_fa_secret, two_fa_enabled FROM usuario WHERE id = ?',
+      [userId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const user = rows[0];
+
+    if (!user.two_fa_enabled || !user.two_fa_secret) {
+      return res.status(400).json({ error: '2FA no está habilitado para este usuario' });
+    }
+
+    // Verificar el token
+    const verified = speakeasy.totp.verify({
+      secret: user.two_fa_secret,
+      encoding: 'base32',
+      token: token,
+      window: 2 // Permite 2 códigos anteriores/posteriores
+    });
+
+    if (!verified) {
+      return res.status(401).json({ error: 'Código 2FA inválido' });
+    }
+
+    // Generar token JWT completo
+    const jwtToken = generateToken({ id: userId });
+
+    res.json({
+      message: '2FA verificado exitosamente',
+      token: jwtToken,
+      userId: userId
+    });
+
+  } catch (error) {
+    console.error('Error verifying 2FA:', error);
+    res.status(500).json({ error: 'Error al verificar 2FA' });
+  }
+});
+
 // Helper function to determine identification type and build query
 function buildUserQuery(identifier) {
   // Remove spaces and convert to uppercase for RUT comparison
@@ -69,41 +147,141 @@ function buildUserQuery(identifier) {
  * /auth/register:
  *   post:
  *     tags: [Auth]
- *     summary: Register a new user
+ *     summary: Registrar un nuevo usuario
+ *     description: |
+ *       Crea una nueva cuenta de usuario en el sistema. 
+ *       
+ *       **Opciones de registro:**
+ *       1. Con persona_id existente: proporciona solo username, password, email y persona_id
+ *       2. Crear nueva persona: proporciona username, password, email, nombres, apellidos, rut, dv (opcional)
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - username
+ *               - password
  *             properties:
  *               username:
  *                 type: string
+ *                 minLength: 3
+ *                 description: Nombre de usuario único
+ *                 example: "usuario123"
  *               password:
  *                 type: string
+ *                 minLength: 6
+ *                 description: Contraseña del usuario
+ *                 example: "MiPassword123!"
  *               email:
  *                 type: string
+ *                 format: email
+ *                 description: Correo electrónico del usuario
+ *                 example: "usuario@example.com"
  *               persona_id:
  *                 type: integer
+ *                 description: ID de la persona asociada (opcional si se proporciona rut/nombres/apellidos)
+ *                 example: 1
+ *               rut:
+ *                 type: string
+ *                 description: RUT sin dígito verificador (requerido para crear nueva persona)
+ *                 example: "12345678"
+ *               dv:
+ *                 type: string
+ *                 description: Dígito verificador del RUT (opcional)
+ *                 example: "9"
+ *               nombres:
+ *                 type: string
+ *                 description: Nombres de la persona (requerido para crear nueva persona)
+ *                 example: "Juan Carlos"
+ *               apellidos:
+ *                 type: string
+ *                 description: Apellidos de la persona (requerido para crear nueva persona)
+ *                 example: "Pérez González"
  *     responses:
  *       201:
- *         description: Created
+ *         description: Usuario creado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: ID del usuario creado
+ *                 username:
+ *                   type: string
+ *                   description: Nombre de usuario
+ *                 persona_id:
+ *                   type: integer
+ *                   description: ID de la persona asociada
+ *                 token:
+ *                   type: string
+ *                   description: Token JWT para autenticación
+ *       400:
+ *         description: Error de validación
+ *       409:
+ *         description: El nombre de usuario, email o RUT ya existe
  */
-router.post('/register', [body('username').isLength({ min: 3 }), body('password').isLength({ min: 6 })], async (req, res) => {
+router.post('/register', [
+  body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('email').optional().isEmail().withMessage('Invalid email format')
+], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const { username, password, email, persona_id } = req.body;
+  
+  const { username, password, email, persona_id, rut, dv, nombres, apellidos } = req.body;
+  
   try {
-    const [exists] = await db.query('SELECT id FROM usuario WHERE username = ? LIMIT 1', [username]);
-    if (exists.length) return res.status(409).json({ error: 'username exists' });
+    // Verificar si el username ya existe
+    const [existsUser] = await db.query('SELECT id FROM usuario WHERE username = ? LIMIT 1', [username]);
+    if (existsUser.length) return res.status(409).json({ error: 'username exists' });
+    
+    // Verificar si el email ya existe
+    if (email) {
+      const [existsEmail] = await db.query('SELECT id FROM usuario WHERE email = ? LIMIT 1', [email]);
+      if (existsEmail.length) return res.status(409).json({ error: 'email exists' });
+    }
+    
+    let finalPersonaId = persona_id;
+    
+    // Si no se proporciona persona_id, crear una nueva persona
+    if (!finalPersonaId && rut && nombres && apellidos) {
+      // Verificar si el RUT ya existe
+      const [existsRut] = await db.query('SELECT id FROM persona WHERE rut = ? LIMIT 1', [rut]);
+      if (existsRut.length) {
+        return res.status(409).json({ error: 'RUT already exists' });
+      }
+      
+      // Crear nueva persona
+      const [personaResult] = await db.query(
+        'INSERT INTO persona (rut, dv, nombres, apellidos, email, telefono) VALUES (?,?,?,?,?,?)',
+        [rut, dv || null, nombres, apellidos, email || null, null]
+      );
+      finalPersonaId = personaResult.insertId;
+    } else if (!finalPersonaId) {
+      // Si no hay persona_id ni datos para crear persona, error
+      return res.status(400).json({ 
+        error: 'Missing required fields: provide either persona_id or (rut, nombres, apellidos)' 
+      });
+    }
+    
+    // Crear usuario
     const hash = await bcrypt.hash(password, 10);
-    const [result] = await db.query('INSERT INTO usuario (persona_id, username, hash_password, email) VALUES (?,?,?,?)', [persona_id || null, username, hash, email || null]);
+    const [result] = await db.query(
+      'INSERT INTO usuario (persona_id, username, hash_password, email) VALUES (?,?,?,?)',
+      [finalPersonaId, username, hash, email || null]
+    );
+    
     const id = result.insertId;
     const token = generateToken({ sub: id, username });
-    res.status(201).json({ id, username, token });
+    
+    res.status(201).json({ id, username, persona_id: finalPersonaId, token });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+    console.error('Register error:', err);
+    res.status(500).json({ error: 'server error', details: err.message });
   }
 });
 
@@ -112,25 +290,84 @@ router.post('/register', [body('username').isLength({ min: 3 }), body('password'
  * /auth/login:
  *   post:
  *     tags: [Auth]
- *     summary: Login with email, RUT, DNI or username
+ *     summary: Iniciar sesión en el sistema
+ *     description: |
+ *       Autentica un usuario y retorna un token JWT con información de roles y membresías.
+ *       
+ *       **El token JWT incluye:**
+ *       - Información básica del usuario (id, username, persona_id)
+ *       - Lista de roles del usuario
+ *       - Membresías por comunidad con nivel de acceso
+ *       - Información de 2FA si está habilitado
+ *       
+ *       **Tipos de identificadores aceptados:**
+ *       - Email: `usuario@example.com`
+ *       - RUT chileno: `12345678-9`
+ *       - DNI numérico: `12345678`
+ *       - Username: `usuario123`
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - identifier
+ *               - password
  *             properties:
  *               identifier:
  *                 type: string
- *                 description: Email, RUT, DNI or username
- *                 example: "user@example.com or 12345678-9 or 12345678"
+ *                 description: Email, RUT, DNI o nombre de usuario
+ *                 example: "usuario@example.com"
  *               password:
  *                 type: string
+ *                 description: Contraseña del usuario
+ *                 example: "MiPassword123!"
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: Login exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   description: Login exitoso sin 2FA
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                       description: Token JWT con roles y membresías
+ *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 - type: object
+ *                   description: Se requiere verificación 2FA
+ *                   properties:
+ *                     twoFactorRequired:
+ *                       type: boolean
+ *                       example: true
+ *                     tempToken:
+ *                       type: string
+ *                       description: Token temporal para completar 2FA
  *       401:
- *         description: Invalid credentials
+ *         description: Credenciales inválidas
+ *       500:
+ *         description: Error del servidor
+ *     x-codeSamples:
+ *       - lang: JavaScript
+ *         source: |
+ *           // Ejemplo de decodificación del token JWT
+ *           const token = response.token;
+ *           const decoded = jwt.decode(token);
+ *           console.log(decoded);
+ *           // {
+ *           //   sub: 1,
+ *           //   username: "usuario123",
+ *           //   persona_id: 1,
+ *           //   roles: ["admin", "propietario"],
+ *           //   comunidad_id: 1,
+ *           //   memberships: [
+ *           //     { comunidadId: 1, rol: "admin", nivel_acceso: 2 },
+ *           //     { comunidadId: 2, rol: "propietario", nivel_acceso: 6 }
+ *           //   ]
+ *           // }
  */
 router.post('/login', [
   body('identifier').exists().withMessage('Identifier (email, RUT, DNI or username) is required'),
@@ -153,12 +390,21 @@ router.post('/login', [
     const ok = await bcrypt.compare(password, user.hash_password);
     if (!ok) return res.status(401).json({ error: 'invalid credentials' });
     
-    // Fetch roles from membresia_comunidad
-    const [membresias] = await db.query('SELECT comunidad_id, rol FROM membresia_comunidad WHERE persona_id = ? AND activo = 1', [user.persona_id]);
+    // Fetch roles from usuario_rol_comunidad (nueva estructura)
+    const [membresias] = await db.query(`
+      SELECT ucr.comunidad_id, r.codigo as rol, r.nivel_acceso 
+      FROM usuario_rol_comunidad ucr
+      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
+      WHERE ucr.usuario_id = ? AND ucr.activo = 1
+    `, [user.id]);
     // Normalizar roles (lowercase) y eliminar duplicados
     const roles = Array.from(new Set(membresias.map(m => String(m.rol || '').toLowerCase())));
     const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
-    const memberships = membresias.map(m => ({ comunidadId: m.comunidad_id, rol: String(m.rol || '').toLowerCase() }));
+    const memberships = membresias.map(m => ({ 
+      comunidadId: m.comunidad_id, 
+      rol: String(m.rol || '').toLowerCase(),
+      nivel_acceso: m.nivel_acceso 
+    }));
     
     // Check if user has TOTP enabled
     const [userRow] = await db.query('SELECT totp_secret, totp_enabled FROM usuario WHERE id = ? LIMIT 1', [user.id]);
@@ -203,11 +449,20 @@ router.post('/2fa/verify', [body('tempToken').exists(), body('code').exists()], 
     const verified = speakeasy.totp.verify({ secret: user.totp_secret, encoding: 'base32', token: code, window: 1 });
     if (!verified) return res.status(401).json({ error: 'invalid code' });
     // create final token
-    const [membresias] = await db.query('SELECT comunidad_id, rol FROM membresia_comunidad WHERE persona_id = ? AND activo = 1', [user.persona_id]);
+    const [membresias] = await db.query(`
+      SELECT ucr.comunidad_id, r.codigo as rol, r.nivel_acceso 
+      FROM usuario_rol_comunidad ucr
+      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
+      WHERE ucr.usuario_id = ? AND ucr.activo = 1
+    `, [user.id]);
     // Normalizar roles (lowercase) y eliminar duplicados
     const roles = Array.from(new Set(membresias.map(m => String(m.rol || '').toLowerCase())));
     const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
-    const memberships = membresias.map(m => ({ comunidadId: m.comunidad_id, rol: String(m.rol || '').toLowerCase() }));
+    const memberships = membresias.map(m => ({ 
+      comunidadId: m.comunidad_id, 
+      rol: String(m.rol || '').toLowerCase(),
+      nivel_acceso: m.nivel_acceso 
+    }));
     const payload = { sub: user.id, username: user.username, persona_id: user.persona_id, roles, comunidad_id, memberships, is_superadmin: !!user.is_superadmin };
     const token = generateToken(payload);
     res.json({ token });
@@ -551,7 +806,7 @@ router.get('/me', authenticate, async (req, res) => {
     };
     
     const [membresias] = await db.query(
-      'SELECT comunidad_id AS comunidadId, rol FROM membresia_comunidad WHERE persona_id = ? AND activo = 1',
+      'SELECT comunidad_id AS comunidadId, rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1',
       [user.persona_id]
     );
     const memberships = (membresias || []).map(m => ({ comunidadId: m.comunidadId, rol: String(m.rol || '').toLowerCase() }));

@@ -1,0 +1,1671 @@
+{
+	"info": {
+		"_postman_id": "cuentas-claras-api-2025",
+		"name": "Cuentas Claras API",
+		"description": "Colección completa de endpoints de la API de Cuentas Claras con autenticación JWT automática.\n\n**Credenciales predeterminadas:**\n- Usuario: patricio@pquintanilla.cl\n- Password: 123456\n\nEl token se captura automáticamente al hacer login y se inyecta en todas las requests.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "comunidad_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "usuario_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🔐 Autenticación",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Capturar el token JWT automáticamente",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set('jwt_token', jsonData.token);",
+									"        console.log('✅ Token JWT guardado:', jsonData.token.substring(0, 20) + '...');",
+									"    }",
+									"    if (jsonData.usuario_id) {",
+									"        pm.collectionVariables.set('usuario_id', jsonData.usuario_id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"identifier\": \"patricio@pquintanilla.cl\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login con credenciales predeterminadas. El token se captura automáticamente.\n\n⚠️ **IMPORTANTE:** Si obtienes error \"invalid credentials\", ejecuta primero el script SQL:\n`base/usuario_patricio.sql`\n\nEste script crea:\n- Persona: Patricio Quintanilla (RUT: 11111111-1)\n- Usuario: patricio@pquintanilla.cl (password: 123456)\n- Membresía en Comunidad 1 como Admin\n- Membresía en Comunidad 2 como Propietario"
+					},
+					"response": []
+				},
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Capturar el token JWT automáticamente después del registro",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set('jwt_token', jsonData.token);",
+									"        console.log('✅ Token JWT guardado:', jsonData.token.substring(0, 20) + '...');",
+									"    }",
+									"    if (jsonData.id) {",
+									"        pm.collectionVariables.set('usuario_id', jsonData.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"nuevousuario\",\n  \"email\": \"nuevousuario@ejemplo.com\",\n  \"password\": \"password123\",\n  \"rut\": \"12345678\",\n  \"dv\": \"9\",\n  \"nombres\": \"Juan Carlos\",\n  \"apellidos\": \"Pérez González\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Registro de nuevo usuario. Crea automáticamente la persona asociada.\n\n⚠️ CAMPOS REQUERIDOS (PLURAL):\n- username (mín. 3 caracteres)\n- password (mín. 6 caracteres)\n- email (formato válido)\n- rut (sin guion, solo números)\n- dv (dígito verificador, opcional)\n- nombres ← PLURAL (no 'nombre')\n- apellidos ← PLURAL (no 'apellido')\n\n✅ El token JWT se captura automáticamente al registrarse exitosamente."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify 2FA",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify-2fa",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"verify-2fa"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "👥 Membresías",
+			"item": [
+				{
+					"name": "🔧 Auto-unirse a comunidad (DEV)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/membresias/auto-join/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"membresias",
+								"auto-join",
+								"{{comunidad_id}}"
+							]
+						},
+						"description": "⚠️ ENDPOINT DE DESARROLLO: Te auto-asigna como admin en la comunidad especificada. Útil para testing cuando acabas de registrarte y necesitas acceso a una comunidad.\n\n✅ Ejecuta este endpoint después de registrarte para poder acceder a los otros endpoints de la comunidad."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar membresías de comunidad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/membresias/comunidad/{{comunidad_id}}?page=1&limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"membresias",
+								"comunidad",
+								"{{comunidad_id}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear membresía",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"usuario_id\": 1,\n  \"rol_id\": 6,\n  \"activo\": true,\n  \"desde\": \"2025-01-01\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/membresias/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"membresias",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar membresía",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rol_id\": 3,\n  \"activo\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/membresias/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"membresias",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar membresía",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/membresias/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"membresias",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏢 Comunidades",
+			"item": [
+				{
+					"name": "Listar comunidades",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/comunidades?page=1&limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"comunidades"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener comunidad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/comunidades/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"comunidades",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear comunidad",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Edificio Los Alpes\",\n  \"direccion\": \"Av. Providencia 1234\",\n  \"ciudad\": \"Santiago\",\n  \"region\": \"Metropolitana\",\n  \"telefono\": \"+56912345678\",\n  \"email\": \"admin@losalpes.cl\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/comunidades",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"comunidades"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar comunidad",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"telefono\": \"+56987654321\",\n  \"email\": \"nuevo@email.cl\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/comunidades/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"comunidades",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Dashboard comunidad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/comunidades/{{comunidad_id}}/dashboard",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"comunidades",
+								"{{comunidad_id}}",
+								"dashboard"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Miembros de comunidad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/comunidades/{{comunidad_id}}/miembros",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"comunidades",
+								"{{comunidad_id}}",
+								"miembros"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏗️ Edificios y Torres",
+			"item": [
+				{
+					"name": "Listar edificios",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/edificios/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"edificios",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear edificio",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Torre A\",\n  \"direccion\": \"Av. Principal 100\",\n  \"pisos\": 10\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/edificios/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"edificios",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar torres",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/torres/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"torres",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏠 Unidades",
+			"item": [
+				{
+					"name": "Listar unidades",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/unidades/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"unidades",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener unidad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/unidades/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"unidades",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear unidad",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"numero\": \"101\",\n  \"piso\": 1,\n  \"edificio_id\": 1,\n  \"tipo\": \"departamento\",\n  \"metraje\": 65.5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/unidades/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"unidades",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Titulares de unidad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/unidades/1/titulares",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"unidades",
+								"1",
+								"titulares"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Agregar titular",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"persona_id\": 1,\n  \"porcentaje\": 100,\n  \"desde\": \"2025-01-01\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/unidades/1/titulares",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"unidades",
+								"1",
+								"titulares"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "💰 Cargos (Cuentas de Cobro)",
+			"item": [
+				{
+					"name": "Listar cargos de comunidad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cargos/comunidad/{{comunidad_id}}?page=1&limit=100&estado=pendiente",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"cargos",
+								"comunidad",
+								"{{comunidad_id}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "estado",
+									"value": "pendiente"
+								},
+								{
+									"key": "unidad",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "periodo",
+									"value": "2025-01",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener cargo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cargos/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"cargos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cargos de unidad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cargos/unidad/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"cargos",
+								"unidad",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "💳 Pagos",
+			"item": [
+				{
+					"name": "Listar pagos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pagos/comunidad/{{comunidad_id}}?page=1&limit=100",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pagos",
+								"comunidad",
+								"{{comunidad_id}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar pago",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"unidad_id\": 1,\n  \"persona_id\": 1,\n  \"fecha\": \"2025-01-15\",\n  \"monto\": 150000,\n  \"medio\": \"transferencia\",\n  \"referencia\": \"TRF-12345\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pagos/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pagos",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener pago",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/pagos/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pagos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Aplicar pago a cargos",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"assignments\": [\n    {\n      \"cuenta_cobro_unidad_id\": 1,\n      \"monto\": 50000\n    },\n    {\n      \"cuenta_cobro_unidad_id\": 2,\n      \"monto\": 100000\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pagos/1/aplicar",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pagos",
+								"1",
+								"aplicar"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📊 Emisiones",
+			"item": [
+				{
+					"name": "Listar emisiones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/emisiones/comunidad/{{comunidad_id}}?page=1&limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"emisiones",
+								"comunidad",
+								"{{comunidad_id}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear emisión",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"periodo\": \"2025-01\",\n  \"fecha_emision\": \"2025-01-05\",\n  \"descripcion\": \"Gastos comunes enero 2025\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/emisiones/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"emisiones",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener emisión",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/emisiones/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"emisiones",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "💸 Gastos",
+			"item": [
+				{
+					"name": "Listar gastos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/gastos/comunidad/{{comunidad_id}}?page=1&limit=100",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"gastos",
+								"comunidad",
+								"{{comunidad_id}}"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear gasto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"descripcion\": \"Mantención ascensor\",\n  \"monto\": 250000,\n  \"fecha\": \"2025-01-10\",\n  \"categoria_id\": 1,\n  \"proveedor_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/gastos/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"gastos",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Categorías de gasto",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categorias-gasto/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categorias-gasto",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Centros de costo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/centros-costo/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"centros-costo",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏪 Proveedores",
+			"item": [
+				{
+					"name": "Listar proveedores",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/proveedores/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"proveedores",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear proveedor",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Empresa de Aseo S.A.\",\n  \"rut\": \"76123456-7\",\n  \"giro\": \"Servicios de aseo\",\n  \"email\": \"contacto@aseo.cl\",\n  \"telefono\": \"+56912345678\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/proveedores/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"proveedores",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "⚠️ Multas",
+			"item": [
+				{
+					"name": "Listar multas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/multas/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"multas",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear multa",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"unidad_id\": 1,\n  \"motivo\": \"Ruidos molestos\",\n  \"monto\": 50000,\n  \"fecha\": \"2025-01-10\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/multas/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"multas",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🎯 Amenidades",
+			"item": [
+				{
+					"name": "Listar amenidades",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/amenidades/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"amenidades",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear amenidad",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Salón de eventos\",\n  \"descripcion\": \"Salón para reuniones y celebraciones\",\n  \"capacidad\": 50,\n  \"costo_reserva\": 30000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/amenidades/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"amenidades",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔧 Soporte",
+			"item": [
+				{
+					"name": "Listar tickets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/soporte/comunidad/{{comunidad_id}}/tickets",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"soporte",
+								"comunidad",
+								"{{comunidad_id}}",
+								"tickets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear ticket",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"unidad_id\": 1,\n  \"categoria\": \"mantenimiento\",\n  \"titulo\": \"Fuga de agua en el pasillo\",\n  \"descripcion\": \"Se detectó fuga en el tercer piso\",\n  \"prioridad\": \"alta\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/soporte/comunidad/{{comunidad_id}}/tickets",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"soporte",
+								"comunidad",
+								"{{comunidad_id}}",
+								"tickets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener ticket",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/soporte/tickets/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"soporte",
+								"tickets",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar ticket",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"estado\": \"resuelto\",\n  \"prioridad\": \"media\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/soporte/tickets/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"soporte",
+								"tickets",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Bitácora de conserjería",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/soporte/comunidad/{{comunidad_id}}/bitacora",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"soporte",
+								"comunidad",
+								"{{comunidad_id}}",
+								"bitacora"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📏 Medidores",
+			"item": [
+				{
+					"name": "Listar medidores",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/medidores/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"medidores",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lecturas de medidor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/medidores/1/lecturas",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"medidores",
+								"1",
+								"lecturas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar lectura",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"valor\": 1250.5,\n  \"fecha\": \"2025-01-15\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/medidores/1/lecturas",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"medidores",
+								"1",
+								"lecturas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Tarifas de consumo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/tarifas-consumo/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tarifas-consumo",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "👤 Personas",
+			"item": [
+				{
+					"name": "Listar personas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/personas/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"personas",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener persona",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/personas/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"personas",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear persona",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Pérez\",\n  \"rut\": \"12345678-9\",\n  \"email\": \"juan.perez@email.com\",\n  \"telefono\": \"+56912345678\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/personas/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"personas",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏦 Conciliaciones",
+			"item": [
+				{
+					"name": "Listar conciliaciones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/conciliaciones/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"conciliaciones",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear conciliación",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"periodo\": \"2025-01\",\n  \"fecha\": \"2025-01-31\",\n  \"saldo_inicial\": 1000000,\n  \"saldo_final\": 1500000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/conciliaciones/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"conciliaciones",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📄 Documentos de Compra",
+			"item": [
+				{
+					"name": "Listar documentos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/documentos-compra/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"documentos-compra",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear documento",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo\": \"factura\",\n  \"numero\": \"12345\",\n  \"proveedor_id\": 1,\n  \"fecha\": \"2025-01-15\",\n  \"monto\": 150000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/documentos-compra/comunidad/{{comunidad_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"documentos-compra",
+								"comunidad",
+								"{{comunidad_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📁 Files",
+			"item": [
+				{
+					"name": "Upload file",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "tipo",
+									"value": "documento",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/files/upload",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"files",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Download file",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/files/download/filename.pdf",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"files",
+								"download",
+								"filename.pdf"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔔 Utilidades",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "API Info",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/info",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"info"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

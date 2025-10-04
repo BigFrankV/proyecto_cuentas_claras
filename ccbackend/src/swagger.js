@@ -6,67 +6,85 @@ const options = {
     openapi: '3.0.0',
     info: {
       title: 'Cuentas Claras API',
-      version: '1.0.0',
+      version: '2.0.0',
       description: `
-        ## Sistema de Gestión Integral para Comunidades Residenciales
+        ## 🏢 API de Gestión para Comunidades Residenciales
         
-        La API **Cuentas Claras** constituye una solución tecnológica robusta y escalable diseñada para optimizar la administración integral de comunidades residenciales y edificios. El sistema proporciona un conjunto completo de herramientas que facilitan la gestión operativa y financiera de propiedades inmobiliarias.
+        Sistema completo para la administración de comunidades, edificios y condominios con arquitectura REST.
         
-        ### Funcionalidades Principales
+        ### 📦 Módulos Principales
         
-        **Módulo de Gestión Inmobiliaria:**
-        - Administración centralizada de comunidades residenciales y estructuras edilicias
-        - Gestión de torres, unidades habitacionales y espacios comunes
-        - Control de amenidades y servicios complementarios
+        - **🔐 Autenticación**: Login/Register con JWT, 2FA, recuperación de contraseña
+        - **🏘️ Comunidades**: CRUD, dashboard con estadísticas, flujo de caja
+        - **🏗️ Edificios y Torres**: Gestión de estructuras físicas y unidades
+        - **👥 Usuarios y Roles**: Sistema jerárquico de 7 niveles de acceso
+        - **💰 Finanzas**: Gastos comunes, pagos, cargos, conciliaciones
+        - **📋 Emisiones**: Generación de gastos comunes con prorrateo
+        - **⚡ Amenidades**: Reservas y gestión de espacios comunes
+        - **🔧 Soporte**: Tickets, notificaciones, bitácora de conserjería
+        - **💳 Payment Gateway**: Integración con Webpay y Khipu
+        - **📄 Files**: Upload y gestión de archivos
         
-        **Módulo de Gestión de Usuarios:**
-        - Sistema de autenticación y autorización por roles
-        - Administración de perfiles de usuarios y membresías
-        - Control de accesos y permisos granulares
+        ### 🔐 Autenticación JWT
         
-        **Módulo Financiero:**
-        - Control integral de gastos operativos y extraordinarios
-        - Gestión de proveedores y documentación comercial
-        - Procesamiento de pagos y transacciones financieras
-        - Conciliaciones bancarias automatizadas
+        La API usa **JSON Web Tokens (JWT)**. Incluya el token en cada request:
+        \`\`\`
+        Authorization: Bearer {your-jwt-token}
+        \`\`\`
         
-        **Módulo de Control y Cumplimiento:**
-        - Sistema de multas y sanciones administrativas
-        - Seguimiento de consumos y mediciones
-        - Generación de reportes y análisis estadísticos
+        **Obtener token:**
+        1. POST /auth/login con \`identifier\` + \`password\`
+        2. Copiar \`token\` de la respuesta
+        3. Usar en header \`Authorization: Bearer {token}\`
         
-        **Integración Tecnológica:**
-        - APIs de pasarelas de pago certificadas
-        - Integración con servicios de terceros
-        - Arquitectura basada en microservicios
+        ### 🎭 Sistema de Roles (nivel_acceso 1-7)
         
-        ### Marco de Autenticación y Seguridad
+        | Nivel | Código | Permisos |
+        |-------|--------|----------|
+        | 1 | superadmin | Acceso total al sistema |
+        | 2 | admin | Gestión completa de comunidad |
+        | 3 | comite | Aprobación de gastos |
+        | 4 | contador | Gestión financiera |
+        | 5 | conserje | Bitácora y notificaciones |
+        | 6 | propietario | Visualización y pagos |
+        | 7 | residente | Solo consultas |
         
-        El sistema implementa un protocolo de seguridad basado en **JSON Web Tokens (JWT)** que garantiza la integridad y confidencialidad de las transacciones. La mayoría de los endpoints requieren autenticación mediante Bearer Token para acceder a los recursos protegidos.
+        ### 📊 Endpoints Destacados
         
-        ### Códigos de Estado HTTP Estándar
+        **Dashboard:** \`GET /comunidades/{id}/dashboard\`
+        - Estadísticas de unidades, residentes, finanzas
+        - Top 5 cargos pendientes
+        - Actividad reciente (últimos pagos)
         
-        La API adhiere a las convenciones del protocolo HTTP para la comunicación cliente-servidor:
+        **Miembros:** \`GET /comunidades/{id}/miembros\` o \`/residentes\`
+        - Lista de usuarios con roles por comunidad
         
-        - **200 OK**: Solicitud procesada exitosamente
-        - **201 Created**: Recurso creado correctamente
-        - **400 Bad Request**: Solicitud malformada o parámetros inválidos
-        - **401 Unauthorized**: Credenciales de autenticación requeridas o inválidas
-        - **403 Forbidden**: Acceso denegado por insuficiencia de permisos
-        - **404 Not Found**: Recurso solicitado no encontrado
-        - **500 Internal Server Error**: Error interno del servidor
+        **Torres por Comunidad:** \`GET /torres/comunidad/{id}\`
+        - Obtener todas las torres de una comunidad
         
-        ### Equipo de Desarrollo
+        **2FA:** \`POST /auth/verify-2fa\`
+        - Verificación de autenticación de dos factores
         
-        Este proyecto ha sido desarrollado por un equipo multidisciplinario de ingenieros especializados en arquitectura de software y desarrollo de aplicaciones empresariales:
+        ### ⚠️ Cambios Importantes v2.0
         
-        - **Patricio Quintanilla** - *Arquitecto de Software Senior*
-        - **Frank Vogt** - *Ingeniero de Desarrollo Full-Stack*
-        - **Matías Román** - *Especialista en Integración de Sistemas*
+        **Tablas actualizadas:**
+        - Vista \`cargo_unidad\` (de \`cuenta_cobro_unidad\`)
+        - Tabla \`pago\` usa campos \`fecha\` y \`medio\` (no fecha_pago/medio_pago)
+        - Tabla \`comunidad\` usa IDs tipo BIGINT
+        
+        **Nuevos endpoints:**
+        - POST /auth/verify-2fa
+        - GET /comunidades/{id}/dashboard
+        - GET /comunidades/{id}/miembros
+        - GET /torres/comunidad/{id}
+        
+        **Credenciales de prueba:**
+        - Email: patricio@pquintanilla.cl
+        - Password: 123456
         
         ---
         
-        *Documentación técnica generada automáticamente mediante OpenAPI 3.0 Specification*
+        **v2.0.0** | Última actualización: Octubre 2025 | **Desarrollado por:** Patricio Quintanilla, Frank Vogt, Matías Román
       `,
       contact: {
         name: 'Soporte Técnico',
@@ -196,19 +214,168 @@ const options = {
               type: 'integer',
               description: 'ID único del usuario'
             },
-            nombre: {
+            username: {
               type: 'string',
-              description: 'Nombre del usuario'
+              description: 'Nombre de usuario'
             },
             email: {
               type: 'string',
               format: 'email',
               description: 'Email del usuario'
             },
+            persona_id: {
+              type: 'integer',
+              description: 'ID de la persona asociada al usuario'
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha de creación'
+            }
+          }
+        },
+        Rol: {
+          type: 'object',
+          description: 'Rol del sistema con nivel de acceso jerárquico',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'ID único del rol'
+            },
+            codigo: {
+              type: 'string',
+              enum: ['superadmin', 'admin', 'comite', 'contador', 'conserje', 'propietario', 'residente'],
+              description: 'Código identificador del rol'
+            },
+            nombre: {
+              type: 'string',
+              description: 'Nombre descriptivo del rol'
+            },
+            nivel_acceso: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 7,
+              description: 'Nivel jerárquico (1=máximo acceso, 7=mínimo acceso)'
+            }
+          }
+        },
+        Membresia: {
+          type: 'object',
+          description: 'Asignación de rol de usuario en una comunidad',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'ID único de la membresía'
+            },
+            comunidad_id: {
+              type: 'integer',
+              description: 'ID de la comunidad'
+            },
+            usuario_id: {
+              type: 'integer',
+              description: 'ID del usuario'
+            },
+            persona_id: {
+              type: 'integer',
+              description: 'ID de la persona (derivado de usuario)'
+            },
             rol: {
               type: 'string',
-              enum: ['admin', 'user', 'moderator'],
-              description: 'Rol del usuario en el sistema'
+              description: 'Código del rol asignado'
+            },
+            rol_nombre: {
+              type: 'string',
+              description: 'Nombre del rol'
+            },
+            nivel_acceso: {
+              type: 'integer',
+              description: 'Nivel de acceso jerárquico'
+            },
+            desde: {
+              type: 'string',
+              format: 'date',
+              description: 'Fecha de inicio de la membresía'
+            },
+            hasta: {
+              type: 'string',
+              format: 'date',
+              nullable: true,
+              description: 'Fecha de fin de la membresía (null si indefinida)'
+            },
+            activo: {
+              type: 'boolean',
+              description: 'Si la membresía está activa'
+            }
+          }
+        },
+        JWTToken: {
+          type: 'object',
+          description: 'Token JWT con información del usuario autenticado',
+          properties: {
+            token: {
+              type: 'string',
+              description: 'Token JWT firmado'
+            }
+          }
+        },
+        JWTPayload: {
+          type: 'object',
+          description: 'Contenido decodificado del token JWT',
+          properties: {
+            sub: {
+              type: 'integer',
+              description: 'ID del usuario (subject)'
+            },
+            username: {
+              type: 'string',
+              description: 'Nombre de usuario'
+            },
+            persona_id: {
+              type: 'integer',
+              description: 'ID de la persona asociada'
+            },
+            roles: {
+              type: 'array',
+              description: 'Array de códigos de roles del usuario',
+              items: {
+                type: 'string'
+              }
+            },
+            comunidad_id: {
+              type: 'integer',
+              nullable: true,
+              description: 'ID de la primera comunidad del usuario'
+            },
+            memberships: {
+              type: 'array',
+              description: 'Lista de membresías del usuario por comunidad',
+              items: {
+                type: 'object',
+                properties: {
+                  comunidadId: {
+                    type: 'integer'
+                  },
+                  rol: {
+                    type: 'string'
+                  },
+                  nivel_acceso: {
+                    type: 'integer'
+                  }
+                }
+              }
+            },
+            is_superadmin: {
+              type: 'boolean',
+              description: 'DEPRECADO: usar sistema de roles en su lugar',
+              deprecated: true
+            },
+            iat: {
+              type: 'integer',
+              description: 'Timestamp de emisión del token'
+            },
+            exp: {
+              type: 'integer',
+              description: 'Timestamp de expiración del token'
             }
           }
         },
@@ -263,44 +430,104 @@ const options = {
     security: [{ bearerAuth: [] }],
     tags: [
       {
-        name: 'Autenticación',
-        description: 'Endpoints para login y gestión de sesiones'
+        name: 'Auth',
+        description: '🔐 Autenticación y autorización (Login, Register, 2FA, Password Reset)'
       },
       {
         name: 'Comunidades',
-        description: 'Gestión de comunidades residenciales'
+        description: '🏘️ CRUD de comunidades + Dashboard con estadísticas + Flujo de caja'
       },
       {
         name: 'Edificios',
-        description: 'Gestión de edificios y torres'
+        description: '🏗️ Gestión de edificios, torres y unidades habitacionales'
       },
       {
-        name: 'Usuarios',
-        description: 'Gestión de usuarios y perfiles'
+        name: 'Torres',
+        description: '🗼 Gestión de torres por edificio o comunidad'
+      },
+      {
+        name: 'Unidades',
+        description: '🏠 Gestión de unidades, tenencias y residentes'
+      },
+      {
+        name: 'Personas',
+        description: '👤 CRUD de personas (propietarios, residentes, etc.)'
+      },
+      {
+        name: 'Membresias',
+        description: '👥 Asignación de roles de usuarios en comunidades'
+      },
+      {
+        name: 'Cargos',
+        description: '💸 Cuentas de cobro y cargos por unidad'
       },
       {
         name: 'Pagos',
-        description: 'Gestión de pagos y transacciones'
+        description: '💰 Registro y aplicación de pagos'
       },
       {
         name: 'Gastos',
-        description: 'Gestión de gastos y categorías'
+        description: '💵 Gestión de gastos operacionales'
+      },
+      {
+        name: 'Emisiones',
+        description: '📋 Emisión de gastos comunes con prorrateo'
+      },
+      {
+        name: 'Categorías de Gasto',
+        description: '📂 Categorías para clasificar gastos'
+      },
+      {
+        name: 'Centros de Costo',
+        description: '🎯 Centros de costo para contabilidad'
       },
       {
         name: 'Proveedores',
-        description: 'Gestión de proveedores y documentos'
+        description: '🏪 Gestión de proveedores y servicios'
+      },
+      {
+        name: 'Documentos de Compra',
+        description: '📄 Facturas y documentos tributarios'
+      },
+      {
+        name: 'Conciliaciones',
+        description: '🏦 Conciliación bancaria'
       },
       {
         name: 'Amenidades',
-        description: 'Gestión de amenidades y reservas'
+        description: '⚡ Gestión de amenidades y reservas'
       },
       {
         name: 'Multas',
-        description: 'Gestión de multas y sanciones'
+        description: '⚠️ Registro y gestión de multas'
+      },
+      {
+        name: 'Medidores',
+        description: '📊 Medidores de consumo (agua, luz, gas) y lecturas'
+      },
+      {
+        name: 'Tarifas de Consumo',
+        description: '💲 Tarifas para cálculo de consumos'
       },
       {
         name: 'Soporte',
-        description: 'Endpoints de soporte y utilidades'
+        description: '🔧 Tickets, notificaciones, bitácora y documentos'
+      },
+      {
+        name: 'Payment Gateway',
+        description: '💳 Integración con Webpay y Khipu'
+      },
+      {
+        name: 'Files',
+        description: '📁 Upload, descarga y gestión de archivos'
+      },
+      {
+        name: 'Webhooks',
+        description: '🔔 Webhooks para integraciones externas'
+      },
+      {
+        name: 'Utilidades',
+        description: '🛠️ Health check, UF, UTM, validación RUT, sync e indicadores'
       }
     ]
   },
