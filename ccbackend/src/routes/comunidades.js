@@ -471,9 +471,94 @@ router.get('/:id/residentes', authenticate, async (req, res) => {
 });
 
 // Alias para compatibilidad con código legacy
+/**
+ * @openapi
+ * /comunidades/{id}/miembros:
+ *   get:
+ *     tags: [Comunidades]
+ *     summary: Obtener miembros de una comunidad
+ *     description: Lista todos los miembros activos de una comunidad con sus roles
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la comunidad
+ *     responses:
+ *       200:
+ *         description: Lista de miembros
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   comunidad_id:
+ *                     type: integer
+ *                   usuario_id:
+ *                     type: integer
+ *                   persona_id:
+ *                     type: integer
+ *                   rol:
+ *                     type: string
+ *                   rol_nombre:
+ *                     type: string
+ *                   nivel_acceso:
+ *                     type: integer
+ *                   desde:
+ *                     type: string
+ *                     format: date
+ *                   hasta:
+ *                     type: string
+ *                     format: date
+ *                     nullable: true
+ *                   activo:
+ *                     type: boolean
+ *       404:
+ *         description: Comunidad no encontrada
+ */
 router.get('/:id/miembros', authenticate, async (req, res) => {
-  req.params.id = req.params.id;
-  return router.handle(req, res);
+  try {
+    const comunidadId = req.params.id;
+    
+    const query = `
+      SELECT 
+        urc.id,
+        urc.comunidad_id,
+        urc.usuario_id,
+        u.persona_id,
+        r.codigo AS rol,
+        r.nombre AS rol_nombre,
+        r.nivel_acceso,
+        urc.desde,
+        urc.hasta,
+        urc.activo
+      FROM usuario_rol_comunidad urc
+      INNER JOIN usuario u ON urc.usuario_id = u.id
+      LEFT JOIN rol_sistema r ON urc.rol_id = r.id
+      WHERE urc.comunidad_id = ?
+      ORDER BY r.nivel_acceso DESC, u.persona_id
+    `;
+    
+    const [rows] = await db.query(query, [comunidadId]);
+    
+    // Convertir activo a boolean
+    const miembros = rows.map(row => ({
+      ...row,
+      activo: Boolean(row.activo)
+    }));
+    
+    res.json(miembros);
+  } catch (err) {
+    console.error('Error fetching miembros:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
 
 /**

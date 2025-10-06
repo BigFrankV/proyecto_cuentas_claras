@@ -48,6 +48,7 @@ setupSwagger(app);
 
 app.use('/auth', authRoutes);
 app.use('/comunidades', comunidadRoutes);
+app.use('/comunidad', comunidadRoutes); // Alias singular
 app.use('/edificios', edificioRoutes);
 app.use('/unidades', unidadRoutes);
 app.use('/personas', personaRoutes);
