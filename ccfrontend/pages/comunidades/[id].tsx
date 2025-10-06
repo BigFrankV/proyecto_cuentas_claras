@@ -20,6 +20,8 @@ export default function ComunidadDetallePage() {
   const [activeTab, setActiveTab] = useState<string>('resumen');
   const [isLoading, setIsLoading] = useState(true);
   const [loadingData, setLoadingData] = useState<{[key: string]: boolean}>({});
+  const [error, setError] = useState<string | null>(null);
+  const [tabErrors, setTabErrors] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     if (id) {
@@ -35,6 +37,7 @@ export default function ComunidadDetallePage() {
 
   const loadComunidad = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const data = await comunidadesService.getComunidadById(Number(id));
       console.log('Datos de comunidad cargados:', data);
@@ -42,8 +45,10 @@ export default function ComunidadDetallePage() {
       
       // Cargar amenidades para la pestaña resumen por defecto
       await loadAmenidades();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading comunidad:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Error al cargar la comunidad. Por favor, intente nuevamente.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -75,12 +80,15 @@ export default function ComunidadDetallePage() {
     if (!id) return;
     
     setLoadingData(prev => ({ ...prev, amenidades: true }));
+    setTabErrors(prev => ({ ...prev, amenidades: '' }));
     try {
       const data = await comunidadesService.getAmenidadesByComunidad(Number(id));
       console.log('Amenidades cargadas:', data);
       setAmenidades(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading amenidades:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Error al cargar las amenidades';
+      setTabErrors(prev => ({ ...prev, amenidades: errorMessage }));
       setAmenidades([]);
     } finally {
       setLoadingData(prev => ({ ...prev, amenidades: false }));
@@ -91,12 +99,15 @@ export default function ComunidadDetallePage() {
     if (!id) return;
     
     setLoadingData(prev => ({ ...prev, edificios: true }));
+    setTabErrors(prev => ({ ...prev, edificios: '' }));
     try {
       const data = await comunidadesService.getEdificiosByComunidad(Number(id));
       console.log('Edificios cargados:', data);
       setEdificios(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading edificios:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Error al cargar los edificios';
+      setTabErrors(prev => ({ ...prev, edificios: errorMessage }));
       setEdificios([]);
     } finally {
       setLoadingData(prev => ({ ...prev, edificios: false }));
@@ -214,6 +225,24 @@ export default function ComunidadDetallePage() {
               </li>
             </ol>
           </nav>
+
+          {/* Alerta de error general */}
+          {error && (
+            <div className="alert alert-danger alert-dismissible fade show" role="alert">
+              <div className="d-flex align-items-center">
+                <span className="material-icons me-2">error</span>
+                <div>
+                  <strong>Error:</strong> {error}
+                </div>
+              </div>
+              <button 
+                type="button" 
+                className="btn-close" 
+                onClick={() => setError(null)}
+                aria-label="Cerrar"
+              />
+            </div>
+          )}
 
           {/* Cover de la comunidad */}
           <div 
@@ -400,6 +429,14 @@ export default function ComunidadDetallePage() {
                     )}
                   </div>
                   <div className="content-section-body p-0">
+                    {tabErrors.amenidades && (
+                      <div className="alert alert-danger m-3" role="alert">
+                        <small className="d-flex align-items-center">
+                          <span className="material-icons me-2" style={{ fontSize: '18px' }}>error</span>
+                          {tabErrors.amenidades}
+                        </small>
+                      </div>
+                    )}
                     {amenidades && amenidades.length > 0 ? (
                       amenidades.map((amenidad) => (
                         <div key={amenidad.id} className="d-flex justify-content-between align-items-center p-3 border-bottom">

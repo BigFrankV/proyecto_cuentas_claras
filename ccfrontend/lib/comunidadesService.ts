@@ -11,13 +11,13 @@ class ComunidadesService {
       
       if (filtros?.busqueda) params.append('nombre', filtros.busqueda);
       if (filtros?.direccion) params.append('direccion', filtros.direccion);
+      if (filtros?.tipo) params.append('rut', filtros.tipo); // Si tipo es RUT
 
       const response = await apiClient.get(`${this.baseUrl}${params.toString() ? `?${params.toString()}` : ''}`);
       return response.data.map((comunidad: any) => this.normalizeComunidad(comunidad));
     } catch (error) {
       console.error('Error fetching comunidades:', error);
-      // Retornar datos de prueba mientras no existe el backend
-      return this.getMockComunidades(filtros);
+      throw error; // Propagar error para manejarlo en el componente
     }
   }
 
@@ -27,7 +27,7 @@ class ComunidadesService {
       return this.normalizeComunidad(response.data) as ComunidadDetalle;
     } catch (error) {
       console.error(`Error fetching comunidad ${id}:`, error);
-      return this.getMockComunidadDetalle(id);
+      throw error;
     }
   }
 
@@ -121,24 +121,19 @@ class ComunidadesService {
 
   async createComunidad(data: ComunidadFormData): Promise<Comunidad> {
     try {
-      const formData = new FormData();
-      
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (key === 'imagen' && value instanceof File) {
-            formData.append(key, value);
-          } else {
-            formData.append(key, value.toString());
-          }
-        }
-      });
+      // Mapear campos del frontend al backend
+      const payload = {
+        razon_social: data.nombre,
+        rut: data.rut || '',
+        dv: data.dv || '',
+        giro: data.descripcion || '',
+        direccion: data.direccion,
+        email_contacto: data.email,
+        telefono_contacto: data.telefono
+      };
 
-      const response = await apiClient.post(this.baseUrl, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
+      const response = await apiClient.post(this.baseUrl, payload);
+      return this.normalizeComunidad(response.data);
     } catch (error) {
       console.error('Error creating comunidad:', error);
       throw error;
@@ -147,24 +142,19 @@ class ComunidadesService {
 
   async updateComunidad(id: number, data: Partial<ComunidadFormData>): Promise<Comunidad> {
     try {
-      const formData = new FormData();
+      // Mapear campos del frontend al backend
+      const payload: any = {};
       
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (key === 'imagen' && value instanceof File) {
-            formData.append(key, value);
-          } else {
-            formData.append(key, value.toString());
-          }
-        }
-      });
+      if (data.nombre) payload.razon_social = data.nombre;
+      if (data.rut) payload.rut = data.rut;
+      if (data.dv) payload.dv = data.dv;
+      if (data.descripcion) payload.giro = data.descripcion;
+      if (data.direccion) payload.direccion = data.direccion;
+      if (data.email) payload.email_contacto = data.email;
+      if (data.telefono) payload.telefono_contacto = data.telefono;
 
-      const response = await apiClient.put(`${this.baseUrl}/${id}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
+      const response = await apiClient.patch(`${this.baseUrl}/${id}`, payload);
+      return this.normalizeComunidad(response.data);
     } catch (error) {
       console.error(`Error updating comunidad ${id}:`, error);
       throw error;
@@ -187,13 +177,13 @@ class ComunidadesService {
       return response.data;
     } catch (error) {
       console.error(`Error fetching parametros for comunidad ${comunidadId}:`, error);
-      return this.getMockParametrosCobranza(comunidadId);
+      throw error;
     }
   }
 
   async updateParametrosCobranza(comunidadId: number, parametros: Partial<ParametrosCobranza>): Promise<ParametrosCobranza> {
     try {
-      const response = await apiClient.put(`${this.baseUrl}/${comunidadId}/parametros`, parametros);
+      const response = await apiClient.patch(`${this.baseUrl}/${comunidadId}/parametros`, parametros);
       return response.data;
     } catch (error) {
       console.error(`Error updating parametros for comunidad ${comunidadId}:`, error);
@@ -208,7 +198,28 @@ class ComunidadesService {
       return response.data;
     } catch (error) {
       console.error(`Error fetching estadisticas for comunidad ${comunidadId}:`, error);
-      return this.getMockEstadisticas(comunidadId);
+      throw error;
+    }
+  }
+
+  // Métodos nuevos basados en los endpoints de la API
+  async verificarAcceso(comunidadId: number): Promise<{ tieneAcceso: boolean; esSuperadmin: boolean }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/verificar-acceso/${comunidadId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error verificando acceso a comunidad ${comunidadId}:`, error);
+      return { tieneAcceso: false, esSuperadmin: false };
+    }
+  }
+
+  async getMisMembresias(): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/mis-membresias`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching membresías:', error);
+      return [];
     }
   }
 
@@ -257,16 +268,29 @@ class ComunidadesService {
     }
   }
 
-  // Función para normalizar datos de comunidad
+  // Función para normalizar datos de comunidad desde backend (snake_case) a frontend (camelCase)
   private normalizeComunidad(comunidad: any): Comunidad {
     return {
-      ...comunidad,
-      totalUnidades: comunidad.totalUnidades || 0,
-      unidadesOcupadas: comunidad.unidadesOcupadas || 0,
-      totalResidentes: comunidad.totalResidentes || 0,
-      saldoPendiente: comunidad.saldoPendiente || 0,
-      ingresosMensuales: comunidad.ingresosMensuales || 0,
-      gastosMensuales: comunidad.gastosMensuales || 0,
+      id: comunidad.id,
+      nombre: comunidad.razon_social || comunidad.nombre || '',
+      direccion: comunidad.direccion || '',
+      tipo: comunidad.tipo || 'Edificio',
+      estado: comunidad.estado || 'Activa',
+      rut: comunidad.rut || '',
+      dv: comunidad.dv || '',
+      telefono: comunidad.telefono_contacto || comunidad.telefono || '',
+      email: comunidad.email_contacto || comunidad.email || '',
+      descripcion: comunidad.giro || comunidad.descripcion || '',
+      administrador: comunidad.administrador || '',
+      imagen: comunidad.imagen || '',
+      fechaCreacion: comunidad.fecha_creacion || comunidad.fechaCreacion || '',
+      fechaActualizacion: comunidad.fecha_actualizacion || comunidad.fechaActualizacion || '',
+      totalUnidades: comunidad.cantidad_unidades || comunidad.totalUnidades || 0,
+      unidadesOcupadas: comunidad.unidades_ocupadas || comunidad.unidadesOcupadas || 0,
+      totalResidentes: comunidad.cantidad_residentes || comunidad.totalResidentes || 0,
+      saldoPendiente: comunidad.deuda_total || comunidad.saldoPendiente || 0,
+      ingresosMensuales: comunidad.ingresos_mensuales || comunidad.ingresosMensuales || 0,
+      gastosMensuales: comunidad.gastos_comunes_mes || comunidad.gastosMensuales || 0,
       morosidad: comunidad.morosidad || 0
     };
   }
