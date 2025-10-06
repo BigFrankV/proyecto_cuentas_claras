@@ -9,6 +9,7 @@ import '@/styles/amenidades.css';
 import '@/styles/amenidades-reservas.css';
 import '@/styles/multas.css';
 import '@/styles/apelaciones.css';
+// import '@/styles/utm-consultor.css';
 import '@/lib/console-filters'; // Filtros para limpiar consola en desarrollo
 import { useEffect } from 'react';
 import { AuthProvider } from '@/lib/useAuth';

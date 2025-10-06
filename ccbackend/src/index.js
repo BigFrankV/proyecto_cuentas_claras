@@ -28,6 +28,7 @@ const amenidadesRoutes = require('./routes/amenidades');
 const soporteRoutes = require('./routes/soporte');
 const utilRoutes = require('./routes/util');
 const filesRoutes = require('./routes/files');
+const valorUtmRoutes = require('./routes/valor_utm');
 const sequelize = require('./sequelize');
 const logger = require('./logger');
 const { setupSwagger } = require('./swagger');
@@ -69,6 +70,7 @@ app.use('/amenidades', amenidadesRoutes);
 app.use('/', soporteRoutes); // soporte exposes varios paths: tickets, notificaciones, documentos, bitacora, parametros
 app.use('/util', utilRoutes);
 app.use('/files', filesRoutes);
+app.use('/api/valor-utm', valorUtmRoutes);
 
 app.get('/healthz', (_, res) => res.json({ status: 'ok' }));
 
