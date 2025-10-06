@@ -305,6 +305,79 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
 
 /**
  * @openapi
+ * /edificios/buscar:
+ *   get:
+ *     tags: [Edificios]
+ *     summary: Búsqueda rápida de edificios
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Límite de resultados
+ *     responses:
+ *       200:
+ *         description: Resultados de búsqueda
+ */
+// GET /edificios/buscar - Búsqueda rápida
+router.get('/buscar', [
+  authenticate,
+  query('q').notEmpty().withMessage('El término de búsqueda es requerido'),
+  query('limit').optional().isInt({ min: 1, max: 50 })
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const searchTerm = req.query.q;
+    const limit = parseInt(req.query.limit) || 10;
+    
+    const [rows] = await db.query(`
+      SELECT 
+        e.id,
+        e.nombre,
+        e.codigo,
+        e.direccion,
+        c.razon_social AS comunidad_nombre,
+        COUNT(DISTINCT u.id) AS total_unidades
+      FROM edificio e
+      INNER JOIN comunidad c ON e.comunidad_id = c.id
+      LEFT JOIN unidad u ON e.id = u.edificio_id
+      WHERE (
+        e.nombre LIKE ? OR
+        e.codigo LIKE ? OR
+        e.direccion LIKE ? OR
+        c.razon_social LIKE ?
+      )
+      GROUP BY e.id
+      ORDER BY e.nombre
+      LIMIT ?
+    `, [
+      `%${searchTerm}%`,
+      `%${searchTerm}%`, 
+      `%${searchTerm}%`, 
+      `%${searchTerm}%`,
+      limit
+    ]);
+    
+    res.json(rows);
+  } catch (error) {
+    console.error('Error searching edificios:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * @openapi
  * /edificios/{id}:
  *   get:
  *     tags: [Edificios]
@@ -1395,79 +1468,6 @@ router.get('/:id/resumen', authenticate, async (req, res) => {
     res.json(resumen);
   } catch (error) {
     console.error('Error fetching resumen:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-/**
- * @openapi
- * /edificios/buscar:
- *   get:
- *     tags: [Edificios]
- *     summary: Búsqueda rápida de edificios
- *     parameters:
- *       - in: query
- *         name: q
- *         required: true
- *         schema:
- *           type: string
- *         description: Término de búsqueda
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: Límite de resultados
- *     responses:
- *       200:
- *         description: Resultados de búsqueda
- */
-// GET /edificios/buscar - Búsqueda rápida
-router.get('/buscar', [
-  authenticate,
-  query('q').notEmpty().withMessage('El término de búsqueda es requerido'),
-  query('limit').optional().isInt({ min: 1, max: 50 })
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const searchTerm = req.query.q;
-    const limit = parseInt(req.query.limit) || 10;
-    
-    const [rows] = await db.query(`
-      SELECT 
-        e.id,
-        e.nombre,
-        e.codigo,
-        e.direccion,
-        c.razon_social AS comunidad_nombre,
-        COUNT(DISTINCT u.id) AS total_unidades
-      FROM edificio e
-      INNER JOIN comunidad c ON e.comunidad_id = c.id
-      LEFT JOIN unidad u ON e.id = u.edificio_id
-      WHERE (
-        e.nombre LIKE ? OR
-        e.codigo LIKE ? OR
-        e.direccion LIKE ? OR
-        c.razon_social LIKE ?
-      )
-      GROUP BY e.id
-      ORDER BY e.nombre
-      LIMIT ?
-    `, [
-      `%${searchTerm}%`,
-      `%${searchTerm}%`, 
-      `%${searchTerm}%`, 
-      `%${searchTerm}%`,
-      limit
-    ]);
-    
-    res.json(rows);
-  } catch (error) {
-    console.error('Error searching edificios:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

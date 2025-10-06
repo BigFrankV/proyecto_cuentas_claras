@@ -45,7 +45,7 @@ router.post('/verify-2fa', [
 
     // Obtener el secret 2FA del usuario
     const [rows] = await db.query(
-      'SELECT two_fa_secret, two_fa_enabled FROM usuario WHERE id = ?',
+      'SELECT totp_secret, totp_enabled FROM usuario WHERE id = ?',
       [userId]
     );
 
@@ -55,13 +55,13 @@ router.post('/verify-2fa', [
 
     const user = rows[0];
 
-    if (!user.two_fa_enabled || !user.two_fa_secret) {
+    if (!user.totp_enabled || !user.totp_secret) {
       return res.status(400).json({ error: '2FA no está habilitado para este usuario' });
     }
 
     // Verificar el token
     const verified = speakeasy.totp.verify({
-      secret: user.two_fa_secret,
+      secret: user.totp_secret,
       encoding: 'base32',
       token: token,
       window: 2 // Permite 2 códigos anteriores/posteriores
