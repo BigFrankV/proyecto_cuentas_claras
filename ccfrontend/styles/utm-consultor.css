@@ -1,0 +1,377 @@
+/* ========================================
+   ESTILOS PARA CONSULTOR UTM RENOVADO
+   ======================================== */
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Contenedor principal */
+.utm-consultor-container {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Tabs personalizados */
+.nav-tabs .nav-link {
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #6c757d;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+  border-bottom-color: #0d6efd;
+  color: #0d6efd;
+}
+
+.nav-tabs .nav-link.active {
+  border-bottom-color: #0d6efd;
+  color: #0d6efd;
+  background-color: transparent;
+}
+
+/* Cards mejorados */
+.card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  border-radius: 12px 12px 0 0 !important;
+  border-bottom: none;
+  padding: 1rem 1.5rem;
+}
+
+/* KPI Cards */
+.kpi-card {
+  position: relative;
+  overflow: hidden;
+  border: none;
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0.3) 100%);
+}
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* Tabla mejorada */
+.table-hover tbody tr {
+  transition: all 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+  transform: scale(1.01);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Badges personalizados */
+.badge {
+  padding: 0.5em 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Botones mejorados */
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* Inputs mejorados */
+.form-control:focus,
+.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+.input-group-lg .form-control {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Alertas personalizadas */
+.alert {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.alert-success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
+}
+
+.alert-danger {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  color: #721c24;
+}
+
+.alert-info {
+  background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+  color: #0c5460;
+}
+
+.alert-warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+  color: #856404;
+}
+
+/* Gráficos - Canvas container */
+.chart-container {
+  position: relative;
+  margin: auto;
+  height: 100%;
+  width: 100%;
+}
+
+/* Cards de estadísticas con gradientes */
+.bg-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
+}
+
+.bg-success {
+  background: linear-gradient(135deg, #198754 0%, #146c43 100%) !important;
+}
+
+.bg-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%) !important;
+}
+
+.bg-info {
+  background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%) !important;
+}
+
+.bg-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #cc9a06 100%) !important;
+}
+
+/* Spinner personalizado */
+.spinner-border {
+  animation: spinner-border 0.75s linear infinite;
+}
+
+/* Iconos Material mejorados */
+.material-icons {
+  vertical-align: middle;
+  transition: all 0.3s ease;
+}
+
+.material-icons.icon-large {
+  font-size: 3rem;
+  opacity: 0.7;
+}
+
+/* Breadcrumb personalizado */
+.breadcrumb {
+  background-color: transparent;
+  padding: 0.75rem 0;
+  margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  content: '›';
+  font-size: 1.2rem;
+  color: #6c757d;
+}
+
+.breadcrumb-item a {
+  color: #0d6efd;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.breadcrumb-item a:hover {
+  color: #0a58ca;
+  transform: translateX(2px);
+}
+
+/* Bordes de tarjetas temáticos */
+.card.border-primary {
+  border-width: 2px;
+  border-color: #0d6efd !important;
+}
+
+.card.border-success {
+  border-width: 2px;
+  border-color: #198754 !important;
+}
+
+.card.border-danger {
+  border-width: 2px;
+  border-color: #dc3545 !important;
+}
+
+.card.border-info {
+  border-width: 2px;
+  border-color: #0dcaf0 !important;
+}
+
+/* Lista mejorada */
+.list-group-item {
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.list-group-item:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+  padding-left: 1.5rem;
+}
+
+/* Tabla responsive mejorada */
+.table-responsive {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Headers de tabla */
+.table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.table-dark {
+  background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+}
+
+/* Textos mejorados */
+.text-muted {
+  opacity: 0.8;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+/* Estados de carga */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: 12px;
+}
+
+/* Animación de números */
+.animate-number {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .kpi-value {
+    font-size: 1.5rem;
+  }
+  
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  .nav-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .nav-tabs .nav-link {
+    white-space: nowrap;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: #1a1a1a;
+    color: #f8f9fa;
+  }
+  
+  .table {
+    color: #f8f9fa;
+  }
+  
+  .form-control,
+  .form-select {
+    background-color: #2d2d2d;
+    color: #f8f9fa;
+    border-color: #444;
+  }
+}
+
+/* Scroll suave */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Transiciones globales */
+* {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
