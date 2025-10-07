@@ -3,6 +3,7 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect, useMemo } from 'react';
+import apiClient from '@/lib/api';
 
 interface Unidad {
   id: string;
@@ -112,28 +113,14 @@ const mockUnidades: Unidad[] = [
   }
 ];
 
-const comunidades = [
-  { id: '1', nombre: 'Las Palmas' },
-  { id: '2', nombre: 'Edificio Central' },
-  { id: '3', nombre: 'Jardines del Este' }
-];
-
-const edificios = [
-  { id: '1', nombre: 'Torre Central', comunidadId: '2' },
-  { id: '2', nombre: 'Edificio Norte', comunidadId: '1' },
-  { id: '3', nombre: 'Jardines del Este', comunidadId: '3' }
-];
-
-const torres = [
-  { id: '1', nombre: 'Torre A', edificioId: '2' },
-  { id: '2', nombre: 'Torre B', edificioId: '1' },
-  { id: '3', nombre: 'Torre C', edificioId: '3' }
-];
+  
 
 export default function UnidadesListado() {
-  const [unidades, setUnidades] = useState<Unidad[]>(mockUnidades);
-  const [filteredUnidades, setFilteredUnidades] = useState<Unidad[]>(mockUnidades);
+  const [unidades, setUnidades] = useState<Unidad[]>([]);
+  const [filteredUnidades, setFilteredUnidades] = useState<Unidad[]>([]);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     comunidad: '',
@@ -145,16 +132,64 @@ export default function UnidadesListado() {
   const [selectedUnidades, setSelectedUnidades] = useState<string[]>([]);
 
   // Filtrar edificios según comunidad seleccionada
-  const availableEdificios = useMemo(() => {
-    if (!filters.comunidad) return edificios;
-    return edificios.filter(edificio => edificio.comunidadId === filters.comunidad);
+  const [availableEdificios, setAvailableEdificios] = useState<any[]>([]);
+  const [availableTorres, setAvailableTorres] = useState<any[]>([]);
+  const [comunidadesState, setComunidadesState] = useState<any[]>([]);
+
+  useEffect(() => {
+    // load comunidades dropdown
+    let mounted = true;
+    (async () => {
+      try {
+  const res = await apiClient.get('/unidades/dropdowns/comunidades');
+  if (!mounted) return;
+  setComunidadesState(res.data || []);
+      } catch (err) {
+        console.error('Error loading comunidades dropdown', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    // load edificios for selected comunidad
+    let mounted = true;
+    (async () => {
+      try {
+        if (!filters.comunidad) {
+          setAvailableEdificios([]);
+          return;
+        }
+        const res = await apiClient.get('/unidades/dropdowns/edificios', { params: { comunidad_id: filters.comunidad } });
+        if (!mounted) return;
+        setAvailableEdificios(res.data || []);
+      } catch (err) {
+        console.error('Error loading edificios dropdown', err);
+      }
+    })();
+    return () => { mounted = false; };
   }, [filters.comunidad]);
 
-  // Filtrar torres según edificio seleccionado
-  const availableTorres = useMemo(() => {
-    if (!filters.edificio) return torres;
-    return torres.filter(torre => torre.edificioId === filters.edificio);
+  useEffect(() => {
+    // load torres for selected edificio
+    let mounted = true;
+    (async () => {
+      try {
+        if (!filters.edificio) {
+          setAvailableTorres([]);
+          return;
+        }
+        const res = await apiClient.get('/unidades/dropdowns/torres', { params: { edificio_id: filters.edificio } });
+        if (!mounted) return;
+        setAvailableTorres(res.data || []);
+      } catch (err) {
+        console.error('Error loading torres dropdown', err);
+      }
+    })();
+    return () => { mounted = false; };
   }, [filters.edificio]);
+
+  // (removed legacy useMemo for availableTorres)
 
   // Aplicar filtros y búsqueda
   useEffect(() => {
@@ -172,19 +207,19 @@ export default function UnidadesListado() {
 
     // Filtrar por comunidad
     if (filters.comunidad) {
-      const comunidadNombre = comunidades.find(c => c.id === filters.comunidad)?.nombre;
+      const comunidadNombre = comunidadesState.find((c:any) => c.id === filters.comunidad)?.nombre;
       filtered = filtered.filter(unidad => unidad.comunidad === comunidadNombre);
     }
 
     // Filtrar por edificio
     if (filters.edificio) {
-      const edificioNombre = edificios.find(e => e.id === filters.edificio)?.nombre;
+      const edificioNombre = availableEdificios.find((e:any) => e.id === filters.edificio)?.nombre;
       filtered = filtered.filter(unidad => unidad.edificio === edificioNombre);
     }
 
     // Filtrar por torre
     if (filters.torre) {
-      const torreNombre = torres.find(t => t.id === filters.torre)?.nombre;
+      const torreNombre = availableTorres.find((t:any) => t.id === filters.torre)?.nombre;
       filtered = filtered.filter(unidad => unidad.torre === torreNombre);
     }
 
@@ -285,6 +320,57 @@ export default function UnidadesListado() {
     return { total, activas, inactivas, mantenimiento, saldoTotal };
   }, [filteredUnidades]);
 
+  // Load unidades from API
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params: any = {};
+        // map filters from UI to API params (basic)
+        if (filters.comunidad) params.comunidad_id = filters.comunidad;
+        if (filters.edificio) params.edificio_id = filters.edificio;
+        if (filters.torre) params.torre_id = filters.torre;
+        if (filters.estado) params.activa = filters.estado === 'Activa' ? true : undefined;
+        if (filters.tipo) params.tipo = filters.tipo;
+        if (searchTerm) params.search = searchTerm;
+
+        const resp = await apiClient.get('/unidades', { params });
+        if (!mounted) return;
+        const data = resp.data || [];
+        // Map backend shapes to frontend Unidad as needed (light mapping)
+        const mapped = data.map((u: any) => ({
+          id: String(u.id),
+          numero: u.codigo || u.numero || '',
+          piso: u.piso || 0,
+          torre: u.torre_nombre || u.torre || '',
+          edificio: u.edificio_nombre || u.edificio || '',
+          comunidad: u.comunidad_nombre || u.comunidad || '',
+          tipo: u.tipo || 'Departamento',
+          superficie: u.m2_utiles || u.superficie || 0,
+          dormitorios: u.dormitorios || 0,
+          banos: u.nro_banos || u.banos || 0,
+          estado: u.estado || 'Activa',
+          propietario: u.propietario_nombre || u.propietario || undefined,
+          residente: u.residente_nombre || undefined,
+          saldoPendiente: u.saldo_pendiente || u.saldo || 0,
+          ultimoPago: u.ultimo_pago_fecha || u.ultimoPago || undefined,
+          fechaCreacion: u.created_at || u.fechaCreacion || ''
+        }));
+        setUnidades(mapped);
+        setFilteredUnidades(mapped);
+      } catch (err: any) {
+        console.error('Error fetching unidades', err);
+        setError(err?.response?.data?.error || err.message || 'Error al cargar unidades');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [filters.comunidad, filters.edificio, filters.torre, filters.estado, filters.tipo, searchTerm]);
+
   return (
     <ProtectedRoute>
       <Head>
@@ -327,7 +413,7 @@ export default function UnidadesListado() {
                       onChange={(e) => handleFilterChange('comunidad', e.target.value)}
                     >
                       <option value=''>Todas las comunidades</option>
-                      {comunidades.map(comunidad => (
+                      {(comunidadesState || []).map((comunidad:any) => (
                         <option key={comunidad.id} value={comunidad.id}>{comunidad.nombre}</option>
                       ))}
                     </select>
