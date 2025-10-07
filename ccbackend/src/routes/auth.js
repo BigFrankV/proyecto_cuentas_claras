@@ -8,9 +8,85 @@ const crypto = require('crypto');
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 
-// ============================================
-// HELPER: Build user query based on identifier type
-// ============================================
+/**
+ * @openapi
+ * /auth/verify-2fa:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Verificar código 2FA
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token JWT válido
+ *       401:
+ *         description: Código 2FA inválido
+ */
+router.post('/verify-2fa', [
+  body('userId').isInt(),
+  body('token').isString().isLength({ min: 6, max: 6 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { userId, token } = req.body;
+
+    // Obtener el secret 2FA del usuario
+    const [rows] = await db.query(
+      'SELECT totp_secret, totp_enabled FROM usuario WHERE id = ?',
+      [userId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const user = rows[0];
+
+    if (!user.totp_enabled || !user.totp_secret) {
+      return res.status(400).json({ error: '2FA no está habilitado para este usuario' });
+    }
+
+    // Verificar el token
+    const verified = speakeasy.totp.verify({
+      secret: user.totp_secret,
+      encoding: 'base32',
+      token: token,
+      window: 2 // Permite 2 códigos anteriores/posteriores
+    });
+
+    if (!verified) {
+      return res.status(401).json({ error: 'Código 2FA inválido' });
+    }
+
+    // Generar token JWT completo
+    const jwtToken = generateToken({ id: userId });
+
+    res.json({
+      message: '2FA verificado exitosamente',
+      token: jwtToken,
+      userId: userId
+    });
+
+  } catch (error) {
+    console.error('Error verifying 2FA:', error);
+    res.status(500).json({ error: 'Error al verificar 2FA' });
+  }
+});
+
+// Helper function to determine identification type and build query
 function buildUserQuery(identifier) {
   const cleanIdentifier = identifier.replace(/\s+/g, '').toUpperCase();
 

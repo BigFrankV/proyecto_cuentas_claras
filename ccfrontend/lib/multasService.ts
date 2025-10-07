@@ -1,4 +1,4 @@
-import apiClient from './api';
+import { api } from './api';
 import {
   Multa,
   MultaFiltros,
@@ -28,64 +28,76 @@ class MultasService {
 
   // ===== CRUD ADAPTADO A TU BACKEND =====
 
-  async getMultas(filtros?: MultaFiltros): Promise<Multa[]> {
+  async getMultas(filtros?: any): Promise<any[]> {
     try {
-      console.log('🔍 Obteniendo multas con filtros:', filtros);
-
-      // ✅ Usar tu endpoint general
-      const params = new URLSearchParams();
-
-      if (filtros?.comunidad_id) params.append('comunidad_id', filtros.comunidad_id.toString());
-      if (filtros?.estado) params.append('estado', filtros.estado);
-      if (filtros?.search) params.append('search', filtros.search);
-
-      const queryString = params.toString() ? `?${params.toString()}` : '';
-
-      const response = await apiClient.get(`/multas${queryString}`);
-
-      console.log(`📋 ${response.data.length} multas obtenidas`);
-      return this.adaptarMultasDelBackend(response.data);
-    } catch (error) {
-      console.error('❌ Error obteniendo multas:', error);
-      throw error;
+      const params: any = {};
+      if (filtros?.comunidad_id) params.comunidad_id = filtros.comunidad_id;
+      if (filtros?.estado) params.estado = filtros.estado;
+      if (filtros?.search) params.search = filtros.search;
+      const response = await api.get('/multas', { params });
+      const rows = response.data?.data ?? response.data;
+      return (rows || []).map(r => this.adaptMultaFromBackend(r));
+    } catch (err) {
+      console.error('❌ Error obteniendo multas:', err);
+      throw err;
     }
   }
 
-  async getMulta(id: number): Promise<Multa> {
-    try {
-      console.log(`🔍 Obteniendo multa ${id}`);
-      const response = await apiClient.get(`/multas/${id}`);
-      return this.adaptarMultaDelBackend(response.data);
-    } catch (error) {
-      console.error(`❌ Error obteniendo multa ${id}:`, error);
-      throw error;
-    }
+  // Helper: adaptar objeto que viene del backend a la forma que espera la UI
+  private adaptMultaFromBackend(raw: any): any {
+    if (!raw) return raw;
+    return {
+      id: raw.id,
+      numero: raw.numero,
+      comunidad_id: raw.comunidad_id,
+      comunidad_nombre: raw.comunidad_nombre || raw.comunidadName,
+      unidad_id: raw.unidad_id,
+      unidad_numero: raw.unidad_numero,
+      torre_nombre: raw.torre_nombre,
+      edificio_nombre: raw.edificio_nombre,
+      persona_id: raw.persona_id,
+      propietario_nombre: raw.propietario_nombre,
+      propietario_email: raw.propietario_email,
+      tipo_infraccion: raw.motivo,         // backend usa 'motivo'
+      motivo: raw.motivo,
+      descripcion: raw.descripcion,
+      monto: Number(raw.monto),
+      estado: raw.estado,
+      prioridad: raw.prioridad,
+      fecha: raw.fecha,                     // backend usa 'fecha'
+      fecha_infraccion: raw.fecha,          // alias para UI
+      fecha_vencimiento: raw.fecha_vencimiento,
+      fecha_pago: raw.fecha_pago,
+      fecha_anulacion: raw.fecha_anulacion,
+      motivo_anulacion: raw.motivo_anulacion,
+      anulado_por: raw.anulado_por,
+      anulado_por_username: raw.anulado_por_username,
+      created_at: raw.created_at,
+      updated_at: raw.updated_at
+    };
   }
 
-  async createMulta(data: CreateMultaData): Promise<Multa> {
-    try {
-      console.log('📝 Creando nueva multa:', data);
+  async getMulta(id: number): Promise<any> {
+    const response = await api.get(`/multas/${id}`);
+    const raw = response.data?.data ?? response.data;
+    return this.adaptMultaFromBackend(raw);
+  }
 
-      // ✅ Incluir unidad_id en el payload
-      const backendData = {
-        motivo: data.tipo_infraccion,
-        descripcion: data.descripcion,
-        monto: data.monto,
-        fecha: this.formatearFechaParaBackend(data.fecha_infraccion),
-        unidad_id: data.unidad_id,  // ✅ Agregar esto
-        persona_id: null
-      };
-
-      console.log('📤 Enviando al backend:', backendData);
-
-      const response = await apiClient.post(`/multas`, backendData);
-
-      console.log('✅ Multa creada exitosamente:', response.data);
-      return this.adaptarMultaDelBackend(response.data);
-    } catch (error) {
-      console.error('❌ Error creando multa:', error);
-      throw error;
-    }
+  async createMulta(data: any): Promise<any> {
+    const payload = {
+      unidad_id: data.unidad_id,
+      comunidad_id: data.comunidad_id,
+      tipo_infraccion: data.tipo_infraccion || data.motivo,
+      motivo: data.tipo_infraccion || data.motivo, // backend expects tipo_infraccion but stores motivo
+      descripcion: data.descripcion,
+      monto: data.monto,
+      prioridad: data.prioridad,
+      fecha_infraccion: data.fecha || data.fecha_infraccion,
+      fecha_vencimiento: data.fecha_vencimiento
+    };
+    const response = await api.post('/multas', payload);
+    const raw = response.data?.data ?? response.data;
+    return this.adaptMultaFromBackend(raw);
   }
 
   async updateMulta(id: number, data: UpdateMultaData): Promise<Multa> {
@@ -116,9 +128,10 @@ class MultasService {
       console.log('📤 Datos a enviar al backend:', backendData);
 
       // � Volver al endpoint normal - el problema era el tamaño del estado
-      const response = await apiClient.patch(`/multas/${id}`, backendData);
+      const response = await api.patch(`/multas/${id}`, backendData);
+      const raw = response.data?.data ?? response.data;
       console.log('✅ Multa actualizada exitosamente');
-      return this.adaptarMultaDelBackend(response.data);
+      return this.adaptarMultaDelBackend(raw);
       
     } catch (error) {
       console.error(`❌ Error actualizando multa ${id}:`, error);
@@ -129,7 +142,7 @@ class MultasService {
   async deleteMulta(id: number): Promise<void> {
     try {
       console.log(`🗑️ Eliminando multa ${id}`);
-      await apiClient.delete(`/multas/${id}`);
+      await api.delete(`/multas/${id}`);
       console.log('✅ Multa eliminada exitosamente');
     } catch (error) {
       console.error(`❌ Error eliminando multa ${id}:`, error);
@@ -154,9 +167,10 @@ class MultasService {
       
       console.log('📤 Datos para anular:', backendData);
       
-      const response = await apiClient.patch(`/multas/${id}`, backendData);
+      const response = await api.patch(`/multas/${id}`, backendData);
+      const raw = response.data?.data ?? response.data;
       console.log('✅ Multa anulada exitosamente');
-      return this.adaptarMultaDelBackend(response.data);
+      return this.adaptarMultaDelBackend(raw);
     } catch (error) {
       console.error(`❌ Error anulando multa ${id}:`, error);
       throw error;
@@ -164,31 +178,10 @@ class MultasService {
   }
 
   // ✅ USAR tu endpoint de estadísticas
-  async getEstadisticas(comunidadId?: number): Promise<MultasEstadisticas> {
-    try {
-      console.log('📊 Obteniendo estadísticas');
-
-      const params = comunidadId ? `?comunidad_id=${comunidadId}` : '';
-      const response = await apiClient.get(`/multas/estadisticas${params}`);
-
-      console.log('✅ Estadísticas obtenidas:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ Error obteniendo estadísticas:', error);
-      // Fallback con datos vacíos
-      return {
-        total: 0,
-        pendientes: 0,
-        pagadas: 0,
-        vencidas: 0,
-        apeladas: 0,
-        anuladas: 0,
-        monto_total: 0,
-        monto_pendiente: 0,
-        monto_recaudado: 0,
-        monto_vencido: 0
-      };
-    }
+  async getEstadisticas(comunidadId?: number): Promise<any> {
+    const params = comunidadId ? { comunidad_id: comunidadId } : undefined;
+    const response = await api.get('/multas/estadisticas', { params });
+    return response.data?.data ?? response.data;
   }
 
   // ===== ADAPTADORES PARA TU ESTRUCTURA DE BD =====
@@ -393,13 +386,37 @@ class MultasService {
     };
     return labels[estado] || estado;
   }
+
+  // ===== API HELPERS (aliases usados por las páginas actuales) =====
+
+  // Obtener historial de una multa
+  async obtenerHistorial(id: number): Promise<any> {
+    const response = await api.get(`/multas/${id}/historial`);
+    return response.data?.data ?? response.data;
+  }
+
+  // Registrar pago (wrapper). Backend esperado: POST /multas/:id/registrar-pago
+  async registrarPago(id: number, pagoData: { fecha_pago: string; metodo_pago?: string; referencia?: string; monto?: number; }): Promise<Multa> {
+    const response = await api.post(`/multas/${id}/registrar-pago`, pagoData);
+    const raw = response.data?.data ?? response.data;
+    return this.adaptarMultaDelBackend(raw);
+  }
+
+  // Crear apelación (wrapper). Backend esperado: POST /multas/:id/apelacion
+  async crearApelacion(id: number, body: { motivo: string; documentos_json?: any[]; }): Promise<any> {
+    const response = await api.post(`/multas/${id}/apelacion`, body);
+    return response.data?.data ?? response.data;
+  }
+
+  // Eliminar multa (alias en español)
+  async eliminarMulta(id: number): Promise<void> {
+    await api.delete(`/multas/${id}`);
+  }
 }
 
 // ✅ CREAR LA INSTANCIA Y EXPORTARLA
 const multasService = new MultasService();
 
 export default multasService;
-
-// ✅ Exports named para compatibilidad
-export const getMultaById = (id: number) => multasService.getMultaById(id);
-export const createMulta = (data: CreateMultaData) => multasService.createMulta(data);
+export const getMultaById = (id: number) => multasService.getMulta(id);
+export const createMulta = (data: any) => multasService.createMulta(data);

@@ -17,7 +17,22 @@ const { requireCommunity } = require('../middleware/tenancy');
 // List unidades por comunidad (miembros)
 router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
-  const [rows] = await db.query('SELECT id, codigo, edificio_id, torre_id, alicuota, activa FROM unidad WHERE comunidad_id = ? LIMIT 500', [comunidadId]);
+  const [rows] = await db.query(`
+    SELECT 
+      u.id, 
+      u.codigo, 
+      u.edificio_id, 
+      u.torre_id,
+      e.nombre as edificio_nombre,
+      t.nombre as torre_nombre,
+      u.alicuota, 
+      u.activa 
+    FROM unidad u
+    LEFT JOIN edificio e ON e.id = u.edificio_id
+    LEFT JOIN torre t ON t.id = u.torre_id
+    WHERE u.comunidad_id = ? 
+    LIMIT 500
+  `, [comunidadId]);
   res.json(rows);
 });
 

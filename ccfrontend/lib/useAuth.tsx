@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/router';
 import authService from './auth';
+import { api } from './api';
 import { User, Role, AuthResponse } from '@/types/profile';
 
 // ============================================
@@ -79,7 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const currentUser = await authService.getCurrentUser();
             if (currentUser) {
               console.log('✅ Datos actualizados desde servidor');
-              setUser(currentUser);
+              // Normalizar memberships y demás campos antes de setear
+              const normalizedUser = normalizeUserResponse(currentUser);
+              setUser(normalizedUser);
             }
           } catch (error) {
             console.warn('⚠️ Error actualizando datos, usando caché');
@@ -125,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         setToken(response.token);
-        setUser(response.user);
+        setUser(normalizeUserResponse(response.user));
 
         // Redirigir al dashboard
         router.push('/dashboard');
@@ -156,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         setToken(response.token);
-        setUser(response.user);
+        setUser(normalizeUserResponse(response.user));
 
         // Redirigir al dashboard
         router.push('/dashboard');
@@ -218,7 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           memberships: currentUser.memberships?.length || 0
         });
 
-        setUser(currentUser);
+        setUser(normalizeUserResponse(currentUser));
       } else {
         console.warn('⚠️ No se pudo obtener usuario actualizado');
       }
@@ -437,3 +440,36 @@ export function AdminProtectedRoute({
 // ============================================
 
 export default useAuth;
+
+// cuando proceses la respuesta de login / me, normaliza memberships
+const normalizeUserResponse = (resp: any) => {
+  if (!resp) return resp;
+  const memberships = (resp.memberships || resp.usuario_miembro_comunidad || []).map((m: any) => ({
+    comunidad_id: m.comunidad_id ?? m.comunidadId ?? m.community_id,
+    persona_id: m.persona_id ?? m.personaId,
+    rol: m.rol ?? m.role ?? m.codigo ?? null,
+    desde: m.desde,
+    hasta: m.hasta,
+    activo: m.activo
+  }));
+  return { 
+    ...resp, 
+    is_superadmin: !!(resp.is_superadmin || resp.isSuperAdmin || resp.superadmin), 
+    memberships 
+  };
+};
+
+// ------------------------------------------------------------------
+// Utility para obtener usuario desde la API (no toca estado)
+// ------------------------------------------------------------------
+export async function fetchCurrentUserFromApi(): Promise<any | null> {
+  try {
+    // Llamar al backend directamente usando api client (baseURL configurado)
+    const res = await api.get('/auth/me');
+    const raw = res.data?.data ?? res.data;
+    return normalizeUserResponse(raw);
+  } catch (err) {
+    console.error('Error fetching current user (api):', err);
+    return null;
+  }
+}

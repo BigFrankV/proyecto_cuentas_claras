@@ -106,34 +106,33 @@ router.get('/',
       
       console.log('🔍 GET /multas - Usuario:', req.user?.username, 'ID:', req.user?.sub);
       
-      let query = `
-        SELECT 
-          m.*,
-          m.motivo as tipo_infraccion,
-          m.fecha as fecha_infraccion,
-          u.numero as unidad_numero,
-          t.nombre as torre_nombre,
-          e.nombre as edificio_nombre,
-          c.razon_social as comunidad_nombre,
-          CONCAT(p.nombres, ' ', p.apellidos) as propietario_nombre,
-          p.email as propietario_email,
-          anulador.username as anulado_por_username
-        FROM multa m
-        INNER JOIN unidad u ON m.unidad_id = u.id
-        LEFT JOIN torre t ON u.torre_id = t.id
-        LEFT JOIN edificio e ON u.edificio_id = e.id
-        INNER JOIN comunidad c ON m.comunidad_id = c.id
-        LEFT JOIN persona p ON m.persona_id = p.id
-        LEFT JOIN usuario anulador ON m.anulado_por = anulador.id
-        WHERE 1=1
-      `;
-      
-      const params = [];
-      
-      // ✅ CORRECCIÓN: Filtrar por permisos usando función helper
+      let sql = `
+         SELECT 
+           m.*,
+           m.motivo as tipo_infraccion,
+           m.fecha as fecha_infraccion,
+           u.codigo as unidad_numero,
+           t.nombre as torre_nombre,
+           e.nombre as edificio_nombre,
+           c.razon_social as comunidad_nombre,
+           CONCAT(p.nombres, ' ', p.apellidos) as propietario_nombre,
+           p.email as propietario_email,
+           anulador.username as anulado_por_username
+         FROM multa m
+         LEFT JOIN unidad u ON m.unidad_id = u.id
+         LEFT JOIN torre t ON u.torre_id = t.id
+         LEFT JOIN edificio e ON u.edificio_id = e.id
+         INNER JOIN comunidad c ON m.comunidad_id = c.id
+         LEFT JOIN persona p ON m.persona_id = p.id
+         LEFT JOIN usuario anulador ON m.anulado_por = anulador.id
+         WHERE 1=1
+       `;
+       
+       const params = [];
+       
       if (req.viewOnlyOwn && req.user.persona_id) {
         // Usuario solo ve sus propias multas
-        query += ' AND m.persona_id = ?';
+        sql += ' AND m.persona_id = ?';
         params.push(req.user.persona_id);
         console.log(`🔒 Filtro aplicado: solo multas de persona_id=${req.user.persona_id}`);
       } else if (!req.user?.is_superadmin) {
@@ -155,7 +154,7 @@ router.get('/',
         }
         
         const placeholders = comunidadIds.map(() => '?').join(',');
-        query += ` AND m.comunidad_id IN (${placeholders})`;
+        sql += ` AND m.comunidad_id IN (${placeholders})`;
         params.push(...comunidadIds);
       } else {
         console.log('👑 Usuario superadmin - ve todas las multas');
@@ -163,38 +162,38 @@ router.get('/',
       
       // Filtros adicionales
       if (estado) {
-        query += ' AND m.estado = ?';
+        sql += ' AND m.estado = ?';
         params.push(estado);
       }
       
       if (prioridad) {
-        query += ' AND m.prioridad = ?';
+        sql += ' AND m.prioridad = ?';
         params.push(prioridad);
       }
       
       if (unidad_id) {
-        query += ' AND m.unidad_id = ?';
+        sql += ' AND m.unidad_id = ?';
         params.push(unidad_id);
       }
       
       if (search) {
-        query += ' AND (m.numero LIKE ? OR m.motivo LIKE ? OR u.numero LIKE ? OR p.nombres LIKE ?)';
-        const searchPattern = `%${search}%`;
-        params.push(searchPattern, searchPattern, searchPattern, searchPattern);
+        const s = `%${search}%`;
+        sql += ' AND (u.codigo LIKE ? OR m.motivo LIKE ? OR CONCAT(p.nombres, " ", p.apellidos) LIKE ?)';
+        params.push(s, s, s);
       }
       
-      // Total count
-      const countQuery = query.replace(/SELECT .+ FROM/, 'SELECT COUNT(*) as total FROM');
+      // Total count (usar pattern que admita newlines)
+      const countQuery = sql.replace(/SELECT[\s\S]*?FROM/i, 'SELECT COUNT(*) as total FROM');
       const [countResult] = await db.query(countQuery, params);
       const total = countResult[0].total;
       
       console.log(`📊 Total de multas encontradas: ${total}`);
       
       // Paginación
-      query += ' ORDER BY m.created_at DESC LIMIT ? OFFSET ?';
+      sql += ' ORDER BY m.created_at DESC LIMIT ? OFFSET ?';
       params.push(parseInt(limit), parseInt(offset));
       
-      const [rows] = await db.query(query, params);
+      const [rows] = await db.query(sql, params);
       
       console.log(`✅ ${rows.length} multas devueltas en esta página`);
       
@@ -438,7 +437,7 @@ router.post('/',
           m.*,
           m.motivo as tipo_infraccion,
           m.fecha as fecha_infraccion,
-          u.numero as unidad_numero,
+          u.codigo as unidad_numero,
           c.razon_social as comunidad_nombre
         FROM multa m
         INNER JOIN unidad u ON m.unidad_id = u.id
@@ -483,7 +482,7 @@ router.get('/:id',
           m.*,
           m.motivo as tipo_infraccion,
           m.fecha as fecha_infraccion,
-          u.numero as unidad_numero,
+          u.codigo as unidad_numero,
           t.nombre as torre_nombre,
           e.nombre as edificio_nombre,
           c.razon_social as comunidad_nombre,
@@ -715,10 +714,11 @@ router.patch('/:id/anular',
         `UPDATE multa 
          SET estado = 'anulada', 
              motivo_anulacion = ?, 
-             anulado_por = ?,         // ✅ CORREGIDO
-             fecha_anulacion = NOW() 
+             anulado_por = ?, 
+             anulado_en = NOW(),
+             updated_at = NOW()
          WHERE id = ?`,
-        [motivo_anulacion, req.user.sub, id]  // ✅ AHORA USA req.user.sub
+        [motivo_anulacion, req.user.sub, id]
       );
       
       // Registrar en historial
@@ -1138,6 +1138,14 @@ router.get('/unidad/:unidadId',
   authenticate, 
   async (req, res) => {
     const unidadId = req.params.unidadId;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validación fallida',
+        details: errors.array()
+      });
+    }
     
     try {
       console.log(`🔍 GET /multas/unidad/${unidadId}`);

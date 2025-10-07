@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
-import { multasService } from '@/lib/multasService';
+import multasService from '@/lib/multasService';
 import { toast } from 'react-hot-toast';
 
 // ============================================
@@ -216,23 +216,14 @@ export default function MultaDetalle() {
   // ============================================
 
   const loadMulta = async () => {
+    if (!id) return;
+    setLoading(true);
     try {
-      setLoading(true);
-      console.log(`🔍 Cargando multa ${id}...`);
-
-      const response = await multasService.obtenerMulta(Number(id));
-      
-      console.log('✅ Multa cargada:', response);
-      setMulta(response);
-
-    } catch (error: any) {
-      console.error('❌ Error cargando multa:', error);
-      toast.error(error.message || 'Error al cargar la multa');
-      
-      // Si no existe, redirigir al listado
-      if (error.message?.includes('no encontrada')) {
-        setTimeout(() => router.push('/multas'), 2000);
-      }
+      const data = await multasService.getMulta(Number(id));
+      // multasService ya devuelve la multa adaptada (fecha y fecha_infraccion sincronizadas)
+      setMulta(data);
+    } catch (err) {
+      console.error('Error cargando multa', err);
     } finally {
       setLoading(false);
     }
@@ -242,10 +233,9 @@ export default function MultaDetalle() {
     try {
       console.log(`📜 Cargando historial de multa ${id}...`);
 
-      const response = await multasService.obtenerHistorial(Number(id));
-      
-      console.log('✅ Historial cargado:', response);
-      setHistorial(response.data || []);
+      const rows = await multasService.obtenerHistorial(Number(id));
+      console.log('✅ Historial cargado:', rows);
+      setHistorial(Array.isArray(rows) ? rows : (rows?.data ?? []));
 
     } catch (error: any) {
       console.error('❌ Error cargando historial:', error);
@@ -271,7 +261,7 @@ export default function MultaDetalle() {
       await multasService.registrarPago(Number(id), pagoData);
 
       toast.success('Pago registrado exitosamente');
-      
+
       setShowPagoModal(false);
       setPagoData({
         fecha_pago: new Date().toISOString().split('T')[0],
@@ -305,7 +295,7 @@ export default function MultaDetalle() {
       await multasService.anularMulta(Number(id), anularData);
 
       toast.success('Multa anulada exitosamente');
-      
+
       setShowAnularModal(false);
       setAnularData({ motivo_anulacion: '' });
 
@@ -335,7 +325,7 @@ export default function MultaDetalle() {
       await multasService.crearApelacion(Number(id), apelacionData);
 
       toast.success('Apelación creada exitosamente');
-      
+
       setShowApelacionModal(false);
       setApelacionData({ motivo: '', documentos_json: [] });
 
@@ -364,7 +354,7 @@ export default function MultaDetalle() {
       await multasService.eliminarMulta(Number(id));
 
       toast.success('Multa eliminada exitosamente');
-      
+
       // Redirigir al listado
       setTimeout(() => router.push('/multas'), 1500);
 
@@ -485,15 +475,15 @@ export default function MultaDetalle() {
 
       <Layout title={`Multa ${multa.numero}`}>
         <div className="container-fluid p-4">
-          
+
           {/* Header */}
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3">
             <div>
               <div className="d-flex align-items-center gap-3 mb-2">
                 <h1 className="h3 mb-0">Multa {multa.numero}</h1>
-                <span 
+                <span
                   className="badge d-inline-flex align-items-center gap-1"
-                  style={{ 
+                  style={{
                     background: estadoConfig.bgColor,
                     color: estadoConfig.textColor,
                     border: `2px solid ${estadoConfig.color}`
@@ -504,9 +494,9 @@ export default function MultaDetalle() {
                   </i>
                   {estadoConfig.label}
                 </span>
-                <span 
+                <span
                   className="badge d-inline-flex align-items-center gap-1"
-                  style={{ 
+                  style={{
                     background: prioridadConfig.color,
                     color: prioridadConfig.textColor
                   }}
@@ -558,7 +548,7 @@ export default function MultaDetalle() {
                 <ul className="dropdown-menu">
                   {puedeApelar && (
                     <li>
-                      <button 
+                      <button
                         className="dropdown-item"
                         onClick={() => setShowApelacionModal(true)}
                       >
@@ -569,7 +559,7 @@ export default function MultaDetalle() {
                   )}
                   {puedeAnular && (
                     <li>
-                      <button 
+                      <button
                         className="dropdown-item text-warning"
                         onClick={() => setShowAnularModal(true)}
                       >
@@ -582,7 +572,7 @@ export default function MultaDetalle() {
                     <>
                       <li><hr className="dropdown-divider" /></li>
                       <li>
-                        <button 
+                        <button
                           className="dropdown-item text-danger"
                           onClick={handleEliminar}
                         >
@@ -671,13 +661,13 @@ export default function MultaDetalle() {
 
           {/* Contenido de tabs */}
           <div className="row">
-            
+
             {/* Tab: Información */}
             {activeTab === 'info' && (
               <>
                 {/* Columna principal */}
                 <div className="col-lg-8">
-                  
+
                   {/* Detalles de la multa */}
                   <div className="card mb-4">
                     <div className="card-header bg-white">
@@ -688,7 +678,7 @@ export default function MultaDetalle() {
                     </div>
                     <div className="card-body">
                       <div className="row g-3">
-                        
+
                         {/* Tipo de infracción */}
                         <div className="col-md-12">
                           <label className="form-label text-muted small">Tipo de Infracción</label>
@@ -721,9 +711,9 @@ export default function MultaDetalle() {
                         <div className="col-md-6">
                           <label className="form-label text-muted small">Prioridad</label>
                           <div>
-                            <span 
+                            <span
                               className="badge d-inline-flex align-items-center gap-1 fs-6"
-                              style={{ 
+                              style={{
                                 background: prioridadConfig.color,
                                 color: prioridadConfig.textColor
                               }}
@@ -784,7 +774,7 @@ export default function MultaDetalle() {
                     </div>
                     <div className="card-body">
                       <div className="row g-3">
-                        
+
                         {/* Unidad */}
                         <div className="col-md-6">
                           <label className="form-label text-muted small">Unidad</label>
@@ -861,7 +851,7 @@ export default function MultaDetalle() {
 
                 {/* Sidebar */}
                 <div className="col-lg-4">
-                  
+
                   {/* Resumen */}
                   <div className="card mb-4">
                     <div className="card-header bg-white">
@@ -872,12 +862,12 @@ export default function MultaDetalle() {
                     </div>
                     <div className="card-body">
                       <div className="d-flex flex-column gap-3">
-                        
+
                         <div>
                           <div className="text-muted small mb-1">Estado</div>
-                          <span 
+                          <span
                             className="badge d-inline-flex align-items-center gap-1"
-                            style={{ 
+                            style={{
                               background: estadoConfig.bgColor,
                               color: estadoConfig.textColor,
                               border: `2px solid ${estadoConfig.color}`
@@ -921,7 +911,7 @@ export default function MultaDetalle() {
                     </div>
                     <div className="card-body">
                       <div className="d-grid gap-2">
-                        
+
                         {puedePagar && (
                           <button
                             className="btn btn-success btn-sm"
@@ -1058,9 +1048,9 @@ export default function MultaDetalle() {
                     <i className="material-icons me-2">payment</i>
                     Registrar Pago
                   </h5>
-                  <button 
-                    type="button" 
-                    className="btn-close" 
+                  <button
+                    type="button"
+                    className="btn-close"
                     onClick={() => setShowPagoModal(false)}
                     disabled={procesando}
                   ></button>
@@ -1105,16 +1095,16 @@ export default function MultaDetalle() {
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-secondary"
                     onClick={() => setShowPagoModal(false)}
                     disabled={procesando}
                   >
                     Cancelar
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-success"
                     onClick={handleRegistrarPago}
                     disabled={procesando}
@@ -1147,9 +1137,9 @@ export default function MultaDetalle() {
                     <i className="material-icons me-2">block</i>
                     Anular Multa
                   </h5>
-                  <button 
-                    type="button" 
-                    className="btn-close" 
+                  <button
+                    type="button"
+                    className="btn-close"
                     onClick={() => setShowAnularModal(false)}
                     disabled={procesando}
                   ></button>
@@ -1175,16 +1165,16 @@ export default function MultaDetalle() {
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-secondary"
                     onClick={() => setShowAnularModal(false)}
                     disabled={procesando}
                   >
                     Cancelar
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-warning"
                     onClick={handleAnular}
                     disabled={procesando || anularData.motivo_anulacion.length < 10}
@@ -1217,9 +1207,9 @@ export default function MultaDetalle() {
                     <i className="material-icons me-2">gavel</i>
                     Crear Apelación
                   </h5>
-                  <button 
-                    type="button" 
-                    className="btn-close btn-close-white" 
+                  <button
+                    type="button"
+                    className="btn-close btn-close-white"
                     onClick={() => setShowApelacionModal(false)}
                     disabled={procesando}
                   ></button>
@@ -1245,16 +1235,16 @@ export default function MultaDetalle() {
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-secondary"
                     onClick={() => setShowApelacionModal(false)}
                     disabled={procesando}
                   >
                     Cancelar
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-info"
                     onClick={handleCrearApelacion}
                     disabled={procesando || apelacionData.motivo.length < 20}

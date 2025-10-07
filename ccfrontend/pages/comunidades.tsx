@@ -23,6 +23,7 @@ export default function ComunidadesListado() {
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [comunidadesFiltradas, setComunidadesFiltradas] = useState<Comunidad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Estados de filtros y configuración
   const [filtros, setFiltros] = useState<ComunidadFiltros>({
@@ -48,6 +49,7 @@ export default function ComunidadesListado() {
 
   const loadComunidades = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       console.log('👤 Usuario actual:', user);
       console.log('👑 Es superadmin:', user?.is_superadmin);
@@ -84,8 +86,11 @@ export default function ComunidadesListado() {
 
       setComunidades(data);
       console.log(`📊 Total comunidades cargadas: ${data.length}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Error loading comunidades:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Error al cargar las comunidades. Por favor, intente nuevamente.';
+      setError(errorMessage);
+      setComunidades([]);
     } finally {
       setIsLoading(false);
     }
@@ -161,9 +166,6 @@ export default function ComunidadesListado() {
     }
   };
 
-  // ✅ AGREGAR: Mostrar información de debug en desarrollo
-
-
   return (
     <ProtectedRoute>
       <Head>
@@ -172,7 +174,6 @@ export default function ComunidadesListado() {
 
       <Layout title='Comunidades'>
         <div className='container-fluid py-4'>
-
           {/* Header */}
           <div className='d-flex justify-content-between align-items-center mb-4'>
             <div>
@@ -208,6 +209,24 @@ export default function ComunidadesListado() {
             totalResultados={comunidadesFiltradas.length}
           />
           
+          {/* Alerta de error */}
+          {error && (
+            <div className="alert alert-danger alert-dismissible fade show" role="alert">
+              <div className="d-flex align-items-center">
+                <span className="material-icons me-2">error</span>
+                <div>
+                  <strong>Error:</strong> {error}
+                </div>
+              </div>
+              <button 
+                type="button" 
+                className="btn-close" 
+                onClick={() => setError(null)}
+                aria-label="Cerrar"
+              />
+            </div>
+          )}
+
           {/* Contenido principal */}
           {isLoading ? (
             <div className="text-center py-5">

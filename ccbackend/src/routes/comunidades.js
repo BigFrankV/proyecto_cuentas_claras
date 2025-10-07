@@ -17,7 +17,11 @@ const { authorize } = require('../middleware/authorize');
  * /comunidades:
  *   get:
  *     tags: [Comunidades]
- *     summary: Lista comunidades con estadísticas calculadas
+ *     summary: Lista comunidades con estadísticas completas
+ *     description: |
+ *       Retorna todas las comunidades con estadísticas. Si el usuario no es superadmin,
+ *       solo retorna las comunidades asignadas.
+ *       Basado en: CONSULTAS_SQL_COMUNIDADES.sql secciones 1.1 y 1.2
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -31,84 +35,98 @@ const { authorize } = require('../middleware/authorize');
  *         schema:
  *           type: string
  *         description: Filtrar por dirección
+ *       - in: query
+ *         name: rut
+ *         schema:
+ *           type: string
+ *         description: Filtrar por RUT
  *     responses:
  *       200:
  *         description: Lista de comunidades con estadísticas
  */
 router.get('/', authenticate, async (req, res) => {
   try {
-    const { nombre, direccion } = req.query;
+    const { nombre, direccion, rut } = req.query;
+    const userId = req.user.id;
     
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 1.1
     let query = `
       SELECT 
           c.id,
-          c.razon_social as nombre,
-          c.rut,
-          c.dv,
-          c.giro,
+          c.razon_social AS nombre,
           c.direccion,
-          c.email_contacto as email,
-          c.telefono_contacto as telefono,
-          c.moneda,
-          c.tz as zona_horaria,
-          c.created_at as fechaCreacion,
-          c.updated_at as fechaActualizacion,
-          
-          -- Estadísticas calculadas
-          COALESCE(stats.total_unidades, 0) as totalUnidades,
-          COALESCE(stats.unidades_activas, 0) as unidadesActivas,
-          COALESCE(stats.total_residentes, 0) as totalResidentes,
-          COALESCE(stats.saldo_pendiente, 0) as saldoPendiente,
-          COALESCE(stats.ingresos_mensuales, 0) as ingresosMensuales,
-          COALESCE(stats.gastos_mensuales, 0) as gastosMensuales
-          
+          c.telefono_contacto AS telefono,
+          c.email_contacto AS email,
+          c.created_at AS fechaCreacion,
+          c.updated_at AS fechaActualizacion,
+          -- Estadísticas
+          COALESCE(unidades.total, 0) AS totalUnidades,
+          COALESCE(unidades.ocupadas, 0) AS unidadesOcupadas,
+          COALESCE(residentes.total, 0) AS totalResidentes,
+          COALESCE(finanzas.saldo_pendiente, 0) AS saldoPendiente,
+          COALESCE(finanzas.morosidad, 0) AS morosidad
       FROM comunidad c
       LEFT JOIN (
-          -- Subconsulta para calcular estadísticas
           SELECT 
-              com.id as comunidad_id,
-              COUNT(DISTINCT u.id) as total_unidades,
-              COUNT(DISTINCT CASE WHEN u.activa = 1 THEN u.id END) as unidades_activas,
-              COUNT(DISTINCT CASE WHEN r.codigo IN ('residente', 'propietario') AND ucr.activo = 1 THEN ucr.usuario_id END) as total_residentes,
-              COALESCE(SUM(CASE WHEN cu.estado IN ('pendiente', 'parcial') THEN cu.saldo ELSE 0 END), 0) as saldo_pendiente,
-              -- Ingresos del mes actual
-              COALESCE((
-                  SELECT SUM(cu2.monto_total) 
-                  FROM cargo_financiero_unidad cu2 
-                  WHERE cu2.comunidad_id = com.id 
-                  AND MONTH(cu2.created_at) = MONTH(CURDATE()) 
-                  AND YEAR(cu2.created_at) = YEAR(CURDATE())
-              ), 0) as ingresos_mensuales,
-              -- Gastos del mes actual  
-              COALESCE((
-                  SELECT SUM(monto) 
-                  FROM gasto g2 
-                  WHERE g2.comunidad_id = com.id 
-                  AND MONTH(g2.fecha) = MONTH(CURDATE()) 
-                  AND YEAR(g2.fecha) = YEAR(CURDATE())
-              ), 0) as gastos_mensuales
-          FROM comunidad com
-          LEFT JOIN unidad u ON u.comunidad_id = com.id
-          LEFT JOIN usuario_rol_comunidad ucr ON ucr.comunidad_id = com.id
-          LEFT JOIN rol_sistema r ON r.id = ucr.rol_id
-          LEFT JOIN cuenta_cobro_unidad cu ON cu.comunidad_id = com.id
-          GROUP BY com.id
-      ) stats ON stats.comunidad_id = c.id
+              comunidad_id,
+              COUNT(*) AS total,
+              SUM(CASE WHEN activa = 1 THEN 1 ELSE 0 END) AS ocupadas
+          FROM unidad
+          GROUP BY comunidad_id
+      ) AS unidades ON c.id = unidades.comunidad_id
+      LEFT JOIN (
+          SELECT 
+              tu.comunidad_id,
+              COUNT(DISTINCT tu.persona_id) AS total
+          FROM titulares_unidad tu
+          WHERE tu.hasta IS NULL OR tu.hasta > CURDATE()
+          GROUP BY tu.comunidad_id
+      ) AS residentes ON c.id = residentes.comunidad_id
+      LEFT JOIN (
+          SELECT 
+              ccu.comunidad_id,
+              SUM(ccu.saldo) AS saldo_pendiente,
+              CASE 
+                  WHEN COUNT(ccu.id) > 0 
+                  THEN (SUM(CASE WHEN ccu.estado = 'vencido' THEN 1 ELSE 0 END) * 100.0 / COUNT(ccu.id))
+                  ELSE 0 
+              END AS morosidad
+          FROM cuenta_cobro_unidad ccu
+          GROUP BY ccu.comunidad_id
+      ) AS finanzas ON c.id = finanzas.comunidad_id
       WHERE 1=1`;
     
     const params = [];
     
+    // Filtro por usuario (sección 1.2 del SQL) - Si no es superadmin
+    if (!req.user.is_superadmin) {
+      query += ` AND c.id IN (
+        SELECT urc.comunidad_id 
+        FROM usuario_rol_comunidad urc
+        WHERE urc.usuario_id = ?
+        AND urc.activo = 1
+        AND (urc.hasta IS NULL OR urc.hasta > CURDATE())
+      )`;
+      params.push(userId);
+    }
+    
+    // Filtros adicionales (sección 13.1 y 13.2 del SQL)
     if (nombre) {
-      query += ` AND c.razon_social LIKE CONCAT('%', ?, '%')`;
-      params.push(nombre);
+      query += ` AND c.razon_social LIKE ?`;
+      params.push(`%${nombre}%`);
     }
     
     if (direccion) {
-      query += ` AND c.direccion LIKE CONCAT('%', ?, '%')`;
-      params.push(direccion);
+      query += ` AND c.direccion LIKE ?`;
+      params.push(`%${direccion}%`);
     }
     
-    query += ` ORDER BY c.razon_social ASC LIMIT 200`;
+    if (rut) {
+      query += ` AND c.rut = ?`;
+      params.push(rut);
+    }
+    
+    query += ` ORDER BY c.razon_social`;
     
     const [rows] = await db.query(query, params);
     res.json(rows);
@@ -120,52 +138,11 @@ router.get('/', authenticate, async (req, res) => {
 
 /**
  * @openapi
- * /comunidades:
- *   post:
- *     tags: [Comunidades]
- *     summary: Crear comunidad
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [razon_social, rut, dv]
- *             properties:
- *               razon_social:
- *                 type: string
- *               rut:
- *                 type: string
- *               dv:
- *                 type: string
- *               giro:
- *                 type: string
- *     responses:
- *       201:
- *         description: Created
- */
-router.post('/', [authenticate, authorize('admin','superadmin'), body('razon_social').notEmpty(), body('rut').notEmpty(), body('dv').notEmpty()], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const { razon_social, rut, dv, giro, direccion, email_contacto, telefono_contacto } = req.body;
-  try {
-    const [result] = await db.query('INSERT INTO comunidad (razon_social, rut, dv, giro, direccion, email_contacto, telefono_contacto) VALUES (?,?,?,?,?,?,?)', [razon_social, rut, dv, giro || null, direccion || null, email_contacto || null, telefono_contacto || null]);
-    const [row] = await db.query('SELECT id, razon_social, rut, dv FROM comunidad WHERE id = ? LIMIT 1', [result.insertId]);
-    res.status(201).json(row[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-/**
- * @openapi
  * /comunidades/{id}:
  *   get:
  *     tags: [Comunidades]
- *     summary: Obtener comunidad por id con información completa
+ *     summary: Obtener detalle completo de una comunidad
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 2.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -176,66 +153,62 @@ router.post('/', [authenticate, authorize('admin','superadmin'), body('razon_soc
  *         required: true
  *     responses:
  *       200:
- *         description: Comunidad con información completa
+ *         description: Información completa de la comunidad
+ *       404:
+ *         description: Comunidad no encontrada
  */
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 2.1
     const query = `
       SELECT 
           c.id,
-          c.razon_social as nombre,
+          c.razon_social AS nombre,
           c.rut,
           c.dv,
-          c.giro,
+          c.giro AS descripcion,
           c.direccion,
-          c.email_contacto as email,
-          c.telefono_contacto as telefono,
+          c.email_contacto AS email,
+          c.telefono_contacto AS telefono,
+          c.created_at AS fechaCreacion,
+          c.updated_at AS fechaActualizacion,
           c.moneda,
-          c.tz as zona_horaria,
-          c.politica_mora_json,
-          c.created_at as fechaCreacion,
-          c.updated_at as fechaActualizacion,
-          
-          -- Contador de unidades
-          (SELECT COUNT(*) 
-           FROM unidad u 
-           WHERE u.comunidad_id = c.id) as totalUnidades,
-           
-          (SELECT COUNT(*) 
-           FROM unidad u 
-           WHERE u.comunidad_id = c.id AND u.activa = 1) as unidadesActivas,
-           
-          -- Contador de residentes activos
-          (SELECT COUNT(DISTINCT ucr.usuario_id) 
-           FROM usuario_rol_comunidad ucr
-           INNER JOIN rol_sistema r ON r.id = ucr.rol_id
-           WHERE ucr.comunidad_id = c.id 
-           AND ucr.activo = 1 
-           AND r.codigo IN ('residente', 'propietario')) as totalResidentes,
-           
-          -- Contador de edificios
-          (SELECT COUNT(*) 
-           FROM edificio e 
-           WHERE e.comunidad_id = c.id) as totalEdificios,
-           
-          -- Contador de amenidades
-          (SELECT COUNT(*) 
-           FROM amenidad a 
-           WHERE a.comunidad_id = c.id) as totalAmenidades,
-           
-          -- Saldo pendiente
-          (SELECT COALESCE(SUM(cu.saldo), 0) 
-           FROM cuenta_cobro_unidad cu 
-           WHERE cu.comunidad_id = c.id 
-           AND cu.estado IN ('pendiente', 'parcial')) as saldoPendiente
-
+          c.tz AS zonaHoraria,
+          -- Estadísticas
+          COALESCE(unidades.total, 0) AS totalUnidades,
+          COALESCE(unidades.ocupadas, 0) AS unidadesOcupadas,
+          COALESCE(residentes.total, 0) AS totalResidentes,
+          COALESCE(finanzas.saldo_pendiente, 0) AS saldoPendiente,
+          COALESCE(finanzas.morosidad, 0) AS morosidad
       FROM comunidad c
+      LEFT JOIN (
+          SELECT comunidad_id, COUNT(*) AS total, 
+                 SUM(CASE WHEN activa = 1 THEN 1 ELSE 0 END) AS ocupadas
+          FROM unidad GROUP BY comunidad_id
+      ) AS unidades ON c.id = unidades.comunidad_id
+      LEFT JOIN (
+          SELECT tu.comunidad_id, COUNT(DISTINCT tu.persona_id) AS total
+          FROM titulares_unidad tu
+          WHERE tu.hasta IS NULL OR tu.hasta > CURDATE()
+          GROUP BY tu.comunidad_id
+      ) AS residentes ON c.id = residentes.comunidad_id
+      LEFT JOIN (
+          SELECT ccu.comunidad_id, SUM(ccu.saldo) AS saldo_pendiente,
+                 CASE WHEN COUNT(ccu.id) > 0 
+                      THEN (SUM(CASE WHEN ccu.estado = 'vencido' THEN 1 ELSE 0 END) * 100.0 / COUNT(ccu.id))
+                      ELSE 0 END AS morosidad
+          FROM cuenta_cobro_unidad ccu
+          GROUP BY ccu.comunidad_id
+      ) AS finanzas ON c.id = finanzas.comunidad_id
       WHERE c.id = ?`;
     
     const [rows] = await db.query(query, [id]);
-    if (!rows.length) return res.status(404).json({ error: 'Comunidad no encontrada' });
+    
+    if (!rows.length) {
+      return res.status(404).json({ error: 'Comunidad no encontrada' });
+    }
     
     res.json(rows[0]);
   } catch (err) {
@@ -246,267 +219,11 @@ router.get('/:id', authenticate, async (req, res) => {
 
 /**
  * @openapi
- * /comunidades/{id}:
- *   patch:
- *     tags: [Comunidades]
- *     summary: Actualizar comunidad parcialmente
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *     responses:
- *       200:
- *         description: Updated
- */
-router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => {
-  const id = req.params.id;
-  const fields = ['razon_social','rut','dv','giro','direccion','email_contacto','telefono_contacto','moneda','tz'];
-  const updates = [];
-  const values = [];
-  fields.forEach(f => { if (req.body[f] !== undefined) { updates.push(`${f} = ?`); values.push(req.body[f]); } });
-  if (!updates.length) return res.status(400).json({ error: 'no fields' });
-  values.push(id);
-  try {
-    await db.query(`UPDATE comunidad SET ${updates.join(', ')} WHERE id = ?`, values);
-    const [rows] = await db.query('SELECT id, razon_social, rut, dv FROM comunidad WHERE id = ? LIMIT 1', [id]);
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-/**
- * @openapi
- * /comunidades/{id}:
- *   delete:
- *     tags: [Comunidades]
- *     summary: Eliminar comunidad
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *     responses:
- *       204:
- *         description: No Content
- */
-router.delete('/:id', authenticate, authorize('superadmin'), async (req, res) => {
-  const id = req.params.id;
-  try {
-    await db.query('DELETE FROM comunidad WHERE id = ?', [id]);
-    res.status(204).end();
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-/**
- * @openapi
- * /comunidades/{id}/dashboard:
- *   get:
- *     tags: [Comunidades]
- *     summary: Obtener dashboard completo de una comunidad
- *     description: Retorna información consolidada para el dashboard incluyendo estadísticas financieras, unidades, residentes y alertas
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *     responses:
- *       200:
- *         description: Dashboard de la comunidad
- */
-router.get('/:id/dashboard', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
-    
-    // Obtener información básica de la comunidad
-    const [comunidad] = await db.query(`
-      SELECT 
-        c.id,
-        c.razon_social as nombre,
-        c.direccion,
-        c.email_contacto as email,
-        c.telefono_contacto as telefono,
-        c.moneda
-      FROM comunidad c
-      WHERE c.id = ?
-      LIMIT 1
-    `, [id]);
-    
-    if (!comunidad.length) {
-      return res.status(404).json({ error: 'Comunidad no encontrada' });
-    }
-    
-    // Obtener estadísticas de unidades
-    const [unidades] = await db.query(`
-      SELECT 
-        COUNT(*) as total,
-        COUNT(CASE WHEN activa = 1 THEN 1 END) as activas,
-        COUNT(CASE WHEN activa = 0 THEN 1 END) as inactivas
-      FROM unidad u
-      INNER JOIN edificio e ON e.id = u.edificio_id
-      WHERE e.comunidad_id = ?
-    `, [id]);
-    
-    // Obtener estadísticas de residentes
-    const [residentes] = await db.query(`
-      SELECT 
-        COUNT(DISTINCT ucr.usuario_id) as total,
-        COUNT(DISTINCT CASE WHEN r.codigo = 'propietario' AND ucr.activo = 1 THEN ucr.usuario_id END) as propietarios,
-        COUNT(DISTINCT CASE WHEN r.codigo = 'residente' AND ucr.activo = 1 THEN ucr.usuario_id END) as residentes,
-        COUNT(DISTINCT CASE WHEN r.codigo IN ('admin', 'comite') AND ucr.activo = 1 THEN ucr.usuario_id END) as administradores
-      FROM usuario_rol_comunidad ucr
-      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
-      WHERE ucr.comunidad_id = ?
-    `, [id]);
-    
-    // Obtener estadísticas financieras del mes actual
-    const [finanzas] = await db.query(`
-      SELECT 
-        -- Ingresos del mes
-        COALESCE((
-          SELECT SUM(cu.monto_total)
-          FROM cargo_financiero_unidad cu
-          INNER JOIN unidad u ON u.id = cu.unidad_id
-          INNER JOIN edificio e ON e.id = u.edificio_id
-          WHERE e.comunidad_id = ?
-            AND MONTH(cu.created_at) = MONTH(CURDATE())
-            AND YEAR(cu.created_at) = YEAR(CURDATE())
-        ), 0) as ingresosMes,
-        
-        -- Ingresos cobrados
-        COALESCE((
-          SELECT SUM(cu.monto_total - cu.saldo)
-          FROM cargo_financiero_unidad cu
-          INNER JOIN unidad u ON u.id = cu.unidad_id
-          INNER JOIN edificio e ON e.id = u.edificio_id
-          WHERE e.comunidad_id = ?
-            AND MONTH(cu.created_at) = MONTH(CURDATE())
-            AND YEAR(cu.created_at) = YEAR(CURDATE())
-        ), 0) as ingresosCobrados,
-        
-        -- Gastos del mes
-        COALESCE((
-          SELECT SUM(g.monto)
-          FROM gasto g
-          WHERE g.comunidad_id = ?
-            AND MONTH(g.fecha) = MONTH(CURDATE())
-            AND YEAR(g.fecha) = YEAR(CURDATE())
-        ), 0) as gastosMes,
-        
-        -- Saldo pendiente total
-        COALESCE((
-          SELECT SUM(cu.saldo)
-          FROM cargo_financiero_unidad cu
-          INNER JOIN unidad u ON u.id = cu.unidad_id
-          INNER JOIN edificio e ON e.id = u.edificio_id
-          WHERE e.comunidad_id = ?
-            AND cu.estado IN ('pendiente', 'parcial')
-        ), 0) as saldoPendiente
-    `, [id, id, id, id]);
-    
-    // Obtener cargos pendientes (top 5)
-    const [cargosPendientes] = await db.query(`
-      SELECT 
-        cu.id,
-        CONCAT(e.nombre, ' - ', u.codigo) as unidad,
-        cu.monto_total as monto,
-        cu.saldo,
-        cu.estado,
-        cu.created_at as fechaEmision,
-        cu.updated_at as fechaActualizacion,
-        DATEDIFF(CURDATE(), cu.created_at) as diasDesdeCreacion
-      FROM cargo_financiero_unidad cu
-      INNER JOIN unidad u ON u.id = cu.unidad_id
-      INNER JOIN edificio e ON e.id = u.edificio_id
-      WHERE e.comunidad_id = ?
-        AND cu.estado IN ('pendiente', 'parcial')
-      ORDER BY cu.created_at DESC
-      LIMIT 5
-    `, [id]);
-    
-    // Obtener actividad reciente (últimos 5 pagos)
-    const [actividadReciente] = await db.query(`
-      SELECT 
-        p.id,
-        CONCAT(e.nombre, ' - ', u.codigo) as unidad,
-        p.monto,
-        p.fecha as fecha,
-        'Pago recibido' as tipo,
-        p.medio as metodo
-      FROM pago p
-      INNER JOIN unidad u ON u.id = p.unidad_id
-      INNER JOIN edificio e ON e.id = u.edificio_id
-      WHERE e.comunidad_id = ?
-      ORDER BY p.fecha DESC
-      LIMIT 5
-    `, [id]);
-    
-    // Construir respuesta del dashboard
-    const dashboard = {
-      comunidad: comunidad[0],
-      resumen: {
-        unidades: {
-          total: unidades[0]?.total || 0,
-          activas: unidades[0]?.activas || 0,
-          inactivas: unidades[0]?.inactivas || 0
-        },
-        residentes: {
-          total: residentes[0]?.total || 0,
-          propietarios: residentes[0]?.propietarios || 0,
-          residentes: residentes[0]?.residentes || 0,
-          administradores: residentes[0]?.administradores || 0
-        },
-        finanzas: {
-          ingresosMes: parseFloat(finanzas[0]?.ingresosMes || 0),
-          ingresosCobrados: parseFloat(finanzas[0]?.ingresosCobrados || 0),
-          gastosMes: parseFloat(finanzas[0]?.gastosMes || 0),
-          saldoPendiente: parseFloat(finanzas[0]?.saldoPendiente || 0),
-          balanceMes: parseFloat(finanzas[0]?.ingresosCobrados || 0) - parseFloat(finanzas[0]?.gastosMes || 0)
-        }
-      },
-      cargosPendientes: cargosPendientes.map(c => ({
-        ...c,
-        monto: parseFloat(c.monto),
-        saldo: parseFloat(c.saldo)
-      })),
-      actividadReciente: actividadReciente.map(a => ({
-        ...a,
-        monto: parseFloat(a.monto)
-      }))
-    };
-    
-    res.json(dashboard);
-  } catch (err) {
-    console.error('Error fetching dashboard:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-/**
- * @openapi
  * /comunidades/{id}/amenidades:
  *   get:
  *     tags: [Comunidades]
  *     summary: Obtener amenidades de una comunidad
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 3.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -523,19 +240,21 @@ router.get('/:id/amenidades', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 3.1
     const query = `
       SELECT 
           a.id,
           a.nombre,
-          a.reglas as descripcion,
+          a.reglas AS descripcion,
           CASE 
-              WHEN a.requiere_aprobacion = 1 THEN 'Mantenimiento'
+              WHEN a.requiere_aprobacion = 1 THEN 'Requiere Aprobación'
               ELSE 'Disponible'
-          END as estado,
-          TIME_FORMAT(a.created_at, '%H:%i') as horarioInicio,
-          TIME_FORMAT(DATE_ADD(a.created_at, INTERVAL 8 HOUR), '%H:%i') as horarioFin,
-          a.requiere_aprobacion as requiereReserva,
-          a.tarifa as costoReserva
+          END AS estado,
+          a.requiere_aprobacion AS requiereReserva,
+          a.tarifa AS costoReserva,
+          a.capacidad,
+          a.created_at,
+          a.updated_at
       FROM amenidad a
       WHERE a.comunidad_id = ?
       ORDER BY a.nombre`;
@@ -554,6 +273,7 @@ router.get('/:id/amenidades', authenticate, async (req, res) => {
  *   get:
  *     tags: [Comunidades]
  *     summary: Obtener edificios de una comunidad
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 4.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -564,21 +284,26 @@ router.get('/:id/amenidades', authenticate, async (req, res) => {
  *         required: true
  *     responses:
  *       200:
- *         description: Lista de edificios
+ *         description: Lista de edificios con conteo de unidades
  */
 router.get('/:id/edificios', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 4.1
     const query = `
       SELECT 
           e.id,
           e.nombre,
-          e.direccion,
           e.codigo,
-          e.created_at as fechaCreacion
+          e.direccion,
+          COUNT(u.id) AS totalUnidades,
+          e.created_at,
+          e.updated_at
       FROM edificio e
+      LEFT JOIN unidad u ON e.id = u.edificio_id
       WHERE e.comunidad_id = ?
+      GROUP BY e.id, e.nombre, e.codigo, e.direccion, e.created_at, e.updated_at
       ORDER BY e.nombre`;
     
     const [rows] = await db.query(query, [id]);
@@ -595,6 +320,9 @@ router.get('/:id/edificios', authenticate, async (req, res) => {
  *   get:
  *     tags: [Comunidades]
  *     summary: Obtener contactos de una comunidad
+ *     description: |
+ *       Retorna usuarios con acceso a la comunidad (administradores, comité, etc.)
+ *       Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 5.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -611,16 +339,24 @@ router.get('/:id/contactos', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 5.1
     const query = `
       SELECT 
-          1 as id,
-          'Administración' as nombre,
-          'Administrador' as cargo,
-          c.telefono_contacto as telefono,
-          c.email_contacto as email,
-          1 as esContactoPrincipal
-      FROM comunidad c
-      WHERE c.id = ?`;
+          p.id,
+          CONCAT(p.nombres, ' ', p.apellidos) AS nombre,
+          p.telefono,
+          p.email,
+          u.username,
+          r.nombre AS rol
+      FROM persona p
+      INNER JOIN usuario u ON p.id = u.persona_id
+      INNER JOIN usuario_rol_comunidad urc ON u.id = urc.usuario_id
+      LEFT JOIN rol_sistema r ON urc.rol_id = r.id
+      WHERE urc.comunidad_id = ?
+      AND urc.activo = 1
+      AND u.activo = 1
+      AND (urc.hasta IS NULL OR urc.hasta > CURDATE())
+      ORDER BY p.apellidos, p.nombres`;
     
     const [rows] = await db.query(query, [id]);
     res.json(rows);
@@ -636,6 +372,7 @@ router.get('/:id/contactos', authenticate, async (req, res) => {
  *   get:
  *     tags: [Comunidades]
  *     summary: Obtener documentos de una comunidad
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 6.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -652,18 +389,20 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 6.1
     const query = `
       SELECT 
-          d.id,
-          d.titulo as nombre,
-          d.tipo,
-          d.url,
-          d.periodo,
-          d.visibilidad,
-          d.created_at as fechaSubida
-      FROM documento_comunidad d
-      WHERE d.comunidad_id = ?
-      ORDER BY d.created_at DESC`;
+          dc.id,
+          dc.titulo AS nombre,
+          dc.tipo,
+          dc.url,
+          dc.created_at AS fechaSubida,
+          0 AS tamano,
+          dc.periodo,
+          dc.visibilidad
+      FROM documento_comunidad dc
+      WHERE dc.comunidad_id = ?
+      ORDER BY dc.created_at DESC`;
     
     const [rows] = await db.query(query, [id]);
     res.json(rows);
@@ -678,7 +417,11 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
  * /comunidades/{id}/residentes:
  *   get:
  *     tags: [Comunidades]
- *     summary: Obtener residentes de una comunidad
+ *     summary: Obtener residentes activos de una comunidad
+ *     description: |
+ *       Retorna personas con titularidad activa en unidades de la comunidad.
+ *       Incluye propietarios y arrendatarios vigentes.
+ *       Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 7.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -689,45 +432,131 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
  *         required: true
  *     responses:
  *       200:
- *         description: Lista de residentes
+ *         description: Lista de residentes con información de unidad
  */
-// Alias para compatibilidad
-router.get('/:id/miembros', authenticate, async (req, res) => {
-  req.url = req.url.replace('/miembros', '/residentes');
-  return router.handle(req, res);
-});
-
 router.get('/:id/residentes', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 7.1
     const query = `
-      SELECT 
+      SELECT DISTINCT
           p.id,
-          CONCAT(p.nombres, ' ', p.apellidos) as nombre,
-          COALESCE(CONCAT(e.nombre, '-', u.codigo), 'Sin unidad') as unidad,
-          r.codigo as tipo,
-          tu.tipo as tipo_tenencia,
-          p.telefono,
+          p.rut,
+          p.dv,
+          CONCAT(p.nombres, ' ', p.apellidos) AS nombreCompleto,
+          p.nombres,
+          p.apellidos,
           p.email,
-          CASE 
-              WHEN ucr.activo = 1 THEN 'Activo'
-              ELSE 'Inactivo'
-          END as estado
+          p.telefono,
+          u.codigo AS unidad,
+          tu.tipo AS tipoResidente,
+          tu.desde AS fechaIngreso,
+          tu.porcentaje,
+          p.created_at,
+          p.updated_at
       FROM persona p
-      INNER JOIN usuario u_table ON u_table.persona_id = p.id
-      INNER JOIN usuario_rol_comunidad ucr ON ucr.usuario_id = u_table.id
-      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
-      LEFT JOIN titulares_unidad tu ON tu.persona_id = p.id AND tu.comunidad_id = ucr.comunidad_id
-      LEFT JOIN unidad u ON u.id = tu.unidad_id
-      LEFT JOIN edificio e ON e.id = u.edificio_id
-      WHERE ucr.comunidad_id = ?
-      ORDER BY r.nivel_acceso, p.apellidos, p.nombres`;
+      INNER JOIN titulares_unidad tu ON p.id = tu.persona_id
+      INNER JOIN unidad u ON tu.unidad_id = u.id
+      WHERE tu.comunidad_id = ?
+      AND (tu.hasta IS NULL OR tu.hasta > CURDATE())
+      ORDER BY p.apellidos, p.nombres`;
     
     const [rows] = await db.query(query, [id]);
     res.json(rows);
   } catch (err) {
     console.error('Error fetching residents:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Alias para compatibilidad con código legacy
+/**
+ * @openapi
+ * /comunidades/{id}/miembros:
+ *   get:
+ *     tags: [Comunidades]
+ *     summary: Obtener miembros de una comunidad
+ *     description: Lista todos los miembros activos de una comunidad con sus roles
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la comunidad
+ *     responses:
+ *       200:
+ *         description: Lista de miembros
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   comunidad_id:
+ *                     type: integer
+ *                   usuario_id:
+ *                     type: integer
+ *                   persona_id:
+ *                     type: integer
+ *                   rol:
+ *                     type: string
+ *                   rol_nombre:
+ *                     type: string
+ *                   nivel_acceso:
+ *                     type: integer
+ *                   desde:
+ *                     type: string
+ *                     format: date
+ *                   hasta:
+ *                     type: string
+ *                     format: date
+ *                     nullable: true
+ *                   activo:
+ *                     type: boolean
+ *       404:
+ *         description: Comunidad no encontrada
+ */
+router.get('/:id/miembros', authenticate, async (req, res) => {
+  try {
+    const comunidadId = req.params.id;
+    
+    const query = `
+      SELECT 
+        urc.id,
+        urc.comunidad_id,
+        urc.usuario_id,
+        u.persona_id,
+        r.codigo AS rol,
+        r.nombre AS rol_nombre,
+        r.nivel_acceso,
+        urc.desde,
+        urc.hasta,
+        urc.activo
+      FROM usuario_rol_comunidad urc
+      INNER JOIN usuario u ON urc.usuario_id = u.id
+      LEFT JOIN rol_sistema r ON urc.rol_id = r.id
+      WHERE urc.comunidad_id = ?
+      ORDER BY r.nivel_acceso DESC, u.persona_id
+    `;
+    
+    const [rows] = await db.query(query, [comunidadId]);
+    
+    // Convertir activo a boolean
+    const miembros = rows.map(row => ({
+      ...row,
+      activo: Boolean(row.activo)
+    }));
+    
+    res.json(miembros);
+  } catch (err) {
+    console.error('Error fetching miembros:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -738,6 +567,7 @@ router.get('/:id/residentes', authenticate, async (req, res) => {
  *   get:
  *     tags: [Comunidades]
  *     summary: Obtener parámetros de cobranza de una comunidad
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 8.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -749,33 +579,37 @@ router.get('/:id/residentes', authenticate, async (req, res) => {
  *     responses:
  *       200:
  *         description: Parámetros de cobranza
+ *       404:
+ *         description: No se encontraron parámetros
  */
 router.get('/:id/parametros', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 8.1
     const query = `
       SELECT 
-          ci.id,
-          ci.comunidad_id as comunidadId,
-          ci.aplica_desde,
-          ci.tasa_mensual as tasaMora,
-          ci.metodo as calculoInteres,
-          COALESCE(ci.tope_mensual, 50.0) as interesMaximo,
-          'capital' as aplicacionInteres,
-          'normal' as tipoRedondeo,
-          'antiguos' as politicaPago,
-          'interes-capital' as ordenAplicacion,
-          5 as diaEmision,
-          25 as diaVencimiento,
-          1 as notificacionesAuto,
-          ci.created_at as fechaCreacion,
-          ci.updated_at as fechaActualizacion
-      FROM configuracion_interes ci
-      WHERE ci.comunidad_id = ?`;
+          pc.id,
+          pc.comunidad_id,
+          pc.dias_gracia AS diasGracia,
+          pc.tasa_mora_mensual AS tasaMora,
+          pc.mora_calculo AS calculoInteres,
+          pc.interes_max_mensual AS interesMaximo,
+          pc.aplica_interes_sobre AS aplicacionInteres,
+          pc.redondeo AS tipoRedondeo,
+          pc.created_at,
+          pc.updated_at
+      FROM parametros_cobranza pc
+      WHERE pc.comunidad_id = ?
+      LIMIT 1`;
     
     const [rows] = await db.query(query, [id]);
-    res.json(rows.length ? rows[0] : null);
+    
+    if (!rows.length) {
+      return res.status(404).json({ error: 'Parámetros no encontrados' });
+    }
+    
+    res.json(rows[0]);
   } catch (err) {
     console.error('Error fetching parameters:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -788,6 +622,9 @@ router.get('/:id/parametros', authenticate, async (req, res) => {
  *   get:
  *     tags: [Comunidades]
  *     summary: Obtener estadísticas financieras de una comunidad
+ *     description: |
+ *       Retorna resumen de ingresos totales, pagados y pendientes.
+ *       Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 9.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -798,57 +635,26 @@ router.get('/:id/parametros', authenticate, async (req, res) => {
  *         required: true
  *     responses:
  *       200:
- *         description: Estadísticas financieras del mes actual
+ *         description: Estadísticas financieras
  */
 router.get('/:id/estadisticas', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 9.1
     const query = `
       SELECT 
-          -- Ingresos totales del mes actual
-          SUM(cu.monto_total) as totalIngresos,
-          SUM(CASE WHEN cu.estado = 'pagado' THEN cu.monto_total ELSE 0 END) as ingresosPagados,
-          SUM(CASE WHEN cu.estado IN ('pendiente', 'parcial') THEN cu.saldo ELSE 0 END) as ingresosPendientes,
-          
-          -- Gastos por tipo del mes actual
-          COALESCE((SELECT SUM(g2.monto) 
-                    FROM gasto g2 
-                    INNER JOIN categoria_gasto gc2 ON g2.categoria_id = gc2.id
-                    WHERE g2.comunidad_id = ? 
-                    AND gc2.nombre = 'Servicios Básicos'
-                    AND MONTH(g2.fecha) = MONTH(CURDATE()) 
-                    AND YEAR(g2.fecha) = YEAR(CURDATE())), 0) as serviciosBasicos,
-                    
-          COALESCE((SELECT SUM(g3.monto) 
-                    FROM gasto g3 
-                    INNER JOIN categoria_gasto gc3 ON g3.categoria_id = gc3.id
-                    WHERE g3.comunidad_id = ? 
-                    AND gc3.nombre = 'Mantenimiento'
-                    AND MONTH(g3.fecha) = MONTH(CURDATE()) 
-                    AND YEAR(g3.fecha) = YEAR(CURDATE())), 0) as mantenimiento,
-                    
-          COALESCE((SELECT SUM(g4.monto) 
-                    FROM gasto g4 
-                    INNER JOIN categoria_gasto gc4 ON g4.categoria_id = gc4.id
-                    WHERE g4.comunidad_id = ? 
-                    AND gc4.nombre = 'Administración'
-                    AND MONTH(g4.fecha) = MONTH(CURDATE()) 
-                    AND YEAR(g4.fecha) = YEAR(CURDATE())), 0) as administracion
-          
-      FROM cargo_financiero_unidad cu
-      WHERE cu.comunidad_id = ?
-          AND MONTH(cu.created_at) = MONTH(CURDATE()) 
-          AND YEAR(cu.created_at) = YEAR(CURDATE())`;
+          COALESCE(SUM(ccu.monto_total), 0) AS totalIngresos,
+          COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) AS ingresosPagados,
+          COALESCE(SUM(ccu.saldo), 0) AS ingresosPendientes
+      FROM cuenta_cobro_unidad ccu
+      WHERE ccu.comunidad_id = ?`;
     
-    const [rows] = await db.query(query, [id, id, id, id]);
-    res.json(rows.length ? rows[0] : {
+    const [rows] = await db.query(query, [id]);
+    res.json(rows[0] || {
       totalIngresos: 0,
       ingresosPagados: 0,
-      ingresosPendientes: 0,
-      serviciosBasicos: 0,
-      mantenimiento: 0,
-      administracion: 0
+      ingresosPendientes: 0
     });
   } catch (err) {
     console.error('Error fetching statistics:', err);
@@ -861,7 +667,10 @@ router.get('/:id/estadisticas', authenticate, async (req, res) => {
  * /comunidades/{id}/flujo-caja:
  *   get:
  *     tags: [Comunidades]
- *     summary: Obtener flujo de caja de los últimos 6 meses
+ *     summary: Obtener flujo de caja de una comunidad (últimos 12 meses)
+ *     description: |
+ *       Retorna resumen mensual de cuentas de cobro por periodo.
+ *       Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 10.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -878,42 +687,360 @@ router.get('/:id/flujo-caja', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 10.1
     const query = `
       SELECT 
-          DATE_FORMAT(mes.fecha, '%Y-%m') as mes,
-          COALESCE(ingresos.total, 0) as ingresos,
-          COALESCE(gastos.total, 0) as gastos,
-          (COALESCE(ingresos.total, 0) - COALESCE(gastos.total, 0)) as flujoNeto
-      FROM (
-          SELECT DATE_SUB(CURDATE(), INTERVAL n MONTH) as fecha
-          FROM (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) meses
-      ) mes
-      LEFT JOIN (
-          SELECT 
-              DATE_FORMAT(cu.created_at, '%Y-%m') as mes,
-              SUM(cu.monto_total) as total
-          FROM cargo_financiero_unidad cu
-          INNER JOIN unidad u ON u.id = cu.unidad_id
-          INNER JOIN edificio e ON e.id = u.edificio_id
-          WHERE e.comunidad_id = ?
-              AND cu.created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-          GROUP BY DATE_FORMAT(cu.created_at, '%Y-%m')
-      ) ingresos ON DATE_FORMAT(mes.fecha, '%Y-%m') = ingresos.mes
-      LEFT JOIN (
-          SELECT 
-              DATE_FORMAT(g.fecha, '%Y-%m') as mes,
-              SUM(g.monto) as total
-          FROM gasto g
-          WHERE g.comunidad_id = ?
-              AND g.fecha >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-          GROUP BY DATE_FORMAT(g.fecha, '%Y-%m')
-      ) gastos ON DATE_FORMAT(mes.fecha, '%Y-%m') = gastos.mes
-      ORDER BY mes.fecha`;
+          e.periodo,
+          e.fecha_vencimiento AS fecha,
+          COUNT(ccu.id) AS totalCuentas,
+          SUM(ccu.monto_total) AS montoTotal,
+          SUM(ccu.saldo) AS saldoPendiente,
+          SUM(ccu.monto_total - ccu.saldo) AS montoPagado
+      FROM emision_gastos_comunes e
+      LEFT JOIN cuenta_cobro_unidad ccu ON e.id = ccu.emision_id
+      WHERE e.comunidad_id = ?
+      AND e.estado != 'anulado'
+      GROUP BY e.periodo, e.fecha_vencimiento
+      ORDER BY e.periodo DESC
+      LIMIT 12`;
     
-    const [rows] = await db.query(query, [id, id]);
+    const [rows] = await db.query(query, [id]);
     res.json(rows);
   } catch (err) {
     console.error('Error fetching cash flow:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * @openapi
+ * /comunidades:
+ *   post:
+ *     tags: [Comunidades]
+ *     summary: Crear nueva comunidad
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 11.1
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [razon_social, rut, dv]
+ *             properties:
+ *               razon_social:
+ *                 type: string
+ *                 description: Nombre o razón social de la comunidad
+ *               rut:
+ *                 type: string
+ *                 description: RUT de la comunidad
+ *               dv:
+ *                 type: string
+ *                 description: Dígito verificador
+ *               giro:
+ *                 type: string
+ *                 description: Giro o descripción
+ *               direccion:
+ *                 type: string
+ *               email_contacto:
+ *                 type: string
+ *               telefono_contacto:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Comunidad creada exitosamente
+ *       400:
+ *         description: Datos inválidos
+ */
+router.post('/', [
+  authenticate,
+  authorize('admin', 'superadmin'),
+  body('razon_social').notEmpty().withMessage('Razón social es requerida'),
+  body('rut').notEmpty().withMessage('RUT es requerido'),
+  body('dv').notEmpty().withMessage('Dígito verificador es requerido')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  
+  try {
+    const {
+      razon_social,
+      rut,
+      dv,
+      giro,
+      direccion,
+      email_contacto,
+      telefono_contacto
+    } = req.body;
+    
+    const userId = req.user.id;
+    
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 11.1
+    const query = `
+      INSERT INTO comunidad (
+          razon_social,
+          rut,
+          dv,
+          giro,
+          direccion,
+          email_contacto,
+          telefono_contacto,
+          moneda,
+          tz,
+          created_by,
+          created_at,
+          updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'CLP', 'America/Santiago', ?, NOW(), NOW())`;
+    
+    const [result] = await db.query(query, [
+      razon_social,
+      rut,
+      dv,
+      giro || null,
+      direccion || null,
+      email_contacto || null,
+      telefono_contacto || null,
+      userId
+    ]);
+    
+    // Retornar la comunidad creada
+    const [row] = await db.query(
+      'SELECT id, razon_social, rut, dv FROM comunidad WHERE id = ? LIMIT 1',
+      [result.insertId]
+    );
+    
+    res.status(201).json(row[0]);
+  } catch (err) {
+    console.error('Error creating community:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * @openapi
+ * /comunidades/{id}:
+ *   patch:
+ *     tags: [Comunidades]
+ *     summary: Actualizar comunidad
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 11.2
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               razon_social:
+ *                 type: string
+ *               rut:
+ *                 type: string
+ *               dv:
+ *                 type: string
+ *               giro:
+ *                 type: string
+ *               direccion:
+ *                 type: string
+ *               email_contacto:
+ *                 type: string
+ *               telefono_contacto:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Comunidad actualizada
+ *       400:
+ *         description: Sin campos para actualizar
+ */
+router.patch('/:id', [
+  authenticate,
+  authorize('admin', 'superadmin')
+], async (req, res) => {
+  try {
+    const id = req.params.id;
+    const userId = req.user.id;
+    
+    const allowedFields = [
+      'razon_social',
+      'rut',
+      'dv',
+      'giro',
+      'direccion',
+      'email_contacto',
+      'telefono_contacto'
+    ];
+    
+    const updates = [];
+    const values = [];
+    
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updates.push(`${field} = ?`);
+        values.push(req.body[field]);
+      }
+    });
+    
+    if (!updates.length) {
+      return res.status(400).json({ error: 'No hay campos para actualizar' });
+    }
+    
+    // Agregar updated_at y updated_by
+    updates.push('updated_at = NOW()');
+    updates.push('updated_by = ?');
+    values.push(userId);
+    values.push(id);
+    
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 11.2
+    await db.query(
+      `UPDATE comunidad SET ${updates.join(', ')} WHERE id = ?`,
+      values
+    );
+    
+    // Retornar la comunidad actualizada
+    const [rows] = await db.query(
+      'SELECT id, razon_social, rut, dv FROM comunidad WHERE id = ? LIMIT 1',
+      [id]
+    );
+    
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Error updating community:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * @openapi
+ * /comunidades/{id}:
+ *   delete:
+ *     tags: [Comunidades]
+ *     summary: Eliminar comunidad
+ *     description: |
+ *       Elimina físicamente una comunidad de la base de datos.
+ *       Solo disponible para superadmin.
+ *       Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 12.1
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       204:
+ *         description: Comunidad eliminada exitosamente
+ *       403:
+ *         description: Sin permisos suficientes
+ */
+router.delete('/:id', [
+  authenticate,
+  authorize('superadmin')
+], async (req, res) => {
+  try {
+    const id = req.params.id;
+    
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 12.1
+    await db.query('DELETE FROM comunidad WHERE id = ?', [id]);
+    
+    res.status(204).end();
+  } catch (err) {
+    console.error('Error deleting community:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * @openapi
+ * /comunidades/verificar-acceso/{id}:
+ *   get:
+ *     tags: [Comunidades]
+ *     summary: Verificar acceso de usuario a comunidad
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 14.3
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Resultado de verificación de acceso
+ */
+router.get('/verificar-acceso/:id', authenticate, async (req, res) => {
+  try {
+    const comunidadId = req.params.id;
+    const userId = req.user.id;
+    
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 14.3
+    const query = `
+      SELECT COUNT(*) AS tiene_acceso
+      FROM usuario_rol_comunidad urc
+      WHERE urc.usuario_id = ?
+      AND urc.comunidad_id = ?
+      AND urc.activo = 1
+      AND (urc.hasta IS NULL OR urc.hasta > CURDATE())`;
+    
+    const [rows] = await db.query(query, [userId, comunidadId]);
+    
+    res.json({
+      tieneAcceso: rows[0].tiene_acceso > 0,
+      esSuperadmin: req.user.is_superadmin || false
+    });
+  } catch (err) {
+    console.error('Error verifying access:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * @openapi
+ * /comunidades/mis-membresias:
+ *   get:
+ *     tags: [Comunidades]
+ *     summary: Obtener membresías del usuario actual
+ *     description: |
+ *       Retorna todas las comunidades a las que el usuario tiene acceso con su rol.
+ *       Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 14.2
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de membresías del usuario
+ */
+router.get('/mis-membresias', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 14.2
+    const query = `
+      SELECT 
+          urc.comunidad_id AS comunidadId,
+          c.razon_social AS nombreComunidad,
+          urc.rol_id,
+          r.nombre AS rol,
+          r.codigo AS rolCodigo
+      FROM usuario_rol_comunidad urc
+      INNER JOIN comunidad c ON urc.comunidad_id = c.id
+      LEFT JOIN rol_sistema r ON urc.rol_id = r.id
+      WHERE urc.usuario_id = ?
+      AND urc.activo = 1
+      AND (urc.hasta IS NULL OR urc.hasta > CURDATE())`;
+    
+    const [rows] = await db.query(query, [userId]);
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching memberships:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
