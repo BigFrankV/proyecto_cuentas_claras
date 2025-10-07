@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
+import apiClient from '@/lib/api';
 
 interface Unidad {
   id: string;
@@ -238,12 +239,113 @@ const mockHistorial: HistorialItem[] = [
 export default function UnidadDetalle() {
   const router = useRouter();
   const { id } = router.query;
-  const [unidad, setUnidad] = useState<Unidad>(mockUnidad);
-  const [cargos, setCargos] = useState<Cargo[]>(mockCargos);
-  const [pagos, setPagos] = useState<Pago[]>(mockPagos);
-  const [historial, setHistorial] = useState<HistorialItem[]>(mockHistorial);
+  const [unidad, setUnidad] = useState<Unidad | null>(null);
+  const [cargos, setCargos] = useState<Cargo[]>([]);
+  const [pagos, setPagos] = useState<Pago[]>([]);
+  const [historial, setHistorial] = useState<HistorialItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('cargos');
   const [showEditModal, setShowEditModal] = useState(false);
+  
+  // Fetch unidad summary, cargos, pagos, medidores
+  useEffect(() => {
+    if (!id) return;
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // summary
+        const summaryRes = await apiClient.get(`/unidades/${id}/summary`);
+        const u = summaryRes.data;
+        if (mounted) {
+          setUnidad({
+            id: String(u.id),
+            numero: u.codigo || u.numero || '',
+            piso: u.piso || 0,
+            torre: u.torre_nombre || '',
+            edificio: u.edificio_nombre || '',
+            comunidad: u.comunidad_nombre || '',
+            tipo: u.tipo || 'Departamento',
+            superficie: u.m2_utiles || 0,
+            superficieTerraza: u.m2_terraza || 0,
+            superficieTotal: (u.m2_utiles || 0) + (u.m2_terraza || 0),
+            alicuota: u.alicuota || 0,
+            dormitorios: u.dormitorios || 0,
+            banos: u.nro_banos || 0,
+            estado: u.estado || 'Activo',
+            propietario: u.propietario ? {
+              nombre: u.propietario.nombre || u.propietario_nombre,
+              fechaIngreso: u.propietario.fecha_ingreso || u.propietario_fecha_ingreso,
+              rut: u.propietario.rut || u.propietario_rut
+            } : { nombre: '', fechaIngreso: '', rut: '' },
+            residentes: (u.residentes || []).map((r: any) => ({ id: String(r.id), nombre: r.nombre, iniciales: r.iniciales || '' })),
+            estacionamiento: u.estacionamiento || undefined,
+            bodega: u.bodega || undefined,
+            caracteristicas: u.caracteristicas || [],
+            descripcion: u.descripcion || '',
+            saldoPendiente: u.saldo_pendiente || 0,
+            ultimoPago: u.ultimo_pago ? { fecha: u.ultimo_pago.fecha, monto: u.ultimo_pago.monto } : undefined,
+            consumoAgua: u.consumo_agua || 0,
+            consumoElectricidad: u.consumo_electricidad || 0,
+            medidores: u.medidores || {},
+            fechaCreacion: u.created_at || ''
+          } as Unidad);
+        }
+
+        // cargos / cuentas
+        const cuentasRes = await apiClient.get(`/unidades/${id}/cuentas`);
+        if (mounted) setCargos(cuentasRes.data || []);
+
+        // pagos
+        const pagosRes = await apiClient.get(`/unidades/${id}/pagos`);
+        if (mounted) setPagos(pagosRes.data || []);
+
+        // historial / tickets could be another endpoint; use resumen.history if available
+        if (mounted) setHistorial((u.historial || []).map((h: any) => ({ id: String(h.id), fecha: h.fecha, tipo: h.tipo, descripcion: h.descripcion })));
+
+      } catch (err: any) {
+        console.error('Error loading unidad data', err);
+        setError(err?.response?.data?.error || err.message || 'Error al cargar unidad');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [id]);
+
+  // Early returns to avoid rendering when data not ready
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <Head>
+          <title>Cargando unidad — Cuentas Claras</title>
+        </Head>
+        <Layout title='Detalle de Unidad'>
+          <div className='container-fluid py-4'>
+            <div className='alert alert-info'>Cargando unidad...</div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
+
+  if (!unidad) {
+    return (
+      <ProtectedRoute>
+        <Head>
+          <title>Unidad no encontrada — Cuentas Claras</title>
+        </Head>
+        <Layout title='Detalle de Unidad'>
+          <div className='container-fluid py-4'>
+            <div className='alert alert-warning'>Unidad no encontrada</div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
@@ -295,6 +397,12 @@ export default function UnidadDetalle() {
 
       <Layout title={`Detalle de Unidad`}>
         <div className='container-fluid py-4'>
+          {loading && (
+            <div className='alert alert-info'>Cargando unidad...</div>
+          )}
+          {error && (
+            <div className='alert alert-danger'>Error: {error}</div>
+          )}
           {/* Breadcrumb y acciones */}
           <div className="row mb-4">
             <div className="col-md-6">

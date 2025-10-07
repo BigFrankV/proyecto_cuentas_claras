@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db
--- Generation Time: Oct 03, 2025 at 02:39 PM
+-- Generation Time: Oct 07, 2025 at 06:28 PM
 -- Server version: 8.0.43
 -- PHP Version: 8.2.29
 
@@ -53,7 +53,37 @@ INSERT INTO `amenidad` (`id`, `comunidad_id`, `nombre`, `reglas`, `capacidad`, `
 (7, 2, 'Sala multiuso 7', 'No se permite alcohol.', 17, 1, 5700.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
 (8, 1, 'Sala multiuso 8', 'No se permite alcohol.', 18, 0, 5800.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
 (9, 5, 'Sala multiuso 9', 'No se permite alcohol.', 19, 1, 5900.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(10, 1, 'Sala multiuso 10', 'No se permite alcohol.', 20, 0, 6000.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27');
+(10, 1, 'Sala multiuso 10', 'No se permite alcohol.', 20, 0, 6000.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
+(11, 1, 'Sala de Eventos Principal', 'Prohibido fumar. Uso hasta las 23:00 hrs. Deposito de garantía $50.000. Debe dejar el espacio limpio y ordenado. No se permite música con volumen alto después de las 22:00 hrs.', 80, 1, 45000.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
+(12, 1, 'Quincho Techado', 'Uso exclusivo residentes. Máximo 6 horas de arriendo. Prohibido fumar en áreas cerradas. Debe traer sus propios implementos de aseo. Depositar basura en contenedores designados.', 30, 1, 25000.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
+(13, 2, 'Piscina Temperada', 'Uso de gorro obligatorio. Niños menores de 12 años deben estar acompañados. Horario: 08:00 a 21:00 hrs. Prohibido ingresar con alimentos. Ducha obligatoria antes de ingresar.', 40, 0, 0.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
+(14, 2, 'Gimnasio', 'Uso exclusivo mayores de 16 años. Uso de toalla obligatorio. Devolver implementos a su lugar. Horario: 06:00 a 23:00 hrs. No se permite reservar, uso por orden de llegada.', 15, 0, 0.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
+(15, 3, 'Cancha de Tenis', 'Uso de calzado deportivo adecuado obligatorio. Reserva máxima 2 horas. Traer su propia raqueta y pelotas. Iluminación nocturna disponible hasta las 22:00 hrs.', 4, 0, 8000.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
+(16, 3, 'Sala de Juegos Infantil', 'Uso exclusivo niños hasta 12 años. Deben estar acompañados por un adulto responsable. Horario: 09:00 a 20:00 hrs. Prohibido ingresar alimentos. Mantener orden y limpieza.', 20, 0, 0.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
+(17, 4, 'Sala de Estudio/Cowork', 'Silencio obligatorio. Prohibido consumir alimentos. WiFi disponible. Uso máximo 4 horas continuas. Deben traer sus propios dispositivos y materiales. Horario: 08:00 a 22:00 hrs.', 12, 0, 0.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
+(18, 5, 'Terraza con Parrillas', 'Reserva con 48 hrs de anticipación. Uso máximo 6 horas. Traer carbón y utensilios propios. Limpiar parrillas después del uso. Prohibido música con amplificación después de las 22:00 hrs.', 25, 1, 15000.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
+(19, 5, 'Estacionamiento de Visitas', 'Máximo 2 cupos por departamento. Uso máximo 24 horas continuas. Debe registrar patente en conserjería. Sujeto a disponibilidad. No se permite estacionamiento permanente.', 10, 0, 3000.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
+(20, 6, 'Sala de Cine', 'Capacidad limitada, reservar con anticipación. Uso de sistema de audio/video incluido. Prohibido ingresar alimentos desde exterior. Mantener volumen moderado. Duración máxima 4 horas.', 16, 1, 12000.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
+(21, 1, 'Sala de Eventos Principal', 'Prohibido fumar. Uso hasta las 23:00 hrs. Deposito de garantía $50.000. Debe dejar el espacio limpio y ordenado. No se permite música con volumen alto después de las 22:00 hrs.', 80, 1, 45000.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
+(22, 1, 'Quincho Techado', 'Uso exclusivo residentes. Máximo 6 horas de arriendo. Prohibido fumar en áreas cerradas. Debe traer sus propios implementos de aseo. Depositar basura en contenedores designados.', 30, 1, 25000.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
+(23, 2, 'Piscina Temperada', 'Uso de gorro obligatorio. Niños menores de 12 años deben estar acompañados. Horario: 08:00 a 21:00 hrs. Prohibido ingresar con alimentos. Ducha obligatoria antes de ingresar.', 40, 0, 0.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
+(24, 2, 'Gimnasio', 'Uso exclusivo mayores de 16 años. Uso de toalla obligatorio. Devolver implementos a su lugar. Horario: 06:00 a 23:00 hrs. No se permite reservar, uso por orden de llegada.', 15, 0, 0.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
+(25, 3, 'Cancha de Tenis', 'Uso de calzado deportivo adecuado obligatorio. Reserva máxima 2 horas. Traer su propia raqueta y pelotas. Iluminación nocturna disponible hasta las 22:00 hrs.', 4, 0, 8000.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
+(26, 3, 'Sala de Juegos Infantil', 'Uso exclusivo niños hasta 12 años. Deben estar acompañados por un adulto responsable. Horario: 09:00 a 20:00 hrs. Prohibido ingresar alimentos. Mantener orden y limpieza.', 20, 0, 0.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
+(27, 4, 'Sala de Estudio/Cowork', 'Silencio obligatorio. Prohibido consumir alimentos. WiFi disponible. Uso máximo 4 horas continuas. Deben traer sus propios dispositivos y materiales. Horario: 08:00 a 22:00 hrs.', 12, 0, 0.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
+(28, 5, 'Terraza con Parrillas', 'Reserva con 48 hrs de anticipación. Uso máximo 6 horas. Traer carbón y utensilios propios. Limpiar parrillas después del uso. Prohibido música con amplificación después de las 22:00 hrs.', 25, 1, 15000.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
+(29, 5, 'Estacionamiento de Visitas', 'Máximo 2 cupos por departamento. Uso máximo 24 horas continuas. Debe registrar patente en conserjería. Sujeto a disponibilidad. No se permite estacionamiento permanente.', 10, 0, 3000.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
+(30, 6, 'Sala de Cine', 'Capacidad limitada, reservar con anticipación. Uso de sistema de audio/video incluido. Prohibido ingresar alimentos desde exterior. Mantener volumen moderado. Duración máxima 4 horas.', 16, 1, 12000.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
+(31, 7, 'Salón de Yoga y Pilates', 'Traer mat propio. Uso de calcetines antideslizantes. Horario: 07:00 a 21:00 hrs. Reserva máxima 90 minutos. Mantener silencio y respeto.', 12, 0, 0.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
+(32, 8, 'Juegos Infantiles Exterior', 'Uso bajo supervisión de adultos. Horario: 09:00 a 20:00 hrs. Niños hasta 10 años. Prohibido el uso en días de lluvia. Respetar turnos de uso.', 15, 0, 0.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
+(33, 9, 'Bodega de Almacenamiento', 'Arriendo mensual. No se permiten artículos inflamables o peligrosos. Acceso solo con autorización de administración. Seguro del contenido es responsabilidad del arrendatario.', 1, 1, 25000.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
+(34, 10, 'Lavandería Común', 'Uso por orden de llegada. Traer su propio detergente. Retirar ropa inmediatamente al finalizar. Horario: 08:00 a 22:00 hrs. Reportar cualquier desperfecto a conserjería.', 6, 0, 2000.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
+(35, 11, 'Sala de Música', 'Insonorizada. Reserva obligatoria máximo 3 horas. No dañar instrumentos disponibles. Prohibido fumar. Dejar instrumentos ordenados. Horario: 10:00 a 22:00 hrs.', 8, 1, 8000.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
+(36, 12, 'Cancha Multiuso (Fútbol/Básquet)', 'Uso de calzado deportivo apropiado. Reserva máxima 2 horas. Respetar horarios. Iluminación hasta las 23:00 hrs. Reportar cualquier daño a la infraestructura.', 20, 0, 10000.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
+(37, 13, 'Sala de Reuniones Corporativa', 'Proyector y pizarra disponibles. WiFi de alta velocidad. Capacidad para videoconferencias. Uso máximo 4 horas. Dejar sala ordenada. Horario: 08:00 a 20:00 hrs.', 10, 1, 15000.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
+(38, 14, 'Spa y Sauna', 'Uso exclusivo mayores de 18 años. Ducha obligatoria antes de ingresar. Uso de toalla obligatorio. Tiempo máximo 30 minutos. Horario: 09:00 a 21:00 hrs. Prohibido el uso con condiciones médicas específicas.', 8, 0, 5000.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
+(39, 15, 'Zona de Mascotas (Dog Park)', 'Solo perros vacunados y con chip. Dueños responsables de recoger desechos. Supervisión constante obligatoria. Uso de correa al entrar y salir. Horario: 07:00 a 20:00 hrs.', 15, 0, 0.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
+(40, 16, 'Taller de Bicicletas', 'Herramientas básicas disponibles. Uso para reparaciones menores. No se permite lavado de bicicletas. Ordenar herramientas después del uso. Horario: 08:00 a 20:00 hrs.', 4, 0, 0.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02');
 
 -- --------------------------------------------------------
 
@@ -105,7 +135,9 @@ INSERT INTO `auditoria` (`id`, `usuario_id`, `accion`, `tabla`, `registro_id`, `
 (2, 3, 'INSERT', 'unidad', 2, NULL, '{\"campo1\": \"valor nuevo\"}', '192.168.0.2', '2025-10-02 18:42:27'),
 (3, 4, 'DELETE', 'unidad', 3, '{\"campo1\": \"valor anterior\"}', NULL, '192.168.0.3', '2025-10-02 18:42:27'),
 (4, 5, 'UPDATE', 'persona', 4, '{\"nombre\": \"Juan\"}', '{\"nombre\": \"Juan P.\"}', '192.168.0.4', '2025-10-02 18:42:27'),
-(5, 6, 'UPDATE', 'gasto', 5, '{\"monto\": 5000}', '{\"monto\": 6000}', '192.168.0.5', '2025-10-02 18:42:27');
+(5, 6, 'UPDATE', 'gasto', 5, '{\"monto\": 5000}', '{\"monto\": 6000}', '192.168.0.5', '2025-10-02 18:42:27'),
+(6, 1, 'INSERT', 'torre', NULL, NULL, '{\"codigo\": \"T101\", \"nombre\": \"Torre Test A\"}', '127.0.0.1', '2025-10-06 18:22:08'),
+(7, NULL, 'INSERT', 'torre', NULL, NULL, '{\"codigo\": null, \"nombre\": null}', '127.0.0.1', '2025-10-06 18:37:23');
 
 -- --------------------------------------------------------
 
@@ -272,9 +304,12 @@ INSERT INTO `comunidad` (`id`, `razon_social`, `rut`, `dv`, `giro`, `direccion`,
 (15, 'Comunidad Las Condes #15', '11259073', '0', 'Administración de edificios', 'Cuesta de Estrella Alcalde #148, Las Condes', 'tiradoisaac@collado-bertran.com', '+34 729511574', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
 (16, 'Comunidad Ñuñoa #16', '11223649', 'K', 'Administración de edificios', 'Glorieta de Lino Real #525, Ñuñoa', 'gamezsusana@costa.es', '+34 823151975', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
 (17, 'Comunidad La Florida #17', '1271048', '8', 'Administración de edificios', 'Alameda Herberto Solana #466, La Florida', 'muria@aguirre-pomares.com', '+34 629 216 748', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(18, 'Comunidad Maipú #18', '13466150', 'K', 'Administración de edificios', 'C. de Vinicio Salazar #46, Maipú', 'ntena@colom.com', '+34 928 57 50 13', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
+(18, 'Comunidad Maipú #15', '13466150', 'K', 'Administración de edificios', 'C. de Vinicio Salazar #46, Maipú', 'ntena@colom.com', '+34 928 57 50 13', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-06 14:11:01', NULL, NULL),
 (19, 'Comunidad Puente Alto #19', '23884158', '5', 'Administración de edificios', 'Callejón Leonor Rodríguez #597, Puente Alto', 'julianbenito@hotmail.com', '+34 728 890 470', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(20, 'Comunidad Recoleta #20', '4164577', '6', 'Administración de edificios', 'Pasaje de Maximiano Alfonso #440, Recoleta', 'angelina85@fabregat-galindo.es', '+34 884 258 433', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL);
+(20, 'Comunidad Recoleta #20', '4164577', '6', 'Administración de edificios', 'Pasaje de Maximiano Alfonso #440, Recoleta', 'angelina85@fabregat-galindo.es', '+34 884 258 433', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
+(21, 'Comunidad QA', '99999999', '9', 'Pruebas', 'Av. QA 123', 'qa@demo.cl', '+56 2 12345678', NULL, 'CLP', 'America/Santiago', '2025-10-06 18:35:12', '2025-10-06 18:35:12', NULL, NULL),
+(100, 'Comunidad Edificio Los Álamos', '76543210', '9', 'Administración de edificios', 'Av. Apoquindo 4500, Las Condes', 'contacto@losalamos.cl', '+56912345678', NULL, 'CLP', 'America/Santiago', '2025-10-06 18:57:25', '2025-10-06 18:57:25', NULL, NULL),
+(101, 'Comunidad Prueba', '76545210', '5', NULL, 'Av. Siempre Viva 123', NULL, NULL, NULL, 'CLP', 'America/Santiago', '2025-10-07 17:02:19', '2025-10-07 17:02:19', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -602,7 +637,11 @@ INSERT INTO `edificio` (`id`, `comunidad_id`, `nombre`, `direccion`, `codigo`, `
 (17, 18, 'Edificio C. Elisa Ferrándiz', 'Paseo de Yaiza Torrens 76 Puerta 3 , Segovia, 49268', 'ED017', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
 (18, 15, 'Edificio Ronda Teófila Plana', 'Glorieta Cesar Anguita 5 Puerta 2 , Valladolid, 42780', 'ED018', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
 (19, 7, 'Edificio Plaza Salvador Chacón', 'Pasaje de Ani Blanch 385 Piso 5 , Teruel, 44033', 'ED019', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(20, 14, 'Edificio C. de Lorenza Hurtado', 'Avenida de Palmira Catalá 8 Piso 9 , Albacete, 17883', 'ED020', '2025-10-02 18:19:29', '2025-10-02 18:19:29');
+(20, 14, 'Edificio C. de Lorenza Hurtado', 'Avenida de Palmira Catalá 8 Piso 9 , Albacete, 17883', 'ED020', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
+(21, 1, 'Edificio Principal Providencia', 'Av. Providencia 1234', NULL, '2025-10-03 15:35:16', '2025-10-03 15:35:16'),
+(22, 1, 'Edificio Central Providencia', 'Av. Providencia 1234', 'EDF-PROV-01', '2025-10-03 15:39:29', '2025-10-03 15:39:29'),
+(100, 100, 'Edificio Los Álamos', 'Av. Apoquindo 4500, Las Condes, Santiago', 'ED-ALM-001', '2025-10-06 18:57:28', '2025-10-06 18:57:28'),
+(103, 20, 'Edificio Norte', 'Av. Siempre Viva 123 - Torre Norte', NULL, '2025-10-07 17:20:49', '2025-10-07 17:20:49');
 
 -- --------------------------------------------------------
 
@@ -1037,7 +1076,7 @@ CREATE TABLE `persona` (
 --
 
 INSERT INTO `persona` (`id`, `rut`, `dv`, `nombres`, `apellidos`, `email`, `telefono`, `direccion`, `created_at`, `updated_at`) VALUES
-(1, '15717183', '6', 'Isaura', 'Solé', 'nvalero@moreno.es', '+34817829633', 'Rambla Roxana Ortega 5, Zamora, 02237', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
+(1, '18514420', '8', 'Patricio', 'Quintanilla', 'pat.quintanilla@duocuc.cl', '+34817829633', 'Rambla Roxana Ortega 5, Zamora, 02237', '2025-10-02 18:00:09', '2025-10-07 12:50:16'),
 (2, '11243882', '3', 'Elisabet', 'Robledo', 'marcosblasco@iglesias.es', '+34747 970 941', 'Plaza de Nuria Sosa 66 Puerta 3 , Almería, 85513', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
 (3, '21141366', '2', 'Dalila', 'Trillo', 'candelarioguardiola@gmail.com', '+34662 265 789', 'Camino de Dolores Álvaro 23 Puerta 6 , Toledo, 78909', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
 (4, '9793463', '0', 'Isidora', 'Sedano', 'casalsteofilo@requena-bermejo.org', '+34722553671', 'C. Paloma Santiago 72 Piso 1 , Toledo, 04314', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
@@ -1057,7 +1096,22 @@ INSERT INTO `persona` (`id`, `rut`, `dv`, `nombres`, `apellidos`, `email`, `tele
 (18, '5163812', '3', 'Nidia', 'Santiago', 'xmorata@raya.net', '+34 718 536 165', 'Alameda Elba Torrents 206 Apt. 73 , Zamora, 81227', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
 (19, '4439658', '0', 'Candelas', 'Berenguer', 'marianela97@acuna.com', '+34994 64 38 76', 'Alameda de Iker Aguirre 31 Puerta 5 , Ávila, 19392', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
 (20, '13051081', '7', 'Jenny', 'Carnero', 'goyoarias@yahoo.com', '+34 706 33 85 67', 'Urbanización Mohamed Soriano 8, Salamanca, 19993', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(21, '12345672', '9', 'Juan Carlos', 'Pérez González', 'nuevousuari2o@ejemplo.com', NULL, NULL, '2025-10-03 14:34:33', '2025-10-03 14:34:33');
+(21, '12345672', '9', 'Juan Carlos', 'Pérez González', 'nuevousuari2o@ejemplo.com', NULL, NULL, '2025-10-03 14:34:33', '2025-10-03 14:34:33'),
+(100, '12345678', '9', 'Juan Carlos', 'González Pérez', 'juan.gonzalez@email.com', '+56912345678', 'Calle Principal 123', '2025-10-06 13:28:58', '2025-10-06 13:28:58'),
+(101, '23456789', '0', 'María Elena', 'Rodríguez Silva', 'maria.rodriguez@email.com', '+56923456789', 'Avenida Central 456', '2025-10-06 13:28:58', '2025-10-06 13:28:58'),
+(102, '34567890', '1', 'Pedro Antonio', 'Martínez López', 'pedro.martinez@email.com', '+56934567890', 'Pasaje Los Robles 789', '2025-10-06 13:28:58', '2025-10-06 13:28:58'),
+(103, '45678901', '2', 'Ana Sofía', 'Fernández Torres', 'ana.fernandez@email.com', '+56945678901', 'Calle Las Flores 321', '2025-10-06 13:28:58', '2025-10-06 13:28:58'),
+(104, '56789012', '3', 'Luis Alberto', 'Muñoz Vargas', 'luis.munoz@email.com', '+56956789012', 'Avenida Los Pinos 654', '2025-10-06 13:28:58', '2025-10-06 13:28:58'),
+(105, '67890123', '4', 'Carmen Gloria', 'Sánchez Rojas', 'carmen.sanchez@email.com', '+56967890123', 'Paseo Las Palmas 987', '2025-10-06 13:29:04', '2025-10-06 13:29:04'),
+(106, '78901234', '5', 'Roberto Carlos', 'Díaz Hernández', 'roberto.diaz@email.com', '+56978901234', 'Calle Los Álamos 147', '2025-10-06 13:29:04', '2025-10-06 13:29:04'),
+(107, '89012345', '6', 'Patricia Isabel', 'Gómez Castro', 'patricia.gomez@email.com', '+56989012345', 'Avenida Las Acacias 258', '2025-10-06 13:29:04', '2025-10-06 13:29:04'),
+(108, '90123456', '7', 'Francisco Javier', 'Ramírez Flores', 'francisco.ramirez@email.com', '+56990123456', 'Pasaje Los Cipreses 369', '2025-10-06 13:29:04', '2025-10-06 13:29:04'),
+(109, '11223344', '8', 'Claudia Andrea', 'Morales Espinoza', 'claudia.morales@email.com', '+56911223344', 'Calle Los Naranjos 741', '2025-10-06 13:29:09', '2025-10-06 13:29:09'),
+(110, '22334455', '9', 'Andrés Felipe', 'Contreras Vega', 'andres.contreras@email.com', '+56922334455', 'Avenida Los Cerezos 852', '2025-10-06 13:29:09', '2025-10-06 13:29:09'),
+(111, '33445566', 'K', 'Gabriela Alejandra', 'Núñez Ponce', 'gabriela.nunez@email.com', '+56933445566', 'Pasaje Los Laureles 963', '2025-10-06 13:29:09', '2025-10-06 13:29:09'),
+(112, '55555555', '5', 'Ana', 'Prueba', 'ana.prueba@demo.cl', '+56 9 11111111', 'Calle Falsa 123', '2025-10-06 18:21:40', '2025-10-06 18:21:40'),
+(113, '66666666', '6', 'Bruno', 'Demo', 'bruno.demo@demo.cl', '+56 9 22222222', 'Av. Siempre Viva 742', '2025-10-06 18:21:40', '2025-10-06 18:21:40'),
+(114, '77777777', '7', 'Carla', 'Test', 'carla.test@demo.cl', '+56 9 33333333', 'Ruta S/N', '2025-10-06 18:21:40', '2025-10-06 18:21:40');
 
 -- --------------------------------------------------------
 
@@ -1379,7 +1433,22 @@ INSERT INTO `titulares_unidad` (`id`, `comunidad_id`, `unidad_id`, `persona_id`,
 (17, 20, 17, 14, 'arrendatario', '2022-02-06', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
 (18, 10, 18, 18, 'arrendatario', '2022-01-01', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
 (19, 19, 19, 1, 'propietario', '2021-10-23', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(20, 8, 20, 19, 'arrendatario', '2022-08-19', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29');
+(20, 8, 20, 19, 'arrendatario', '2022-08-19', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
+(100, 1, 100, 100, 'propietario', '2023-01-15', NULL, 100.00, '2025-10-06 13:29:35', '2025-10-06 13:29:35'),
+(101, 1, 101, 101, 'propietario', '2022-06-01', NULL, 100.00, '2025-10-06 13:29:43', '2025-10-06 13:29:43'),
+(102, 1, 101, 102, 'arrendatario', '2024-01-01', NULL, 100.00, '2025-10-06 13:29:43', '2025-10-06 13:29:43'),
+(103, 1, 102, 103, 'arrendatario', '2023-03-01', '2024-12-31', 100.00, '2025-10-06 13:29:55', '2025-10-06 13:29:55'),
+(104, 1, 103, 104, 'propietario', '2023-08-10', NULL, 50.00, '2025-10-06 13:30:04', '2025-10-06 13:30:04'),
+(105, 1, 103, 105, 'propietario', '2023-08-10', NULL, 50.00, '2025-10-06 13:30:04', '2025-10-06 13:30:04'),
+(106, 1, 104, 106, 'propietario', '2024-02-20', NULL, 100.00, '2025-10-06 13:30:04', '2025-10-06 13:30:04'),
+(107, 2, 105, 105, 'propietario', '2022-11-05', NULL, 100.00, '2025-10-06 13:30:12', '2025-10-06 13:30:12'),
+(108, 2, 106, 106, 'arrendatario', '2023-04-12', NULL, 100.00, '2025-10-06 13:30:12', '2025-10-06 13:30:12'),
+(109, 2, 107, 107, 'propietario', '2023-09-22', NULL, 100.00, '2025-10-06 13:30:12', '2025-10-06 13:30:12'),
+(110, 2, 108, 108, 'arrendatario', '2024-06-01', NULL, 100.00, '2025-10-06 13:30:12', '2025-10-06 13:30:12'),
+(111, 3, 109, 109, 'propietario', '2023-05-18', NULL, 100.00, '2025-10-06 13:30:20', '2025-10-06 13:30:20'),
+(112, 3, 110, 110, 'arrendatario', '2024-03-10', NULL, 100.00, '2025-10-06 13:30:20', '2025-10-06 13:30:20'),
+(113, 3, 111, 111, 'propietario', '2022-12-01', NULL, 100.00, '2025-10-06 13:30:20', '2025-10-06 13:30:20'),
+(114, 3, 111, 100, 'arrendatario', '2024-08-15', NULL, 100.00, '2025-10-06 13:30:20', '2025-10-06 13:30:20');
 
 -- --------------------------------------------------------
 
@@ -1439,7 +1508,14 @@ INSERT INTO `torre` (`id`, `edificio_id`, `nombre`, `codigo`, `created_at`, `upd
 (17, 17, 'Torre R', 'T017', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
 (18, 18, 'Torre S', 'T018', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
 (19, 19, 'Torre T', 'T019', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(20, 20, 'Torre U', 'T020', '2025-10-02 18:19:29', '2025-10-02 18:19:29');
+(20, 20, 'Torre U', 'T020', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
+(21, 1, 'Torre Test A', 'T101', '2025-10-06 18:23:54', '2025-10-06 18:23:54'),
+(100, 100, 'Torre A', 'TA-001', '2025-10-06 18:57:30', '2025-10-06 18:57:30'),
+(101, 100, 'Torre B', 'TB-001', '2025-10-06 18:57:30', '2025-10-06 18:57:30'),
+(102, 100, 'Torre C', 'TC-001', '2025-10-06 18:57:30', '2025-10-06 18:57:30'),
+(103, 100, 'Torre D', 'TD-001', '2025-10-06 18:57:30', '2025-10-06 18:57:30'),
+(104, 100, 'Torre E', 'TE-001', '2025-10-06 18:57:30', '2025-10-06 18:57:30'),
+(106, 15, 'Torre A', 'TA', '2025-10-07 17:21:11', '2025-10-07 17:21:11');
 
 -- --------------------------------------------------------
 
@@ -1461,7 +1537,8 @@ INSERT INTO `uf_valor` (`fecha`, `valor`) VALUES
 ('2025-09-29', 36510.5678),
 ('2025-09-30', 36520.0000),
 ('2025-10-01', 36525.1234),
-('2025-10-02', 36530.4567);
+('2025-10-02', 36530.4567),
+('2025-10-03', 39485.6500);
 
 -- --------------------------------------------------------
 
@@ -1490,26 +1567,61 @@ CREATE TABLE `unidad` (
 --
 
 INSERT INTO `unidad` (`id`, `comunidad_id`, `edificio_id`, `torre_id`, `codigo`, `alicuota`, `m2_utiles`, `m2_terrazas`, `nro_bodega`, `nro_estacionamiento`, `activa`, `created_at`, `updated_at`) VALUES
-(1, 12, 7, 7, 'U001', 0.021523, 65.88, 7.60, 'B001', 'E001', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(2, 17, 3, 13, 'U002', 0.010362, 70.73, 13.13, 'B002', 'E002', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(3, 20, 18, 2, 'U003', 0.006624, 118.30, 18.93, 'B003', 'E003', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(4, 12, 14, 9, 'U004', 0.017598, 75.79, 9.82, 'B004', 'E004', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(5, 19, 5, 4, 'U005', 0.018412, 58.61, 5.42, 'B005', 'E005', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(6, 13, 5, 13, 'U006', 0.009389, 66.45, 19.46, 'B006', 'E006', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(7, 14, 5, 11, 'U007', 0.017770, 87.06, 14.33, 'B007', 'E007', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(8, 6, 11, 2, 'U008', 0.020005, 74.86, 9.55, 'B008', 'E008', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(9, 6, 13, 6, 'U009', 0.024811, 42.86, 5.36, 'B009', 'E009', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(10, 18, 18, 7, 'U010', 0.023610, 54.17, 14.47, 'B010', 'E010', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(11, 15, 17, 20, 'U011', 0.022403, 45.74, 6.71, 'B011', 'E011', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(12, 15, 5, 16, 'U012', 0.017768, 85.03, 5.80, 'B012', 'E012', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(13, 16, 20, 4, 'U013', 0.020766, 95.13, 8.55, 'B013', 'E013', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(14, 15, 15, 8, 'U014', 0.015158, 64.60, 6.68, 'B014', 'E014', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(15, 13, 11, 7, 'U015', 0.019276, 111.38, 15.99, 'B015', 'E015', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(16, 6, 5, 5, 'U016', 0.005108, 117.70, 15.11, 'B016', 'E016', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(17, 20, 15, 7, 'U017', 0.024073, 98.57, 5.21, 'B017', 'E017', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(18, 10, 10, 14, 'U018', 0.022069, 75.53, 13.53, 'B018', 'E018', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(19, 19, 16, 17, 'U019', 0.013526, 49.13, 14.08, 'B019', 'E019', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(20, 8, 16, 2, 'U020', 0.015334, 63.84, 17.38, 'B020', 'E020', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29');
+(1, 16, 7, 7, 'U001', 0.021523, 65.88, 7.60, 'B001', 'E001', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(2, 20, 3, 13, 'U002', 0.010362, 70.73, 13.13, 'B002', 'E002', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(3, 15, 18, 2, 'U003', 0.006624, 118.30, 18.93, 'B003', 'E003', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(4, 10, 14, 9, 'U004', 0.017598, 75.79, 9.82, 'B004', 'E004', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(5, 2, 5, 4, 'U005', 0.018412, 58.61, 5.42, 'B005', 'E005', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(6, 2, 5, 13, 'U006', 0.009389, 66.45, 19.46, 'B006', 'E006', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(7, 2, 5, 11, 'U007', 0.017770, 87.06, 14.33, 'B007', 'E007', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(8, 18, 11, 2, 'U008', 0.020005, 74.86, 9.55, 'B008', 'E008', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(9, 4, 13, 6, 'U009', 0.024811, 42.86, 5.36, 'B009', 'E009', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(10, 15, 18, 7, 'U010', 0.023610, 54.17, 14.47, 'B010', 'E010', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(11, 18, 17, 20, 'U011', 0.022403, 45.74, 6.71, 'B011', 'E011', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(12, 2, 5, 16, 'U012', 0.017768, 85.03, 5.80, 'B012', 'E012', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(13, 14, 20, 4, 'U013', 0.020766, 95.13, 8.55, 'B013', 'E013', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(14, 7, 15, 8, 'U014', 0.015158, 64.60, 6.68, 'B014', 'E014', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(15, 18, 11, 7, 'U015', 0.019276, 111.38, 15.99, 'B015', 'E015', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(16, 2, 5, 5, 'U016', 0.005108, 117.70, 15.11, 'B016', 'E016', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(17, 7, 15, 7, 'U017', 0.024073, 98.57, 5.21, 'B017', 'E017', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(18, 18, 10, 14, 'U018', 0.022069, 75.53, 13.53, 'B018', 'E018', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(19, 12, 16, 17, 'U019', 0.013526, 49.13, 14.08, 'B019', 'E019', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(20, 12, 16, 2, 'U020', 0.015334, 63.84, 17.38, 'B020', 'E020', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
+(25, 1, 21, NULL, '101', 0.025000, 65.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
+(26, 1, 21, NULL, '102', 0.025000, 65.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
+(27, 1, 21, NULL, '103', 0.025000, 70.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
+(28, 1, 21, NULL, '201', 0.030000, 80.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
+(29, 1, 21, NULL, '202', 0.030000, 80.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
+(30, 1, 21, NULL, '203', 0.030000, 85.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
+(31, 1, 21, NULL, '301', 0.035000, 90.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
+(32, 1, 21, NULL, '302', 0.035000, 90.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
+(100, 1, 1, 1, 'DEPTO-101', 0.025000, 85.50, 12.00, 'BOD-101', 'EST-101', 1, '2025-10-06 13:29:16', '2025-10-06 13:29:16'),
+(101, 1, 1, 1, 'DEPTO-102', 0.025000, 92.30, 15.50, 'BOD-102', 'EST-102', 1, '2025-10-06 13:29:16', '2025-10-06 13:29:16'),
+(102, 1, 1, 1, 'DEPTO-103', 0.025000, 78.80, 10.00, 'BOD-103', 'EST-103', 1, '2025-10-06 13:29:16', '2025-10-06 13:29:16'),
+(103, 1, 1, 1, 'DEPTO-201', 0.025000, 85.50, 12.00, 'BOD-201', 'EST-201', 1, '2025-10-06 13:29:16', '2025-10-06 13:29:16'),
+(104, 1, 1, 1, 'DEPTO-202', 0.025000, 92.30, 15.50, 'BOD-202', 'EST-202', 1, '2025-10-06 13:29:16', '2025-10-06 13:29:16'),
+(105, 2, 5, 5, 'CASA-A1', 0.033333, 120.00, 25.00, 'BOD-A1', 'EST-A1', 1, '2025-10-06 13:29:22', '2025-10-06 13:29:22'),
+(106, 2, 5, 5, 'CASA-A2', 0.033333, 115.50, 20.00, 'BOD-A2', 'EST-A2', 1, '2025-10-06 13:29:22', '2025-10-06 13:29:22'),
+(107, 2, 5, 5, 'CASA-B1', 0.033333, 135.80, 30.00, 'BOD-B1', 'EST-B1', 1, '2025-10-06 13:29:22', '2025-10-06 13:29:22'),
+(108, 2, 5, 5, 'CASA-B2', 0.033333, 128.40, 28.00, 'BOD-B2', 'EST-B2', 1, '2025-10-06 13:29:22', '2025-10-06 13:29:22'),
+(109, 3, 9, 9, 'TORRE-A-301', 0.020000, 68.90, 8.50, 'BOD-301', 'EST-301', 1, '2025-10-06 13:29:27', '2025-10-06 13:29:27'),
+(110, 3, 9, 9, 'TORRE-A-302', 0.020000, 72.40, 9.00, 'BOD-302', 'EST-302', 1, '2025-10-06 13:29:27', '2025-10-06 13:29:27'),
+(111, 3, 9, 9, 'TORRE-B-401', 0.020000, 65.30, 7.80, 'BOD-401', 'EST-401', 1, '2025-10-06 13:29:27', '2025-10-06 13:29:27'),
+(112, 100, 100, 100, '01-A', 0.025000, 85.50, 12.00, 'B-001', 'E-001', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(113, 100, 100, 100, '02-A', 0.025000, 85.50, 12.00, 'B-002', 'E-002', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(114, 100, 100, 100, '03-A', 0.025000, 85.50, 12.00, 'B-003', 'E-003', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(115, 100, 100, 100, '04-A', 0.025000, 85.50, 12.00, 'B-004', 'E-004', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(1004, 100, 100, 101, '01-B', 0.028000, 95.00, 15.00, 'B-005', 'E-005', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(1005, 100, 100, 101, '02-B', 0.028000, 95.00, 15.00, 'B-006', 'E-006', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(1006, 100, 100, 101, '03-B', 0.028000, 95.00, 15.00, 'B-007', 'E-007', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(1007, 100, 100, 101, '04-B', 0.028000, 95.00, 15.00, 'B-008', 'E-008', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(1008, 100, 100, 102, '01-C', 0.022000, 75.00, 10.00, 'B-009', 'E-009', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(1009, 100, 100, 102, '02-C', 0.022000, 75.00, 10.00, 'B-010', 'E-010', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(1010, 100, 100, 102, '03-C', 0.022000, 75.00, 10.00, 'B-011', 'E-011', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(1011, 100, 100, 103, '01-D', 0.030000, 110.00, 20.00, 'B-012', 'E-012', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(1012, 100, 100, 103, '02-D', 0.030000, 110.00, 20.00, 'B-013', 'E-013', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(1013, 100, 100, 104, '01-E', 0.020000, 65.00, 8.00, 'B-014', 'E-014', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
+(1014, 100, 100, 104, '02-E', 0.020000, 65.00, 8.00, 'B-015', 'E-015', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53');
 
 -- --------------------------------------------------------
 
@@ -1576,7 +1688,7 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id`, `persona_id`, `username`, `hash_password`, `email`, `activo`, `created_at`, `updated_at`, `is_superadmin`, `totp_secret`, `totp_enabled`) VALUES
-(1, 1, 'patricio', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'patricio@pquintanilla.cl', 1, '2025-10-02 18:00:09', '2025-10-03 14:24:46', 1, NULL, 0),
+(1, 1, 'Patricio', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'pat.quintanilla@duocuc.cl', 1, '2025-10-02 18:00:09', '2025-10-07 12:49:22', 1, NULL, 0),
 (2, 2, 'user2', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'marcosblasco@iglesias.es', 1, '2025-10-02 18:00:09', '2025-10-03 14:25:05', 0, NULL, 0),
 (3, 3, 'user3', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'candelarioguardiola@gmail.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:25:10', 0, NULL, 0),
 (4, 4, 'user4', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'casalsteofilo@requena-bermejo.org', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
@@ -1605,6 +1717,15 @@ INSERT INTO `usuario` (`id`, `persona_id`, `username`, `hash_password`, `email`,
 -- (See below for the actual view)
 --
 CREATE TABLE `usuario_miembro_comunidad` (
+`activo` tinyint(1)
+,`comunidad_id` bigint
+,`created_at` datetime
+,`desde` date
+,`hasta` date
+,`id` bigint
+,`persona_id` bigint
+,`rol` varchar(50)
+,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
@@ -1667,8 +1788,8 @@ CREATE TABLE `utm_valor` (
 --
 
 INSERT INTO `utm_valor` (`fecha`, `valor`) VALUES
-('2025-09-01', 65000.00),
-('2025-10-01', 65500.00);
+('2023-01-01', 66016.62),
+('2023-01-02', 65824.03);
 
 -- --------------------------------------------------------
 
@@ -2040,7 +2161,7 @@ ALTER TABLE `webhook_pago`
 -- AUTO_INCREMENT for table `amenidad`
 --
 ALTER TABLE `amenidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `archivos`
@@ -2052,7 +2173,7 @@ ALTER TABLE `archivos`
 -- AUTO_INCREMENT for table `auditoria`
 --
 ALTER TABLE `auditoria`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `categoria_gasto`
@@ -2070,7 +2191,7 @@ ALTER TABLE `centro_costo`
 -- AUTO_INCREMENT for table `comunidad`
 --
 ALTER TABLE `comunidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
 
 --
 -- AUTO_INCREMENT for table `conciliacion_bancaria`
@@ -2118,7 +2239,7 @@ ALTER TABLE `documento_comunidad`
 -- AUTO_INCREMENT for table `edificio`
 --
 ALTER TABLE `edificio`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
 
 --
 -- AUTO_INCREMENT for table `emision_gastos_comunes`
@@ -2178,7 +2299,7 @@ ALTER TABLE `parametros_cobranza`
 -- AUTO_INCREMENT for table `persona`
 --
 ALTER TABLE `persona`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1010;
 
 --
 -- AUTO_INCREMENT for table `proveedor`
@@ -2220,19 +2341,19 @@ ALTER TABLE `ticket_soporte`
 -- AUTO_INCREMENT for table `titulares_unidad`
 --
 ALTER TABLE `titulares_unidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=115;
 
 --
 -- AUTO_INCREMENT for table `torre`
 --
 ALTER TABLE `torre`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
 
 --
 -- AUTO_INCREMENT for table `unidad`
 --
 ALTER TABLE `unidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1021;
 
 --
 -- AUTO_INCREMENT for table `user_preferences`
@@ -2328,7 +2449,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `ti
 --
 DROP TABLE IF EXISTS `usuario_miembro_comunidad`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `usuario_miembro_comunidad`  AS SELECT `ucr`.`id` AS `id`, `ucr`.`comunidad_id` AS `comunidad_id`, `u`.`persona_id` AS `persona_id`, `r`.`codigo` AS `rol`, `ucr`.`desde` AS `desde`, `ucr`.`hasta` AS `hasta`, `ucr`.`activo` AS `activo`, `ucr`.`created_at` AS `created_at`, `ucr`.`updated_at` AS `updated_at` FROM ((`usuario_comunidad_rol` `ucr` join `usuario` `u` on((`u`.`id` = `ucr`.`usuario_id`))) join `rol` `r` on((`r`.`id` = `ucr`.`rol_id`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY INVOKER VIEW `usuario_miembro_comunidad`  AS SELECT `urc`.`id` AS `id`, `urc`.`comunidad_id` AS `comunidad_id`, `u`.`persona_id` AS `persona_id`, `r`.`codigo` AS `rol`, `urc`.`desde` AS `desde`, `urc`.`hasta` AS `hasta`, `urc`.`activo` AS `activo`, `urc`.`created_at` AS `created_at`, `urc`.`updated_at` AS `updated_at` FROM ((`usuario_rol_comunidad` `urc` join `usuario` `u` on((`u`.`id` = `urc`.`usuario_id`))) join `rol_sistema` `r` on((`r`.`id` = `urc`.`rol_id`))) ;
 
 --
 -- Constraints for dumped tables
