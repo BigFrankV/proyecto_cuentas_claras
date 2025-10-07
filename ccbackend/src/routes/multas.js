@@ -324,16 +324,17 @@ router.post('/',
     body('unidad_id').notEmpty().isInt().withMessage('unidad_id es requerido y debe ser un número'),
     body('tipo_infraccion').notEmpty().isLength({ min: 5, max: 120 }).withMessage('tipo_infraccion es requerido (5-120 caracteres)'),
     body('monto').isFloat({ min: 0.01 }).withMessage('monto debe ser mayor a 0'),
-    body('fecha_infraccion').isISO8601().withMessage('fecha_infraccion debe ser una fecha válida')
+    // fechas opcionales
+    body('fecha_infraccion').optional().isISO8601().withMessage('fecha_infraccion debe ser una fecha válida')
       .custom(fecha => {
-        if (new Date(fecha) > new Date()) {
+        if (fecha && new Date(fecha) > new Date()) {
           throw new Error('fecha_infraccion no puede ser futura');
         }
         return true;
       }),
-    body('fecha_vencimiento').isISO8601().withMessage('fecha_vencimiento debe ser una fecha válida')
+    body('fecha_vencimiento').optional().isISO8601().withMessage('fecha_vencimiento debe ser una fecha válida')
       .custom((fecha_venc, { req }) => {
-        if (new Date(fecha_venc) <= new Date(req.body.fecha_infraccion)) {
+        if (fecha_venc && req.body.fecha_infraccion && new Date(fecha_venc) <= new Date(req.body.fecha_infraccion)) {
           throw new Error('fecha_vencimiento debe ser mayor a fecha_infraccion');
         }
         return true;
@@ -1230,7 +1231,7 @@ router.post('/unidad/:unidadId',
   [
     body('tipo_infraccion').notEmpty(),
     body('monto').isNumeric(),
-    body('fecha_infraccion').notEmpty()
+    body('fecha_infraccion').optional().isISO8601() // antes .notEmpty()
   ], 
   async (req, res) => {
     const unidadId = req.params.unidadId;

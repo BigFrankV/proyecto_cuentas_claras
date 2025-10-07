@@ -92,7 +92,7 @@ class MultasService {
       descripcion: data.descripcion,
       monto: data.monto,
       prioridad: data.prioridad,
-      fecha_infraccion: data.fecha || data.fecha_infraccion,
+      fecha_infraccion: this.formatearFechaParaBackend(data.fecha || data.fecha_infraccion),
       fecha_vencimiento: data.fecha_vencimiento
     };
     const response = await api.post('/multas', payload);
@@ -100,41 +100,15 @@ class MultasService {
     return this.adaptMultaFromBackend(raw);
   }
 
-  async updateMulta(id: number, data: UpdateMultaData): Promise<Multa> {
+  async updateMulta(id: number, data: any): Promise<any> {
     try {
-      console.log(`📝 Actualizando multa ${id}:`, data);
-
-      // ✅ Adaptar para tu endpoint PATCH
-      const backendData: any = {};
-
-      if (data.tipo_infraccion) backendData.motivo = data.tipo_infraccion;
-      if (data.descripcion) backendData.descripcion = data.descripcion;
-      if (data.monto) backendData.monto = data.monto;
-      if (data.estado) {
-        // 🔧 MAPEAR estados largos a valores cortos que acepta la DB
-        const estadoMap: { [key: string]: string } = {
-          'pendiente': 'pendiente',  // Mantener si es corto
-          'pagado': 'pagado',        // Mantener si es corto  
-          'vencido': 'vencido',      // Mantener si es corto
-          'apelada': 'apelada',      // Mantener si es corto
-          'anulada': 'anulada'       // Mantener si es corto
-        };
-        
-        backendData.estado = estadoMap[data.estado] || data.estado.substring(0, 10); // Truncar a 10 chars max
-        console.log(`🔄 Estado mapeado: '${data.estado}' -> '${backendData.estado}'`);
-      }
-      if (data.fecha_pago) backendData.fecha_pago = data.fecha_pago;
-
-      console.log('📤 Datos a enviar al backend:', backendData);
-
-      // � Volver al endpoint normal - el problema era el tamaño del estado
-      const response = await api.patch(`/multas/${id}`, backendData);
+      // Usar la ruta plural /multas para que coincida con la mayoría de llamadas del frontend
+      const response = await api.patch(`/multas/${id}`, data);
+      // Normalizar distintos formatos de respuesta
       const raw = response.data?.data ?? response.data;
-      console.log('✅ Multa actualizada exitosamente');
-      return this.adaptarMultaDelBackend(raw);
-      
+      return this.adaptMultaFromBackend(raw);
     } catch (error) {
-      console.error(`❌ Error actualizando multa ${id}:`, error);
+      console.error(`❌ Error updating multa ${id}:`, error);
       throw error;
     }
   }
@@ -153,24 +127,14 @@ class MultasService {
   async anularMulta(id: number, motivo?: string): Promise<Multa> {
     try {
       console.log(`🚫 Anulando multa ${id}`);
-      
-      const backendData: any = {
-        estado: 'anulada'  // Usar valor corto
-      };
-      
-      // Si se proporciona un motivo, agregarlo a la descripción
-      if (motivo) {
-        const multaActual = await this.getMulta(id);
-        backendData.descripcion = multaActual.descripcion + 
-          `\n\n[ANULADA] ${new Date().toLocaleDateString('es-CL')}: ${motivo}`;
-      }
-      
-      console.log('📤 Datos para anular:', backendData);
-      
-      const response = await api.patch(`/multas/${id}`, backendData);
+
+      // Usar endpoint específico si existe en backend
+      const payload: any = {};
+      if (motivo) payload.motivo_anulacion = motivo;
+      const response = await api.patch(`/multas/${id}/anular`, payload);
       const raw = response.data?.data ?? response.data;
       console.log('✅ Multa anulada exitosamente');
-      return this.adaptarMultaDelBackend(raw);
+      return this.adaptMultaFromBackend(raw);
     } catch (error) {
       console.error(`❌ Error anulando multa ${id}:`, error);
       throw error;
@@ -186,56 +150,13 @@ class MultasService {
 
   // ===== ADAPTADORES PARA TU ESTRUCTURA DE BD =====
 
+  // Compatibilidad: delegar en adaptMultaFromBackend para evitar duplicación
   private adaptarMultaDelBackend(multaBackend: any): Multa {
-    console.log('🔄 Adaptando multa del backend:', multaBackend);
-
-    return {
-      // IDs
-      id: multaBackend.id,
-      numero: `M-${String(multaBackend.id).padStart(4, '0')}`,
-
-      // Datos principales
-      tipo_infraccion: multaBackend.motivo,
-      descripcion: multaBackend.descripcion || '',
-      monto: parseFloat(multaBackend.monto || 0),
-
-      // Fechas
-      fecha_infraccion: this.normalizarFechaFromDB(multaBackend.fecha),
-      fecha_vencimiento: this.calcularFechaVencimiento(multaBackend.fecha),
-
-      // ✅ Estados - usar tal como vienen de BD
-      estado: multaBackend.estado || 'pendiente', // Tu BD usa 'pagado'/'vencido' 
-      prioridad: 'media',
-
-      // ✅ Relaciones (según tu BD)
-      unidad_id: multaBackend.unidad_id,
-      unidad_numero: multaBackend.unidad_numero || `Unidad ${multaBackend.unidad_id}`,
-      comunidad_id: multaBackend.comunidad_id,
-      comunidad_nombre: multaBackend.comunidad_nombre || `Comunidad ${multaBackend.comunidad_id}`,
-
-      // ✅ Propietario (tu BD)
-      propietario_id: multaBackend.persona_id,
-      propietario_nombre: '',
-
-      // Gestión (campos que tu BD no tiene - valores por defecto)
-      created_by_user_id: 1,
-
-      // ✅ Pagos (según tu BD)
-      monto_pagado: parseFloat(multaBackend.monto_pagado || 0),
-      fecha_pago: multaBackend.fecha_pago ? this.normalizarFechaFromDB(multaBackend.fecha_pago) : undefined,
-
-      // Notificaciones (tu BD no tiene - valores por defecto)
-      notificado_email: false,
-      notificado_sms: false,
-
-      // ✅ Timestamps (según tu BD)
-      created_at: this.normalizarTimestampFromDB(multaBackend.created_at),
-      updated_at: this.normalizarTimestampFromDB(multaBackend.updated_at)
-    };
+    return this.adaptMultaFromBackend(multaBackend);
   }
 
   private adaptarMultasDelBackend(multasBackend: any[]): Multa[] {
-    return multasBackend.map(multa => this.adaptarMultaDelBackend(multa));
+    return (multasBackend || []).map(m => this.adaptMultaFromBackend(m));
   }
 
   // ✅ Formatear fecha para tu backend (DATE field)

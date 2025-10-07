@@ -32,6 +32,19 @@ export enum Permission {
   SYSTEM_CONFIG = 'system_config',
 }
 
+// Mapa simple: permiso lógico -> roles que lo permiten (slugs)
+const PERMISSION_MAP: Record<string, string[]> = {
+  'multas.view_all': ['superadmin','sistema','soporte_tecnico'],
+  'multas.view_community': ['admin_comunidad','presidente_comite','sindico','contador','tesorero','admin_externo','conserje'],
+  'multas.view_own': ['propietario','inquilino','residente'],
+  'multas.create': ['superadmin','presidente_comite','admin_comunidad','sindico','contador','admin_externo','conserje'],
+  'multas.edit': ['superadmin','presidente_comite','admin_comunidad','sindico','contador','admin_externo','soporte_tecnico'],
+  'multas.anular': ['superadmin','presidente_comite','admin_comunidad'],
+  'multas.register_payment': ['superadmin','presidente_comite','admin_comunidad','sindico','contador','tesorero'],
+  'multas.delete': ['superadmin','presidente_comite','admin_comunidad'],
+  'multas.apelar': ['propietario','inquilino','residente']
+};
+
 // Mapa de roles y sus permisos
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   [UserRole.SUPERUSER]: [
@@ -318,4 +331,29 @@ export function PermissionGuard({
     (!permission && !role); // Si no se especifica permiso/rol, mostrar siempre
 
   return hasAccess ? <>{children}</> : <>{fallback}</>;
+}
+
+export function hasPermission(user: any, permission: string, comunidadId?: number) {
+  if (!user) return false;
+  if (user.is_superadmin) return true;
+
+  const allowedRoles = PERMISSION_MAP[permission] ?? [];
+  const userRoles = (user.roles || []).map((r: any) => (r.slug || r.codigo || String(r)).toLowerCase());
+
+  // permiso por rol global
+  if (allowedRoles.some(ar => userRoles.includes(ar))) return true;
+
+  // casos especiales: view_community -> verificar memberships
+  if (permission === 'multas.view_community' || permission === 'multas.create' || permission === 'multas.edit' || permission === 'multas.anular' || permission === 'multas.register_payment') {
+    // si comunidadId especificada, validar membership
+    if (!comunidadId) return user.memberships && user.memberships.length > 0;
+    return (user.memberships || []).some((m: any) => m.comunidad_id === Number(comunidadId));
+  }
+
+  // view_own: check persona_id presence
+  if (permission === 'multas.view_own') {
+    return !!user.persona_id;
+  }
+
+  return false;
 }

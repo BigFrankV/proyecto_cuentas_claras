@@ -3,9 +3,9 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
-import { multasService } from '@/lib/multasService';
+import multasService from '@/lib/multasService';
+import api from '@/lib/api';
 import { toast } from 'react-hot-toast';
-
 // ============================================
 // TIPOS E INTERFACES
 // ============================================
@@ -217,7 +217,7 @@ export default function EditarMulta() {
       setLoading(true);
       console.log(`🔍 Cargando multa ${id}...`);
 
-      const response = await multasService.obtenerMulta(Number(id));
+      const response = await multasService.getMulta(Number(id));
 
       console.log('✅ Multa cargada:', response);
       setMulta(response);
@@ -272,38 +272,19 @@ export default function EditarMulta() {
     }
   };
 
-  const loadUnidades = async () => {
-    try {
-      const response = await fetch('/api/unidades', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+  // obtener comunidadId desde user (user.memberships[0].comunidad_id) o contexto
+  const comunidadId = user?.memberships?.[0]?.comunidad_id;
 
-      if (response.ok) {
-        const data = await response.json();
-        setUnidades(data);
-      }
-    } catch (error) {
-      console.error('Error cargando unidades:', error);
-    }
+  const loadUnidades = async () => {
+    if (!comunidadId) { setUnidades([]); return; }
+    const res = await api.get(`/unidades/comunidad/${comunidadId}`);
+    setUnidades(res.data?.data ?? res.data ?? []);
   };
 
-  const loadPersonasUnidad = async (unidadId: number) => {
-    try {
-      const response = await fetch(`/api/unidades/${unidadId}/personas`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPersonas(data);
-      }
-    } catch (error) {
-      console.error('Error cargando personas:', error);
-    }
+  const loadPersonasUnidad = async (unidadId) => {
+    if (!unidadId) return setPersonas([]);
+    const res = await api.get(`/unidades/${unidadId}/residentes`);
+    setPersonas(res.data?.data ?? res.data ?? []);
   };
 
   // ============================================
@@ -321,9 +302,8 @@ export default function EditarMulta() {
       newErrors.monto = 'El monto debe ser mayor a 0';
     }
 
-    if (!formData.fecha_infraccion) {
-      newErrors.fecha_infraccion = 'La fecha de infracción es requerida';
-    } else {
+    // Fechas opcionales: validar sólo si se ingresan
+    if (formData.fecha_infraccion) {
       const fechaInfraccion = new Date(formData.fecha_infraccion);
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
@@ -332,13 +312,13 @@ export default function EditarMulta() {
       }
     }
 
-    if (!formData.fecha_vencimiento) {
-      newErrors.fecha_vencimiento = 'La fecha de vencimiento es requerida';
-    } else if (formData.fecha_infraccion) {
-      const fechaInfraccion = new Date(formData.fecha_infraccion);
-      const fechaVencimiento = new Date(formData.fecha_vencimiento);
-      if (fechaVencimiento <= fechaInfraccion) {
-        newErrors.fecha_vencimiento = 'Debe ser posterior a la fecha de infracción';
+    if (formData.fecha_vencimiento) {
+      if (formData.fecha_infraccion) {
+        const fechaInfraccion = new Date(formData.fecha_infraccion);
+        const fechaVencimiento = new Date(formData.fecha_vencimiento);
+        if (fechaVencimiento <= fechaInfraccion) {
+          newErrors.fecha_vencimiento = 'Debe ser posterior a la fecha de infracción';
+        }
       }
     }
 
@@ -412,20 +392,21 @@ export default function EditarMulta() {
     setSaving(true);
 
     try {
-      const payload = {
+      const payload: any = {
         unidad_id: formData.unidad_id,
         persona_id: formData.persona_id,
         tipo_infraccion: formData.tipo_infraccion,
         descripcion: formData.descripcion || null,
         monto: parseFloat(formData.monto),
-        fecha_infraccion: formData.fecha_infraccion,
-        fecha_vencimiento: formData.fecha_vencimiento,
+        // enviar fechas sólo si usuario las dejó; si no, omitir (backend mantiene valor)
+        ...(formData.fecha_infraccion ? { fecha_infraccion: formData.fecha_infraccion } : {}),
+        ...(formData.fecha_vencimiento ? { fecha_vencimiento: formData.fecha_vencimiento } : {}),
         prioridad: formData.prioridad
       };
 
       console.log('📝 Actualizando multa con datos:', payload);
 
-      const response = await multasService.actualizarMulta(Number(id), payload);
+      const response = await multasService.updateMulta(Number(id), payload);
 
       console.log('✅ Multa actualizada:', response);
 

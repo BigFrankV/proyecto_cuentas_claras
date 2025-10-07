@@ -6,6 +6,8 @@ import multasService from '../lib/multasService';
 import { Multa, MultaFiltros, MultasEstadisticas } from '../types/multas';
 import Head from 'next/head';
 import Link from 'next/link';
+import ActionsDropdown from '../components/ActionsDropdown';
+import { hasPermission } from '../lib/usePermissions';
 
 export default function MultasListado() {
   const router = useRouter();
@@ -167,6 +169,37 @@ export default function MultasListado() {
     }
   };
 
+  // ==== NUEVO: helper para decidir si se puede editar una multa ====
+  const canEditMulta = (m: Multa) => {
+    if (!m) return false;
+    // no editar si ya está pagada o anulada
+    if (['pagado', 'anulada'].includes(m.estado)) return false;
+    // superadmin siempre puede
+    if (user?.is_superadmin) return true;
+    // comprobar permiso y pertenencia a comunidad
+    return hasPermission(user, 'multas.edit', m.comunidad_id);
+  };
+  // ==============================================================
+
+  // ==== HELPERS: permisos por multa ====
+  const canAnularMulta = (m: Multa) => {
+    if (!m) return false;
+    if (m.estado === 'anulada') return false;
+    // superadmin o permiso de comunidad
+    if (user?.is_superadmin) return true;
+    return hasPermission(user, 'multas.anular', m.comunidad_id);
+  };
+
+  const canApelarMulta = (m: Multa) => {
+    if (!m) return false;
+    // sólo propietario/inquilino/residente pueden apelar su propia multa y solo si no está anulada
+    if (m.estado === 'anulada') return false;
+    if (!user?.persona_id) return false;
+    if (m.persona_id !== user.persona_id) return false;
+    return hasPermission(user, 'multas.apelar', m.comunidad_id) || user?.is_superadmin;
+  };
+  // ==============================================================
+
   const handleExportar = async () => {
     try {
       console.log('📥 Exportando multas...');
@@ -275,10 +308,12 @@ export default function MultasListado() {
                 <span className="material-icons me-1">file_download</span>
                 Exportar
               </button>
-              <Link href="/multas/nueva" className="btn btn-primary">
-                <span className="material-icons me-1">add</span>
-                Nueva Multa
-              </Link>
+              { (hasPermission(user, 'multas.create') || user?.is_superadmin) && (
+                <Link href="/multas/nueva" className="btn btn-primary">
+                  <span className="material-icons me-1">add</span>
+                  Nueva Multa
+                </Link>
+              )}
             </div>
           </div>
 
@@ -580,71 +615,64 @@ export default function MultasListado() {
                         </span>
                       </td>
                       <td>
-                        <div className="dropdown">
-                          <button 
-                            className="btn btn-sm btn-outline-secondary dropdown-toggle" 
-                            data-bs-toggle="dropdown"
-                          >
-                            Acciones
-                          </button>
-                          <ul className="dropdown-menu">
-                            <li>
-                              <button 
-                                className="dropdown-item"
-                                onClick={() => handleVerDetalle(multa.id)}
-                              >
-                                <span className="material-icons me-2">visibility</span>
-                                Ver Detalle
-                              </button>
-                            </li>
-                            {['pendiente', 'vencido'].includes(multa.estado) && (
+                        <ActionsDropdown
+                          trigger={<button className="btn btn-sm btn-outline-secondary">Acciones ▾</button>}
+                          menu={
+                            <ul style={{ margin: 0, padding: 8, listStyle: 'none', minWidth: 180 }}>
                               <li>
-                                <button 
-                                  className="dropdown-item text-success"
-                                  onClick={() => handleRegistrarPago(multa.id)}
-                                >
-                                  <span className="material-icons me-2">payment</span>
-                                  Registrar Pago
+                                <button className="dropdown-item" onClick={() => handleVerDetalle(multa.id)}>
+                                  <span className="material-icons me-2">visibility</span>
+                                  Ver Detalle
                                 </button>
                               </li>
-                            )}
-                            {!['pagado', 'anulada'].includes(multa.estado) && (
-                              <li>
-                                <button 
-                                  className="dropdown-item"
-                                  onClick={() => handleEditar(multa.id)}
-                                >
-                                  <span className="material-icons me-2">edit</span>
-                                  Editar
-                                </button>
-                              </li>
-                            )}
-                            <li><hr className="dropdown-divider" /></li>
-                            <li>
-                              <button 
-                                className="dropdown-item"
-                                onClick={() => handleEnviarRecordatorio(multa.id)}
-                              >
-                                <span className="material-icons me-2">email</span>
-                                Enviar Recordatorio
-                              </button>
-                            </li>
-                            {!['pagado', 'anulada'].includes(multa.estado) && (
-                              <>
-                                <li><hr className="dropdown-divider" /></li>
+                              { hasPermission(user, 'multas.register_payment') && ['pendiente','vencido'].includes(multa.estado) && (
                                 <li>
-                                  <button 
-                                    className="dropdown-item text-danger"
-                                    onClick={() => handleAnular(multa.id)}
-                                  >
-                                    <span className="material-icons me-2">cancel</span>
-                                    Anular Multa
+                                  <button className="dropdown-item text-success" onClick={() => handleRegistrarPago(multa.id)}>
+                                    <span className="material-icons me-2">payment</span>
+                                    Registrar Pago
                                   </button>
                                 </li>
-                              </>
-                            )}
-                          </ul>
-                        </div>
+                              )}
+                              { canEditMulta(multa) && (
+                                <li>
+                                  <button className="dropdown-item" onClick={() => handleEditar(multa.id)}>
+                                    <span className="material-icons me-2">edit</span>
+                                    Editar
+                                  </button>
+                                </li>
+                              )}
+                              <li><hr className="dropdown-divider" /></li>
+                              <li>
+                                <button className="dropdown-item" onClick={() => handleEnviarRecordatorio(multa.id)}>
+                                  <span className="material-icons me-2">email</span>
+                                  Enviar Recordatorio
+                                </button>
+                              </li>
+                              { canAnularMulta(multa) && (
+                                <>
+                                  <li><hr className="dropdown-divider" /></li>
+                                  <li>
+                                    <button className="dropdown-item text-danger" onClick={() => handleAnular(multa.id)}>
+                                      <span className="material-icons me-2">cancel</span>
+                                      Anular Multa
+                                    </button>
+                                  </li>
+                                </>
+                              )}
+                              { canApelarMulta(multa) && (
+                                <>
+                                  <li><hr className="dropdown-divider" /></li>
+                                  <li>
+                                    <button className="dropdown-item text-info" onClick={() => handleApelar(multa.id)}>
+                                      <span className="material-icons me-2">gavel</span>
+                                      Apelar
+                                    </button>
+                                  </li>
+                                </>
+                              )}
+                            </ul>
+                          }
+                        />
                       </td>
                     </tr>
                   ))}

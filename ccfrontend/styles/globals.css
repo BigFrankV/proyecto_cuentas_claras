@@ -1,4 +1,4 @@
-/* Variables CSS personalizadas */
+  /* Variables CSS personalizadas */
 :root {
   --color-primary: #0d47a1;
   --color-secondary: #1976d2;
@@ -1429,4 +1429,21 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Evitar que el dropdown quede recortado por el contenedor de la tabla */
+.table-responsive, .table-wrapper, .antd-table-wrapper, .multas-table-wrapper {
+  overflow: visible !important;
+}
+
+/* Asegurar que el menú desplegable se muestre encima */
+.actions-dropdown, .actions-dropdown .dropdown {
+  position: relative;
+  z-index: 2000;
+}
+
+.actions-dropdown .dropdown-menu, .dropdown-menu {
+  position: absolute;
+  z-index: 3000 !important;
+  /* si usas transform en ancestros, puede crear stacking context; el portal sería la solución definitiva */
 }
