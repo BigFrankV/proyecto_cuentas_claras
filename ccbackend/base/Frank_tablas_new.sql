@@ -1,4 +1,3 @@
-
 -- ============================================
 -- MIGRACIÓN 3: NUEVAS COLUMNAS EN TABLA gasto
 -- ============================================
@@ -80,50 +79,12 @@ VALUES
   (1, 'UPDATE', 'persona', 1, '{"nombres": "María José"}', '{"nombres": "Patricio"}', '192.168.1.100', '2025-09-18 20:33:26'),
   (2, 'CREATE', 'multa', 1, NULL, '{"monto": 50000.00, "motivo": "Ruidos molestos"}', '192.168.1.101', '2025-09-18 20:08:33');
 
-
-
-
-
 -- ============================================
--- MIGRACIÓN 3: TABLA apelacion_multa
+-- TRIGGERS Y TABLAS RELACIONADAS CON MULTAS (documento_multa, historial_multa, etc.)
 -- ============================================
 
-CREATE TABLE IF NOT EXISTS `apelacion_multa` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT,
-  `multa_id` BIGINT NOT NULL COMMENT 'ID de la multa apelada',
-  `usuario_id` BIGINT NOT NULL COMMENT 'Usuario que presenta la apelación',
-  `motivo` TEXT NOT NULL COMMENT 'Motivo de la apelación',
-  `evidencias` JSON DEFAULT NULL COMMENT 'URLs o referencias a archivos de evidencia',
-  `estado` ENUM('pendiente','en_revision','aceptada','rechazada') NOT NULL DEFAULT 'pendiente' COMMENT 'Estado de la apelación',
-  `respuesta` TEXT DEFAULT NULL COMMENT 'Respuesta del administrador',
-  `revisada_por` BIGINT DEFAULT NULL COMMENT 'Usuario que revisó la apelación',
-  `fecha_apelacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de presentación',
-  `fecha_revision` DATETIME DEFAULT NULL COMMENT 'Fecha de revisión',
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `fk_apelacion_multa` (`multa_id`),
-  KEY `fk_apelacion_usuario` (`usuario_id`),
-  KEY `fk_apelacion_revisada_por` (`revisada_por`),
-  KEY `idx_apelacion_estado` (`estado`),
-  KEY `idx_apelacion_fecha` (`fecha_apelacion`),
-  CONSTRAINT `fk_apelacion_multa` 
-    FOREIGN KEY (`multa_id`) REFERENCES `multa` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_apelacion_usuario` 
-    FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`),
-  CONSTRAINT `fk_apelacion_revisada_por` 
-    FOREIGN KEY (`revisada_por`) REFERENCES `usuario` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-COMMENT='Apelaciones presentadas por usuarios contra multas';
-
--- Índice compuesto para consultas de multas con apelaciones pendientes
-CREATE INDEX `idx_apelacion_multa_estado` ON `apelacion_multa` (`multa_id`, `estado`);
-
--- Verificar estructura
-DESCRIBE apelacion_multa;
-
 -- ============================================
--- MIGRACIÓN 4: TABLA documento_multa
+-- MIGRACIÓN: documento_multa (adjuntos a multas)
 -- ============================================
 
 CREATE TABLE IF NOT EXISTS `documento_multa` (
@@ -149,7 +110,7 @@ CREATE TABLE IF NOT EXISTS `documento_multa` (
 COMMENT='Documentos adjuntos a multas (fotos, videos, actas, etc.)';
 
 -- Índice para búsqueda por multa y tipo
-CREATE INDEX `idx_documento_multa_tipo` ON `documento_multa` (`multa_id`, `tipo`);
+CREATE INDEX IF NOT EXISTS `idx_documento_multa_tipo` ON `documento_multa` (`multa_id`, `tipo`);
 
 -- Verificar estructura
 DESCRIBE documento_multa;
@@ -174,13 +135,7 @@ WHERE NOT EXISTS (
 )
 LIMIT 10;
 
--- Ejemplo de apelación
-INSERT IGNORE INTO `apelacion_multa` 
-  (`multa_id`, `usuario_id`, `motivo`, `estado`, `fecha_apelacion`)
-VALUES
-  (1, 2, 'No me encontraba en la propiedad en la fecha indicada. Adjunto comprobante de viaje.', 'pendiente', NOW());
-
--- Ejemplo de documento
+-- Ejemplo de documento (solo si no existe)
 INSERT IGNORE INTO `documento_multa` 
   (`multa_id`, `tipo`, `nombre_archivo`, `ruta_archivo`, `descripcion`, `subido_por`)
 VALUES
@@ -192,7 +147,6 @@ VALUES
 
 -- Trigger: Registrar creación de multa
 DELIMITER $$
-
 CREATE TRIGGER `trg_multa_after_insert`
 AFTER INSERT ON `multa`
 FOR EACH ROW
@@ -229,10 +183,7 @@ BEGIN
     (NEW.id, accion_texto, IFNULL(NEW.aprobada_por, 1), OLD.monto, NEW.monto, 
      CONCAT('Estado cambiado de ', OLD.estado, ' a ', NEW.estado));
 END$$
-
 DELIMITER ;
-
-
 
 -- ============================================
 -- PASO 1: VERIFICAR QUÉ ES usuario_miembro_comunidad
@@ -245,11 +196,6 @@ SELECT
 FROM information_schema.TABLES
 WHERE TABLE_SCHEMA = 'ccdb' 
   AND TABLE_NAME = 'usuario_miembro_comunidad';
-
--- Resultado esperado:
--- TABLE_NAME: usuario_miembro_comunidad
--- TABLE_TYPE: BASE TABLE (es una tabla física)
--- ENGINE: InnoDB
 
 -- ============================================
 -- PASO 2: HACER BACKUP DE LA TABLA (POR SEGURIDAD)
@@ -299,10 +245,6 @@ FROM information_schema.TABLES
 WHERE TABLE_SCHEMA = 'ccdb' 
   AND TABLE_NAME = 'usuario_miembro_comunidad';
 
--- Resultado esperado:
--- TABLE_NAME: usuario_miembro_comunidad
--- TABLE_TYPE: VIEW ✅
-
 -- Verificar datos
 SELECT COUNT(*) as registros_en_vista FROM usuario_miembro_comunidad;
 
@@ -331,17 +273,6 @@ INNER JOIN usuario u ON umc.persona_id = u.persona_id
 INNER JOIN rol_sistema rs ON umc.rol = rs.codigo
 WHERE umc.persona_id = 1 AND umc.activo = 1;
 
--- Resultado esperado:
--- id: 1
--- comunidad_id: 6
--- comunidad: "Comunidad Puente Alto #6"
--- persona_id: 1
--- username: "patricio"
--- rol: "superadmin"
--- rol_nombre: "Superadmin"
--- nivel_acceso: 100
--- activo: 1
-
 -- ============================================
 -- PASO 7: VERIFICAR LA QUERY EXACTA DEL BACKEND
 -- ============================================
@@ -362,8 +293,6 @@ FROM usuario_miembro_comunidad umc
 INNER JOIN comunidad c ON umc.comunidad_id = c.id
 INNER JOIN rol_sistema rs ON umc.rol = rs.codigo
 WHERE umc.persona_id = 1 AND umc.activo = 1;
-
--- Si esto devuelve 1 fila, el login funcionará ✅
 
 -- ============================================
 -- VERIFICACIÓN FINAL
@@ -393,45 +322,6 @@ WHERE EXISTS (
   FROM usuario_miembro_comunidad 
   WHERE persona_id = 1 AND activo = 1
 );
-
--- Resultado esperado:
--- ✅ usuario_miembro_comunidad es una VISTA
--- ✅ Vista tiene 20 registros
--- ✅ Usuario patricio (persona_id=1) tiene roles
-
--- ============================================
--- RESUMEN COMPLETO
--- ============================================
-
-SELECT 
-  'Usuario patricio' as item,
-  u.id as usuario_id,
-  u.persona_id,
-  u.username as valor
-FROM usuario u
-WHERE u.username = 'patricio'
-
-UNION ALL
-
-SELECT 
-  'Rol en usuario_rol_comunidad',
-  urc.usuario_id,
-  NULL,
-  CONCAT('Comunidad ', urc.comunidad_id, ', Rol ', rs.nombre)
-FROM usuario_rol_comunidad urc
-INNER JOIN rol_sistema rs ON urc.rol_id = rs.id
-WHERE urc.usuario_id = 1 AND urc.activo = 1
-
-UNION ALL
-
-SELECT 
-  'Rol en VISTA usuario_miembro_comunidad',
-  NULL,
-  umc.persona_id,
-  CONCAT('Comunidad ', c.razon_social, ', Rol ', umc.rol)
-FROM usuario_miembro_comunidad umc
-INNER JOIN comunidad c ON umc.comunidad_id = c.id
-WHERE umc.persona_id = 1 AND umc.activo = 1;
 
 -- ============================================
 -- FIN - AHORA REINICIA EL BACKEND Y PRUEBA LOGIN
@@ -473,3 +363,107 @@ ALTER TABLE usuario_rol_comunidad
 -- ============================================
 -- FIN - AHORA REINICIA EL BACKEND Y PRUEBA LOGIN
 -- ============================================
+
+
+/*
+  MIGRACIÓN: normalizar / asegurar tabla de apelaciones (multa_apelacion)
+  - Crea la tabla si no existe (nombre: multa_apelacion)
+  - Añade columnas faltantes si es necesario
+  - Crea índices si faltan
+  - Añade foreign keys si faltan
+  - Idempotente: se puede ejecutar varias veces sin duplicar
+*/
+CREATE TABLE IF NOT EXISTS `multa_apelacion` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `multa_id` BIGINT NOT NULL,
+  `usuario_id` BIGINT NOT NULL,
+  `persona_id` BIGINT DEFAULT NULL,
+  `comunidad_id` BIGINT DEFAULT NULL,
+  `motivo` TEXT NOT NULL,
+  `documentos_json` JSON DEFAULT NULL,
+  `estado` ENUM('pendiente','aprobada','rechazada') NOT NULL DEFAULT 'pendiente',
+  `resolucion` TEXT DEFAULT NULL,
+  `resuelto_por` BIGINT DEFAULT NULL,
+  `fecha_apelacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_resolucion` DATETIME DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+COMMENT='Apelaciones relacionadas con multas (multa_apelacion)';
+
+-- Crear índices de forma segura (procedimiento temporal)
+DELIMITER $$
+DROP PROCEDURE IF EXISTS _ensure_idx_multa_apelacion$$
+CREATE PROCEDURE _ensure_idx_multa_apelacion()
+BEGIN
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'multa_apelacion' AND INDEX_NAME = 'idx_apelacion_multa') = 0 THEN
+    CREATE INDEX idx_apelacion_multa ON multa_apelacion(multa_id);
+  END IF;
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'multa_apelacion' AND INDEX_NAME = 'idx_apelacion_usuario') = 0 THEN
+    CREATE INDEX idx_apelacion_usuario ON multa_apelacion(usuario_id);
+  END IF;
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'multa_apelacion' AND INDEX_NAME = 'idx_apelacion_persona') = 0 THEN
+    CREATE INDEX idx_apelacion_persona ON multa_apelacion(persona_id);
+  END IF;
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'multa_apelacion' AND INDEX_NAME = 'idx_apelacion_comunidad') = 0 THEN
+    CREATE INDEX idx_apelacion_comunidad ON multa_apelacion(comunidad_id);
+  END IF;
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'multa_apelacion' AND INDEX_NAME = 'idx_apelacion_estado') = 0 THEN
+    CREATE INDEX idx_apelacion_estado ON multa_apelacion(estado);
+  END IF;
+END$$
+CALL _ensure_idx_multa_apelacion()$$
+DROP PROCEDURE IF EXISTS _ensure_idx_multa_apelacion$$
+DELIMITER ;
+
+-- Añadir foreign keys de forma segura (procedimiento temporal)
+DELIMITER $$
+DROP PROCEDURE IF EXISTS _ensure_fks_multa_apelacion$$
+CREATE PROCEDURE _ensure_fks_multa_apelacion()
+BEGIN
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+      WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'multa_apelacion' AND CONSTRAINT_NAME = 'fk_multa_apelacion_multa') = 0 THEN
+    ALTER TABLE multa_apelacion
+      ADD CONSTRAINT fk_multa_apelacion_multa FOREIGN KEY (multa_id) REFERENCES multa(id) ON DELETE CASCADE;
+  END IF;
+
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+      WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'multa_apelacion' AND CONSTRAINT_NAME = 'fk_multa_apelacion_usuario') = 0 THEN
+    ALTER TABLE multa_apelacion
+      ADD CONSTRAINT fk_multa_apelacion_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id);
+  END IF;
+
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+      WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'multa_apelacion' AND CONSTRAINT_NAME = 'fk_multa_apelacion_persona') = 0 THEN
+    ALTER TABLE multa_apelacion
+      ADD CONSTRAINT fk_multa_apelacion_persona FOREIGN KEY (persona_id) REFERENCES persona(id);
+  END IF;
+
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+      WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'multa_apelacion' AND CONSTRAINT_NAME = 'fk_multa_apelacion_comunidad') = 0 THEN
+    ALTER TABLE multa_apelacion
+      ADD CONSTRAINT fk_multa_apelacion_comunidad FOREIGN KEY (comunidad_id) REFERENCES comunidad(id);
+  END IF;
+
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+      WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'multa_apelacion' AND CONSTRAINT_NAME = 'fk_multa_apelacion_resuelto_por') = 0 THEN
+    ALTER TABLE multa_apelacion
+      ADD CONSTRAINT fk_multa_apelacion_resuelto_por FOREIGN KEY (resuelto_por) REFERENCES usuario(id);
+  END IF;
+END$$
+CALL _ensure_fks_multa_apelacion()$$
+DROP PROCEDURE IF EXISTS _ensure_fks_multa_apelacion$$
+DELIMITER ;
+
+-- Datos de ejemplo (solo si no existen)
+INSERT INTO multa_apelacion (multa_id, usuario_id, motivo, estado, fecha_apelacion)
+SELECT 1, 1, 'Ejemplo de apelación', 'pendiente', NOW()
+WHERE NOT EXISTS (SELECT 1 FROM multa_apelacion WHERE multa_id = 1 AND usuario_id = 1 LIMIT 1);
+
+-- FIN DEL ARCHIVO

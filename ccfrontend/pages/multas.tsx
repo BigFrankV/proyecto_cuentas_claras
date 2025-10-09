@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '../components/layout/Layout';
 import { ProtectedRoute, useAuth } from '../lib/useAuth';
@@ -7,7 +7,7 @@ import { Multa, MultaFiltros, MultasEstadisticas } from '../types/multas';
 import Head from 'next/head';
 import Link from 'next/link';
 import ActionsDropdown from '../components/ActionsDropdown';
-import { hasPermission } from '../lib/usePermissions';
+import { hasPermission, canCreateAnyMulta, canCreateMulta, canRegisterPayment } from '../lib/usePermissions';
 
 export default function MultasListado() {
   const router = useRouter();
@@ -21,6 +21,7 @@ export default function MultasListado() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [prioridadFiltro, setPrioridadFiltro] = useState<string>('all');
+  const [isMobile, setIsMobile] = useState(false);
 
   // Cargar datos
   useEffect(() => {
@@ -261,6 +262,29 @@ export default function MultasListado() {
     return new Date(dateString).toLocaleDateString('es-CL');
   };
 
+  // reemplazar uso de multasService.estaVencida por helper local
+  const isVencida = (fechaString?: string) => {
+    if (!fechaString) return false;
+    try {
+      return new Date(fechaString) < new Date();
+    } catch {
+      return false;
+    }
+  };
+ 
+  // handler para apelar (faltaba)
+  const handleApelar = (multaId: number) => {
+    router.push(`/multas/${multaId}/apelacion`);
+  };
+ 
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768); // ajusta breakpoint si usas otro
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -308,7 +332,7 @@ export default function MultasListado() {
                 <span className="material-icons me-1">file_download</span>
                 Exportar
               </button>
-              { (hasPermission(user, 'multas.create') || user?.is_superadmin) && (
+              { (canCreateAnyMulta(user) || user?.is_superadmin) && (
                 <Link href="/multas/nueva" className="btn btn-primary">
                   <span className="material-icons me-1">add</span>
                   Nueva Multa
@@ -600,7 +624,7 @@ export default function MultasListado() {
                       <td>{formatDate(multa.fecha_infraccion || multa.fecha)}</td>
                       <td>
                         {formatDate(multa.fecha_vencimiento)}
-                        {multasService.estaVencida && multasService.estaVencida(multa.fecha_vencimiento) && (
+                        {isVencida(multa.fecha_vencimiento) && (
                           <small className="text-danger d-block">¡Vencida!</small>
                         )}
                       </td>
@@ -625,7 +649,7 @@ export default function MultasListado() {
                                   Ver Detalle
                                 </button>
                               </li>
-                              { hasPermission(user, 'multas.register_payment') && ['pendiente','vencido'].includes(multa.estado) && (
+                              { canRegisterPayment(user, multa.comunidad_id) && ['pendiente','vencido'].includes(multa.estado) && (
                                 <li>
                                   <button className="dropdown-item text-success" onClick={() => handleRegistrarPago(multa.id)}>
                                     <span className="material-icons me-2">payment</span>

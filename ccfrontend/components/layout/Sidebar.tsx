@@ -2,12 +2,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/lib/useAuth';
-import { getUserRole } from '@/lib/roles';
-import {
-  usePermissions,
-  PermissionGuard,
-  Permission,
-} from '@/lib/usePermissions';
+// importar helpers/enum desde usePermissions
+import { usePermissions, hasPermission, Permission, canSeeMultas } from '@/lib/usePermissions';
 
 // Definición de las secciones del menú
 const menuSections = [
@@ -113,8 +109,29 @@ const menuSections = [
 export default function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { isSuperUser, hasPermission, currentRole } = usePermissions();
+  const { isSuperUser, currentRole } = usePermissions();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Roles que pueden ver Sanciones/Multas (rol_slug tal como viene de la vista)
+  const MULTAS_ROLES = [
+    'superadmin',
+    'sistema',
+    'soporte_tecnico',
+    'presidente_comite',
+    'admin_comunidad',
+    'sindico',
+    'admin_externo',
+    'tesorero',
+    'contador',
+    'conserje',
+    'revisor_cuentas',
+    'auditor_externo',
+    'moderador_comunidad',
+    'secretario',
+    'propietario',
+    'inquilino',
+    'residente'
+  ];
 
   // Función para determinar si una sección debe mostrarse según permisos
   const shouldShowSection = (sectionTitle: string) => {
@@ -124,23 +141,28 @@ export default function Sidebar() {
       case 'Dashboard':
         return true; // Todos pueden ver el dashboard
       case 'Estructura':
-        return hasPermission(Permission.VIEW_COMMUNITIES);
+        return hasPermission(user, Permission.VIEW_COMMUNITIES);
       case 'Residentes':
-        return hasPermission(Permission.VIEW_USERS);
+        return hasPermission(user, Permission.VIEW_USERS);
       case 'Finanzas':
-        return hasPermission(Permission.VIEW_FINANCES);
+        return hasPermission(user, Permission.VIEW_FINANCES);
       case 'Gastos':
-        return hasPermission(Permission.VIEW_FINANCES); // Gastos también son finanzas
+        return hasPermission(user, Permission.VIEW_FINANCES); // Gastos también son finanzas
       case 'Servicios':
-        return hasPermission(Permission.VIEW_COMMUNITIES); // Servicios de comunidades
+        return hasPermission(user, Permission.VIEW_COMMUNITIES); // Servicios de comunidades
       case 'Amenidades':
-        return hasPermission(Permission.VIEW_COMMUNITIES); // Amenidades de comunidades
-      case 'Sanciones':
-        return hasPermission(Permission.VIEW_USERS); // Sanciones a usuarios
+        return hasPermission(user, Permission.VIEW_COMMUNITIES); // Amenidades de comunidades
+
+      // Sanciones: permitimos si el usuario tiene permiso general o pertenece a un rol de MULTAS_ROLES
+      case 'Sanciones': {
+        // usar helper centralizado
+        return canSeeMultas(user) || hasPermission(user, Permission.VIEW_USERS);
+      }
+
       case 'Comunicación':
         return true; // Comunicación básica para todos
       case 'Utilidades':
-        return hasPermission(Permission.VIEW_REPORTS); // Acceso a herramientas de utilidad
+        return hasPermission(user, Permission.VIEW_REPORTS); // Acceso a herramientas de utilidad
       default:
         return false;
     }
@@ -172,14 +194,24 @@ export default function Sidebar() {
       '/lecturas': Permission.VIEW_COMMUNITIES,
       '/consumos': Permission.VIEW_COMMUNITIES,
       '/tarifas': Permission.VIEW_COMMUNITIES,
+      // mantenemos VIEW_USERS como fallback para sanciones, pero hacemos comprobación adicional abajo
       '/multas': Permission.VIEW_USERS,
       '/multas-nueva': Permission.VIEW_USERS,
       '/apelaciones': Permission.VIEW_USERS,
       '/apelaciones-nueva': Permission.VIEW_USERS,
     };
 
+    // Si la ruta está en el mapa y el usuario tiene ese permiso, mostrar
     const requiredPermission = routePermissions[href];
-    return !requiredPermission || hasPermission(requiredPermission);
+    if (requiredPermission && hasPermission(user, requiredPermission)) return true;
+
+    // Reglas especiales para rutas de Sanciones (por si el permiso no está mapeado)
+    if (href.startsWith('/multas') || href.startsWith('/apelaciones')) {
+      return canSeeMultas(user) || isSuperUser();
+    }
+
+    // Si no hay permiso requerido explícito, mostrar por defecto
+    return !requiredPermission;
   };
 
   const isActive = (href: string) => {
@@ -239,28 +271,20 @@ export default function Sidebar() {
               borderRadius: '50%',
             }}
           >
-            {user?.persona?.nombres && user?.persona?.apellidos 
+            {user?.persona?.nombres && user?.persona?.apellidos
               ? `${user.persona.nombres.charAt(0)}${user.persona.apellidos.charAt(0)}`.toUpperCase()
               : user?.username ? user.username.substring(0, 2).toUpperCase() : 'U'}
           </div>
           <div>
             <span className='d-block text-white'>
-              {user?.persona?.nombres && user?.persona?.apellidos 
+              {user?.persona?.nombres && user?.persona?.apellidos
                 ? `${user.persona.nombres} ${user.persona.apellidos}`
                 : user?.username || 'Usuario'}
               {isSuperUser() ? (
-                <span
-                  className='badge bg-warning text-dark ms-1'
-                  style={{ fontSize: '0.6rem' }}
-                >
-                  SUPERADMIN
-                </span>
+                <span className='badge bg-warning text-dark ms-1' style={{ fontSize: '0.6rem' }}>SUPERADMIN</span>
               ) : (
-                <span
-                  className='badge bg-secondary ms-1'
-                  style={{ fontSize: '0.6rem' }}
-                >
-                  {getUserRole(user).toUpperCase()}
+                <span className='badge bg-secondary ms-1' style={{ fontSize: '0.6rem' }}>
+                  {String(currentRole).toUpperCase()}
                 </span>
               )}
             </span>

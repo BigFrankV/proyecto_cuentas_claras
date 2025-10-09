@@ -220,6 +220,26 @@ router.post('/login', [
       return res.json({ twoFactorRequired: true, tempToken });
     }
 
+    // Obtener memberships desde la view consolidada
+    const [memberships] = await db.query(
+      `SELECT
+         id AS membership_id,
+         usuario_id,
+         persona_id,
+         comunidad_id,
+         rol_id,
+         rol_slug AS rol,
+         rol_nombre,
+         desde,
+         hasta,
+         activo,
+         comunidad_nombre
+       FROM usuario_miembro_comunidad
+       WHERE persona_id = ? AND activo = 1`,
+      [ user.persona_id ]
+    );
+    user.memberships = memberships || [];
+
     // 7. ✅ CONSTRUIR ARRAYS (SIN DUPLICADOS)
     const rolesArray = userRoles.map(r => ({
       id: r.rol_id,

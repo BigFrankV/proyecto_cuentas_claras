@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 import multasService from '@/lib/multasService';
 import api from '@/lib/api';
 import { toast } from 'react-hot-toast';
+import useAuth from '@/lib/useAuth'; // <-- import faltante
+
 // ============================================
 // TIPOS E INTERFACES
 // ============================================
@@ -74,44 +76,44 @@ interface ValidationErrors {
 // ============================================
 
 const TIPOS_INFRACCION = [
-  { 
-    value: 'Ruidos molestos fuera de horario', 
+  {
+    value: 'Ruidos molestos fuera de horario',
     icon: 'volume_up',
     color: '#ff9800',
     descripcion: 'Ruidos que perturban la tranquilidad después de las 22:00'
   },
-  { 
-    value: 'Mal uso de áreas comunes', 
+  {
+    value: 'Mal uso de áreas comunes',
     icon: 'people',
     color: '#2196f3',
     descripcion: 'Uso inadecuado de espacios compartidos'
   },
-  { 
-    value: 'Mascotas sin correa', 
+  {
+    value: 'Mascotas sin correa',
     icon: 'pets',
     color: '#4caf50',
     descripcion: 'Mascotas circulando sin correa en áreas comunes'
   },
-  { 
-    value: 'Basura fuera del horario', 
+  {
+    value: 'Basura fuera del horario',
     icon: 'delete',
     color: '#f44336',
     descripcion: 'Depósito de basura fuera del horario establecido'
   },
-  { 
-    value: 'Daño a la propiedad común', 
+  {
+    value: 'Daño a la propiedad común',
     icon: 'warning',
     color: '#ff5722',
     descripcion: 'Daños causados a instalaciones compartidas'
   },
-  { 
-    value: 'Incumplimiento de reglamento', 
+  {
+    value: 'Incumplimiento de reglamento',
     icon: 'gavel',
     color: '#9c27b0',
     descripcion: 'Violación de normas del reglamento interno'
   },
-  { 
-    value: 'Otro', 
+  {
+    value: 'Otro',
     icon: 'more_horiz',
     color: '#607d8b',
     descripcion: 'Otra infracción no especificada'
@@ -119,30 +121,30 @@ const TIPOS_INFRACCION = [
 ];
 
 const PRIORIDADES = [
-  { 
-    value: 'baja' as const, 
-    label: 'Baja', 
+  {
+    value: 'baja' as const,
+    label: 'Baja',
     icon: 'flag',
     color: '#4caf50',
     descripcion: 'Situación menor, no urgente'
   },
-  { 
-    value: 'media' as const, 
-    label: 'Media', 
+  {
+    value: 'media' as const,
+    label: 'Media',
     icon: 'flag',
     color: '#ff9800',
     descripcion: 'Requiere atención moderada'
   },
-  { 
-    value: 'alta' as const, 
-    label: 'Alta', 
+  {
+    value: 'alta' as const,
+    label: 'Alta',
     icon: 'flag',
     color: '#ff5722',
     descripcion: 'Situación importante, requiere pronta resolución'
   },
-  { 
-    value: 'critica' as const, 
-    label: 'Crítica', 
+  {
+    value: 'critica' as const,
+    label: 'Crítica',
     icon: 'priority_high',
     color: '#f44336',
     descripcion: 'Situación grave, requiere acción inmediata'
@@ -156,6 +158,7 @@ const PRIORIDADES = [
 export default function EditarMulta() {
   const router = useRouter();
   const { id } = router.query;
+  const { user } = useAuth();
 
   // Estados principales
   const [multa, setMulta] = useState<Multa | null>(null);
@@ -180,17 +183,68 @@ export default function EditarMulta() {
     prioridad: 'media'
   });
 
-  // Validaciones
+  // Estados auxiliares que faltaban
   const [errors, setErrors] = useState<ValidationErrors>({});
-
-  // Datos seleccionados (para mostrar)
   const [unidadSeleccionada, setUnidadSeleccionada] = useState<Unidad | null>(null);
   const [personaSeleccionada, setPersonaSeleccionada] = useState<Persona | null>(null);
+  const [showUnidadModal, setShowUnidadModal] = useState<boolean>(false);
+  const [showPersonaModal, setShowPersonaModal] = useState<boolean>(false);
 
-  // Estados de UI
-  const [showUnidadModal, setShowUnidadModal] = useState(false);
-  const [showPersonaModal, setShowPersonaModal] = useState(false);
+  // Handler de cancelar / volver
+  const handleCancel = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/multas');
+    }
+  };
 
+  // ============================================
+  // VALIDACIONES (validar sólo campos modificados)
+  // ============================================
+  const getChangedFields = (): Partial<FormData> => {
+    if (!multa) return {};
+    const changes: Partial<FormData> = {};
+    if (Number(formData.unidad_id) !== Number(multa.unidad_id)) changes.unidad_id = formData.unidad_id;
+    if ((formData.persona_id ?? null) !== (multa.persona_id ?? null)) changes.persona_id = formData.persona_id ?? null;
+    if ((formData.tipo_infraccion ?? '') !== String(multa.tipo_infraccion ?? multa.motivo ?? '')) changes.tipo_infraccion = formData.tipo_infraccion;
+    if ((formData.descripcion ?? '') !== String(multa.descripcion ?? '')) changes.descripcion = formData.descripcion;
+    if (String(formData.monto) !== String(multa.monto)) changes.monto = formData.monto;
+    if ((formData.fecha_infraccion ?? '') !== String(multa.fecha_infraccion ?? multa.fecha ?? '')) changes.fecha_infraccion = formData.fecha_infraccion;
+    if ((formData.fecha_vencimiento ?? '') !== String(multa.fecha_vencimiento ?? '')) changes.fecha_vencimiento = formData.fecha_vencimiento;
+    if ((formData.prioridad ?? '') !== String(multa.prioridad ?? '')) changes.prioridad = formData.prioridad;
+    return changes;
+  };
+
+  const validateChanges = (changes: Partial<FormData>): { valid: boolean; errors: ValidationErrors } => {
+    const newErrors: ValidationErrors = {};
+
+    if ('monto' in changes) {
+      const montoNum = parseFloat(String(changes.monto ?? '0'));
+      if (Number.isNaN(montoNum) || montoNum <= 0) {
+        newErrors.monto = 'El monto debe ser mayor a 0';
+      }
+    }
+
+    if ('fecha_infraccion' in changes && changes.fecha_infraccion) {
+      const fechaInfraccion = new Date(String(changes.fecha_infraccion));
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      if (fechaInfraccion > hoy) {
+        newErrors.fecha_infraccion = 'La fecha no puede ser futura';
+      }
+    }
+
+    if ('fecha_vencimiento' in changes && changes.fecha_vencimiento) {
+      const fechaVenc = new Date(String(changes.fecha_vencimiento));
+      const fechaInf = changes.fecha_infraccion ? new Date(String(changes.fecha_infraccion)) : (multa?.fecha_infraccion ? new Date(multa.fecha_infraccion) : null);
+      if (fechaInf && fechaVenc <= fechaInf) {
+        newErrors.fecha_vencimiento = 'La fecha de vencimiento debe ser posterior a la fecha de infracción';
+      }
+    }
+
+    return { valid: Object.keys(newErrors).length === 0, errors: newErrors };
+  };
   // ============================================
   // EFECTOS
   // ============================================
@@ -198,7 +252,7 @@ export default function EditarMulta() {
   useEffect(() => {
     if (id) {
       loadMulta();
-      loadUnidades();
+      // loadUnidades ya se llamará automáticamente cuando loadMulta setee comunidadId
     }
   }, [id]);
 
@@ -207,6 +261,9 @@ export default function EditarMulta() {
       loadPersonasUnidad(formData.unidad_id);
     }
   }, [formData.unidad_id]);
+
+  // Evitar acceso directo a `user` en SSR:
+  const [comunidadId, setComunidadId] = useState<number | null>(null);
 
   // ============================================
   // FUNCIONES DE CARGA
@@ -221,6 +278,9 @@ export default function EditarMulta() {
 
       console.log('✅ Multa cargada:', response);
       setMulta(response);
+
+      // Determinar comunidadId desde la propia multa (evita depender de `user` en SSR)
+      setComunidadId(response?.comunidad_id ? Number(response.comunidad_id) : null);
 
       // Verificar si se puede editar
       if (['pagado', 'anulada'].includes(response.estado)) {
@@ -272,12 +332,10 @@ export default function EditarMulta() {
     }
   };
 
-  // obtener comunidadId desde user (user.memberships[0].comunidad_id) o contexto
-  const comunidadId = user?.memberships?.[0]?.comunidad_id;
-
-  const loadUnidades = async () => {
-    if (!comunidadId) { setUnidades([]); return; }
-    const res = await api.get(`/unidades/comunidad/${comunidadId}`);
+  const loadUnidades = async (cid?: number | null) => {
+    const idToUse = cid ?? comunidadId;
+    if (!idToUse) { setUnidades([]); return; }
+    const res = await api.get(`/unidades/comunidad/${idToUse}`);
     setUnidades(res.data?.data ?? res.data ?? []);
   };
 
@@ -286,6 +344,15 @@ export default function EditarMulta() {
     const res = await api.get(`/unidades/${unidadId}/residentes`);
     setPersonas(res.data?.data ?? res.data ?? []);
   };
+
+  // cargar unidades cuando comunidadId esté disponible (se setea desde la multa)
+  useEffect(() => {
+    if (comunidadId) {
+      loadUnidades(comunidadId);
+    } else {
+      setUnidades([]);
+    }
+  }, [comunidadId]);
 
   // ============================================
   // VALIDACIONES
@@ -370,7 +437,7 @@ export default function EditarMulta() {
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Limpiar error del campo
     if (errors[field as keyof ValidationErrors]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
@@ -378,43 +445,42 @@ export default function EditarMulta() {
   };
 
   // ============================================
-  // SUBMIT
+  // SUBMIT (enviar sólo campos cambiados)
   // ============================================
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      toast.error('Por favor completa todos los campos requeridos');
+    if (!multa) {
+      toast.error('Multa no cargada');
+      return;
+    }
+
+    const changes = getChangedFields();
+    if (Object.keys(changes).length === 0) {
+      toast('No hay cambios para guardar', { icon: 'ℹ️' });
+      return;
+    }
+
+    const { valid, errors: validationErrors } = validateChanges(changes);
+    setErrors(validationErrors);
+    if (!valid) {
+      toast.error('Corrige los campos marcados');
       return;
     }
 
     setSaving(true);
-
     try {
-      const payload: any = {
-        unidad_id: formData.unidad_id,
-        persona_id: formData.persona_id,
-        tipo_infraccion: formData.tipo_infraccion,
-        descripcion: formData.descripcion || null,
-        monto: parseFloat(formData.monto),
-        // enviar fechas sólo si usuario las dejó; si no, omitir (backend mantiene valor)
-        ...(formData.fecha_infraccion ? { fecha_infraccion: formData.fecha_infraccion } : {}),
-        ...(formData.fecha_vencimiento ? { fecha_vencimiento: formData.fecha_vencimiento } : {}),
-        prioridad: formData.prioridad
-      };
+      const payload: any = { ...changes };
+      if ('monto' in payload) payload.monto = parseFloat(String(payload.monto));
 
-      console.log('📝 Actualizando multa con datos:', payload);
+      console.log('📝 Actualizando multa (solo campos modificados):', payload);
 
       const response = await multasService.updateMulta(Number(id), payload);
 
       console.log('✅ Multa actualizada:', response);
-
       toast.success('Multa actualizada exitosamente');
 
-      // Redirigir al detalle
       router.push(`/multas/${id}`);
-
     } catch (error: any) {
       console.error('❌ Error actualizando multa:', error);
       toast.error(error.message || 'Error al actualizar la multa');
@@ -423,32 +489,26 @@ export default function EditarMulta() {
     }
   };
 
-  const handleCancel = () => {
-    if (confirm('¿Descartar los cambios realizados?')) {
-      router.push(`/multas/${id}`);
-    }
-  };
-
   // ============================================
   // FILTROS DE BÚSQUEDA
   // ============================================
 
-  const unidadesFiltradas = unidades.filter(u => {
-    const search = searchUnidad.toLowerCase();
-    return (
-      u.numero.toLowerCase().includes(search) ||
-      u.torre_nombre?.toLowerCase().includes(search) ||
-      u.edificio_nombre?.toLowerCase().includes(search)
-    );
+  const unidadesFiltradas = (unidades || []).filter((u: any) => {
+    const search = String(searchUnidad || '').toLowerCase().trim();
+    const numero = String(u?.numero ?? '').toLowerCase();
+    const torre = String(u?.torre_nombre ?? '').toLowerCase();
+    const edificio = String(u?.edificio_nombre ?? '').toLowerCase();
+
+    return numero.includes(search) || torre.includes(search) || edificio.includes(search);
   });
 
-  const personasFiltradas = personas.filter(p => {
-    const search = searchPersona.toLowerCase();
-    return (
-      p.nombres.toLowerCase().includes(search) ||
-      p.apellidos.toLowerCase().includes(search) ||
-      p.email.toLowerCase().includes(search)
-    );
+  const personasFiltradas = (personas || []).filter((p: any) => {
+    const search = String(searchPersona || '').toLowerCase().trim();
+    const nombres = String(p?.nombres ?? '').toLowerCase();
+    const apellidos = String(p?.apellidos ?? '').toLowerCase();
+    const email = String(p?.email ?? '').toLowerCase();
+
+    return nombres.includes(search) || apellidos.includes(search) || email.includes(search);
   });
 
   // ============================================
@@ -643,9 +703,8 @@ export default function EditarMulta() {
                       {TIPOS_INFRACCION.map(tipo => (
                         <div
                           key={tipo.value}
-                          className={`infraction-card ${
-                            formData.tipo_infraccion === tipo.value ? 'selected' : ''
-                          }`}
+                          className={`infraction-card ${formData.tipo_infraccion === tipo.value ? 'selected' : ''
+                            }`}
                           onClick={() => handleSelectTipoInfraccion(tipo.value)}
                         >
                           <div className="infraction-icon" style={{ color: tipo.color }}>
@@ -693,7 +752,7 @@ export default function EditarMulta() {
                     </h5>
                   </div>
                   <div className="card-body">
-                    
+
                     {/* Monto */}
                     <div className="mb-4">
                       <label htmlFor="monto" className="form-label">
@@ -724,9 +783,8 @@ export default function EditarMulta() {
                         {PRIORIDADES.map(prioridad => (
                           <div
                             key={prioridad.value}
-                            className={`priority-card ${
-                              formData.prioridad === prioridad.value ? 'selected' : ''
-                            }`}
+                            className={`priority-card ${formData.prioridad === prioridad.value ? 'selected' : ''
+                              }`}
                             onClick={() => handleSelectPrioridad(prioridad.value)}
                             style={{ borderColor: prioridad.color }}
                           >

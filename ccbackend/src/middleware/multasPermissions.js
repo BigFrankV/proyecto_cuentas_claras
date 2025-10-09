@@ -51,19 +51,16 @@ const MultasPermissions = {
    */
   canCreate: (req, res, next) => {
     const rolesPermitidos = [
-      'superadmin', 'sistema',
-      'presidente_comite', 'admin_comunidad', 'sindico', 
+      'superadmin',
+      // 'sistema', // QUITADO: sistema no debe crear según el mapa
+      'presidente_comite', 'admin_comunidad', 'sindico',
       'contador', 'admin_externo', 'conserje'
     ];
 
     if (isSuperAdmin(req) || hasRole(req, rolesPermitidos)) {
       return next();
     }
-
-    return res.status(403).json({ 
-      success: false, 
-      error: 'No tiene permisos para crear multas' 
-    });
+    return res.status(403).json({ success: false, error: 'No tiene permisos para crear multas' });
   },
 
   /**
@@ -71,19 +68,15 @@ const MultasPermissions = {
    */
   canEdit: (req, res, next) => {
     const rolesPermitidos = [
-      'superadmin', 'soporte_tecnico',
-      'presidente_comite', 'admin_comunidad', 'sindico', 
+      'superadmin', 'soporte_tecnico', 'sistema', // AÑADIDO 'sistema'
+      'presidente_comite', 'admin_comunidad', 'sindico',
       'contador', 'admin_externo'
     ];
 
     if (isSuperAdmin(req) || hasRole(req, rolesPermitidos)) {
       return next();
     }
-
-    return res.status(403).json({ 
-      success: false, 
-      error: 'No tiene permisos para editar multas' 
-    });
+    return res.status(403).json({ success: false, error: 'No tiene permisos para editar multas' });
   },
 
   /**
@@ -111,18 +104,15 @@ const MultasPermissions = {
   canRegistrarPago: (req, res, next) => {
     const rolesPermitidos = [
       'superadmin',
-      'presidente_comite', 'admin_comunidad', 'sindico', 
-      'contador', 'tesorero'
+      'presidente_comite', 'admin_comunidad', 'sindico',
+      'contador', 'tesorero',
+      'sistema', 'soporte_tecnico' // AÑADIDOS: sistema y soporte_tecnico
     ];
 
     if (isSuperAdmin(req) || hasRole(req, rolesPermitidos)) {
       return next();
     }
-
-    return res.status(403).json({ 
-      success: false, 
-      error: 'No tiene permisos para registrar pagos' 
-    });
+    return res.status(403).json({ success: false, error: 'No tiene permisos para registrar pagos' });
   },
 
   /**
@@ -130,18 +120,13 @@ const MultasPermissions = {
    */
   canDelete: (req, res, next) => {
     const rolesPermitidos = [
-      'superadmin',
-      'presidente_comite', 'admin_comunidad'
+      'superadmin' // RESTRINGIDO: solo superadmin
     ];
 
     if (isSuperAdmin(req) || hasRole(req, rolesPermitidos)) {
       return next();
     }
-
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Solo Presidente o Admin puede eliminar multas' 
-    });
+    return res.status(403).json({ success: false, error: 'Solo superadmin puede eliminar multas' });
   },
 
   /**

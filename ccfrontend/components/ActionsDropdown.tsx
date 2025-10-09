@@ -15,9 +15,17 @@ export default function ActionsDropdown({ trigger, menu, className }: Props) {
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (!ref.current) return;
-      if (e.target instanceof Node && ref.current.contains(e.target)) return;
+      const target = e.target as Element | null;
+
+      // Si el click está dentro del botón trigger, no cerrar
+      if (target && ref.current.contains(target)) return;
+
+      // Si el click está dentro del portal del dropdown, no cerrar
+      if (target && target.closest && target.closest('.actions-dropdown-portal')) return;
+
       setOpen(false);
     }
+
     if (open) document.addEventListener('mousedown', onDocClick);
     return () => document.removeEventListener('mousedown', onDocClick);
   }, [open]);

@@ -38,10 +38,10 @@ const PERMISSION_MAP: Record<string, string[]> = {
   'multas.view_community': ['admin_comunidad','presidente_comite','sindico','contador','tesorero','admin_externo','conserje'],
   'multas.view_own': ['propietario','inquilino','residente'],
   'multas.create': ['superadmin','presidente_comite','admin_comunidad','sindico','contador','admin_externo','conserje'],
-  'multas.edit': ['superadmin','presidente_comite','admin_comunidad','sindico','contador','admin_externo','soporte_tecnico'],
+  'multas.edit': ['superadmin','presidente_comite','admin_comunidad','sindico','contador','admin_externo','soporte_tecnico','sistema'],
   'multas.anular': ['superadmin','presidente_comite','admin_comunidad'],
-  'multas.register_payment': ['superadmin','presidente_comite','admin_comunidad','sindico','contador','tesorero'],
-  'multas.delete': ['superadmin','presidente_comite','admin_comunidad'],
+  'multas.register_payment': ['superadmin','presidente_comite','admin_comunidad','sindico','contador','tesorero','sistema','soporte_tecnico'],
+  'multas.delete': ['superadmin'], // <-- ahora sólo superadmin
   'multas.apelar': ['propietario','inquilino','residente']
 };
 
@@ -335,25 +335,65 @@ export function PermissionGuard({
 
 export function hasPermission(user: any, permission: string, comunidadId?: number) {
   if (!user) return false;
-  if (user.is_superadmin) return true;
+  if (user.is_superadmin) return true; // superadmin siempre puede (global)
 
-  const allowedRoles = PERMISSION_MAP[permission] ?? [];
-  const userRoles = (user.roles || []).map((r: any) => (r.slug || r.codigo || String(r)).toLowerCase());
+  const allowedRoles = (PERMISSION_MAP[permission] ?? []).map(r => r.toLowerCase());
 
-  // permiso por rol global
-  if (allowedRoles.some(ar => userRoles.includes(ar))) return true;
+  // roles globales del usuario (si existen)
+  const userRolesGlobal = (user.roles || []).map((r: any) => (r.slug || r.codigo || String(r)).toLowerCase());
 
-  // casos especiales: view_community -> verificar memberships
-  if (permission === 'multas.view_community' || permission === 'multas.create' || permission === 'multas.edit' || permission === 'multas.anular' || permission === 'multas.register_payment') {
-    // si comunidadId especificada, validar membership
-    if (!comunidadId) return user.memberships && user.memberships.length > 0;
-    return (user.memberships || []).some((m: any) => m.comunidad_id === Number(comunidadId));
+  // permiso concedido por rol global
+  if (allowedRoles.some(ar => userRolesGlobal.includes(ar))) {
+    // para permisos que afectan a una comunidad, exigir comunidadId y membership
+    if (permission.startsWith('multas.') && ['multas.create','multas.edit','multas.anular','multas.register_payment','multas.view_community'].includes(permission)) {
+      if (!comunidadId) return false; // requerir comunidad explícita en UI
+      return (user.memberships || []).some((m: any) =>
+        Number(m.comunidad_id) === Number(comunidadId) && allowedRoles.includes(String(m.rol_slug ?? m.rol ?? '').toLowerCase())
+      );
+    }
+    // permisos no comunitarios (o globales) ya permitidos por rol
+    return true;
   }
 
-  // view_own: check persona_id presence
+  // casos: view_community / create / edit / anular / register_payment -> comprobar memberships
+  if (permission === 'multas.view_community' || permission === 'multas.create' || permission === 'multas.edit' || permission === 'multas.anular' || permission === 'multas.register_payment') {
+    if (!comunidadId) return false; // exigir comunidad
+    return (user.memberships || []).some((m: any) =>
+      Number(m.comunidad_id) === Number(comunidadId) &&
+      allowedRoles.includes(String(m.rol_slug ?? m.rol ?? '').toLowerCase())
+    );
+  }
+
+  // view_own: necesita persona_id y que la multa pertenezca a la persona (backend siempre verifica)
   if (permission === 'multas.view_own') {
     return !!user.persona_id;
   }
 
   return false;
+}
+export function canCreateAnyMulta(user: any): boolean {
+  if (!user) return false;
+  if (user.is_superadmin) return true;
+  const allowed = ['presidente_comite','admin_comunidad','sindico','contador','admin_externo','conserje'];
+  return (user.memberships || []).some((m: any) => allowed.includes(String(m.rol_slug ?? m.rol ?? '').toLowerCase()));
+}
+
+export function canCreateMulta(user: any, comunidadId?: number): boolean {
+  if (!user) return false;
+  if (user.is_superadmin) return true;
+  if (!comunidadId) return false;
+  const allowed = ['presidente_comite','admin_comunidad','sindico','contador','admin_externo','conserje'];
+  return (user.memberships || []).some((m: any) =>
+    Number(m.comunidad_id) === Number(comunidadId) && allowed.includes(String(m.rol_slug ?? m.rol ?? '').toLowerCase())
+  );
+}
+
+export function canRegisterPayment(user: any, comunidadId?: number): boolean {
+  if (!user) return false;
+  if (user.is_superadmin) return true;
+  if (!comunidadId) return false;
+  const allowed = ['presidente_comite','admin_comunidad','sindico','contador','tesorero','sistema','soporte_tecnico'];
+  return (user.memberships || []).some((m: any) =>
+    Number(m.comunidad_id) === Number(comunidadId) && allowed.includes(String(m.rol_slug ?? m.rol ?? '').toLowerCase())
+  );
 }
