@@ -436,3 +436,40 @@ WHERE umc.persona_id = 1 AND umc.activo = 1;
 -- ============================================
 -- FIN - AHORA REINICIA EL BACKEND Y PRUEBA LOGIN
 -- ============================================
+
+-- ============================================
+-- INICIO - MODIFICAR VIEW MIEMBRO COMUNIDAD PARA INCLUIR MÁS DATOS
+-- ============================================
+DROP VIEW IF EXISTS usuario_miembro_comunidad;
+CREATE OR REPLACE VIEW usuario_miembro_comunidad AS
+SELECT
+  ucr.id                         AS id,
+  ucr.id                         AS membership_id,
+  ucr.usuario_id                 AS usuario_id,
+  u.persona_id                   AS persona_id,
+  ucr.comunidad_id               AS comunidad_id,
+  COALESCE(ucr.rol_id, 0)        AS rol_id,
+  COALESCE(rs.codigo, ucr.rol)   AS rol_slug,
+  COALESCE(rs.nombre, NULL)      AS rol_nombre,
+  ucr.desde                      AS desde,
+  ucr.hasta                      AS hasta,
+  ucr.activo                     AS activo,
+  ucr.created_at                 AS created_at,
+  ucr.updated_at                 AS updated_at,
+  c.razon_social                 AS comunidad_nombre
+FROM usuario_rol_comunidad ucr
+LEFT JOIN usuario u       ON u.id = ucr.usuario_id
+LEFT JOIN rol_sistema rs  ON rs.id = ucr.rol_id
+LEFT JOIN comunidad c    ON c.id = ucr.comunidad_id;
+
+--Índices sobre la tabla base, no sobre la vista
+ALTER TABLE usuario_rol_comunidad
+  ADD INDEX idx_usuario_id_activo (usuario_id, activo),
+  ADD INDEX idx_comunidad_id_activo (comunidad_id, activo),
+  ADD INDEX idx_usuario_comunidad_activo (usuario_id, comunidad_id, activo),
+  ADD INDEX idx_rol_id (rol_id);
+
+
+-- ============================================
+-- FIN - AHORA REINICIA EL BACKEND Y PRUEBA LOGIN
+-- ============================================

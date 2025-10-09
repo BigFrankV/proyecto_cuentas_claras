@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
+import apiClient from '@/lib/api';
 
 interface Torre {
   id: string;
@@ -74,38 +75,17 @@ const mockTorre: Torre = {
   }
 };
 
-const mockUnidades: Unidad[] = Array.from({ length: 45 }, (_, i) => {
-  const unidad: Unidad = {
-    id: (i + 1).toString(),
-    numero: `${Math.floor(i / 3) + 1}${String.fromCharCode(65 + (i % 3))}`,
-    piso: Math.floor(i / 3) + 1,
-    tipo: i % 3 === 0 ? '3D/2B' : i % 3 === 1 ? '2D/2B' : '2D/1B',
-    superficie: i % 3 === 0 ? 95 : i % 3 === 1 ? 80 : 65,
-    dormitorios: i % 3 === 0 ? 3 : 2,
-    banos: i % 3 === 0 ? 2 : i % 3 === 1 ? 2 : 1,
-    estado: i < 42 ? 'Ocupada' : 'Vacante'
-  };
-  
-  if (i < 42) {
-    unidad.propietario = `Propietario ${i + 1}`;
-  }
-  
-  if (i < 20) {
-    unidad.arrendatario = `Arrendatario ${i + 1}`;
-  }
-  
-  return unidad;
-});
+// Unidades will be loaded from API per tower
 
 export default function TorreDetalle() {
   const router = useRouter();
   const { id } = router.query;
   const [torre, setTorre] = useState<Torre>(mockTorre);
-  const [unidades, setUnidades] = useState<Unidad[]>(mockUnidades);
+  const [unidades, setUnidades] = useState<Unidad[]>([]);
   const [activeTab, setActiveTab] = useState('info');
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState<Torre>(mockTorre);
-  const [filteredUnidades, setFilteredUnidades] = useState<Unidad[]>(mockUnidades);
+  const [filteredUnidades, setFilteredUnidades] = useState<Unidad[]>([]);
   const [unidadFilter, setUnidadFilter] = useState('todas');
   const [unidadSearch, setUnidadSearch] = useState('');
 
@@ -129,6 +109,35 @@ export default function TorreDetalle() {
     
     setFilteredUnidades(filtered);
   }, [unidades, unidadFilter, unidadSearch]);
+
+  // Load unidades for this tower
+  useEffect(() => {
+    if (!id) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await apiClient.get('/unidades', { params: { torre_id: id } });
+        if (!mounted) return;
+        const data = res.data || [];
+        const mapped = data.map((u:any) => ({
+          id: String(u.id),
+          numero: u.codigo || u.numero || '',
+          piso: u.piso || 0,
+          tipo: u.tipo || '',
+          superficie: u.m2_utiles || u.superficie || 0,
+          dormitorios: u.dormitorios || 0,
+          banos: u.nro_banos || 0,
+          estado: u.estado || 'Ocupada',
+          propietario: u.propietario_nombre || undefined,
+          arrendatario: u.arrendatario_nombre || undefined
+        }));
+        setUnidades(mapped);
+      } catch (err) {
+        console.error('Error loading unidades for torre', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [id]);
 
   const handleEditToggle = () => {
     setEditMode(!editMode);
