@@ -2,181 +2,127 @@ import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useMembresias, Membresia, MembresiaFilters } from '@/hooks/useMembresias';
 
-interface Membresia {
-  id: string;
-  miembro: {
-    nombre: string;
-    tipo: string;
-    unidades: number;
-    avatar: string;
-  };
-  nivel: 'Básico' | 'Estándar' | 'Premium' | 'VIP';
-  comunidad: string;
-  fechaInicio: string;
-  fechaVencimiento: string;
-  estado: 'Activo' | 'Pendiente' | 'Vencido' | 'Inactivo';
-  progreso: number;
-  diasVencimiento: number;
-}
-
-const mockMembresias: Membresia[] = [
-  {
-    id: '1',
-    miembro: {
-      nombre: 'Juan Delgado',
-      tipo: 'Propietario',
-      unidades: 2,
-      avatar: 'JD'
-    },
-    nivel: 'Estándar',
-    comunidad: 'Parque Real',
-    fechaInicio: '01/01/2023',
-    fechaVencimiento: '31/12/2023',
-    estado: 'Activo',
-    progreso: 75,
-    diasVencimiento: 107
-  },
-  {
-    id: '2',
-    miembro: {
-      nombre: 'María López',
-      tipo: 'Inquilina',
-      unidades: 1,
-      avatar: 'ML'
-    },
-    nivel: 'Básico',
-    comunidad: 'Torres del Bosque',
-    fechaInicio: '15/03/2023',
-    fechaVencimiento: '15/03/2024',
-    estado: 'Activo',
-    progreso: 50,
-    diasVencimiento: 181
-  },
-  {
-    id: '3',
-    miembro: {
-      nombre: 'Carlos Ramírez',
-      tipo: 'Administrador',
-      unidades: 0,
-      avatar: 'CR'
-    },
-    nivel: 'Premium',
-    comunidad: 'Edificio Las Heras',
-    fechaInicio: '05/06/2023',
-    fechaVencimiento: '05/06/2024',
-    estado: 'Activo',
-    progreso: 40,
-    diasVencimiento: 225
-  },
-  {
-    id: '4',
-    miembro: {
-      nombre: 'Ana Martínez',
-      tipo: 'Propietaria',
-      unidades: 1,
-      avatar: 'AM'
-    },
-    nivel: 'VIP',
-    comunidad: 'Parque Real',
-    fechaInicio: '10/08/2023',
-    fechaVencimiento: '10/08/2024',
-    estado: 'Pendiente',
-    progreso: 25,
-    diasVencimiento: 289
-  },
-  {
-    id: '5',
-    miembro: {
-      nombre: 'Pedro Vásquez',
-      tipo: 'Inquilino',
-      unidades: 1,
-      avatar: 'PV'
-    },
-    nivel: 'Básico',
-    comunidad: 'Torres del Bosque',
-    fechaInicio: '20/02/2023',
-    fechaVencimiento: '20/02/2024',
-    estado: 'Vencido',
-    progreso: 100,
-    diasVencimiento: -45
-  }
-];
-
-export default function MembresiasListado() {
+const MembresiasListado = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [nivelFilter, setNivelFilter] = useState('todos');
-  const [estadoFilter, setEstadoFilter] = useState('todos');
+  const [nivelFilter, setNivelFilter] = useState<number | 'todos'>('todos');
+  const [estadoFilter, setEstadoFilter] = useState<'todos' | 'activo' | 'inactivo'>('todos');
+  const [comunidadFilter, setComunidadFilter] = useState<number | 'todos'>('todos');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [membresias, setMembresias] = useState<Membresia[]>([]);
+  const [total, setTotal] = useState(0);
+  const [roles, setRoles] = useState<any[]>([]);
+  const [comunidades, setComunidades] = useState<any[]>([]);
 
-  // Filtrado de membresías
-  const filteredMembresias = useMemo(() => {
-    return mockMembresias.filter(membresia => {
-      const matchesSearch = membresia.miembro.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           membresia.comunidad.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesNivel = nivelFilter === 'todos' || 
-                          (nivelFilter === 'basico' && membresia.nivel === 'Básico') ||
-                          (nivelFilter === 'estandar' && membresia.nivel === 'Estándar') ||
-                          (nivelFilter === 'premium' && membresia.nivel === 'Premium') ||
-                          (nivelFilter === 'vip' && membresia.nivel === 'VIP');
-      
-      const matchesEstado = estadoFilter === 'todos' || 
-                           (estadoFilter === 'activo' && membresia.estado === 'Activo') ||
-                           (estadoFilter === 'pendiente' && membresia.estado === 'Pendiente') ||
-                           (estadoFilter === 'vencido' && membresia.estado === 'Vencido') ||
-                           (estadoFilter === 'inactivo' && membresia.estado === 'Inactivo');
-      
-      return matchesSearch && matchesNivel && matchesEstado;
-    });
-  }, [searchTerm, nivelFilter, estadoFilter]);
+  const { listarMembresias, listarRoles, listarComunidades, loading, error } = useMembresias();
+
+  const itemsPerPage = 20;
+
+  useEffect(() => {
+    cargarMembresias();
+  }, [searchTerm, nivelFilter, estadoFilter, comunidadFilter, currentPage]);
+
+  useEffect(() => {
+    cargarCatalogos();
+  }, []);
+
+  const cargarCatalogos = async () => {
+    try {
+      const [rolesData, comunidadesData] = await Promise.all([
+        listarRoles(),
+        listarComunidades()
+      ]);
+      setRoles(rolesData);
+      setComunidades(comunidadesData);
+    } catch (err) {
+      console.error('Error al cargar catálogos:', err);
+    }
+  };
+
+  const cargarMembresias = async () => {
+    try {
+      const filters: MembresiaFilters = {
+        limit: itemsPerPage,
+        offset: (currentPage - 1) * itemsPerPage,
+      };
+
+      if (nivelFilter !== 'todos') {
+        filters.rol_id = nivelFilter;
+      }
+
+      if (comunidadFilter !== 'todos') {
+        filters.comunidad_id = comunidadFilter;
+      }
+
+      const response = await listarMembresias(filters);
+      setMembresias(response.data);
+      setTotal(response.meta.total);
+    } catch (err) {
+      console.error('Error al cargar membresías:', err);
+    }
+  };
+
+  // Filtrado de membresías (ya filtrado por API)
+  const filteredMembresias = membresias;
 
   // Estadísticas
   const stats = useMemo(() => {
-    const total = mockMembresias.length;
-    const activas = mockMembresias.filter(m => m.estado === 'Activo').length;
-    const vencenEsteMes = mockMembresias.filter(m => m.diasVencimiento <= 30 && m.diasVencimiento > 0).length;
-    const vencidas = mockMembresias.filter(m => m.estado === 'Vencido').length;
+    const activas = membresias.filter(m => m.activo).length;
+    const inactivas = membresias.filter(m => !m.activo).length;
+    // Para vencenEsteMes y vencidas, calcular basado en hasta
+    const now = new Date();
+    const vencenEsteMes = membresias.filter(m => m.hasta && new Date(m.hasta) > now && (new Date(m.hasta).getTime() - now.getTime()) / (1000 * 60 * 60 * 24) <= 30).length;
+    const vencidas = membresias.filter(m => m.hasta && new Date(m.hasta) < now).length;
     
     return { total, activas, vencenEsteMes, vencidas };
-  }, []);
+  }, [membresias, total]);
 
-  const getTierBadgeClass = (nivel: string) => {
+  const getTierBadgeClass = (rolCodigo: string) => {
     const classes = {
-      'Básico': 'tier-basic',
-      'Estándar': 'tier-standard',
-      'Premium': 'tier-premium',
-      'VIP': 'tier-vip'
+      'residente': 'tier-basic',
+      'propietario': 'tier-standard',
+      'directivo': 'tier-premium',
+      'contador': 'tier-premium',
+      'secretario': 'tier-premium',
+      'tesorero': 'tier-premium',
+      'comite': 'tier-premium',
+      'admin': 'tier-vip',
+      'superadmin': 'tier-vip'
     };
-    return `tier-badge ${classes[nivel as keyof typeof classes] || 'tier-basic'}`;
+    return `tier-badge ${classes[rolCodigo as keyof typeof classes] || 'tier-basic'}`;
   };
 
-  const getEstadoIcon = (estado: string) => {
-    const icons = {
-      'Activo': 'status-activo',
-      'Pendiente': 'status-pendiente',
-      'Vencido': 'status-vencido',
-      'Inactivo': 'status-inactivo'
-    };
-    return icons[estado as keyof typeof icons] || 'status-inactivo';
+  const getEstadoIcon = (activo: boolean) => {
+    return activo ? 'status-activo' : 'status-inactivo';
   };
 
-  const getProgressColor = (estado: string, diasVencimiento: number) => {
-    if (estado === 'Vencido') return 'bg-danger';
-    if (diasVencimiento <= 30) return 'bg-warning';
+  const getProgressColor = (activo: boolean, hasta: string | null) => {
+    if (!activo) return 'bg-secondary';
+    if (!hasta) return 'bg-success';
+    const now = new Date();
+    const vencimiento = new Date(hasta);
+    const diasRestantes = (vencimiento.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    if (diasRestantes < 0) return 'bg-danger';
+    if (diasRestantes <= 30) return 'bg-warning';
     return 'bg-success';
   };
 
-  const getAvatarColor = (tipo: string) => {
+  const getAvatarColor = (rolCodigo: string) => {
     const colors = {
-      'Propietario': 'var(--color-primary)',
-      'Propietaria': 'var(--color-primary)',
-      'Inquilino': 'var(--color-info)',
-      'Inquilina': 'var(--color-info)',
-      'Administrador': 'var(--color-warning)'
+      'residente': 'var(--color-info)',
+      'propietario': 'var(--color-primary)',
+      'directivo': 'var(--color-warning)',
+      'contador': 'var(--color-success)',
+      'secretario': 'var(--color-success)',
+      'tesorero': 'var(--color-success)',
+      'comite': 'var(--color-warning)',
+      'admin': 'var(--color-danger)',
+      'superadmin': 'var(--color-danger)'
     };
-    return colors[tipo as keyof typeof colors] || 'var(--color-primary)';
+    return colors[rolCodigo as keyof typeof colors] || 'var(--color-primary)';
   };
 
   return (
@@ -192,7 +138,7 @@ export default function MembresiasListado() {
             <div className='col-12'>
               <div className='filter-container' style={{ backgroundColor: '#f8f9fa', borderRadius: 'var(--radius)', padding: '1rem' }}>
                 <div className='row g-2'>
-                  <div className='col-12 col-md-4 col-lg-3'>
+                  <div className='col-12 col-md-3 col-lg-2'>
                     <div className='search-icon-container' style={{ position: 'relative' }}>
                       <i className='material-icons search-icon' style={{ 
                         position: 'absolute', 
@@ -212,33 +158,42 @@ export default function MembresiasListado() {
                       />
                     </div>
                   </div>
-                  <div className='col-12 col-md-3 col-lg-2'>
+                  <div className='col-12 col-md-2 col-lg-2'>
                     <select 
                       className='form-select'
                       value={nivelFilter}
-                      onChange={(e) => setNivelFilter(e.target.value)}
+                      onChange={(e) => setNivelFilter(e.target.value === 'todos' ? 'todos' : parseInt(e.target.value))}
                     >
                       <option value='todos'>Todos los niveles</option>
-                      <option value='basico'>Básico</option>
-                      <option value='estandar'>Estándar</option>
-                      <option value='premium'>Premium</option>
-                      <option value='vip'>VIP</option>
+                      {roles.map((rol) => (
+                        <option key={rol.id} value={rol.id}>{rol.nombre}</option>
+                      ))}
                     </select>
                   </div>
-                  <div className='col-12 col-md-3 col-lg-2'>
+                  <div className='col-12 col-md-2 col-lg-2'>
                     <select 
                       className='form-select'
                       value={estadoFilter}
-                      onChange={(e) => setEstadoFilter(e.target.value)}
+                      onChange={(e) => setEstadoFilter(e.target.value as 'todos' | 'activo' | 'inactivo')}
                     >
                       <option value='todos'>Todos los estados</option>
                       <option value='activo'>Activo</option>
-                      <option value='pendiente'>Pendiente</option>
-                      <option value='vencido'>Vencido</option>
                       <option value='inactivo'>Inactivo</option>
                     </select>
                   </div>
-                  <div className='col-12 col-md-2 col-lg-2 d-flex gap-2'>
+                  <div className='col-12 col-md-2 col-lg-2'>
+                    <select 
+                      className='form-select'
+                      value={comunidadFilter}
+                      onChange={(e) => setComunidadFilter(e.target.value === 'todos' ? 'todos' : parseInt(e.target.value))}
+                    >
+                      <option value='todos'>Todas las comunidades</option>
+                      {comunidades.map((comunidad) => (
+                        <option key={comunidad.id} value={comunidad.id}>{comunidad.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className='col-12 col-md-3 col-lg-2 d-flex gap-2'>
                     <button className='btn btn-outline-primary flex-fill'>
                       <i className='material-icons me-2' style={{ fontSize: '16px' }}>filter_list</i>
                       Filtrar
@@ -397,63 +352,62 @@ export default function MembresiasListado() {
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    backgroundColor: getAvatarColor(membresia.miembro.tipo),
+                                    backgroundColor: getAvatarColor(membresia.rol_codigo),
                                     color: '#fff',
                                     fontWeight: 'bold',
                                     borderRadius: '50%'
                                   }}
                                 >
-                                  {membresia.miembro.avatar}
+                                  {membresia.nombre_completo.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                                 </div>
                                 <div>
-                                  <div className='fw-semibold'>{membresia.miembro.nombre}</div>
+                                  <div className='fw-semibold'>{membresia.nombre_completo}</div>
                                   <div className='small text-muted'>
-                                    {membresia.miembro.tipo} - {membresia.miembro.unidades} unidad{membresia.miembro.unidades !== 1 ? 'es' : ''}
+                                    {membresia.rol_nombre}
                                   </div>
                                 </div>
                               </div>
                             </td>
                             <td>
-                              <span className={getTierBadgeClass(membresia.nivel)}>
-                                {membresia.nivel}
+                              <span className={getTierBadgeClass(membresia.rol_codigo)}>
+                                {membresia.rol_nombre}
                               </span>
                             </td>
-                            <td>{membresia.comunidad}</td>
-                            <td>{membresia.fechaInicio}</td>
-                            <td>{membresia.fechaVencimiento}</td>
+                            <td>{membresia.comunidad_nombre}</td>
+                            <td>{new Date(membresia.desde).toLocaleDateString()}</td>
+                            <td>{membresia.hasta ? new Date(membresia.hasta).toLocaleDateString() : 'Indefinido'}</td>
                             <td>
                               <span className='d-flex align-items-center'>
                                 <span 
-                                  className={`status-icon ${getEstadoIcon(membresia.estado)}`}
+                                  className={`status-icon ${getEstadoIcon(membresia.activo)}`}
                                   style={{
                                     width: '10px',
                                     height: '10px',
                                     display: 'inline-block',
                                     borderRadius: '50%',
                                     marginRight: '5px',
-                                    backgroundColor: membresia.estado === 'Activo' ? 'var(--color-success)' :
-                                                   membresia.estado === 'Pendiente' ? 'var(--color-warning)' :
-                                                   membresia.estado === 'Vencido' ? 'var(--color-danger)' :
-                                                   'var(--color-muted)'
+                                    backgroundColor: membresia.activo ? 'var(--color-success)' : 'var(--color-muted)'
                                   }}
                                 />
-                                {membresia.estado}
+                                {membresia.activo ? 'Activo' : 'Inactivo'}
                               </span>
                               <div className='progress mt-1' style={{ height: '5px' }}>
                                 <div 
-                                  className={`progress-bar ${getProgressColor(membresia.estado, membresia.diasVencimiento)}`}
+                                  className={`progress-bar ${getProgressColor(membresia.activo, membresia.hasta)}`}
                                   role='progressbar'
-                                  style={{ width: `${membresia.progreso}%` }}
-                                  aria-valuenow={membresia.progreso}
+                                  style={{ width: membresia.hasta ? `${Math.max(0, Math.min(100, ((new Date(membresia.hasta).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365)) * 100))}%` : '100%' }}
+                                  aria-valuenow={membresia.hasta ? Math.max(0, Math.min(100, ((new Date(membresia.hasta).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365)) * 100)) : 100}
                                   aria-valuemin={0}
                                   aria-valuemax={100}
                                 />
                               </div>
                               <span className='small'>
-                                {membresia.diasVencimiento > 0 
-                                  ? `Vence en ${membresia.diasVencimiento} días`
-                                  : `Vencida hace ${Math.abs(membresia.diasVencimiento)} días`
-                                }
+                                {membresia.hasta ? (() => {
+                                  const diasRestantes = Math.ceil((new Date(membresia.hasta!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                                  return diasRestantes > 0 
+                                    ? `Vence en ${diasRestantes} días`
+                                    : `Vencida hace ${Math.abs(diasRestantes)} días`;
+                                })() : 'Sin vencimiento'}
                               </span>
                             </td>
                             <td>
@@ -520,50 +474,52 @@ export default function MembresiasListado() {
                                   width: '48px',
                                   height: '48px',
                                   borderRadius: '50%',
-                                  backgroundColor: getAvatarColor(membresia.miembro.tipo),
+                                  backgroundColor: getAvatarColor(membresia.rol_codigo),
                                   fontSize: '20px'
                                 }}
                               >
-                                {membresia.miembro.avatar}
+                                {membresia.nombre_completo.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                               </div>
                               <div>
-                                <h6 className='mb-1'>{membresia.miembro.nombre}</h6>
+                                <h6 className='mb-1'>{membresia.nombre_completo}</h6>
                                 <div className='small text-muted'>
-                                  {membresia.miembro.tipo} - {membresia.miembro.unidades} unidad{membresia.miembro.unidades !== 1 ? 'es' : ''}
+                                  {membresia.rol_nombre}
                                 </div>
                               </div>
                             </div>
-                            <span className={getTierBadgeClass(membresia.nivel)}>
-                              {membresia.nivel}
+                            <span className={getTierBadgeClass(membresia.rol_codigo)}>
+                              {membresia.rol_nombre}
                             </span>
                           </div>
                           
                           <div className='mb-3'>
                             <div className='small text-muted mb-1'>Comunidad</div>
-                            <div>{membresia.comunidad}</div>
+                            <div>{membresia.comunidad_nombre}</div>
                           </div>
                           
                           <div className='mb-3'>
                             <div className='small text-muted mb-1'>Vigencia</div>
-                            <div>{membresia.fechaInicio} - {membresia.fechaVencimiento}</div>
+                            <div>{new Date(membresia.desde).toLocaleDateString()} - {membresia.hasta ? new Date(membresia.hasta).toLocaleDateString() : 'Indefinido'}</div>
                           </div>
                           
                           <div className='mb-3'>
                             <div className='d-flex justify-content-between align-items-center mb-1'>
                               <span className='small text-muted'>Estado</span>
                               <span className='small'>
-                                {membresia.diasVencimiento > 0 
-                                  ? `${membresia.diasVencimiento} días restantes`
-                                  : `Vencida hace ${Math.abs(membresia.diasVencimiento)} días`
-                                }
+                                {membresia.hasta ? (() => {
+                                  const diasRestantes = Math.ceil((new Date(membresia.hasta!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                                  return diasRestantes > 0 
+                                    ? `${diasRestantes} días restantes`
+                                    : `Vencida hace ${Math.abs(diasRestantes)} días`;
+                                })() : 'Sin vencimiento'}
                               </span>
                             </div>
                             <div className='progress' style={{ height: '8px', borderRadius: '4px' }}>
                               <div 
-                                className={`progress-bar ${getProgressColor(membresia.estado, membresia.diasVencimiento)}`}
+                                className={`progress-bar ${getProgressColor(membresia.activo, membresia.hasta)}`}
                                 role='progressbar'
-                                style={{ width: `${membresia.progreso}%` }}
-                                aria-valuenow={membresia.progreso}
+                                style={{ width: membresia.hasta ? `${Math.max(0, Math.min(100, ((new Date(membresia.hasta).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365)) * 100))}%` : '100%' }}
+                                aria-valuenow={membresia.hasta ? Math.max(0, Math.min(100, ((new Date(membresia.hasta).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365)) * 100)) : 100}
                                 aria-valuemin={0}
                                 aria-valuemax={100}
                               />
@@ -578,13 +534,10 @@ export default function MembresiasListado() {
                                   width: '10px',
                                   height: '10px',
                                   borderRadius: '50%',
-                                  backgroundColor: membresia.estado === 'Activo' ? 'var(--color-success)' :
-                                                 membresia.estado === 'Pendiente' ? 'var(--color-warning)' :
-                                                 membresia.estado === 'Vencido' ? 'var(--color-danger)' :
-                                                 'var(--color-muted)'
+                                  backgroundColor: membresia.activo ? 'var(--color-success)' : 'var(--color-muted)'
                                 }}
                               />
-                              <span className='small'>{membresia.estado}</span>
+                              <span className='small'>{membresia.activo ? 'Activo' : 'Inactivo'}</span>
                             </div>
                           </div>
                           
@@ -663,4 +616,6 @@ export default function MembresiasListado() {
       </Layout>
     </ProtectedRoute>
   );
-}
+};
+
+export default MembresiasListado;

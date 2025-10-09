@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { CargosUnidad, UnitInfo, Cargo } from '@/components/cargos';
+import { cargosApi } from '@/lib/api/cargos';
 import Head from 'next/head';
 
 export default function CargosUnidadPage() {
@@ -13,186 +14,59 @@ export default function CargosUnidadPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock data - Replace with actual API calls
-  const mockUnits: Record<string, UnitInfo> = {
-    '101-A': {
-      numero: '101-A',
-      torre: 'Torre A',
-      propietario: 'Juan Carlos Pérez López',
-      residente: 'María Elena Rodríguez García',
-      telefono: '+57 300 123 4567',
-      email: 'maria.rodriguez@email.com',
-      metrosCuadrados: 85.5,
-      coeficiente: 0.0342
-    },
-    '102-B': {
-      numero: '102-B',
-      torre: 'Torre B',
-      propietario: 'Ana María González Vargas',
-      residente: 'Carlos Eduardo Martínez',
-      telefono: '+57 301 987 6543',
-      email: 'carlos.martinez@email.com',
-      metrosCuadrados: 78.2,
-      coeficiente: 0.0313
-    },
-    '201-A': {
-      numero: '201-A',
-      torre: 'Torre A',
-      propietario: 'Roberto Silva Mendoza',
-      residente: 'Lucía Patricia Herrera',
-      telefono: '+57 302 456 7890',
-      email: 'lucia.herrera@email.com',
-      metrosCuadrados: 92.1,
-      coeficiente: 0.0368
-    }
-  };
-
-  const mockCargosUnidad: Cargo[] = [
-    {
-      id: 'CHG-2024-001',
-      concepto: 'Administración Enero 2024',
-      descripcion: 'Cuota de administración mensual',
-      tipo: 'administration',
-      estado: 'paid',
-      monto: 250000,
-      montoAplicado: 250000,
-      unidad: String(unidad) || '101-A',
-      periodo: '2024-01',
-      fechaVencimiento: new Date('2024-01-15'),
-      fechaCreacion: new Date('2024-01-01'),
-      cuentaCosto: 'ADM-001',
-    },
-    {
-      id: 'CHG-2024-002',
-      concepto: 'Administración Febrero 2024',
-      descripcion: 'Cuota de administración mensual',
-      tipo: 'administration',
-      estado: 'pending',
-      monto: 250000,
-      montoAplicado: 0,
-      unidad: String(unidad) || '101-A',
-      periodo: '2024-02',
-      fechaVencimiento: new Date('2024-02-15'),
-      fechaCreacion: new Date('2024-02-01'),
-      cuentaCosto: 'ADM-001',
-    },
-    {
-      id: 'CHG-2024-003',
-      concepto: 'Administración Marzo 2024',
-      descripcion: 'Cuota de administración mensual',
-      tipo: 'administration',
-      estado: 'approved',
-      monto: 250000,
-      montoAplicado: 0,
-      unidad: String(unidad) || '101-A',
-      periodo: '2024-03',
-      fechaVencimiento: new Date('2024-03-15'),
-      fechaCreacion: new Date('2024-03-01'),
-      cuentaCosto: 'ADM-001',
-    },
-    {
-      id: 'CHG-2024-004',
-      concepto: 'Mantenimiento Ascensor',
-      descripcion: 'Mantenimiento preventivo del ascensor principal',
-      tipo: 'maintenance',
-      estado: 'approved',
-      monto: 180000,
-      montoAplicado: 180000,
-      unidad: String(unidad) || '101-A',
-      periodo: '2024-02',
-      fechaVencimiento: new Date('2024-02-28'),
-      fechaCreacion: new Date('2024-02-01'),
-      cuentaCosto: 'MNT-002',
-    },
-    {
-      id: 'CHG-2024-005',
-      concepto: 'Seguro Todo Riesgo',
-      descripcion: 'Prima de seguro anual edificio',
-      tipo: 'insurance',
-      estado: 'partial',
-      monto: 450000,
-      montoAplicado: 225000,
-      unidad: String(unidad) || '101-A',
-      periodo: '2024-03',
-      fechaVencimiento: new Date('2024-03-30'),
-      fechaCreacion: new Date('2024-03-01'),
-      cuentaCosto: 'SEG-001',
-    },
-    {
-      id: 'CHG-2024-006',
-      concepto: 'Servicios Públicos',
-      descripcion: 'Consumo de agua y luz áreas comunes',
-      tipo: 'service',
-      estado: 'pending',
-      monto: 85000,
-      montoAplicado: 0,
-      unidad: String(unidad) || '101-A',
-      periodo: '2024-02',
-      fechaVencimiento: new Date('2024-02-20'),
-      fechaCreacion: new Date('2024-02-05'),
-      cuentaCosto: 'SER-001',
-    },
-    {
-      id: 'CHG-2024-007',
-      concepto: 'Jardinería y Aseo',
-      descripcion: 'Mantenimiento de zonas verdes y aseo general',
-      tipo: 'maintenance',
-      estado: 'paid',
-      monto: 120000,
-      montoAplicado: 120000,
-      unidad: String(unidad) || '101-A',
-      periodo: '2024-01',
-      fechaVencimiento: new Date('2024-01-25'),
-      fechaCreacion: new Date('2024-01-10'),
-      cuentaCosto: 'MNT-001',
-    },
-    {
-      id: 'CHG-2024-008',
-      concepto: 'Vigilancia y Portería',
-      descripcion: 'Servicio de vigilancia 24/7 y portería',
-      tipo: 'service',
-      estado: 'paid',
-      monto: 320000,
-      montoAplicado: 320000,
-      unidad: String(unidad) || '101-A',
-      periodo: '2024-01',
-      fechaVencimiento: new Date('2024-01-31'),
-      fechaCreacion: new Date('2024-01-01'),
-      cuentaCosto: 'SER-002',
-    }
-  ];
-
   useEffect(() => {
     const fetchUnitData = async () => {
-      if (!unidad) return;
-      
-      setLoading(true);
-      try {
-        // TODO: Replace with actual API calls
-        // const [unitResponse, cargosResponse] = await Promise.all([
-        //   fetch(`/api/unidades/${unidad}`),
-        //   fetch(`/api/cargos?unidad=${unidad}`)
-        // ]);
-        
-        // if (!unitResponse.ok) {
-        //   throw new Error('Unidad no encontrada');
-        // }
-        
-        // const unitData = await unitResponse.json();
-        // const cargosData = await cargosResponse.json();
+      if (!unidad || typeof unidad !== 'string') return;
 
-        // Mock delay to simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const unitData = mockUnits[String(unidad)];
-        if (!unitData) {
-          throw new Error('Unidad no encontrada');
-        }
-        
+      setLoading(true);
+      setError(null);
+
+      try {
+        console.log('🔍 Cargando datos de la unidad:', unidad);
+
+        // Obtener cargos de la unidad desde la API
+        const cargosData = await cargosApi.getByUnidad(parseInt(unidad));
+
+        // Mapear los datos de la API al formato que espera el componente
+        const mappedCargos: Cargo[] = cargosData.map(cargo => ({
+          id: cargo.id.toString(),
+          concepto: cargo.concepto,
+          descripcion: cargo.descripcion || '',
+          tipo: cargo.tipo.toLowerCase().includes('administración') ? 'administration' :
+                cargo.tipo.toLowerCase().includes('mantenimiento') ? 'maintenance' :
+                cargo.tipo.toLowerCase().includes('servicio') ? 'service' :
+                cargo.tipo.toLowerCase().includes('seguro') ? 'insurance' : 'other',
+          estado: cargo.estado === 'pendiente' ? 'pending' :
+                  cargo.estado === 'pagado' ? 'paid' :
+                  cargo.estado === 'parcial' ? 'partial' : 'pending',
+          monto: cargo.monto,
+          montoAplicado: cargo.monto - cargo.saldo,
+          unidad: cargo.unidad,
+          periodo: cargo.periodo || '',
+          fechaVencimiento: cargo.fechaVencimiento,
+          fechaCreacion: cargo.fechaCreacion,
+          cuentaCosto: `CCU-${cargo.id}`,
+          observaciones: `Comunidad: ${cargo.nombreComunidad || 'N/A'}`
+        }));
+
+        // Crear información básica de la unidad (mock por ahora)
+        const unitData: UnitInfo = {
+          numero: unidad,
+          torre: unidad.includes('-') ? `Torre ${unidad.split('-')[1]}` : 'Torre A',
+          propietario: 'Información no disponible',
+          residente: 'Información no disponible',
+          telefono: 'N/A',
+          email: 'N/A',
+          metrosCuadrados: 0,
+          coeficiente: 0
+        };
+
+        console.log('✅ Datos cargados:', { unitData, cargosCount: mappedCargos.length });
         setUnitInfo(unitData);
-        setCargos(mockCargosUnidad);
+        setCargos(mappedCargos);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido');
+        console.error('❌ Error al cargar datos de la unidad:', err);
+        setError(err instanceof Error ? err.message : 'Error desconocido al cargar los datos');
       } finally {
         setLoading(false);
       }

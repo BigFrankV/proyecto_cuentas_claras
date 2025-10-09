@@ -3,6 +3,8 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import Head from 'next/head';
+import { cargosApi } from '@/lib/api/cargos';
+import { CargoFormData } from '@/types/cargos';
 
 // Interfaces
 interface Charge {
@@ -19,9 +21,10 @@ export default function NuevoCargoPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Form data
-  const [formData, setFormData] = useState<Charge>({
+  const [formData, setFormData] = useState<CargoFormData>({
     concept: '',
     type: 'administration',
     amount: 0,
@@ -68,40 +71,29 @@ export default function NuevoCargoPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const generateId = () => {
-    // Generar un ID simple para el ejemplo
-    const year = new Date().getFullYear();
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `CHG-${year}-${random}`;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setSaving(true);
-    
+    setApiError(null);
+
     try {
-      // Simular creación - en un caso real sería una llamada a la API
-      const newCharge = {
-        id: generateId(),
-        ...formData,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      
-      console.log('Creando cargo:', newCharge);
-      
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      console.log('📝 Creando cargo con datos:', formData);
+
+      // Crear el cargo usando la API
+      const newCharge = await cargosApi.create(formData);
+
+      console.log('✅ Cargo creado exitosamente:', newCharge);
+
       // Redirigir de vuelta a la lista
       router.push('/cargos');
     } catch (error) {
-      console.error('Error al crear:', error);
-      // Aquí podrías mostrar un mensaje de error
+      console.error('❌ Error al crear cargo:', error);
+      setApiError(error instanceof Error ? error.message : 'Error desconocido al crear el cargo');
     } finally {
       setSaving(false);
     }
@@ -161,6 +153,12 @@ export default function NuevoCargoPage() {
                   <h5 className="card-title mb-0">Información del Cargo</h5>
                 </div>
                 <div className="card-body">
+                  {apiError && (
+                    <div className="alert alert-danger" role="alert">
+                      <i className="material-icons me-2">error</i>
+                      {apiError}
+                    </div>
+                  )}
                   <form onSubmit={handleSubmit}>
                     <div className="row">
                       <div className="col-md-6 mb-3">

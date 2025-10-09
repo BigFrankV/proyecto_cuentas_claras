@@ -3,6 +3,8 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { cargosApi } from '@/lib/api/cargos';
+import { CargoDetalle as CargoDetalleType } from '@/types/cargos';
 
 // Interfaces
 interface Charge {
@@ -18,45 +20,6 @@ interface Charge {
   paymentDate?: string;
   paymentAmount?: number;
 }
-
-// Mock data - En un caso real vendría de la API
-const mockCharges: Charge[] = [
-  {
-    id: 'CHG-2024-001',
-    concept: 'Administración Enero 2024',
-    type: 'administration',
-    amount: 45000,
-    dueDate: '2024-01-31',
-    status: 'paid',
-    unit: 'APT-101',
-    description: 'Cuota de administración mensual',
-    createdAt: '2024-01-01',
-    paymentDate: '2024-01-25',
-    paymentAmount: 45000
-  },
-  {
-    id: 'CHG-2024-002',
-    concept: 'Mantenimiento Ascensores',
-    type: 'maintenance',
-    amount: 25000,
-    dueDate: '2024-02-15',
-    status: 'pending',
-    unit: 'APT-102',
-    description: 'Mantenimiento preventivo ascensores',
-    createdAt: '2024-02-01'
-  },
-  {
-    id: 'CHG-2024-003',
-    concept: 'Servicio de Seguridad',
-    type: 'service',
-    amount: 35000,
-    dueDate: '2024-02-28',
-    status: 'approved',
-    unit: 'APT-103',
-    description: 'Servicio de vigilancia 24/7',
-    createdAt: '2024-02-01'
-  }
-];
 
 export default function EditarCargoPage() {
   const router = useRouter();
@@ -78,23 +41,70 @@ export default function EditarCargoPage() {
   });
 
   useEffect(() => {
-    if (id) {
-      // Simular carga de datos - en un caso real sería una llamada a la API
-      const foundCharge = mockCharges.find(c => c.id === id);
-      if (foundCharge) {
-        setCharge(foundCharge);
+    const fetchCharge = async () => {
+      if (!id || typeof id !== 'string') return;
+
+      setLoading(true);
+      try {
+        console.log('🔍 Cargando cargo para editar:', id);
+
+        // Obtener el cargo desde la API
+        const cargoData = await cargosApi.getById(parseInt(id));
+
+        // Mapear los datos de la API al formato del formulario
+        const fechaVencimiento = cargoData.fechaVencimiento as any;
+        const fechaCreacion = cargoData.fechaCreacion as any;
+
+        // Función helper para convertir fecha a string
+        const formatDate = (date: any): string => {
+          if (date instanceof Date) {
+            return date.toISOString().split('T')[0]!;
+          }
+          if (typeof date === 'string') {
+            return date.split('T')[0]!;
+          }
+          return new Date().toISOString().split('T')[0]!;
+        };
+
+        const mappedCharge: Charge = {
+          id: cargoData.id.toString(),
+          concept: cargoData.concepto,
+          type: cargoData.tipo.toLowerCase().includes('administración') ? 'administration' :
+                cargoData.tipo.toLowerCase().includes('mantenimiento') ? 'maintenance' :
+                cargoData.tipo.toLowerCase().includes('servicio') ? 'service' :
+                cargoData.tipo.toLowerCase().includes('seguro') ? 'insurance' : 'other',
+          amount: cargoData.monto,
+          dueDate: formatDate(fechaVencimiento),
+          status: cargoData.estado === 'pendiente' ? 'pending' :
+                  cargoData.estado === 'pagado' ? 'paid' :
+                  cargoData.estado === 'parcial' ? 'partial' : 'pending',
+          unit: cargoData.unidad,
+          description: cargoData.descripcion || '',
+          createdAt: formatDate(fechaCreacion),
+          paymentAmount: cargoData.monto - cargoData.saldo
+        };
+
+        setCharge(mappedCharge);
         setFormData({
-          concept: foundCharge.concept,
-          type: foundCharge.type,
-          amount: foundCharge.amount,
-          dueDate: foundCharge.dueDate,
-          status: foundCharge.status,
-          unit: foundCharge.unit,
-          description: foundCharge.description || ''
+          concept: mappedCharge.concept,
+          type: mappedCharge.type,
+          amount: mappedCharge.amount,
+          dueDate: mappedCharge.dueDate,
+          status: mappedCharge.status,
+          unit: mappedCharge.unit,
+          description: mappedCharge.description || ''
         });
+
+        console.log('✅ Cargo cargado para edición:', mappedCharge);
+      } catch (err) {
+        console.error('❌ Error al cargar cargo:', err);
+        // Aquí podrías mostrar un mensaje de error o redirigir
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }
+    };
+
+    fetchCharge();
   }, [id]);
 
   const handleInputChange = (field: string, value: string | number) => {

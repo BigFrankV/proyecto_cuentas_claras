@@ -1,4 +1,3 @@
-// ...existing code...
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -59,29 +58,96 @@ const { requireCommunity } = require('../middleware/tenancy');
  *         description: Error del servidor
  */
 
-// List membresias for comunidad (members only)
-router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  // Usar nueva tabla usuario_comunidad_rol con JOIN a rol y usuario
-  const [rows] = await db.query(`
+// List membresias
+router.get('/', authenticate, async (req, res) => {
+  const { comunidad_id, usuario_id, rol_id, activo, limit = 20, offset = 0 } = req.query;
+  
+  let query = `
     SELECT 
-      ucr.id, 
-      ucr.usuario_id,
-      u.persona_id,
-      r.codigo as rol,
-      r.nombre as rol_nombre,
-      r.nivel_acceso,
-      ucr.desde,
-      ucr.hasta,
-      ucr.activo
-    FROM usuario_rol_comunidad ucr
-    INNER JOIN rol_sistema r ON r.id = ucr.rol_id
-    INNER JOIN usuario u ON u.id = ucr.usuario_id
-    WHERE ucr.comunidad_id = ?
-    ORDER BY r.nivel_acceso ASC
-    LIMIT 500
-  `, [comunidadId]);
-  res.json(rows);
+      urc.id,
+      urc.usuario_id,
+      u.username,
+      p.nombres,
+      p.apellidos,
+      CONCAT(p.nombres, ' ', p.apellidos) AS nombre_completo,
+      p.rut,
+      p.dv,
+      CONCAT(p.rut, '-', p.dv) AS rut_completo,
+      c.id AS comunidad_id,
+      c.razon_social AS comunidad_nombre,
+      rs.id AS rol_id,
+      rs.nombre AS rol_nombre,
+      rs.codigo AS rol_codigo,
+      rs.nivel_acceso,
+      urc.desde,
+      urc.hasta,
+      urc.activo,
+      urc.created_at,
+      urc.updated_at
+    FROM usuario_rol_comunidad urc
+    JOIN usuario u ON urc.usuario_id = u.id
+    JOIN persona p ON u.persona_id = p.id
+    JOIN comunidad c ON urc.comunidad_id = c.id
+    JOIN rol_sistema rs ON urc.rol_id = rs.id
+    WHERE 1=1
+  `;
+  const params = [];
+
+  if (comunidad_id) {
+    query += ' AND urc.comunidad_id = ?';
+    params.push(comunidad_id);
+  }
+  if (usuario_id) {
+    query += ' AND urc.usuario_id = ?';
+    params.push(usuario_id);
+  }
+  if (rol_id) {
+    query += ' AND urc.rol_id = ?';
+    params.push(rol_id);
+  }
+  if (activo !== undefined) {
+    query += ' AND urc.activo = ?';
+    params.push(activo === 'true' ? 1 : 0);
+  }
+
+  query += ' ORDER BY urc.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), parseInt(offset));
+
+  const [rows] = await db.query(query, params);
+
+  // Contar total
+  const countQuery = `
+    SELECT COUNT(*) as total
+    FROM usuario_rol_comunidad urc
+    WHERE 1=1
+  `;
+  const countParams = [];
+  if (comunidad_id) {
+    countQuery += ' AND comunidad_id = ?';
+    countParams.push(comunidad_id);
+  }
+  if (usuario_id) {
+    countQuery += ' AND usuario_id = ?';
+    countParams.push(usuario_id);
+  }
+  if (rol_id) {
+    countQuery += ' AND rol_id = ?';
+    countParams.push(rol_id);
+  }
+  if (activo !== undefined) {
+    countQuery += ' AND activo = ?';
+    countParams.push(activo === 'true' ? 1 : 0);
+  }
+  const [[{ total }]] = await db.query(countQuery, countParams);
+
+  res.json({
+    data: rows,
+    meta: {
+      total,
+      page: Math.floor(offset / limit) + 1,
+      pageSize: parseInt(limit)
+    }
+  });
 });
 
 /**
@@ -160,17 +226,17 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
  */
 
 // Create membresia (admin of comunidad or superadmin)
-router.post('/comunidad/:comunidadId', [
+router.post('/', [
   authenticate, 
-  requireCommunity('comunidadId', ['admin']), 
+  authorize('admin','superadmin'), 
   body('usuario_id').isInt(), 
+  body('comunidad_id').isInt(),
   body('rol_id').isInt()
 ], async (req, res) => {
   const errors = validationResult(req); 
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
   
-  const comunidadId = Number(req.params.comunidadId);
-  const { usuario_id, rol_id, activo, desde, hasta } = req.body;
+  const { usuario_id, comunidad_id, rol_id, activo, desde, hasta } = req.body;
   
   // Verificar que el rol existe
   const [rolRows] = await db.query('SELECT id, codigo FROM rol_sistema WHERE id = ? LIMIT 1', [rol_id]);
@@ -181,7 +247,7 @@ router.post('/comunidad/:comunidadId', [
   try {
     const [result] = await db.query(
       'INSERT INTO usuario_rol_comunidad (comunidad_id, usuario_id, rol_id, desde, hasta, activo) VALUES (?,?,?,?,?,?)', 
-      [comunidadId, usuario_id, rol_id, desdeVal, hasta || null, typeof activo === 'undefined' ? 1 : (activo ? 1 : 0)]
+      [comunidad_id, usuario_id, rol_id, desdeVal, hasta || null, typeof activo === 'undefined' ? 1 : (activo ? 1 : 0)]
     );
     
     const [row] = await db.query(`
@@ -344,5 +410,190 @@ router.delete('/:id', authenticate, authorize('admin','superadmin'), async (req,
     res.status(500).json({ error: 'server error' }); 
   } 
 });
+
+/**
+ * @openapi
+ * /membresias/{id}:
+ *   get:
+ *     tags: [Membresias]
+ *     summary: Obtener membresía por ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Membresía encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Membresia'
+ *       404:
+ *         description: Membresía no encontrada
+ */
+
+// Get membresia by id
+router.get('/:id', authenticate, async (req, res) => {
+  const id = req.params.id;
+  const [rows] = await db.query(`
+    SELECT 
+      urc.id,
+      urc.usuario_id,
+      u.username,
+      p.nombres,
+      p.apellidos,
+      CONCAT(p.nombres, ' ', p.apellidos) AS nombre_completo,
+      p.rut,
+      p.dv,
+      CONCAT(p.rut, '-', p.dv) AS rut_completo,
+      c.id AS comunidad_id,
+      c.razon_social AS comunidad_nombre,
+      rs.id AS rol_id,
+      rs.nombre AS rol_nombre,
+      rs.codigo AS rol_codigo,
+      rs.nivel_acceso,
+      urc.desde,
+      urc.hasta,
+      urc.activo,
+      urc.created_at,
+      urc.updated_at
+    FROM usuario_rol_comunidad urc
+    JOIN usuario u ON urc.usuario_id = u.id
+    JOIN persona p ON u.persona_id = p.id
+    JOIN comunidad c ON urc.comunidad_id = c.id
+    JOIN rol_sistema rs ON urc.rol_id = rs.id
+    WHERE urc.id = ?
+  `, [id]);
+  if (rows.length === 0) return res.status(404).json({ error: 'Membresía no encontrada' });
+  res.json(rows[0]);
+});
+
+/**
+ * @openapi
+ * /membresias/catalogos/planes:
+ *   get:
+ *     tags: [Membresias]
+ *     summary: Obtener catálogo de planes
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de planes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   codigo:
+ *                     type: string
+ *                   nombre:
+ *                     type: string
+ *                   nivel_acceso:
+ *                     type: integer
+ */
+
+// Get catalogos planes
+router.get('/catalogos/planes', authenticate, async (req, res) => {
+  const [rows] = await db.query('SELECT id, codigo, nombre, nivel_acceso FROM rol_sistema ORDER BY nivel_acceso');
+  res.json(rows);
+});
+
+/**
+ * @openapi
+ * /membresias/catalogos/estados:
+ *   get:
+ *     tags: [Membresias]
+ *     summary: Obtener catálogo de estados
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de estados
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ */
+
+// Get catalogos estados
+router.get('/catalogos/estados', authenticate, async (req, res) => {
+  res.json(['activo', 'inactivo']);
+});
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     Membresia:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         usuario_id:
+ *           type: integer
+ *         username:
+ *           type: string
+ *         nombres:
+ *           type: string
+ *         apellidos:
+ *           type: string
+ *         nombre_completo:
+ *           type: string
+ *         rut:
+ *           type: string
+ *         dv:
+ *           type: string
+ *         rut_completo:
+ *           type: string
+ *         comunidad_id:
+ *           type: integer
+ *         comunidad_nombre:
+ *           type: string
+ *         rol_id:
+ *           type: integer
+ *         rol_nombre:
+ *           type: string
+ *         rol_codigo:
+ *           type: string
+ *         nivel_acceso:
+ *           type: integer
+ *         desde:
+ *           type: string
+ *           format: date
+ *         hasta:
+ *           type: string
+ *           format: date
+ *           nullable: true
+ *         activo:
+ *           type: boolean
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *     Error:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *   responses:
+ *     UnauthorizedError:
+ *       description: No autorizado
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Error'
+ */
 
 module.exports = router;
