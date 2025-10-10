@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/lib/useAuth';
 // importar helpers/enum desde usePermissions
-import { usePermissions, hasPermission, Permission, canSeeMultas } from '@/lib/usePermissions';
-
+import { usePermissions, hasPermission, Permission, canCreateAnyMulta } from '@/lib/usePermissions';
+ 
 // Definición de las secciones del menú
 const menuSections = [
   {
@@ -109,8 +109,22 @@ const menuSections = [
 export default function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { isSuperUser, currentRole } = usePermissions();
+  const { isSuperUser, currentRole, primaryRoleLabel, primaryRoleSlug } = usePermissions();
   const [isCollapsed, setIsCollapsed] = useState(false);
+ 
+  // Helper local: reutiliza hasPermission / canCreateAnyMulta para determinar
+  // si el usuario puede ver la sección "Sanciones" (multas/apelaciones)
+  const canSeeMultasLocal = (u?: any, comunidadId?: number) => {
+    if (!u) return false;
+    if (u.is_superadmin) return true;
+    // permisos definidos en PERMISSION_MAP: multas.view_all / view_community / view_own
+    if (hasPermission(u, 'multas.view_all')) return true;
+    if (comunidadId && hasPermission(u, 'multas.view_community', comunidadId)) return true;
+    if (hasPermission(u, 'multas.view_own')) return !!u.persona_id;
+    // permitir si puede crear multas (rol administrativo)
+    if (canCreateAnyMulta(u)) return true;
+    return false;
+  };
 
   // Roles que pueden ver Sanciones/Multas (rol_slug tal como viene de la vista)
   const MULTAS_ROLES = [
@@ -133,39 +147,19 @@ export default function Sidebar() {
     'residente'
   ];
 
-  // Función para determinar si una sección debe mostrarse según permisos
+  // Mostrar secciones: permitimos ver las secciones principales a cualquier usuario autenticado.
+  // Las acciones sensibles ("nueva", "editar", "anular") se controlan en los botones con hasPermission/canCreateAnyMulta.
   const shouldShowSection = (sectionTitle: string) => {
-    if (isSuperUser()) return true; // Superuser ve todo
+    if (!user) return false;
+    if (isSuperUser()) return true;
 
-    switch (sectionTitle) {
-      case 'Dashboard':
-        return true; // Todos pueden ver el dashboard
-      case 'Estructura':
-        return hasPermission(user, Permission.VIEW_COMMUNITIES);
-      case 'Residentes':
-        return hasPermission(user, Permission.VIEW_USERS);
-      case 'Finanzas':
-        return hasPermission(user, Permission.VIEW_FINANCES);
-      case 'Gastos':
-        return hasPermission(user, Permission.VIEW_FINANCES); // Gastos también son finanzas
-      case 'Servicios':
-        return hasPermission(user, Permission.VIEW_COMMUNITIES); // Servicios de comunidades
-      case 'Amenidades':
-        return hasPermission(user, Permission.VIEW_COMMUNITIES); // Amenidades de comunidades
-
-      // Sanciones: permitimos si el usuario tiene permiso general o pertenece a un rol de MULTAS_ROLES
-      case 'Sanciones': {
-        // usar helper centralizado
-        return canSeeMultas(user) || hasPermission(user, Permission.VIEW_USERS);
-      }
-
-      case 'Comunicación':
-        return true; // Comunicación básica para todos
-      case 'Utilidades':
-        return hasPermission(user, Permission.VIEW_REPORTS); // Acceso a herramientas de utilidad
-      default:
-        return false;
-    }
+    // Por defecto mostrar secciones comunes a usuarios (residente/propietario/inquilino)
+    // Solo ocultamos secciones explícitamente administrativas si no tiene permiso
+    if (sectionTitle === 'Utilidades') return hasPermission(user, Permission.VIEW_REPORTS);
+    // 'Sanciones' requiere al menos poder ver multas en algún nivel (propias/comunidad/global)
+    if (sectionTitle === 'Sanciones') return canSeeMultasLocal(user) || hasPermission(user, Permission.VIEW_USERS);
+    // resto: mostrar (lectura) para usuarios autenticados
+    return true;
   };
 
   // Función para determinar si un item específico debe mostrarse
@@ -207,7 +201,7 @@ export default function Sidebar() {
 
     // Reglas especiales para rutas de Sanciones (por si el permiso no está mapeado)
     if (href.startsWith('/multas') || href.startsWith('/apelaciones')) {
-      return canSeeMultas(user) || isSuperUser();
+      return canSeeMultasLocal(user) || isSuperUser();
     }
 
     // Si no hay permiso requerido explícito, mostrar por defecto
@@ -280,13 +274,9 @@ export default function Sidebar() {
               {user?.persona?.nombres && user?.persona?.apellidos
                 ? `${user.persona.nombres} ${user.persona.apellidos}`
                 : user?.username || 'Usuario'}
-              {isSuperUser() ? (
-                <span className='badge bg-warning text-dark ms-1' style={{ fontSize: '0.6rem' }}>SUPERADMIN</span>
-              ) : (
-                <span className='badge bg-secondary ms-1' style={{ fontSize: '0.6rem' }}>
-                  {String(currentRole).toUpperCase()}
-                </span>
-              )}
+              <span className={`badge ms-1 ${isSuperUser() ? 'bg-warning text-dark' : 'bg-secondary'}`} style={{ fontSize: '0.6rem' }}>
+                {isSuperUser() ? 'SUPERADMIN' : (primaryRoleLabel || String(currentRole).toLowerCase()).toUpperCase()}
+              </span>
             </span>
             <span className='small text-white-50'>
               {user?.email || 'Sin email configurado'}

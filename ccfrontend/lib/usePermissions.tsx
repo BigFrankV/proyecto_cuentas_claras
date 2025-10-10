@@ -184,6 +184,27 @@ export function usePermissions() {
 
   const currentRole = getUserRole();
 
+  // obtener rol/slug primario para mostrar en UI (ej: 'propietario', 'residente', 'inquilino')
+  const getPrimaryRoleSlug = (): string | null => {
+    // priorizar roles_slug si viene del backend
+    if (user?.roles_slug && Array.isArray(user.roles_slug) && user.roles_slug.length > 0) {
+      return String(user.roles_slug[0]).toLowerCase();
+    }
+    // luego buscar en memberships (rol por comunidad)
+    if (user?.memberships && Array.isArray(user.memberships) && user.memberships.length > 0) {
+      const r = user.memberships[0].rol_slug ?? user.memberships[0].rol;
+      if (r) return String(r).toLowerCase();
+    }
+    // fallback a user.roles si es array de strings
+    if (user?.roles && Array.isArray(user.roles) && typeof user.roles[0] === 'string') {
+      return String(user.roles[0]).toLowerCase();
+    }
+    return null;
+  };
+
+  const primaryRoleSlug = getPrimaryRoleSlug();
+  const primaryRoleLabel = primaryRoleSlug ? primaryRoleSlug.replace(/_/g, ' ') : String(currentRole).toLowerCase();
+
   // ✅ CORRECCIÓN: Verificar acceso a comunidad específica
   const hasAccessToCommunity = (communityId?: number): boolean => {
     // Superadmin ve todas las comunidades
@@ -283,6 +304,8 @@ export function usePermissions() {
 
   return {
     currentRole,
+    primaryRoleSlug,
+    primaryRoleLabel,
     hasPermission,
     hasRole,
     isSuperUser,
