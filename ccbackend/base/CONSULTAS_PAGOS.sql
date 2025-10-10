@@ -9,15 +9,15 @@
 -- ===========================================
 SELECT
   p.id,
-  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as orderId,
-  p.monto as amount,
-  DATE_FORMAT(p.fecha, '%Y-%m-%d') as paymentDate,
+  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as idOrden,
+  p.monto as monto,
+  DATE_FORMAT(p.fecha, '%Y-%m-%d') as fechaPago,
   CASE
     WHEN p.estado = 'pendiente' THEN 'pending'
     WHEN p.estado = 'aplicado' THEN 'approved'
     WHEN p.estado = 'reversado' THEN 'cancelled'
     ELSE 'pending'
-  END as status,
+  END as estado,
   CASE
     WHEN p.medio = 'transferencia' THEN 'bank_transfer'
     WHEN p.medio = 'webpay' THEN 'webpay'
@@ -25,13 +25,13 @@ SELECT
     WHEN p.medio = 'servipag' THEN 'servipag'
     WHEN p.medio = 'efectivo' THEN 'cash'
     ELSE p.medio
-  END as paymentMethod,
-  p.referencia as reference,
-  p.comprobante_num as receiptNumber,
-  c.razon_social as communityName,
-  u.codigo as unitNumber,
-  CONCAT(pers.nombres, ' ', pers.apellidos) as residentName,
-  pers.email as residentEmail,
+  END as metodoPago,
+  p.referencia as referencia,
+  p.comprobante_num as numeroComprobante,
+  c.razon_social as nombreComunidad,
+  u.codigo as numeroUnidad,
+  CONCAT(pers.nombres, ' ', pers.apellidos) as nombreResidente,
+  pers.email as emailResidente,
   p.created_at,
   p.updated_at
 FROM pago p
@@ -71,15 +71,15 @@ WHERE 1=1
 -- ===========================================
 SELECT
   p.id,
-  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as orderId,
-  p.monto as amount,
-  DATE_FORMAT(p.fecha, '%Y-%m-%d') as paymentDate,
+  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as idOrden,
+  p.monto as monto,
+  DATE_FORMAT(p.fecha, '%Y-%m-%d') as fechaPago,
   CASE
     WHEN p.estado = 'pendiente' THEN 'pending'
     WHEN p.estado = 'aplicado' THEN 'approved'
     WHEN p.estado = 'reversado' THEN 'cancelled'
     ELSE 'pending'
-  END as status,
+  END as estado,
   CASE
     WHEN p.medio = 'transferencia' THEN 'bank_transfer'
     WHEN p.medio = 'webpay' THEN 'webpay'
@@ -87,14 +87,14 @@ SELECT
     WHEN p.medio = 'servipag' THEN 'servipag'
     WHEN p.medio = 'efectivo' THEN 'cash'
     ELSE p.medio
-  END as paymentMethod,
-  p.referencia as reference,
-  p.comprobante_num as receiptNumber,
-  c.razon_social as communityName,
-  u.codigo as unitNumber,
-  CONCAT(pers.nombres, ' ', pers.apellidos) as residentName,
-  pers.email as residentEmail,
-  pers.telefono as residentPhone,
+  END as metodoPago,
+  p.referencia as referencia,
+  p.comprobante_num as numeroComprobante,
+  c.razon_social as nombreComunidad,
+  u.codigo as numeroUnidad,
+  CONCAT(pers.nombres, ' ', pers.apellidos) as nombreResidente,
+  pers.email as emailResidente,
+  pers.telefono as telefonoResidente,
   p.created_at,
   p.updated_at
 FROM pago p
@@ -109,15 +109,15 @@ WHERE p.id = ?;
 -- ===========================================
 SELECT
   p.id,
-  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as orderId,
-  p.monto as amount,
-  DATE_FORMAT(p.fecha, '%Y-%m-%d') as paymentDate,
+  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as idOrden,
+  p.monto as monto,
+  DATE_FORMAT(p.fecha, '%Y-%m-%d') as fechaPago,
   CASE
     WHEN p.estado = 'pendiente' THEN 'pending'
     WHEN p.estado = 'aplicado' THEN 'approved'
     WHEN p.estado = 'reversado' THEN 'cancelled'
     ELSE 'pending'
-  END as status,
+  END as estado,
   CASE
     WHEN p.medio = 'transferencia' THEN 'bank_transfer'
     WHEN p.medio = 'webpay' THEN 'webpay'
@@ -125,15 +125,15 @@ SELECT
     WHEN p.medio = 'servipag' THEN 'servipag'
     WHEN p.medio = 'efectivo' THEN 'cash'
     ELSE p.medio
-  END as paymentMethod,
-  p.referencia as reference,
-  u.codigo as unitNumber,
-  CONCAT(pers.nombres, ' ', pers.apellidos) as residentName,
+  END as metodoPago,
+  p.referencia as referencia,
+  u.codigo as numeroUnidad,
+  CONCAT(pers.nombres, ' ', pers.apellidos) as nombreResidente,
   p.created_at
 FROM pago p
 LEFT JOIN unidad u ON p.unidad_id = u.id
 LEFT JOIN persona pers ON p.persona_id = pers.id
-WHERE p.comunidad_id = ?
+WHERE p.comunidad_id = 1
 ORDER BY p.fecha DESC, p.created_at DESC;
 
 -- ===========================================
@@ -141,17 +141,17 @@ ORDER BY p.fecha DESC, p.created_at DESC;
 -- Consulta de estadísticas generales de pagos
 -- ===========================================
 SELECT
-  COUNT(*) as totalPayments,
-  COUNT(CASE WHEN p.estado = 'aplicado' THEN 1 END) as approvedPayments,
-  COUNT(CASE WHEN p.estado = 'pendiente' THEN 1 END) as pendingPayments,
-  COUNT(CASE WHEN p.estado = 'reversado' THEN 1 END) as cancelledPayments,
-  SUM(p.monto) as totalAmount,
-  AVG(p.monto) as averageAmount,
-  MIN(p.fecha) as oldestPayment,
-  MAX(p.fecha) as newestPayment,
-  SUM(CASE WHEN p.estado = 'aplicado' THEN p.monto ELSE 0 END) as approvedAmount
+  COUNT(*) as totalPagos,
+  COUNT(CASE WHEN p.estado = 'aplicado' THEN 1 END) as pagosAprobados,
+  COUNT(CASE WHEN p.estado = 'pendiente' THEN 1 END) as pagosPendientes,
+  COUNT(CASE WHEN p.estado = 'reversado' THEN 1 END) as pagosCancelados,
+  SUM(p.monto) as montoTotal,
+  AVG(p.monto) as montoPromedio,
+  MIN(p.fecha) as pagoMasAntiguo,
+  MAX(p.fecha) as pagoMasReciente,
+  SUM(CASE WHEN p.estado = 'aplicado' THEN p.monto ELSE 0 END) as montoAprobado
 FROM pago p
-WHERE p.comunidad_id = ?;
+WHERE p.comunidad_id = 1;
 
 -- ===========================================
 -- 6. APLICACIÓN DE PAGOS A CARGOS
@@ -159,23 +159,23 @@ WHERE p.comunidad_id = ?;
 -- ===========================================
 SELECT
   pa.id,
-  pa.monto as appliedAmount,
+  pa.monto as montoAplicado,
   pa.prioridad,
-  ccu.id as chargeId,
-  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as chargeCode,
-  ccu.monto_total as chargeTotal,
-  ccu.saldo as chargeBalance,
-  egc.periodo as period,
-  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as dueDate,
-  u.codigo as unitNumber,
-  CONCAT(pers.nombres, ' ', pers.apellidos) as residentName
+  ccu.id as idCargo,
+  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as codigoCargo,
+  ccu.monto_total as totalCargo,
+  ccu.saldo as saldoCargo,
+  egc.periodo as periodo,
+  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fechaVencimiento,
+  u.codigo as numeroUnidad,
+  CONCAT(pers.nombres, ' ', pers.apellidos) as nombreResidente
 FROM pago_aplicacion pa
 JOIN cuenta_cobro_unidad ccu ON pa.cuenta_cobro_unidad_id = ccu.id
 LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
 LEFT JOIN unidad u ON ccu.unidad_id = u.id
-LEFT JOIN titulares_unidad tu ON u.id = tu.unidad_id AND tu.principal = 1
+LEFT JOIN titulares_unidad tu ON u.id = tu.unidad_id
 LEFT JOIN persona pers ON tu.persona_id = pers.id
-WHERE pa.pago_id = ?
+WHERE pa.pago_id = 1
 ORDER BY pa.prioridad, pa.id;
 
 -- ===========================================
@@ -188,12 +188,12 @@ SELECT
     WHEN p.estado = 'aplicado' THEN 'approved'
     WHEN p.estado = 'reversado' THEN 'cancelled'
     ELSE 'pending'
-  END as status,
-  COUNT(*) as count,
-  SUM(p.monto) as totalAmount,
-  AVG(p.monto) as averageAmount
+  END as estado,
+  COUNT(*) as cantidad,
+  SUM(p.monto) as montoTotal,
+  AVG(p.monto) as montoPromedio
 FROM pago p
-WHERE p.comunidad_id = ?
+WHERE p.comunidad_id = 1
 GROUP BY p.estado
 ORDER BY
   CASE p.estado
@@ -215,14 +215,14 @@ SELECT
     WHEN p.medio = 'servipag' THEN 'servipag'
     WHEN p.medio = 'efectivo' THEN 'cash'
     ELSE p.medio
-  END as paymentMethod,
-  COUNT(*) as count,
-  SUM(p.monto) as totalAmount,
-  AVG(p.monto) as averageAmount
+  END as metodoPago,
+  COUNT(*) as cantidad,
+  SUM(p.monto) as montoTotal,
+  AVG(p.monto) as montoPromedio
 FROM pago p
-WHERE p.comunidad_id = ?
+WHERE p.comunidad_id = 1
 GROUP BY p.medio
-ORDER BY totalAmount DESC;
+ORDER BY montoTotal DESC;
 
 -- ===========================================
 -- 9. PAGOS PENDIENTES DE APLICACIÓN
@@ -230,22 +230,22 @@ ORDER BY totalAmount DESC;
 -- ===========================================
 SELECT
   p.id,
-  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as orderId,
-  p.monto as totalPayment,
-  COALESCE(SUM(pa.monto), 0) as appliedAmount,
-  (p.monto - COALESCE(SUM(pa.monto), 0)) as remainingAmount,
-  DATE_FORMAT(p.fecha, '%Y-%m-%d') as paymentDate,
-  u.codigo as unitNumber,
-  CONCAT(pers.nombres, ' ', pers.apellidos) as residentName,
-  p.referencia as reference
+  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as idOrden,
+  p.monto as totalPago,
+  COALESCE(SUM(pa.monto), 0) as montoAplicado,
+  (p.monto - COALESCE(SUM(pa.monto), 0)) as saldoPendiente,
+  DATE_FORMAT(p.fecha, '%Y-%m-%d') as fechaPago,
+  u.codigo as numeroUnidad,
+  CONCAT(pers.nombres, ' ', pers.apellidos) as nombreResidente,
+  p.referencia as referencia
 FROM pago p
 LEFT JOIN pago_aplicacion pa ON p.id = pa.pago_id
 LEFT JOIN unidad u ON p.unidad_id = u.id
 LEFT JOIN persona pers ON p.persona_id = pers.id
-WHERE p.comunidad_id = ?
+WHERE p.comunidad_id = 1
   AND p.estado = 'pendiente'
 GROUP BY p.id, p.monto, p.fecha, u.codigo, pers.nombres, pers.apellidos, p.referencia
-HAVING remainingAmount > 0
+HAVING saldoPendiente > 0
 ORDER BY p.fecha DESC;
 
 -- ===========================================
@@ -254,15 +254,15 @@ ORDER BY p.fecha DESC;
 -- ===========================================
 SELECT
   p.id,
-  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as orderId,
-  DATE_FORMAT(p.fecha, '%Y-%m-%d') as paymentDate,
-  p.monto as amount,
+  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as idOrden,
+  DATE_FORMAT(p.fecha, '%Y-%m-%d') as fechaPago,
+  p.monto as monto,
   CASE
     WHEN p.estado = 'pendiente' THEN 'pending'
     WHEN p.estado = 'aplicado' THEN 'approved'
     WHEN p.estado = 'reversado' THEN 'cancelled'
     ELSE 'pending'
-  END as status,
+  END as estado,
   CASE
     WHEN p.medio = 'transferencia' THEN 'bank_transfer'
     WHEN p.medio = 'webpay' THEN 'webpay'
@@ -270,12 +270,12 @@ SELECT
     WHEN p.medio = 'servipag' THEN 'servipag'
     WHEN p.medio = 'efectivo' THEN 'cash'
     ELSE p.medio
-  END as paymentMethod,
-  p.referencia as reference,
-  COALESCE(SUM(pa.monto), 0) as appliedAmount
+  END as metodoPago,
+  p.referencia as referencia,
+  COALESCE(SUM(pa.monto), 0) as montoAplicado
 FROM pago p
 LEFT JOIN pago_aplicacion pa ON p.id = pa.pago_id
-WHERE p.unidad_id = ?
+WHERE p.unidad_id = 1
 GROUP BY p.id, p.fecha, p.monto, p.estado, p.medio, p.referencia
 ORDER BY p.fecha DESC;
 
@@ -285,28 +285,29 @@ ORDER BY p.fecha DESC;
 -- ===========================================
 SELECT
   cb.id,
-  DATE_FORMAT(cb.fecha_movimiento, '%Y-%m-%d') as movementDate,
-  cb.descripcion,
+  DATE_FORMAT(cb.fecha_mov, '%Y-%m-%d') as fechaMovimiento,
+  cb.glosa as descripcion,
   cb.monto,
   CASE
-    WHEN cb.tipo = 'credito' THEN 'credit'
-    WHEN cb.tipo = 'debito' THEN 'debit'
-    ELSE cb.tipo
-  END as type,
-  cb.referencia_bancaria as bankReference,
-  p.id as paymentId,
-  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as paymentCode,
-  p.referencia as paymentReference,
-  CASE
-    WHEN cb.estado_conciliacion = 'pendiente' THEN 'pending'
-    WHEN cb.estado_conciliacion = 'conciliado' THEN 'reconciled'
-    WHEN cb.estado_conciliacion = 'diferencia' THEN 'difference'
+    WHEN cb.estado = 'pendiente' THEN 'pending'
+    WHEN cb.estado = 'conciliado' THEN 'reconciled'
+    WHEN cb.estado = 'descartado' THEN 'discarded'
     ELSE 'pending'
-  END as reconciliationStatus
+  END as estado,
+  cb.referencia as referenciaBancaria,
+  p.id as idPago,
+  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as codigoPago,
+  p.referencia as referenciaPago,
+  CASE
+    WHEN cb.estado = 'pendiente' THEN 'pending'
+    WHEN cb.estado = 'conciliado' THEN 'reconciled'
+    WHEN cb.estado = 'descartado' THEN 'discarded'
+    ELSE 'pending'
+  END as estadoConciliacion
 FROM conciliacion_bancaria cb
 LEFT JOIN pago p ON cb.pago_id = p.id
-WHERE cb.comunidad_id = ?
-ORDER BY cb.fecha_movimiento DESC;
+WHERE cb.comunidad_id = 1
+ORDER BY cb.fecha_mov DESC;
 
 -- ===========================================
 -- 12. WEBHOOKS DE PAGOS
@@ -314,13 +315,13 @@ ORDER BY cb.fecha_movimiento DESC;
 -- ===========================================
 SELECT
   wp.id,
-  wp.evento,
-  wp.payload,
+  wp.proveedor as proveedor,
+  wp.payload_json as payload,
   wp.procesado,
-  DATE_FORMAT(wp.fecha_recepcion, '%Y-%m-%d %H:%i:%s') as receivedAt,
-  wp.created_at
+  DATE_FORMAT(wp.fecha_recepcion, '%Y-%m-%d %H:%i:%s') as fechaRecepcion,
+  wp.fecha_recepcion as created_at
 FROM webhook_pago wp
-WHERE wp.pago_id = ?
+WHERE wp.pago_id = 1
 ORDER BY wp.fecha_recepcion DESC;
 
 -- ===========================================
@@ -328,19 +329,19 @@ ORDER BY wp.fecha_recepcion DESC;
 -- Consulta de pagos agrupados por mes/año
 -- ===========================================
 SELECT
-  YEAR(p.fecha) as year,
-  MONTH(p.fecha) as month,
-  DATE_FORMAT(p.fecha, '%Y-%m') as period,
-  COUNT(*) as paymentCount,
-  SUM(p.monto) as totalAmount,
-  AVG(p.monto) as averageAmount,
-  COUNT(CASE WHEN p.estado = 'aplicado' THEN 1 END) as approvedCount,
-  COUNT(CASE WHEN p.estado = 'pendiente' THEN 1 END) as pendingCount,
-  COUNT(CASE WHEN p.estado = 'reversado' THEN 1 END) as cancelledCount
+  YEAR(p.fecha) as anio,
+  MONTH(p.fecha) as mes,
+  DATE_FORMAT(p.fecha, '%Y-%m') as periodo,
+  COUNT(*) as cantidadPagos,
+  SUM(p.monto) as montoTotal,
+  AVG(p.monto) as montoPromedio,
+  COUNT(CASE WHEN p.estado = 'aplicado' THEN 1 END) as cantidadAprobados,
+  COUNT(CASE WHEN p.estado = 'pendiente' THEN 1 END) as cantidadPendientes,
+  COUNT(CASE WHEN p.estado = 'reversado' THEN 1 END) as cantidadCancelados
 FROM pago p
-WHERE p.comunidad_id = ?
+WHERE p.comunidad_id = 1
 GROUP BY YEAR(p.fecha), MONTH(p.fecha), DATE_FORMAT(p.fecha, '%Y-%m')
-ORDER BY year DESC, month DESC;
+ORDER BY anio DESC, mes DESC;
 
 -- ===========================================
 -- 14. VALIDACIÓN DE PAGOS
@@ -354,17 +355,17 @@ SELECT
     WHEN p.fecha IS NULL THEN 'Missing payment date'
     WHEN p.estado NOT IN ('pendiente', 'aplicado', 'reversado') THEN 'Invalid status'
     ELSE 'Valid'
-  END as validation_status,
+  END as estadoValidacion,
   p.monto,
   p.fecha,
   p.estado,
-  COUNT(pa.id) as application_count,
-  COALESCE(SUM(pa.monto), 0) as applied_amount
+  COUNT(pa.id) as cantidadAplicaciones,
+  COALESCE(SUM(pa.monto), 0) as montoAplicado
 FROM pago p
 LEFT JOIN pago_aplicacion pa ON p.id = pa.pago_id
-WHERE p.comunidad_id = ?
+WHERE p.comunidad_id = 1
 GROUP BY p.id, p.comunidad_id, p.monto, p.fecha, p.estado
-HAVING validation_status != 'Valid'
+HAVING estadoValidacion != 'Valid'
 ORDER BY p.id;
 
 -- ===========================================
@@ -372,22 +373,21 @@ ORDER BY p.id;
 -- Consulta consolidada de pagos por residente
 -- ===========================================
 SELECT
-  pers.id as residentId,
-  CONCAT(pers.nombres, ' ', pers.apellidos) as residentName,
-  pers.email as residentEmail,
-  u.codigo as unitNumber,
-  COUNT(p.id) as totalPayments,
-  SUM(p.monto) as totalPaid,
-  AVG(p.monto) as averagePayment,
-  MAX(p.fecha) as lastPaymentDate,
-  COUNT(CASE WHEN p.estado = 'aplicado' THEN 1 END) as approvedPayments,
-  COUNT(CASE WHEN p.estado = 'pendiente' THEN 1 END) as pendingPayments,
-  COUNT(CASE WHEN p.estado = 'reversado' THEN 1 END) as cancelledPayments
+  pers.id as idResidente,
+  CONCAT(pers.nombres, ' ', pers.apellidos) as nombreResidente,
+  pers.email as emailResidente,
+  u.codigo as numeroUnidad,
+  COUNT(p.id) as totalPagos,
+  SUM(p.monto) as totalPagado,
+  AVG(p.monto) as pagoPromedio,
+  MAX(p.fecha) as fechaUltimoPago,
+  COUNT(CASE WHEN p.estado = 'aplicado' THEN 1 END) as pagosAprobados,
+  COUNT(CASE WHEN p.estado = 'pendiente' THEN 1 END) as pagosPendientes,
+  COUNT(CASE WHEN p.estado = 'reversado' THEN 1 END) as pagosCancelados
 FROM persona pers
-JOIN titulares_unidad tu ON pers.id = tu.persona_id AND tu.principal = 1
+JOIN titulares_unidad tu ON pers.id = tu.persona_id
 JOIN unidad u ON tu.unidad_id = u.id
 LEFT JOIN pago p ON pers.id = p.persona_id
-WHERE u.comunidad_id = ?
+WHERE u.comunidad_id = 1
 GROUP BY pers.id, pers.nombres, pers.apellidos, pers.email, u.codigo
-ORDER BY totalPaid DESC;</content>
-<parameter name="filePath">c:\Users\patri\Documents\GitHub\proyecto_cuentas_claras\ccbackend\base\CONSULTAS_PAGOS.sql
+ORDER BY totalPagado DESC;<

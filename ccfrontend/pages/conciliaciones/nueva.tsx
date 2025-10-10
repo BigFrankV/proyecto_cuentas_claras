@@ -5,6 +5,46 @@ import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 
+// API interfaces
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
+interface ApiConciliacion {
+  id: number;
+  codigo?: string;
+  fecha_mov: string;
+  glosa?: string;
+  monto: number;
+  tipo?: 'credito' | 'debito' | 'otro';
+  referencia_bancaria?: string;
+  estado_conciliacion?: 'pendiente' | 'conciliado' | 'diferencia' | 'descartado';
+  pago_id?: number;
+  codigo_pago?: string;
+  referencia_pago?: string;
+  nombre_comunidad?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// API functions
+const conciliacionesApi = {
+  async createConciliacion(data: Omit<ApiConciliacion, 'id' | 'created_at' | 'updated_at'>): Promise<ApiConciliacion> {
+    const response = await fetch(`${API_BASE_URL}/conciliaciones`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al crear conciliación: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+};
+
 interface FormData {
   bank: string;
   bankAccount: string;
@@ -151,10 +191,21 @@ export default function NuevaConciliacion() {
   const processFiles = async () => {
     setProcessing(true);
     setLoading(true);
-    
-    // Simulate file processing
-    setTimeout(() => {
-      // Mock transaction data
+
+    try {
+      // Crear la conciliación en la API
+      const conciliacionData: Omit<ApiConciliacion, 'id' | 'created_at' | 'updated_at'> = {
+        fecha_mov: formData.startDate,
+        monto: 0, // Se calculará basado en las transacciones procesadas
+        glosa: `Conciliación ${formData.period} - ${formData.bankAccount}`,
+        estado_conciliacion: 'pendiente',
+        referencia_bancaria: `CONC-${formData.period}-${Date.now()}`
+      };
+
+      const createdConciliacion = await conciliacionesApi.createConciliacion(conciliacionData);
+
+      // Aquí iría la lógica para procesar el archivo y crear transacciones
+      // Por ahora, simulamos transacciones
       const mockTransactions: BankTransaction[] = [
         {
           id: 1,
@@ -199,11 +250,11 @@ export default function NuevaConciliacion() {
       ];
 
       setBankTransactions(mockTransactions);
-      
+
       const matched = mockTransactions.filter(t => t.matched).length;
       const total = mockTransactions.length;
       const totalAmount = mockTransactions.reduce((sum, t) => sum + t.amount, 0);
-      
+
       setMatchingSummary({
         totalTransactions: total,
         matchedTransactions: matched,
@@ -217,7 +268,18 @@ export default function NuevaConciliacion() {
       setLoading(false);
       setShowResults(true);
       nextStep();
-    }, 3000);
+
+      // Redirigir a la página de detalle de la conciliación creada
+      setTimeout(() => {
+        router.push(`/conciliaciones/${createdConciliacion.id}`);
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error creating conciliation:', error);
+      setProcessing(false);
+      setLoading(false);
+      // Aquí se podría mostrar un mensaje de error
+    }
   };
 
   const formatCurrency = (amount: number) => {
