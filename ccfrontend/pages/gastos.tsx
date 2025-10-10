@@ -40,38 +40,26 @@ export default function GastosListado() {
     direccion: 'DESC'
   });
 
+  // Determinar si es superadmin (normalizado)
+  const isSuperAdmin = Boolean(user?.is_superadmin === true || (user?.roles_slug || []).includes('superadmin'));
+
   // ✅ Establecer comunidad según rol del usuario
   useEffect(() => {
     if (user) {
-      console.log('🔍 DEBUG COMPLETO DEL USUARIO:');
-      console.log('- Username:', user.username);
-      console.log('- Rol global:', user.rol_global);
-      console.log('- ID:', user.id);
-      console.log('- Persona ID:', user.persona_id);
-      console.log('- Membresías (español):', user.membresias);
-      console.log('- Memberships (inglés):', user.memberships);
-      console.log('- Todas las propiedades:', Object.keys(user));
-      console.log('- Usuario completo:', JSON.stringify(user, null, 2));
-
-      // Normalizar membresías
-      const membresias = user?.membresias || user?.memberships || [];
-
-      console.log('🏢 Membresías procesadas:', membresias);
-
-      if (membresias.length > 0) {
-        // ✅ DETECTAR TANTO comunidad_id COMO comunidadId
-        const comunidadId = membresias[0].comunidad_id || membresias[0].comunidadId;
-        setComunidadId(comunidadId);
-        console.log('✅ Comunidad establecida:', comunidadId);
+      const membresias = user?.memberships || user?.membresias || [];
+      if (isSuperAdmin) {
+        setComunidadId(0); // 0 = todas
+      } else if (membresias.length > 0) {
+        const comunidadIdFromMember = membresias[0].comunidad_id ?? membresias[0].comunidadId;
+        setComunidadId(Number(comunidadIdFromMember));
       } else {
-        console.log('⚠️ Usuario sin membresías');
         setComunidadId(null);
       }
     }
-  }, [user]);
+  }, [user, isSuperAdmin]);
 
-  // ✅ USAR LOS HOOKS CORREGIDOS (eliminar duplicación de estadisticas)
-  const { gastos, loading, error, updateFilters, refetch } = useGastos(comunidadId || 0, filtros);
+  // ✅ USAR LOS HOOKS CORREGIDOS (pasar 0 para superadmin)
+  const { gastos, loading, error, updateFilters, refetch } = useGastos((comunidadId === null ? 0 : comunidadId), filtros);
   const { estadisticas: statsFromHook } = useGastoEstadisticas(comunidadId || 0);
   const { categorias } = useCategorias(comunidadId || 0);
 
@@ -79,36 +67,42 @@ export default function GastosListado() {
   const gastosFiltrados = React.useMemo(() => {
     let filtered = [...gastos];
 
-    // Filtro por búsqueda
+    // Si no es superadmin y tenemos comunidadId, filtrar por comunidad (defensa adicional)
+    if (!isSuperAdmin && comunidadId) {
+      filtered = filtered.filter(g => Number(g.comunidad_id) === Number(comunidadId));
+    }
+
+    // Filtro por búsqueda (con guards para campos null)
     if (searchTerm) {
+      const q = searchTerm.toString().toLowerCase();
       filtered = filtered.filter(gasto =>
-        gasto.glosa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        gasto.numero?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        gasto.categoria_nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        gasto.creado_por_nombre?.toLowerCase().includes(searchTerm.toLowerCase())
+        (gasto.glosa || '').toString().toLowerCase().includes(q) ||
+        (gasto.numero || '').toString().toLowerCase().includes(q) ||
+        (gasto.categoria_nombre || '').toString().toLowerCase().includes(q) ||
+        (gasto.creado_por_nombre || '').toString().toLowerCase().includes(q)
       );
     }
 
     // Filtro por estado
     if (selectedEstado) {
-      filtered = filtered.filter(gasto => gasto.estado === selectedEstado);
+      filtered = filtered.filter(gasto => (gasto.estado || '').toString() === selectedEstado);
     }
 
     // Filtro por categoría
     if (selectedCategoria) {
-      filtered = filtered.filter(gasto => gasto.categoria_id === selectedCategoria);
+      filtered = filtered.filter(gasto => Number(gasto.categoria_id) === Number(selectedCategoria));
     }
 
     // Filtro por fechas
     if (fechaDesde) {
-      filtered = filtered.filter(gasto => gasto.fecha >= fechaDesde);
+      filtered = filtered.filter(gasto => (gasto.fecha || '') >= fechaDesde);
     }
     if (fechaHasta) {
-      filtered = filtered.filter(gasto => gasto.fecha <= fechaHasta);
+      filtered = filtered.filter(gasto => (gasto.fecha || '') <= fechaHasta);
     }
 
     return filtered;
-  }, [gastos, searchTerm, selectedEstado, selectedCategoria, fechaDesde, fechaHasta]);
+  }, [gastos, searchTerm, selectedEstado, selectedCategoria, fechaDesde, fechaHasta, comunidadId, isSuperAdmin]);
 
   // Helpers
   const formatCurrency = (amount: number) => {
@@ -145,18 +139,19 @@ export default function GastosListado() {
     return colores[tipo as keyof typeof colores] || 'secondary';
   };
 
-  // Permisos
-  const canCreate = user?.rol_global === 'super_admin' || user?.is_superadmin ||
-    (comunidadId && (user?.membresias || user?.memberships || []).find(m =>
-      (m.comunidad_id === comunidadId || m.comunidadId === comunidadId) &&
-      ['administrador', 'tesorero', 'admin'].includes(m.rol || m.role)
-    ));
+  // Permisos — usar memberships/roles_slug normalizados
+  const userMemberships = user?.memberships || user?.membresias || [];
+  const hasRoleInCommunity = (roles: string[]) => {
+    if (isSuperAdmin) return true;
+    if (!comunidadId) return false;
+    return userMemberships.some(m =>
+      Number(m.comunidad_id ?? m.comunidadId) === Number(comunidadId) &&
+      roles.includes((m.rol || m.rol_slug || m.role || '').toString().toLowerCase())
+    );
+  };
 
-  const canApprove = user?.rol_global === 'super_admin' || user?.is_superadmin ||
-    (comunidadId && (user?.membresias || user?.memberships || []).find(m =>
-      (m.comunidad_id === comunidadId || m.comunidadId === comunidadId) &&
-      ['administrador', 'admin'].includes(m.rol || m.role)
-    ));
+  const canCreate = isSuperAdmin || hasRoleInCommunity(['administrador', 'tesorero', 'contador', 'admin']);
+  const canApprove = isSuperAdmin || hasRoleInCommunity(['administrador', 'admin', 'tesorero', 'consejo', 'contador']);
 
   // Render de estadísticas
   const renderEstadisticas = () => {
@@ -255,8 +250,8 @@ export default function GastosListado() {
     );
   };
 
-  // ✅ MOSTRAR DEBUG SI NO HAY COMUNIDAD
-  if (!comunidadId) {
+  // ✅ MOSTRAR DEBUG SI NO HAY COMUNIDAD Y NO ES SUPERADMIN
+  if (!comunidadId && !isSuperAdmin) {
     return (
       <ProtectedRoute>
         <Layout>
@@ -265,8 +260,11 @@ export default function GastosListado() {
               <strong>🔍 Debug: Sin acceso a comunidad</strong><br />
               <div className="mt-3">
                 <strong>Usuario:</strong> {user?.username}<br />
-                <strong>Rol global:</strong> {user?.rol_global}<br />
-                <strong>Membresías encontradas:</strong> {JSON.stringify(user?.membresias || user?.memberships || [], null, 2)}
+                <strong>Superadmin:</strong> {String(Boolean(user?.is_superadmin))}<br />
+                <strong>Roles / memberships:</strong>
+                <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+                  {JSON.stringify(user?.roles_slug || user?.roles || user?.memberships || user?.membresias || [], null, 2)}
+                </pre>
               </div>
               <div className="mt-3">
                 <small>Este mensaje desaparecerá cuando tengas membresías correctas desde el backend.</small>
@@ -292,7 +290,9 @@ export default function GastosListado() {
             <div>
               <h1 className='h3 mb-0'>Gastos</h1>
               <p className='text-muted mb-0'>
-                Gestión de gastos de la comunidad ID: {comunidadId}
+                {isSuperAdmin
+                  ? 'Gestión de gastos (Superadmin: todas las comunidades)'
+                  : `Gestión de gastos de la comunidad ID: ${comunidadId}`}
               </p>
             </div>
 
@@ -305,7 +305,7 @@ export default function GastosListado() {
 
               {/* Botón nuevo gasto */}
               {canCreate && (
-                <Link href="/gasto-nuevo" className='btn btn-primary'>
+                <Link href="/gastos/nuevo" className='btn btn-primary'>
                   <span className='material-icons me-2'>add</span>
                   Nuevo Gasto
                 </Link>
@@ -317,12 +317,19 @@ export default function GastosListado() {
           <div className="alert alert-info mb-4">
             <strong>🔍 Debug Info:</strong><br />
             <small>
-              Comunidad ID: {comunidadId} |
+              Comunidad ID: {comunidadId ?? 'Todas'} |
               Gastos: {gastos.length} |
               Loading: {loading ? 'Sí' : 'No'} |
               Error: {error || 'Ninguno'} |
               Categorías: {categorias.length}
             </small>
+            <div className="mt-2">
+              <small>
+                <strong>Usuario:</strong> {user?.username} |
+                <strong> Superadmin:</strong> {String(Boolean(user?.is_superadmin))} |
+                <strong> Roles:</strong> {JSON.stringify(user?.roles_slug || user?.roles || user?.membresias || [], null, 0)}
+              </small>
+            </div>
           </div>
 
           {/* Estadísticas */}
@@ -468,7 +475,7 @@ export default function GastosListado() {
                 }
               </p>
               {canCreate && !searchTerm && (
-                <Link href="/gasto-nuevo" className="btn btn-primary mt-3">
+                <Link href="/gastos/nuevo" className="btn btn-primary mt-3">
                   <span className="material-icons me-2">add</span>
                   Crear Primer Gasto
                 </Link>

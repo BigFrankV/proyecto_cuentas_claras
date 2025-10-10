@@ -50,6 +50,28 @@ class GastosService {
     return response.data.data;
   }
 
+  // ----------------- Nuevos métodos para aprobaciones -----------------
+  /**
+   * Obtener aprobaciones de un gasto
+   */
+  async getAprobaciones(gastoId: number): Promise<any[]> {
+    const resp = await api.get(`/gastos/${gastoId}/aprobaciones`);
+    // backend devuelve { success: true, data: rows } o { success: true, data: { gasto, aprobaciones, historial } }
+    if (resp?.data?.data) {
+      return Array.isArray(resp.data.data) ? resp.data.data : (resp.data.data.aprobaciones ?? []);
+    }
+    return resp?.data ?? [];
+  }
+
+  /**
+   * Enviar aprobación/rechazo
+   */
+  async postAprobacion(gastoId: number, body: { decision: 'aprobado' | 'rechazado', observaciones?: string, monto_aprobado?: number }) {
+    const resp = await api.post(`/gastos/${gastoId}/aprobaciones`, body);
+    return resp.data;
+  }
+  // ------------------------------------------------------------------
+
   /**
    * Crear nuevo gasto
    */

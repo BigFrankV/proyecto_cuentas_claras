@@ -38,15 +38,14 @@ export function useGastos(comunidadId: number, initialFilters: GastoFilters = {}
   });
 
   const fetchGastos = useCallback(async () => {
-    if (!comunidadId) return;
+    // comunidadId === 0 => todas las comunidades (permitir para superadmin)
+    if (comunidadId === null || typeof comunidadId === 'undefined') return;
+    // continuar para comunidadId === 0 o >0
 
     try {
       setLoading(true);
       setError(null);
-
       console.log('🔍 Cargando gastos para comunidad:', comunidadId, 'filtros:', filters);
-      
-      // ✅ URL CORRECTA SEGÚN TU BACKEND
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== '') {
@@ -109,13 +108,10 @@ export function useGastoEstadisticas(comunidadId: number) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchEstadisticas = useCallback(async () => {
-    if (!comunidadId) return;
-
+    if (comunidadId === null || typeof comunidadId === 'undefined') return;
     try {
       setLoading(true);
       setError(null);
-      
-      // ✅ URL CORRECTA SEGÚN TU BACKEND
       const response = await api.get(`/gastos/comunidad/${comunidadId}/stats`);
       setEstadisticas(response.data.data.resumen);
     } catch (err: any) {

@@ -198,9 +198,15 @@ class AuthService {
   async getCurrentUser(): Promise<User | null> {
     try {
       console.log('🔍 Obteniendo usuario actual desde servidor...');
-
       const response = await api.get<User>('/auth/me');
-      const user = response.data;
+      // backend devuelve { success: true, data: user }
+      const user = response.data?.data ?? response.data;
+
+      // Normalizaciones para compatibilidad (alias en español y arrays de slugs)
+      user.memberships = user.memberships || user.membreships || [];
+      user.membresias = user.membresias || user.memberships || [];
+      user.roles_slug = user.roles_slug || (user.memberships || []).map((m: any) => m.rol_slug).filter(Boolean);
+      user.is_superadmin = Boolean(user.is_superadmin);
 
       console.log('✅ Usuario actual:', {
         username: user.username,
@@ -208,12 +214,8 @@ class AuthService {
         roles: user.roles?.length || 0,
         memberships: user.memberships?.length || 0
       });
-
-      // Actualizar localStorage con datos frescos
       this.saveUser(user);
-
       return user;
-
     } catch (error) {
       console.error('❌ Error obteniendo usuario:', error);
       return null;

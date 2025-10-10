@@ -1,149 +1,155 @@
--- ============================================
--- MIGRACIÓN 3: NUEVAS COLUMNAS EN TABLA gasto
--- ============================================
-
--- 1. Agregar columna numero
-ALTER TABLE `gasto` 
-ADD COLUMN `numero` VARCHAR(50) DEFAULT NULL 
-AFTER `id`;
-
+import api from './api'; // Cambio: import por defecto
+import type {3: NUEVAS COLUMNAS EN TABLA gasto
+  Gasto,=======================================
+  CategoriaGasto,
+  GastoEstadisticas,a numero
+  GastoCreateRequest,
+  GastoUpdateRequest,ARCHAR(50) DEFAULT NULL 
+  PaginatedResponse
+} from '../types/gastos';
 -- 2. Agregar columna estado
-ALTER TABLE `gasto` 
-ADD COLUMN `estado` ENUM('borrador','aprobado','rechazado','pagado','anulado') NOT NULL DEFAULT 'aprobado' 
-AFTER `extraordinario`;
-
--- 3. Agregar columna creado_por
-ALTER TABLE `gasto` 
-ADD COLUMN `creado_por` BIGINT DEFAULT NULL 
-AFTER `estado`;
-
--- 4. Agregar columna aprobado_por
-ALTER TABLE `gasto` 
+export interface GastoFilters {
+  estado?: string;` ENUM('borrador','aprobado','rechazado','pagado','anulado') NOT NULL DEFAULT 'aprobado' 
+  categoria?: number;`;
+  fechaDesde?: string;
+  fechaHasta?: string;creado_por
+  busqueda?: string;
+  ordenar?: string;por` BIGINT DEFAULT NULL 
+  direccion?: 'ASC' | 'DESC';
+  page?: number;
+  limit?: number;umna aprobado_por
+}LTER TABLE `gasto` 
 ADD COLUMN `aprobado_por` BIGINT DEFAULT NULL 
-AFTER `creado_por`;
-
+class GastosService {
+  private baseUrl = '/gastos';
 -- 5. Agregar índices
+  /** TABLE `gasto` 
+   * Obtener gastos con filtros y paginación
+   */NDEX `idx_gasto_numero` (`numero`);
+  async getGastos(comunidadId: number, filters: GastoFilters = {}): Promise<PaginatedResponse<Gasto>> {
+    const params = new URLSearchParams();
 ALTER TABLE `gasto` 
-ADD INDEX `idx_gasto_estado` (`estado`),
-ADD INDEX `idx_gasto_numero` (`numero`);
-
--- 6. Agregar foreign keys
-ALTER TABLE `gasto` 
-ADD CONSTRAINT `fk_gasto_creado_por` 
-FOREIGN KEY (`creado_por`) REFERENCES `usuario` (`id`);
-
-ALTER TABLE `gasto` 
-ADD CONSTRAINT `fk_gasto_aprobado_por` 
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value));
+      }ABLE `gasto` 
+    });STRAINT `fk_gasto_aprobado_por` 
 FOREIGN KEY (`aprobado_por`) REFERENCES `usuario` (`id`);
-
--- 7. Actualizar gastos existentes con número
+    const queryString = params.toString();
+    const url = `${this.baseUrl}/comunidad/${comunidadId}${queryString ? `?${queryString}` : ''}`;
 UPDATE `gasto` 
-SET `numero` = CONCAT('G2025-', LPAD(id, 6, '0'))
-WHERE `numero` IS NULL OR `numero` = '';
-
+    const response = await api.get(url); 6, '0'))
+    return response.data; `numero` = '';
+  }
 -- Verificar
-SELECT id, numero, estado, creado_por, aprobado_por FROM gasto LIMIT 5;
-
--- ============================================
--- MIGRACIÓN 4: TABLA historial_gasto
--- ============================================
-
-CREATE TABLE IF NOT EXISTS `historial_gasto` (
+  /**T id, numero, estado, creado_por, aprobado_por FROM gasto LIMIT 5;
+   * Obtener detalle de un gasto
+   */==========================================
+  async getGasto(id: number): Promise<Gasto> {
+    const response = await api.get(`${this.baseUrl}/${id}`);
+    return response.data.data;
+  }ATE TABLE IF NOT EXISTS `historial_gasto` (
   `id` BIGINT NOT NULL AUTO_INCREMENT,
-  `gasto_id` BIGINT NOT NULL,
-  `accion` ENUM('creado','modificado','aprobado','rechazado','pagado','anulado') NOT NULL,
-  `usuario_id` BIGINT NOT NULL,
-  `observaciones` TEXT,
-  `fecha` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `fk_historial_gasto` (`gasto_id`),
-  KEY `fk_historial_usuario` (`usuario_id`),
-  KEY `idx_historial_fecha` (`fecha`),
-  CONSTRAINT `fk_historial_gasto` 
-    FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_historial_usuario` 
-    FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  /**sto_id` BIGINT NOT NULL,
+   * Crear nuevo gastoo','modificado','aprobado','rechazado','pagado','anulado') NOT NULL,
+   */uario_id` BIGINT NOT NULL,
+  async createGasto(comunidadId: number, gastoData: GastoCreateRequest): Promise<any> {
+    const response = await api.post(`/gastos/comunidad/${comunidadId}`, {
+      categoria_id: gastoData.categoria_id,
+      proveedor_id: gastoData.proveedor_id || null,  // ← AGREGAR ESTA LÍNEA
+      centro_costo_id: gastoData.centro_costo_id || null,
+      documento_compra_id: gastoData.documento_compra_id || null,
+      fecha: gastoData.fecha,sto` 
+      monto: gastoData.monto,REFERENCES `gasto` (`id`) ON DELETE CASCADE,
+      glosa: gastoData.glosa,uario` 
+      extraordinario: gastoData.extraordinario || false,`)
+    });E=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Verificar
-DESCRIBE historial_gasto;
+    return response.data;
+  }CRIBE historial_gasto;
 
--- ============================================
--- MIGRACIÓN 5: DATOS DE EJEMPLO PARA AUDITORÍA
--- ============================================
-
-INSERT IGNORE INTO `auditoria` 
-  (`usuario_id`, `accion`, `tabla`, `registro_id`, `valores_anteriores`, `valores_nuevos`, `ip_address`, `created_at`) 
-VALUES
+  /**==========================================
+   * Actualizar gasto DE EJEMPLO PARA AUDITORÍA
+   */==========================================
+  async updateGasto(id: number, gasto: GastoUpdateRequest): Promise<Gasto> {
+    const response = await api.put(`${this.baseUrl}/${id}`, gasto);
+    return response.data.data;bla`, `registro_id`, `valores_anteriores`, `valores_nuevos`, `ip_address`, `created_at`) 
+  }UES
   (1, 'CREATE', 'pago', 1, NULL, '{"monto": 47012.50, "medio": "transferencia", "estado": "aplicado"}', '192.168.1.100', '2025-09-18 20:06:10'),
-  (1, 'UPDATE', 'persona', 1, '{"nombres": "María José"}', '{"nombres": "Patricio"}', '192.168.1.100', '2025-09-18 20:33:26'),
-  (2, 'CREATE', 'multa', 1, NULL, '{"monto": 50000.00, "motivo": "Ruidos molestos"}', '192.168.1.101', '2025-09-18 20:08:33');
+  /** 'UPDATE', 'persona', 1, '{"nombres": "María José"}', '{"nombres": "Patricio"}', '192.168.1.100', '2025-09-18 20:33:26'),
+   * Aprobar gastoulta', 1, NULL, '{"monto": 50000.00, "motivo": "Ruidos molestos"}', '192.168.1.101', '2025-09-18 20:08:33');
+   */
+  async aprobarGasto(id: number, observaciones?: string): Promise<void> {
+    await api.put(`${this.baseUrl}/${id}/aprobar`, { observaciones });al_multa, etc.)
+  }============================================
 
--- ============================================
--- TRIGGERS Y TABLAS RELACIONADAS CON MULTAS (documento_multa, historial_multa, etc.)
--- ============================================
-
--- ============================================
--- MIGRACIÓN: documento_multa (adjuntos a multas)
--- ============================================
-
-CREATE TABLE IF NOT EXISTS `documento_multa` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  /**==========================================
+   * Rechazar gastoento_multa (adjuntos a multas)
+   */==========================================
+  async rechazarGasto(id: number, observaciones_rechazo: string): Promise<void> {
+    await api.put(`${this.baseUrl}/${id}/rechazar`, { observaciones_rechazo });
+  }id` BIGINT NOT NULL AUTO_INCREMENT,
   `multa_id` BIGINT NOT NULL COMMENT 'ID de la multa',
-  `tipo` ENUM('foto','video','pdf','acta','otros') NOT NULL COMMENT 'Tipo de documento',
-  `nombre_archivo` VARCHAR(255) NOT NULL COMMENT 'Nombre del archivo',
-  `ruta_archivo` VARCHAR(500) NOT NULL COMMENT 'Ruta donde está almacenado',
-  `tamano` BIGINT DEFAULT NULL COMMENT 'Tamaño en bytes',
-  `mime_type` VARCHAR(100) DEFAULT NULL COMMENT 'Tipo MIME',
-  `descripcion` TEXT DEFAULT NULL COMMENT 'Descripción del documento',
+  /**po` ENUM('foto','video','pdf','acta','otros') NOT NULL COMMENT 'Tipo de documento',
+   * Enviar gasto para aprobaciónOT NULL COMMENT 'Nombre del archivo',
+   */ta_archivo` VARCHAR(500) NOT NULL COMMENT 'Ruta donde está almacenado',
+  async enviarAprobacion(id: number): Promise<void> {es',
+    await api.put(`${this.baseUrl}/${id}/enviar-aprobacion`);
+  }descripcion` TEXT DEFAULT NULL COMMENT 'Descripción del documento',
   `subido_por` BIGINT NOT NULL COMMENT 'Usuario que subió el documento',
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `fk_documento_multa` (`multa_id`),
-  KEY `fk_documento_usuario` (`subido_por`),
-  KEY `idx_documento_tipo` (`tipo`),
-  CONSTRAINT `fk_documento_multa` 
+  /**eated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   * Eliminar gasto (solo borradores)
+   */ `fk_documento_multa` (`multa_id`),
+  async deleteGasto(id: number): Promise<void> {
+    await api.delete(`${this.baseUrl}/${id}`);
+  }ONSTRAINT `fk_documento_multa` 
     FOREIGN KEY (`multa_id`) REFERENCES `multa` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_documento_usuario` 
-    FOREIGN KEY (`subido_por`) REFERENCES `usuario` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-COMMENT='Documentos adjuntos a multas (fotos, videos, actas, etc.)';
+  /**STRAINT `fk_documento_usuario` 
+   * Obtener estadísticas de gastosRENCES `usuario` (`id`)
+   */INE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  async getEstadisticas(comunidadId: number): Promise<GastoEstadisticas> {
+    const response = await api.get(`${this.baseUrl}/comunidad/${comunidadId}/stats`);
+    return response.data.data;lta y tipo
+  }ATE INDEX IF NOT EXISTS `idx_documento_multa_tipo` ON `documento_multa` (`multa_id`, `tipo`);
 
--- Índice para búsqueda por multa y tipo
-CREATE INDEX IF NOT EXISTS `idx_documento_multa_tipo` ON `documento_multa` (`multa_id`, `tipo`);
-
--- Verificar estructura
-DESCRIBE documento_multa;
-
--- ============================================
--- DATOS DE EJEMPLO PARA PRUEBAS
--- ============================================
-
+  /**rificar estructura
+   * Obtener categorías de gasto
+   */
+  async getCategorias(comunidadId: number): Promise<CategoriaGasto[]> {
+    const response = await api.get(`/categorias-gasto/comunidad/${comunidadId}`);
+    return response.data.data;=================
+  }
 -- Insertar historial de multas existentes (si hay multas en la BD)
-INSERT INTO `historial_multa` 
-  (`multa_id`, `accion`, `usuario_id`, `monto_nuevo`, `observaciones`, `fecha`)
-SELECT 
-  id,
-  'creada',
-  1,
-  monto,
+  /**T INTO `historial_multa` 
+   * Crear nueva categoríausuario_id`, `monto_nuevo`, `observaciones`, `fecha`)
+   */T 
+  async createCategoria(comunidadId: number, categoria: Omit<CategoriaGasto, 'id' | 'created_at' | 'updated_at' | 'total_gastos' | 'monto_total'>): Promise<CategoriaGasto> {
+    const response = await api.post(`/categorias-gasto/comunidad/${comunidadId}`, categoria);
+    return response.data.data;
+  }onto,
   CONCAT('Multa creada: ', motivo),
-  fecha_emision
-FROM multa
-WHERE NOT EXISTS (
-  SELECT 1 FROM historial_multa hm WHERE hm.multa_id = multa.id
-)
-LIMIT 10;
-
--- Ejemplo de documento (solo si no existe)
-INSERT IGNORE INTO `documento_multa` 
-  (`multa_id`, `tipo`, `nombre_archivo`, `ruta_archivo`, `descripcion`, `subido_por`)
+  /**ha_emision
+   * Actualizar categoría
+   */ NOT EXISTS (
+  async updateCategoria(id: number, categoria: Partial<CategoriaGasto>): Promise<CategoriaGasto> {
+    const response = await api.put(`/categorias-gasto/${id}`, categoria);
+    return response.data.data;
+  }
+- Ejemplo de documento (solo si no existe)
+  async getAprobaciones(gastoId: number): Promise<any[]> {INSERT IGNORE INTO `documento_multa` 
+    const resp = await api.get(`/gastos/${gastoId}/aprobaciones`);
+    export const gastosService = new GastosService();
+    return resp.data;
+    const resp = await api.post(`/gastos/${gastoId}/aprobaciones`, body);
+  async postAprobacion(gastoId: number, body: { decision: 'aprobado'|'rechazado', observaciones?: string, monto_aprobado?: number }) {
+    return resp.data.data || resp.data;
+  }
 VALUES
-  (1, 'foto', 'evidencia_ruido.jpg', '/uploads/multas/2025/evidencia_ruido.jpg', 'Foto del medidor de ruido', 1);
+    (1, 'foto', 'evidencia_ruido.jpg', '/uploads/multas/2025/evidencia_ruido.jpg', 'Foto del medidor de ruido', 1);
 
--- ============================================
+-- ============================================ 
 -- TRIGGERS PARA AUTOMATIZAR HISTORIAL
--- ============================================
+-- ============================================ 
 
 -- Trigger: Registrar creación de multa
 DELIMITER $$
@@ -467,3 +473,44 @@ SELECT 1, 1, 'Ejemplo de apelación', 'pendiente', NOW()
 WHERE NOT EXISTS (SELECT 1 FROM multa_apelacion WHERE multa_id = 1 AND usuario_id = 1 LIMIT 1);
 
 -- FIN DEL ARCHIVO
+
+
+CREATE TABLE IF NOT EXISTS gasto_aprobacion (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  gasto_id BIGINT NOT NULL,
+  usuario_id BIGINT NOT NULL,
+  rol_id INT DEFAULT NULL,
+  decision ENUM('aprobado','rechazado') NOT NULL,
+  observaciones TEXT DEFAULT NULL,
+  monto_aprobado DECIMAL(12,2) DEFAULT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_ga_gasto FOREIGN KEY (gasto_id) REFERENCES gasto(id),
+  CONSTRAINT fk_ga_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id),
+  CONSTRAINT fk_ga_rol FOREIGN KEY (rol_id) REFERENCES rol_sistema(id)
+);
+
+-- Backfill: contar aprobaciones y fijar aprobado_por/aprobado_at si ya cumplen required_aprobaciones
+UPDATE gasto g
+LEFT JOIN (
+  SELECT gasto_id, SUM(decision='aprobado') AS aprobadas
+  FROM gasto_aprobacion
+  GROUP BY gasto_id
+) ga ON ga.gasto_id = g.id
+SET g.aprobaciones_count = COALESCE(ga.aprobadas, 0);
+
+-- Para los casos que ya cumplen required_aprobaciones, fijar aprobado_at y aprobado_por (último aprobador)
+UPDATE gasto g
+SET
+  g.aprobado_at = (
+    SELECT created_at FROM gasto_aprobacion
+    WHERE gasto_id = g.id AND decision = 'aprobado'
+    ORDER BY created_at DESC LIMIT 1
+  ),
+  g.aprobado_por = (
+    SELECT usuario_id FROM gasto_aprobacion
+    WHERE gasto_id = g.id AND decision = 'aprobado'
+    ORDER BY created_at DESC LIMIT 1
+  ),
+  g.estado = 'aprobado'
+WHERE COALESCE(g.aprobaciones_count,0) >= COALESCE(g.required_aprobaciones,1);

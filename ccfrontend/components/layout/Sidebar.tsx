@@ -147,26 +147,59 @@ export default function Sidebar() {
     'residente'
   ];
 
-  // Mostrar secciones: permitimos ver las secciones principales a cualquier usuario autenticado.
-  // Las acciones sensibles ("nueva", "editar", "anular") se controlan en los botones con hasPermission/canCreateAnyMulta.
+  // Mapea roles (rol_slug) a secciones permitidas.
+  // Ajusta los slugs aquí según tu base de datos (ej: 'admin_comunidad' vs 'administrador')
+  const ROLE_MENU_MAP: Record<string, { sections: string[], extraItems?: string[] }> = {
+    superadmin: { sections: menuSections.map(s => s.title) },
+    admin_comunidad: {
+      sections: [
+        'Dashboard', 'Estructura', 'Residentes', 'Finanzas', 'Gastos', 'Servicios',
+        'Amenidades', 'Sanciones', 'Comunicación', 'Utilidades'
+      ]
+    },
+    tesorero: {
+      sections: ['Dashboard', 'Finanzas', 'Gastos', 'Comunicación', 'Utilidades']
+    },
+    contador: {
+      sections: ['Dashboard', 'Finanzas', 'Gastos', 'Comunicación']
+    },
+    presidente_comite: {
+      sections: ['Dashboard', 'Residentes', 'Gastos', 'Comunicación']
+    },
+    residente: {
+      sections: ['Dashboard', 'Residentes', 'Comunicación', 'Utilidades']
+    },
+    propietario: {
+      sections: ['Dashboard', 'Residentes', 'Comunicación']
+    },
+    soporte_tecnico: { sections: menuSections.map(s => s.title) },
+    // fallback: roles no listados verán secciones por permisos individuales
+  };
+
+  // Decide si mostrar una sección en el sidebar
   const shouldShowSection = (sectionTitle: string) => {
     if (!user) return false;
     if (isSuperUser()) return true;
 
-    // Por defecto mostrar secciones comunes a usuarios (residente/propietario/inquilino)
-    // Solo ocultamos secciones explícitamente administrativas si no tiene permiso
+    const role = (primaryRoleSlug || '').toString().toLowerCase();
+
+    // Si hay mapeo explícito para el rol, usarlo
+    if (ROLE_MENU_MAP[role]) {
+      return ROLE_MENU_MAP[role].sections.includes(sectionTitle);
+    }
+
+    // Reglas por sección si no está en el mapa
     if (sectionTitle === 'Utilidades') return hasPermission(user, Permission.VIEW_REPORTS);
-    // 'Sanciones' requiere al menos poder ver multas en algún nivel (propias/comunidad/global)
-    if (sectionTitle === 'Sanciones') return canSeeMultasLocal(user) || hasPermission(user, Permission.VIEW_USERS);
-    // resto: mostrar (lectura) para usuarios autenticados
+    if (sectionTitle === 'Sanciones') return canSeeMultasLocal(user);
+    // por defecto permitir secciones básicas para usuarios autenticados
     return true;
   };
 
-  // Función para determinar si un item específico debe mostrarse
+  // Decide si mostrar un item de ruta concreto
   const shouldShowItem = (href: string) => {
     if (isSuperUser()) return true;
 
-    // Mapeo específico de rutas a permisos
+    // Regla rápida: si el item requiere permiso explícito, comprobarlo
     const routePermissions: { [key: string]: Permission } = {
       '/reportes': Permission.VIEW_REPORTS,
       '/comunidades': Permission.VIEW_COMMUNITIES,
@@ -188,24 +221,22 @@ export default function Sidebar() {
       '/lecturas': Permission.VIEW_COMMUNITIES,
       '/consumos': Permission.VIEW_COMMUNITIES,
       '/tarifas': Permission.VIEW_COMMUNITIES,
-      // mantenemos VIEW_USERS como fallback para sanciones, pero hacemos comprobación adicional abajo
       '/multas': Permission.VIEW_USERS,
       '/multas-nueva': Permission.VIEW_USERS,
       '/apelaciones': Permission.VIEW_USERS,
       '/apelaciones-nueva': Permission.VIEW_USERS,
     };
 
-    // Si la ruta está en el mapa y el usuario tiene ese permiso, mostrar
     const requiredPermission = routePermissions[href];
-    if (requiredPermission && hasPermission(user, requiredPermission)) return true;
+    if (requiredPermission) return hasPermission(user, requiredPermission);
 
-    // Reglas especiales para rutas de Sanciones (por si el permiso no está mapeado)
+    // Rutas de sanciones: reglas adicionales
     if (href.startsWith('/multas') || href.startsWith('/apelaciones')) {
       return canSeeMultasLocal(user) || isSuperUser();
     }
 
-    // Si no hay permiso requerido explícito, mostrar por defecto
-    return !requiredPermission;
+    // Si no hay permiso explícito, permitir por defecto
+    return true;
   };
 
   const isActive = (href: string) => {
