@@ -2,39 +2,13 @@ const fs = require('fs').promises;
 const path = require('path');
 const db = require('../db');
 
+/**
+ * FileService - Servicio para gestión de archivos
+ * 
+ * NOTA: Este servicio asume que la tabla 'archivos' ya existe en la base de datos.
+ * La tabla debe ser creada mediante el esquema SQL en base/cuentasclaras.sql
+ */
 class FileService {
-  
-  // Crear tabla de archivos si no existe
-  static async initializeFileTable() {
-    try {
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS archivos (
-          id BIGINT AUTO_INCREMENT PRIMARY KEY,
-          original_name VARCHAR(255) NOT NULL,
-          filename VARCHAR(255) NOT NULL,
-          file_path VARCHAR(500) NOT NULL,
-          file_size BIGINT NOT NULL,
-          mimetype VARCHAR(100) NOT NULL,
-          comunidad_id BIGINT NOT NULL,
-          entity_type VARCHAR(50),
-          entity_id BIGINT,
-          category VARCHAR(100) DEFAULT 'general',
-          description TEXT,
-          uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          uploaded_by BIGINT,
-          is_active BOOLEAN DEFAULT TRUE,
-          FOREIGN KEY (comunidad_id) REFERENCES comunidad(id) ON DELETE CASCADE,
-          INDEX idx_comunidad_entity (comunidad_id, entity_type, entity_id),
-          INDEX idx_category (category),
-          INDEX idx_uploaded_at (uploaded_at)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-      `);
-      console.log('Tabla archivos inicializada correctamente');
-    } catch (error) {
-      console.error('Error inicializando tabla archivos:', error);
-      throw error;
-    }
-  }
 
   // Guardar información del archivo en la base de datos
   static async saveFileRecord(fileInfo) {
