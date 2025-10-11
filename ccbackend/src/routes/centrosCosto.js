@@ -10,9 +10,9 @@ const { requireCommunity } = require('../middleware/tenancy');
 /**
  * @openapi
  * /comunidades/{comunidadId}/centros-costo:
- *   get:
- *     tags: [CentrosCosto]
- *     summary: Listar centros de costo por comunidad
+ * get:
+ * tags: [CentrosCosto]
+ * summary: Listar centros de costo por comunidad
  */
 router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);

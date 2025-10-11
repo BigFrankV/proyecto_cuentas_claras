@@ -31,6 +31,7 @@
     "sequelize": "^6.33.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^4.6.3",
+    "transbank-sdk": "^6.1.0",
     "winston": "^3.9.0"
   },
   "devDependencies": {

@@ -5,6 +5,87 @@ import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 
+// API interfaces
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
+interface ApiConciliacion {
+  id: number;
+  codigo?: string;
+  fecha_mov: string;
+  glosa?: string;
+  monto: number;
+  tipo?: 'credito' | 'debito' | 'otro';
+  referencia_bancaria?: string;
+  estado_conciliacion?: 'pendiente' | 'conciliado' | 'diferencia' | 'descartado';
+  pago_id?: number;
+  codigo_pago?: string;
+  referencia_pago?: string;
+  nombre_comunidad?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface ApiTransaction {
+  id: number;
+  fecha_mov: string;
+  glosa?: string;
+  monto: number;
+  referencia?: string;
+  estado: 'pendiente' | 'conciliado' | 'descartado';
+}
+
+// API functions
+const conciliacionesApi = {
+  async getConciliacionById(id: string): Promise<ApiConciliacion> {
+    const response = await fetch(`${API_BASE_URL}/conciliaciones/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener conciliación: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  async updateConciliacion(id: string, updates: Partial<ApiConciliacion>): Promise<ApiConciliacion> {
+    const response = await fetch(`${API_BASE_URL}/conciliaciones/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updates)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al actualizar conciliación: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  async createConciliacion(data: Omit<ApiConciliacion, 'id' | 'created_at' | 'updated_at'>): Promise<ApiConciliacion> {
+    const response = await fetch(`${API_BASE_URL}/conciliaciones`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al crear conciliación: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+};
+
 interface FormData {
   bank: string;
   bankAccount: string;
@@ -85,37 +166,37 @@ export default function EditarConciliacion() {
     try {
       setLoading(true);
       
-      // Simular delay de carga
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Load conciliacion data from API
+      const apiData = await conciliacionesApi.getConciliacionById(id as string);
       
-      // Por ahora, usar datos mock hasta que la API esté implementada
-      const mockData: ConciliationData = {
-        id: Number(id),
-        bank: 'Banco de Chile',
-        bankAccount: '12345-67890',
-        period: '2024-03',
-        startDate: '2024-03-01',
-        endDate: '2024-03-31',
-        status: 'completed',
-        createdAt: '2024-03-15T10:30:00Z',
-        totalTransactions: 25,
-        matchedTransactions: 20,
-        unMatchedTransactions: 5,
-        totalAmount: 1800000
+      // Map API data to frontend format
+      const conciliacionData: ConciliationData = {
+        id: apiData.id,
+        bank: 'Banco Principal', // Default, could be enhanced
+        bankAccount: 'Cuenta Principal', // Default, could be enhanced
+        period: `${new Date(apiData.fecha_mov).getFullYear()}-${String(new Date(apiData.fecha_mov).getMonth() + 1).padStart(2, '0')}`,
+        startDate: apiData.fecha_mov,
+        endDate: apiData.fecha_mov,
+        status: apiData.estado_conciliacion === 'conciliado' ? 'completed' : apiData.estado_conciliacion === 'descartado' || apiData.estado_conciliacion === 'diferencia' ? 'with-differences' : 'in-progress',
+        createdAt: apiData.created_at || new Date().toISOString(),
+        totalTransactions: 1, // Simplified
+        matchedTransactions: apiData.estado_conciliacion === 'conciliado' ? 1 : 0,
+        unMatchedTransactions: apiData.estado_conciliacion === 'pendiente' ? 1 : 0,
+        totalAmount: apiData.monto
       };
 
-      setConciliationData(mockData);
+      setConciliationData(conciliacionData);
       setFormData({
-        bank: mockData.bank,
-        bankAccount: mockData.bankAccount,
-        period: mockData.period,
-        startDate: mockData.startDate,
-        endDate: mockData.endDate,
+        bank: conciliacionData.bank,
+        bankAccount: conciliacionData.bankAccount,
+        period: conciliacionData.period,
+        startDate: conciliacionData.startDate,
+        endDate: conciliacionData.endDate,
         uploadedFile: null
       });
 
       // Si la conciliación ya está procesada, mostrar los resultados
-      if (mockData.status === 'completed') {
+      if (conciliacionData.status === 'completed') {
         setShowResults(true);
         setCurrentStep(4);
         loadBankTransactions();
@@ -247,84 +328,31 @@ export default function EditarConciliacion() {
       }
       nextStep();
     } else if (currentStep === 3) {
-      // Procesar archivo
+      // Procesar archivo y actualizar conciliación
       setProcessing(true);
       try {
-        // Simular procesamiento
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Simular actualización de datos básicos
-        console.log('Actualizando conciliación con datos:', {
-          bank: formData.bank,
-          bankAccount: formData.bankAccount,
-          period: formData.period,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-        });
+        // Preparar datos para actualizar
+        const updateData: Partial<ApiConciliacion> = {
+          glosa: `Conciliación actualizada - ${formData.period}`,
+          estado_conciliacion: 'conciliado', // Marcar como conciliado después del procesamiento
+          // Aquí se podrían agregar más campos según la lógica de negocio
+        };
 
-        // Cargar o recargar transacciones
+        // Si hay un archivo, podríamos procesarlo y crear nuevas transacciones
         if (formData.uploadedFile) {
-          // Simular procesamiento de archivo nuevo
           console.log('Procesando archivo:', formData.uploadedFile.name);
-          
-          // Generar transacciones mock con datos más variados
-          const mockProcessedTransactions: BankTransaction[] = [
-            {
-              id: 1,
-              date: '2024-03-15',
-              description: 'Pago Gastos Comunes - Torre A',
-              reference: 'REF001',
-              amount: 150000,
-              type: 'credit',
-              matched: true,
-              matchStatus: 'matched'
-            },
-            {
-              id: 2,
-              date: '2024-03-16',
-              description: 'Transferencia Mantenimiento',
-              reference: 'REF002',
-              amount: -75000,
-              type: 'debit',
-              matched: true,
-              matchStatus: 'matched'
-            },
-            {
-              id: 3,
-              date: '2024-03-17',
-              description: 'Pago Servicios Básicos',
-              reference: 'REF003',
-              amount: -25000,
-              type: 'debit',
-              matched: false,
-              matchStatus: 'unmatched'
-            },
-            {
-              id: 4,
-              date: '2024-03-18',
-              description: 'Ingreso Multas',
-              reference: 'REF004',
-              amount: 50000,
-              type: 'credit',
-              matched: true,
-              matchStatus: 'matched'
-            },
-            {
-              id: 5,
-              date: '2024-03-19',
-              description: 'Gasto Mantenimiento Ascensor',
-              reference: 'REF005',
-              amount: -120000,
-              type: 'debit',
-              matched: false,
-              matchStatus: 'unmatched'
-            }
-          ];
-          setBankTransactions(mockProcessedTransactions);
-        } else {
-          // Si no hay archivo nuevo, cargar transacciones existentes
-          loadBankTransactions();
+          // Aquí iría la lógica para procesar el archivo y crear transacciones
+          // Por ahora, simulamos el procesamiento
         }
+
+        // Actualizar la conciliación en la API
+        await conciliacionesApi.updateConciliacion(id as string, updateData);
+
+        // Recargar datos actualizados
+        await loadConciliationData();
+
+        // Cargar transacciones (por ahora mock, pero podría ser de la API)
+        loadBankTransactions();
 
         setShowResults(true);
         nextStep();
