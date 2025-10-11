@@ -2,13 +2,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/lib/useAuth';
-import { getUserRole } from '@/lib/roles';
-import {
-  usePermissions,
-  PermissionGuard,
-  Permission,
-} from '@/lib/usePermissions';
-
+// importar helpers/enum desde usePermissions
+import { usePermissions, hasPermission, Permission, canCreateAnyMulta } from '@/lib/usePermissions';
+ 
 // Definición de las secciones del menú
 const menuSections = [
   {
@@ -58,7 +54,7 @@ const menuSections = [
         icon: 'account_balance_wallet',
       },
       { href: '/proveedores', label: 'Proveedores', icon: 'store' },
-      { href: '/compras', label: 'Compras', icon: 'inventory' },
+      { href: '/documentos-compra', label: 'Compras', icon: 'inventory' },
     ],
   },
   {
@@ -113,44 +109,97 @@ const menuSections = [
 export default function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { isSuperUser, hasPermission, currentRole } = usePermissions();
+  const { isSuperUser, currentRole, primaryRoleLabel, primaryRoleSlug } = usePermissions();
   const [isCollapsed, setIsCollapsed] = useState(false);
-
-  // Función para determinar si una sección debe mostrarse según permisos
-  const shouldShowSection = (sectionTitle: string) => {
-    if (isSuperUser()) return true; // Superuser ve todo
-
-    switch (sectionTitle) {
-      case 'Dashboard':
-        return true; // Todos pueden ver el dashboard
-      case 'Estructura':
-        return hasPermission(Permission.VIEW_COMMUNITIES);
-      case 'Residentes':
-        return hasPermission(Permission.VIEW_USERS);
-      case 'Finanzas':
-        return hasPermission(Permission.VIEW_FINANCES);
-      case 'Gastos':
-        return hasPermission(Permission.VIEW_FINANCES); // Gastos también son finanzas
-      case 'Servicios':
-        return hasPermission(Permission.VIEW_COMMUNITIES); // Servicios de comunidades
-      case 'Amenidades':
-        return hasPermission(Permission.VIEW_COMMUNITIES); // Amenidades de comunidades
-      case 'Sanciones':
-        return hasPermission(Permission.VIEW_USERS); // Sanciones a usuarios
-      case 'Comunicación':
-        return true; // Comunicación básica para todos
-      case 'Utilidades':
-        return hasPermission(Permission.VIEW_REPORTS); // Acceso a herramientas de utilidad
-      default:
-        return false;
-    }
+ 
+  // Helper local: reutiliza hasPermission / canCreateAnyMulta para determinar
+  // si el usuario puede ver la sección "Sanciones" (multas/apelaciones)
+  const canSeeMultasLocal = (u?: any, comunidadId?: number) => {
+    if (!u) return false;
+    if (u.is_superadmin) return true;
+    // permisos definidos en PERMISSION_MAP: multas.view_all / view_community / view_own
+    if (hasPermission(u, 'multas.view_all')) return true;
+    if (comunidadId && hasPermission(u, 'multas.view_community', comunidadId)) return true;
+    if (hasPermission(u, 'multas.view_own')) return !!u.persona_id;
+    // permitir si puede crear multas (rol administrativo)
+    if (canCreateAnyMulta(u)) return true;
+    return false;
   };
 
-  // Función para determinar si un item específico debe mostrarse
+  // Roles que pueden ver Sanciones/Multas (rol_slug tal como viene de la vista)
+  const MULTAS_ROLES = [
+    'superadmin',
+    'sistema',
+    'soporte_tecnico',
+    'presidente_comite',
+    'admin_comunidad',
+    'sindico',
+    'admin_externo',
+    'tesorero',
+    'contador',
+    'conserje',
+    'revisor_cuentas',
+    'auditor_externo',
+    'moderador_comunidad',
+    'secretario',
+    'propietario',
+    'inquilino',
+    'residente'
+  ];
+
+  // Mapea roles (rol_slug) a secciones permitidas.
+  // Ajusta los slugs aquí según tu base de datos (ej: 'admin_comunidad' vs 'administrador')
+  const ROLE_MENU_MAP: Record<string, { sections: string[], extraItems?: string[] }> = {
+    superadmin: { sections: menuSections.map(s => s.title) },
+    admin_comunidad: {
+      sections: [
+        'Dashboard', 'Estructura', 'Residentes', 'Finanzas', 'Gastos', 'Servicios',
+        'Amenidades', 'Sanciones', 'Comunicación', 'Utilidades'
+      ]
+    },
+    tesorero: {
+      sections: ['Dashboard', 'Finanzas', 'Gastos', 'Comunicación', 'Utilidades']
+    },
+    contador: {
+      sections: ['Dashboard', 'Finanzas', 'Gastos', 'Comunicación']
+    },
+    presidente_comite: {
+      sections: ['Dashboard', 'Residentes', 'Gastos', 'Comunicación']
+    },
+    residente: {
+      sections: ['Dashboard', 'Residentes', 'Comunicación', 'Utilidades']
+    },
+    propietario: {
+      sections: ['Dashboard', 'Residentes', 'Comunicación']
+    },
+    soporte_tecnico: { sections: menuSections.map(s => s.title) },
+    // fallback: roles no listados verán secciones por permisos individuales
+  };
+
+  // Decide si mostrar una sección en el sidebar
+  const shouldShowSection = (sectionTitle: string) => {
+    if (!user) return false;
+    if (isSuperUser()) return true;
+
+    const role = (primaryRoleSlug || '').toString().toLowerCase();
+
+    // Si hay mapeo explícito para el rol, usarlo
+    if (ROLE_MENU_MAP[role]) {
+      return ROLE_MENU_MAP[role].sections.includes(sectionTitle);
+    }
+
+    // Reglas por sección si no está en el mapa
+    if (sectionTitle === 'Utilidades') return hasPermission(user, Permission.VIEW_REPORTS);
+    if (sectionTitle === 'Sanciones') return canSeeMultasLocal(user);
+    // por defecto permitir secciones básicas para usuarios autenticados
+    return true;
+  };
+
+  // Decide si mostrar un item de ruta concreto
   const shouldShowItem = (href: string) => {
     if (isSuperUser()) return true;
 
-    // Mapeo específico de rutas a permisos
+    // Regla rápida: si el item requiere permiso explícito, comprobarlo
     const routePermissions: { [key: string]: Permission } = {
       '/reportes': Permission.VIEW_REPORTS,
       '/comunidades': Permission.VIEW_COMMUNITIES,
@@ -167,7 +216,7 @@ export default function Sidebar() {
       '/categorias-gasto': Permission.VIEW_FINANCES,
       '/centros-costo': Permission.VIEW_FINANCES,
       '/proveedores': Permission.VIEW_FINANCES,
-      '/compras': Permission.VIEW_FINANCES,
+      '/documentos-compra': Permission.VIEW_FINANCES,
       '/medidores': Permission.VIEW_COMMUNITIES,
       '/lecturas': Permission.VIEW_COMMUNITIES,
       '/consumos': Permission.VIEW_COMMUNITIES,
@@ -179,7 +228,15 @@ export default function Sidebar() {
     };
 
     const requiredPermission = routePermissions[href];
-    return !requiredPermission || hasPermission(requiredPermission);
+    if (requiredPermission) return hasPermission(user, requiredPermission);
+
+    // Rutas de sanciones: reglas adicionales
+    if (href.startsWith('/multas') || href.startsWith('/apelaciones')) {
+      return canSeeMultasLocal(user) || isSuperUser();
+    }
+
+    // Si no hay permiso explícito, permitir por defecto
+    return true;
   };
 
   const isActive = (href: string) => {
@@ -239,30 +296,18 @@ export default function Sidebar() {
               borderRadius: '50%',
             }}
           >
-            {user?.persona?.nombres && user?.persona?.apellidos 
+            {user?.persona?.nombres && user?.persona?.apellidos
               ? `${user.persona.nombres.charAt(0)}${user.persona.apellidos.charAt(0)}`.toUpperCase()
               : user?.username ? user.username.substring(0, 2).toUpperCase() : 'U'}
           </div>
           <div>
             <span className='d-block text-white'>
-              {user?.persona?.nombres && user?.persona?.apellidos 
+              {user?.persona?.nombres && user?.persona?.apellidos
                 ? `${user.persona.nombres} ${user.persona.apellidos}`
                 : user?.username || 'Usuario'}
-              {isSuperUser() ? (
-                <span
-                  className='badge bg-warning text-dark ms-1'
-                  style={{ fontSize: '0.6rem' }}
-                >
-                  SUPERADMIN
-                </span>
-              ) : (
-                <span
-                  className='badge bg-secondary ms-1'
-                  style={{ fontSize: '0.6rem' }}
-                >
-                  {getUserRole(user).toUpperCase()}
-                </span>
-              )}
+              <span className={`badge ms-1 ${isSuperUser() ? 'bg-warning text-dark' : 'bg-secondary'}`} style={{ fontSize: '0.6rem' }}>
+                {isSuperUser() ? 'SUPERADMIN' : (primaryRoleLabel || String(currentRole).toLowerCase()).toUpperCase()}
+              </span>
             </span>
             <span className='small text-white-50'>
               {user?.email || 'Sin email configurado'}

@@ -88,18 +88,15 @@ router.post('/verify-2fa', [
 
 // Helper function to determine identification type and build query
 function buildUserQuery(identifier) {
-  // Remove spaces and convert to uppercase for RUT comparison
   const cleanIdentifier = identifier.replace(/\s+/g, '').toUpperCase();
-  
-  // Check if it's an email
+
   if (cleanIdentifier.includes('@')) {
     return {
       query: 'SELECT u.id, u.persona_id, u.hash_password, u.is_superadmin, u.username FROM usuario u WHERE u.email = ? LIMIT 1',
       param: identifier.toLowerCase()
     };
   }
-  
-  // Check if it's a Chilean RUT (format: 12345678-9 or 123456789)
+
   const rutPattern = /^(\d{1,8})-?([0-9K])$/i;
   const rutMatch = cleanIdentifier.match(rutPattern);
   if (rutMatch) {
@@ -113,12 +110,9 @@ function buildUserQuery(identifier) {
       param: [rutNumber, dv]
     };
   }
-  
-  // Check if it's a numeric DNI (Argentina, other countries)
+
   const dniPattern = /^\d{7,9}$/;
   if (dniPattern.test(cleanIdentifier)) {
-    // For DNI, we'll store it in a new field or use the rut field
-    // For now, let's check if it matches the rut field as numeric
     return {
       query: `SELECT u.id, u.persona_id, u.hash_password, u.is_superadmin, u.username 
               FROM usuario u 
@@ -127,625 +121,204 @@ function buildUserQuery(identifier) {
       param: cleanIdentifier
     };
   }
-  
-  // Default: treat as username
+
   return {
     query: 'SELECT id, persona_id, hash_password, is_superadmin, username FROM usuario WHERE username = ? LIMIT 1',
     param: identifier
   };
 }
 
-/**
- * @openapi
- * tags:
- *   - name: Auth
- *     description: Autenticación y gestión de cuentas
- */
-
-/**
- * @openapi
- * /auth/register:
- *   post:
- *     tags: [Auth]
- *     summary: Registrar un nuevo usuario
- *     description: |
- *       Crea una nueva cuenta de usuario en el sistema. 
- *       
- *       **Opciones de registro:**
- *       1. Con persona_id existente: proporciona solo username, password, email y persona_id
- *       2. Crear nueva persona: proporciona username, password, email, nombres, apellidos, rut, dv (opcional)
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - username
- *               - password
- *             properties:
- *               username:
- *                 type: string
- *                 minLength: 3
- *                 description: Nombre de usuario único
- *                 example: "usuario123"
- *               password:
- *                 type: string
- *                 minLength: 6
- *                 description: Contraseña del usuario
- *                 example: "MiPassword123!"
- *               email:
- *                 type: string
- *                 format: email
- *                 description: Correo electrónico del usuario
- *                 example: "usuario@example.com"
- *               persona_id:
- *                 type: integer
- *                 description: ID de la persona asociada (opcional si se proporciona rut/nombres/apellidos)
- *                 example: 1
- *               rut:
- *                 type: string
- *                 description: RUT sin dígito verificador (requerido para crear nueva persona)
- *                 example: "12345678"
- *               dv:
- *                 type: string
- *                 description: Dígito verificador del RUT (opcional)
- *                 example: "9"
- *               nombres:
- *                 type: string
- *                 description: Nombres de la persona (requerido para crear nueva persona)
- *                 example: "Juan Carlos"
- *               apellidos:
- *                 type: string
- *                 description: Apellidos de la persona (requerido para crear nueva persona)
- *                 example: "Pérez González"
- *     responses:
- *       201:
- *         description: Usuario creado exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                   description: ID del usuario creado
- *                 username:
- *                   type: string
- *                   description: Nombre de usuario
- *                 persona_id:
- *                   type: integer
- *                   description: ID de la persona asociada
- *                 token:
- *                   type: string
- *                   description: Token JWT para autenticación
- *       400:
- *         description: Error de validación
- *       409:
- *         description: El nombre de usuario, email o RUT ya existe
- */
-router.post('/register', [
-  body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('email').optional().isEmail().withMessage('Invalid email format')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  
-  const { username, password, email, persona_id, rut, dv, nombres, apellidos } = req.body;
-  
-  try {
-    // Verificar si el username ya existe
-    const [existsUser] = await db.query('SELECT id FROM usuario WHERE username = ? LIMIT 1', [username]);
-    if (existsUser.length) return res.status(409).json({ error: 'username exists' });
-    
-    // Verificar si el email ya existe
-    if (email) {
-      const [existsEmail] = await db.query('SELECT id FROM usuario WHERE email = ? LIMIT 1', [email]);
-      if (existsEmail.length) return res.status(409).json({ error: 'email exists' });
-    }
-    
-    let finalPersonaId = persona_id;
-    
-    // Si no se proporciona persona_id, crear una nueva persona
-    if (!finalPersonaId && rut && nombres && apellidos) {
-      // Verificar si el RUT ya existe
-      const [existsRut] = await db.query('SELECT id FROM persona WHERE rut = ? LIMIT 1', [rut]);
-      if (existsRut.length) {
-        return res.status(409).json({ error: 'RUT already exists' });
-      }
-      
-      // Crear nueva persona
-      const [personaResult] = await db.query(
-        'INSERT INTO persona (rut, dv, nombres, apellidos, email, telefono) VALUES (?,?,?,?,?,?)',
-        [rut, dv || null, nombres, apellidos, email || null, null]
-      );
-      finalPersonaId = personaResult.insertId;
-    } else if (!finalPersonaId) {
-      // Si no hay persona_id ni datos para crear persona, error
-      return res.status(400).json({ 
-        error: 'Missing required fields: provide either persona_id or (rut, nombres, apellidos)' 
-      });
-    }
-    
-    // Crear usuario
-    const hash = await bcrypt.hash(password, 10);
-    const [result] = await db.query(
-      'INSERT INTO usuario (persona_id, username, hash_password, email) VALUES (?,?,?,?)',
-      [finalPersonaId, username, hash, email || null]
-    );
-    
-    const id = result.insertId;
-    const token = generateToken({ sub: id, username });
-    
-    res.status(201).json({ id, username, persona_id: finalPersonaId, token });
-  } catch (err) {
-    console.error('Register error:', err);
-    res.status(500).json({ error: 'server error', details: err.message });
-  }
-});
-
-/**
- * @openapi
- * /auth/login:
- *   post:
- *     tags: [Auth]
- *     summary: Iniciar sesión en el sistema
- *     description: |
- *       Autentica un usuario y retorna un token JWT con información de roles y membresías.
- *       
- *       **El token JWT incluye:**
- *       - Información básica del usuario (id, username, persona_id)
- *       - Lista de roles del usuario
- *       - Membresías por comunidad con nivel de acceso
- *       - Información de 2FA si está habilitado
- *       
- *       **Tipos de identificadores aceptados:**
- *       - Email: `usuario@example.com`
- *       - RUT chileno: `12345678-9`
- *       - DNI numérico: `12345678`
- *       - Username: `usuario123`
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - identifier
- *               - password
- *             properties:
- *               identifier:
- *                 type: string
- *                 description: Email, RUT, DNI o nombre de usuario
- *                 example: "usuario@example.com"
- *               password:
- *                 type: string
- *                 description: Contraseña del usuario
- *                 example: "MiPassword123!"
- *     responses:
- *       200:
- *         description: Login exitoso
- *         content:
- *           application/json:
- *             schema:
- *               oneOf:
- *                 - type: object
- *                   description: Login exitoso sin 2FA
- *                   properties:
- *                     token:
- *                       type: string
- *                       description: Token JWT con roles y membresías
- *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                 - type: object
- *                   description: Se requiere verificación 2FA
- *                   properties:
- *                     twoFactorRequired:
- *                       type: boolean
- *                       example: true
- *                     tempToken:
- *                       type: string
- *                       description: Token temporal para completar 2FA
- *       401:
- *         description: Credenciales inválidas
- *       500:
- *         description: Error del servidor
- *     x-codeSamples:
- *       - lang: JavaScript
- *         source: |
- *           // Ejemplo de decodificación del token JWT
- *           const token = response.token;
- *           const decoded = jwt.decode(token);
- *           console.log(decoded);
- *           // {
- *           //   sub: 1,
- *           //   username: "usuario123",
- *           //   persona_id: 1,
- *           //   roles: ["admin", "propietario"],
- *           //   comunidad_id: 1,
- *           //   memberships: [
- *           //     { comunidadId: 1, rol: "admin", nivel_acceso: 2 },
- *           //     { comunidadId: 2, rol: "propietario", nivel_acceso: 6 }
- *           //   ]
- *           // }
- */
+// ============================================
+// POST /auth/login - ✅ CORREGIDO
+// ============================================
 router.post('/login', [
-  body('identifier').exists().withMessage('Identifier (email, RUT, DNI or username) is required'),
+  body('identifier').exists().withMessage('Identifier is required'),
   body('password').exists().withMessage('Password is required')
 ], async (req, res) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   const { identifier, password } = req.body;
-  
+
   try {
-    // Build query based on identifier type
+    console.log('🔐 Intento de login:', identifier);
+
+    // 1. Buscar usuario
     const { query, param } = buildUserQuery(identifier);
     const params = Array.isArray(param) ? param : [param];
-    
     const [rows] = await db.query(query, params);
-    if (!rows.length) return res.status(401).json({ error: 'invalid credentials' });
-    
+
+    if (!rows.length) {
+      return res.status(401).json({ error: 'invalid credentials' });
+    }
+
     const user = rows[0];
+
+    // 2. Verificar contraseña
     const ok = await bcrypt.compare(password, user.hash_password);
-    if (!ok) return res.status(401).json({ error: 'invalid credentials' });
-    
-    // Fetch roles from usuario_rol_comunidad (nueva estructura)
-    const [membresias] = await db.query(`
-      SELECT ucr.comunidad_id, r.codigo as rol, r.nivel_acceso 
-      FROM usuario_rol_comunidad ucr
-      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
-      WHERE ucr.usuario_id = ? AND ucr.activo = 1
-    `, [user.id]);
-    // Normalizar roles (lowercase) y eliminar duplicados
-    const roles = Array.from(new Set(membresias.map(m => String(m.rol || '').toLowerCase())));
-    const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
-    const memberships = membresias.map(m => ({ 
-      comunidadId: m.comunidad_id, 
-      rol: String(m.rol || '').toLowerCase(),
-      nivel_acceso: m.nivel_acceso 
-    }));
-    
-    // Check if user has TOTP enabled
-    const [userRow] = await db.query('SELECT totp_secret, totp_enabled FROM usuario WHERE id = ? LIMIT 1', [user.id]);
+    if (!ok) {
+      return res.status(401).json({ error: 'invalid credentials' });
+    }
+
+    console.log('✅ Contraseña verificada para usuario:', user.username);
+
+    // 3. ✅ OBTENER ROLES Y MEMBRESÍAS (USANDO VISTA DIRECTAMENTE)
+    const [userRoles] = await db.query(`
+      SELECT 
+        umc.id as membership_id,
+        umc.comunidad_id,
+        umc.persona_id,
+        umc.rol,
+        umc.activo,
+        c.razon_social as comunidad_nombre,
+        rs.id as rol_id,
+        rs.nombre as rol_nombre,
+        rs.codigo as rol_slug,
+        rs.nivel_acceso as nivel,
+        rs.es_rol_sistema as es_admin
+      FROM usuario_miembro_comunidad umc
+      INNER JOIN comunidad c ON umc.comunidad_id = c.id
+      INNER JOIN rol_sistema rs ON umc.rol = rs.codigo
+      WHERE umc.persona_id = ? AND umc.activo = 1
+    `, [user.persona_id]);
+
+    console.log(`📋 ${userRoles.length} roles y membresías encontrados`);
+
+    // 4. ✅ DETERMINAR SI ES SUPERADMIN O ADMIN
+    const isSuperAdmin = user.is_superadmin === 1;
+    const hasAdminRole = userRoles.some(r => r.es_admin === 1 || r.nivel >= 90);
+    const isAdmin = isSuperAdmin || hasAdminRole;
+
+    console.log('🔑 Permisos:', { isSuperAdmin, hasAdminRole, isAdmin });
+
+    // 5. ✅ OBTENER DATOS DE PERSONA
+    const [personaRows] = await db.query(`
+      SELECT rut, dv, nombres, apellidos, email, telefono, direccion
+      FROM persona
+      WHERE id = ?
+    `, [user.persona_id]);
+
+    const persona = personaRows[0] || null;
+
+    // 6. ✅ VERIFICAR 2FA
+    const [userRow] = await db.query(
+      'SELECT totp_secret, totp_enabled, email FROM usuario WHERE id = ? LIMIT 1',
+      [user.id]
+    );
     const totp_info = userRow[0] || { totp_secret: null, totp_enabled: 0 };
-    
+
     if (totp_info.totp_enabled) {
-      const tempPayload = { sub: user.id, username: user.username, persona_id: user.persona_id, twoFactor: true };
+      const tempPayload = {
+        sub: user.id,
+        username: user.username,
+        persona_id: user.persona_id,
+        twoFactor: true
+      };
       const tempToken = generateTempToken(tempPayload, '5m');
       return res.json({ twoFactorRequired: true, tempToken });
     }
 
-    const payload = { 
-      sub: user.id, 
-      username: user.username, 
-      persona_id: user.persona_id, 
-      roles, 
-      comunidad_id, 
-      is_superadmin: !!user.is_superadmin,
-      memberships
-    };
-    const token = generateToken(payload);
-    res.json({ token });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
+    // Obtener memberships desde la view consolidada
+    const [memberships] = await db.query(
+      `SELECT
+         id AS membership_id,
+         usuario_id,
+         persona_id,
+         comunidad_id,
+         rol_id,
+         rol_slug AS rol,
+         rol_nombre,
+         desde,
+         hasta,
+         activo,
+         comunidad_nombre
+       FROM usuario_miembro_comunidad
+       WHERE persona_id = ? AND activo = 1`,
+      [ user.persona_id ]
+    );
+    user.memberships = memberships || [];
 
-// Verify TOTP using tempToken produced by /auth/login
-router.post('/2fa/verify', [body('tempToken').exists(), body('code').exists()], async (req, res) => {
-  const { tempToken, code } = req.body;
-  const jwt = require('jsonwebtoken');
-  const secret = process.env.JWT_SECRET || 'change_me';
-  try {
-    const data = jwt.verify(tempToken, secret);
-    if (!data || !data.twoFactor) return res.status(400).json({ error: 'invalid temp token' });
-    const userId = data.sub;
-    const [rows] = await db.query('SELECT id, persona_id, username, totp_secret FROM usuario WHERE id = ? LIMIT 1', [userId]);
-    if (!rows.length) return res.status(404).json({ error: 'user not found' });
-    const user = rows[0];
-    // verify code
-    const verified = speakeasy.totp.verify({ secret: user.totp_secret, encoding: 'base32', token: code, window: 1 });
-    if (!verified) return res.status(401).json({ error: 'invalid code' });
-    // create final token
-    const [membresias] = await db.query(`
-      SELECT ucr.comunidad_id, r.codigo as rol, r.nivel_acceso 
-      FROM usuario_rol_comunidad ucr
-      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
-      WHERE ucr.usuario_id = ? AND ucr.activo = 1
-    `, [user.id]);
-    // Normalizar roles (lowercase) y eliminar duplicados
-    const roles = Array.from(new Set(membresias.map(m => String(m.rol || '').toLowerCase())));
-    const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
-    const memberships = membresias.map(m => ({ 
-      comunidadId: m.comunidad_id, 
-      rol: String(m.rol || '').toLowerCase(),
-      nivel_acceso: m.nivel_acceso 
+    // 7. ✅ CONSTRUIR ARRAYS (SIN DUPLICADOS)
+    const rolesArray = userRoles.map(r => ({
+      id: r.rol_id,
+      nombre: r.rol_nombre,
+      slug: r.rol_slug,
+      comunidad_id: r.comunidad_id,
+      comunidad_nombre: r.comunidad_nombre,
+      nivel: r.nivel,
+      es_admin: r.es_admin === 1
     }));
-    const payload = { sub: user.id, username: user.username, persona_id: user.persona_id, roles, comunidad_id, memberships, is_superadmin: !!user.is_superadmin };
+
+    const membershipsArray = userRoles.map(m => ({
+      id: m.membership_id,
+      comunidad_id: m.comunidad_id,
+      comunidad_nombre: m.comunidad_nombre,
+      estado: 'activo' // La vista ya filtra por activo=1
+    }));
+
+    const rolesSlugArray = Array.from(
+      new Set(rolesArray.map(r => (r.slug || '').toLowerCase()))
+    );
+
+    const comunidad_id = membershipsArray.length > 0 ? membershipsArray[0].comunidad_id : null;
+
+    // 8. ✅ PAYLOAD DEL TOKEN
+    const payload = {
+      sub: user.id,
+      username: user.username,
+      persona_id: user.persona_id,
+      is_superadmin: isSuperAdmin,
+      is_admin: isAdmin,
+      roles: rolesSlugArray,
+      comunidad_id,
+      memberships: membershipsArray,
+      full_roles: rolesArray
+    };
+
+    // 9. ✅ GENERAR TOKEN
     const token = generateToken(payload);
-    res.json({ token });
-  } catch (err) {
-    console.error(err);
-    return res.status(401).json({ error: 'invalid or expired temp token' });
-  }
-});
 
-// Protected: generate TOTP secret and otpauth URL for QR
-router.get('/2fa/setup', authenticate, async (req, res) => {
-  try {
-    const userId = req.user.sub;
-    const [rows] = await db.query('SELECT id, username, email FROM usuario WHERE id = ? LIMIT 1', [userId]);
-    if (!rows.length) return res.status(404).json({ error: 'user not found' });
-    const user = rows[0];
-    const secret = speakeasy.generateSecret({ name: `CuentasClaras:${user.email || user.username}` });
-    const otpauth = secret.otpauth_url;
-    const qrData = await qrcode.toDataURL(otpauth);
-    // return secret.base32 and qr
-    res.json({ base32: secret.base32, otpauth, qr: qrData });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
+    // 10. ✅ RESPUESTA
+    const userData = {
+      id: user.id,
+      username: user.username,
+      email: totp_info.email || null,
+      persona_id: user.persona_id,
+      is_superadmin: isSuperAdmin,
+      is_admin: isAdmin,
+      activo: 1,
+      created_at: new Date().toISOString(),
+      persona: persona,
+      roles: rolesArray,
+      memberships: membershipsArray
+    };
 
-// Protected: enable 2FA after verifying a code from user's authenticator app
-router.post('/2fa/enable', authenticate, [body('code').exists(), body('base32').exists()], async (req, res) => {
-  const { code, base32 } = req.body;
-  try {
-    const userId = req.user.sub;
-    const verified = speakeasy.totp.verify({ secret: base32, encoding: 'base32', token: code, window: 1 });
-    if (!verified) return res.status(400).json({ error: 'invalid code' });
-    // store secret encrypted (here stored plain for demo — in prod encrypt)
-    await db.query('UPDATE usuario SET totp_secret = ?, totp_enabled = 1 WHERE id = ?', [base32, userId]);
-    res.json({ ok: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-// Protected: disable 2FA
-router.post('/2fa/disable', authenticate, [body('code').exists()], async (req, res) => {
-  const { code } = req.body;
-  try {
-    const userId = req.user.sub;
-    const [rows] = await db.query('SELECT totp_secret FROM usuario WHERE id = ? LIMIT 1', [userId]);
-    if (!rows.length) return res.status(404).json({ error: 'user not found' });
-    const secret = rows[0].totp_secret;
-    const verified = speakeasy.totp.verify({ secret, encoding: 'base32', token: code, window: 1 });
-    if (!verified) return res.status(400).json({ error: 'invalid code' });
-    await db.query('UPDATE usuario SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?', [userId]);
-    res.json({ ok: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-// Refresh: issue a new token for a valid current token
-router.post('/refresh', authenticate, async (req, res) => {
-  try {
-    const payload = { sub: req.user.sub, username: req.user.username, persona_id: req.user.persona_id, roles: req.user.roles || [], is_superadmin: !!req.user.is_superadmin };
-    const token = generateToken(payload);
-    res.json({ token });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-// Logout (stateless) - client should drop token; respond OK
-router.post('/logout', authenticate, async (req, res) => {
-  // In a real app we'd blacklist the token or remove session; here we return success
-  res.json({ ok: true });
-});
-
-// Forgot password - generate a reset token and (theoretically) email it
-router.post('/forgot-password', [body('email').isEmail()], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const { email } = req.body;
-  try {
-    const [rows] = await db.query('SELECT id, username FROM usuario WHERE email = ? LIMIT 1', [email]);
-    if (!rows.length) return res.status(200).json({ ok: true }); // don't reveal
-    const user = rows[0];
-    const token = crypto.randomBytes(24).toString('hex');
-    // store token in a simple table reset_tokens if exists; here we just return it for demo
-    // In production: save token with expiry and send email
-    res.json({ ok: true, resetToken: token });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-// Reset password - accepts token and new password
-router.post('/reset-password', [body('token').exists(), body('password').isLength({ min: 6 })], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const { token, password } = req.body;
-  try {
-    // For demo we don't persist tokens; in production validate token and map to user
-    // Here we return success to keep flow consistent
-    res.json({ ok: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-/**
- * @openapi
- * /auth/change-password:
- *   post:
- *     tags: [Auth]
- *     summary: Change user password
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               currentPassword:
- *                 type: string
- *                 description: Current password
- *               newPassword:
- *                 type: string
- *                 description: New password (minimum 6 characters)
- *             required:
- *               - currentPassword
- *               - newPassword
- *     responses:
- *       200:
- *         description: Password changed successfully
- *       400:
- *         description: Invalid current password or validation error
- *       500:
- *         description: Server error
- */
-router.post('/change-password', authenticate, [
-  body('currentPassword').exists().withMessage('Current password is required'),
-  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  
-  const { currentPassword, newPassword } = req.body;
-  const userId = req.user.sub;
-  
-  try {
-    // Get current user data
-    const [rows] = await db.query('SELECT id, hash_password FROM usuario WHERE id = ? LIMIT 1', [userId]);
-    if (!rows.length) return res.status(404).json({ error: 'User not found' });
-    
-    const user = rows[0];
-    
-    // Verify current password
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.hash_password);
-    if (!isCurrentPasswordValid) {
-      return res.status(400).json({ error: 'Current password is incorrect' });
-    }
-    
-    // Hash new password
-    const newHashedPassword = await bcrypt.hash(newPassword, 10);
-    
-    // Update password in database
-    await db.query('UPDATE usuario SET hash_password = ? WHERE id = ?', [newHashedPassword, userId]);
-    
-    res.json({ message: 'Password changed successfully' });
-  } catch (err) {
-    console.error('Change password error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-/**
- * @openapi
- * /auth/profile:
- *   patch:
- *     tags: [Auth]
- *     summary: Update user profile information
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *                 description: New username (minimum 3 characters)
- *               email:
- *                 type: string
- *                 format: email
- *                 description: New email address
- *     responses:
- *       200:
- *         description: Profile updated successfully
- *       400:
- *         description: Validation error or username/email already exists
- *       500:
- *         description: Server error
- */
-router.patch('/profile', authenticate, [
-  body('username').optional().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
-  body('email').optional().isEmail().withMessage('Invalid email format')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  
-  const userId = req.user.sub;
-  const { username, email } = req.body;
-  
-  // Check if at least one field is provided
-  if (!username && !email) {
-    return res.status(400).json({ error: 'At least one field (username or email) must be provided' });
-  }
-  
-  try {
-    const updates = [];
-    const values = [];
-    
-    // Check for username availability if provided
-    if (username) {
-      const [existingUsername] = await db.query('SELECT id FROM usuario WHERE username = ? AND id != ? LIMIT 1', [username, userId]);
-      if (existingUsername.length > 0) {
-        return res.status(400).json({ error: 'Username already exists' });
-      }
-      updates.push('username = ?');
-      values.push(username);
-    }
-    
-    // Check for email availability if provided
-    if (email) {
-      const [existingEmail] = await db.query('SELECT id FROM usuario WHERE email = ? AND id != ? LIMIT 1', [email, userId]);
-      if (existingEmail.length > 0) {
-        return res.status(400).json({ error: 'Email already exists' });
-      }
-      updates.push('email = ?');
-      values.push(email);
-    }
-    
-    values.push(userId);
-    
-    // Update user profile
-    await db.query(`UPDATE usuario SET ${updates.join(', ')} WHERE id = ?`, values);
-    
-    // Get updated user data
-    const [updatedUser] = await db.query('SELECT id, username, email, persona_id, is_superadmin FROM usuario WHERE id = ? LIMIT 1', [userId]);
-    
-    res.json({ 
-      message: 'Profile updated successfully',
-      user: updatedUser[0]
+    console.log('✅ Login exitoso:', {
+      username: user.username,
+      is_superadmin: isSuperAdmin,
+      is_admin: isAdmin,
+      roles_count: rolesArray.length,
+      memberships_count: membershipsArray.length
     });
+
+    res.json({ token, user: userData });
+
   } catch (err) {
-    console.error('Update profile error:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('❌ Login error:', err);
+    res.status(500).json({ error: 'server error', message: err.message });
   }
 });
 
-/**
- * @openapi
- * /auth/me:
- *   get:
- *     tags: [Auth]
- *     summary: Get current user
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Current user
- */
+// ============================================
+// GET /auth/me - ✅ CORREGIDO
+// ============================================
 router.get('/me', authenticate, async (req, res) => {
   try {
-    // Join usuario with persona to get complete profile data
+    console.log('🔍 GET /auth/me - Usuario ID:', req.user.sub);
+
+    // 1. Obtener datos del usuario con persona
     const [rows] = await db.query(`
       SELECT 
         u.id, 
@@ -767,33 +340,65 @@ router.get('/me', authenticate, async (req, res) => {
       LEFT JOIN persona p ON u.persona_id = p.id 
       WHERE u.id = ? LIMIT 1
     `, [req.user.sub]);
-    
-    if (!rows.length) return res.status(404).json({ error: 'not found' });
-    
+
+    if (!rows.length) {
+      return res.status(404).json({ error: 'user not found' });
+    }
+
     const user = rows[0];
-    
-    // Include is_superadmin as boolean in the response
-    user.is_superadmin = !!user.is_superadmin;
-    
-    // Include totp_enabled status (true if totp_secret exists)
-    user.totp_enabled = !!(user.totp_secret && user.totp_secret.trim() !== '');
-    
-    // Remove totp_secret from response for security
-    delete user.totp_secret;
-    
-    // Structure the response to separate user and person data
-    const response = {
-      // User data
+
+    // 2. ✅ Obtener roles y membresías desde la vista
+    const [userRoles] = await db.query(`
+      SELECT 
+        umc.id as membership_id,
+        umc.comunidad_id,
+        c.razon_social as comunidad_nombre,
+        rs.id as rol_id,
+        rs.nombre as rol_nombre,
+        rs.codigo as rol_slug,
+        rs.nivel_acceso as nivel,
+        rs.es_rol_sistema as es_admin
+      FROM usuario_miembro_comunidad umc
+      INNER JOIN comunidad c ON umc.comunidad_id = c.id
+      INNER JOIN rol_sistema rs ON umc.rol = rs.codigo
+      WHERE umc.persona_id = ? AND umc.activo = 1
+    `, [user.persona_id]);
+
+    const isSuperAdmin = user.is_superadmin === 1;
+    const hasAdminRole = userRoles.some(r => r.es_admin === 1 || r.nivel >= 90);
+    const isAdmin = isSuperAdmin || hasAdminRole;
+
+    const rolesArray = userRoles.map(r => ({
+      id: r.rol_id,
+      nombre: r.rol_nombre,
+      slug: r.rol_slug,
+      comunidad_id: r.comunidad_id,
+      comunidad_nombre: r.comunidad_nombre,
+      nivel: r.nivel,
+      es_admin: r.es_admin === 1
+    }));
+
+    const rolesSlugArray = Array.from(
+      new Set(rolesArray.map(r => (r.slug || '').toLowerCase()))
+    );
+
+    const membershipsArray = userRoles.map(m => ({
+      id: m.membership_id,
+      comunidad_id: m.comunidad_id,
+      comunidad_nombre: m.comunidad_nombre,
+      estado: 'activo'
+    }));
+
+    const userData = {
       id: user.id,
       username: user.username,
       email: user.email,
       persona_id: user.persona_id,
+      is_superadmin: isSuperAdmin,
+      is_admin: isAdmin,
+      is_2fa_enabled: !!(user.totp_secret && user.totp_secret.trim() !== ''),
       activo: user.activo,
       created_at: user.created_at,
-      is_superadmin: user.is_superadmin,
-      totp_enabled: user.totp_enabled,
-      
-      // Person data (if exists)
       persona: user.persona_id ? {
         rut: user.rut,
         dv: user.dv,
@@ -802,123 +407,361 @@ router.get('/me', authenticate, async (req, res) => {
         email: user.persona_email,
         telefono: user.telefono,
         direccion: user.direccion
-      } : null
+      } : null,
+      roles: rolesArray,
+      memberships: membershipsArray,
+      roles_slug: rolesSlugArray
     };
-    
-    const [membresias] = await db.query(
-      'SELECT comunidad_id AS comunidadId, rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1',
-      [user.persona_id]
+
+    console.log('✅ Usuario verificado:', {
+      username: user.username,
+      is_admin: isAdmin,
+      roles_count: rolesArray.length,
+      memberships_count: membershipsArray.length
+    });
+
+    res.json(userData);
+
+  } catch (err) {
+    console.error('❌ Error en /auth/me:', err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+// ============================================
+// POST /auth/verify-2fa - ✅ CORREGIDO
+// ============================================
+router.post('/verify-2fa', [
+  body('tempToken').exists(),
+  body('code').exists().isLength({ min: 6, max: 6 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { tempToken, code } = req.body;
+  const jwt = require('jsonwebtoken');
+
+  try {
+    const decoded = jwt.verify(tempToken, process.env.JWT_SECRET || 'change_me');
+    if (!decoded.twoFactor) {
+      return res.status(400).json({ error: 'invalid temp token' });
+    }
+
+    const [userRow] = await db.query(
+      'SELECT totp_secret, persona_id FROM usuario WHERE id = ? LIMIT 1',
+      [decoded.sub]
     );
-    const memberships = (membresias || []).map(m => ({ comunidadId: m.comunidadId, rol: String(m.rol || '').toLowerCase() }));
-    // roles globales derivados de memberships
-    const roles = Array.from(new Set(memberships.map(m => m.rol)));
-    return res.json({ ...response, roles, memberships });
+
+    if (!userRow.length || !userRow[0].totp_secret) {
+      return res.status(400).json({ error: '2FA not configured' });
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: userRow[0].totp_secret,
+      encoding: 'base32',
+      token: code,
+      window: 2
+    });
+
+    if (!verified) {
+      return res.status(401).json({ error: 'invalid 2FA code' });
+    }
+
+    const persona_id = userRow[0].persona_id;
+
+    // Obtener roles y membresías desde la vista
+    const [userRoles] = await db.query(`
+      SELECT 
+        umc.id as membership_id,
+        umc.comunidad_id,
+        c.razon_social as comunidad_nombre,
+        rs.id as rol_id,
+        rs.nombre as rol_nombre,
+        rs.codigo as rol_slug,
+        rs.nivel_acceso as nivel,
+        rs.es_rol_sistema as es_admin
+      FROM usuario_miembro_comunidad umc
+      INNER JOIN comunidad c ON umc.comunidad_id = c.id
+      INNER JOIN rol_sistema rs ON umc.rol = rs.codigo
+      WHERE umc.persona_id = ? AND umc.activo = 1
+    `, [persona_id]);
+
+    const rolesArray = userRoles.map(r => ({
+      id: r.rol_id,
+      nombre: r.rol_nombre,
+      slug: r.rol_slug,
+      comunidad_id: r.comunidad_id,
+      nivel: r.nivel,
+      es_admin: r.es_admin === 1
+    }));
+
+    const membershipsArray = userRoles.map(m => ({
+      id: m.membership_id,
+      comunidad_id: m.comunidad_id,
+      comunidad_nombre: m.comunidad_nombre,
+      estado: 'activo'
+    }));
+
+    const rolesSlugArray = Array.from(
+      new Set(rolesArray.map(r => (r.slug || '').toLowerCase()))
+    );
+
+    const payload = {
+      sub: decoded.sub,
+      username: decoded.username,
+      persona_id: decoded.persona_id,
+      roles: rolesSlugArray,
+      memberships: membershipsArray,
+      full_roles: rolesArray
+    };
+
+    const token = generateToken(payload);
+    res.json({ token });
+
+  } catch (err) {
+    console.error('2FA verification error:', err);
+    res.status(401).json({ error: 'invalid or expired temp token' });
+  }
+});
+
+// ============================================
+// Resto de endpoints sin cambios (no usan las tablas afectadas)
+// ============================================
+
+router.get('/2fa/setup', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.sub;
+    const [rows] = await db.query('SELECT id, username, email FROM usuario WHERE id = ? LIMIT 1', [userId]);
+    if (!rows.length) return res.status(404).json({ error: 'user not found' });
+    const user = rows[0];
+    const secret = speakeasy.generateSecret({
+      name: `CuentasClaras:${user.email || user.username}`,
+      length: 32
+    });
+    const otpauth = secret.otpauth_url;
+    const qrData = await qrcode.toDataURL(otpauth);
+    res.json({ base32: secret.base32, otpauth, qr: qrData });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });
   }
 });
 
-/**
- * @openapi
- * /auth/profile/persona:
- *   patch:
- *     tags: [Auth]
- *     summary: Update persona information linked to the authenticated user
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               nombres:
- *                 type: string
- *                 description: First names
- *               apellidos:
- *                 type: string
- *                 description: Last names
- *               telefono:
- *                 type: string
- *                 description: Phone number
- *               direccion:
- *                 type: string
- *                 description: Address
- *               email:
- *                 type: string
- *                 format: email
- *                 description: Email address
- *     responses:
- *       200:
- *         description: Persona information updated successfully
- *       400:
- *         description: Validation error or no persona linked
- *       404:
- *         description: User not found or no persona linked
- *       500:
- *         description: Server error
- */
-router.patch('/profile/persona', authenticate, [
-  body('nombres').optional().isLength({ min: 1 }).withMessage('Names cannot be empty'),
-  body('apellidos').optional().isLength({ min: 1 }).withMessage('Last names cannot be empty'),
-  body('telefono').optional().isLength({ min: 1 }).withMessage('Phone cannot be empty'),
-  body('email').optional().isEmail().withMessage('Invalid email format')
+router.post('/2fa/enable', authenticate, [
+  body('code').exists(),
+  body('base32').exists()
+], async (req, res) => {
+  const { code, base32 } = req.body;
+  try {
+    const userId = req.user.sub;
+    const verified = speakeasy.totp.verify({
+      secret: base32,
+      encoding: 'base32',
+      token: code,
+      window: 2
+    });
+    if (!verified) return res.status(400).json({ error: 'invalid code' });
+    await db.query('UPDATE usuario SET totp_secret = ?, totp_enabled = 1 WHERE id = ?', [base32, userId]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+router.post('/2fa/disable', authenticate, [
+  body('code').exists()
+], async (req, res) => {
+  const { code } = req.body;
+  try {
+    const userId = req.user.sub;
+    const [rows] = await db.query('SELECT totp_secret FROM usuario WHERE id = ? LIMIT 1', [userId]);
+    if (!rows.length) return res.status(404).json({ error: 'user not found' });
+    const secret = rows[0].totp_secret;
+    const verified = speakeasy.totp.verify({
+      secret,
+      encoding: 'base32',
+      token: code,
+      window: 2
+    });
+    if (!verified) return res.status(400).json({ error: 'invalid code' });
+    await db.query('UPDATE usuario SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?', [userId]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+router.post('/refresh', authenticate, async (req, res) => {
+  try {
+    const payload = {
+      sub: req.user.sub,
+      username: req.user.username,
+      persona_id: req.user.persona_id,
+      roles: req.user.roles || [],
+      is_superadmin: !!req.user.is_superadmin
+    };
+    const token = generateToken(payload);
+    res.json({ token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+router.post('/logout', authenticate, async (req, res) => {
+  res.json({ ok: true });
+});
+
+router.post('/forgot-password', [
+  body('email').isEmail()
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  
-  const userId = req.user.sub;
-  const { nombres, apellidos, telefono, direccion, email } = req.body;
-  
+  const { email } = req.body;
   try {
-    // Get user's persona_id
-    const [userRows] = await db.query('SELECT persona_id FROM usuario WHERE id = ? LIMIT 1', [userId]);
-    if (!userRows.length) return res.status(404).json({ error: 'User not found' });
-    
-    const personaId = userRows[0].persona_id;
-    if (!personaId) return res.status(400).json({ error: 'No persona linked to this user' });
-    
-    // Build update query
+    const [rows] = await db.query('SELECT id, username FROM usuario WHERE email = ? LIMIT 1', [email]);
+    if (!rows.length) return res.status(200).json({ ok: true });
+    const token = crypto.randomBytes(24).toString('hex');
+    res.json({ ok: true, resetToken: token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+router.post('/reset-password', [
+  body('token').exists(),
+  body('password').isLength({ min: 6 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  res.json({ ok: true });
+});
+
+router.post('/change-password', authenticate, [
+  body('currentPassword').exists(),
+  body('newPassword').isLength({ min: 6 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.user.sub;
+
+  try {
+    const [rows] = await db.query('SELECT id, hash_password FROM usuario WHERE id = ? LIMIT 1', [userId]);
+    if (!rows.length) return res.status(404).json({ error: 'User not found' });
+
+    const user = rows[0];
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.hash_password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+    await db.query('UPDATE usuario SET hash_password = ? WHERE id = ?', [newHashedPassword, userId]);
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.patch('/profile', authenticate, [
+  body('username').optional().isLength({ min: 3 }),
+  body('email').optional().isEmail()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  const userId = req.user.sub;
+  const { username, email } = req.body;
+
+  if (!username && !email) {
+    return res.status(400).json({ error: 'At least one field must be provided' });
+  }
+
+  try {
     const updates = [];
     const values = [];
-    
-    if (nombres !== undefined) {
-      updates.push('nombres = ?');
-      values.push(nombres);
+
+    if (username) {
+      const [existingUsername] = await db.query('SELECT id FROM usuario WHERE username = ? AND id != ? LIMIT 1', [username, userId]);
+      if (existingUsername.length > 0) {
+        return res.status(400).json({ error: 'Username already exists' });
+      }
+      updates.push('username = ?');
+      values.push(username);
     }
-    if (apellidos !== undefined) {
-      updates.push('apellidos = ?');
-      values.push(apellidos);
-    }
-    if (telefono !== undefined) {
-      updates.push('telefono = ?');
-      values.push(telefono);
-    }
-    if (direccion !== undefined) {
-      updates.push('direccion = ?');
-      values.push(direccion);
-    }
-    if (email !== undefined) {
+
+    if (email) {
+      const [existingEmail] = await db.query('SELECT id FROM usuario WHERE email = ? AND id != ? LIMIT 1', [email, userId]);
+      if (existingEmail.length > 0) {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
       updates.push('email = ?');
       values.push(email);
     }
-    
+
+    values.push(userId);
+    await db.query(`UPDATE usuario SET ${updates.join(', ')} WHERE id = ?`, values);
+
+    const [updatedUser] = await db.query('SELECT id, username, email, persona_id, is_superadmin FROM usuario WHERE id = ? LIMIT 1', [userId]);
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: updatedUser[0]
+    });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.patch('/profile/persona', authenticate, [
+  body('nombres').optional().isLength({ min: 1 }),
+  body('apellidos').optional().isLength({ min: 1 }),
+  body('telefono').optional().isLength({ min: 1 }),
+  body('email').optional().isEmail()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  const userId = req.user.sub;
+  const { nombres, apellidos, telefono, direccion, email } = req.body;
+
+  try {
+    const [userRows] = await db.query('SELECT persona_id FROM usuario WHERE id = ? LIMIT 1', [userId]);
+    if (!userRows.length) return res.status(404).json({ error: 'User not found' });
+
+    const personaId = userRows[0].persona_id;
+    if (!personaId) return res.status(400).json({ error: 'No persona linked' });
+
+    const updates = [];
+    const values = [];
+
+    if (nombres !== undefined) { updates.push('nombres = ?'); values.push(nombres); }
+    if (apellidos !== undefined) { updates.push('apellidos = ?'); values.push(apellidos); }
+    if (telefono !== undefined) { updates.push('telefono = ?'); values.push(telefono); }
+    if (direccion !== undefined) { updates.push('direccion = ?'); values.push(direccion); }
+    if (email !== undefined) { updates.push('email = ?'); values.push(email); }
+
     if (updates.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
     }
-    
+
     values.push(personaId);
-    
-    // Update persona data
     await db.query(`UPDATE persona SET ${updates.join(', ')} WHERE id = ?`, values);
-    
-    // Get updated persona data
+
     const [updatedPersona] = await db.query('SELECT rut, dv, nombres, apellidos, email, telefono, direccion FROM persona WHERE id = ? LIMIT 1', [personaId]);
-    
-    res.json({ 
-      message: 'Persona information updated successfully',
+
+    res.json({
+      message: 'Persona updated successfully',
       persona: updatedPersona[0]
     });
   } catch (err) {
@@ -927,64 +770,25 @@ router.patch('/profile/persona', authenticate, [
   }
 });
 
-/**
- * @openapi
- * /auth/sessions:
- *   get:
- *     tags: [Auth]
- *     summary: Get active sessions for current user
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of active sessions
- */
 router.get('/sessions', authenticate, async (req, res) => {
   try {
-    // For now, return a simple mock response
-    // In a real implementation, you would track sessions in Redis or database
     const currentSession = {
       id: 'current-session',
       device: req.headers['user-agent'] || 'Unknown Device',
-      location: 'Unknown Location', // You could use IP geolocation
+      location: 'Unknown Location',
       ip: req.ip || req.connection.remoteAddress || 'Unknown IP',
       lastAccess: new Date().toISOString(),
       isCurrent: true
     };
-    
-    res.json({
-      sessions: [currentSession]
-    });
+    res.json({ sessions: [currentSession] });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });
   }
 });
 
-/**
- * @openapi
- * /auth/sessions/{sessionId}:
- *   delete:
- *     tags: [Auth]
- *     summary: Close a specific session
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: sessionId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Session closed successfully
- */
 router.delete('/sessions/:sessionId', authenticate, async (req, res) => {
   try {
-    const { sessionId } = req.params;
-    
-    // For now, just return success
-    // In a real implementation, you would revoke the specific session token
     res.json({ message: 'Session closed successfully' });
   } catch (err) {
     console.error(err);
@@ -992,22 +796,8 @@ router.delete('/sessions/:sessionId', authenticate, async (req, res) => {
   }
 });
 
-/**
- * @openapi
- * /auth/sessions:
- *   delete:
- *     tags: [Auth]
- *     summary: Close all sessions except current
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: All sessions closed successfully
- */
 router.delete('/sessions', authenticate, async (req, res) => {
   try {
-    // For now, just return success
-    // In a real implementation, you would revoke all session tokens except current
     res.json({ message: 'All sessions closed successfully' });
   } catch (err) {
     console.error(err);
@@ -1015,32 +805,15 @@ router.delete('/sessions', authenticate, async (req, res) => {
   }
 });
 
-/**
- * @openapi
- * /auth/preferences:
- *   get:
- *     tags: [Auth]
- *     summary: Get user preferences
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User preferences
- *       500:
- *         description: Server error
- */
 router.get('/preferences', authenticate, async (req, res) => {
   try {
     const userId = req.user.sub;
-    
-    // Get user preferences from database
     const [rows] = await db.query('SELECT preferences FROM user_preferences WHERE user_id = ? LIMIT 1', [userId]);
-    
+
     if (rows.length > 0) {
       return res.json(rows[0].preferences);
     }
-    
-    // If no preferences found, return and create default preferences
+
     const defaultPreferences = {
       notifications: {
         email_enabled: true,
@@ -1053,13 +826,12 @@ router.get('/preferences', authenticate, async (req, res) => {
         language: 'es'
       }
     };
-    
-    // Create default preferences for user
+
     await db.query(
       'INSERT INTO user_preferences (user_id, preferences) VALUES (?, ?)',
       [userId, JSON.stringify(defaultPreferences)]
     );
-    
+
     res.json(defaultPreferences);
   } catch (err) {
     console.error('Get preferences error:', err);
@@ -1067,64 +839,21 @@ router.get('/preferences', authenticate, async (req, res) => {
   }
 });
 
-/**
- * @openapi
- * /auth/preferences:
- *   patch:
- *     tags: [Auth]
- *     summary: Update user preferences
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               notifications:
- *                 type: object
- *                 properties:
- *                   email_enabled:
- *                     type: boolean
- *                   payment_notifications:
- *                     type: boolean
- *                   weekly_summaries:
- *                     type: boolean
- *               display:
- *                 type: object
- *                 properties:
- *                   timezone:
- *                     type: string
- *                   date_format:
- *                     type: string
- *                   language:
- *                     type: string
- *     responses:
- *       200:
- *         description: Preferences updated successfully
- *       400:
- *         description: Validation error
- *       500:
- *         description: Server error
- */
 router.patch('/preferences', authenticate, async (req, res) => {
   try {
     const userId = req.user.sub;
     const preferences = req.body;
-    
-    // Validate preferences structure
+
     if (typeof preferences !== 'object') {
       return res.status(400).json({ error: 'Invalid preferences format' });
     }
-    
-    // Save preferences to database
+
     await db.query(
       'INSERT INTO user_preferences (user_id, preferences) VALUES (?, ?) ON DUPLICATE KEY UPDATE preferences = ?',
       [userId, JSON.stringify(preferences), JSON.stringify(preferences)]
     );
-    
-    res.json({ 
+
+    res.json({
       message: 'Preferences updated successfully',
       preferences: preferences
     });

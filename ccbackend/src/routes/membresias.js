@@ -245,6 +245,12 @@ router.post('/', [
   const desdeVal = desde || new Date().toISOString().slice(0,10); // YYYY-MM-DD
   
   try {
+    // Evitar asignar comunidad a un superadmin
+    const [targetUser] = await db.query('SELECT is_superadmin FROM usuario WHERE id = ? LIMIT 1', [usuario_id]);
+    if (targetUser[0]?.is_superadmin) {
+      return res.status(400).json({ success: false, error: 'No se puede asignar comunidad a un superadmin' });
+    }
+
     const [result] = await db.query(
       'INSERT INTO usuario_rol_comunidad (comunidad_id, usuario_id, rol_id, desde, hasta, activo) VALUES (?,?,?,?,?,?)', 
       [comunidad_id, usuario_id, rol_id, desdeVal, hasta || null, typeof activo === 'undefined' ? 1 : (activo ? 1 : 0)]
