@@ -5,40 +5,12 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { EmissionStatusBadge, EmissionTypeBadge } from '@/components/emisiones';
-
-interface EmissionDetail {
-  id: string;
-  period: string;
-  type: 'gastos_comunes' | 'extraordinaria' | 'multa' | 'interes';
-  status: 'draft' | 'ready' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
-  issueDate: string;
-  dueDate: string;
-  totalAmount: number;
-  paidAmount: number;
-  unitCount: number;
-  description: string;
-  communityName: string;
-}
-
-interface UnitDistribution {
-  id: string;
-  unitNumber: string;
-  unitType: string;
-  owner: string;
-  participation: number;
-  totalAmount: number;
-  paidAmount: number;
-  status: 'pending' | 'partial' | 'paid';
-  details: ConceptDistribution[];
-}
-
-interface ConceptDistribution {
-  conceptId: string;
-  conceptName: string;
-  totalAmount: number;
-  unitAmount: number;
-  distributionType: 'proportional' | 'equal' | 'custom';
-}
+import {
+  EmissionDetail,
+  UnitDistribution,
+  ConceptDistribution
+} from '@/types/emisiones';
+import emisionesService from '@/lib/emisionesService';
 
 interface DistributionChart {
   labels: string[];
@@ -63,136 +35,39 @@ export default function EmisionProrrateo() {
     }
   }, [id]);
 
-  const loadProrrateoData = () => {
-    // Mock data
-    setTimeout(() => {
-      const mockEmission: EmissionDetail = {
-        id: id as string,
-        period: 'Septiembre 2025',
-        type: 'gastos_comunes',
-        status: 'sent',
-        issueDate: '2025-09-01',
-        dueDate: '2025-09-15',
-        totalAmount: 2500000,
-        paidAmount: 1800000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de septiembre',
-        communityName: 'Edificio Central'
-      };
+  const loadProrrateoData = async () => {
+    if (!id) return;
 
-      const mockUnits: UnitDistribution[] = [
-        {
-          id: '1',
-          unitNumber: '101',
-          unitType: 'Departamento',
-          owner: 'Juan Pérez',
-          participation: 2.5,
-          totalAmount: 62500,
-          paidAmount: 62500,
-          status: 'paid',
-          details: [
-            {
-              conceptId: '1',
-              conceptName: 'Administración',
-              totalAmount: 450000,
-              unitAmount: 11250,
-              distributionType: 'proportional'
-            },
-            {
-              conceptId: '2',
-              conceptName: 'Servicios Básicos',
-              totalAmount: 730000,
-              unitAmount: 18250,
-              distributionType: 'proportional'
-            },
-            {
-              conceptId: '3',
-              conceptName: 'Fondo de Reserva',
-              totalAmount: 900000,
-              unitAmount: 20000,
-              distributionType: 'equal'
-            }
-          ]
-        },
-        {
-          id: '2',
-          unitNumber: '102',
-          unitType: 'Departamento',
-          owner: 'María González',
-          participation: 2.2,
-          totalAmount: 55000,
-          paidAmount: 30000,
-          status: 'partial',
-          details: [
-            {
-              conceptId: '1',
-              conceptName: 'Administración',
-              totalAmount: 450000,
-              unitAmount: 9900,
-              distributionType: 'proportional'
-            },
-            {
-              conceptId: '2',
-              conceptName: 'Servicios Básicos',
-              totalAmount: 730000,
-              unitAmount: 16060,
-              distributionType: 'proportional'
-            },
-            {
-              conceptId: '3',
-              conceptName: 'Fondo de Reserva',
-              totalAmount: 900000,
-              unitAmount: 20000,
-              distributionType: 'equal'
-            }
-          ]
-        },
-        {
-          id: '3',
-          unitNumber: '201',
-          unitType: 'Departamento',
-          owner: 'Carlos Rodríguez',
-          participation: 2.8,
-          totalAmount: 70000,
-          paidAmount: 0,
-          status: 'pending',
-          details: [
-            {
-              conceptId: '1',
-              conceptName: 'Administración',
-              totalAmount: 450000,
-              unitAmount: 12600,
-              distributionType: 'proportional'
-            },
-            {
-              conceptId: '2',
-              conceptName: 'Servicios Básicos',
-              totalAmount: 730000,
-              unitAmount: 20440,
-              distributionType: 'proportional'
-            },
-            {
-              conceptId: '3',
-              conceptName: 'Fondo de Reserva',
-              totalAmount: 900000,
-              unitAmount: 20000,
-              distributionType: 'equal'
-            }
-          ]
-        }
-      ];
+    try {
+      setLoading(true);
 
-      const mockChartData: DistributionChart = {
-        labels: ['Administración', 'Servicios Básicos', 'Fondo de Reserva', 'Mantención', 'Seguros'],
-        amounts: [450000, 730000, 900000, 320000, 100000],
-        colors: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1']
-      };
+      // Cargar datos en paralelo
+      const [emissionData, unitsData, conceptsData] = await Promise.all([
+        emisionesService.getEmissionById(id as string),
+        emisionesService.getEmissionUnits(id as string),
+        emisionesService.getEmissionConcepts(id as string)
+      ]);
 
-      setEmission(mockEmission);
-      setUnits(mockUnits);
-      setChartData(mockChartData);
+      setEmission(emissionData);
+      setUnits(unitsData);
+
+      // Crear datos del gráfico basado en conceptos
+      if (conceptsData.length > 0) {
+        const chartData: DistributionChart = {
+          labels: conceptsData.map(concept => concept.name),
+          amounts: conceptsData.map(concept => concept.amount),
+          colors: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#20c997', '#e83e8c']
+        };
+        setChartData(chartData);
+      }
+    } catch (error) {
+      console.error('Error loading prorrateo data:', error);
+      setEmission(null);
+      setUnits([]);
+      setChartData(null);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -521,18 +396,26 @@ export default function EmisionProrrateo() {
                                       </tr>
                                     </thead>
                                     <tbody>
-                                      {unit.details.map((detail) => (
-                                        <tr key={detail.conceptId}>
-                                          <td>{detail.conceptName}</td>
-                                          <td>{formatCurrency(detail.totalAmount)}</td>
-                                          <td>
-                                            <span className='badge bg-secondary'>
-                                              {getDistributionTypeText(detail.distributionType)}
-                                            </span>
+                                      {unit.details && unit.details.length > 0 ? (
+                                        unit.details.map((detail) => (
+                                          <tr key={detail.conceptId}>
+                                            <td>{detail.conceptName}</td>
+                                            <td>{formatCurrency(detail.totalAmount)}</td>
+                                            <td>
+                                              <span className='badge bg-secondary'>
+                                                {getDistributionTypeText(detail.distributionType)}
+                                              </span>
+                                            </td>
+                                            <td><strong>{formatCurrency(detail.unitAmount)}</strong></td>
+                                          </tr>
+                                        ))
+                                      ) : (
+                                        <tr>
+                                          <td colSpan={4} className='text-center text-muted'>
+                                            Detalles de distribución no disponibles
                                           </td>
-                                          <td><strong>{formatCurrency(detail.unitAmount)}</strong></td>
                                         </tr>
-                                      ))}
+                                      )}
                                     </tbody>
                                     <tfoot>
                                       <tr className='table-primary'>
@@ -603,17 +486,21 @@ export default function EmisionProrrateo() {
                           
                           <div className='concepts-breakdown'>
                             <h6>Conceptos:</h6>
-                            {unit.details.map((detail) => (
-                              <div key={detail.conceptId} className='concept-item'>
-                                <div className='concept-info'>
-                                  <span className='concept-name'>{detail.conceptName}</span>
-                                  <span className='concept-amount'>{formatCurrency(detail.unitAmount)}</span>
+                            {unit.details && unit.details.length > 0 ? (
+                              unit.details.map((detail) => (
+                                <div key={detail.conceptId} className='concept-item'>
+                                  <div className='concept-info'>
+                                    <span className='concept-name'>{detail.conceptName}</span>
+                                    <span className='concept-amount'>{formatCurrency(detail.unitAmount)}</span>
+                                  </div>
+                                  <small className='text-muted'>
+                                    {getDistributionTypeText(detail.distributionType)}
+                                  </small>
                                 </div>
-                                <small className='text-muted'>
-                                  {getDistributionTypeText(detail.distributionType)}
-                                </small>
-                              </div>
-                            ))}
+                              ))
+                            ) : (
+                              <small className='text-muted'>Detalles no disponibles</small>
+                            )}
                           </div>
                         </div>
                       </div>

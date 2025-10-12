@@ -9,164 +9,91 @@ import {
   EmissionCard,
   EmissionRow,
   Emission,
-  EmissionFiltersType
+  EmissionFilters as EmissionFiltersType
 } from '@/components/emisiones';
+import emisionesService from '@/lib/emisionesService';
+import { EmissionListResponse } from '@/types/emisiones';
 
 export default function EmisionesListado() {
   const [emissions, setEmissions] = useState<Emission[]>([]);
-  const [filteredEmissions, setFilteredEmissions] = useState<Emission[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'table' | 'cards'>('table');
   const [selectedEmissions, setSelectedEmissions] = useState<string[]>([]);
-  
+
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
 
-  // Generar datos mock
-  const generateMockEmissions = (): Emission[] => {
-    const mockEmissions: Emission[] = [
-      {
-        id: '1',
-        period: 'Septiembre 2025',
-        type: 'gastos_comunes',
-        status: 'sent',
-        issueDate: '2025-09-01',
-        dueDate: '2025-09-15',
-        totalAmount: 2500000,
-        paidAmount: 1800000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de septiembre',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '2',
-        period: 'Agosto 2025',
-        type: 'gastos_comunes',
-        status: 'paid',
-        issueDate: '2025-08-01',
-        dueDate: '2025-08-15',
-        totalAmount: 2400000,
-        paidAmount: 2400000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de agosto',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '3',
-        period: 'Extraordinaria - Ascensor',
-        type: 'extraordinaria',
-        status: 'ready',
-        issueDate: '2025-09-10',
-        dueDate: '2025-09-30',
-        totalAmount: 800000,
-        paidAmount: 0,
-        unitCount: 45,
-        description: 'Reparación ascensor principal',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '4',
-        period: 'Julio 2025',
-        type: 'gastos_comunes',
-        status: 'overdue',
-        issueDate: '2025-07-01',
-        dueDate: '2025-07-15',
-        totalAmount: 2300000,
-        paidAmount: 1200000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de julio',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '5',
-        period: 'Multa - Ruidos molestos',
-        type: 'multa',
-        status: 'draft',
-        issueDate: '2025-09-15',
-        dueDate: '2025-10-01',
-        totalAmount: 50000,
-        paidAmount: 0,
-        unitCount: 1,
-        description: 'Multa por ruidos molestos - Unidad 302',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '6',
-        period: 'Junio 2025',
-        type: 'gastos_comunes',
-        status: 'partial',
-        issueDate: '2025-06-01',
-        dueDate: '2025-06-15',
-        totalAmount: 2200000,
-        paidAmount: 1500000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de junio',
-        communityName: 'Edificio Central'
-      }
-    ];
+  // Filtros actuales
+  const [currentFilters, setCurrentFilters] = useState<EmissionFiltersType>({
+    search: '',
+    status: 'all',
+    type: 'all',
+    period: 'all',
+    dateFrom: '',
+    dateTo: '',
+    community: 'all'
+  });
 
-    return mockEmissions;
+  // Cargar datos de la API
+  const loadEmissions = async (page: number = 1, filters: EmissionFiltersType = currentFilters) => {
+    try {
+      setLoading(true);
+      const apiFilters: any = {};
+
+      if (filters.search) apiFilters.search = filters.search;
+      if (filters.status !== 'all') apiFilters.status = filters.status;
+      if (filters.type !== 'all') apiFilters.type = filters.type;
+      if (filters.period !== 'all') apiFilters.period = filters.period;
+      if (filters.dateFrom) apiFilters.dateFrom = filters.dateFrom;
+      if (filters.dateTo) apiFilters.dateTo = filters.dateTo;
+      if (filters.community) apiFilters.communityId = parseInt(filters.community);
+
+      const response: EmissionListResponse = await emisionesService.getEmissions(
+        apiFilters,
+        page,
+        itemsPerPage
+      );
+
+      setEmissions(response.data);
+      setTotalPages(response.pagination.pages);
+      setTotalItems(response.pagination.total);
+      setCurrentPage(page);
+    } catch (error) {
+      console.error('Error loading emissions:', error);
+      // En caso de error, mostrar lista vacía
+      setEmissions([]);
+      setTotalPages(1);
+      setTotalItems(0);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    // Simular carga de datos
-    setTimeout(() => {
-      const mockData = generateMockEmissions();
-      setEmissions(mockData);
-      setFilteredEmissions(mockData);
-      setLoading(false);
-    }, 1000);
+    loadEmissions();
   }, []);
 
   // Manejar filtros
   const handleFilterChange = (filters: EmissionFiltersType) => {
-    let filtered = emissions;
-
-    // Búsqueda por texto
-    if (filters.search) {
-      filtered = filtered.filter(emission =>
-        emission.period.toLowerCase().includes(filters.search.toLowerCase()) ||
-        (emission.description && emission.description.toLowerCase().includes(filters.search.toLowerCase())) ||
-        (emission.communityName && emission.communityName.toLowerCase().includes(filters.search.toLowerCase()))
-      );
-    }
-
-    // Filtro por estado
-    if (filters.status !== 'all') {
-      filtered = filtered.filter(emission => emission.status === filters.status);
-    }
-
-    // Filtro por tipo
-    if (filters.type !== 'all') {
-      filtered = filtered.filter(emission => emission.type === filters.type);
-    }
-
-    // Filtro por período
-    if (filters.period !== 'all') {
-      filtered = filtered.filter(emission => emission.period.includes(filters.period));
-    }
-
-    // Filtro por fechas
-    if (filters.dateFrom) {
-      filtered = filtered.filter(emission => 
-        new Date(emission.issueDate) >= new Date(filters.dateFrom)
-      );
-    }
-
-    if (filters.dateTo) {
-      filtered = filtered.filter(emission => 
-        new Date(emission.issueDate) <= new Date(filters.dateTo)
-      );
-    }
-
-    setFilteredEmissions(filtered);
-    setCurrentPage(1); // Reset página
+    setCurrentFilters(filters);
+    loadEmissions(1, filters);
   };
 
   const handleClearFilters = () => {
-    setFilteredEmissions(emissions);
-    setCurrentPage(1);
+    const defaultFilters: EmissionFiltersType = {
+      search: '',
+      status: 'all',
+      type: 'all',
+      period: 'all',
+      dateFrom: '',
+      dateTo: '',
+      community: 'all'
+    };
+    setCurrentFilters(defaultFilters);
+    loadEmissions(1, defaultFilters);
   };
 
   // Manejar selección
@@ -179,22 +106,17 @@ export default function EmisionesListado() {
   };
 
   const handleSelectAll = () => {
-    const currentPageEmissions = getCurrentPageEmissions();
-    const allSelected = currentPageEmissions.every(emission => 
+    const allSelected = emissions.every((emission: Emission) =>
       selectedEmissions.includes(emission.id)
     );
 
     if (allSelected) {
-      // Deseleccionar todos de la página actual
-      const newSelected = selectedEmissions.filter(id => 
-        !currentPageEmissions.some(emission => emission.id === id)
-      );
-      setSelectedEmissions(newSelected);
+      // Deseleccionar todos
+      setSelectedEmissions([]);
     } else {
       // Seleccionar todos de la página actual
-      const pageIds = currentPageEmissions.map(emission => emission.id);
-      const newSelected = [...new Set([...selectedEmissions, ...pageIds])];
-      setSelectedEmissions(newSelected);
+      const pageIds = emissions.map((emission: Emission) => emission.id);
+      setSelectedEmissions(pageIds);
     }
   };
 
@@ -209,17 +131,8 @@ export default function EmisionesListado() {
   };
 
   // Paginación
-  const getCurrentPageEmissions = () => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredEmissions.slice(startIndex, endIndex);
-  };
-
-  const totalPages = Math.ceil(filteredEmissions.length / itemsPerPage);
-
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    loadEmissions(page, currentFilters);
   };
 
   // Render paginación
@@ -370,7 +283,7 @@ export default function EmisionesListado() {
           <ViewControls
             currentView={currentView}
             onViewChange={setCurrentView}
-            totalItems={filteredEmissions.length}
+            totalItems={totalItems}
             selectedItems={selectedEmissions.length}
             onSelectAll={handleSelectAll}
             onDeselectAll={handleDeselectAll}
@@ -389,8 +302,8 @@ export default function EmisionesListado() {
                           <input
                             className='form-check-input'
                             type='checkbox'
-                            checked={getCurrentPageEmissions().length > 0 && 
-                              getCurrentPageEmissions().every(emission => 
+                            checked={emissions.length > 0 &&
+                              emissions.every((emission: Emission) =>
                                 selectedEmissions.includes(emission.id)
                               )}
                             onChange={handleSelectAll}
@@ -409,7 +322,7 @@ export default function EmisionesListado() {
                     </tr>
                   </thead>
                   <tbody>
-                    {getCurrentPageEmissions().map((emission) => (
+                    {emissions.map((emission: Emission) => (
                       <EmissionRow
                         key={emission.id}
                         emission={emission}
@@ -427,7 +340,7 @@ export default function EmisionesListado() {
           {currentView === 'cards' && (
             <div className='cards-view'>
               <div className='row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4'>
-                {getCurrentPageEmissions().map((emission) => (
+                {emissions.map((emission: Emission) => (
                   <div key={emission.id} className='col'>
                     <EmissionCard emission={emission} />
                   </div>
@@ -437,7 +350,7 @@ export default function EmisionesListado() {
           )}
 
           {/* Estado vacío */}
-          {filteredEmissions.length === 0 && (
+          {emissions.length === 0 && !loading && (
             <div className='empty-state text-center py-5'>
               <i className='fa-solid fa-file-invoice-dollar text-muted mb-3' style={{ fontSize: '4rem' }}></i>
               <h5 className='text-muted'>No se encontraron emisiones</h5>
