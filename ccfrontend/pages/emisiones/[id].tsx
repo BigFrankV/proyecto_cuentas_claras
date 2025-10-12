@@ -5,72 +5,14 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { EmissionStatusBadge, EmissionTypeBadge } from '@/components/emisiones';
-
-interface EmissionDetail {
-  id: string;
-  period: string;
-  type: 'gastos_comunes' | 'extraordinaria' | 'multa' | 'interes';
-  status: 'draft' | 'ready' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
-  issueDate: string;
-  dueDate: string;
-  totalAmount: number;
-  paidAmount: number;
-  unitCount: number;
-  description: string;
-  communityName: string;
-  hasInterest: boolean;
-  interestRate: number;
-  gracePeriod: number;
-}
-
-interface Concept {
-  id: string;
-  name: string;
-  description: string;
-  amount: number;
-  distributionType: 'proportional' | 'equal' | 'custom';
-  category: string;
-}
-
-interface ExpenseDetail {
-  id: string;
-  description: string;
-  amount: number;
-  category: string;
-  supplier: string;
-  date: string;
-  document: string;
-}
-
-interface UnitDetail {
-  id: string;
-  number: string;
-  type: string;
-  owner: string;
-  contact: string;
-  participation: number;
-  totalAmount: number;
-  paidAmount: number;
-  status: 'pending' | 'partial' | 'paid';
-}
-
-interface Payment {
-  id: string;
-  date: string;
-  amount: number;
-  method: string;
-  reference: string;
-  unit: string;
-  status: 'confirmed' | 'pending' | 'rejected';
-}
-
-interface HistoryEntry {
-  id: string;
-  date: string;
-  action: string;
-  user: string;
-  description: string;
-}
+import {
+  EmissionDetail,
+  Concept,
+  ExpenseDetail,
+  UnitDistribution,
+  Payment
+} from '@/types/emisiones';
+import emisionesService from '@/lib/emisionesService';
 
 export default function EmisionDetalle() {
   const router = useRouter();
@@ -79,9 +21,8 @@ export default function EmisionDetalle() {
   const [emission, setEmission] = useState<EmissionDetail | null>(null);
   const [concepts, setConcepts] = useState<Concept[]>([]);
   const [expenses, setExpenses] = useState<ExpenseDetail[]>([]);
-  const [units, setUnits] = useState<UnitDetail[]>([]);
+  const [units, setUnits] = useState<UnitDistribution[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('detalles');
 
@@ -91,145 +32,33 @@ export default function EmisionDetalle() {
     }
   }, [id]);
 
-  const loadEmissionData = () => {
-    // Mock data
-    setTimeout(() => {
-      const mockEmission: EmissionDetail = {
-        id: id as string,
-        period: 'Septiembre 2025',
-        type: 'gastos_comunes',
-        status: 'sent',
-        issueDate: '2025-09-01',
-        dueDate: '2025-09-15',
-        totalAmount: 2500000,
-        paidAmount: 1800000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de septiembre',
-        communityName: 'Edificio Central',
-        hasInterest: true,
-        interestRate: 2.0,
-        gracePeriod: 5
-      };
+  const loadEmissionData = async () => {
+    if (!id) return;
 
-      const mockConcepts: Concept[] = [
-        {
-          id: '1',
-          name: 'Administración',
-          description: 'Honorarios administrador y gastos administrativos',
-          amount: 450000,
-          distributionType: 'proportional',
-          category: 'Administración'
-        },
-        {
-          id: '2',
-          name: 'Servicios Básicos',
-          description: 'Electricidad y agua áreas comunes',
-          amount: 730000,
-          distributionType: 'proportional',
-          category: 'Servicios'
-        },
-        {
-          id: '3',
-          name: 'Fondo de Reserva',
-          description: 'Aporte mensual al fondo de reserva',
-          amount: 200000,
-          distributionType: 'equal',
-          category: 'Reservas'
-        }
-      ];
+    try {
+      setLoading(true);
 
-      const mockExpenses: ExpenseDetail[] = [
-        {
-          id: '1',
-          description: 'Consumo eléctrico - Septiembre',
-          amount: 450000,
-          category: 'Servicios Básicos',
-          supplier: 'CGE',
-          date: '2025-09-15',
-          document: 'Factura #12345'
-        },
-        {
-          id: '2',
-          description: 'Consumo de agua - Septiembre',
-          amount: 280000,
-          category: 'Servicios Básicos',
-          supplier: 'ESVAL',
-          date: '2025-09-10',
-          document: 'Factura #67890'
-        }
-      ];
+      // Cargar datos en paralelo
+      const [emissionData, conceptsData, expensesData, unitsData, paymentsData] = await Promise.all([
+        emisionesService.getEmissionById(id as string),
+        emisionesService.getEmissionConcepts(id as string),
+        emisionesService.getEmissionExpenses(id as string),
+        emisionesService.getEmissionUnits(id as string),
+        emisionesService.getEmissionPayments(id as string)
+      ]);
 
-      const mockUnits: UnitDetail[] = [
-        {
-          id: '1',
-          number: '101',
-          type: 'Departamento',
-          owner: 'Juan Pérez',
-          contact: 'juan.perez@email.com',
-          participation: 2.5,
-          totalAmount: 62500,
-          paidAmount: 62500,
-          status: 'paid'
-        },
-        {
-          id: '2',
-          number: '102',
-          type: 'Departamento',
-          owner: 'María González',
-          contact: 'maria.gonzalez@email.com',
-          participation: 2.2,
-          totalAmount: 55000,
-          paidAmount: 30000,
-          status: 'partial'
-        }
-      ];
-
-      const mockPayments: Payment[] = [
-        {
-          id: '1',
-          date: '2025-09-10',
-          amount: 62500,
-          method: 'Transferencia',
-          reference: 'TRF001234',
-          unit: '101',
-          status: 'confirmed'
-        },
-        {
-          id: '2',
-          date: '2025-09-12',
-          amount: 30000,
-          method: 'Efectivo',
-          reference: 'EF001',
-          unit: '102',
-          status: 'confirmed'
-        }
-      ];
-
-      const mockHistory: HistoryEntry[] = [
-        {
-          id: '1',
-          date: '2025-09-01',
-          action: 'Emisión creada',
-          user: 'Administrador',
-          description: 'Se creó la emisión de gastos comunes'
-        },
-        {
-          id: '2',
-          date: '2025-09-02',
-          action: 'Emisión enviada',
-          user: 'Administrador',
-          description: 'Se envió la emisión a todas las unidades'
-        }
-      ];
-
-      setEmission(mockEmission);
-      setConcepts(mockConcepts);
-      setExpenses(mockExpenses);
-      setUnits(mockUnits);
-      setPayments(mockPayments);
-      setHistory(mockHistory);
+      setEmission(emissionData);
+      setConcepts(conceptsData);
+      setExpenses(expensesData);
+      setUnits(unitsData);
+      setPayments(paymentsData);
+    } catch (error) {
+      console.error('Error loading emission data:', error);
+      // En caso de error, mostrar mensaje
+      setEmission(null);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -448,13 +277,6 @@ export default function EmisionDetalle() {
               </button>
             </li>
             <li className='nav-item'>
-              <button
-                className={`nav-link ${activeTab === 'historial' ? 'active' : ''}`}
-                onClick={() => setActiveTab('historial')}
-              >
-                <i className='material-icons me-2'>history</i>
-                Historial
-              </button>
             </li>
           </ul>
 
@@ -628,8 +450,8 @@ export default function EmisionDetalle() {
                         <tbody>
                           {units.map((unit) => (
                             <tr key={unit.id}>
-                              <td><strong>{unit.number}</strong></td>
-                              <td>{unit.type}</td>
+                              <td><strong>{unit.unitNumber}</strong></td>
+                              <td>{unit.unitType}</td>
                               <td>{unit.owner}</td>
                               <td>{unit.contact}</td>
                               <td>{unit.participation}%</td>
@@ -707,29 +529,6 @@ export default function EmisionDetalle() {
               </div>
             )}
 
-            {/* Tab Historial */}
-            {activeTab === 'historial' && (
-              <div className='tab-pane active'>
-                <div className='content-card'>
-                  <div className='card-body'>
-                    <div className='timeline'>
-                      {history.map((entry) => (
-                        <div key={entry.id} className='timeline-item'>
-                          <div className='timeline-date'>
-                            {formatDate(entry.date)}
-                          </div>
-                          <div className='timeline-content'>
-                            <h6>{entry.action}</h6>
-                            <p className='text-muted mb-1'>{entry.description}</p>
-                            <small className='text-muted'>Por: {entry.user}</small>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
