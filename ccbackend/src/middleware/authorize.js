@@ -6,10 +6,9 @@
 function authorize(...allowed) {
   return (req, res, next) => {
     if (!req.user) return res.status(401).json({ error: 'unauthorized' });
-    // DEPRECADO pero mantener compatibilidad: Global superadmin bypass
     if (req.user.is_superadmin) return next();
-    const userRoles = req.user.roles || [];
-    const ok = allowed.some(r => userRoles.includes(r));
+    const userRoles = (req.user.roles || []).map(r => typeof r === 'string' ? r.toLowerCase() : (r.slug || r.codigo || '').toLowerCase());
+    const ok = allowed.some(r => userRoles.includes(String(r).toLowerCase()));
     if (!ok) return res.status(403).json({ error: 'forbidden' });
     next();
   };
@@ -23,22 +22,14 @@ function authorize(...allowed) {
 function checkRoleLevel(comunidadIdParam = 'comunidadId', minLevel = 5) {
   return (req, res, next) => {
     if (!req.user) return res.status(401).json({ error: 'unauthorized' });
-    // DEPRECADO: Compatibilidad con is_superadmin
     if (req.user.is_superadmin) return next();
-    
     const comunidadId = Number(req.params[comunidadIdParam]);
     const memberships = req.user.memberships || [];
-    const membership = memberships.find(m => m.comunidadId === comunidadId);
-    
-    if (!membership) {
-      return res.status(403).json({ error: 'no membership in this community' });
-    }
-    
-    // nivel_acceso menor = más privilegios (1=superadmin, 7=residente)
-    if (membership.nivel_acceso > minLevel) {
-      return res.status(403).json({ error: 'insufficient privileges' });
-    }
-    
+    // buscar por comunidad_id (snake_case) o comunidadId por compatibilidad
+    const membership = memberships.find(m => Number(m.comunidad_id ?? m.comunidadId) === comunidadId);
+    if (!membership) return res.status(403).json({ error: 'no membership in this community' });
+    const nivel = membership.nivel ?? membership.nivel_acceso ?? 99;
+    if (nivel > minLevel) return res.status(403).json({ error: 'insufficient privileges' });
     next();
   };
 }
@@ -49,15 +40,26 @@ function checkRoleLevel(comunidadIdParam = 'comunidadId', minLevel = 5) {
 function allowSelfOrRoles(paramName = 'id', ...allowed) {
   return (req, res, next) => {
     if (!req.user) return res.status(401).json({ error: 'unauthorized' });
-    // DEPRECADO: Global superadmin bypass
     if (req.user.is_superadmin) return next();
-    const personaId = req.user.persona_id;
+    const personaId = req.user.persona_id || req.user.personaId;
     if (personaId && String(personaId) === String(req.params[paramName])) return next();
-    const userRoles = req.user.roles || [];
-    const ok = allowed.some(r => userRoles.includes(r));
+    const userRoles = (req.user.roles || []).map(r => typeof r === 'string' ? r.toLowerCase() : (r.slug || r.codigo || '').toLowerCase());
+    const ok = allowed.some(r => userRoles.includes(String(r).toLowerCase()));
     if (!ok) return res.status(403).json({ error: 'forbidden' });
     next();
   };
 }
 
-module.exports = { authorize, allowSelfOrRoles, checkRoleLevel };
+// Helpers exportables usados en middleware específicos
+function hasRole(req, allowedRoles = []) {
+  if (!req.user) return false;
+  if (req.user.is_superadmin) return true;
+  const userRoles = (req.user.roles || []).map(r => typeof r === 'string' ? r.toLowerCase() : (r.slug || r.codigo || '').toLowerCase());
+  return allowedRoles.some(r => userRoles.includes(String(r).toLowerCase()));
+}
+
+function isSuperAdmin(req) {
+  return !!req.user && !!req.user.is_superadmin;
+}
+
+module.exports = { authorize, allowSelfOrRoles, checkRoleLevel, hasRole, isSuperAdmin };

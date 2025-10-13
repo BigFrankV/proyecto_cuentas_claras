@@ -1,171 +1,119 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { Button, Card, Form, Row, Col, Alert, Badge } from 'react-bootstrap';
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
+import { Form, Button, Card, Alert, Row, Col } from 'react-bootstrap';
 
-interface Contact {
-  id: string;
-  name: string;
-  position: string;
-  phone: string;
-  email: string;
-  notes: string;
-  isPrimary: boolean;
-}
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { proveedoresService, ProveedorCreateRequest } from '@/lib/proveedoresService';
 
-interface UploadedFile {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  url?: string;
-}
-
-export default function ProveedorNuevo() {
+export default function NuevoProveedor() {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const logoInputRef = useRef<HTMLInputElement>(null);
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    businessName: '',
-    category: '',
-    type: '',
-    rif: '',
-    website: '',
-    status: 'active',
-    description: '',
-    address: '',
-    city: '',
-    state: '',
-    country: 'Venezuela',
-    postalCode: '',
-    bank: '',
-    accountType: '',
-    accountNumber: '',
-    accountHolder: '',
-    paymentTerms: '',
-    currency: 'ves',
-    tags: '',
-    rating: 0
+  const { user } = useAuth();
+
+  const [formData, setFormData] = useState<ProveedorCreateRequest>({
+    razon_social: '',
+    rut: '',
+    dv: '',
+    giro: '',
+    telefono: '',
+    email: '',
+    direccion: '',
+    categorias: []
   });
 
-  const [contacts, setContacts] = useState<Contact[]>([
-    {
-      id: '1',
-      name: '',
-      position: '',
-      phone: '',
-      email: '',
-      notes: '',
-      isPrimary: true
-    }
-  ]);
-  
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [logoPreview, setLogoPreview] = useState<string>('');
-  const [tagInput, setTagInput] = useState('');
-  const [tags, setTags] = useState<string[]>(['Confiable', 'Preferente']);
-  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [categoriaInput, setCategoriaInput] = useState('');
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: keyof ProveedorCreateRequest, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+
+    // Limpiar error cuando el usuario empieza a escribir
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
     }
   };
 
-  const handleContactChange = (contactId: string, field: string, value: string | boolean) => {
-    setContacts(prev => prev.map(contact => 
-      contact.id === contactId 
-        ? { ...contact, [field]: value }
-        : contact
-    ));
-  };
+  const handleRutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, '');
 
-  const addContact = () => {
-    const newContact: Contact = {
-      id: Date.now().toString(),
-      name: '',
-      position: '',
-      phone: '',
-      email: '',
-      notes: '',
-      isPrimary: false
-    };
-    setContacts(prev => [...prev, newContact]);
-  };
+    if (value.length > 8) {
+      value = value.slice(0, 8);
+    }
 
-  const removeContact = (contactId: string) => {
-    if (contacts.length > 1) {
-      setContacts(prev => prev.filter(contact => contact.id !== contactId));
+    setFormData(prev => ({ ...prev, rut: value }));
+
+    if (errors.rut) {
+      setErrors(prev => ({ ...prev, rut: '' }));
     }
   };
 
-  const setPrimaryContact = (contactId: string) => {
-    setContacts(prev => prev.map(contact => 
-      ({ ...contact, isPrimary: contact.id === contactId })
-    ));
-  };
+  const handleDvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.toUpperCase().replace(/[^0-9K]/g, '');
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
+    if (value.length > 1) {
+      value = value.slice(0, 1);
+    }
 
-    Array.from(files).forEach(file => {
-      const newFile: UploadedFile = {
-        id: Date.now().toString() + Math.random(),
-        name: file.name,
-        size: file.size,
-        type: file.type
-      };
-      setUploadedFiles(prev => [...prev, newFile]);
-    });
-  };
+    setFormData(prev => ({ ...prev, dv: value }));
 
-  const removeFile = (fileId: string) => {
-    setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
-  };
-
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setLogoPreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const addTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags(prev => [...prev, tagInput.trim()]);
-      setTagInput('');
+    if (errors.dv) {
+      setErrors(prev => ({ ...prev, dv: '' }));
     }
   };
 
-  const removeTag = (tagToRemove: string) => {
-    setTags(prev => prev.filter(tag => tag !== tagToRemove));
+  const agregarCategoria = () => {
+    if (categoriaInput.trim() && !formData.categorias?.includes(categoriaInput.trim()) && (formData.categorias?.length || 0) < 10) {
+      setFormData(prev => ({
+        ...prev,
+        categorias: [...(prev.categorias || []), categoriaInput.trim()]
+      }));
+      setCategoriaInput('');
+    }
   };
 
-  const validateForm = () => {
+  const removerCategoria = (categoriaARemover: string) => {
+    setFormData(prev => ({
+      ...prev,
+      categorias: prev.categorias?.filter(cat => cat !== categoriaARemover) || []
+    }));
+  };
+
+  const handleCategoriaKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      agregarCategoria();
+    }
+  };
+
+  const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es requerido';
+    if (!formData.razon_social?.trim()) {
+      newErrors.razon_social = 'La razón social es obligatoria';
     }
-    if (!formData.category) {
-      newErrors.category = 'La categoría es requerida';
+
+    if (!formData.rut?.trim()) {
+      newErrors.rut = 'El RUT es obligatorio';
+    } else if (formData.rut.length < 7) {
+      newErrors.rut = 'El RUT debe tener al menos 7 dígitos';
     }
-    
-    // Validar que haya al menos un contacto con nombre y teléfono
-    const validContacts = contacts.filter(c => c.name.trim() && c.phone.trim());
-    if (validContacts.length === 0) {
-      newErrors.contacts = 'Debe agregar al menos un contacto con nombre y teléfono';
+
+    if (!formData.dv?.trim()) {
+      newErrors.dv = 'El dígito verificador es obligatorio';
+    } else if (!proveedoresService.validateRut(formData.rut, formData.dv)) {
+      newErrors.dv = 'El RUT y dígito verificador no son válidos';
+    }
+
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'El email no tiene un formato válido';
     }
 
     setErrors(newErrors);
@@ -174,61 +122,33 @@ export default function ProveedorNuevo() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
+
+    if (!validateForm()) {
+      return;
+    }
 
     setLoading(true);
+
     try {
-      // Simular envío de datos
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Datos del proveedor:', {
-        ...formData,
-        contacts: contacts.filter(c => c.name.trim()),
-        files: uploadedFiles,
-        tags,
-        logo: logoPreview
-      });
+      // ✅ CORREGIR - Usar memberships correctamente:
+      const comunidadId = user?.memberships?.[0]?.comunidadId;
+
+      if (!comunidadId) {
+        throw new Error('No se pudo obtener la comunidad del usuario');
+      }
+
+      await proveedoresService.createProveedor(comunidadId, formData);
 
       alert('Proveedor creado exitosamente');
       router.push('/proveedores');
-    } catch (error) {
-      console.error('Error creating provider:', error);
-      alert('Error al crear el proveedor');
+
+    } catch (error: any) {
+      console.error('Error creating proveedor:', error);
+      const errorMsg = error.response?.data?.error || 'Error al crear proveedor';
+      alert(errorMsg);
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const renderRatingInput = () => {
-    const stars = [];
-    for (let i = 5; i >= 1; i--) {
-      stars.push(
-        <React.Fragment key={i}>
-          <input
-            type="radio"
-            id={`star${i}`}
-            name="rating"
-            value={i}
-            checked={formData.rating === i}
-            onChange={() => handleInputChange('rating', i.toString())}
-            className="rating-radio"
-          />
-          <label htmlFor={`star${i}`} className="rating-label">
-            <span className="material-icons">star</span>
-          </label>
-        </React.Fragment>
-      );
-    }
-    return <div className="rating-input">{stars}</div>;
   };
 
   return (
@@ -237,599 +157,230 @@ export default function ProveedorNuevo() {
         <title>Nuevo Proveedor — Cuentas Claras</title>
       </Head>
 
-      <Layout>
-        <div className="providers-container">
-          {/* Header */}
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div className="d-flex align-items-center">
-              <Button 
-                variant="link" 
-                className="text-secondary p-0 me-3"
-                onClick={() => router.back()}
-              >
-                <span className="material-icons">arrow_back</span>
-              </Button>
-              <div>
-                <h1 className="providers-title mb-0">
-                  <span className="material-icons me-2">add_business</span>
-                  Nuevo Proveedor
-                </h1>
-                <p className="providers-subtitle">
-                  Registra un nuevo proveedor en el sistema
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <Form onSubmit={handleSubmit}>
-            <Row>
-              {/* Columna izquierda */}
-              <Col lg={8}>
-                {/* Información General */}
-                <Card className="provider-form-section mb-4">
-                  <Card.Header className="section-header">
-                    <h6 className="mb-0">
-                      <span className="material-icons me-2">business</span>
-                      Información General
-                    </h6>
-                  </Card.Header>
-                  <Card.Body>
-                    <Row className="g-3">
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label className="required">Nombre o Razón Social</Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Ej: Constructora Edificar"
-                            value={formData.name}
-                            onChange={(e) => handleInputChange('name', e.target.value)}
-                            isInvalid={!!errors.name}
-                          />
-                          <Form.Control.Feedback type="invalid">
-                            {errors.name}
-                          </Form.Control.Feedback>
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>RIF/ID Fiscal</Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="J-12345678-9"
-                            value={formData.rif}
-                            onChange={(e) => handleInputChange('rif', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label className="required">Categoría</Form.Label>
-                          <Form.Select
-                            value={formData.category}
-                            onChange={(e) => handleInputChange('category', e.target.value)}
-                            isInvalid={!!errors.category}
-                          >
-                            <option value="">Seleccione una categoría</option>
-                            <option value="supplies">Suministros</option>
-                            <option value="services">Servicios</option>
-                            <option value="construction">Construcción</option>
-                            <option value="others">Otros</option>
-                          </Form.Select>
-                          <Form.Control.Feedback type="invalid">
-                            {errors.category}
-                          </Form.Control.Feedback>
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Tipo de Proveedor</Form.Label>
-                          <Form.Select
-                            value={formData.type}
-                            onChange={(e) => handleInputChange('type', e.target.value)}
-                          >
-                            <option value="">Seleccione un tipo</option>
-                            <option value="empresa">Empresa</option>
-                            <option value="individual">Persona Individual</option>
-                            <option value="externo">Proveedor Externo</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col xs={12}>
-                        <Form.Group>
-                          <Form.Label>Descripción</Form.Label>
-                          <Form.Control
-                            as="textarea"
-                            rows={3}
-                            placeholder="Describe brevemente los productos o servicios que ofrece este proveedor..."
-                            value={formData.description}
-                            onChange={(e) => handleInputChange('description', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Sitio Web</Form.Label>
-                          <Form.Control
-                            type="url"
-                            placeholder="https://www.ejemplo.com"
-                            value={formData.website}
-                            onChange={(e) => handleInputChange('website', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Estado</Form.Label>
-                          <Form.Select
-                            value={formData.status}
-                            onChange={(e) => handleInputChange('status', e.target.value)}
-                          >
-                            <option value="active">Activo</option>
-                            <option value="inactive">Inactivo</option>
-                            <option value="pending">Pendiente</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-
-                {/* Dirección */}
-                <Card className="provider-form-section mb-4">
-                  <Card.Header className="section-header">
-                    <h6 className="mb-0">
-                      <span className="material-icons me-2">location_on</span>
-                      Dirección
-                    </h6>
-                  </Card.Header>
-                  <Card.Body>
-                    <Row className="g-3">
-                      <Col xs={12}>
-                        <Form.Group>
-                          <Form.Label>Dirección</Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Calle, número, oficina, etc."
-                            value={formData.address}
-                            onChange={(e) => handleInputChange('address', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Ciudad</Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={formData.city}
-                            onChange={(e) => handleInputChange('city', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Estado/Región</Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={formData.state}
-                            onChange={(e) => handleInputChange('state', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>País</Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={formData.country}
-                            onChange={(e) => handleInputChange('country', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Código Postal</Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={formData.postalCode}
-                            onChange={(e) => handleInputChange('postalCode', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-
-                {/* Contactos */}
-                <Card className="provider-form-section mb-4">
-                  <Card.Header className="section-header">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h6 className="mb-0">
-                        <span className="material-icons me-2">contacts</span>
-                        Contactos
-                      </h6>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={addContact}
-                      >
-                        <span className="material-icons me-1">add</span>
-                        Añadir Contacto
-                      </Button>
-                    </div>
-                  </Card.Header>
-                  <Card.Body>
-                    {errors.contacts && (
-                      <Alert variant="danger" className="mb-3">
-                        {errors.contacts}
-                      </Alert>
-                    )}
-                    {contacts.map((contact, index) => (
-                      <div key={contact.id} className="contact-item">
-                        {contacts.length > 1 && (
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            className="remove-btn"
-                            onClick={() => removeContact(contact.id)}
-                          >
-                            <span className="material-icons">close</span>
-                          </Button>
-                        )}
-                        <Row className="g-3">
-                          <Col md={6}>
-                            <Form.Group>
-                              <Form.Label className="required">Nombre</Form.Label>
-                              <Form.Control
-                                type="text"
-                                placeholder="Nombre del contacto"
-                                value={contact.name}
-                                onChange={(e) => handleContactChange(contact.id, 'name', e.target.value)}
-                              />
-                            </Form.Group>
-                          </Col>
-                          <Col md={6}>
-                            <Form.Group>
-                              <Form.Label>Cargo</Form.Label>
-                              <Form.Control
-                                type="text"
-                                placeholder="Ej: Gerente de Ventas"
-                                value={contact.position}
-                                onChange={(e) => handleContactChange(contact.id, 'position', e.target.value)}
-                              />
-                            </Form.Group>
-                          </Col>
-                          <Col md={6}>
-                            <Form.Group>
-                              <Form.Label className="required">Teléfono</Form.Label>
-                              <Form.Control
-                                type="tel"
-                                placeholder="+58 212 555-0123"
-                                value={contact.phone}
-                                onChange={(e) => handleContactChange(contact.id, 'phone', e.target.value)}
-                              />
-                            </Form.Group>
-                          </Col>
-                          <Col md={6}>
-                            <Form.Group>
-                              <Form.Label>Email</Form.Label>
-                              <Form.Control
-                                type="email"
-                                placeholder="contacto@ejemplo.com"
-                                value={contact.email}
-                                onChange={(e) => handleContactChange(contact.id, 'email', e.target.value)}
-                              />
-                            </Form.Group>
-                          </Col>
-                          <Col xs={12}>
-                            <Form.Group>
-                              <Form.Label>Notas</Form.Label>
-                              <Form.Control
-                                as="textarea"
-                                rows={2}
-                                placeholder="Información adicional sobre este contacto..."
-                                value={contact.notes}
-                                onChange={(e) => handleContactChange(contact.id, 'notes', e.target.value)}
-                              />
-                            </Form.Group>
-                          </Col>
-                          <Col xs={12}>
-                            <Form.Check
-                              type="checkbox"
-                              label="Contacto principal"
-                              checked={contact.isPrimary}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setPrimaryContact(contact.id);
-                                }
-                              }}
-                            />
-                          </Col>
-                        </Row>
-                      </div>
-                    ))}
-                  </Card.Body>
-                </Card>
-
-                {/* Información Financiera */}
-                <Card className="provider-form-section mb-4">
-                  <Card.Header className="section-header">
-                    <h6 className="mb-0">
-                      <span className="material-icons me-2">account_balance</span>
-                      Información Financiera
-                    </h6>
-                  </Card.Header>
-                  <Card.Body>
-                    <Row className="g-3">
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Banco</Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Ej: Banco Provincial"
-                            value={formData.bank}
-                            onChange={(e) => handleInputChange('bank', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Tipo de Cuenta</Form.Label>
-                          <Form.Select
-                            value={formData.accountType}
-                            onChange={(e) => handleInputChange('accountType', e.target.value)}
-                          >
-                            <option value="">Seleccione un tipo</option>
-                            <option value="corriente">Cuenta Corriente</option>
-                            <option value="ahorro">Cuenta de Ahorro</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Número de Cuenta</Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={formData.accountNumber}
-                            onChange={(e) => handleInputChange('accountNumber', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Titular de la Cuenta</Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={formData.accountHolder}
-                            onChange={(e) => handleInputChange('accountHolder', e.target.value)}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Condición de Pago</Form.Label>
-                          <Form.Select
-                            value={formData.paymentTerms}
-                            onChange={(e) => handleInputChange('paymentTerms', e.target.value)}
-                          >
-                            <option value="">Seleccione una condición</option>
-                            <option value="contado">Contado</option>
-                            <option value="30dias">30 días</option>
-                            <option value="60dias">60 días</option>
-                            <option value="90dias">90 días</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Moneda de Pago</Form.Label>
-                          <Form.Select
-                            value={formData.currency}
-                            onChange={(e) => handleInputChange('currency', e.target.value)}
-                          >
-                            <option value="ves">Bolívar Soberano (VES)</option>
-                            <option value="usd">Dólar Estadounidense (USD)</option>
-                            <option value="eur">Euro (EUR)</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-
-                {/* Documentos */}
-                <Card className="provider-form-section mb-4">
-                  <Card.Header className="section-header">
-                    <h6 className="mb-0">
-                      <span className="material-icons me-2">folder</span>
-                      Documentos
-                    </h6>
-                  </Card.Header>
-                  <Card.Body>
-                    <div 
-                      className="file-upload-box"
-                      onClick={() => fileInputRef.current?.click()}
+      <Layout title="Nuevo Proveedor">
+        <div className="container-fluid py-4">
+          <div className="row justify-content-center">
+            <div className="col-12 col-lg-8 col-xl-6">
+              <Card className="shadow-sm border-0">
+                <Card.Header className="bg-primary text-white">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <h4 className="mb-0">
+                      <i className="fas fa-store me-2"></i>
+                      Registrar Nuevo Proveedor
+                    </h4>
+                    <Button
+                      variant="outline-light"
+                      size="sm"
+                      onClick={() => router.back()}
+                      disabled={loading}
                     >
-                      <div className="upload-content">
-                        <span className="material-icons">cloud_upload</span>
-                        <h6 className="mb-2">Sube tus archivos aquí</h6>
-                        <p className="text-muted small mb-0">
-                          Haz clic para seleccionar archivos
-                        </p>
-                      </div>
-                    </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      className="d-none"
-                      onChange={handleFileUpload}
-                    />
-                    
-                    {uploadedFiles.length > 0 && (
-                      <div className="mt-3">
-                        {uploadedFiles.map(file => (
-                          <div key={file.id} className="uploaded-file">
-                            <span className="material-icons file-icon">description</span>
-                            <div className="file-info">
-                              <p className="file-name mb-0">{file.name}</p>
-                              <span className="file-size">{formatFileSize(file.size)}</span>
-                            </div>
-                            <Button
-                              variant="outline-danger"
-                              size="sm"
-                              onClick={() => removeFile(file.id)}
-                            >
-                              <span className="material-icons">delete</span>
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </Card.Body>
-                </Card>
+                      <i className="fas fa-arrow-left me-1"></i>
+                      Volver
+                    </Button>
+                  </div>
+                </Card.Header>
 
-                {/* Etiquetas */}
-                <Card className="provider-form-section">
-                  <Card.Header className="section-header">
-                    <h6 className="mb-0">
-                      <span className="material-icons me-2">label</span>
-                      Etiquetas
-                    </h6>
-                  </Card.Header>
-                  <Card.Body>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Etiquetas</Form.Label>
-                      <div className="d-flex">
+                <Card.Body className="p-4">
+                  <Form onSubmit={handleSubmit}>
+                    {/* Razón Social */}
+                    <div className="mb-4">
+                      <Form.Label className="fw-semibold">
+                        Razón Social <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="Ej: Empresa de Servicios Ltda."
+                        value={formData.razon_social}
+                        onChange={(e) => handleInputChange('razon_social', e.target.value)}
+                        isInvalid={!!errors.razon_social}
+                        disabled={loading}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.razon_social}
+                      </Form.Control.Feedback>
+                    </div>
+
+                    {/* RUT */}
+                    <Row className="mb-4">
+                      <Col md={8}>
+                        <Form.Label className="fw-semibold">
+                          RUT <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Control
                           type="text"
-                          placeholder="Añadir etiqueta..."
-                          value={tagInput}
-                          onChange={(e) => setTagInput(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              addTag();
-                            }
-                          }}
+                          placeholder="12345678"
+                          value={formData.rut}
+                          onChange={handleRutChange}
+                          isInvalid={!!errors.rut}
+                          disabled={loading}
                         />
-                        <Button
-                          variant="outline-primary"
-                          className="ms-2"
-                          onClick={addTag}
-                        >
-                          <span className="material-icons">add</span>
-                        </Button>
-                      </div>
-                      <Form.Text>
-                        Las etiquetas facilitan la búsqueda y organización de los proveedores.
-                      </Form.Text>
-                    </Form.Group>
-                    
-                    <div className="d-flex flex-wrap gap-2">
-                      {tags.map(tag => (
-                        <Badge 
-                          key={tag}
-                          bg="light" 
-                          text="dark"
-                          className="d-flex align-items-center provider-tag"
-                        >
-                          {tag}
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="p-0 ms-2 text-danger"
-                            onClick={() => removeTag(tag)}
-                          >
-                            <span className="material-icons" style={{ fontSize: '14px' }}>close</span>
-                          </Button>
-                        </Badge>
-                      ))}
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
+                        <Form.Control.Feedback type="invalid">
+                          {errors.rut}
+                        </Form.Control.Feedback>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Label className="fw-semibold">
+                          DV <span className="text-danger">*</span>
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="9"
+                          value={formData.dv}
+                          onChange={handleDvChange}
+                          isInvalid={!!errors.dv}
+                          disabled={loading}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.dv}
+                        </Form.Control.Feedback>
+                      </Col>
+                    </Row>
 
-              {/* Columna derecha */}
-              <Col lg={4}>
-                <Card className="provider-form-section">
-                  <Card.Header className="section-header">
-                    <h6 className="mb-0">
-                      <span className="material-icons me-2">photo</span>
-                      Logo y Clasificación
-                    </h6>
-                  </Card.Header>
-                  <Card.Body>
-                    {/* Logo */}
-                    <div className="text-center mb-4">
-                      <Form.Label>Logo del Proveedor</Form.Label>
-                      <div 
-                        className="provider-logo-upload"
-                        onClick={() => logoInputRef.current?.click()}
-                      >
-                        {logoPreview ? (
-                          <>
-                            <img src={logoPreview} alt="Logo del proveedor" />
-                            <div className="upload-overlay">
-                              <span className="material-icons">edit</span>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="upload-placeholder">
-                            <span className="material-icons">add_photo_alternate</span>
-                            <span className="d-block small text-muted">Subir logo</span>
-                          </div>
-                        )}
+                    {formData.rut && formData.dv && (
+                      <div className="mb-3">
+                        <small className="text-muted">
+                          RUT completo: {proveedoresService.formatRut(formData.rut, formData.dv)}
+                        </small>
                       </div>
-                      <input
-                        ref={logoInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="d-none"
-                        onChange={handleLogoUpload}
+                    )}
+
+                    {/* Giro */}
+                    <div className="mb-4">
+                      <Form.Label className="fw-semibold">
+                        Giro Comercial
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="Ej: Servicios de mantención, Construcción, etc."
+                        value={formData.giro}
+                        onChange={(e) => handleInputChange('giro', e.target.value)}
+                        disabled={loading}
                       />
                     </div>
 
-                    {/* Rating */}
-                    <Form.Group>
-                      <Form.Label>Calificación Inicial</Form.Label>
-                      {renderRatingInput()}
-                      <Form.Text>
-                        Califica el proveedor basándote en experiencias previas
-                      </Form.Text>
-                    </Form.Group>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
+                    {/* Contacto */}
+                    <Row className="mb-4">
+                      <Col md={6}>
+                        <Form.Label className="fw-semibold">
+                          Teléfono
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="+56 9 1234 5678"
+                          value={formData.telefono}
+                          onChange={(e) => handleInputChange('telefono', e.target.value)}
+                          disabled={loading}
+                        />
+                      </Col>
+                      <Col md={6}>
+                        <Form.Label className="fw-semibold">
+                          Email
+                        </Form.Label>
+                        <Form.Control
+                          type="email"
+                          placeholder="contacto@empresa.com"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          isInvalid={!!errors.email}
+                          disabled={loading}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.email}
+                        </Form.Control.Feedback>
+                      </Col>
+                    </Row>
 
-            {/* Botones de acción */}
-            <div className="d-flex justify-content-end gap-2 mt-4">
-              <Button 
-                variant="outline-secondary"
-                onClick={() => router.back()}
-                disabled={loading}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                type="submit"
-                variant="primary"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" />
-                    Guardando...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-icons me-2">save</span>
-                    Crear Proveedor
-                  </>
-                )}
-              </Button>
+                    {/* Dirección */}
+                    <div className="mb-4">
+                      <Form.Label className="fw-semibold">
+                        Dirección
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="Calle Ejemplo 123, Comuna, Ciudad"
+                        value={formData.direccion}
+                        onChange={(e) => handleInputChange('direccion', e.target.value)}
+                        disabled={loading}
+                      />
+                    </div>
+
+                    {/* Categorías */}
+                    <div className="mb-4">
+                      <Form.Label className="fw-semibold">
+                        Categorías de Servicio
+                      </Form.Label>
+                      <div className="input-group mb-2">
+                        <Form.Control
+                          type="text"
+                          placeholder="Agregar categoría..."
+                          value={categoriaInput}
+                          onChange={(e) => setCategoriaInput(e.target.value)}
+                          onKeyPress={handleCategoriaKeyPress}
+                          disabled={loading || (formData.categorias?.length || 0) >= 10}
+                        />
+                        <Button
+                          variant="outline-primary"
+                          onClick={agregarCategoria}
+                          disabled={loading || !categoriaInput.trim() || (formData.categorias?.length || 0) >= 10}
+                        >
+                          <i className="fas fa-plus"></i>
+                        </Button>
+                      </div>
+
+                      <div className="d-flex flex-wrap gap-2">
+                        {formData.categorias?.map((categoria) => (
+                          <span key={categoria} className="badge bg-secondary d-flex align-items-center">
+                            {categoria}
+                            <button
+                              type="button"
+                              className="btn-close btn-close-white ms-2"
+                              style={{ fontSize: '0.75em' }}
+                              onClick={() => removerCategoria(categoria)}
+                              disabled={loading}
+                            ></button>
+                          </span>
+                        ))}
+                      </div>
+
+                      <Form.Text className="text-muted">
+                        Máximo 10 categorías. Ej: Electricidad, Plomería, Jardinería, etc.
+                      </Form.Text>
+                    </div>
+
+                    {/* Botones */}
+                    <div className="d-flex gap-2 justify-content-end">
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => router.back()}
+                        disabled={loading}
+                      >
+                        <i className="fas fa-times me-2"></i>
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="submit"
+                        variant="success"
+                        disabled={loading}
+                        className="px-4"
+                      >
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Guardando...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-save me-2"></i>
+                            Guardar Proveedor
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </Form>
+                </Card.Body>
+              </Card>
             </div>
-          </Form>
+          </div>
         </div>
       </Layout>
     </ProtectedRoute>

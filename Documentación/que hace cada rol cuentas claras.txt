@@ -1,0 +1,137 @@
+Módulo SANCIONES (Multas / Nueva Multa / Apelaciones / Nueva Apelación)
+
+superadmin
+Sidebar: ver menú completo.
+Multas (listado): ver todas (global).
+Detalle: ver todas.
+Crear (Nueva Multa): sí (global).
+Editar / Anular / Eliminar: sí.
+Registrar pago: sí.
+Apelaciones: ver/gestionar todas; crear apelación en nombre de usuarios si aplica.
+
+sistema, soporte_tecnico
+Sidebar: ver menú.
+Multas: ver todas.
+Detalle: ver todas.
+Crear: normalmente NO (salvo soporte operativo), o con restricción según política.
+Editar: sí (correcciones).
+Anular: normalmente NO; solo operaciones administrativas concretas.
+Registrar pago: sí.
+Apelaciones: ver historial y estado; no gestionar todas las resoluciones (según política).
+
+presidente_comite, admin_comunidad, admin_externo, sindico, tesorero, contador
+Sidebar: ver menú (si pertenece a comunidad).
+Multas (listado): ver solo de sus comunidades.
+Detalle: ver de su(s) comunidad(es).
+Crear (Nueva Multa): sí, para su comunidad.
+Editar: sí (según rol; presidente/admin pueden editar/anular).
+Anular: presidente_comite y admin_comunidad: sí; tesorero/contador: poder limitado (anular solo con justificante).
+Registrar pago: sí.
+Apelaciones: ver y gestionar apelaciones de su comunidad (decisión/rechazo según política).
+
+conserje
+Sidebar: ver menú mínimo.
+Multas: ver listado de su comunidad.
+Crear: sí (crear multas de gestión).
+Editar / Anular: no (o muy limitado: edición menor).
+Registrar pago: no.
+Apelaciones: ver estado, NO gestionar resolución.
+
+revisor_cuentas, auditor_externo, moderador_comunidad, secretario
+Sidebar: ver menú (si pertenece).
+Multas: ver listado de su comunidad (solo lectura).
+Detalle: ver.
+Crear/Editar/Anular/Registrar pago: NO.
+Apelaciones: ver historial; no decidir.
+
+propietario, inquilino, residente
+Sidebar: ver enlace a "Mis multas" (no listado global).
+Multas: ver SOLO sus multas (listado propio).
+Detalle: ver.
+Crear: NO (no crear multas).
+Editar/Anular/Registrar pago: registrar pago sí (si la pasarela lo permite), editar/anular NO.
+Apelar: sí — pueden crear nueva apelación (Nueva Apelación) y ver estado.
+
+proveedor_servicio, visitante_autorizado / guest
+Proveedor_servicio: por lo general NO acceso a multas (a menos que el proveedor ofrezca servicio vinculado).
+visitant_autorizado / guest: NO ver menú; si acceden → 403.
+
+
+Módulo GASTOS (Gastos / Categorías / Centros de Costo / Proveedores / Compras)
+superadmin
+Sidebar: ver y gestionar todo.
+Gastos (listado): ver todos.
+Detalle: ver.
+Crear / Editar / Anular / Eliminar: sí (global).
+Categorías / Centros de Costo: crear/editar/eliminar.
+Proveedores: gestionar.
+Compras: ver/crear/autorizar/comprobar/editar.
+
+sistema, soporte_tecnico
+Gastos: ver todos; editar limitado (correcciones); registrar operaciones técnicas si procede.
+Categorías / Centros / Proveedores: ver y editar limitado.
+Compras: ver/gestionar support ops.
+
+tesorero, contador, admin_comunidad, admin_externo
+Gastos: ver y gestionar gastos de su comunidad.
+Detalle: ver.
+Crear / Editar / Anular: sí (tesorero y contador con privilegios de edición y aprobación).
+Categorías / Centros de Costo: crear/editar (contador/tesorero/admin).
+Proveedores: crear/editar/validar.
+Compras: crear y aprobar (tesorero/contador/admin).
+
+revisor_cuentas, auditor_externo
+Gastos: ver (solo lectura) de su comunidad; ver documentación; no editar.
+Categorías / Centros / Proveedores / Compras: ver histórico y documentación.
+conserje, coordinador_reservas, moderador_comunidad
+Gastos: ver limitado (según comunidad); si corresponde, crear gastos menores (conserje) con flujo de aprobación.
+Categorías / Centros: ver.
+Compras: crear solicitudes (no aprobaciones).
+propietario, inquilino, residente
+Gastos: ver cargos aplicados a su unidad (no listado global); ver detalle de facturas/recibos; pagar.
+Categorías / Centros / Proveedores / Compras: NO gestionar.
+proveedor_servicio
+Proveedores: acceso a su perfil; subir documentos; crear facturas/compras relacionadas; ver compras que le atañen.
+Gastos: ver pagos relacionados con sus facturas; no ver gastos internos de la comunidad salvo lo necesario.
+visitante_autorizado / guest
+NO ver menú; 403 si acceden.
+Módulos SERVICIOS (Medidores / Lecturas / Consumos / Tarifas)
+superadmin
+Sidebar: ver y gestionar.
+Medidores: ver todos, crear/editar/desasignar.
+Lecturas: ver/importar/editar/eliminar.
+Consumos: ver todos, generar reportes, ajustar.
+Tarifas: crear/editar/aplicar.
+sistema, soporte_tecnico
+Medidores/Lecturas/Consumos: ver todos, ejecutar importaciones, corregir lecturas; no siempre modificar tarifas.
+Tarifas: ver; editar solo si autorizado.
+admin_comunidad, admin_externo, presidente_comite, sindico
+Medidores: ver medidores de su comunidad; asignar a unidades; crear/editar según proveedor.
+Lecturas: ver e importar lecturas de su comunidad; autorizar ajustes.
+Consumos: ver reportes y consumos por unidad/comunidad.
+Tarifas: ver y proponer cambios; aprobar solo con rol financiero (tesorero/contador).
+tesorero, contador
+Lecturas/Consumos: ver y cruzar con facturación; generar informes.
+Tarifas: crear/editar/aprobar tarifas que afectan cobros.
+conserje
+Medidores: ver medidores de su comunidad; tomar/registrar lecturas manuales (si corresponde).
+Lecturas: ingresar lecturas puntuales; no importar masivas sin aprobación.
+revisor_cuentas, auditor_externo, moderador_comunidad, secretario
+Medidores/Lecturas/Consumos/Tarifas: ver (solo lectura) de su comunidad; auditoría e inspección.
+propietario, inquilino, residente
+Medidores / Lecturas / Consumos: ver lecturas y consumos de su unidad; ver historial; ver tarifas aplicadas; pagar facturas.
+No crear/editar medidores ni tarifas.
+proveedor_servicio
+Medidores / Lecturas: acceso para actualizar/integrar lecturas si está contratado (APIs limitadas); puede subir lecturas o reportes de servicio.
+Tarifas: NO gestionar.
+visitante_autorizado / guest
+NO ver menú; 403.
+Observaciones y recomendaciones prácticas
+
+Sidebar / visibilidad: mostrar entradas solo si hasPermission(role, acción, comunidadId) → evita menús que provocan 403 al hacer click.
+Distinguir tres niveles de visibilidad en listados: global (superadmin/sistema), comunitario (admin_comunidad, presidente, tesorero, etc.) y propio (propietario/inquilino/residente).
+Apelaciones: permitir crear apelación desde la vista detalle de la multa (propietario/inquilino/residente), y permitir gestión de apelaciones a superadmin y roles de gobierno de comunidad (presidente/admin/sindico).
+Acciones financieras (registrar pago, generar comprobantes): restringir a tesorero/contador/admin_comunidad/superadmin/sistema.
+Gestión de cat./centros/proveedores/compras: reservar creación/edición para roles financieros y admin_comunidad/admin_externo; permitir proveedores crear/actualizar solo su información y subir facturas.
+Proveedores: interfaz y APIs separadas con permisos específicos (authProveedores) — no dar acceso de proveedor a datos internos de comunidad salvo lo necesario.
+Visitantes/guest: eliminar enlaces del sidebar; si intentan URL directa → 403 y mensaje claro.

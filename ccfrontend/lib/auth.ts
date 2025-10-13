@@ -1,590 +1,628 @@
-import apiClient from './api';
+import api from './api';
 import { jwtDecode } from 'jwt-decode';
+import {
+  User,
+  Role,
+  Membership,
+  Persona,
+  LoginResponse,
+  AuthResponse,
+  LoginCredentials,
+  RegisterData
+} from '@/types/profile';
 
-// Tipos para la autenticación
-export interface LoginCredentials {
-  identifier: string; // Email, RUT, DNI o username
-  password: string;
-}
+// ============================================
+// INTERFACE PARA JWT PAYLOAD
+// ============================================
 
-export interface RegisterData {
-  username: string;
-  password: string;
-  email?: string;
-  persona_id?: number;
-}
-
-export interface Persona {
-  rut?: string;
-  dv?: string;
-  nombres?: string;
-  apellidos?: string;
-  email?: string;
-  telefono?: string;
-  direccion?: string;
-}
-
-export interface Membership {
-  comunidadId: number;
-  rol: string;
-  desde?: string;
-  hasta?: string;
-  activo?: boolean;
-}
-
-// ✅ CORREGIR: Interfaz User compatible con exactOptionalPropertyTypes
-export interface User {
-  id: number;
-  username: string;
-  is_superadmin?: boolean; // ✅ CAMBIAR a opcional temporalmente
-  email?: string;
-  persona_id?: number | undefined; // ✅ Agregar undefined explícitamente
-  nombres?: string;
-  apellidos?: string;
-  comunidad_id?: number | undefined; // ✅ Agregar undefined explícitamente
-  roles?: string[];
-  memberships?: Membership[];
-  is_2fa_enabled?: boolean;
-  totp_enabled?: boolean;
-  
-  // Campos adicionales opcionales
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  activo?: boolean;
-  created_at?: string;
-  
-  // Datos de persona relacionados
-  persona?: Persona | null;
-}
-
-export interface AuthResponse {
-  token?: string;
-  user?: User;
-  expires_in?: number;
-  
-  // Campos para 2FA
-  twoFactorRequired?: boolean;
-  tempToken?: string;
-}
-
-export interface AuthError {
-  message: string;
-  code?: string;
-}
-
-// Interface para el payload del JWT
 interface JWTPayload {
   sub: number;
   username: string;
   persona_id?: number;
-  roles?: string[];
-  comunidad_id?: number;
   is_superadmin?: boolean;
-  memberships?: Membership[]; // ✅ AGREGAR
+  is_admin?: boolean;
+  roles?: string[]; // Array de slugs
+  full_roles?: Role[]; // Array de objetos Role completos
+  memberships?: Membership[];
+  comunidad_id?: number;
   twoFactor?: boolean;
   iat: number;
   exp: number;
 }
 
+// ============================================
+// INTERFACES ADICIONALES PARA RESPUESTAS
+// ============================================
+
+interface LoginResponseData {
+  token?: string;
+  user?: User;
+  twoFactorRequired?: boolean;
+  tempToken?: string;
+}
+
+// ============================================
+// CLASE AUTH SERVICE
+// ============================================
+
 class AuthService {
-  // Login del usuario (puede requerir 2FA)
+  private readonly TOKEN_KEY = 'token';
+  private readonly USER_KEY = 'user';
+  private readonly TEMP_TOKEN_KEY = 'temp_token';
+
+  // ============================================
+  // LOGIN - CON SOPORTE PARA 2FA
+  // ============================================
+
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post('/auth/login', {
+      console.log('🔐 Intentando login con:', credentials.identifier);
+
+      const response = await api.post<LoginResponseData>('/auth/login', {
         identifier: credentials.identifier,
         password: credentials.password,
       });
 
-      console.log('🔍 Respuesta completa de la API:', response.data);
+      console.log('📥 Respuesta del servidor:', response.data);
 
-      // Verificar si se requiere 2FA
-      if (response.data.twoFactorRequired) {
-        console.log('🔐 2FA requerido, devolviendo tempToken');
+      const data = response.data;
+
+      // ✅ VERIFICAR SI SE REQUIERE 2FA
+      if (data.twoFactorRequired) {
+        console.log('🔐 2FA requerido - Guardando tempToken');
+
+        if (data.tempToken) {
+          sessionStorage.setItem(this.TEMP_TOKEN_KEY, data.tempToken);
+        }
+        // ✅ CORRECCIÓN: return con valor completo
         return {
           twoFactorRequired: true,
-          tempToken: response.data.tempToken,
+          tempToken: data.tempToken,
         };
       }
 
-      const token = response.data.token;
-
-      if (!token) {
+      // ✅ LOGIN NORMAL (SIN 2FA)
+      if (!data.token || !data.user) {
         throw new Error('No se recibió token de autenticación');
       }
 
-      console.log('🔍 Token extraído:', token);
+      console.log('✅ Login exitoso:', {
+        username: data.user.username,
+        is_admin: data.user.is_admin,
+        roles_count: data.user.roles?.length || 0,
+        memberships_count: data.user.memberships?.length || 0
+      });
 
-      // Decodificar el token para extraer los datos del usuario
-      let user: User;
-      try {
-        const decodedToken = jwtDecode<JWTPayload>(token);
-        console.log('🔍 Token decodificado:', decodedToken);
+      // Guardar en localStorage
+      this.saveAuth(data.token, data.user);
 
-        // ✅ CORREGIR: Crear objeto usuario con valores por defecto seguros
-        const userObj: User = {
-          id: decodedToken.sub,
-          username: decodedToken.username,
-          is_superadmin: Boolean(decodedToken.is_superadmin), // ✅ Convertir a boolean explícitamente
-          persona_id: decodedToken.persona_id, // Ahora acepta undefined
-          comunidad_id: decodedToken.comunidad_id, // Ahora acepta undefined
-          roles: decodedToken.roles || [],
-          memberships: decodedToken.memberships || [],
-        };
+      return { token: data.token, user: data.user };
 
-        user = userObj;
-
-        console.log('🔍 Usuario extraído del token:', user);
-        
-        // Intentar obtener información completa del usuario del servidor
-        try {
-          const fullUserData = await this.getCurrentUser();
-          if (fullUserData) {
-            // Combinar datos del token con datos completos del servidor
-            user = { ...user, ...fullUserData };
-            console.log('🔍 Usuario completo con datos del servidor:', user);
-          }
-        } catch (serverError) {
-          console.log('⚠️ No se pudo obtener datos completos del servidor, usando datos del token');
-        }
-      } catch (jwtError) {
-        console.error('❌ Error decodificando token:', jwtError);
-        throw new Error('Token de autenticación inválido');
-      }
-
-      // Guardar token y datos de usuario en localStorage
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('user_data', JSON.stringify(user));
-
-      console.log('💾 Datos guardados en localStorage');
-      return { token, user };
     } catch (error: any) {
-      console.error('Error en login:', error);
-
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.response?.status === 401) {
-        throw new Error(
-          'Credenciales inválidas. Verifica tu usuario y contraseña.'
-        );
-      } else if (error.code === 'ECONNREFUSED') {
-        throw new Error(
-          'No se pudo conectar con el servidor. Verifica que la API esté ejecutándose.'
-        );
-      } else {
-        throw new Error('Error de conexión. Por favor intenta nuevamente.');
-      }
+      console.error('❌ Error en login:', error);
+      throw this.handleAuthError(error, 'login');
     }
   }
 
-  // Completar login con código 2FA
+  // ============================================
+  // COMPLETAR LOGIN CON 2FA
+  // ============================================
+
   async complete2FALogin(tempToken: string, code: string): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post('/auth/2fa/verify', {
+      console.log('🔐 Verificando código 2FA...');
+
+      const response = await api.post<LoginResponseData>('/auth/verify-2fa', {
         tempToken,
         code,
       });
 
-      const token = response.data.token;
+      const data = response.data;
 
-      if (!token) {
-        throw new Error('No se recibió token de autenticación');
+      if (!data.token || !data.user) {
+        throw new Error('Respuesta inválida del servidor');
       }
 
-      // Decodificar el token para extraer los datos del usuario
-      let user: User;
-      try {
-        const decodedToken = jwtDecode<JWTPayload>(token);
-        console.log('🔍 Token 2FA decodificado:', decodedToken);
+      console.log('✅ 2FA verificado exitosamente');
 
-        // ✅ CORREGIR: Crear objeto usuario con valores por defecto seguros
-        const userObj: User = {
-          id: decodedToken.sub,
-          username: decodedToken.username,
-          persona_id: decodedToken.persona_id,
-          is_superadmin: Boolean(decodedToken.is_superadmin), // ✅ Convertir a boolean explícitamente
-          roles: decodedToken.roles || [],
-          comunidad_id: decodedToken.comunidad_id,
-          memberships: decodedToken.memberships || [],
-        };
+      // Limpiar tempToken
+      sessionStorage.removeItem(this.TEMP_TOKEN_KEY);
 
-        user = userObj;
+      // Guardar auth
+      this.saveAuth(data.token, data.user);
 
-        console.log('🔍 Usuario extraído del token 2FA:', user);
-        
-        // Intentar obtener información completa del usuario del servidor
-        try {
-          const fullUserData = await this.getCurrentUser();
-          if (fullUserData) {
-            // Combinar datos del token con datos completos del servidor
-            user = { ...user, ...fullUserData };
-            console.log('🔍 Usuario 2FA completo con datos del servidor:', user);
-          }
-        } catch (serverError) {
-          console.log('⚠️ No se pudo obtener datos completos del servidor en 2FA, usando datos del token');
-        }
-      } catch (jwtError) {
-        console.error('❌ Error decodificando token 2FA:', jwtError);
-        throw new Error('Token de autenticación inválido');
-      }
+      return { token: data.token, user: data.user };
 
-      // Guardar token y datos de usuario en localStorage
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('user_data', JSON.stringify(user));
-
-      console.log('💾 Datos 2FA guardados en localStorage');
-
-      return { token, user };
     } catch (error: any) {
-      console.error('❌ Error en login 2FA:', error);
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.response?.status === 401) {
-        throw new Error('Código 2FA inválido o expirado');
-      } else {
-        throw new Error('Error de conexión. Por favor intenta nuevamente.');
-      }
+      console.error('❌ Error verificando 2FA:', error);
+      throw this.handleAuthError(error, '2FA');
     }
   }
 
-  // Registro de usuario
+  // ============================================
+  // REGISTER
+  // ============================================
+
   async register(data: RegisterData): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post('/auth/register', {
-        username: data.username,
-        password: data.password,
-        email: data.email,
-        persona_id: data.persona_id,
-      });
+      console.log('📝 Registrando usuario:', data.username);
 
-      const { token, user } = response.data;
+      const response = await api.post<LoginResponseData>('/auth/register', data);
 
-      // Guardar token y datos de usuario en localStorage
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('user_data', JSON.stringify(user));
+      const responseData = response.data;
 
-      return response.data;
-    } catch (error: any) {
-      console.error('Error en registro:', error);
-
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.response?.status === 400) {
-        throw new Error(
-          'Datos de registro inválidos. Verifica que el usuario tenga al menos 3 caracteres y la contraseña 6.'
-        );
-      } else {
-        throw new Error(
-          'Error al registrar usuario. Por favor intenta nuevamente.'
-        );
+      if (!responseData.token || !responseData.user) {
+        throw new Error('Respuesta inválida del servidor');
       }
+
+      console.log('✅ Usuario registrado:', responseData.user.username);
+
+      // Guardar auth
+      this.saveAuth(responseData.token, responseData.user);
+
+      return { token: responseData.token, user: responseData.user };
+
+    } catch (error: any) {
+      console.error('❌ Error en registro:', error);
+      throw this.handleAuthError(error, 'registro');
     }
   }
 
-  // Logout del usuario
+  // ============================================
+  // LOGOUT
+  // ============================================
+
   async logout(): Promise<void> {
     try {
-      // Intentar hacer logout en el servidor
-      await apiClient.post('/auth/logout');
-    } catch (error) {
-      console.warn('Error al hacer logout en servidor:', error);
+      console.log('👋 Cerrando sesión...');
+
+      // Intentar logout en servidor
+      try {
+        await api.post('/auth/logout');
+      } catch (error) {
+        console.warn('⚠️ Error en logout del servidor:', error);
+      }
+
     } finally {
-      // Limpiar datos locales siempre
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
+      // Limpiar localStorage SIEMPRE
+      this.clearAuth();
+
+      console.log('✅ Sesión cerrada');
     }
   }
 
-  // Obtener información del usuario actual
+  // ============================================
+  // OBTENER USUARIO ACTUAL (DESDE SERVIDOR)
+  // ============================================
+
   async getCurrentUser(): Promise<User | null> {
     try {
-      const response = await apiClient.get('/auth/me');
-      const userData = response.data;
-      
-      // ✅ CORREGIR: Mapear correctamente todos los campos
-      const user: User = {
-        id: userData.id || userData.sub,
-        username: userData.username,
-        email: userData.email,
-        persona_id: userData.persona_id,
-        nombres: userData.nombres,
-        apellidos: userData.apellidos,
-        is_superadmin: userData.is_superadmin || false,
-        roles: userData.roles || [],
-        comunidad_id: userData.comunidad_id,
-        memberships: userData.memberships || [], // ✅ AGREGAR
-        is_2fa_enabled: userData.totp_enabled || userData.is_2fa_enabled || false,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        phone: userData.phone,
-        activo: userData.activo,
-        created_at: userData.created_at,
-        persona: userData.persona,
-      };
-      
-      console.log('✅ Usuario actual obtenido del servidor:', user);
+      console.log('🔍 Obteniendo usuario actual desde servidor...');
+      const response = await api.get<User>('/auth/me');
+      // backend devuelve { success: true, data: user }
+      const user = response.data?.data ?? response.data;
+
+      // Normalizaciones para compatibilidad (alias en español y arrays de slugs)
+      user.memberships = user.memberships || user.membreships || [];
+      user.membresias = user.membresias || user.memberships || [];
+      user.roles_slug = user.roles_slug || (user.memberships || []).map((m: any) => m.rol_slug).filter(Boolean);
+      user.is_superadmin = Boolean(user.is_superadmin);
+
+      console.log('✅ Usuario actual:', {
+        username: user.username,
+        is_admin: user.is_admin,
+        roles: user.roles?.length || 0,
+        memberships: user.memberships?.length || 0
+      });
+      this.saveUser(user);
       return user;
     } catch (error) {
-      console.error('❌ Error obteniendo usuario actual:', error);
+      console.error('❌ Error obteniendo usuario:', error);
       return null;
     }
   }
 
-  // Verificar si el usuario está logueado
+  // ============================================
+  // VERIFICAR SI ESTÁ AUTENTICADO
+  // ============================================
+
   isAuthenticated(): boolean {
-    const token = localStorage.getItem('auth_token');
-    
+    const token = this.getToken();
+
     if (!token) {
-      console.log('❌ No se encontró token en localStorage');
       return false;
     }
 
     try {
-      // Verificar si el token es válido y no ha expirado
-      const decodedToken = jwtDecode<JWTPayload>(token);
-      const currentTime = Date.now() / 1000;
-      
-      if (decodedToken.exp < currentTime) {
-        console.log('❌ Token expirado, limpiando localStorage');
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_data');
+      const decoded = jwtDecode<JWTPayload>(token);
+      const now = Date.now() / 1000;
+
+      if (decoded.exp < now) {
+        console.log('❌ Token expirado');
+        this.clearAuth();
         return false;
       }
-      
-      console.log('✅ Token válido y no expirado');
+
       return true;
+
     } catch (error) {
-      console.error('❌ Error validando token:', error);
-      // Si hay error decodificando, limpiar datos
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
+      console.error('❌ Error verificando token:', error);
+      this.clearAuth();
       return false;
     }
   }
 
-  // Obtener token actual
-  getToken(): string | null {
-    return localStorage.getItem('auth_token');
+  // ============================================
+  // HELPERS DE PERMISOS
+  // ============================================
+
+  /**
+   * Verificar si el usuario tiene un rol específico
+   */
+  hasRole(user: User | null, roleSlug: string, comunidadId?: number): boolean {
+    if (!user || !user.roles) return false;
+
+    return user.roles.some(role => {
+      const matchesSlug = role.slug.toLowerCase() === roleSlug.toLowerCase();
+      const matchesComunidad = !comunidadId || role.comunidad_id === comunidadId;
+      return matchesSlug && matchesComunidad;
+    });
   }
 
-  // Obtener datos del usuario desde localStorage
-  getUserData(): User | null {
-    const userData = localStorage.getItem('user_data');
-    console.log('🔍 Datos raw del localStorage:', userData);
+  /**
+   * Verificar si es admin (SuperAdmin O tiene rol admin)
+   */
+  isAdmin(user: User | null): boolean {
+    if (!user) return false;
+    return user.is_admin === true || user.is_superadmin === true;
+  }
+
+  /**
+   * Verificar si es SuperAdmin
+   */
+  isSuperAdmin(user: User | null): boolean {
+    if (!user) return false;
+    return user.is_superadmin === true;
+  }
+
+  /**
+   * Obtener roles de una comunidad específica
+   */
+  getRolesByComunidad(user: User | null, comunidadId: number): Role[] {
+    if (!user || !user.roles) return [];
+    return user.roles.filter(role => role.comunidad_id === comunidadId);
+  }
+
+  /**
+   * Verificar si tiene acceso a una comunidad
+   */
+  hasComunidadAccess(user: User | null, comunidadId: number): boolean {
+    if (!user) return false;
+    if (user.is_superadmin) return true;
+
+    return user.memberships?.some(m => m.comunidad_id === comunidadId && m.estado === 'activo') || false;
+  }
+
+  /**
+   * Obtener nivel más alto del usuario
+   */
+  getHighestRoleLevel(user: User | null): number {
+    if (!user || !user.roles) return 0;
+    if (user.is_superadmin) return 100;
+
+    return Math.max(...user.roles.map(r => r.nivel), 0);
+  }
+
+  /**
+   * Verificar si tiene permiso específico
+   */
+  hasPermission(user: User | null, permission: string, comunidadId?: number): boolean {
+    if (!user) return false;
+    if (user.is_superadmin) return true;
+
+    if (!user.roles) return false;
+
+    const roles = comunidadId
+      ? user.roles.filter(r => r.comunidad_id === comunidadId)
+      : user.roles;
+
+    return roles.some(role => {
+      if (role.es_admin) return true;
+      if (!role.permisos) return false;
+      return role.permisos.includes(permission);
+    });
+  }
+
+  // ============================================
+  // GESTIÓN DE TOKEN Y USUARIO
+  // ============================================
+
+  getToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  getStoredUser(): User | null {
+    if (typeof window === 'undefined') return null;
+
     try {
-      const parsedUser = userData ? JSON.parse(userData) : null;
-      console.log('🔍 Usuario parseado:', parsedUser);
-      return parsedUser;
+      const userStr = localStorage.getItem(this.USER_KEY);
+      if (!userStr) return null;
+
+      const user = JSON.parse(userStr);
+
+      return user;
+
     } catch (error) {
-      console.error('❌ Error parseando datos de usuario:', error);
+      console.error('❌ Error parseando usuario:', error);
       return null;
     }
   }
 
-  // Debug: Mostrar estado actual del localStorage
+  private saveAuth(token: string, user: User): void {
+    if (typeof window === 'undefined') return;
+
+    localStorage.setItem(this.TOKEN_KEY, token);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+
+    console.log('💾 Auth guardado:', {
+      username: user.username,
+      is_admin: user.is_admin
+    });
+  }
+
+  private saveUser(user: User): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+  }
+
+  private clearAuth(): void {
+    if (typeof window === 'undefined') return;
+
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_data');
+    sessionStorage.removeItem(this.TEMP_TOKEN_KEY);
+
+    console.log('🗑️ Auth limpiado');
+  }
+
+  // ============================================
+  // CAMBIO DE CONTRASEÑA
+  // ============================================
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    try {
+      await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword,
+      });
+
+      console.log('✅ Contraseña cambiada');
+
+    } catch (error: any) {
+      console.error('❌ Error cambiando contraseña:', error);
+      throw this.handleAuthError(error, 'cambio de contraseña');
+    }
+  }
+
+  // ============================================
+  // ACTUALIZAR PERFIL
+  // ============================================
+
+  async updateProfile(data: { username?: string; email?: string }): Promise<User> {
+    try {
+      const response = await api.patch<{ user: User }>('/auth/profile', data);
+      const updatedUser = response.data.user;
+
+      this.saveUser(updatedUser);
+      console.log('✅ Perfil actualizado');
+
+      return updatedUser;
+
+    } catch (error: any) {
+      console.error('❌ Error actualizando perfil:', error);
+      throw this.handleAuthError(error, 'actualización de perfil');
+    }
+  }
+
+  // ============================================
+  // ACTUALIZAR PERSONA
+  // ============================================
+
+  async updatePersona(data: Partial<Persona>): Promise<Persona> {
+    try {
+      const response = await api.patch<{ persona: Persona }>('/auth/profile/persona', data);
+      const updatedPersona = response.data.persona;
+
+      const user = this.getStoredUser();
+      if (user) {
+        user.persona = updatedPersona;
+        this.saveUser(user);
+      }
+
+      console.log('✅ Datos personales actualizados');
+      return updatedPersona;
+
+    } catch (error: any) {
+      console.error('❌ Error actualizando persona:', error);
+      throw this.handleAuthError(error, 'actualización de datos personales');
+    }
+  }
+
+  // ============================================
+  // PREFERENCIAS
+  // ============================================
+
+  async getPreferences(): Promise<any> {
+    try {
+      const response = await api.get('/auth/preferences');
+      return response.data;
+    } catch (error) {
+      console.error('Error obteniendo preferencias:', error);
+      return {
+        notifications: { email_enabled: true, payment_notifications: true },
+        display: { timezone: 'America/Santiago', date_format: 'DD/MM/YYYY', language: 'es' }
+      };
+    }
+  }
+
+  async updatePreferences(preferences: any): Promise<void> {
+    try {
+      await api.patch('/auth/preferences', preferences);
+      console.log('✅ Preferencias actualizadas');
+    } catch (error: any) {
+      console.error('❌ Error actualizando preferencias:', error);
+      throw this.handleAuthError(error, 'actualización de preferencias');
+    }
+  }
+
+  // ============================================
+  // SESIONES
+  // ============================================
+
+  async getSessions(): Promise<any[]> {
+    try {
+      const response = await api.get('/auth/sessions');
+      return response.data.sessions || [];
+    } catch (error) {
+      console.error('Error obteniendo sesiones:', error);
+      return [];
+    }
+  }
+
+  async closeSession(sessionId: string): Promise<void> {
+    try {
+      await api.delete(`/auth/sessions/${sessionId}`);
+      console.log('✅ Sesión cerrada');
+    } catch (error: any) {
+      console.error('❌ Error cerrando sesión:', error);
+      throw this.handleAuthError(error, 'cerrar sesión');
+    }
+  }
+
+  async closeAllSessions(): Promise<void> {
+    try {
+      await api.delete('/auth/sessions');
+      console.log('✅ Todas las sesiones cerradas');
+    } catch (error: any) {
+      console.error('❌ Error cerrando sesiones:', error);
+      throw this.handleAuthError(error, 'cerrar sesiones');
+    }
+  }
+
+  // ============================================
+  // RECUPERACIÓN DE CONTRASEÑA
+  // ============================================
+
+  async forgotPassword(email: string): Promise<void> {
+    try {
+      await api.post('/auth/forgot-password', { email });
+      console.log('✅ Email de recuperación enviado');
+    } catch (error: any) {
+      console.error('❌ Error solicitando reset:', error);
+      throw this.handleAuthError(error, 'recuperación de contraseña');
+    }
+  }
+
+  async resetPassword(token: string, password: string): Promise<void> {
+    try {
+      await api.post('/auth/reset-password', { token, password });
+      console.log('✅ Contraseña reseteada');
+    } catch (error: any) {
+      console.error('❌ Error reseteando contraseña:', error);
+      throw this.handleAuthError(error, 'reset de contraseña');
+    }
+  }
+
+  // ============================================
+  // REFRESH TOKEN
+  // ============================================
+
+  async refreshToken(): Promise<string | null> {
+    try {
+      const response = await api.post<{ token: string }>('/auth/refresh');
+      const { token } = response.data;
+
+      localStorage.setItem(this.TOKEN_KEY, token);
+      console.log('✅ Token renovado');
+
+      return token;
+
+    } catch (error) {
+      console.error('❌ Error renovando token:', error);
+      return null;
+    }
+  }
+
+  // ============================================
+  // MANEJO DE ERRORES
+  // ============================================
+
+  private handleAuthError(error: any, context: string): Error {
+    const message = error.response?.data?.error ||
+      error.response?.data?.message ||
+      error.message ||
+      'Error desconocido';
+
+    const status = error.response?.status;
+
+    console.error(`❌ Error en ${context}:`, { status, message });
+
+    switch (status) {
+      case 400:
+        return new Error(`Datos inválidos: ${message}`);
+      case 401:
+        return new Error('Credenciales inválidas');
+      case 403:
+        return new Error('Acceso denegado');
+      case 404:
+        return new Error('Recurso no encontrado');
+      case 409:
+        return new Error(message);
+      case 422:
+        return new Error(`Datos incorrectos: ${message}`);
+      default:
+        return new Error(message);
+    }
+  }
+
+  // ============================================
+  // DEBUG
+  // ============================================
+
   debugAuthState(): void {
-    const token = localStorage.getItem('auth_token');
-    const userData = localStorage.getItem('user_data');
-    
+    const token = this.getToken();
+    const user = this.getStoredUser();
+
     console.log('🔍 DEBUG - Estado de autenticación:');
     console.log('  Token presente:', !!token);
-    console.log('  Token:', token ? `${token.substring(0, 20)}...` : 'null');
-    console.log('  Datos de usuario:', userData);
-    
+    console.log('  Usuario presente:', !!user);
+
     if (token) {
       try {
         const decoded = jwtDecode<JWTPayload>(token);
         const now = Date.now() / 1000;
         console.log('  Token válido:', decoded.exp > now);
         console.log('  Expira en:', Math.round(decoded.exp - now), 'segundos');
+        console.log('  Usuario ID:', decoded.sub);
+        console.log('  Roles:', decoded.roles || []);
       } catch (error) {
         console.log('  Token inválido:', error);
       }
     }
-  }
 
-  // Cambiar contraseña
-  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    try {
-      await apiClient.post('/auth/change-password', {
-        currentPassword,
-        newPassword,
-      });
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.response?.data?.error) {
-        throw new Error(error.response.data.error);
-      } else {
-        throw new Error('Error al cambiar la contraseña');
-      }
-    }
-  }
-
-  // Actualizar perfil de usuario
-  async updateProfile(data: { username?: string; email?: string }): Promise<User> {
-    try {
-      const response = await apiClient.patch('/auth/profile', data);
-      const updatedUser = response.data.user;
-      
-      // Actualizar datos en localStorage
-      localStorage.setItem('user_data', JSON.stringify(updatedUser));
-      
-      return updatedUser;
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.response?.data?.error) {
-        throw new Error(error.response.data.error);
-      } else {
-        throw new Error('Error al actualizar el perfil');
-      }
-    }
-  }
-
-  // Actualizar datos de persona
-  async updatePersona(data: Partial<Persona>): Promise<Persona> {
-    try {
-      const response = await apiClient.patch('/auth/profile/persona', data);
-      
-      // Actualizar datos de usuario en localStorage con la nueva información de persona
-      const currentUser = this.getUserData();
-      if (currentUser) {
-        currentUser.persona = response.data.persona;
-        localStorage.setItem('user_data', JSON.stringify(currentUser));
-      }
-      
-      return response.data.persona;
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.response?.data?.error) {
-        throw new Error(error.response.data.error);
-      } else {
-        throw new Error('Error al actualizar la información personal');
-      }
-    }
-  }
-
-  // Obtener preferencias del usuario
-  async getPreferences(): Promise<any> {
-    try {
-      const response = await apiClient.get('/auth/preferences');
-      return response.data;
-    } catch (error: any) {
-      console.error('Error obteniendo preferencias:', error);
-      // Devolver preferencias por defecto si hay error
-      return {
-        notifications: {
-          email_enabled: true,
-          payment_notifications: true,
-          weekly_summaries: true
-        },
-        display: {
-          timezone: 'America/Santiago',
-          date_format: 'DD/MM/YYYY',
-          language: 'es'
-        }
-      };
-    }
-  }
-
-  // Actualizar preferencias del usuario
-  async updatePreferences(preferences: any): Promise<void> {
-    try {
-      await apiClient.patch('/auth/preferences', preferences);
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.response?.data?.error) {
-        throw new Error(error.response.data.error);
-      } else {
-        throw new Error('Error al actualizar las preferencias');
-      }
-    }
-  }
-
-  // Obtener sesiones activas
-  async getSessions(): Promise<any[]> {
-    try {
-      const response = await apiClient.get('/auth/sessions');
-      return response.data.sessions;
-    } catch (error: any) {
-      console.error('Error obteniendo sesiones:', error);
-      return [];
-    }
-  }
-
-  // Cerrar una sesión específica
-  async closeSession(sessionId: string): Promise<void> {
-    try {
-      await apiClient.delete(`/auth/sessions/${sessionId}`);
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else {
-        throw new Error('Error al cerrar la sesión');
-      }
-    }
-  }
-
-  // Cerrar todas las sesiones excepto la actual
-  async closeAllSessions(): Promise<void> {
-    try {
-      await apiClient.delete('/auth/sessions');
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else {
-        throw new Error('Error al cerrar las sesiones');
-      }
-    }
-  }
-
-  // Refresh del token
-  async refreshToken(): Promise<string | null> {
-    try {
-      const response = await apiClient.post('/auth/refresh');
-      const { token } = response.data;
-
-      localStorage.setItem('auth_token', token);
-      return token;
-    } catch (error) {
-      console.error('Error refrescando token:', error);
-      return null;
-    }
-  }
-
-  // Solicitar reset de contraseña
-  async forgotPassword(email: string): Promise<void> {
-    try {
-      await apiClient.post('/auth/forgot-password', { email });
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else {
-        throw new Error('Error al solicitar reset de contraseña');
-      }
-    }
-  }
-
-  // Reset de contraseña
-  async resetPassword(token: string, password: string): Promise<void> {
-    try {
-      await apiClient.post('/auth/reset-password', {
-        token,
-        password,
-      });
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else {
-        throw new Error('Error al resetear contraseña');
-      }
+    if (user) {
+      console.log('  Username:', user.username);
+      console.log('  Is Admin:', user.is_admin);
+      console.log('  Is SuperAdmin:', user.is_superadmin);
+      console.log('  Roles:', user.roles?.length || 0);
+      console.log('  Membresías:', user.memberships?.length || 0);
     }
   }
 }
 
-// Exportar instancia única del servicio
 const authService = new AuthService();
 export default authService;
+export { AuthService };

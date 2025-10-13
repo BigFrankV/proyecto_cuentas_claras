@@ -1,218 +1,280 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { Button, Card, Form, Alert, Table, Modal, Dropdown, Badge } from 'react-bootstrap';
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { NextPage } from 'next';
 import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { toast } from 'react-hot-toast';
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 
-interface Expense {
-  id: number;
-  description: string;
-  category: string;
-  provider: string;
-  amount: number;
-  date: string;
-  status: 'pending' | 'approved' | 'rejected' | 'paid' | 'completed';
-  dueDate: string;
-  documentType: string;
-  documentNumber: string;
-  hasAttachments: boolean;
-  createdBy: string;
-  tags: string[];
-}
+// Hooks y servicios
+import { useGastos, useGastoEstadisticas } from '@/hooks/useGastos';
+import { useCategorias } from '@/hooks/useCategorias';
+
+// Types
+import type { Gasto, GastoFilters } from '@/types/gastos';
 
 export default function GastosListado() {
   const router = useRouter();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
-  const [selectedExpenses, setSelectedExpenses] = useState<number[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
-  
-  // Filtros
-  const [filters, setFilters] = useState({
-    search: '',
-    category: '',
-    status: '',
-    provider: '',
-    dateFrom: '',
-    dateTo: '',
-    amountFrom: '',
-    amountTo: ''
+  const { user } = useAuth();
+
+  // Estados de filtros locales
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEstado, setSelectedEstado] = useState<string>('');
+  const [selectedCategoria, setSelectedCategoria] = useState<number | undefined>();
+  const [fechaDesde, setFechaDesde] = useState('');
+  const [fechaHasta, setFechaHasta] = useState('');
+
+  // Estados de vista
+  const [vistaActual, setVistaActual] = useState<'cards' | 'table'>('cards');
+  const [gastosSeleccionados, setGastosSeleccionados] = useState<number[]>([]);
+
+  // Determinar comunidadId basado en rol
+  const [comunidadId, setComunidadId] = useState<number | null>(null);
+
+  // Filtros para el hook
+  const [filtros, setFiltros] = useState<GastoFilters>({
+    page: 1,
+    limit: 20,
+    ordenar: 'fecha',
+    direccion: 'DESC'
   });
 
-  // Paginación
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  // Determinar si es superadmin (normalizado)
+  const isSuperAdmin = Boolean(user?.is_superadmin === true || (user?.roles_slug || []).includes('superadmin'));
 
+  // ✅ Establecer comunidad según rol del usuario
   useEffect(() => {
-    loadExpenses();
-  }, []);
-
-  const loadExpenses = async () => {
-    try {
-      setLoading(true);
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockExpenses: Expense[] = [
-        {
-          id: 1,
-          description: 'Mantenimiento de ascensores',
-          category: 'mantenimiento',
-          provider: 'Elevadores Modernos S.A.',
-          amount: 850000,
-          date: '2024-03-15',
-          status: 'approved',
-          dueDate: '2024-03-30',
-          documentType: 'Factura',
-          documentNumber: 'F-2024-001',
-          hasAttachments: true,
-          createdBy: 'Patricia Contreras',
-          tags: ['urgente', 'mensual']
-        },
-        {
-          id: 2,
-          description: 'Suministros de limpieza',
-          category: 'suministros',
-          provider: 'Distribuidora Clean Pro',
-          amount: 245000,
-          date: '2024-03-14',
-          status: 'pending',
-          dueDate: '2024-03-25',
-          documentType: 'Boleta',
-          documentNumber: 'B-789',
-          hasAttachments: false,
-          createdBy: 'María González',
-          tags: ['mensual']
-        },
-        {
-          id: 3,
-          description: 'Servicio de jardinería',
-          category: 'servicios',
-          provider: 'Jardines del Sur',
-          amount: 180000,
-          date: '2024-03-13',
-          status: 'paid',
-          dueDate: '2024-03-20',
-          documentType: 'Factura',
-          documentNumber: 'F-456',
-          hasAttachments: true,
-          createdBy: 'Carlos Muñoz',
-          tags: ['externo']
-        },
-        {
-          id: 4,
-          description: 'Seguro de incendio anual',
-          category: 'seguros',
-          provider: 'Seguros La Protección',
-          amount: 1250000,
-          date: '2024-03-12',
-          status: 'rejected',
-          dueDate: '2024-04-15',
-          documentType: 'Póliza',
-          documentNumber: 'P-2024-15',
-          hasAttachments: true,
-          createdBy: 'Patricia Contreras',
-          tags: ['anual', 'importante']
-        },
-        {
-          id: 5,
-          description: 'Consumo eléctrico marzo',
-          category: 'servicios',
-          provider: 'Enel Distribución',
-          amount: 890000,
-          date: '2024-03-11',
-          status: 'completed',
-          dueDate: '2024-03-28',
-          documentType: 'Factura',
-          documentNumber: 'FE-2024-0234',
-          hasAttachments: true,
-          createdBy: 'María González',
-          tags: ['mensual', 'servicios básicos']
-        }
-      ];
-      
-      setExpenses(mockExpenses);
-    } catch (error) {
-      console.error('Error loading expenses:', error);
-    } finally {
-      setLoading(false);
+    if (user) {
+      const membresias = user?.memberships || user?.membresias || [];
+      if (isSuperAdmin) {
+        setComunidadId(0); // 0 = todas
+      } else if (membresias.length > 0) {
+        const comunidadIdFromMember = membresias[0].comunidad_id ?? membresias[0].comunidadId;
+        setComunidadId(Number(comunidadIdFromMember));
+      } else {
+        setComunidadId(null);
+      }
     }
-  };
+  }, [user, isSuperAdmin]);
 
+  // ✅ USAR LOS HOOKS CORREGIDOS (pasar 0 para superadmin)
+  const { gastos, loading, error, updateFilters, refetch } = useGastos((comunidadId === null ? 0 : comunidadId), filtros);
+  const { estadisticas: statsFromHook } = useGastoEstadisticas(comunidadId || 0);
+  const { categorias } = useCategorias(comunidadId || 0);
+
+  // ✅ Filtrar gastos localmente
+  const gastosFiltrados = React.useMemo(() => {
+    let filtered = [...gastos];
+
+    // Si no es superadmin y tenemos comunidadId, filtrar por comunidad (defensa adicional)
+    if (!isSuperAdmin && comunidadId) {
+      filtered = filtered.filter(g => Number(g.comunidad_id) === Number(comunidadId));
+    }
+
+    // Filtro por búsqueda (con guards para campos null)
+    if (searchTerm) {
+      const q = searchTerm.toString().toLowerCase();
+      filtered = filtered.filter(gasto =>
+        (gasto.glosa || '').toString().toLowerCase().includes(q) ||
+        (gasto.numero || '').toString().toLowerCase().includes(q) ||
+        (gasto.categoria_nombre || '').toString().toLowerCase().includes(q) ||
+        (gasto.creado_por_nombre || '').toString().toLowerCase().includes(q)
+      );
+    }
+
+    // Filtro por estado
+    if (selectedEstado) {
+      filtered = filtered.filter(gasto => (gasto.estado || '').toString() === selectedEstado);
+    }
+
+    // Filtro por categoría
+    if (selectedCategoria) {
+      filtered = filtered.filter(gasto => Number(gasto.categoria_id) === Number(selectedCategoria));
+    }
+
+    // Filtro por fechas
+    if (fechaDesde) {
+      filtered = filtered.filter(gasto => (gasto.fecha || '') >= fechaDesde);
+    }
+    if (fechaHasta) {
+      filtered = filtered.filter(gasto => (gasto.fecha || '') <= fechaHasta);
+    }
+
+    return filtered;
+  }, [gastos, searchTerm, selectedEstado, selectedCategoria, fechaDesde, fechaHasta, comunidadId, isSuperAdmin]);
+
+  // Helpers
   const formatCurrency = (amount: number) => {
-    return amount.toLocaleString('es-CL', {
+    return new Intl.NumberFormat('es-CL', {
       style: 'currency',
       currency: 'CLP'
-    });
+    }).format(amount);
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      pending: { label: 'Pendiente', className: 'status-pending' },
-      approved: { label: 'Aprobado', className: 'status-approved' },
-      rejected: { label: 'Rechazado', className: 'status-rejected' },
-      paid: { label: 'Pagado', className: 'status-paid' },
-      completed: { label: 'Completado', className: 'status-completed' }
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-CL');
+  };
+
+  const getEstadoColor = (estado: string) => {
+    const colores = {
+      borrador: 'secondary',
+      pendiente_aprobacion: 'warning',
+      aprobado: 'success',
+      rechazado: 'danger',
+      pagado: 'primary',
+      anulado: 'dark'
     };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
-    
-    return (
-      <span className={`status-badge ${config.className}`}>
-        {config.label}
-      </span>
-    );
+    return colores[estado as keyof typeof colores] || 'secondary';
   };
 
-  const getCategoryBadge = (category: string) => {
-    const categoryConfig = {
-      mantenimiento: { label: 'Mantenimiento', className: 'category-mantenimiento' },
-      servicios: { label: 'Servicios', className: 'category-servicios' },
-      personal: { label: 'Personal', className: 'category-personal' },
-      suministros: { label: 'Suministros', className: 'category-suministros' },
-      impuestos: { label: 'Impuestos', className: 'category-impuestos' },
-      seguros: { label: 'Seguros', className: 'category-seguros' }
+  const getCategoriaColor = (tipo: string) => {
+    const colores = {
+      operacional: 'primary',
+      extraordinario: 'warning',
+      fondo_reserva: 'success',
+      multas: 'danger',
+      consumo: 'info'
     };
-    
-    const config = categoryConfig[category as keyof typeof categoryConfig] || { label: category, className: 'category-badge' };
-    
-    return (
-      <span className={`category-badge ${config.className}`}>
-        {config.label}
-      </span>
+    return colores[tipo as keyof typeof colores] || 'secondary';
+  };
+
+  // Permisos — usar memberships/roles_slug normalizados
+  const userMemberships = user?.memberships || user?.membresias || [];
+  const hasRoleInCommunity = (roles: string[]) => {
+    if (isSuperAdmin) return true;
+    if (!comunidadId) return false;
+    return userMemberships.some(m =>
+      Number(m.comunidad_id ?? m.comunidadId) === Number(comunidadId) &&
+      roles.includes((m.rol || m.rol_slug || m.role || '').toString().toLowerCase())
     );
   };
 
-  const getAmountClass = (amount: number) => {
-    if (amount >= 1000000) return 'amount-high';
-    if (amount >= 500000) return 'amount-medium';
-    return 'amount-low';
-  };
+  const canCreate = isSuperAdmin || hasRoleInCommunity(['administrador', 'tesorero', 'contador', 'admin']);
+  const canApprove = isSuperAdmin || hasRoleInCommunity(['administrador', 'admin', 'tesorero', 'consejo', 'contador']);
 
-  const handleExpenseClick = (expenseId: number) => {
-    router.push(`/gastos/${expenseId}`);
-  };
+  // Render de estadísticas
+  const renderEstadisticas = () => {
+    if (!statsFromHook) return null;
 
-  const filteredExpenses = expenses.filter(expense => {
     return (
-      expense.description.toLowerCase().includes(filters.search.toLowerCase()) &&
-      (filters.category === '' || expense.category === filters.category) &&
-      (filters.status === '' || expense.status === filters.status) &&
-      (filters.provider === '' || expense.provider.toLowerCase().includes(filters.provider.toLowerCase()))
+      <div className="row mb-4">
+        <div className="col-md-2 col-6 mb-3">
+          <div className="card bg-primary text-white h-100">
+            <div className="card-body">
+              <div className="d-flex align-items-center">
+                <span className="material-icons fs-1 me-3">receipt_long</span>
+                <div>
+                  <div className="fs-4 fw-bold">{statsFromHook.total_gastos || 0}</div>
+                  <div className="small">Total</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-2 col-6 mb-3">
+          <div className="card bg-warning text-white h-100">
+            <div className="card-body">
+              <div className="d-flex align-items-center">
+                <span className="material-icons fs-1 me-3">pending</span>
+                <div>
+                  <div className="fs-4 fw-bold">{statsFromHook.pendientes || 0}</div>
+                  <div className="small">Pendientes</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-2 col-6 mb-3">
+          <div className="card bg-success text-white h-100">
+            <div className="card-body">
+              <div className="d-flex align-items-center">
+                <span className="material-icons fs-1 me-3">check_circle</span>
+                <div>
+                  <div className="fs-4 fw-bold">{statsFromHook.aprobados || 0}</div>
+                  <div className="small">Aprobados</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-2 col-6 mb-3">
+          <div className="card bg-info text-white h-100">
+            <div className="card-body">
+              <div className="d-flex align-items-center">
+                <span className="material-icons fs-1 me-3">paid</span>
+                <div>
+                  <div className="fs-4 fw-bold">{statsFromHook.pagados || 0}</div>
+                  <div className="small">Pagados</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-2 col-6 mb-3">
+          <div className="card bg-success text-white h-100">
+            <div className="card-body">
+              <div className="d-flex align-items-center">
+                <span className="material-icons fs-1 me-3">attach_money</span>
+                <div>
+                  <div className="fs-4 fw-bold">
+                    {formatCurrency(statsFromHook.monto_total || 0)}
+                  </div>
+                  <div className="small">Monto Total</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-2 col-6 mb-3">
+          <div className="card bg-secondary text-white h-100">
+            <div className="card-body">
+              <div className="d-flex align-items-center">
+                <span className="material-icons fs-1 me-3">calendar_month</span>
+                <div>
+                  <div className="fs-4 fw-bold">
+                    {formatCurrency(statsFromHook.monto_anio_actual || 0)}
+                  </div>
+                  <div className="small">Este Año</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
-  });
-
-  // Paginación
-  const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedExpenses = filteredExpenses.slice(startIndex, startIndex + itemsPerPage);
-
-  const getActiveFiltersCount = () => {
-    return Object.values(filters).filter(value => value !== '').length;
   };
+
+  // ✅ MOSTRAR DEBUG SI NO HAY COMUNIDAD Y NO ES SUPERADMIN
+  if (!comunidadId && !isSuperAdmin) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className="container-fluid p-4">
+            <div className="alert alert-warning">
+              <strong>🔍 Debug: Sin acceso a comunidad</strong><br />
+              <div className="mt-3">
+                <strong>Usuario:</strong> {user?.username}<br />
+                <strong>Superadmin:</strong> {String(Boolean(user?.is_superadmin))}<br />
+                <strong>Roles / memberships:</strong>
+                <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+                  {JSON.stringify(user?.roles_slug || user?.roles || user?.memberships || user?.membresias || [], null, 2)}
+                </pre>
+              </div>
+              <div className="mt-3">
+                <small>Este mensaje desaparecerá cuando tengas membresías correctas desde el backend.</small>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -220,436 +282,314 @@ export default function GastosListado() {
         <title>Gastos — Cuentas Claras</title>
       </Head>
 
-      <Layout>
-        <div className="expenses-container">
+      <Layout title='Gastos'>
+        <div className='container-fluid py-4'>
+
           {/* Header */}
-          <div className="expenses-header">
-            <div className="d-flex justify-content-between align-items-start mb-4">
-              <div>
-                <h1 className="expenses-title">
-                  <span className="material-icons me-2">receipt_long</span>
-                  Gestión de Gastos
-                </h1>
-                <p className="expenses-subtitle">
-                  Administra y controla todos los gastos de la comunidad
-                </p>
-                <div className="header-stats">
-                  <div className="stat-item">
-                    <div className="stat-number">{expenses.length}</div>
-                    <div className="stat-label">Total Gastos</div>
-                  </div>
-                  <div className="stat-item">
-                    <div className="stat-number">{expenses.filter(e => e.status === 'pending').length}</div>
-                    <div className="stat-label">Pendientes</div>
-                  </div>
-                  <div className="stat-item">
-                    <div className="stat-number">{expenses.filter(e => e.status === 'approved').length}</div>
-                    <div className="stat-label">Aprobados</div>
-                  </div>
-                  <div className="stat-item">
-                    <div className="stat-number">
-                      {formatCurrency(expenses.reduce((sum, e) => sum + e.amount, 0))}
-                    </div>
-                    <div className="stat-label">Monto Total</div>
-                  </div>
-                </div>
-              </div>
-              <div className="d-flex gap-2">
-                <Button 
-                  variant="outline-light" 
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="position-relative"
-                >
-                  <span className="material-icons me-2">filter_list</span>
-                  Filtros
-                  {getActiveFiltersCount() > 0 && (
-                    <Badge bg="light" text="dark" className="position-absolute top-0 start-100 translate-middle badge rounded-pill">
-                      {getActiveFiltersCount()}
-                    </Badge>
-                  )}
-                </Button>
-                <Button 
-                  variant="light" 
-                  onClick={() => router.push('/gastos/nuevo')}
-                >
-                  <span className="material-icons me-2">add</span>
+          <div className='d-flex justify-content-between align-items-center mb-4'>
+            <div>
+              <h1 className='h3 mb-0'>Gastos</h1>
+              <p className='text-muted mb-0'>
+                {isSuperAdmin
+                  ? 'Gestión de gastos (Superadmin: todas las comunidades)'
+                  : `Gestión de gastos de la comunidad ID: ${comunidadId}`}
+              </p>
+            </div>
+
+            <div className="d-flex gap-2">
+              {/* Botón exportar */}
+              <button className="btn btn-outline-primary">
+                <span className="material-icons me-2">download</span>
+                Exportar
+              </button>
+
+              {/* Botón nuevo gasto */}
+              {canCreate && (
+                <Link href="/gastos/nuevo" className='btn btn-primary'>
+                  <span className='material-icons me-2'>add</span>
                   Nuevo Gasto
-                </Button>
-              </div>
+                </Link>
+              )}
             </div>
           </div>
+
+          {/* Debug info temporal */}
+          <div className="alert alert-info mb-4">
+            <strong>🔍 Debug Info:</strong><br />
+            <small>
+              Comunidad ID: {comunidadId ?? 'Todas'} |
+              Gastos: {gastos.length} |
+              Loading: {loading ? 'Sí' : 'No'} |
+              Error: {error || 'Ninguno'} |
+              Categorías: {categorias.length}
+            </small>
+            <div className="mt-2">
+              <small>
+                <strong>Usuario:</strong> {user?.username} |
+                <strong> Superadmin:</strong> {String(Boolean(user?.is_superadmin))} |
+                <strong> Roles:</strong> {JSON.stringify(user?.roles_slug || user?.roles || user?.membresias || [], null, 0)}
+              </small>
+            </div>
+          </div>
+
+          {/* Estadísticas */}
+          {renderEstadisticas()}
 
           {/* Filtros */}
-          {showFilters && (
-            <div className="filters-panel">
-              <div className="filters-header">
-                <h5 className="filters-title">
-                  <span className="material-icons">tune</span>
-                  Filtros Avanzados
-                </h5>
-                <Button 
-                  variant="outline-secondary" 
-                  size="sm"
-                  onClick={() => setFilters({
-                    search: '', category: '', status: '', provider: '', 
-                    dateFrom: '', dateTo: '', amountFrom: '', amountTo: ''
-                  })}
-                >
-                  Limpiar
-                </Button>
-              </div>
+          <div className="card mb-4">
+            <div className="card-body">
               <div className="row g-3">
+                {/* Búsqueda */}
                 <div className="col-md-3">
-                  <Form.Group>
-                    <Form.Label>Buscar</Form.Label>
-                    <Form.Control
+                  <div className="input-group">
+                    <span className="input-group-text">
+                      <span className="material-icons">search</span>
+                    </span>
+                    <input
                       type="text"
-                      placeholder="Descripción, proveedor..."
-                      value={filters.search}
-                      onChange={(e) => setFilters({...filters, search: e.target.value})}
+                      className="form-control"
+                      placeholder="Buscar gastos..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                  </Form.Group>
+                  </div>
                 </div>
-                <div className="col-md-3">
-                  <Form.Group>
-                    <Form.Label>Categoría</Form.Label>
-                    <Form.Select
-                      value={filters.category}
-                      onChange={(e) => setFilters({...filters, category: e.target.value})}
-                    >
-                      <option value="">Todas las categorías</option>
-                      <option value="mantenimiento">Mantenimiento</option>
-                      <option value="servicios">Servicios</option>
-                      <option value="personal">Personal</option>
-                      <option value="suministros">Suministros</option>
-                      <option value="impuestos">Impuestos</option>
-                      <option value="seguros">Seguros</option>
-                    </Form.Select>
-                  </Form.Group>
-                </div>
-                <div className="col-md-3">
-                  <Form.Group>
-                    <Form.Label>Estado</Form.Label>
-                    <Form.Select
-                      value={filters.status}
-                      onChange={(e) => setFilters({...filters, status: e.target.value})}
-                    >
-                      <option value="">Todos los estados</option>
-                      <option value="pending">Pendiente</option>
-                      <option value="approved">Aprobado</option>
-                      <option value="rejected">Rechazado</option>
-                      <option value="paid">Pagado</option>
-                      <option value="completed">Completado</option>
-                    </Form.Select>
-                  </Form.Group>
-                </div>
-                <div className="col-md-3">
-                  <Form.Group>
-                    <Form.Label>Proveedor</Form.Label>
-                    <Form.Control
-                      type="text"
-                      placeholder="Nombre del proveedor"
-                      value={filters.provider}
-                      onChange={(e) => setFilters({...filters, provider: e.target.value})}
-                    />
-                  </Form.Group>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* Opciones de vista y resultados */}
-          <div className="view-options">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <span className="text-muted">
-                  Mostrando {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredExpenses.length)} de {filteredExpenses.length} gastos
-                </span>
-              </div>
-              <div className="d-flex align-items-center gap-3">
-                <div className="btn-group" role="group">
-                  <Button 
-                    variant={viewMode === 'table' ? 'primary' : 'outline-primary'}
-                    size="sm"
-                    onClick={() => setViewMode('table')}
+                {/* Filtro por estado */}
+                <div className="col-md-2">
+                  <select
+                    className="form-select"
+                    value={selectedEstado}
+                    onChange={(e) => setSelectedEstado(e.target.value)}
                   >
-                    <span className="material-icons">view_list</span>
-                  </Button>
-                  <Button 
-                    variant={viewMode === 'grid' ? 'primary' : 'outline-primary'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
+                    <option value="">Todos los estados</option>
+                    <option value="borrador">Borrador</option>
+                    <option value="pendiente_aprobacion">Pendientes</option>
+                    <option value="aprobado">Aprobados</option>
+                    <option value="rechazado">Rechazados</option>
+                    <option value="pagado">Pagados</option>
+                    <option value="anulado">Anulados</option>
+                  </select>
+                </div>
+
+                {/* Filtro por categoría */}
+                <div className="col-md-2">
+                  <select
+                    className="form-select"
+                    value={selectedCategoria || ''}
+                    onChange={(e) => setSelectedCategoria(e.target.value ? Number(e.target.value) : undefined)}
                   >
-                    <span className="material-icons">view_module</span>
-                  </Button>
+                    <option value="">Todas las categorías</option>
+                    {categorias.map(categoria => (
+                      <option key={categoria.id} value={categoria.id}>
+                        {categoria.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Fecha desde */}
+                <div className="col-md-2">
+                  <input
+                    type="date"
+                    className="form-control"
+                    placeholder="Fecha desde"
+                    value={fechaDesde}
+                    onChange={(e) => setFechaDesde(e.target.value)}
+                  />
+                </div>
+
+                {/* Fecha hasta */}
+                <div className="col-md-1">
+                  <input
+                    type="date"
+                    className="form-control"
+                    placeholder="Fecha hasta"
+                    value={fechaHasta}
+                    onChange={(e) => setFechaHasta(e.target.value)}
+                  />
+                </div>
+
+                {/* Toggle de vista */}
+                <div className="col-md-1">
+                  <div className="btn-group w-100" role="group">
+                    <button
+                      type="button"
+                      className={`btn ${vistaActual === 'cards' ? 'btn-primary' : 'btn-outline-primary'}`}
+                      onClick={() => setVistaActual('cards')}
+                    >
+                      <span className="material-icons">view_module</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${vistaActual === 'table' ? 'btn-primary' : 'btn-outline-primary'}`}
+                      onClick={() => setVistaActual('table')}
+                    >
+                      <span className="material-icons">view_list</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Limpiar filtros */}
+                <div className="col-md-1">
+                  <button
+                    className="btn btn-outline-secondary w-100"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedEstado('');
+                      setSelectedCategoria(undefined);
+                      setFechaDesde('');
+                      setFechaHasta('');
+                    }}
+                  >
+                    <span className="material-icons">clear</span>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Vista de tabla */}
-          {viewMode === 'table' && (
-            <div className="expenses-table">
-              <div className="table-header">
-                <h5 className="table-title">
-                  <span className="material-icons">receipt_long</span>
-                  Lista de Gastos
-                </h5>
+          {/* Contenido */}
+          {loading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Cargando...</span>
               </div>
-              <div className="table-responsive">
-                <Table hover className="custom-table mb-0">
-                  <thead>
-                    <tr>
-                      <th>
-                        <Form.Check 
-                          type="checkbox"
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedExpenses(paginatedExpenses.map(exp => exp.id));
-                            } else {
-                              setSelectedExpenses([]);
-                            }
-                          }}
-                        />
-                      </th>
-                      <th>Descripción</th>
-                      <th>Categoría</th>
-                      <th>Proveedor</th>
-                      <th>Monto</th>
-                      <th>Fecha</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedExpenses.map((expense) => (
-                      <tr 
-                        key={expense.id} 
-                        className="data-row"
-                        onClick={() => handleExpenseClick(expense.id)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <td onClick={(e) => e.stopPropagation()}>
-                          <Form.Check 
-                            type="checkbox"
-                            checked={selectedExpenses.includes(expense.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedExpenses([...selectedExpenses, expense.id]);
-                              } else {
-                                setSelectedExpenses(selectedExpenses.filter(id => id !== expense.id));
-                              }
-                            }}
-                          />
-                        </td>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <div>
-                              <div className="fw-medium">{expense.description}</div>
-                              <small className="text-muted">{expense.documentType} {expense.documentNumber}</small>
-                            </div>
-                            {expense.hasAttachments && (
-                              <span className="material-icons text-muted ms-2">attach_file</span>
-                            )}
-                          </div>
-                        </td>
-                        <td>{getCategoryBadge(expense.category)}</td>
-                        <td>
-                          <div className="fw-medium">{expense.provider}</div>
-                        </td>
-                        <td>
-                          <span className={`amount fw-bold ${getAmountClass(expense.amount)}`}>
-                            {formatCurrency(expense.amount)}
-                          </span>
-                        </td>
-                        <td>{new Date(expense.date).toLocaleDateString('es-CL')}</td>
-                        <td>{getStatusBadge(expense.status)}</td>
-                        <td onClick={(e) => e.stopPropagation()}>
-                          <div className="d-flex gap-1">
-                            <Button 
-                              variant="outline-primary" 
-                              size="sm" 
-                              className="action-button"
-                              onClick={() => router.push(`/gastos/${expense.id}`)}
-                            >
-                              <span className="material-icons">visibility</span>
-                            </Button>
-                            <Button 
-                              variant="outline-secondary" 
-                              size="sm" 
-                              className="action-button"
-                              onClick={() => router.push(`/gastos/${expense.id}/editar`)}
-                            >
-                              <span className="material-icons">edit</span>
-                            </Button>
-                            <Dropdown>
-                              <Dropdown.Toggle 
-                                variant="outline-secondary" 
-                                size="sm" 
-                                className="action-button dropdown-toggle-no-caret"
-                              >
-                                <span className="material-icons">more_vert</span>
-                              </Dropdown.Toggle>
-                              <Dropdown.Menu>
-                                <Dropdown.Item>
-                                  <span className="material-icons me-2">file_download</span>
-                                  Descargar
-                                </Dropdown.Item>
-                                <Dropdown.Item>
-                                  <span className="material-icons me-2">share</span>
-                                  Compartir
-                                </Dropdown.Item>
-                                <Dropdown.Divider />
-                                <Dropdown.Item className="text-danger">
-                                  <span className="material-icons me-2">delete</span>
-                                  Eliminar
-                                </Dropdown.Item>
-                              </Dropdown.Menu>
-                            </Dropdown>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
+              <p className="mt-3">Cargando gastos...</p>
             </div>
-          )}
-
-          {/* Vista de tarjetas */}
-          {viewMode === 'grid' && (
+          ) : error ? (
+            <div className="alert alert-danger">
+              <strong>Error:</strong> {error}
+              <button className="btn btn-link p-0 mt-1 d-block" onClick={refetch}>
+                Reintentar
+              </button>
+            </div>
+          ) : gastosFiltrados.length === 0 ? (
+            <div className="text-center py-5">
+              <span className="material-icons display-1 text-muted">receipt_long</span>
+              <h5 className="mt-3">No se encontraron gastos</h5>
+              <p className="text-muted">
+                {searchTerm || selectedEstado || selectedCategoria || fechaDesde || fechaHasta
+                  ? 'Intenta ajustar los filtros de búsqueda'
+                  : 'No hay gastos registrados aún'
+                }
+              </p>
+              {canCreate && !searchTerm && (
+                <Link href="/gastos/nuevo" className="btn btn-primary mt-3">
+                  <span className="material-icons me-2">add</span>
+                  Crear Primer Gasto
+                </Link>
+              )}
+            </div>
+          ) : (
             <div className="row">
-              {paginatedExpenses.map((expense) => (
-                <div key={expense.id} className="col-lg-6 col-xl-4 mb-3">
-                  <div 
-                    className="data-card"
-                    onClick={() => handleExpenseClick(expense.id)}
-                  >
-                    <div className="card-body">
-                      <div className="data-card-header">
+              {gastosFiltrados.map((gasto) => (
+                <div key={gasto.id} className={vistaActual === 'cards' ? 'col-md-6 col-lg-4 mb-3' : 'col-12 mb-2'}>
+                  {vistaActual === 'cards' ? (
+                    /* Card View */
+                    <div className="card h-100">
+                      <div className="card-header d-flex justify-content-between align-items-center">
                         <div>
-                          <h6 className="data-card-title">{expense.description}</h6>
-                          <p className="data-card-subtitle">{expense.provider}</p>
+                          <h6 className="card-title mb-0">{gasto.glosa}</h6>
+                          <small className="text-muted">#{gasto.numero}</small>
                         </div>
-                        <Form.Check 
-                          type="checkbox"
-                          checked={selectedExpenses.includes(expense.id)}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            if (e.target.checked) {
-                              setSelectedExpenses([...selectedExpenses, expense.id]);
-                            } else {
-                              setSelectedExpenses(selectedExpenses.filter(id => id !== expense.id));
-                            }
-                          }}
-                        />
+                        <div className="d-flex gap-1">
+                          <span className={`badge bg-${getEstadoColor(gasto.estado)}`}>
+                            {gasto.estado.replace('_', ' ')}
+                          </span>
+                          {gasto.extraordinario && (
+                            <span className="badge bg-warning">Extraordinario</span>
+                          )}
+                        </div>
                       </div>
-                      
-                      <div className="data-card-details mb-3">
-                        <div className="data-card-detail">
-                          <span className="material-icons">category</span>
-                          {getCategoryBadge(expense.category)}
-                        </div>
-                        <div className="data-card-detail">
-                          <span className="material-icons">event</span>
-                          {new Date(expense.date).toLocaleDateString('es-CL')}
-                        </div>
-                        <div className="data-card-detail">
-                          <span className="material-icons">attach_money</span>
-                          <span className={`amount fw-bold ${getAmountClass(expense.amount)}`}>
-                            {formatCurrency(expense.amount)}
+                      <div className="card-body">
+                        <div className="mb-2">
+                          <span className={`badge bg-${getCategoriaColor(gasto.categoria_tipo || '')}`}>
+                            {gasto.categoria_nombre}
                           </span>
                         </div>
-                      </div>
-
-                      <div className="data-card-footer">
-                        <div>
-                          {getStatusBadge(expense.status)}
-                          {expense.tags.map((tag, index) => (
-                            <Badge key={index} bg="secondary" className="ms-1">
-                              {tag}
-                            </Badge>
-                          ))}
+                        <div className="row text-sm">
+                          <div className="col-6">
+                            <strong>Monto:</strong><br />
+                            <span className="text-primary fw-bold">
+                              {formatCurrency(gasto.monto)}
+                            </span>
+                          </div>
+                          <div className="col-6">
+                            <strong>Fecha:</strong><br />
+                            <span className="text-muted">
+                              {formatDate(gasto.fecha)}
+                            </span>
+                          </div>
                         </div>
-                        <div className="data-card-actions">
-                          <Button 
-                            variant="outline-primary" 
-                            size="sm" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/gastos/${expense.id}`);
-                            }}
+                      </div>
+                      <div className="card-footer">
+                        <div className="d-flex justify-content-between align-items-center">
+                          <small className="text-muted">
+                            {gasto.creado_por_nombre || 'Sistema'}
+                          </small>
+                          <Link
+                            href={`/gastos/${gasto.id}`}
+                            className="btn btn-sm btn-outline-primary"
                           >
-                            <span className="material-icons">visibility</span>
-                          </Button>
-                          <Button 
-                            variant="outline-secondary" 
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/gastos/${expense.id}/editar`);
-                            }}
-                          >
-                            <span className="material-icons">edit</span>
-                          </Button>
+                            Ver detalle
+                          </Link>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    /* Table Row */
+                    <div className="card">
+                      <div className="card-body py-2">
+                        <div className="row align-items-center">
+                          <div className="col-1">
+                            <input
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={gastosSeleccionados.includes(gasto.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setGastosSeleccionados([...gastosSeleccionados, gasto.id]);
+                                } else {
+                                  setGastosSeleccionados(gastosSeleccionados.filter(id => id !== gasto.id));
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="col-3">
+                            <div className="fw-bold">{gasto.glosa}</div>
+                            <small className="text-muted">#{gasto.numero}</small>
+                          </div>
+                          <div className="col-2">
+                            <span className={`badge bg-${getCategoriaColor(gasto.categoria_tipo || '')}`}>
+                              {gasto.categoria_nombre}
+                            </span>
+                          </div>
+                          <div className="col-2 text-center">
+                            <div className="fw-bold text-primary">{formatCurrency(gasto.monto)}</div>
+                            <small className="text-muted">{formatDate(gasto.fecha)}</small>
+                          </div>
+                          <div className="col-2 text-center">
+                            <span className={`badge bg-${getEstadoColor(gasto.estado)}`}>
+                              {gasto.estado.replace('_', ' ')}
+                            </span>
+                          </div>
+                          <div className="col-2 text-end">
+                            <Link
+                              href={`/gastos/${gasto.id}`}
+                              className="btn btn-sm btn-outline-primary"
+                            >
+                              <span className="material-icons">visibility</span>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
-
-          {/* Paginación */}
-          {totalPages > 1 && (
-            <div className="d-flex justify-content-center mt-4">
-              <nav>
-                <ul className="pagination">
-                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      <span className="material-icons">chevron_left</span>
-                    </button>
-                  </li>
-                  {Array.from({ length: totalPages }, (_, index) => (
-                    <li key={index + 1} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
-                      <button 
-                        className="page-link"
-                        onClick={() => setCurrentPage(index + 1)}
-                      >
-                        {index + 1}
-                      </button>
-                    </li>
-                  ))}
-                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                    >
-                      <span className="material-icons">chevron_right</span>
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-          )}
-
-          {/* Mobile FAB */}
-          <div className="mobile-fab d-lg-none">
-            <Button 
-              variant="primary" 
-              className="rounded-circle shadow"
-              onClick={() => router.push('/gastos/nuevo')}
-              style={{ width: '56px', height: '56px' }}
-            >
-              <span className="material-icons">add</span>
-            </Button>
-          </div>
         </div>
       </Layout>
     </ProtectedRoute>
