@@ -12,7 +12,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD:-apipassword}
     volumes:
       - db_data:/var/lib/mysql
-      - ./ccbackend/base:/docker-entrypoint-initdb.d:ro
+      - ./ccbackend/base/BBDD+pob_datos:/docker-entrypoint-initdb.d:ro
     ports:
       - "3306:3306"
 
