@@ -18,155 +18,46 @@ export default function EmisionesListado() {
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'table' | 'cards'>('table');
   const [selectedEmissions, setSelectedEmissions] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [totalItems, setTotalItems] = useState(0);
   
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Generar datos mock
-  const generateMockEmissions = (): Emission[] => {
-    const mockEmissions: Emission[] = [
-      {
-        id: '1',
-        period: 'Septiembre 2025',
-        type: 'gastos_comunes',
-        status: 'sent',
-        issueDate: '2025-09-01',
-        dueDate: '2025-09-15',
-        totalAmount: 2500000,
-        paidAmount: 1800000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de septiembre',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '2',
-        period: 'Agosto 2025',
-        type: 'gastos_comunes',
-        status: 'paid',
-        issueDate: '2025-08-01',
-        dueDate: '2025-08-15',
-        totalAmount: 2400000,
-        paidAmount: 2400000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de agosto',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '3',
-        period: 'Extraordinaria - Ascensor',
-        type: 'extraordinaria',
-        status: 'ready',
-        issueDate: '2025-09-10',
-        dueDate: '2025-09-30',
-        totalAmount: 800000,
-        paidAmount: 0,
-        unitCount: 45,
-        description: 'Reparación ascensor principal',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '4',
-        period: 'Julio 2025',
-        type: 'gastos_comunes',
-        status: 'overdue',
-        issueDate: '2025-07-01',
-        dueDate: '2025-07-15',
-        totalAmount: 2300000,
-        paidAmount: 1200000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de julio',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '5',
-        period: 'Multa - Ruidos molestos',
-        type: 'multa',
-        status: 'draft',
-        issueDate: '2025-09-15',
-        dueDate: '2025-10-01',
-        totalAmount: 50000,
-        paidAmount: 0,
-        unitCount: 1,
-        description: 'Multa por ruidos molestos - Unidad 302',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '6',
-        period: 'Junio 2025',
-        type: 'gastos_comunes',
-        status: 'partial',
-        issueDate: '2025-06-01',
-        dueDate: '2025-06-15',
-        totalAmount: 2200000,
-        paidAmount: 1500000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de junio',
-        communityName: 'Edificio Central'
-      }
-    ];
-
-    return mockEmissions;
+  // Cargar emisiones desde el backend
+  const loadEmissions = async (filters?: any) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const emisionesService = (await import('@/lib/emisionesService')).default;
+      const response = await emisionesService.getEmissions(filters, currentPage, itemsPerPage);
+      
+      setEmissions(response.data);
+      setFilteredEmissions(response.data);
+      setTotalItems(response.pagination.total);
+      setLoading(false);
+    } catch (err: any) {
+      console.error('Error al cargar emisiones:', err);
+      setError(err.message || 'Error al cargar las emisiones');
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    // Simular carga de datos
-    setTimeout(() => {
-      const mockData = generateMockEmissions();
-      setEmissions(mockData);
-      setFilteredEmissions(mockData);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    loadEmissions();
+  }, [currentPage]);
 
   // Manejar filtros
-  const handleFilterChange = (filters: EmissionFiltersType) => {
-    let filtered = emissions;
-
-    // Búsqueda por texto
-    if (filters.search) {
-      filtered = filtered.filter(emission =>
-        emission.period.toLowerCase().includes(filters.search.toLowerCase()) ||
-        (emission.description && emission.description.toLowerCase().includes(filters.search.toLowerCase())) ||
-        (emission.communityName && emission.communityName.toLowerCase().includes(filters.search.toLowerCase()))
-      );
-    }
-
-    // Filtro por estado
-    if (filters.status !== 'all') {
-      filtered = filtered.filter(emission => emission.status === filters.status);
-    }
-
-    // Filtro por tipo
-    if (filters.type !== 'all') {
-      filtered = filtered.filter(emission => emission.type === filters.type);
-    }
-
-    // Filtro por período
-    if (filters.period !== 'all') {
-      filtered = filtered.filter(emission => emission.period.includes(filters.period));
-    }
-
-    // Filtro por fechas
-    if (filters.dateFrom) {
-      filtered = filtered.filter(emission => 
-        new Date(emission.issueDate) >= new Date(filters.dateFrom)
-      );
-    }
-
-    if (filters.dateTo) {
-      filtered = filtered.filter(emission => 
-        new Date(emission.issueDate) <= new Date(filters.dateTo)
-      );
-    }
-
-    setFilteredEmissions(filtered);
-    setCurrentPage(1); // Reset página
+  const handleFilterChange = async (filters: any) => {
+    setCurrentPage(1);
+    await loadEmissions(filters);
   };
 
-  const handleClearFilters = () => {
-    setFilteredEmissions(emissions);
+  const handleClearFilters = async () => {
     setCurrentPage(1);
+    await loadEmissions();
   };
 
   // Manejar selección
@@ -210,12 +101,10 @@ export default function EmisionesListado() {
 
   // Paginación
   const getCurrentPageEmissions = () => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredEmissions.slice(startIndex, endIndex);
+    return filteredEmissions;
   };
 
-  const totalPages = Math.ceil(filteredEmissions.length / itemsPerPage);
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

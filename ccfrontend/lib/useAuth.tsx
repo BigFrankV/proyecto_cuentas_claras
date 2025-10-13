@@ -6,14 +6,14 @@ import {
   ReactNode,
 } from 'react';
 import { useRouter } from 'next/router';
-import authService, { User, AuthResponse } from './auth'; // ✅ CORREGIR IMPORT
+import authService, { User, AuthResponse } from './auth';
 
 // Tipos para el contexto de autenticación
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (identifier: string, password: string, totp_code?: string) => Promise<AuthResponse>; // ✅ AGREGAR totp_code
+  login: (identifier: string, password: string, totp_code?: string) => Promise<AuthResponse>;
   complete2FALogin: (tempToken: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;

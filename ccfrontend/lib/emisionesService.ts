@@ -107,6 +107,45 @@ class EmisionesService {
     }
   }
 
+  // Obtener historial de una emisión
+  async getEmissionHistory(id: string): Promise<HistoryEntry[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}/historial`);
+      return response.data.map((entry: any) => ({
+        id: entry.id.toString(),
+        date: entry.fecha,
+        action: entry.accion,
+        user: entry.usuario,
+        description: entry.descripcion
+      }));
+    } catch (error) {
+      console.error(`Error fetching history for emission ${id}:`, error);
+      return [];
+    }
+  }
+
+  // Obtener estadísticas de emisiones
+  async getEmissionsStatistics(): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/estadisticas`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching emissions statistics:', error);
+      throw error;
+    }
+  }
+
+  // Obtener validaciones de una emisión
+  async getEmissionValidations(id: string): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}/validaciones`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching validations for emission ${id}:`, error);
+      throw error;
+    }
+  }
+
   // Crear nueva emisión
   async createEmission(communityId: number, data: CreateEmissionData): Promise<Emission> {
     try {
