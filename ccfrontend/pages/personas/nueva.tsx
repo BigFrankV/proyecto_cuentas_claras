@@ -3,6 +3,8 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/router';
+import { usePersonas } from '@/hooks/usePersonas';
 
 interface FormData {
   tipo: 'Propietario' | 'Inquilino' | 'Administrador';
@@ -71,6 +73,8 @@ const mockUnidades = [
 ];
 
 export default function PersonaNueva() {
+  const router = useRouter();
+  const { crearPersona, validarCampo, loading, error } = usePersonas();
   const [formData, setFormData] = useState<FormData>({
     tipo: 'Propietario',
     nombre: '',
@@ -88,9 +92,10 @@ export default function PersonaNueva() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [validationStates, setValidationStates] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleInputChange = (field: keyof FormData, value: any) => {
+  const handleInputChange = async (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Generar username automáticamente
@@ -100,6 +105,49 @@ export default function PersonaNueva() {
       if (nombre && apellido) {
         const username = `${nombre.toLowerCase()}${apellido.toLowerCase().charAt(0)}`.replace(/\s+/g, '');
         setFormData(prev => ({ ...prev, username }));
+      }
+    }
+
+    // Validación en tiempo real para campos únicos
+    if (field === 'nroDoc' && value) {
+      try {
+        const result = await validarCampo('rut', value);
+        setValidationStates(prev => ({ ...prev, nroDoc: result.valido }));
+        if (!result.valido) {
+          setErrors(prev => ({ ...prev, nroDoc: result.mensaje || 'RUT ya existe' }));
+        } else {
+          setErrors(prev => ({ ...prev, nroDoc: '' }));
+        }
+      } catch (err) {
+        console.error('Error validando RUT:', err);
+      }
+    }
+
+    if (field === 'email' && value) {
+      try {
+        const result = await validarCampo('email', value);
+        setValidationStates(prev => ({ ...prev, email: result.valido }));
+        if (!result.valido) {
+          setErrors(prev => ({ ...prev, email: result.mensaje || 'Email ya existe' }));
+        } else {
+          setErrors(prev => ({ ...prev, email: '' }));
+        }
+      } catch (err) {
+        console.error('Error validando email:', err);
+      }
+    }
+
+    if (field === 'username' && value && formData.crearCuenta) {
+      try {
+        const result = await validarCampo('username', value);
+        setValidationStates(prev => ({ ...prev, username: result.valido }));
+        if (!result.valido) {
+          setErrors(prev => ({ ...prev, username: result.mensaje || 'Username ya existe' }));
+        } else {
+          setErrors(prev => ({ ...prev, username: '' }));
+        }
+      } catch (err) {
+        console.error('Error validando username:', err);
       }
     }
 
@@ -167,11 +215,44 @@ export default function PersonaNueva() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log('Formulario válido:', formData);
-      // Aquí iría la lógica para guardar
+    if (!validateForm()) return;
+
+    try {
+      // Preparar datos para la API
+      const rutParts = formData.nroDoc.split('-');
+      if (!rutParts[0]) {
+        setErrors({ nroDoc: 'Formato de documento inválido' });
+        return;
+      }
+      
+      const personaData: any = {
+        rut: rutParts[0],
+        dv: rutParts[1] || '',
+        nombres: formData.nombre,
+        apellidos: formData.apellido
+      };
+
+      // Agregar campos opcionales solo si tienen valor
+      if (formData.email) personaData.email = formData.email;
+      if (formData.telefono) personaData.telefono = formData.telefono;
+      if (formData.direccion) personaData.direccion = formData.direccion;
+      if (avatarPreview) personaData.avatar = avatarPreview;
+
+      const nuevaPersona = await crearPersona(personaData);
+      
+      // Si se debe crear cuenta de usuario
+      if (formData.crearCuenta && nuevaPersona.id) {
+        // Aquí iría la lógica para crear usuario si la API lo soporta
+        console.log('Usuario creado:', nuevaPersona);
+      }
+
+      // Redirigir a la lista o al detalle
+      router.push('/personas');
+    } catch (err) {
+      console.error('Error al crear persona:', err);
+      setErrors({ submit: 'Error al crear la persona. Intente nuevamente.' });
     }
   };
 
@@ -187,6 +268,23 @@ export default function PersonaNueva() {
 
       <Layout title='Nueva Persona'>
         <div className='container-fluid py-4'>
+          {/* Mostrar error general */}
+          {error && (
+            <div className='alert alert-danger alert-dismissible fade show' role='alert'>
+              <i className='material-icons me-2'>error</i>
+              {error}
+              <button type='button' className='btn-close' onClick={() => {/* clear error */}}></button>
+            </div>
+          )}
+
+          {/* Mostrar error de submit */}
+          {errors.submit && (
+            <div className='alert alert-danger alert-dismissible fade show' role='alert'>
+              <i className='material-icons me-2'>error</i>
+              {errors.submit}
+              <button type='button' className='btn-close' onClick={() => setErrors(prev => ({ ...prev, submit: '' }))}></button>
+            </div>
+          )}
           <div className='row'>
             <div className='col-12'>
               {/* Header */}
@@ -551,11 +649,21 @@ export default function PersonaNueva() {
                     Cancelar
                   </Link>
                   <div>
-                    <button type='button' className='btn btn-outline-primary me-2'>
+                    <button type='button' className='btn btn-outline-primary me-2' disabled={loading}>
                       Guardar como Borrador
                     </button>
-                    <button type='submit' className='btn btn-primary'>
-                      Guardar
+                    <button type='submit' className='btn btn-primary' disabled={loading}>
+                      {loading ? (
+                        <>
+                          <span className='spinner-border spinner-border-sm me-2' role='status'></span>
+                          Guardando...
+                        </>
+                      ) : (
+                        <>
+                          <i className='material-icons me-1' style={{ fontSize: '16px' }}>save</i>
+                          Guardar
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

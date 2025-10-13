@@ -6,6 +6,7 @@ import Layout from '../../components/layout/Layout';
 import { useAuth } from '../../lib/useAuth';
 import comunidadesService from '../../lib/comunidadesService';
 import { ComunidadFormData, TipoComunidad, EstadoComunidad } from '../../types/comunidades';
+import { validateRut, getRutValidationError, formatRut, calculateDV } from '../../lib/rutValidator';
 
 export default function NuevaComunidad() {
   const { user } = useAuth();
@@ -92,6 +93,15 @@ export default function NuevaComunidad() {
       if (!formData.administrador.trim()) {
         newErrors.administrador = 'El administrador es requerido';
       }
+      
+      // Validación de RUT (opcional pero si se ingresa debe ser válido)
+      if (formData.rut || formData.dv) {
+        const rutError = getRutValidationError(formData.rut || '', formData.dv || '');
+        if (rutError) {
+          newErrors.rut = rutError;
+        }
+      }
+      
       if (formData.telefono && !/^\+?[\d\s-()]+$/.test(formData.telefono)) {
         newErrors.telefono = 'Formato de teléfono inválido';
       }
@@ -240,6 +250,62 @@ export default function NuevaComunidad() {
                             <option key={estado} value={estado}>{estado}</option>
                           ))}
                         </select>
+                      </div>
+
+                      {/* Campos de RUT */}
+                      <div className="col-md-8 mb-3">
+                        <label htmlFor="rut" className="form-label">
+                          RUT
+                          <small className="text-muted ms-2">(sin puntos ni guión)</small>
+                        </label>
+                        <input
+                          type="text"
+                          className={`form-control ${errors.rut ? 'is-invalid' : ''}`}
+                          id="rut"
+                          value={formData.rut || ''}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 8);
+                            handleInputChange('rut', value);
+                            // Auto-calcular DV si el RUT tiene 7-8 dígitos
+                            if (value.length >= 7) {
+                              const calculatedDV = calculateDV(value);
+                              handleInputChange('dv', calculatedDV);
+                            }
+                          }}
+                          placeholder="12345678"
+                          maxLength={8}
+                        />
+                        {errors.rut && <div className="invalid-feedback">{errors.rut}</div>}
+                        <small className="form-text text-muted">
+                          Ingrese el RUT y el dígito verificador se calculará automáticamente
+                        </small>
+                      </div>
+
+                      <div className="col-md-4 mb-3">
+                        <label htmlFor="dv" className="form-label">DV</label>
+                        <input
+                          type="text"
+                          className={`form-control ${errors.rut ? 'is-invalid' : ''}`}
+                          id="dv"
+                          value={formData.dv || ''}
+                          onChange={(e) => {
+                            const value = e.target.value.toUpperCase().replace(/[^0-9K]/g, '').slice(0, 1);
+                            handleInputChange('dv', value);
+                          }}
+                          placeholder="K"
+                          maxLength={1}
+                          readOnly={!!(formData.rut && formData.rut.length >= 7)}
+                          style={{ 
+                            backgroundColor: formData.rut && formData.rut.length >= 7 ? '#e9ecef' : 'white',
+                            cursor: formData.rut && formData.rut.length >= 7 ? 'not-allowed' : 'text'
+                          }}
+                        />
+                        {formData.rut && formData.dv && (
+                          <small className="form-text text-success">
+                            <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle' }}>check_circle</span>
+                            {' '}RUT: {formatRut(formData.rut, formData.dv)}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-md-6 mb-3">

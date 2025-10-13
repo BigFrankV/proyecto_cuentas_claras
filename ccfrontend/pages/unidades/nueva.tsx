@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
+import apiClient from '@/lib/api';
 
 interface FormData {
   comunidad: string;
@@ -167,20 +168,48 @@ export default function UnidadNueva() {
     setIsSubmitting(true);
     
     try {
-      // Aquí harías la llamada a la API
-      console.log('Datos de la nueva unidad:', {
-        ...formData,
+      // Construir payload según API
+      const payload = {
+        codigo: formData.codigoUnidad,
+        tipo: formData.tipoUnidad,
+        piso: formData.piso,
+        dormitorios: formData.nroDormitorios,
+        nro_banos: formData.nroBanos,
+        descripcion: formData.descripcion,
+        m2_utiles: formData.m2Utiles,
+        m2_terraza: formData.m2Terrazas,
+        alicuota: formData.alicuota,
+        estacionamiento: formData.estacionamiento ? { numero: formData.estacionamiento, ubicacion: formData.ubicacionEstacionamiento } : null,
+        bodega: formData.bodega ? { numero: formData.bodega, ubicacion: formData.ubicacionBodega } : null,
+        estado: formData.estadoInicial,
         caracteristicas: selectedCaracteristicas,
-        medidores
-      });
-      
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Redirigir al listado
-      router.push('/unidades');
-    } catch (error) {
+        medidores: medidores.map(m => ({ tipo: m.tipo, numero: m.numero, ubicacion: m.ubicacion }))
+      };
+
+      // POST to create unidad on selected comunidad
+      const comunidadId = formData.comunidad;
+      const resp = await apiClient.post(`/unidades/comunidad/${comunidadId}`, payload);
+      // on success, navigate to new unidad detail or list
+      const created = resp.data;
+      if (created && created.id) {
+        router.push(`/unidades/${created.id}`);
+      } else {
+        router.push('/unidades');
+      }
+    } catch (err) {
+      const error: any = err;
       console.error('Error al crear unidad:', error);
+      // map server validation
+      const serverErr = error?.response?.data;
+      if (serverErr) {
+        if (serverErr.errors) {
+          const newErrors: Record<string,string> = {};
+          Object.keys(serverErr.errors).forEach(k => { newErrors[k] = serverErr.errors[k].msg || serverErr.errors[k]; });
+          setErrors(newErrors);
+        } else if (serverErr.error) {
+          setErrors({ _global: serverErr.error });
+        }
+      }
     } finally {
       setIsSubmitting(false);
     }

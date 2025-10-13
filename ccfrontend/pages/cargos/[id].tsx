@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { CargoDetalle, Cargo, PaymentRecord, Document, TimelineItem } from '@/components/cargos';
+import { cargosApi } from '@/lib/api/cargos';
+import { CargoDetalle as CargoDetalleType } from '@/types/cargos';
 import Head from 'next/head';
 
 export default function CargoDetallePage() {
@@ -12,146 +14,51 @@ export default function CargoDetallePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock data - Replace with actual API calls
-  const mockCargo: Cargo = {
-    id: 'CHG-2024-001',
-    concepto: 'Administración Enero 2024',
-    descripcion: 'Cuota de administración mensual correspondiente al período enero 2024',
-    tipo: 'administration',
-    estado: 'paid',
-    monto: 250000,
-    montoAplicado: 250000,
-    unidad: '101-A',
-    periodo: '2024-01',
-    fechaVencimiento: new Date('2024-01-15'),
-    fechaCreacion: new Date('2024-01-01'),
-    cuentaCosto: 'ADM-001',
-    observaciones: 'Cargo generado automáticamente según resolución de la asamblea general.'
-  };
-
-  const mockPayments: PaymentRecord[] = [
-    {
-      id: 'PAY-001',
-      fecha: new Date('2024-01-10'),
-      monto: 125000,
-      metodo: 'Transferencia Bancaria',
-      referencia: 'TRF-001-2024',
-      estado: 'completed',
-      observaciones: 'Pago parcial inicial'
-    },
-    {
-      id: 'PAY-002',
-      fecha: new Date('2024-01-15'),
-      monto: 125000,
-      metodo: 'PSE',
-      referencia: 'PSE-002-2024',
-      estado: 'completed',
-      observaciones: 'Completar pago restante antes del vencimiento'
-    }
-  ];
-
-  const mockDocuments: Document[] = [
-    {
-      id: 'DOC-001',
-      nombre: 'Factura_Administracion_Enero_2024.pdf',
-      tipo: 'PDF',
-      tamaño: 256789,
-      fechaSubida: new Date('2024-01-01'),
-      url: '/documents/factura-adm-ene-2024.pdf'
-    },
-    {
-      id: 'DOC-002',
-      nombre: 'Soporte_Pago_Transferencia.jpg',
-      tipo: 'Image',
-      tamaño: 98432,
-      fechaSubida: new Date('2024-01-10'),
-      url: '/documents/soporte-pago-001.jpg'
-    },
-    {
-      id: 'DOC-003',
-      nombre: 'Comprobante_PSE.pdf',
-      tipo: 'PDF',
-      tamaño: 143256,
-      fechaSubida: new Date('2024-01-15'),
-      url: '/documents/comprobante-pse-002.pdf'
-    }
-  ];
-
-  const mockTimeline: TimelineItem[] = [
-    {
-      id: 'TL-001',
-      type: 'info',
-      title: 'Cargo Creado',
-      content: 'Se creó el cargo de administración para enero 2024 según resolución de asamblea',
-      date: new Date('2024-01-01 09:00:00'),
-      user: 'Sistema Admin'
-    },
-    {
-      id: 'TL-002',
-      type: 'success',
-      title: 'Cargo Aprobado',
-      content: 'El cargo fue aprobado por el administrador y enviado para notificación',
-      date: new Date('2024-01-02 14:30:00'),
-      user: 'María González'
-    },
-    {
-      id: 'TL-003',
-      type: 'info',
-      title: 'Notificación Enviada',
-      content: 'Se envió notificación por email y WhatsApp al propietario y residente',
-      date: new Date('2024-01-02 15:00:00'),
-      user: 'Sistema Notificaciones'
-    },
-    {
-      id: 'TL-004',
-      type: 'success',
-      title: 'Pago Parcial Recibido',
-      content: 'Se recibió pago parcial por $125.000 vía transferencia bancaria. Referencia: TRF-001-2024',
-      date: new Date('2024-01-10 16:45:00'),
-      user: 'Sistema Pagos'
-    },
-    {
-      id: 'TL-005',
-      type: 'success',
-      title: 'Pago Completado',
-      content: 'Se completó el pago total del cargo vía PSE. Referencia: PSE-002-2024',
-      date: new Date('2024-01-15 11:20:00'),
-      user: 'Sistema Pagos'
-    },
-    {
-      id: 'TL-006',
-      type: 'success',
-      title: 'Cargo Cancelado',
-      content: 'El cargo fue marcado como pagado en su totalidad y cancelado del sistema',
-      date: new Date('2024-01-15 11:25:00'),
-      user: 'Sistema Pagos'
-    }
-  ];
-
   useEffect(() => {
     const fetchCargo = async () => {
-      if (!id) return;
-      
+      if (!id || typeof id !== 'string') return;
+
       setLoading(true);
+      setError(null);
+
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch(`/api/cargos/${id}`);
-        // if (!response.ok) {
-        //   throw new Error('Cargo no encontrado');
-        // }
-        // const cargoData = await response.json();
-        
-        // Mock delay to simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Simulate cargo not found for invalid IDs
-        if (id !== 'CHG-2024-001') {
-          throw new Error('Cargo no encontrado');
-        }
-        
-        setCargo(mockCargo);
+        console.log('🔍 Cargando detalle del cargo:', id);
+
+        // Obtener el cargo desde la API
+        const cargoData = await cargosApi.getById(parseInt(id));
+
+        // Mapear los datos de la API al formato que espera el componente
+        const estadoMapping: Record<string, 'pending' | 'approved' | 'rejected' | 'paid' | 'partial'> = {
+          'pendiente': 'pending',
+          'pagado': 'paid',
+          'vencido': 'pending', // Mapear vencido como pending
+          'parcial': 'partial'
+        };
+
+        const mappedCargo: Cargo = {
+          id: cargoData.id.toString(),
+          concepto: cargoData.concepto,
+          descripcion: cargoData.descripcion || '',
+          tipo: cargoData.tipo.toLowerCase().includes('administración') ? 'administration' :
+                cargoData.tipo.toLowerCase().includes('mantenimiento') ? 'maintenance' :
+                cargoData.tipo.toLowerCase().includes('servicio') ? 'service' :
+                cargoData.tipo.toLowerCase().includes('seguro') ? 'insurance' : 'other',
+          estado: estadoMapping[cargoData.estado] || 'pending',
+          monto: cargoData.monto,
+          montoAplicado: cargoData.monto - cargoData.saldo, // Calcular monto aplicado
+          unidad: cargoData.unidad,
+          periodo: cargoData.periodo || '',
+          fechaVencimiento: cargoData.fechaVencimiento,
+          fechaCreacion: cargoData.fechaCreacion,
+          cuentaCosto: `CCU-${cargoData.id}`, // Generar un código de cuenta de costo
+          observaciones: `Propietario: ${cargoData.propietario || 'N/A'}`
+        };
+
+        console.log('✅ Cargo mapeado:', mappedCargo);
+        setCargo(mappedCargo);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido');
+        console.error('❌ Error al cargar cargo:', err);
+        setError(err instanceof Error ? err.message : 'Error desconocido al cargar el cargo');
       } finally {
         setLoading(false);
       }
@@ -242,9 +149,6 @@ export default function CargoDetallePage() {
 
           <CargoDetalle 
             cargo={cargo}
-            pagos={mockPayments}
-            documentos={mockDocuments}
-            historial={mockTimeline}
           />
         </div>
       </Layout>

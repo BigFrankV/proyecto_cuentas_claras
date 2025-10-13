@@ -6,6 +6,9 @@ export interface Comunidad {
   direccion: string;
   tipo: 'Condominio' | 'Edificio' | 'Conjunto Residencial' | 'Otro';
   estado: 'Activa' | 'Inactiva' | 'Suspendida';
+  rut?: string;
+  dv?: string;
+  descripcion?: string;
   administrador: string;
   telefono?: string;
   email?: string;
@@ -145,6 +148,8 @@ export interface HistorialParametros {
 // Formulario para crear/editar comunidad
 export interface ComunidadFormData {
   nombre: string;
+  rut?: string;
+  dv?: string;
   direccion: string;
   tipo: 'Condominio' | 'Edificio' | 'Conjunto Residencial' | 'Otro';
   estado: 'Activa' | 'Inactiva' | 'Suspendida';
@@ -219,6 +224,18 @@ export const VALIDATION_RULES = {
   email: {
     pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     required: false
+  },
+  rut: {
+    pattern: /^\d{7,8}$/,
+    min: 7,
+    max: 8,
+    required: false,
+    message: 'El RUT debe tener entre 7 y 8 dígitos'
+  },
+  dv: {
+    pattern: /^[0-9kK]$/,
+    required: false,
+    message: 'El dígito verificador debe ser un número del 0-9 o K'
   },
   tasaMora: {
     min: 0,

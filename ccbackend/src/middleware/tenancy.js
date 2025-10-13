@@ -17,18 +17,22 @@ function requireCommunity(paramName = 'comunidadId', allowedRoles = []) {
       const comunidadId = req.params[paramName];
       if (!comunidadId) return res.status(400).json({ error: 'missing comunidad id' });
 
-      const personaId = req.user.persona_id;
-      if (!personaId) return res.status(403).json({ error: 'forbidden' });
+      const usuarioId = req.user.sub;
+      if (!usuarioId) return res.status(403).json({ error: 'forbidden' });
 
-      // buscar membresía activa
-      const [rows] = await db.query(
-        'SELECT rol FROM membresia_comunidad WHERE comunidad_id = ? AND persona_id = ? AND activo = 1 LIMIT 1',
-        [comunidadId, personaId]
-      );
+      // buscar membresía activa en usuario_rol_comunidad (nueva estructura)
+      const [rows] = await db.query(`
+        SELECT r.codigo as rol, r.nivel_acceso 
+        FROM usuario_rol_comunidad ucr
+        INNER JOIN rol_sistema r ON r.id = ucr.rol_id
+        WHERE ucr.comunidad_id = ? AND ucr.usuario_id = ? AND ucr.activo = 1 
+        LIMIT 1
+      `, [comunidadId, usuarioId]);
 
       if (rows && rows.length) {
         const rolMembresia = String(rows[0].rol || '').toLowerCase();
-        req.membership = { comunidadId: Number(comunidadId), rol: rolMembresia };
+        const nivelAcceso = rows[0].nivel_acceso;
+        req.membership = { comunidadId: Number(comunidadId), rol: rolMembresia, nivel_acceso: nivelAcceso };
 
         // si no se requieren roles específicos, pertenecer basta
         if (!allowedRoles || allowedRoles.length === 0) return next();

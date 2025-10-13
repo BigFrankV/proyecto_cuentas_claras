@@ -5,6 +5,13 @@ const nextConfig = {
   swcMinify: true,
   output: 'export',
 
+  // Experimental options to fix EMFILE error
+  experimental: {
+    // Reduce concurrent processing to avoid EMFILE errors
+    workerThreads: false,
+    cpus: 1,
+  },
+
   // Configuración de imágenes
   images: {
     domains: ['localhost', 'example.com'],
