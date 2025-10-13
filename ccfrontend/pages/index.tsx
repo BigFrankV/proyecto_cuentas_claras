@@ -138,13 +138,15 @@ export default function Home() {
 
   // Pre-llenar los campos con las credenciales por defecto
   const fillDefaultCredentials = () => {
-    // ✅ CORRECCIÓN: Cambiar 'username' por 'identifier'
-    setIdentifierValue('user2');
+    const usernameInput = document.querySelector(
+      'input[name="username"]'
+    ) as HTMLInputElement;
     const passwordInput = document.querySelector(
       'input[name="password"]'
     ) as HTMLInputElement;
 
-    if (passwordInput) passwordInput.value = 'user2';
+    if (usernameInput) usernameInput.value = 'patrick';
+    if (passwordInput) passwordInput.value = 'patrick';
   };
 
   return (
@@ -496,8 +498,7 @@ export default function Home() {
                         onClick={fillDefaultCredentials}
                         style={{ fontSize: 'inherit' }}
                       >
-                        {/* ✅ CORRECCIÓN: Cambiar a user2/user2 */}
-                        <strong>user2</strong> / <strong>user2</strong>
+                        <strong>patrick</strong> / <strong>patrick</strong>
                       </button>
                       <br />
                       <small className='text-muted'>

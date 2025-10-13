@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'; // ✅ AGREGAR ESTA LÍNEA
 import { useAuth } from './useAuth';
 
 // Definición de roles del sistema
@@ -31,19 +31,6 @@ export enum Permission {
   // Configuración del sistema
   SYSTEM_CONFIG = 'system_config',
 }
-
-// Mapa simple: permiso lógico -> roles que lo permiten (slugs)
-const PERMISSION_MAP: Record<string, string[]> = {
-  'multas.view_all': ['superadmin','sistema','soporte_tecnico'],
-  'multas.view_community': ['admin_comunidad','presidente_comite','sindico','contador','tesorero','admin_externo','conserje'],
-  'multas.view_own': ['propietario','inquilino','residente'],
-  'multas.create': ['superadmin','presidente_comite','admin_comunidad','sindico','contador','admin_externo','conserje'],
-  'multas.edit': ['superadmin','presidente_comite','admin_comunidad','sindico','contador','admin_externo','soporte_tecnico','sistema'],
-  'multas.anular': ['superadmin','presidente_comite','admin_comunidad'],
-  'multas.register_payment': ['superadmin','presidente_comite','admin_comunidad','sindico','contador','tesorero','sistema','soporte_tecnico'],
-  'multas.delete': ['superadmin'], // <-- ahora sólo superadmin
-  'multas.apelar': ['propietario','inquilino','residente']
-};
 
 // Mapa de roles y sus permisos
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -87,125 +74,33 @@ export function usePermissions() {
   const getUserRole = (): UserRole => {
     if (!user) return UserRole.USER;
 
-    console.log('🔍 [usePermissions] Determinando rol para:', {
-      username: user.username,
-      is_superadmin: user.is_superadmin,
-      is_admin: user.is_admin,
-      roles: user.roles,
-      roles_slug: user.roles_slug
-    });
-
-    // ✅ 1. Verificar si es superadmin desde el backend
-    if (user.is_superadmin === true) {
-      console.log('✅ [usePermissions] Usuario es SUPERUSER (is_superadmin=true)');
+    // Verificar si es superadmin desde el token
+    if (user.is_superadmin) {
       return UserRole.SUPERUSER;
     }
 
-    // ✅ 2. Verificar si es admin desde el backend
-    if (user.is_admin === true) {
-      console.log('✅ [usePermissions] Usuario es ADMIN (is_admin=true)');
-      return UserRole.ADMIN;
+    // Si tiene roles específicos, usar el más alto
+    if (user.roles && user.roles.length > 0) {
+      const roles = user.roles.map((r: any) => r.toLowerCase()); // ✅ AGREGAR tipo any
+      
+      if (roles.includes('admin')) return UserRole.ADMIN;
+      if (roles.includes('manager') || roles.includes('comite')) return UserRole.MANAGER;
+      if (roles.includes('propietario') || roles.includes('residente')) return UserRole.USER;
     }
 
-    // ✅ 3. Extraer roles (priorizar roles_slug si existe)
-    let rolesSlug: string[] = [];
-
-    if (user.roles_slug && Array.isArray(user.roles_slug)) {
-      // Usar roles_slug directamente (es un array de strings)
-      rolesSlug = user.roles_slug.map((r: string) => r.toLowerCase());
-      console.log('📋 [usePermissions] Usando roles_slug:', rolesSlug);
-    } else if (user.roles && Array.isArray(user.roles)) {
-      // ✅ CORRECCIÓN: Extraer slug desde array de objetos
-      rolesSlug = user.roles
-        .map((r: any) => {
-          // Intentar obtener slug, codigo, o el valor directo
-          if (typeof r === 'string') return r;
-          return r.slug || r.codigo || null;
-        })
-        .filter((r: any): r is string => typeof r === 'string' && r.length > 0)
-        .map((r: string) => r.toLowerCase());
-      console.log('📋 [usePermissions] Roles extraídos desde user.roles:', rolesSlug);
-    }
-
-    // ✅ 4. Mapear roles del backend a roles del frontend
-    // Superadmin
-    if (rolesSlug.includes('superadmin')) {
-      console.log('✅ [usePermissions] Rol "superadmin" detectado → SUPERUSER');
+    // Patrick es superuser por defecto (fallback para compatibilidad)
+    if (user.username === 'patrick' || user.username === 'patricio.quintanilla') {
       return UserRole.SUPERUSER;
     }
 
-    // Admin
-    if (
-      rolesSlug.includes('admin') || 
-      rolesSlug.includes('admin_comunidad') ||
-      rolesSlug.includes('admin_externo')
-    ) {
-      console.log('✅ [usePermissions] Rol admin detectado → ADMIN');
-      return UserRole.ADMIN;
-    }
-
-    // Manager (Tesorero, Presidente, Secretario, Moderador)
-    if (
-      rolesSlug.includes('manager') || 
-      rolesSlug.includes('comite') || 
-      rolesSlug.includes('tesorero') ||
-      rolesSlug.includes('presidente_comite') ||
-      rolesSlug.includes('secretario') ||
-      rolesSlug.includes('moderador_comunidad') ||
-      rolesSlug.includes('coordinador_reservas') ||
-      rolesSlug.includes('sindico')
-    ) {
-      console.log('✅ [usePermissions] Rol manager detectado → MANAGER');
-      return UserRole.MANAGER;
-    }
-
-    // Usuario regular (Propietario, Residente, Inquilino)
-    if (
-      rolesSlug.includes('propietario') || 
-      rolesSlug.includes('residente') ||
-      rolesSlug.includes('inquilino') ||
-      rolesSlug.includes('conserje') ||
-      rolesSlug.includes('proveedor_servicio')
-    ) {
-      console.log('✅ [usePermissions] Rol usuario detectado → USER');
-      return UserRole.USER;
-    }
-
-    // ✅ 5. Fallback: Patrick es superuser (compatibilidad)
-    if (user.username === 'patrick' || user.username === 'patricio.quintanilla' || user.username === 'patricio') {
-      console.log('✅ [usePermissions] Usuario especial (Patrick) → SUPERUSER');
-      return UserRole.SUPERUSER;
-    }
-
-    // Por defecto, usuario regular
-    console.log('⚠️ [usePermissions] Sin rol específico → USER por defecto');
+    // En el futuro, esto vendría de la API
+    // Por ahora, defaultear a USER
     return UserRole.USER;
   };
 
   const currentRole = getUserRole();
 
-  // obtener rol/slug primario para mostrar en UI (ej: 'propietario', 'residente', 'inquilino')
-  const getPrimaryRoleSlug = (): string | null => {
-    // priorizar roles_slug si viene del backend
-    if (user?.roles_slug && Array.isArray(user.roles_slug) && user.roles_slug.length > 0) {
-      return String(user.roles_slug[0]).toLowerCase();
-    }
-    // luego buscar en memberships (rol por comunidad)
-    if (user?.memberships && Array.isArray(user.memberships) && user.memberships.length > 0) {
-      const r = user.memberships[0].rol_slug ?? user.memberships[0].rol;
-      if (r) return String(r).toLowerCase();
-    }
-    // fallback a user.roles si es array de strings
-    if (user?.roles && Array.isArray(user.roles) && typeof user.roles[0] === 'string') {
-      return String(user.roles[0]).toLowerCase();
-    }
-    return null;
-  };
-
-  const primaryRoleSlug = getPrimaryRoleSlug();
-  const primaryRoleLabel = primaryRoleSlug ? primaryRoleSlug.replace(/_/g, ' ') : String(currentRole).toLowerCase();
-
-  // ✅ CORRECCIÓN: Verificar acceso a comunidad específica
+  // ✅ NUEVO: Verificar acceso a comunidad específica
   const hasAccessToCommunity = (communityId?: number): boolean => {
     // Superadmin ve todas las comunidades
     if (user?.is_superadmin) return true;
@@ -213,10 +108,10 @@ export function usePermissions() {
     // Si no hay comunidad específica, permitir
     if (!communityId) return true;
     
-    // ✅ CORRECCIÓN: usar comunidad_id (con guion bajo)
+    // Verificar si el usuario pertenece a esa comunidad
     if (user?.memberships && Array.isArray(user.memberships)) {
       return user.memberships.some((membership: any) => 
-        membership.comunidad_id === communityId // ✅ CORREGIDO
+        membership.comunidadId === communityId
       );
     }
     
@@ -224,23 +119,23 @@ export function usePermissions() {
     return user?.comunidad_id === communityId;
   };
 
-  // ✅ CORRECCIÓN: Obtener comunidades del usuario
-  const getUserCommunities = (): Array<{comunidad_id: number, rol: string, comunidad_nombre?: string}> => {
+  // ✅ NUEVO: Obtener comunidades del usuario
+  const getUserCommunities = (): Array<{comunidadId: number, rol: string}> => {
     if (user?.is_superadmin) return []; // Superadmin ve todas
     return user?.memberships || [];
   };
 
-  // ✅ CORRECCIÓN: Verificar si tiene un rol específico en una comunidad
+  // ✅ NUEVO: Verificar si tiene un rol específico en una comunidad
   const hasRoleInCommunity = (communityId: number, roleToCheck: string): boolean => {
     if (user?.is_superadmin) return true;
     
     return user?.memberships?.some((membership: any) => 
-      membership.comunidad_id === communityId && // ✅ CORREGIDO
-      membership.rol?.toLowerCase() === roleToCheck.toLowerCase()
+      membership.comunidadId === communityId && 
+      membership.rol.toLowerCase() === roleToCheck.toLowerCase()
     ) || false;
   };
 
-  // Verificar permisos con contexto de comunidad
+  // ✅ MODIFICADO: Verificar permisos con contexto de comunidad
   const hasPermission = (permission: Permission, communityId?: number): boolean => {
     const rolePermissions = ROLE_PERMISSIONS[currentRole] || [];
     const hasBasePermission = rolePermissions.includes(permission);
@@ -287,32 +182,30 @@ export function usePermissions() {
     return ROLE_PERMISSIONS[currentRole] || [];
   };
 
-  // Verificar si puede administrar una comunidad específica
+  // ✅ NUEVO: Verificar si puede administrar una comunidad específica
   const canManageCommunity = (communityId?: number): boolean => {
     return hasPermission(Permission.MANAGE_COMMUNITIES, communityId);
   };
 
-  // Verificar si puede ver finanzas de una comunidad específica  
+  // ✅ NUEVO: Verificar si puede ver finanzas de una comunidad específica  
   const canViewCommunityFinances = (communityId?: number): boolean => {
     return hasPermission(Permission.VIEW_FINANCES, communityId);
   };
 
-  // Verificar si puede gestionar usuarios de una comunidad específica
+  // ✅ NUEVO: Verificar si puede gestionar usuarios de una comunidad específica
   const canManageCommunityUsers = (communityId?: number): boolean => {
     return hasPermission(Permission.MANAGE_USERS, communityId);
   };
 
   return {
     currentRole,
-    primaryRoleSlug,
-    primaryRoleLabel,
     hasPermission,
     hasRole,
     isSuperUser,
     isAdmin,
     getUserPermissions,
     
-    // Funciones para multi-tenancy
+    // ✅ NUEVAS FUNCIONES para multi-tenancy
     hasAccessToCommunity,
     getUserCommunities,
     hasRoleInCommunity,
@@ -354,69 +247,4 @@ export function PermissionGuard({
     (!permission && !role); // Si no se especifica permiso/rol, mostrar siempre
 
   return hasAccess ? <>{children}</> : <>{fallback}</>;
-}
-
-export function hasPermission(user: any, permission: string, comunidadId?: number) {
-  if (!user) return false;
-  if (user.is_superadmin) return true; // superadmin siempre puede (global)
-
-  const allowedRoles = (PERMISSION_MAP[permission] ?? []).map(r => r.toLowerCase());
-
-  // roles globales del usuario (si existen)
-  const userRolesGlobal = (user.roles || []).map((r: any) => (r.slug || r.codigo || String(r)).toLowerCase());
-
-  // permiso concedido por rol global
-  if (allowedRoles.some(ar => userRolesGlobal.includes(ar))) {
-    // para permisos que afectan a una comunidad, exigir comunidadId y membership
-    if (permission.startsWith('multas.') && ['multas.create','multas.edit','multas.anular','multas.register_payment','multas.view_community'].includes(permission)) {
-      if (!comunidadId) return false; // requerir comunidad explícita en UI
-      return (user.memberships || []).some((m: any) =>
-        Number(m.comunidad_id) === Number(comunidadId) && allowedRoles.includes(String(m.rol_slug ?? m.rol ?? '').toLowerCase())
-      );
-    }
-    // permisos no comunitarios (o globales) ya permitidos por rol
-    return true;
-  }
-
-  // casos: view_community / create / edit / anular / register_payment -> comprobar memberships
-  if (permission === 'multas.view_community' || permission === 'multas.create' || permission === 'multas.edit' || permission === 'multas.anular' || permission === 'multas.register_payment') {
-    if (!comunidadId) return false; // exigir comunidad
-    return (user.memberships || []).some((m: any) =>
-      Number(m.comunidad_id) === Number(comunidadId) &&
-      allowedRoles.includes(String(m.rol_slug ?? m.rol ?? '').toLowerCase())
-    );
-  }
-
-  // view_own: necesita persona_id y que la multa pertenezca a la persona (backend siempre verifica)
-  if (permission === 'multas.view_own') {
-    return !!user.persona_id;
-  }
-
-  return false;
-}
-export function canCreateAnyMulta(user: any): boolean {
-  if (!user) return false;
-  if (user.is_superadmin) return true;
-  const allowed = ['presidente_comite','admin_comunidad','sindico','contador','admin_externo','conserje'];
-  return (user.memberships || []).some((m: any) => allowed.includes(String(m.rol_slug ?? m.rol ?? '').toLowerCase()));
-}
-
-export function canCreateMulta(user: any, comunidadId?: number): boolean {
-  if (!user) return false;
-  if (user.is_superadmin) return true;
-  if (!comunidadId) return false;
-  const allowed = ['presidente_comite','admin_comunidad','sindico','contador','admin_externo','conserje'];
-  return (user.memberships || []).some((m: any) =>
-    Number(m.comunidad_id) === Number(comunidadId) && allowed.includes(String(m.rol_slug ?? m.rol ?? '').toLowerCase())
-  );
-}
-
-export function canRegisterPayment(user: any, comunidadId?: number): boolean {
-  if (!user) return false;
-  if (user.is_superadmin) return true;
-  if (!comunidadId) return false;
-  const allowed = ['presidente_comite','admin_comunidad','sindico','contador','tesorero','sistema','soporte_tecnico'];
-  return (user.memberships || []).some((m: any) =>
-    Number(m.comunidad_id) === Number(comunidadId) && allowed.includes(String(m.rol_slug ?? m.rol ?? '').toLowerCase())
-  );
 }

@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import { ActivityTypeCard, PriorityOption, ActivityBadge, PriorityBadge, FileIcon } from '@/components/bitacora';
- 
+
 interface UploadedFile {
   id: string;
   name: string;
