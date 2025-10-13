@@ -91,134 +91,82 @@ export default function EmisionDetalle() {
     }
   }, [id]);
 
-  const loadEmissionData = () => {
-    // Mock data
-    setTimeout(() => {
+  const loadEmissionData = async () => {
+    try {
+      setLoading(true);
+      const emisionesService = (await import('@/lib/emisionesService')).default;
+      
+      // Cargar datos en paralelo
+      const [emissionData, conceptsData, expensesData, unitsData, paymentsData, historyData] = await Promise.all([
+        emisionesService.getEmissionById(id as string),
+        emisionesService.getEmissionConcepts(id as string),
+        emisionesService.getEmissionExpenses(id as string),
+        emisionesService.getEmissionUnits(id as string),
+        emisionesService.getEmissionPayments(id as string),
+        emisionesService.getEmissionHistory(id as string)
+      ]);
+
+      // Convertir EmissionDetail
       const mockEmission: EmissionDetail = {
-        id: id as string,
-        period: 'Septiembre 2025',
-        type: 'gastos_comunes',
-        status: 'sent',
-        issueDate: '2025-09-01',
-        dueDate: '2025-09-15',
-        totalAmount: 2500000,
-        paidAmount: 1800000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de septiembre',
-        communityName: 'Edificio Central',
-        hasInterest: true,
-        interestRate: 2.0,
-        gracePeriod: 5
+        ...emissionData,
+        hasInterest: (emissionData as any).tieneInteres || false,
+        interestRate: (emissionData as any).tasaInteres || 0,
+        gracePeriod: (emissionData as any).periodoGracia || 0
       };
 
-      const mockConcepts: Concept[] = [
-        {
-          id: '1',
-          name: 'Administración',
-          description: 'Honorarios administrador y gastos administrativos',
-          amount: 450000,
-          distributionType: 'proportional',
-          category: 'Administración'
-        },
-        {
-          id: '2',
-          name: 'Servicios Básicos',
-          description: 'Electricidad y agua áreas comunes',
-          amount: 730000,
-          distributionType: 'proportional',
-          category: 'Servicios'
-        },
-        {
-          id: '3',
-          name: 'Fondo de Reserva',
-          description: 'Aporte mensual al fondo de reserva',
-          amount: 200000,
-          distributionType: 'equal',
-          category: 'Reservas'
-        }
-      ];
+      // Mapear conceptos
+      const mockConcepts: Concept[] = conceptsData.map(c => ({
+        id: c.id,
+        name: c.name,
+        description: c.description,
+        amount: c.amount,
+        distributionType: c.distributionType as 'proportional' | 'equal' | 'custom',
+        category: c.category
+      }));
 
-      const mockExpenses: ExpenseDetail[] = [
-        {
-          id: '1',
-          description: 'Consumo eléctrico - Septiembre',
-          amount: 450000,
-          category: 'Servicios Básicos',
-          supplier: 'CGE',
-          date: '2025-09-15',
-          document: 'Factura #12345'
-        },
-        {
-          id: '2',
-          description: 'Consumo de agua - Septiembre',
-          amount: 280000,
-          category: 'Servicios Básicos',
-          supplier: 'ESVAL',
-          date: '2025-09-10',
-          document: 'Factura #67890'
-        }
-      ];
+      // Mapear gastos
+      const mockExpenses: ExpenseDetail[] = expensesData.map(e => ({
+        id: e.id,
+        description: e.description,
+        amount: e.amount,
+        category: e.category,
+        supplier: e.supplier,
+        date: e.date,
+        document: e.document
+      }));
 
-      const mockUnits: UnitDetail[] = [
-        {
-          id: '1',
-          number: '101',
-          type: 'Departamento',
-          owner: 'Juan Pérez',
-          contact: 'juan.perez@email.com',
-          participation: 2.5,
-          totalAmount: 62500,
-          paidAmount: 62500,
-          status: 'paid'
-        },
-        {
-          id: '2',
-          number: '102',
-          type: 'Departamento',
-          owner: 'María González',
-          contact: 'maria.gonzalez@email.com',
-          participation: 2.2,
-          totalAmount: 55000,
-          paidAmount: 30000,
-          status: 'partial'
-        }
-      ];
+      // Mapear unidades
+      const mockUnits: UnitDetail[] = unitsData.map(u => ({
+        id: u.id,
+        number: u.unitNumber,
+        type: u.unitType,
+        owner: u.owner,
+        contact: u.contact,
+        participation: u.participation,
+        totalAmount: u.totalAmount,
+        paidAmount: u.paidAmount,
+        status: u.status as 'pending' | 'partial' | 'paid'
+      }));
 
-      const mockPayments: Payment[] = [
-        {
-          id: '1',
-          date: '2025-09-10',
-          amount: 62500,
-          method: 'Transferencia',
-          reference: 'TRF001234',
-          unit: '101',
-          status: 'confirmed'
-        },
-        {
-          id: '2',
-          date: '2025-09-12',
-          amount: 30000,
-          method: 'Efectivo',
-          reference: 'EF001',
-          unit: '102',
-          status: 'confirmed'
-        }
-      ];
+      // Mapear pagos
+      const mockPayments: Payment[] = paymentsData.map(p => ({
+        id: p.id,
+        date: p.date,
+        amount: p.amount,
+        method: p.method,
+        reference: p.reference,
+        unit: p.unit,
+        status: p.status as 'confirmed' | 'pending' | 'rejected'
+      }));
 
-      const mockHistory: HistoryEntry[] = [
+      // Mapear historial
+      const mockHistory: HistoryEntry[] = historyData.length > 0 ? historyData : [
         {
           id: '1',
-          date: '2025-09-01',
+          date: emissionData.issueDate,
           action: 'Emisión creada',
-          user: 'Administrador',
-          description: 'Se creó la emisión de gastos comunes'
-        },
-        {
-          id: '2',
-          date: '2025-09-02',
-          action: 'Emisión enviada',
-          user: 'Administrador',
-          description: 'Se envió la emisión a todas las unidades'
+          user: 'Sistema',
+          description: 'Se creó la emisión'
         }
       ];
 
@@ -229,7 +177,10 @@ export default function EmisionDetalle() {
       setPayments(mockPayments);
       setHistory(mockHistory);
       setLoading(false);
-    }, 1000);
+    } catch (error) {
+      console.error('Error al cargar datos de emisión:', error);
+      setLoading(false);
+    }
   };
 
   const formatCurrency = (amount: number) => {

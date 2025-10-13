@@ -63,136 +63,73 @@ export default function EmisionProrrateo() {
     }
   }, [id]);
 
-  const loadProrrateoData = () => {
-    // Mock data
-    setTimeout(() => {
+  const loadProrrateoData = async () => {
+    try {
+      setLoading(true);
+      const emisionesService = (await import('@/lib/emisionesService')).default;
+      
+      // Cargar datos de la emisión y unidades
+      const [emissionData, unitsData, conceptsData] = await Promise.all([
+        emisionesService.getEmissionById(id as string),
+        emisionesService.getEmissionUnits(id as string),
+        emisionesService.getEmissionConcepts(id as string)
+      ]);
+
       const mockEmission: EmissionDetail = {
-        id: id as string,
-        period: 'Septiembre 2025',
-        type: 'gastos_comunes',
-        status: 'sent',
-        issueDate: '2025-09-01',
-        dueDate: '2025-09-15',
-        totalAmount: 2500000,
-        paidAmount: 1800000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de septiembre',
-        communityName: 'Edificio Central'
+        id: emissionData.id,
+        period: emissionData.period,
+        type: emissionData.type,
+        status: emissionData.status,
+        issueDate: emissionData.issueDate,
+        dueDate: emissionData.dueDate,
+        totalAmount: emissionData.totalAmount,
+        paidAmount: emissionData.paidAmount,
+        unitCount: emissionData.unitCount,
+        description: emissionData.description,
+        communityName: emissionData.communityName
       };
 
-      const mockUnits: UnitDistribution[] = [
-        {
-          id: '1',
-          unitNumber: '101',
-          unitType: 'Departamento',
-          owner: 'Juan Pérez',
-          participation: 2.5,
-          totalAmount: 62500,
-          paidAmount: 62500,
-          status: 'paid',
-          details: [
-            {
-              conceptId: '1',
-              conceptName: 'Administración',
-              totalAmount: 450000,
-              unitAmount: 11250,
-              distributionType: 'proportional'
-            },
-            {
-              conceptId: '2',
-              conceptName: 'Servicios Básicos',
-              totalAmount: 730000,
-              unitAmount: 18250,
-              distributionType: 'proportional'
-            },
-            {
-              conceptId: '3',
-              conceptName: 'Fondo de Reserva',
-              totalAmount: 900000,
-              unitAmount: 20000,
-              distributionType: 'equal'
-            }
-          ]
-        },
-        {
-          id: '2',
-          unitNumber: '102',
-          unitType: 'Departamento',
-          owner: 'María González',
-          participation: 2.2,
-          totalAmount: 55000,
-          paidAmount: 30000,
-          status: 'partial',
-          details: [
-            {
-              conceptId: '1',
-              conceptName: 'Administración',
-              totalAmount: 450000,
-              unitAmount: 9900,
-              distributionType: 'proportional'
-            },
-            {
-              conceptId: '2',
-              conceptName: 'Servicios Básicos',
-              totalAmount: 730000,
-              unitAmount: 16060,
-              distributionType: 'proportional'
-            },
-            {
-              conceptId: '3',
-              conceptName: 'Fondo de Reserva',
-              totalAmount: 900000,
-              unitAmount: 20000,
-              distributionType: 'equal'
-            }
-          ]
-        },
-        {
-          id: '3',
-          unitNumber: '201',
-          unitType: 'Departamento',
-          owner: 'Carlos Rodríguez',
-          participation: 2.8,
-          totalAmount: 70000,
-          paidAmount: 0,
-          status: 'pending',
-          details: [
-            {
-              conceptId: '1',
-              conceptName: 'Administración',
-              totalAmount: 450000,
-              unitAmount: 12600,
-              distributionType: 'proportional'
-            },
-            {
-              conceptId: '2',
-              conceptName: 'Servicios Básicos',
-              totalAmount: 730000,
-              unitAmount: 20440,
-              distributionType: 'proportional'
-            },
-            {
-              conceptId: '3',
-              conceptName: 'Fondo de Reserva',
-              totalAmount: 900000,
-              unitAmount: 20000,
-              distributionType: 'equal'
-            }
-          ]
-        }
-      ];
+      // Mapear unidades con detalles de conceptos
+      const mockUnits: UnitDistribution[] = unitsData.map(u => {
+        // Calcular detalles de conceptos para cada unidad
+        const details: ConceptDistribution[] = conceptsData.map(c => ({
+          conceptId: c.id,
+          conceptName: c.name,
+          totalAmount: c.amount,
+          unitAmount: c.distributionType === 'equal' 
+            ? c.amount / emissionData.unitCount 
+            : (c.amount * u.participation) / 100,
+          distributionType: c.distributionType as 'proportional' | 'equal' | 'custom'
+        }));
 
+        return {
+          id: u.id,
+          unitNumber: u.unitNumber,
+          unitType: u.unitType,
+          owner: u.owner,
+          participation: u.participation,
+          totalAmount: u.totalAmount,
+          paidAmount: u.paidAmount,
+          status: u.status as 'pending' | 'partial' | 'paid',
+          details
+        };
+      });
+
+      // Crear datos del gráfico
       const mockChartData: DistributionChart = {
-        labels: ['Administración', 'Servicios Básicos', 'Fondo de Reserva', 'Mantención', 'Seguros'],
-        amounts: [450000, 730000, 900000, 320000, 100000],
-        colors: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1']
+        labels: conceptsData.map(c => c.name),
+        amounts: conceptsData.map(c => c.amount),
+        colors: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#20c997', '#fd7e14']
       };
 
       setEmission(mockEmission);
       setUnits(mockUnits);
       setChartData(mockChartData);
       setLoading(false);
-    }, 1000);
+    } catch (error) {
+      console.error('Error al cargar datos de prorrateo:', error);
+      setLoading(false);
+    }
   };
 
   const formatCurrency = (amount: number) => {
