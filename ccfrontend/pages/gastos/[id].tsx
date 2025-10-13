@@ -4,7 +4,6 @@ import { Button, Card, Badge, Alert, Table, Modal, Dropdown, OverlayTrigger, Too
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
-import { gastosService } from '@/lib/gastosService';
 
 interface Expense {
   id: number;
@@ -59,30 +58,11 @@ export default function GastoDetalle() {
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [aprobaciones, setAprobaciones] = useState<any[]>([]);
-  const [aprobando, setAprobando] = useState(false);
 
   useEffect(() => {
     if (id) {
       loadExpense();
     }
-  }, [id]);
-
-  useEffect(() => {
-    if (!id) return;
-    let mounted = true;
-
-    (async () => {
-      try {
-        await loadExpense();
-        const rows = await gastosService.getAprobaciones(id);
-        if (mounted) setAprobaciones(rows);
-      } catch (err) {
-        console.error('Error cargando aprobaciones', err);
-      }
-    })();
-
-    return () => { mounted = false; };
   }, [id]);
 
   const loadExpense = async () => {
@@ -295,23 +275,6 @@ export default function GastoDetalle() {
       alert('Error al eliminar el gasto');
     } finally {
       setActionLoading(false);
-    }
-  };
-
-  const handleAprobar = async (decision: 'aprobado' | 'rechazado') => {
-    if (!id) return;
-    setAprobando(true);
-    try {
-      await gastosService.postAprobacion(id, { decision, observaciones: decision === 'rechazado' ? 'Rechazado desde UI' : 'Aprobado desde UI' });
-      // recargar aprobaciones y gasto
-      const rows = await gastosService.getAprobaciones(id);
-      setAprobaciones(rows);
-      await loadExpense(); // refrescar estado del gasto
-    } catch (err) {
-      console.error('Error al enviar aprobacion', err);
-      // mostrar mensaje al usuario según tu UI (toast/alert)
-    } finally {
-      setAprobando(false);
     }
   };
 
@@ -840,25 +803,6 @@ export default function GastoDetalle() {
             </div>
           </Modal.Body>
         </Modal>
-
-        <section>
-          <h3>Aprobaciones</h3>
-          {aprobaciones.length === 0 && <p>No hay aprobaciones registradas</p>}
-          <ul>
-            {aprobaciones.map(a => (
-              <li key={a.id}>
-                <strong>{a.decision}</strong> — {a.usuario_id ? a.username ?? a.usuario_id : 'Usuario'} — {new Date(a.created_at).toLocaleString()}
-                {a.observaciones ? <div>{a.observaciones}</div> : null}
-              </li>
-            ))}
-          </ul>
-
-          {/* Botones de aprobar/rechazar: mostrar solo si el usuario tiene permiso (usa tu hook/useAuth / usePermissions) */}
-          <div style={{ marginTop: 12 }}>
-            <button disabled={aprobando} onClick={() => handleAprobar('aprobado')}>Aprobar</button>
-            <button disabled={aprobando} onClick={() => handleAprobar('rechazado')}>Rechazar</button>
-          </div>
-        </section>
       </Layout>
     </ProtectedRoute>
   );

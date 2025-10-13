@@ -3,21 +3,6 @@
 import { User } from './auth';
 
 /**
- * Extrae el slug del rol (puede ser string u objeto)
- */
-function extractRoleSlug(role: any): string {
-  if (typeof role === 'string') {
-    return role;
-  }
-  
-  if (typeof role === 'object' && role !== null) {
-    return role.slug || role.codigo || role.nombre || '';
-  }
-  
-  return '';
-}
-
-/**
  * Obtiene el rol principal del usuario en formato neutro
  * @param user - Objeto usuario
  * @returns Rol en formato neutro (string)
@@ -27,42 +12,19 @@ export function getUserRole(user: User | null): string {
     return 'Invitado';
   }
 
-  console.log('🔍 [roles.ts] getUserRole - Usuario:', {
-    username: user.username,
-    is_superadmin: user.is_superadmin,
-    roles: user.roles,
-    roles_slug: user.roles_slug
-  });
-
   // Verificar si es superadmin (prioridad máxima)
   if (user.is_superadmin) {
-    console.log('✅ [roles.ts] Usuario es Superadmin (is_superadmin=true)');
     return 'Superadmin';
   }
 
-  // ✅ CORRECCIÓN: Usar roles_slug si existe
-  let rolesSlug: string[] = [];
-
-  if (user.roles_slug && Array.isArray(user.roles_slug)) {
-    rolesSlug = user.roles_slug.map((r: string) => r.toLowerCase());
-    console.log('📋 [roles.ts] Usando roles_slug:', rolesSlug);
-  } else if (user.roles && Array.isArray(user.roles)) {
-    // ✅ CORRECCIÓN: Extraer slug desde array de objetos
-    rolesSlug = user.roles
-      .map((role: any) => extractRoleSlug(role))
-      .filter((slug: string) => slug.length > 0)
-      .map((slug: string) => slug.toLowerCase());
-    console.log('📋 [roles.ts] Roles extraídos desde user.roles:', rolesSlug);
-  }
-
   // Verificar roles específicos del array
-  if (rolesSlug.length > 0) {
+  if (user.roles && user.roles.length > 0) {
     // Buscar el rol con mayor prioridad
     const roleHierarchy = [
       'superadmin', 'superadministrador', 'superadministradora',
-      'admin', 'administrador', 'administradora', 'admin_comunidad', 'admin_externo',
-      'manager', 'gerente', 'tesorero', 'presidente_comite', 'secretario', 'sindico',
-      'proveedor', 'proveedora', 'contractor', 'proveedor_servicio',
+      'admin', 'administrador', 'administradora',
+      'manager', 'gerente',
+      'proveedor', 'proveedora', 'contractor',
       'conserje', 'portero', 'portera', 'vigilante',
       'propietario', 'propietaria',
       'inquilino', 'inquilina', 
@@ -70,35 +32,27 @@ export function getUserRole(user: User | null): string {
     ];
 
     for (const hierarchyRole of roleHierarchy) {
-      // ✅ CORRECCIÓN: Comparar strings extraídos
-      const foundRoleSlug = rolesSlug.find((roleSlug: string) => 
-        roleSlug === hierarchyRole
+      const foundRole = user.roles.find(role => 
+        role?.toLowerCase() === hierarchyRole
       );
-      
-      if (foundRoleSlug) {
-        const normalized = normalizeRole(foundRoleSlug);
-        console.log(`✅ [roles.ts] Rol encontrado en jerarquía: ${foundRoleSlug} → ${normalized}`);
-        return normalized;
+      if (foundRole) {
+        return normalizeRole(foundRole);
       }
     }
 
     // Si no está en la jerarquía, usar el primer rol
-    const primaryRoleSlug = rolesSlug[0];
-    if (primaryRoleSlug) {
-      const normalized = normalizeRole(primaryRoleSlug);
-      console.log(`✅ [roles.ts] Usando primer rol: ${primaryRoleSlug} → ${normalized}`);
-      return normalized;
+    const primaryRole = user.roles[0];
+    if (primaryRole) {
+      return normalizeRole(primaryRole);
     }
   }
 
   // Si tiene comunidad_id, probablemente es admin de comunidad
   if (user.comunidad_id) {
-    console.log('✅ [roles.ts] Usuario tiene comunidad_id → Admin');
     return 'Admin';
   }
 
   // Por defecto, asumir que es residente
-  console.log('⚠️ [roles.ts] Sin rol específico → Residente por defecto');
   return 'Residente';
 }
 
@@ -114,24 +68,12 @@ export function normalizeRole(role: string): string {
     'administradora': 'Admin',
     'admin': 'Admin',
     'administrator': 'Admin',
-    'admin_comunidad': 'Admin',
-    'admin_externo': 'Admin',
     
     // Roles de super administración
     'superadministrador': 'Superadmin',
     'superadministradora': 'Superadmin',
     'superadmin': 'Superadmin',
     'super_admin': 'Superadmin',
-    
-    // Roles de gestión
-    'manager': 'Manager',
-    'gerente': 'Manager',
-    'tesorero': 'Tesorero',
-    'presidente_comite': 'Presidente',
-    'secretario': 'Secretario',
-    'sindico': 'Síndico',
-    'moderador_comunidad': 'Moderador',
-    'coordinador_reservas': 'Coordinador',
     
     // Roles de residentes
     'residente': 'Residente',
@@ -151,15 +93,6 @@ export function normalizeRole(role: string): string {
     'proveedor': 'Proveedor',
     'proveedora': 'Proveedor',
     'contractor': 'Proveedor',
-    'proveedor_servicio': 'Proveedor',
-    
-    // Roles especiales
-    'contador': 'Contador',
-    'auditor_externo': 'Auditor',
-    'revisor_cuentas': 'Revisor',
-    'soporte_tecnico': 'Soporte',
-    'visitante_autorizado': 'Visitante',
-    'sistema': 'Sistema',
     
     // Otros
     'invitado': 'Invitado',
@@ -192,12 +125,6 @@ export function getRoleTagClass(user: User | null): string {
       return 'tag--primary';
     case 'Superadmin':
       return 'tag--success';
-    case 'Manager':
-    case 'Tesorero':
-    case 'Presidente':
-    case 'Secretario':
-    case 'Síndico':
-      return 'tag--primary';
     case 'Residente':
     case 'Propietario':
     case 'Inquilino':
@@ -207,13 +134,6 @@ export function getRoleTagClass(user: User | null): string {
     case 'Conserje':
     case 'Portero':
     case 'Vigilante':
-      return 'tag--secondary';
-    case 'Contador':
-    case 'Auditor':
-    case 'Revisor':
-      return 'tag--info';
-    case 'Soporte':
-    case 'Sistema':
       return 'tag--secondary';
     default:
       return 'tag--secondary';
@@ -236,21 +156,9 @@ export function getUserRoles(user: User | null): string[] {
     roles.push('Superadmin');
   }
 
-  // ✅ CORRECCIÓN: Usar roles_slug si existe
-  let rolesSlug: string[] = [];
-
-  if (user.roles_slug && Array.isArray(user.roles_slug)) {
-    rolesSlug = user.roles_slug;
-  } else if (user.roles && Array.isArray(user.roles)) {
-    // ✅ CORRECCIÓN: Extraer slug desde array de objetos
-    rolesSlug = user.roles
-      .map((role: any) => extractRoleSlug(role))
-      .filter((slug: string) => slug.length > 0);
-  }
-
-  if (rolesSlug.length > 0) {
-    rolesSlug.forEach((roleSlug: string) => {
-      const normalizedRole = normalizeRole(roleSlug);
+  if (user.roles && user.roles.length > 0) {
+    user.roles.forEach(role => {
+      const normalizedRole = normalizeRole(role);
       if (!roles.includes(normalizedRole)) {
         roles.push(normalizedRole);
       }

@@ -3,10 +3,6 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
-import ComunidadesService from '@/lib/comunidadesService';
-import { Comunidad } from '@/types/comunidades';
-import emisionesService from '@/lib/emisionesService';
-import { CreateEmissionData } from '@/types/emisiones';
 
 interface Concept {
   id: string;
@@ -45,9 +41,7 @@ export default function EmisionNueva() {
 
   const [concepts, setConcepts] = useState<Concept[]>([]);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
-  const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingComunidades, setLoadingComunidades] = useState(true);
   const [showConceptModal, setShowConceptModal] = useState(false);
   const [newConcept, setNewConcept] = useState({
     name: '',
@@ -57,71 +51,56 @@ export default function EmisionNueva() {
     category: ''
   });
 
-  // Load communities and mock expenses
+  // Generate mock expenses
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Load communities from API
-        const comunidadesData = await ComunidadesService.getComunidades();
-        setComunidades(comunidadesData);
-      } catch (error) {
-        console.error('Error loading communities:', error);
-      } finally {
-        setLoadingComunidades(false);
+    const mockExpenses: ExpenseItem[] = [
+      {
+        id: '1',
+        description: 'Consumo eléctrico - Septiembre',
+        amount: 450000,
+        category: 'Servicios Básicos',
+        supplier: 'CGE',
+        date: '2025-09-15',
+        selected: false
+      },
+      {
+        id: '2',
+        description: 'Consumo de agua - Septiembre',
+        amount: 280000,
+        category: 'Servicios Básicos',
+        supplier: 'ESVAL',
+        date: '2025-09-10',
+        selected: false
+      },
+      {
+        id: '3',
+        description: 'Servicio de aseo - Septiembre',
+        amount: 320000,
+        category: 'Servicios',
+        supplier: 'Aseo Total',
+        date: '2025-09-01',
+        selected: false
+      },
+      {
+        id: '4',
+        description: 'Mantención ascensores',
+        amount: 180000,
+        category: 'Mantenimiento',
+        supplier: 'Ascensores SA',
+        date: '2025-09-05',
+        selected: false
+      },
+      {
+        id: '5',
+        description: 'Seguridad - Septiembre',
+        amount: 650000,
+        category: 'Servicios',
+        supplier: 'Seguridad Total',
+        date: '2025-09-01',
+        selected: false
       }
-
-      // Keep mock expenses for now (TODO: replace with API call when expenses service is available)
-      const mockExpenses: ExpenseItem[] = [
-        {
-          id: '1',
-          description: 'Consumo eléctrico - Septiembre',
-          amount: 450000,
-          category: 'Servicios Básicos',
-          supplier: 'CGE',
-          date: '2025-09-15',
-          selected: false
-        },
-        {
-          id: '2',
-          description: 'Consumo de agua - Septiembre',
-          amount: 280000,
-          category: 'Servicios Básicos',
-          supplier: 'ESVAL',
-          date: '2025-09-10',
-          selected: false
-        },
-        {
-          id: '3',
-          description: 'Servicio de aseo - Septiembre',
-          amount: 320000,
-          category: 'Servicios',
-          supplier: 'Aseo Total',
-          date: '2025-09-01',
-          selected: false
-        },
-        {
-          id: '4',
-          description: 'Mantención ascensores',
-          amount: 180000,
-          category: 'Mantenimiento',
-          supplier: 'Ascensores SA',
-          date: '2025-09-05',
-          selected: false
-        },
-        {
-          id: '5',
-          description: 'Seguridad - Septiembre',
-          amount: 650000,
-          category: 'Servicios',
-          supplier: 'Seguridad Total',
-          date: '2025-09-01',
-          selected: false
-        }
-      ];
-      setExpenses(mockExpenses);
-    };
-
-    loadData();
+    ];
+    setExpenses(mockExpenses);
   }, []);
 
   const handleInputChange = (field: string, value: any) => {
@@ -199,53 +178,19 @@ export default function EmisionNueva() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.period || !formData.issueDate || !formData.dueDate || !formData.community) {
+    if (!formData.period || !formData.issueDate || !formData.dueDate) {
       alert('Por favor completa todos los campos obligatorios');
       return;
     }
 
     setLoading(true);
     
-    try {
-      // Prepare emission data
-      const emissionData: CreateEmissionData = {
-        periodo: formData.period,
-        fecha_vencimiento: formData.dueDate,
-        ...(formData.description && { observaciones: formData.description }),
-        detalles: []
-      };
-
-      // Add selected expenses as details
-      const selectedExpenses = expenses.filter(expense => expense.selected);
-      selectedExpenses.forEach(expense => {
-        emissionData.detalles!.push({
-          categoria_id: 1, // TODO: Map category to actual category ID from API
-          monto: expense.amount,
-          regla_prorrateo: 'proportional'
-        });
-      });
-
-      // Add concepts as details
-      concepts.forEach(concept => {
-        emissionData.detalles!.push({
-          categoria_id: 2, // TODO: Map concept category to actual category ID from API
-          monto: concept.amount,
-          regla_prorrateo: concept.distributionType === 'proportional' ? 'proportional' : 'equal'
-        });
-      });
-
-      // Create emission via API
-      const communityId = parseInt(formData.community);
-      await emisionesService.createEmission(communityId, emissionData);
-      
+    // Simulate API call
+    setTimeout(() => {
+      setLoading(false);
       alert('Emisión creada exitosamente');
       router.push('/emisiones');
-    } catch (error) {
-      console.error('Error creating emission:', error);
-      alert('Error al crear la emisión. Por favor intenta nuevamente.');
-    } finally {
-      setLoading(false);
-    }
+    }, 2000);
   };
 
   return (
@@ -334,16 +279,11 @@ export default function EmisionNueva() {
                           value={formData.community}
                           onChange={(e) => handleInputChange('community', e.target.value)}
                           required
-                          disabled={loadingComunidades}
                         >
-                          <option value=''>
-                            {loadingComunidades ? 'Cargando comunidades...' : 'Seleccionar comunidad'}
-                          </option>
-                          {comunidades.map(comunidad => (
-                            <option key={comunidad.id} value={comunidad.id.toString()}>
-                              {comunidad.nombre} - {comunidad.direccion}
-                            </option>
-                          ))}
+                          <option value=''>Seleccionar comunidad</option>
+                          <option value='1'>Edificio Central</option>
+                          <option value='2'>Torres del Sol</option>
+                          <option value='3'>Condominio Verde</option>
                         </select>
                       </div>
                       <div className='col-md-6'>
