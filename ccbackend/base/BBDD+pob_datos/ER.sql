@@ -709,19 +709,8 @@ CREATE TABLE `emision_gasto_comun` (
 -- Stand-in structure for view `emision_gasto_detalle`
 -- (See below for the actual view)
 --
-DROP TABLE IF EXISTS `emision_gasto_detalle`;
 CREATE TABLE `emision_gasto_detalle` (
-  `id` bigint NOT NULL,
-  `emision_id` bigint NOT NULL,
-  `gasto_id` bigint DEFAULT NULL,
-  `categoria_id` bigint NOT NULL,
-  `monto` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `regla_prorrateo` enum('coeficiente','partes_iguales','consumo','fijo_por_unidad') NOT NULL DEFAULT 'coeficiente',
-  `metadata_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -1351,22 +1340,8 @@ INSERT INTO `tarifa_consumo` (`id`, `comunidad_id`, `tipo`, `periodo_desde`, `pe
 -- Stand-in structure for view `ticket`
 -- (See below for the actual view)
 --
-DROP TABLE IF EXISTS `ticket`;
 CREATE TABLE `ticket` (
-  `id` bigint NOT NULL,
-  `comunidad_id` bigint NOT NULL,
-  `unidad_id` bigint DEFAULT NULL,
-  `categoria` varchar(120) NOT NULL,
-  `titulo` varchar(200) NOT NULL,
-  `descripcion` varchar(1000) DEFAULT NULL,
-  `estado` enum('abierto','en_progreso','resuelto','cerrado') NOT NULL DEFAULT 'abierto',
-  `prioridad` enum('baja','media','alta') NOT NULL DEFAULT 'media',
-  `asignado_a` bigint DEFAULT NULL,
-  `attachments_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+);
 
 -- --------------------------------------------------------
 
@@ -1741,19 +1716,17 @@ INSERT INTO `usuario` (`id`, `persona_id`, `username`, `hash_password`, `email`,
 -- Stand-in structure for view `usuario_miembro_comunidad`
 -- (See below for the actual view)
 --
-DROP TABLE IF EXISTS `usuario_miembro_comunidad`;
 CREATE TABLE `usuario_miembro_comunidad` (
-  `id` bigint NOT NULL,
-  `comunidad_id` bigint NOT NULL,
-  `persona_id` bigint NOT NULL,
-  `rol` varchar(50) NOT NULL,
-  `desde` date NOT NULL,
-  `hasta` date DEFAULT NULL,
-  `activo` tinyint(1) NOT NULL DEFAULT '1',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+`activo` tinyint(1)
+,`comunidad_id` bigint
+,`created_at` datetime
+,`desde` date
+,`hasta` date
+,`id` bigint
+,`persona_id` bigint
+,`rol` varchar(50)
+,`updated_at` datetime
+);
 
 -- --------------------------------------------------------
 
@@ -3542,19 +3515,8 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `em
 --
 DROP TABLE IF EXISTS `emision_gasto_detalle`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER 
-VIEW `emision_gasto_detalle` AS 
-SELECT 
-  `detalle_emision_gastos`.`id` AS `id`,
-  `detalle_emision_gastos`.`emision_id` AS `emision_id`,
-  `detalle_emision_gastos`.`gasto_id` AS `gasto_id`,
-  `detalle_emision_gastos`.`categoria_id` AS `categoria_id`,
-  `detalle_emision_gastos`.`monto` AS `monto`,
-  `detalle_emision_gastos`.`regla_prorrateo` AS `regla_prorrateo`,
-  `detalle_emision_gastos`.`metadata_json` AS `metadata_json`,
-  `detalle_emision_gastos`.`created_at` AS `created_at`,
-  `detalle_emision_gastos`.`updated_at` AS `updated_at`
-FROM `detalle_emision_gastos`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `emision_gasto_detalle`  AS SELECT `detalle_emision`.`id` AS `id`, `detalle_emision`.`emision_id` AS `emision_id`, `detalle_emision`.`gasto_id` AS `gasto_id`, `detalle_emision`.`categoria_id` AS `categoria_id`, `detalle_emision`.`monto` AS `monto`, `detalle_emision`.`regla_prorrateo` AS `regla_prorrateo`, `detalle_emision`.`metadata_json` AS `metadata_json`, `detalle_emision`.`created_at` AS `created_at`, `detalle_emision`.`updated_at` AS `updated_at` FROM `detalle_emision` ;
+
 -- --------------------------------------------------------
 
 --
@@ -3562,22 +3524,8 @@ FROM `detalle_emision_gastos`;
 --
 DROP TABLE IF EXISTS `ticket`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER 
-VIEW `ticket` AS 
-SELECT 
-  `ticket_soporte`.`id` AS `id`,
-  `ticket_soporte`.`comunidad_id` AS `comunidad_id`,
-  `ticket_soporte`.`unidad_id` AS `unidad_id`,
-  `ticket_soporte`.`categoria` AS `categoria`,
-  `ticket_soporte`.`titulo` AS `titulo`,
-  `ticket_soporte`.`descripcion` AS `descripcion`,
-  `ticket_soporte`.`estado` AS `estado`,
-  `ticket_soporte`.`prioridad` AS `prioridad`,
-  `ticket_soporte`.`asignado_a` AS `asignado_a`,
-  `ticket_soporte`.`attachments_json` AS `attachments_json`,
-  `ticket_soporte`.`created_at` AS `created_at`,
-  `ticket_soporte`.`updated_at` AS `updated_at`
-FROM `ticket_soporte`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `ticket`  AS SELECT `solicitud_soporte`.`id` AS `id`, `solicitud_soporte`.`comunidad_id` AS `comunidad_id`, `solicitud_soporte`.`unidad_id` AS `unidad_id`, `solicitud_soporte`.`categoria` AS `categoria`, `solicitud_soporte`.`titulo` AS `titulo`, `solicitud_soporte`.`descripcion` AS `descripcion`, `solicitud_soporte`.`estado` AS `estado`, `solicitud_soporte`.`prioridad` AS `prioridad`, `solicitud_soporte`.`asignado_a` AS `asignado_a`, `solicitud_soporte`.`attachments_json` AS `attachments_json`, `solicitud_soporte`.`created_at` AS `created_at`, `solicitud_soporte`.`updated_at` AS `updated_at` FROM `solicitud_soporte` ;
+
 -- --------------------------------------------------------
 
 --
@@ -3588,6 +3536,17 @@ DROP TABLE IF EXISTS `titularidad_unidad`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `titularidad_unidad`  AS SELECT `titulares_unidad`.`id` AS `id`, `titulares_unidad`.`comunidad_id` AS `comunidad_id`, `titulares_unidad`.`unidad_id` AS `unidad_id`, `titulares_unidad`.`persona_id` AS `persona_id`, `titulares_unidad`.`tipo` AS `tipo`, `titulares_unidad`.`desde` AS `desde`, `titulares_unidad`.`hasta` AS `hasta`, `titulares_unidad`.`porcentaje` AS `porcentaje`, `titulares_unidad`.`created_at` AS `created_at`, `titulares_unidad`.`updated_at` AS `updated_at` FROM `titulares_unidad` ;
 
 -- --------------------------------------------------------
+
+--
+-- Structure for view `usuario_miembro_comunidad`
+--
+DROP TABLE IF EXISTS `usuario_miembro_comunidad`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY INVOKER VIEW `usuario_miembro_comunidad`  AS SELECT `urc`.`id` AS `id`, `urc`.`comunidad_id` AS `comunidad_id`, `u`.`persona_id` AS `persona_id`, `r`.`codigo` AS `rol`, `urc`.`desde` AS `desde`, `urc`.`hasta` AS `hasta`, `urc`.`activo` AS `activo`, `urc`.`created_at` AS `created_at`, `urc`.`updated_at` AS `updated_at` FROM ((`usuario_rol_comunidad` `urc` join `usuario` `u` on((`u`.`id` = `urc`.`usuario_id`))) join `rol_sistema` `r` on((`r`.`id` = `urc`.`rol_id`))) ;
+
+--
+-- Constraints for dumped tables
+--
 
 --
 -- Constraints for table `amenidad`
@@ -3839,169 +3798,3 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
--- ============================================
--- NUEVAS FUNCIONALIDADES - VERSIÓN CORREGIDA
--- ============================================
-
--- ============================================
--- 1. MEJORAS EN TABLA GASTO
--- ============================================
-
--- Agregar columna numero (solo si no existe)
-SET @col_numero = (SELECT COUNT(*) FROM information_schema.columns 
-  WHERE table_schema = DATABASE() AND table_name = 'gasto' AND column_name = 'numero');
-
-SET @sql_numero = IF(@col_numero = 0, 
-  'ALTER TABLE `gasto` ADD COLUMN `numero` varchar(50) DEFAULT NULL AFTER `id`',
-  'SELECT "Columna numero ya existe" AS resultado'
-);
-
-PREPARE stmt FROM @sql_numero;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- Agregar columna estado (solo si no existe)
-SET @col_estado = (SELECT COUNT(*) FROM information_schema.columns 
-  WHERE table_schema = DATABASE() AND table_name = 'gasto' AND column_name = 'estado');
-
-SET @sql_estado = IF(@col_estado = 0, 
-  'ALTER TABLE `gasto` ADD COLUMN `estado` enum(''borrador'',''aprobado'',''rechazado'',''pagado'',''anulado'') NOT NULL DEFAULT ''aprobado'' AFTER `extraordinario`',
-  'SELECT "Columna estado ya existe" AS resultado'
-);
-
-PREPARE stmt FROM @sql_estado;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- Agregar columna creado_por (solo si no existe)
-SET @col_creado = (SELECT COUNT(*) FROM information_schema.columns 
-  WHERE table_schema = DATABASE() AND table_name = 'gasto' AND column_name = 'creado_por');
-
-SET @sql_creado = IF(@col_creado = 0, 
-  'ALTER TABLE `gasto` ADD COLUMN `creado_por` bigint DEFAULT NULL AFTER `estado`',
-  'SELECT "Columna creado_por ya existe" AS resultado'
-);
-
-PREPARE stmt FROM @sql_creado;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- Agregar columna aprobado_por (solo si no existe)
-SET @col_aprobado = (SELECT COUNT(*) FROM information_schema.columns 
-  WHERE table_schema = DATABASE() AND table_name = 'gasto' AND column_name = 'aprobado_por');
-
-SET @sql_aprobado = IF(@col_aprobado = 0, 
-  'ALTER TABLE `gasto` ADD COLUMN `aprobado_por` bigint DEFAULT NULL AFTER `creado_por`',
-  'SELECT "Columna aprobado_por ya existe" AS resultado'
-);
-
-PREPARE stmt FROM @sql_aprobado;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- ============================================
--- 2. ÍNDICES PARA GASTO
--- ============================================
-
--- Agregar índice idx_gasto_estado (solo si no existe)
-SET @idx_estado = (SELECT COUNT(*) FROM information_schema.statistics 
-  WHERE table_schema = DATABASE() AND table_name = 'gasto' AND index_name = 'idx_gasto_estado');
-
-SET @sql_idx_estado = IF(@idx_estado = 0, 
-  'ALTER TABLE `gasto` ADD INDEX `idx_gasto_estado` (`estado`)',
-  'SELECT "Índice idx_gasto_estado ya existe" AS resultado'
-);
-
-PREPARE stmt FROM @sql_idx_estado;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- Agregar índice idx_gasto_numero (solo si no existe)
-SET @idx_numero = (SELECT COUNT(*) FROM information_schema.statistics 
-  WHERE table_schema = DATABASE() AND table_name = 'gasto' AND index_name = 'idx_gasto_numero');
-
-SET @sql_idx_numero = IF(@idx_numero = 0, 
-  'ALTER TABLE `gasto` ADD INDEX `idx_gasto_numero` (`numero`)',
-  'SELECT "Índice idx_gasto_numero ya existe" AS resultado'
-);
-
-PREPARE stmt FROM @sql_idx_numero;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- ============================================
--- 3. FOREIGN KEYS PARA GASTO (CORREGIDO: APUNTA A USUARIO)
--- ============================================
-
--- Agregar FK fk_gasto_creado_por (solo si no existe)
-SET @fk_creado = (SELECT COUNT(*) FROM information_schema.table_constraints 
-  WHERE table_schema = DATABASE() AND table_name = 'gasto' AND constraint_name = 'fk_gasto_creado_por');
-
-SET @sql_fk_creado = IF(@fk_creado = 0, 
-  'ALTER TABLE `gasto` ADD CONSTRAINT `fk_gasto_creado_por` FOREIGN KEY (`creado_por`) REFERENCES `usuario` (`id`)',
-  'SELECT "FK fk_gasto_creado_por ya existe" AS resultado'
-);
-
-PREPARE stmt FROM @sql_fk_creado;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- Agregar FK fk_gasto_aprobado_por (solo si no existe)
-SET @fk_aprobado = (SELECT COUNT(*) FROM information_schema.table_constraints 
-  WHERE table_schema = DATABASE() AND table_name = 'gasto' AND constraint_name = 'fk_gasto_aprobado_por');
-
-SET @sql_fk_aprobado = IF(@fk_aprobado = 0, 
-  'ALTER TABLE `gasto` ADD CONSTRAINT `fk_gasto_aprobado_por` FOREIGN KEY (`aprobado_por`) REFERENCES `usuario` (`id`)',
-  'SELECT "FK fk_gasto_aprobado_por ya existe" AS resultado'
-);
-
-PREPARE stmt FROM @sql_fk_aprobado;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- ============================================
--- 4. TABLA HISTORIAL_GASTO
--- ============================================
-
-CREATE TABLE IF NOT EXISTS `historial_gasto` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `gasto_id` bigint NOT NULL,
-  `accion` enum('creado','modificado','aprobado','rechazado','pagado','anulado') NOT NULL,
-  `usuario_id` bigint NOT NULL,
-  `observaciones` text,
-  `fecha` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `fk_historial_gasto` (`gasto_id`),
-  KEY `fk_historial_usuario` (`usuario_id`),
-  KEY `idx_historial_fecha` (`fecha`),
-  CONSTRAINT `fk_historial_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_historial_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- ============================================
--- 5. DATOS DE EJEMPLO PARA AUDITORÍA
--- ============================================
-
-INSERT IGNORE INTO `auditoria` (`usuario_id`, `accion`, `tabla`, `registro_id`, `valores_anteriores`, `valores_nuevos`, `ip_address`, `created_at`) VALUES
-(1, 'CREATE', 'pago', 1, NULL, '{"monto": 47012.50, "medio": "transferencia", "estado": "aplicado"}', '192.168.1.100', '2025-09-18 20:06:10'),
-(1, 'UPDATE', 'persona', 1, '{"nombres": "María José", "email": "maria.gonzalez@email.com"}', '{"nombres": "Patricio", "email": "maria.gonzalez@email.com"}', '192.168.1.100', '2025-09-18 20:33:26'),
-(2, 'CREATE', 'multa', 1, NULL, '{"monto": 50000.00, "motivo": "Ruidos molestos", "estado": "pendiente"}', '192.168.1.101', '2025-09-18 20:08:33'),
-(3, 'UPDATE', 'cargo_unidad', 2, '{"saldo": 47012.50, "estado": "pendiente"}', '{"saldo": 35259.38, "estado": "parcial"}', '192.168.1.102', '2025-09-18 20:53:26'),
-(1, 'DELETE', 'reserva_amenidad', 8, '{"estado": "solicitada", "inicio": "2025-10-05 14:00:00"}', NULL, '192.168.1.100', '2025-09-18 20:20:10');
-
--- ============================================
--- 6. ACTUALIZAR GASTOS EXISTENTES
--- ============================================
-
-UPDATE `gasto` 
-SET `numero` = CONCAT('G2025-', LPAD(id, 6, '0'))
-WHERE `numero` IS NULL OR `numero` = '';
-
-UPDATE `gasto` 
-SET `estado` = 'aprobado' 
-WHERE `estado` IS NULL;
-
--- ============================================
--- FIN NUEVAS FUNCIONALIDADES
--- ============================================
