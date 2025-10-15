@@ -19,7 +19,6 @@ SELECT
     cg.cta_contable,
     cg.activa,
     CASE WHEN cg.activa = 1 THEN 'active' ELSE 'inactive' END AS status,
-    -- Información adicional (si se almacenara en JSON o campos extendidos)
     cg.created_at,
     cg.updated_at
 FROM categoria_gasto cg
@@ -39,21 +38,23 @@ SELECT
     cg.updated_at
 FROM categoria_gasto cg
 INNER JOIN comunidad c ON cg.comunidad_id = c.id
-WHERE (cg.nombre LIKE CONCAT('%', ?, '%') OR ? = '')
-    AND (cg.tipo = ? OR ? = '')
-    AND (cg.activa = ? OR ? = -1)
-    AND (cg.comunidad_id = ? OR ? = 0)
+-- Filtros (Se mantiene la lógica de placeholders en el lado derecho de OR)
+WHERE (:nombre_busqueda IS NULL OR cg.nombre LIKE CONCAT('%', :nombre_busqueda, '%'))
+    AND (:tipo_filtro IS NULL OR cg.tipo = :tipo_filtro)
+    AND (:activa_filtro = -1 OR cg.activa = :activa_filtro)
+    AND (cg.comunidad_id = :comunidad_id_filtro) -- Se asume que este filtro es mandatorio o se usa un 0/NULL para todas
 ORDER BY cg.nombre
-LIMIT ? OFFSET ?;
+LIMIT :limit_rows OFFSET :offset_rows;
 
 -- 1.3 Conteo total para paginación
 SELECT COUNT(*) AS total
 FROM categoria_gasto cg
 INNER JOIN comunidad c ON cg.comunidad_id = c.id
-WHERE (cg.nombre LIKE CONCAT('%', ?, '%') OR ? = '')
-    AND (cg.tipo = ? OR ? = '')
-    AND (cg.activa = ? OR ? = -1)
-    AND (cg.comunidad_id = ? OR ? = 0);
+-- Filtros (Se mantiene la lógica de placeholders en el lado derecho de OR)
+WHERE (:nombre_busqueda IS NULL OR cg.nombre LIKE CONCAT('%', :nombre_busqueda, '%'))
+    AND (:tipo_filtro IS NULL OR cg.tipo = :tipo_filtro)
+    AND (:activa_filtro = -1 OR cg.activa = :activa_filtro)
+    AND (cg.comunidad_id = :comunidad_id_filtro);
 
 -- =========================================
 -- 2. DETALLE DE CATEGORÍA DE GASTO ESPECÍFICA
@@ -161,7 +162,8 @@ SELECT
 FROM categoria_gasto cg
 LEFT JOIN gasto g ON cg.id = g.categoria_id
 WHERE cg.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+    -- Lógica de filtro de rango de fecha. Se asume que los 4 placeholders son (fecha_inicio, fecha_fin, check_inicio, check_fin)
+    AND (g.fecha BETWEEN ? AND ? OR (? IS NULL AND ? IS NULL))
 GROUP BY cg.id, cg.nombre, cg.tipo
 HAVING COUNT(g.id) > 0
 ORDER BY cantidad_gastos DESC;
@@ -178,7 +180,8 @@ SELECT
 FROM categoria_gasto cg
 LEFT JOIN gasto g ON cg.id = g.categoria_id
 WHERE cg.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+    -- Lógica de filtro de rango de fecha. Se asume que los 4 placeholders son (fecha_inicio, fecha_fin, check_inicio, check_fin)
+    AND (g.fecha BETWEEN ? AND ? OR (? IS NULL AND ? IS NULL))
 GROUP BY cg.id, cg.nombre, cg.tipo
 HAVING SUM(g.monto) > 0
 ORDER BY total_monto DESC;
@@ -219,6 +222,7 @@ FROM gasto
 WHERE categoria_id = ?;
 
 -- 5.4 Verificar si existe el tipo de categoría
+-- CORRECCIÓN: Se mantiene el placeholder para el valor de entrada, asumiendo que el cliente lo pasa.
 SELECT ? IN ('operacional', 'extraordinario', 'fondo_reserva', 'multas', 'consumo') AS tipo_valido;
 
 -- =========================================
@@ -310,13 +314,16 @@ SELECT
     STDDEV(g.monto) AS desviacion_estandar,
     MIN(g.monto) AS minimo,
     MAX(g.monto) AS maximo,
-    (STDDEV(g.monto) / AVG(g.monto)) * 100 AS coeficiente_variacion
+    -- Cálculo del Coeficiente de Variación
+    (STDDEV(g.monto) / NULLIF(AVG(g.monto), 0)) * 100 AS coeficiente_variacion
 FROM categoria_gasto cg
 INNER JOIN gasto g ON cg.id = g.categoria_id
 WHERE cg.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+    -- Lógica de filtro de rango de fecha. Se asume que los 4 placeholders son (fecha_inicio, fecha_fin, check_inicio, check_fin)
+    AND (g.fecha BETWEEN ? AND ? OR (? IS NULL AND ? IS NULL))
 GROUP BY cg.id, cg.nombre, cg.tipo
 HAVING COUNT(g.id) >= 3 -- Al menos 3 gastos para calcular variabilidad
+    AND AVG(g.monto) IS NOT NULL -- Asegurar que el promedio no sea NULL para el cálculo
 ORDER BY coeficiente_variacion DESC;
 
 -- =========================================
@@ -354,7 +361,7 @@ LEFT JOIN (
         MAX(fecha) AS ultimo_gasto
     FROM gasto
     GROUP BY categoria_id
-) stats ON cg.id = stats.categoria_id
+) AS stats ON cg.id = stats.categoria_id
 WHERE cg.comunidad_id = ?
 ORDER BY cg.nombre;
 
@@ -362,7 +369,7 @@ ORDER BY cg.nombre;
 -- 9. CONSULTAS PARA DASHBOARD
 -- =========================================
 
--- 9.1 Resumen de categorías para dashboard
+-- 9.1 Resumen de categorías para dashboard (Sin cambios estructurales)
 SELECT
     COUNT(*) AS total_categorias,
     SUM(CASE WHEN activa = 1 THEN 1 ELSE 0 END) AS categorias_activas,
@@ -371,7 +378,7 @@ SELECT
 FROM categoria_gasto
 WHERE comunidad_id = ?;
 
--- 9.2 Top categorías por gasto en el último mes
+-- 9.2 Top categorías por gasto en el último mes (Sin cambios estructurales)
 SELECT
     cg.nombre AS categoria,
     cg.tipo,
@@ -385,7 +392,7 @@ GROUP BY cg.id, cg.nombre, cg.tipo
 ORDER BY total_monto DESC
 LIMIT 5;
 
--- 9.3 Categorías sin uso reciente
+-- 9.3 Categorías sin uso reciente (Sin cambios estructurales)
 SELECT
     cg.nombre AS categoria,
     cg.tipo,
@@ -414,10 +421,12 @@ SELECT
     COUNT(DISTINCT cg.id) AS categorias,
     COUNT(g.id) AS total_gastos,
     SUM(g.monto) AS total_monto,
-    (SUM(g.monto) / (SELECT SUM(monto) FROM gasto WHERE comunidad_id = ?)) * 100 AS porcentaje_total
+    -- CORRECCIÓN: Asegurar que el denominador sea el total de gastos para la comunidad y período.
+    (SUM(g.monto) / NULLIF((SELECT SUM(monto) FROM gasto WHERE comunidad_id = ? AND (g.fecha BETWEEN ? AND ? OR (? IS NULL AND ? IS NULL))), 0)) * 100 AS porcentaje_total
 FROM categoria_gasto cg
 LEFT JOIN gasto g ON cg.id = g.categoria_id
 WHERE cg.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+    -- Lógica de filtro de rango de fecha. Se asume que los 4 placeholders son (fecha_inicio, fecha_fin, check_inicio, check_fin)
+    AND (g.fecha BETWEEN ? AND ? OR (? IS NULL AND ? IS NULL))
 GROUP BY cg.tipo
 ORDER BY total_monto DESC;

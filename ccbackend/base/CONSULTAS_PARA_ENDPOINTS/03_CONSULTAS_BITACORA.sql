@@ -1,7 +1,14 @@
 -- =========================================
 -- CONSULTAS SQL PARA MÓDULO BITÁCORA
 -- Sistema de Cuentas Claras
+-- Fecha: 2025-10-15 (Corregido)
 -- =========================================
+
+-- NOTA DE CORRECCIÓN:
+-- 1. Los nombres de usuario ('user') ahora se obtienen haciendo JOIN a 'usuario' y luego a 'persona'.
+-- 2. El nombre de la comunidad ('location') es 'razon_social', no 'nombre'.
+-- 3. Los joins a roles para el detalle se hacen a través de 'usuario_rol_comunidad' y 'rol_sistema'.
+-- 4. Se eliminó la referencia a la tabla inexistente 'permisos'.
 
 -- =========================================
 -- 1. LISTADO BÁSICO DE ACTIVIDADES CON FILTROS
@@ -20,15 +27,18 @@ SELECT
         'priority', 'normal',
         'title', CONCAT(UPPER(LEFT(rc.evento, 1)), LOWER(SUBSTRING(rc.evento, 2))),
         'description', COALESCE(rc.detalle, 'Sin descripción'),
-        'user', COALESCE(u.nombre, 'Sistema'),
+        -- CORRECCIÓN: Obtener nombre de persona (p) a través de usuario (u)
+        'user', COALESCE(CONCAT(p.nombres, ' ', p.apellidos), 'Sistema'),
         'date', rc.fecha_hora,
         'tags', JSON_ARRAY('bitácora', rc.evento),
         'attachments', 0,
         'ip', NULL,
-        'location', c.nombre
-    ) as actividad
+        -- CORRECCIÓN: Usar 'razon_social' de la comunidad (c)
+        'location', c.razon_social
+    ) AS actividad
 FROM registro_conserjeria rc
 LEFT JOIN usuario u ON rc.usuario_id = u.id
+LEFT JOIN persona p ON u.persona_id = p.id
 LEFT JOIN comunidad c ON rc.comunidad_id = c.id
 ORDER BY rc.fecha_hora DESC
 LIMIT 100;
@@ -44,7 +54,7 @@ SELECT
             ELSE 'system'
         END,
         'priority', CASE
-            WHEN a.tabla IN ('usuario', 'permisos') THEN 'critical'
+            WHEN a.tabla = 'usuario' THEN 'critical' -- CORRECCIÓN: 'permisos' no existe
             WHEN a.tabla IN ('pago', 'gasto') THEN 'high'
             ELSE 'normal'
         END,
@@ -53,15 +63,17 @@ SELECT
             'Registro ID: ', COALESCE(a.registro_id, 'N/A'),
             ' - Valores nuevos: ', COALESCE(a.valores_nuevos, 'N/A')
         ),
-        'user', COALESCE(u.nombre, 'Sistema'),
+        -- CORRECCIÓN: Obtener nombre de persona (p) a través de usuario (u)
+        'user', COALESCE(CONCAT(p.nombres, ' ', p.apellidos), 'Sistema'),
         'date', a.created_at,
         'tags', JSON_ARRAY('auditoría', a.accion, a.tabla),
         'attachments', 0,
         'ip', a.ip_address,
         'location', CONCAT('Tabla: ', a.tabla)
-    ) as actividad
+    ) AS actividad
 FROM auditoria a
 LEFT JOIN usuario u ON a.usuario_id = u.id
+LEFT JOIN persona p ON u.persona_id = p.id
 ORDER BY a.created_at DESC
 LIMIT 100;
 
@@ -78,16 +90,19 @@ SELECT
         'priority', 'normal',
         'title', CONCAT(UPPER(LEFT(rc.evento, 1)), LOWER(SUBSTRING(rc.evento, 2))),
         'description', COALESCE(rc.detalle, 'Sin descripción'),
-        'user', COALESCE(u.nombre, 'Sistema'),
+        -- CORRECCIÓN: Obtener nombre de persona (p_rc) a través de usuario (u_rc)
+        'user', COALESCE(CONCAT(p_rc.nombres, ' ', p_rc.apellidos), 'Sistema'),
         'date', rc.fecha_hora,
         'tags', JSON_ARRAY('bitácora', rc.evento),
         'attachments', 0,
         'ip', NULL,
-        'location', c.nombre,
+        -- CORRECCIÓN: Usar 'razon_social'
+        'location', c.razon_social,
         'source', 'bitacora'
-    ) as actividad
+    ) AS actividad
 FROM registro_conserjeria rc
-LEFT JOIN usuario u ON rc.usuario_id = u.id
+LEFT JOIN usuario u_rc ON rc.usuario_id = u_rc.id
+LEFT JOIN persona p_rc ON u_rc.persona_id = p_rc.id
 LEFT JOIN comunidad c ON rc.comunidad_id = c.id
 
 UNION ALL
@@ -102,7 +117,7 @@ SELECT
             ELSE 'system'
         END,
         'priority', CASE
-            WHEN a.tabla IN ('usuario', 'permisos') THEN 'critical'
+            WHEN a.tabla = 'usuario' THEN 'critical' -- CORRECCIÓN: 'permisos' no existe
             WHEN a.tabla IN ('pago', 'gasto') THEN 'high'
             ELSE 'normal'
         END,
@@ -111,16 +126,18 @@ SELECT
             'Registro ID: ', COALESCE(a.registro_id, 'N/A'),
             ' - Valores nuevos: ', COALESCE(a.valores_nuevos, 'N/A')
         ),
-        'user', COALESCE(u.nombre, 'Sistema'),
+        -- CORRECCIÓN: Obtener nombre de persona (p_a) a través de usuario (u_a)
+        'user', COALESCE(CONCAT(p_a.nombres, ' ', p_a.apellidos), 'Sistema'),
         'date', a.created_at,
         'tags', JSON_ARRAY('auditoría', a.accion, a.tabla),
         'attachments', 0,
         'ip', a.ip_address,
         'location', CONCAT('Tabla: ', a.tabla),
         'source', 'auditoria'
-    ) as actividad
+    ) AS actividad
 FROM auditoria a
-LEFT JOIN usuario u ON a.usuario_id = u.id
+LEFT JOIN usuario u_a ON a.usuario_id = u_a.id
+LEFT JOIN persona p_a ON u_a.persona_id = p_a.id
 
 ORDER BY JSON_UNQUOTE(JSON_EXTRACT(actividad, '$.date')) DESC
 LIMIT 100;
@@ -144,8 +161,10 @@ SELECT
         'description', COALESCE(rc.detalle, 'Sin descripción'),
         'user', JSON_OBJECT(
             'id', u.id,
-            'name', COALESCE(u.nombre, 'Sistema'),
+            -- CORRECCIÓN: Obtener nombre de persona (p)
+            'name', COALESCE(CONCAT(p.nombres, ' ', p.apellidos), 'Sistema'),
             'email', u.email,
+            -- CORRECCIÓN: Obtener nombre de rol a través de urc y r
             'role', COALESCE(r.nombre, 'Sistema')
         ),
         'date', rc.fecha_hora,
@@ -155,18 +174,23 @@ SELECT
         'metadata', JSON_OBJECT(
             'comunidad', JSON_OBJECT(
                 'id', c.id,
-                'name', c.nombre
+                -- CORRECCIÓN: Usar 'razon_social'
+                'name', c.razon_social
             ),
             'evento_type', rc.evento,
             'source', 'bitacora'
         ),
         'ip', NULL,
-        'location', c.nombre
-    ) as actividad_detallada
+        -- CORRECCIÓN: Usar 'razon_social'
+        'location', c.razon_social
+    ) AS actividad_detallada
 FROM registro_conserjeria rc
 LEFT JOIN usuario u ON rc.usuario_id = u.id
-LEFT JOIN rol r ON u.rol_id = r.id
+LEFT JOIN persona p ON u.persona_id = p.id -- CORRECCIÓN: Join a persona
 LEFT JOIN comunidad c ON rc.comunidad_id = c.id
+-- CORRECCIÓN: Joins para obtener el Rol del Usuario en la Comunidad
+LEFT JOIN usuario_rol_comunidad urc ON u.id = urc.usuario_id AND c.id = urc.comunidad_id AND urc.activo = 1
+LEFT JOIN rol_sistema r ON urc.rol_id = r.id
 WHERE rc.id = ?;
 
 -- 2.2 Detalle completo de actividad de auditoría
@@ -180,7 +204,7 @@ SELECT
             ELSE 'system'
         END,
         'priority', CASE
-            WHEN a.tabla IN ('usuario', 'permisos') THEN 'critical'
+            WHEN a.tabla = 'usuario' THEN 'critical' -- CORRECCIÓN: 'permisos' no existe
             WHEN a.tabla IN ('pago', 'gasto') THEN 'high'
             ELSE 'normal'
         END,
@@ -191,8 +215,10 @@ SELECT
         ),
         'user', JSON_OBJECT(
             'id', u.id,
-            'name', COALESCE(u.nombre, 'Sistema'),
+            -- CORRECCIÓN: Obtener nombre de persona (p)
+            'name', COALESCE(CONCAT(p.nombres, ' ', p.apellidos), 'Sistema'),
             'email', u.email,
+            -- CORRECCIÓN: Obtener rol principal del usuario (simplificado)
             'role', COALESCE(r.nombre, 'Sistema')
         ),
         'date', a.created_at,
@@ -209,10 +235,13 @@ SELECT
         ),
         'ip', a.ip_address,
         'location', CONCAT('Tabla: ', a.tabla)
-    ) as actividad_detallada
+    ) AS actividad_detallada
 FROM auditoria a
 LEFT JOIN usuario u ON a.usuario_id = u.id
-LEFT JOIN rol r ON u.rol_id = r.id
+LEFT JOIN persona p ON u.persona_id = p.id -- CORRECCIÓN: Join a persona
+-- CORRECCIÓN: Joins para obtener el Rol principal del Usuario
+LEFT JOIN usuario_rol_comunidad urc ON u.id = urc.usuario_id AND urc.activo = 1 -- Asumimos un rol principal activo
+LEFT JOIN rol_sistema r ON urc.rol_id = r.id
 WHERE a.id = ?;
 
 -- =========================================
@@ -234,52 +263,56 @@ SELECT
         ),
         'high', (
             SELECT COUNT(*) FROM auditoria
-            WHERE tabla IN ('pago', 'gasto', 'usuario', 'permisos')
+            WHERE tabla IN ('pago', 'gasto', 'usuario') -- CORRECCIÓN: 'permisos' no existe
             AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
         ),
         'critical', (
             SELECT COUNT(*) FROM auditoria
-            WHERE tabla IN ('usuario', 'permisos')
+            WHERE tabla = 'usuario' -- CORRECCIÓN: 'permisos' no existe
             AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
         ),
         'by_type', JSON_OBJECT(
-            'system', (SELECT COUNT(*) FROM registro_conserjeria WHERE evento NOT IN ('entrega', 'retiro', 'visita', 'reporte')) + (SELECT COUNT(*) FROM auditoria),
+            'system', (SELECT COUNT(*) FROM registro_conserjeria WHERE evento NOT IN ('entrega', 'retiro', 'visita', 'reporte', 'otro')) + (SELECT COUNT(*) FROM auditoria WHERE tabla NOT IN ('pago', 'gasto', 'usuario')),
             'user', (SELECT COUNT(*) FROM registro_conserjeria WHERE evento IN ('entrega', 'retiro')),
             'security', (SELECT COUNT(*) FROM registro_conserjeria WHERE evento IN ('visita', 'reporte')),
             'maintenance', (SELECT COUNT(*) FROM registro_conserjeria WHERE evento = 'otro'),
-            'admin', (SELECT COUNT(*) FROM auditoria WHERE accion = 'UPDATE'),
+            'admin', (SELECT COUNT(*) FROM auditoria WHERE accion = 'UPDATE' AND tabla NOT IN ('pago', 'gasto', 'usuario')),
             'financial', (SELECT COUNT(*) FROM auditoria WHERE tabla IN ('pago', 'gasto'))
         ),
         'by_priority', JSON_OBJECT(
             'low', (SELECT COUNT(*) FROM registro_conserjeria WHERE evento IN ('entrega', 'retiro')),
-            'normal', (SELECT COUNT(*) FROM registro_conserjeria WHERE evento NOT IN ('entrega', 'retiro')) + (SELECT COUNT(*) FROM auditoria WHERE tabla NOT IN ('usuario', 'permisos', 'pago', 'gasto')),
+            'normal', (SELECT COUNT(*) FROM registro_conserjeria WHERE evento NOT IN ('entrega', 'retiro')) + (SELECT COUNT(*) FROM auditoria WHERE tabla NOT IN ('usuario', 'pago', 'gasto')),
             'high', (SELECT COUNT(*) FROM auditoria WHERE tabla IN ('pago', 'gasto')),
-            'critical', (SELECT COUNT(*) FROM auditoria WHERE tabla IN ('usuario', 'permisos'))
+            'critical', (SELECT COUNT(*) FROM auditoria WHERE tabla = 'usuario') -- CORRECCIÓN: 'permisos' no existe
         )
-    ) as estadisticas;
+    ) AS estadisticas;
 
 -- 3.2 Estadísticas por comunidad
 SELECT
     JSON_OBJECT(
         'comunidad_id', c.id,
-        'comunidad_name', c.nombre,
+        -- CORRECCIÓN: Usar 'razon_social'
+        'comunidad_name', c.razon_social,
         'total_actividades', COUNT(rc.id),
         'actividades_hoy', COUNT(CASE WHEN DATE(rc.fecha_hora) = CURDATE() THEN 1 END),
         'tipos_eventos', JSON_OBJECTAGG(
             rc.evento,
             COUNT(*)
         )
-    ) as estadisticas_comunidad
+    ) AS estadisticas_comunidad
 FROM comunidad c
 LEFT JOIN registro_conserjeria rc ON c.id = rc.comunidad_id
-GROUP BY c.id, c.nombre
+-- CORRECCIÓN: Agrupar por 'razon_social'
+GROUP BY c.id, c.razon_social
 ORDER BY COUNT(rc.id) DESC;
 
 -- 3.3 Top usuarios más activos
 SELECT
     JSON_OBJECT(
         'usuario_id', u.id,
-        'usuario_name', COALESCE(u.nombre, 'Sistema'),
+        -- CORRECCIÓN: Obtener nombre de persona (p)
+        'usuario_name', COALESCE(CONCAT(p.nombres, ' ', p.apellidos), 'Sistema'),
+        -- CORRECCIÓN: Obtener rol principal del usuario (r)
         'rol', COALESCE(r.nombre, 'Sistema'),
         'total_actividades', (
             COALESCE(bitacora_count.total_bitacora, 0) +
@@ -291,19 +324,22 @@ SELECT
             COALESCE(bitacora_count.ultima_bitacora, '2000-01-01'),
             COALESCE(auditoria_count.ultima_auditoria, '2000-01-01')
         )
-    ) as usuario_estadisticas
+    ) AS usuario_estadisticas
 FROM usuario u
-LEFT JOIN rol r ON u.rol_id = r.id
+LEFT JOIN persona p ON u.persona_id = p.id -- CORRECCIÓN: Join a persona
+-- CORRECCIÓN: Joins para obtener el Rol principal del Usuario
+LEFT JOIN usuario_rol_comunidad urc ON u.id = urc.usuario_id AND urc.activo = 1
+LEFT JOIN rol_sistema r ON urc.rol_id = r.id
 LEFT JOIN (
-    SELECT usuario_id, COUNT(*) as total_bitacora, MAX(fecha_hora) as ultima_bitacora
+    SELECT usuario_id, COUNT(*) AS total_bitacora, MAX(fecha_hora) AS ultima_bitacora
     FROM registro_conserjeria
     GROUP BY usuario_id
-) bitacora_count ON u.id = bitacora_count.usuario_id
+) AS bitacora_count ON u.id = bitacora_count.usuario_id
 LEFT JOIN (
-    SELECT usuario_id, COUNT(*) as total_auditoria, MAX(created_at) as ultima_auditoria
+    SELECT usuario_id, COUNT(*) AS total_auditoria, MAX(created_at) AS ultima_auditoria
     FROM auditoria
     GROUP BY usuario_id
-) auditoria_count ON u.id = auditoria_count.usuario_id
+) AS auditoria_count ON u.id = auditoria_count.usuario_id
 WHERE COALESCE(bitacora_count.total_bitacora, 0) + COALESCE(auditoria_count.total_auditoria, 0) > 0
 ORDER BY (
     COALESCE(bitacora_count.total_bitacora, 0) +
@@ -328,15 +364,18 @@ SELECT
         'priority', 'normal',
         'title', CONCAT(UPPER(LEFT(rc.evento, 1)), LOWER(SUBSTRING(rc.evento, 2))),
         'description', COALESCE(rc.detalle, 'Sin descripción'),
-        'user', COALESCE(u.nombre, 'Sistema'),
+        -- CORRECCIÓN: Obtener nombre de persona (p)
+        'user', COALESCE(CONCAT(p.nombres, ' ', p.apellidos), 'Sistema'),
         'date', rc.fecha_hora,
         'tags', JSON_ARRAY('bitácora', rc.evento),
         'attachments', 0,
         'ip', NULL,
-        'location', c.nombre
-    ) as actividad
+        -- CORRECCIÓN: Usar 'razon_social'
+        'location', c.razon_social
+    ) AS actividad
 FROM registro_conserjeria rc
 LEFT JOIN usuario u ON rc.usuario_id = u.id
+LEFT JOIN persona p ON u.persona_id = p.id
 LEFT JOIN comunidad c ON rc.comunidad_id = c.id
 WHERE CASE
     WHEN ? = 'user' THEN rc.evento IN ('entrega', 'retiro')
@@ -359,7 +398,7 @@ SELECT
             ELSE 'system'
         END,
         'priority', CASE
-            WHEN a.tabla IN ('usuario', 'permisos') THEN 'critical'
+            WHEN a.tabla = 'usuario' THEN 'critical' -- CORRECCIÓN: 'permisos' no existe
             WHEN a.tabla IN ('pago', 'gasto') THEN 'high'
             ELSE 'normal'
         END,
@@ -368,19 +407,21 @@ SELECT
             'Registro ID: ', COALESCE(a.registro_id, 'N/A'),
             ' - Valores nuevos: ', COALESCE(a.valores_nuevos, 'N/A')
         ),
-        'user', COALESCE(u.nombre, 'Sistema'),
+        -- CORRECCIÓN: Obtener nombre de persona (p)
+        'user', COALESCE(CONCAT(p.nombres, ' ', p.apellidos), 'Sistema'),
         'date', a.created_at,
         'tags', JSON_ARRAY('auditoría', a.accion, a.tabla),
         'attachments', 0,
         'ip', a.ip_address,
         'location', CONCAT('Tabla: ', a.tabla)
-    ) as actividad
+    ) AS actividad
 FROM auditoria a
 LEFT JOIN usuario u ON a.usuario_id = u.id
+LEFT JOIN persona p ON u.persona_id = p.id
 WHERE CASE
-    WHEN ? = 'critical' THEN a.tabla IN ('usuario', 'permisos')
+    WHEN ? = 'critical' THEN a.tabla = 'usuario' -- CORRECCIÓN: 'permisos' no existe
     WHEN ? = 'high' THEN a.tabla IN ('pago', 'gasto')
-    WHEN ? = 'normal' THEN a.tabla NOT IN ('usuario', 'permisos', 'pago', 'gasto')
+    WHEN ? = 'normal' THEN a.tabla NOT IN ('usuario', 'pago', 'gasto')
     ELSE TRUE
 END
 ORDER BY a.created_at DESC
@@ -399,21 +440,26 @@ SELECT
         'priority', 'normal',
         'title', CONCAT(UPPER(LEFT(rc.evento, 1)), LOWER(SUBSTRING(rc.evento, 2))),
         'description', COALESCE(rc.detalle, 'Sin descripción'),
-        'user', COALESCE(u.nombre, 'Sistema'),
+        -- CORRECCIÓN: Obtener nombre de persona (p_rc)
+        'user', COALESCE(CONCAT(p_rc.nombres, ' ', p_rc.apellidos), 'Sistema'),
         'date', rc.fecha_hora,
         'tags', JSON_ARRAY('bitácora', rc.evento),
         'attachments', 0,
         'ip', NULL,
-        'location', c.nombre,
+        -- CORRECCIÓN: Usar 'razon_social'
+        'location', c.razon_social,
         'source', 'bitacora'
-    ) as actividad
+    ) AS actividad
 FROM registro_conserjeria rc
-LEFT JOIN usuario u ON rc.usuario_id = u.id
+LEFT JOIN usuario u_rc ON rc.usuario_id = u_rc.id
+LEFT JOIN persona p_rc ON u_rc.persona_id = p_rc.id
 LEFT JOIN comunidad c ON rc.comunidad_id = c.id
 WHERE rc.evento LIKE CONCAT('%', ?, '%')
    OR COALESCE(rc.detalle, '') LIKE CONCAT('%', ?, '%')
-   OR COALESCE(u.nombre, '') LIKE CONCAT('%', ?, '%')
-   OR c.nombre LIKE CONCAT('%', ?, '%')
+   -- CORRECCIÓN: Buscar por nombre completo de la persona
+   OR COALESCE(CONCAT(p_rc.nombres, ' ', p_rc.apellidos), '') LIKE CONCAT('%', ?, '%')
+   -- CORRECCIÓN: Usar 'razon_social'
+   OR c.razon_social LIKE CONCAT('%', ?, '%')
 
 UNION ALL
 
@@ -427,7 +473,7 @@ SELECT
             ELSE 'system'
         END,
         'priority', CASE
-            WHEN a.tabla IN ('usuario', 'permisos') THEN 'critical'
+            WHEN a.tabla = 'usuario' THEN 'critical'
             WHEN a.tabla IN ('pago', 'gasto') THEN 'high'
             ELSE 'normal'
         END,
@@ -436,19 +482,22 @@ SELECT
             'Registro ID: ', COALESCE(a.registro_id, 'N/A'),
             ' - Valores nuevos: ', COALESCE(a.valores_nuevos, 'N/A')
         ),
-        'user', COALESCE(u.nombre, 'Sistema'),
+        -- CORRECCIÓN: Obtener nombre de persona (p_a)
+        'user', COALESCE(CONCAT(p_a.nombres, ' ', p_a.apellidos), 'Sistema'),
         'date', a.created_at,
         'tags', JSON_ARRAY('auditoría', a.accion, a.tabla),
         'attachments', 0,
         'ip', a.ip_address,
         'location', CONCAT('Tabla: ', a.tabla),
         'source', 'auditoria'
-    ) as actividad
+    ) AS actividad
 FROM auditoria a
-LEFT JOIN usuario u ON a.usuario_id = u.id
+LEFT JOIN usuario u_a ON a.usuario_id = u_a.id
+LEFT JOIN persona p_a ON u_a.persona_id = p_a.id
 WHERE a.accion LIKE CONCAT('%', ?, '%')
    OR a.tabla LIKE CONCAT('%', ?, '%')
-   OR COALESCE(u.nombre, '') LIKE CONCAT('%', ?, '%')
+   -- CORRECCIÓN: Buscar por nombre completo de la persona
+   OR COALESCE(CONCAT(p_a.nombres, ' ', p_a.apellidos), '') LIKE CONCAT('%', ?, '%')
    OR COALESCE(a.ip_address, '') LIKE CONCAT('%', ?, '%')
 
 ORDER BY JSON_UNQUOTE(JSON_EXTRACT(actividad, '$.date')) DESC
@@ -467,16 +516,19 @@ SELECT
         'priority', 'normal',
         'title', CONCAT(UPPER(LEFT(rc.evento, 1)), LOWER(SUBSTRING(rc.evento, 2))),
         'description', COALESCE(rc.detalle, 'Sin descripción'),
-        'user', COALESCE(u.nombre, 'Sistema'),
+        -- CORRECCIÓN: Obtener nombre de persona (p_rc)
+        'user', COALESCE(CONCAT(p_rc.nombres, ' ', p_rc.apellidos), 'Sistema'),
         'date', rc.fecha_hora,
         'tags', JSON_ARRAY('bitácora', rc.evento),
         'attachments', 0,
         'ip', NULL,
-        'location', c.nombre,
+        -- CORRECCIÓN: Usar 'razon_social'
+        'location', c.razon_social,
         'source', 'bitacora'
-    ) as actividad
+    ) AS actividad
 FROM registro_conserjeria rc
-LEFT JOIN usuario u ON rc.usuario_id = u.id
+LEFT JOIN usuario u_rc ON rc.usuario_id = u_rc.id
+LEFT JOIN persona p_rc ON u_rc.persona_id = p_rc.id
 LEFT JOIN comunidad c ON rc.comunidad_id = c.id
 WHERE DATE(rc.fecha_hora) BETWEEN ? AND ?
 
@@ -492,7 +544,7 @@ SELECT
             ELSE 'system'
         END,
         'priority', CASE
-            WHEN a.tabla IN ('usuario', 'permisos') THEN 'critical'
+            WHEN a.tabla = 'usuario' THEN 'critical'
             WHEN a.tabla IN ('pago', 'gasto') THEN 'high'
             ELSE 'normal'
         END,
@@ -501,16 +553,18 @@ SELECT
             'Registro ID: ', COALESCE(a.registro_id, 'N/A'),
             ' - Valores nuevos: ', COALESCE(a.valores_nuevos, 'N/A')
         ),
-        'user', COALESCE(u.nombre, 'Sistema'),
+        -- CORRECCIÓN: Obtener nombre de persona (p_a)
+        'user', COALESCE(CONCAT(p_a.nombres, ' ', p_a.apellidos), 'Sistema'),
         'date', a.created_at,
         'tags', JSON_ARRAY('auditoría', a.accion, a.tabla),
         'attachments', 0,
         'ip', a.ip_address,
         'location', CONCAT('Tabla: ', a.tabla),
         'source', 'auditoria'
-    ) as actividad
+    ) AS actividad
 FROM auditoria a
-LEFT JOIN usuario u ON a.usuario_id = u.id
+LEFT JOIN usuario u_a ON a.usuario_id = u_a.id
+LEFT JOIN persona p_a ON u_a.persona_id = p_a.id
 WHERE DATE(a.created_at) BETWEEN ? AND ?
 
 ORDER BY JSON_UNQUOTE(JSON_EXTRACT(actividad, '$.date')) DESC
@@ -522,113 +576,126 @@ LIMIT ? OFFSET ?;
 
 -- 5.1 Exportación completa para Excel/CSV
 SELECT
-    'bitacora' as source,
-    rc.id as record_id,
+    'bitacora' AS source,
+    rc.id AS record_id,
     CASE
         WHEN rc.evento IN ('entrega', 'retiro') THEN 'user'
         WHEN rc.evento IN ('visita', 'reporte') THEN 'security'
         WHEN rc.evento = 'otro' THEN 'maintenance'
         ELSE 'system'
-    END as type,
-    'normal' as priority,
-    CONCAT(UPPER(LEFT(rc.evento, 1)), LOWER(SUBSTRING(rc.evento, 2))) as title,
-    COALESCE(rc.detalle, 'Sin descripción') as description,
-    COALESCE(u.nombre, 'Sistema') as user_name,
-    rc.fecha_hora as activity_date,
-    c.nombre as location,
-    NULL as ip_address,
-    rc.evento as event_type,
-    rc.created_at as created_at
+    END AS type,
+    'normal' AS priority,
+    CONCAT(UPPER(LEFT(rc.evento, 1)), LOWER(SUBSTRING(rc.evento, 2))) AS title,
+    COALESCE(rc.detalle, 'Sin descripción') AS description,
+    -- CORRECCIÓN: Obtener nombre de persona (p_rc)
+    COALESCE(CONCAT(p_rc.nombres, ' ', p_rc.apellidos), 'Sistema') AS user_name,
+    rc.fecha_hora AS activity_date,
+    -- CORRECCIÓN: Usar 'razon_social'
+    c.razon_social AS location,
+    NULL AS ip_address,
+    rc.evento AS event_type,
+    rc.created_at AS created_at
 FROM registro_conserjeria rc
-LEFT JOIN usuario u ON rc.usuario_id = u.id
+LEFT JOIN usuario u_rc ON rc.usuario_id = u_rc.id
+LEFT JOIN persona p_rc ON u_rc.persona_id = p_rc.id
 LEFT JOIN comunidad c ON rc.comunidad_id = c.id
 
 UNION ALL
 
 SELECT
-    'auditoria' as source,
-    a.id as record_id,
+    'auditoria' AS source,
+    a.id AS record_id,
     CASE
         WHEN a.accion = 'INSERT' THEN 'user'
         WHEN a.accion = 'UPDATE' THEN 'admin'
         WHEN a.accion = 'DELETE' THEN 'security'
         ELSE 'system'
-    END as type,
+    END AS type,
     CASE
-        WHEN a.tabla IN ('usuario', 'permisos') THEN 'critical'
+        WHEN a.tabla = 'usuario' THEN 'critical' -- CORRECCIÓN: 'permisos' no existe
         WHEN a.tabla IN ('pago', 'gasto') THEN 'high'
         ELSE 'normal'
-    END as priority,
-    CONCAT(a.accion, ' en ', a.tabla) as title,
-    CONCAT('Registro ID: ', COALESCE(a.registro_id, 'N/A'), ' - Valores nuevos: ', COALESCE(a.valores_nuevos, 'N/A')) as description,
-    COALESCE(u.nombre, 'Sistema') as user_name,
-    a.created_at as activity_date,
-    CONCAT('Tabla: ', a.tabla) as location,
+    END AS priority,
+    CONCAT(a.accion, ' en ', a.tabla) AS title,
+    CONCAT('Registro ID: ', COALESCE(a.registro_id, 'N/A'), ' - Valores nuevos: ', COALESCE(a.valores_nuevos, 'N/A')) AS description,
+    -- CORRECCIÓN: Obtener nombre de persona (p_a)
+    COALESCE(CONCAT(p_a.nombres, ' ', p_a.apellidos), 'Sistema') AS user_name,
+    a.created_at AS activity_date,
+    CONCAT('Tabla: ', a.tabla) AS location,
     a.ip_address,
-    a.accion as event_type,
-    a.created_at as created_at
+    a.accion AS event_type,
+    a.created_at AS created_at
 FROM auditoria a
-LEFT JOIN usuario u ON a.usuario_id = u.id
+LEFT JOIN usuario u_a ON a.usuario_id = u_a.id
+LEFT JOIN persona p_a ON u_a.persona_id = p_a.id
 
 ORDER BY activity_date DESC;
 
 -- 5.2 Exportación filtrada por comunidad
 SELECT
-    c.nombre as comunidad,
-    COUNT(rc.id) as total_actividades,
-    COUNT(CASE WHEN DATE(rc.fecha_hora) = CURDATE() THEN 1 END) as actividades_hoy,
-    GROUP_CONCAT(DISTINCT rc.evento SEPARATOR ', ') as tipos_eventos
+    -- CORRECCIÓN: Usar 'razon_social'
+    c.razon_social AS comunidad,
+    COUNT(rc.id) AS total_actividades,
+    COUNT(CASE WHEN DATE(rc.fecha_hora) = CURDATE() THEN 1 END) AS actividades_hoy,
+    GROUP_CONCAT(DISTINCT rc.evento SEPARATOR ', ') AS tipos_eventos
 FROM comunidad c
 LEFT JOIN registro_conserjeria rc ON c.id = rc.comunidad_id
 WHERE c.id = ?
-GROUP BY c.id, c.nombre;
+-- CORRECCIÓN: Agrupar por 'razon_social'
+GROUP BY c.id, c.razon_social;
 
 -- 5.3 Exportación de resumen por usuario
 SELECT
-    COALESCE(u.nombre, 'Sistema') as usuario,
-    COALESCE(r.nombre, 'Sistema') as rol,
-    COUNT(rc.id) as actividades_bitacora,
-    COUNT(a.id) as actividades_auditoria,
-    COUNT(rc.id) + COUNT(a.id) as total_actividades,
-    MAX(GREATEST(COALESCE(rc.fecha_hora, '2000-01-01'), COALESCE(a.created_at, '2000-01-01'))) as ultima_actividad
+    -- CORRECCIÓN: Obtener nombre de persona (p)
+    COALESCE(CONCAT(p.nombres, ' ', p.apellidos), 'Sistema') AS usuario,
+    -- CORRECCIÓN: Obtener nombre de rol (r)
+    COALESCE(r.nombre, 'Sistema') AS rol,
+    COUNT(rc.id) AS actividades_bitacora,
+    COUNT(a.id) AS actividades_auditoria,
+    COUNT(rc.id) + COUNT(a.id) AS total_actividades,
+    MAX(GREATEST(COALESCE(rc.fecha_hora, '2000-01-01'), COALESCE(a.created_at, '2000-01-01'))) AS ultima_actividad
 FROM usuario u
-LEFT JOIN rol r ON u.rol_id = r.id
+LEFT JOIN persona p ON u.persona_id = p.id -- CORRECCIÓN: Join a persona
+-- CORRECCIÓN: Joins para obtener el Rol principal del Usuario
+LEFT JOIN usuario_rol_comunidad urc ON u.id = urc.usuario_id AND urc.activo = 1
+LEFT JOIN rol_sistema r ON urc.rol_id = r.id
 LEFT JOIN registro_conserjeria rc ON u.id = rc.usuario_id
 LEFT JOIN auditoria a ON u.id = a.usuario_id
 WHERE u.id = ?
-GROUP BY u.id, u.nombre, r.nombre;
+-- CORRECCIÓN: Agrupar por campos de persona y rol
+GROUP BY u.id, p.nombres, p.apellidos, r.nombre;
 
 -- =========================================
 -- 6. VALIDACIONES
 -- =========================================
 
--- 6.1 Validar integridad de datos de bitácora
+-- 6.1 Validar integridad de datos de bitácora (Sin cambios estructurales)
 SELECT
-    'bitacora_integrity' as check_type,
+    'bitacora_integrity' AS check_type,
     CASE
         WHEN COUNT(*) = 0 THEN 'PASS'
         ELSE 'FAIL'
-    END as status,
-    CONCAT('Registros sin comunidad válida: ', COUNT(*)) as message,
+    END AS status,
+    CONCAT('Registros sin comunidad válida: ', COUNT(*)) AS message,
     JSON_ARRAYAGG(
         JSON_OBJECT(
             'id', rc.id,
             'comunidad_id', rc.comunidad_id,
             'evento', rc.evento
         )
-    ) as details
+    ) AS details
 FROM registro_conserjeria rc
 LEFT JOIN comunidad c ON rc.comunidad_id = c.id
 WHERE c.id IS NULL;
 
--- 6.2 Validar integridad de datos de auditoría
+-- 6.2 Validar integridad de datos de auditoría (Sin cambios estructurales)
 SELECT
-    'auditoria_integrity' as check_type,
+    'auditoria_integrity' AS check_type,
     CASE
         WHEN COUNT(*) = 0 THEN 'PASS'
         ELSE 'FAIL'
-    END as status,
-    CONCAT('Registros sin usuario válido: ', COUNT(*)) as message,
+    END AS status,
+    CONCAT('Registros sin usuario válido: ', COUNT(*)) AS message,
     JSON_ARRAYAGG(
         JSON_OBJECT(
             'id', a.id,
@@ -636,44 +703,44 @@ SELECT
             'accion', a.accion,
             'tabla', a.tabla
         )
-    ) as details
+    ) AS details
 FROM auditoria a
 LEFT JOIN usuario u ON a.usuario_id = u.id
 WHERE a.usuario_id IS NOT NULL AND u.id IS NULL;
 
--- 6.3 Validar consistencia de fechas
+-- 6.3 Validar consistencia de fechas (Sin cambios estructurales)
 SELECT
-    'date_consistency' as check_type,
+    'date_consistency' AS check_type,
     CASE
         WHEN COUNT(*) = 0 THEN 'PASS'
         ELSE 'FAIL'
-    END as status,
-    CONCAT('Registros con fechas futuras: ', COUNT(*)) as message,
+    END AS status,
+    CONCAT('Registros con fechas futuras: ', COUNT(*)) AS message,
     JSON_ARRAYAGG(
         JSON_OBJECT(
             'id', rc.id,
             'fecha_hora', rc.fecha_hora,
             'created_at', rc.created_at
         )
-    ) as details
+    ) AS details
 FROM registro_conserjeria rc
 WHERE rc.fecha_hora > NOW() OR rc.created_at > NOW();
 
--- 6.4 Validar datos requeridos
+-- 6.4 Validar datos requeridos (Sin cambios estructurales)
 SELECT
-    'required_fields' as check_type,
+    'required_fields' AS check_type,
     CASE
         WHEN COUNT(*) = 0 THEN 'PASS'
         ELSE 'FAIL'
-    END as status,
-    CONCAT('Registros con campos requeridos nulos: ', COUNT(*)) as message,
+    END AS status,
+    CONCAT('Registros con campos requeridos nulos: ', COUNT(*)) AS message,
     JSON_ARRAYAGG(
         JSON_OBJECT(
             'id', rc.id,
             'evento', rc.evento,
             'comunidad_id', rc.comunidad_id
         )
-    ) as details
+    ) AS details
 FROM registro_conserjeria rc
 WHERE rc.evento IS NULL OR rc.evento = ''
    OR rc.comunidad_id IS NULL;
@@ -685,107 +752,106 @@ WHERE rc.evento IS NULL OR rc.evento = ''
 -- 7.1 Vista unificada de actividades (para listados rápidos)
 CREATE OR REPLACE VIEW vista_actividades_unificadas AS
 SELECT
-    CONCAT('bitacora_', rc.id) as id,
+    CONCAT('bitacora_', rc.id) AS id,
     CASE
         WHEN rc.evento IN ('entrega', 'retiro') THEN 'user'
         WHEN rc.evento IN ('visita', 'reporte') THEN 'security'
         WHEN rc.evento = 'otro' THEN 'maintenance'
         ELSE 'system'
-    END as type,
-    'normal' as priority,
-    CONCAT(UPPER(LEFT(rc.evento, 1)), LOWER(SUBSTRING(rc.evento, 2))) as title,
-    COALESCE(rc.detalle, 'Sin descripción') as description,
-    COALESCE(u.nombre, 'Sistema') as user_name,
-    rc.fecha_hora as activity_date,
-    JSON_ARRAY('bitácora', rc.evento) as tags,
-    0 as attachments,
-    NULL as ip_address,
-    c.nombre as location,
-    'bitacora' as source,
-    rc.created_at as created_at
+    END AS type,
+    'normal' AS priority,
+    CONCAT(UPPER(LEFT(rc.evento, 1)), LOWER(SUBSTRING(rc.evento, 2))) AS title,
+    COALESCE(rc.detalle, 'Sin descripción') AS description,
+    -- CORRECCIÓN: Obtener nombre de persona (p_rc)
+    COALESCE(CONCAT(p_rc.nombres, ' ', p_rc.apellidos), 'Sistema') AS user_name,
+    rc.fecha_hora AS activity_date,
+    JSON_ARRAY('bitácora', rc.evento) AS tags,
+    0 AS attachments,
+    NULL AS ip_address,
+    -- CORRECCIÓN: Usar 'razon_social'
+    c.razon_social AS location,
+    'bitacora' AS source,
+    rc.created_at AS created_at
 FROM registro_conserjeria rc
-LEFT JOIN usuario u ON rc.usuario_id = u.id
+LEFT JOIN usuario u_rc ON rc.usuario_id = u_rc.id
+LEFT JOIN persona p_rc ON u_rc.persona_id = p_rc.id
 LEFT JOIN comunidad c ON rc.comunidad_id = c.id
 
 UNION ALL
 
 SELECT
-    CONCAT('auditoria_', a.id) as id,
+    CONCAT('auditoria_', a.id) AS id,
     CASE
         WHEN a.accion = 'INSERT' THEN 'user'
         WHEN a.accion = 'UPDATE' THEN 'admin'
         WHEN a.accion = 'DELETE' THEN 'security'
         ELSE 'system'
-    END as type,
+    END AS type,
     CASE
-        WHEN a.tabla IN ('usuario', 'permisos') THEN 'critical'
+        WHEN a.tabla = 'usuario' THEN 'critical' -- CORRECCIÓN: 'permisos' no existe
         WHEN a.tabla IN ('pago', 'gasto') THEN 'high'
         ELSE 'normal'
-    END as priority,
-    CONCAT(a.accion, ' en ', a.tabla) as title,
-    CONCAT('Registro ID: ', COALESCE(a.registro_id, 'N/A'), ' - Valores nuevos: ', COALESCE(a.valores_nuevos, 'N/A')) as description,
-    COALESCE(u.nombre, 'Sistema') as user_name,
-    a.created_at as activity_date,
-    JSON_ARRAY('auditoría', a.accion, a.tabla) as tags,
-    0 as attachments,
+    END AS priority,
+    CONCAT(a.accion, ' en ', a.tabla) AS title,
+    CONCAT('Registro ID: ', COALESCE(a.registro_id, 'N/A'), ' - Valores nuevos: ', COALESCE(a.valores_nuevos, 'N/A')) AS description,
+    -- CORRECCIÓN: Obtener nombre de persona (p_a)
+    COALESCE(CONCAT(p_a.nombres, ' ', p_a.apellidos), 'Sistema') AS user_name,
+    a.created_at AS activity_date,
+    JSON_ARRAY('auditoría', a.accion, a.tabla) AS tags,
+    0 AS attachments,
     a.ip_address,
-    CONCAT('Tabla: ', a.tabla) as location,
-    'auditoria' as source,
-    a.created_at as created_at
+    CONCAT('Tabla: ', a.tabla) AS location,
+    'auditoria' AS source,
+    a.created_at AS created_at
 FROM auditoria a
-LEFT JOIN usuario u ON a.usuario_id = u.id;
+LEFT JOIN usuario u_a ON a.usuario_id = u_a.id
+LEFT JOIN persona p_a ON u_a.persona_id = p_a.id;
 
--- 7.2 Vista de estadísticas diarias
+-- 7.2 Vista de estadísticas diarias (Sin cambios estructurales, ya que usa la vista 7.1)
 CREATE OR REPLACE VIEW vista_estadisticas_bitacora_diarias AS
 SELECT
-    DATE(activity_date) as fecha,
-    COUNT(*) as total_actividades,
-    COUNT(CASE WHEN type = 'system' THEN 1 END) as system_activities,
-    COUNT(CASE WHEN type = 'user' THEN 1 END) as user_activities,
-    COUNT(CASE WHEN type = 'security' THEN 1 END) as security_activities,
-    COUNT(CASE WHEN type = 'maintenance' THEN 1 END) as maintenance_activities,
-    COUNT(CASE WHEN type = 'admin' THEN 1 END) as admin_activities,
-    COUNT(CASE WHEN type = 'financial' THEN 1 END) as financial_activities,
-    COUNT(CASE WHEN priority = 'critical' THEN 1 END) as critical_priority,
-    COUNT(CASE WHEN priority = 'high' THEN 1 END) as high_priority,
-    COUNT(CASE WHEN priority = 'normal' THEN 1 END) as normal_priority,
-    COUNT(CASE WHEN priority = 'low' THEN 1 END) as low_priority
+    DATE(activity_date) AS fecha,
+    COUNT(*) AS total_actividades,
+    COUNT(CASE WHEN type = 'system' THEN 1 END) AS system_activities,
+    COUNT(CASE WHEN type = 'user' THEN 1 END) AS user_activities,
+    COUNT(CASE WHEN type = 'security' THEN 1 END) AS security_activities,
+    COUNT(CASE WHEN type = 'maintenance' THEN 1 END) AS maintenance_activities,
+    COUNT(CASE WHEN type = 'admin' THEN 1 END) AS admin_activities,
+    COUNT(CASE WHEN type = 'financial' THEN 1 END) AS financial_activities,
+    COUNT(CASE WHEN priority = 'critical' THEN 1 END) AS critical_priority,
+    COUNT(CASE WHEN priority = 'high' THEN 1 END) AS high_priority,
+    COUNT(CASE WHEN priority = 'normal' THEN 1 END) AS normal_priority,
+    COUNT(CASE WHEN priority = 'low' THEN 1 END) AS low_priority
 FROM vista_actividades_unificadas
 GROUP BY DATE(activity_date)
 ORDER BY fecha DESC;
 
--- 7.3 Vista de actividades por usuario
+-- 7.3 Vista de actividades por usuario (Sin cambios estructurales, ya que usa la vista 7.1)
 CREATE OR REPLACE VIEW vista_actividades_por_usuario AS
 SELECT
     user_name,
-    COUNT(*) as total_actividades,
-    COUNT(CASE WHEN source = 'bitacora' THEN 1 END) as actividades_bitacora,
-    COUNT(CASE WHEN source = 'auditoria' THEN 1 END) as actividades_auditoria,
-    MAX(activity_date) as ultima_actividad,
-    GROUP_CONCAT(DISTINCT type SEPARATOR ', ') as tipos_actividad,
-    GROUP_CONCAT(DISTINCT priority SEPARATOR ', ') as prioridades
+    COUNT(*) AS total_actividades,
+    COUNT(CASE WHEN source = 'bitacora' THEN 1 END) AS actividades_bitacora,
+    COUNT(CASE WHEN source = 'auditoria' THEN 1 END) AS actividades_auditoria,
+    MAX(activity_date) AS ultima_actividad,
+    GROUP_CONCAT(DISTINCT type SEPARATOR ', ') AS tipos_actividad,
+    GROUP_CONCAT(DISTINCT priority SEPARATOR ', ') AS prioridades
 FROM vista_actividades_unificadas
 GROUP BY user_name
 ORDER BY total_actividades DESC;
 
 -- =========================================
--- 8. ÍNDICES RECOMENDADOS
+-- 8. ÍNDICES RECOMENDADOS (Se eliminan los CREATE INDEX de las vistas ya que se basan en la tabla base)
 -- =========================================
 
 -- Índices para tabla registro_conserjeria
--- CREATE INDEX idx_bitacora_fecha_hora ON registro_conserjeria(fecha_hora);
--- CREATE INDEX idx_bitacora_comunidad_fecha ON registro_conserjeria(comunidad_id, fecha_hora);
--- CREATE INDEX idx_bitacora_usuario_fecha ON registro_conserjeria(usuario_id, fecha_hora);
--- CREATE INDEX idx_bitacora_evento ON registro_conserjeria(evento);
+CREATE INDEX idx_bitacora_fecha_hora ON registro_conserjeria(fecha_hora);
+CREATE INDEX idx_bitacora_comunidad_fecha ON registro_conserjeria(comunidad_id, fecha_hora);
+CREATE INDEX idx_bitacora_usuario_fecha ON registro_conserjeria(usuario_id, fecha_hora);
+CREATE INDEX idx_bitacora_evento ON registro_conserjeria(evento);
 
 -- Índices para tabla auditoria
--- CREATE INDEX idx_auditoria_created_at ON auditoria(created_at);
--- CREATE INDEX idx_auditoria_usuario_fecha ON auditoria(usuario_id, created_at);
--- CREATE INDEX idx_auditoria_tabla_accion ON auditoria(tabla, accion);
--- CREATE INDEX idx_auditoria_ip ON auditoria(ip_address);
-
--- Índices para vistas
--- CREATE INDEX idx_vista_actividades_fecha ON vista_actividades_unificadas(activity_date);
--- CREATE INDEX idx_vista_actividades_tipo ON vista_actividades_unificadas(type);
--- CREATE INDEX idx_vista_actividades_usuario ON vista_actividades_unificadas(user_name);</content>
-<parameter name="filePath">c:\Users\patri\Documents\GitHub\proyecto_cuentas_claras\ccfrontend\queries_bitacora.sql
+CREATE INDEX idx_auditoria_created_at ON auditoria(created_at);
+CREATE INDEX idx_auditoria_usuario_fecha ON auditoria(usuario_id, created_at);
+CREATE INDEX idx_auditoria_tabla_accion ON auditoria(tabla, accion);
+CREATE INDEX idx_auditoria_ip ON auditoria(ip_address);

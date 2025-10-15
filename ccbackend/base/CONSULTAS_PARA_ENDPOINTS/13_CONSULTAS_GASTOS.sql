@@ -1,9 +1,7 @@
 -- =========================================
 -- CONSULTAS SQL PARA EL MÓDULO DE GASTOS
+-- Sistema de Cuentas Claras (Basado en el esquema de 'gasto')
 -- =========================================
--- Este archivo contiene todas las consultas SQL necesarias
--- para el manejo completo del módulo de gastos en el sistema
--- Cuentas Claras.
 
 -- =========================================
 -- 1. LISTADO DE GASTOS CON FILTROS Y PAGINACIÓN
@@ -30,6 +28,7 @@ SELECT
     -- Información del proveedor (a través de documento_compra)
     p.razon_social AS proveedor_nombre,
     p.rut AS proveedor_rut,
+    g.estado AS estado, -- Se añade el estado de gasto
     -- Información de archivos adjuntos
     CASE WHEN COUNT(a.id) > 0 THEN 1 ELSE 0 END AS tiene_adjuntos,
     -- Metadatos
@@ -42,8 +41,11 @@ LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
 LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
 LEFT JOIN proveedor p ON dc.proveedor_id = p.id
 LEFT JOIN archivos a ON a.entity_type = 'gasto' AND a.entity_id = g.id AND a.is_active = 1
-WHERE g.comunidad_id = ?
-GROUP BY g.id
+WHERE g.comunidad_id = ? /* :comunidad_id */
+GROUP BY
+    g.id, g.comunidad_id, c.razon_social, g.categoria_id, cat.nombre, cat.tipo, g.centro_costo_id, cc.nombre,
+    g.documento_compra_id, dc.tipo_doc, dc.folio, dc.fecha_emision, g.fecha, g.monto, g.glosa, g.extraordinario,
+    p.razon_social, p.rut, g.estado, g.created_at, g.updated_at
 ORDER BY g.fecha DESC, g.created_at DESC;
 
 -- 1.2 Listado con filtros avanzados
@@ -64,17 +66,18 @@ LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
 LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
 LEFT JOIN proveedor p ON dc.proveedor_id = p.id
 LEFT JOIN archivos a ON a.entity_type = 'gasto' AND a.entity_id = g.id AND a.is_active = 1
-WHERE g.comunidad_id = ?
-    AND (cat.nombre LIKE CONCAT('%', ?, '%') OR ? = '')
-    AND (p.razon_social LIKE CONCAT('%', ?, '%') OR ? = '')
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
-    AND (g.monto BETWEEN ? AND ? OR (? = 0 AND ? = 0))
-    AND (g.categoria_id = ? OR ? = 0)
-    AND (g.centro_costo_id = ? OR ? = 0)
-    AND (g.extraordinario = ? OR ? = -1)
-GROUP BY g.id
+WHERE g.comunidad_id = ?1 /* :comunidad_id */
+    AND (cat.nombre LIKE CONCAT('%', ?2, '%') OR ?3 = '') -- Filtro categoría nombre
+    AND (p.razon_social LIKE CONCAT('%', ?4, '%') OR ?5 = '') -- Filtro proveedor nombre
+    AND (g.fecha BETWEEN ?6 AND ?7 OR (?8 = '' AND ?9 = '')) -- Filtro rango de fechas
+    AND (g.monto BETWEEN ?10 AND ?11 OR (?12 = 0 AND ?13 = 0)) -- Filtro rango de montos
+    AND (g.categoria_id = ?14 OR ?15 = 0) -- Filtro categoría id
+    AND (g.centro_costo_id = ?16 OR ?17 = 0) -- Filtro centro costo id
+    AND (g.extraordinario = ?18 OR ?19 = -1) -- Filtro extraordinario
+GROUP BY
+    g.id, g.fecha, g.monto, g.glosa, cat.nombre, cc.nombre, p.razon_social, dc.folio, g.created_at
 ORDER BY g.fecha DESC, g.created_at DESC
-LIMIT ? OFFSET ?;
+LIMIT ?20 OFFSET ?21;
 
 -- 1.3 Conteo total para paginación
 SELECT COUNT(DISTINCT g.id) AS total
@@ -83,14 +86,14 @@ INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
 LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
 LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
 LEFT JOIN proveedor p ON dc.proveedor_id = p.id
-WHERE g.comunidad_id = ?
-    AND (cat.nombre LIKE CONCAT('%', ?, '%') OR ? = '')
-    AND (p.razon_social LIKE CONCAT('%', ?, '%') OR ? = '')
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
-    AND (g.monto BETWEEN ? AND ? OR (? = 0 AND ? = 0))
-    AND (g.categoria_id = ? OR ? = 0)
-    AND (g.centro_costo_id = ? OR ? = 0)
-    AND (g.extraordinario = ? OR ? = -1);
+WHERE g.comunidad_id = ?1
+    AND (cat.nombre LIKE CONCAT('%', ?2, '%') OR ?3 = '')
+    AND (p.razon_social LIKE CONCAT('%', ?4, '%') OR ?5 = '')
+    AND (g.fecha BETWEEN ?6 AND ?7 OR (?8 = '' AND ?9 = ''))
+    AND (g.monto BETWEEN ?10 AND ?11 OR (?12 = 0 AND ?13 = 0))
+    AND (g.categoria_id = ?14 OR ?15 = 0)
+    AND (g.centro_costo_id = ?16 OR ?17 = 0)
+    AND (g.extraordinario = ?18 OR ?19 = -1);
 
 -- =========================================
 -- 2. DETALLE DE GASTO ESPECÍFICO
@@ -120,6 +123,7 @@ SELECT
     g.monto,
     g.glosa AS descripcion,
     g.extraordinario,
+    g.estado,
     -- Información del proveedor
     p.id AS proveedor_id,
     p.razon_social AS proveedor_nombre,
@@ -138,7 +142,7 @@ INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
 LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
 LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
 LEFT JOIN proveedor p ON dc.proveedor_id = p.id
-WHERE g.id = ? AND g.comunidad_id = ?;
+WHERE g.id = ? /* :gasto_id */ AND g.comunidad_id = ? /* :comunidad_id */;
 
 -- 2.2 Archivos adjuntos del gasto
 SELECT
@@ -153,12 +157,13 @@ SELECT
     a.uploaded_at,
     a.uploaded_by,
     -- Información del usuario que subió el archivo
-    CONCAT(per.nombres, ' ', per.apellido_paterno, ' ', COALESCE(per.apellido_materno, '')) AS uploaded_by_name
+    -- CORRECCIÓN: Se usa COALESCE para manejar el nombre completo, ya que persona_id es nullable
+    COALESCE(CONCAT(per.nombres, ' ', per.apellidos), u.username, 'Sistema') AS uploaded_by_name
 FROM archivos a
 LEFT JOIN usuario u ON a.uploaded_by = u.id
 LEFT JOIN persona per ON u.persona_id = per.id
 WHERE a.entity_type = 'gasto'
-    AND a.entity_id = ?
+    AND a.entity_id = ? /* :gasto_id */
     AND a.is_active = 1
 ORDER BY a.uploaded_at DESC;
 
@@ -175,22 +180,36 @@ INSERT INTO gasto (
     fecha,
     monto,
     glosa,
-    extraordinario
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+    extraordinario,
+    numero,
+    creado_por
+) VALUES (
+    ?1, -- comunidad_id
+    ?2, -- categoria_id
+    ?3, -- centro_costo_id
+    ?4, -- documento_compra_id
+    ?5, -- fecha
+    ?6, -- monto
+    ?7, -- glosa
+    ?8, -- extraordinario
+    ?9, -- numero (opcional, pero existe en esquema)
+    ?10 -- creado_por (opcional, pero existe en esquema)
+);
 
 -- 3.2 Actualizar gasto existente
 UPDATE gasto SET
-    categoria_id = ?,
-    centro_costo_id = ?,
-    documento_compra_id = ?,
-    fecha = ?,
-    monto = ?,
-    glosa = ?,
-    extraordinario = ?,
+    categoria_id = ?1,
+    centro_costo_id = ?2,
+    documento_compra_id = ?3,
+    fecha = ?4,
+    monto = ?5,
+    glosa = ?6,
+    extraordinario = ?7,
     updated_at = CURRENT_TIMESTAMP
-WHERE id = ? AND comunidad_id = ?;
+WHERE id = ?8 AND comunidad_id = ?9;
 
 -- 3.3 Eliminar gasto
+-- Sugerir índice: gasto(comunidad_id, id)
 DELETE FROM gasto WHERE id = ? AND comunidad_id = ?;
 
 -- =========================================
@@ -207,8 +226,8 @@ SELECT
     MIN(fecha) AS fecha_primer_gasto,
     MAX(fecha) AS fecha_ultimo_gasto
 FROM gasto
-WHERE comunidad_id = ?
-    AND (fecha BETWEEN ? AND ? OR (? = '' AND ? = ''));
+WHERE comunidad_id = ?1 /* :comunidad_id */
+    AND (fecha BETWEEN ?2 AND ?3 OR (?4 = '' AND ?5 = ''));
 
 -- 4.2 Gastos por categoría
 SELECT
@@ -221,8 +240,8 @@ SELECT
     MAX(g.monto) AS monto_maximo
 FROM gasto g
 INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
-WHERE g.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+WHERE g.comunidad_id = ?1 /* :comunidad_id */
+    AND (g.fecha BETWEEN ?2 AND ?3 OR (?4 = '' AND ?5 = ''))
 GROUP BY cat.id, cat.nombre, cat.tipo
 ORDER BY total_monto DESC;
 
@@ -235,8 +254,8 @@ SELECT
     AVG(g.monto) AS promedio_monto
 FROM gasto g
 LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
-WHERE g.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+WHERE g.comunidad_id = ?1 /* :comunidad_id */
+    AND (g.fecha BETWEEN ?2 AND ?3 OR (?4 = '' AND ?5 = ''))
 GROUP BY cc.id, cc.nombre, cc.codigo
 ORDER BY total_monto DESC;
 
@@ -251,8 +270,8 @@ SELECT
 FROM gasto g
 INNER JOIN documento_compra dc ON g.documento_compra_id = dc.id
 INNER JOIN proveedor p ON dc.proveedor_id = p.id
-WHERE g.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+WHERE g.comunidad_id = ?1 /* :comunidad_id */
+    AND (g.fecha BETWEEN ?2 AND ?3 OR (?4 = '' AND ?5 = ''))
 GROUP BY p.id, p.razon_social, p.rut
 ORDER BY total_monto DESC;
 
@@ -263,7 +282,7 @@ SELECT
     SUM(monto) AS total_monto,
     AVG(monto) AS promedio_monto
 FROM gasto
-WHERE comunidad_id = ?
+WHERE comunidad_id = ? /* :comunidad_id */
     AND fecha >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
 GROUP BY DATE_FORMAT(fecha, '%Y-%m')
 ORDER BY mes DESC;
@@ -277,11 +296,13 @@ SELECT
     COUNT(*) AS cantidad,
     SUM(monto) AS total_monto,
     AVG(monto) AS promedio_monto,
-    (SUM(monto) / (SELECT SUM(monto) FROM gasto WHERE comunidad_id = ?)) * 100 AS porcentaje_total
+    -- CORRECCIÓN: Uso de NULLIF para evitar división por cero
+    (SUM(monto) / NULLIF((SELECT SUM(monto) FROM gasto WHERE comunidad_id = ?1), 0)) * 100 AS porcentaje_total
 FROM gasto
-WHERE comunidad_id = ?
-    AND (fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
-GROUP BY extraordinario;
+WHERE comunidad_id = ?1 /* :comunidad_id */
+    AND (fecha BETWEEN ?2 AND ?3 OR (?4 = '' AND ?5 = ''))
+GROUP BY extraordinario
+ORDER BY extraordinario DESC;
 
 -- =========================================
 -- 5. VALIDACIONES Y VERIFICACIONES
@@ -292,7 +313,7 @@ SELECT COUNT(*) > 0 AS existe
 FROM gasto
 WHERE id = ? AND comunidad_id = ?;
 
--- 5.2 Verificar si existe categoría de gasto
+-- 5.2 Verificar si existe categoría de gasto (y está activa)
 SELECT COUNT(*) > 0 AS existe
 FROM categoria_gasto
 WHERE id = ? AND comunidad_id = ? AND activa = 1;
@@ -307,7 +328,7 @@ SELECT COUNT(*) > 0 AS existe
 FROM documento_compra
 WHERE id = ? AND comunidad_id = ?;
 
--- 5.5 Verificar si existe proveedor
+-- 5.5 Verificar si existe proveedor (y está activo)
 SELECT COUNT(*) > 0 AS existe
 FROM proveedor
 WHERE id = ? AND comunidad_id = ? AND activo = 1;
@@ -316,10 +337,10 @@ WHERE id = ? AND comunidad_id = ? AND activo = 1;
 SELECT COUNT(*) > 0 AS existe_duplicado
 FROM gasto g
 INNER JOIN documento_compra dc ON g.documento_compra_id = dc.id
-WHERE g.comunidad_id = ?
-    AND dc.folio = ?
-    AND g.fecha = ?
-    AND g.id != ?; -- Excluir el gasto actual en caso de actualización
+WHERE g.comunidad_id = ?1 /* :comunidad_id */
+    AND dc.folio = ?2 /* :folio */
+    AND g.fecha = ?3 /* :fecha */
+    AND g.id != ?4; -- Excluir el gasto actual en caso de actualización
 
 -- =========================================
 -- 6. CONSULTAS PARA LISTAS DESPLEGABLES
@@ -364,12 +385,12 @@ SELECT
     p.razon_social AS proveedor
 FROM documento_compra dc
 INNER JOIN proveedor p ON dc.proveedor_id = p.id
-WHERE dc.comunidad_id = ?
+WHERE dc.comunidad_id = ?1 /* :comunidad_id */
     AND dc.id NOT IN (
         SELECT documento_compra_id
         FROM gasto
         WHERE documento_compra_id IS NOT NULL
-            AND comunidad_id = ?
+            AND comunidad_id = ?1
     )
 ORDER BY dc.fecha_emision DESC;
 
@@ -386,15 +407,16 @@ SELECT
     AVG(monto) AS promedio_monto,
     -- Comparativo con mes anterior
     LAG(SUM(monto)) OVER (ORDER BY YEAR(fecha), MONTH(fecha)) AS monto_mes_anterior,
+    -- CORRECCIÓN: Uso de NULLIF para evitar división por cero
     CASE
         WHEN LAG(SUM(monto)) OVER (ORDER BY YEAR(fecha), MONTH(fecha)) IS NOT NULL
         THEN ((SUM(monto) - LAG(SUM(monto)) OVER (ORDER BY YEAR(fecha), MONTH(fecha))) /
-              LAG(SUM(monto)) OVER (ORDER BY YEAR(fecha), MONTH(fecha))) * 100
+              NULLIF(LAG(SUM(monto)) OVER (ORDER BY YEAR(fecha), MONTH(fecha)), 0)) * 100
         ELSE NULL
     END AS variacion_porcentual
 FROM gasto
-WHERE comunidad_id = ?
-    AND fecha BETWEEN ? AND ?
+WHERE comunidad_id = ?1 /* :comunidad_id */
+    AND fecha BETWEEN ?2 AND ?3
 GROUP BY YEAR(fecha), MONTH(fecha)
 ORDER BY anio DESC, mes DESC;
 
@@ -411,12 +433,12 @@ SELECT
 FROM gasto g
 INNER JOIN documento_compra dc ON g.documento_compra_id = dc.id
 INNER JOIN proveedor p ON dc.proveedor_id = p.id
-WHERE g.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+WHERE g.comunidad_id = ?1 /* :comunidad_id */
+    AND (g.fecha BETWEEN ?2 AND ?3 OR (?4 = '' AND ?5 = ''))
 GROUP BY p.id, p.razon_social, p.rut
-HAVING COUNT(g.id) >= ?
+HAVING COUNT(g.id) >= ?6 /* :min_compras */
 ORDER BY total_comprado DESC
-LIMIT ?;
+LIMIT ?7; /* :limit */
 
 -- 7.3 Análisis de gastos por día de la semana
 SELECT
@@ -434,8 +456,8 @@ SELECT
     SUM(monto) AS total_monto,
     AVG(monto) AS promedio_monto
 FROM gasto
-WHERE comunidad_id = ?
-    AND (fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+WHERE comunidad_id = ?1 /* :comunidad_id */
+    AND (fecha BETWEEN ?2 AND ?3 OR (?4 = '' AND ?5 = ''))
 GROUP BY DAYOFWEEK(fecha)
 ORDER BY dia_semana_num;
 
@@ -469,9 +491,11 @@ LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
 LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
 LEFT JOIN proveedor p ON dc.proveedor_id = p.id
 LEFT JOIN archivos a ON a.entity_type = 'gasto' AND a.entity_id = g.id AND a.is_active = 1
-WHERE g.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
-GROUP BY g.id
+WHERE g.comunidad_id = ?1 /* :comunidad_id */
+    AND (g.fecha BETWEEN ?2 AND ?3 OR (?4 = '' AND ?5 = ''))
+GROUP BY
+    g.id, c.razon_social, cat.nombre, cat.tipo, cc.nombre, p.razon_social, p.rut, dc.tipo_doc, dc.folio,
+    dc.fecha_emision, g.fecha, g.monto, g.glosa, g.extraordinario, g.created_at, g.updated_at
 ORDER BY g.fecha DESC, g.id DESC;
 
 -- =========================================
@@ -487,8 +511,8 @@ SELECT
     SUM(CASE WHEN extraordinario = 1 THEN monto ELSE 0 END) AS gastos_extraordinarios,
     SUM(CASE WHEN extraordinario = 0 THEN monto ELSE 0 END) AS gastos_operativos
 FROM gasto
-WHERE comunidad_id = ?
-    AND fecha >= DATE_SUB(CURRENT_DATE, INTERVAL ? MONTH)
+WHERE comunidad_id = ?1 /* :comunidad_id */
+    AND fecha >= DATE_SUB(CURRENT_DATE, INTERVAL ?2 MONTH)
 GROUP BY DATE_FORMAT(fecha, '%Y-%m')
 ORDER BY periodo DESC;
 
@@ -499,7 +523,7 @@ SELECT
     SUM(g.monto) AS total
 FROM gasto g
 INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
-WHERE g.comunidad_id = ?
+WHERE g.comunidad_id = ? /* :comunidad_id */
     AND YEAR(g.fecha) = YEAR(CURRENT_DATE)
     AND MONTH(g.fecha) = MONTH(CURRENT_DATE)
 GROUP BY cat.id, cat.nombre
@@ -518,7 +542,7 @@ FROM gasto g
 INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
 LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
 LEFT JOIN proveedor p ON dc.proveedor_id = p.id
-WHERE g.comunidad_id = ?
+WHERE g.comunidad_id = ?1 /* :comunidad_id */
     AND g.fecha >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
-    AND g.monto > ?
+    AND g.monto > ?2 /* :monto_umbral */
 ORDER BY g.monto DESC;

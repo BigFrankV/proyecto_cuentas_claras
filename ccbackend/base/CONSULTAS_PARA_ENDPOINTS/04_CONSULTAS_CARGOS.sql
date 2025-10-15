@@ -2,11 +2,8 @@
 -- CONSULTAS PARA EL MÓDULO DE CARGOS
 -- Extraído de los endpoints y componentes frontend
 --
--- NOTA: Se corrigieron las siguientes inconsistencias con ER.sql:
--- 1. Se eliminó la referencia a columna 'principal' en titulares_unidad
---    (no existe en el esquema actual)
--- 2. Se implementó lógica para seleccionar el propietario activo más reciente
---    por unidad usando subconsultas
+-- NOTA: Corregido para usar nombres de tablas y columnas según el esquema 'cuentasclaras'.
+-- Se ajustó la lógica del campo 'tipo' ya que 'emision_gastos_comunes.periodo' es solo 'YYYY-MM'.
 -- ===========================================
 
 -- ===========================================
@@ -15,35 +12,31 @@
 -- ===========================================
 SELECT
   ccu.id,
-  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
+  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) AS concepto,
+  -- CORRECCIÓN (Lógica simplificada): Inferir tipo de cargo basado en el tipo de emisión o el estado.
   CASE
-    WHEN egc.periodo LIKE '%Extraordinaria%' THEN 'extraordinaria'
-    WHEN egc.periodo LIKE '%Multa%' THEN 'multa'
-    WHEN egc.periodo LIKE '%Interes%' THEN 'interes'
+    WHEN ccu.interes_acumulado > 0 THEN 'interes'
+    WHEN egc.observaciones LIKE '%Extraordinario%' THEN 'extraordinaria'
+    -- Una solución más robusta requeriría inspeccionar detalle_cuenta_unidad.origen
     ELSE 'Administración'
-  END as tipo,
-  ccu.monto_total as monto,
-  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fecha_vencimiento,
-  CASE
-    WHEN ccu.estado = 'pendiente' THEN 'pendiente'
-    WHEN ccu.estado = 'pagado' THEN 'pagado'
-    WHEN ccu.estado = 'vencido' THEN 'vencido'
-    WHEN ccu.estado = 'parcial' THEN 'parcial'
-    ELSE 'pendiente'
-  END as estado,
-  u.codigo as unidad,
-  c.razon_social as nombre_comunidad,
-  egc.periodo as periodo,
-  CONCAT(p.nombres, ' ', p.apellidos) as propietario,
-  ccu.saldo as saldo,
-  ccu.interes_acumulado as interes_acumulado,
-  DATE_FORMAT(ccu.created_at, '%Y-%m-%d') as fecha_creacion,
+  END AS tipo,
+  ccu.monto_total AS monto,
+  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') AS fecha_vencimiento,
+  ccu.estado, -- El estado ya está en el formato de la columna enum
+  u.codigo AS unidad, -- CORRECCIÓN: Usar u.codigo
+  c.razon_social AS nombre_comunidad,
+  egc.periodo AS periodo,
+  CONCAT(p.nombres, ' ', p.apellidos) AS propietario,
+  ccu.saldo AS saldo,
+  ccu.interes_acumulado AS interes_acumulado,
+  DATE_FORMAT(ccu.created_at, '%Y-%m-%d') AS fecha_creacion,
   ccu.updated_at
 FROM cuenta_cobro_unidad ccu
 JOIN comunidad c ON ccu.comunidad_id = c.id
 JOIN unidad u ON ccu.unidad_id = u.id
 LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
 LEFT JOIN (
+    -- Lógica para obtener el propietario activo más reciente
     SELECT tu1.*
     FROM titulares_unidad tu1
     WHERE tu1.tipo = 'propietario'
@@ -55,7 +48,7 @@ LEFT JOIN (
             AND tu2.hasta IS NULL
             AND tu2.created_at > tu1.created_at
       )
-) tu ON u.id = tu.unidad_id
+) AS tu ON u.id = tu.unidad_id
 LEFT JOIN persona p ON tu.persona_id = p.id
 WHERE 1=1
 -- Filtros opcionales (descomentar según necesidad):
@@ -72,7 +65,7 @@ LIMIT 20 OFFSET 0;
 -- ===========================================
 -- 2. CONTAR CARGOS TOTALES (para paginación)
 -- ===========================================
-SELECT COUNT(*) as total
+SELECT COUNT(*) AS total
 FROM cuenta_cobro_unidad ccu
 JOIN comunidad c ON ccu.comunidad_id = c.id
 JOIN unidad u ON ccu.unidad_id = u.id
@@ -91,33 +84,27 @@ WHERE 1=1
 -- ===========================================
 SELECT
   ccu.id,
-  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
+  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) AS concepto,
+  -- CORRECCIÓN (Lógica simplificada): Inferir tipo de cargo basado en el tipo de emisión o el estado.
   CASE
-    WHEN egc.periodo LIKE '%Extraordinaria%' THEN 'extraordinaria'
-    WHEN egc.periodo LIKE '%Multa%' THEN 'multa'
-    WHEN egc.periodo LIKE '%Interes%' THEN 'interes'
+    WHEN ccu.interes_acumulado > 0 THEN 'interes'
+    WHEN egc.observaciones LIKE '%Extraordinario%' THEN 'extraordinaria'
     ELSE 'Administración'
-  END as tipo,
-  ccu.monto_total as monto,
-  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fecha_vencimiento,
-  CASE
-    WHEN ccu.estado = 'pendiente' THEN 'pendiente'
-    WHEN ccu.estado = 'pagado' THEN 'pagado'
-    WHEN ccu.estado = 'vencido' THEN 'vencido'
-    WHEN ccu.estado = 'parcial' THEN 'parcial'
-    ELSE 'pendiente'
-  END as estado,
-  u.codigo as unidad,
-  c.razon_social as nombre_comunidad,
-  egc.periodo as periodo,
-  CONCAT(p.nombres, ' ', p.apellidos) as propietario,
-  p.email as email_propietario,
-  p.telefono as telefono_propietario,
-  ccu.saldo as saldo,
-  ccu.interes_acumulado as interes_acumulado,
-  DATE_FORMAT(ccu.created_at, '%Y-%m-%d') as fecha_creacion,
+  END AS tipo,
+  ccu.monto_total AS monto,
+  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') AS fecha_vencimiento,
+  ccu.estado, -- El estado ya está en el formato de la columna enum
+  u.codigo AS unidad, -- CORRECCIÓN: Usar u.codigo
+  c.razon_social AS nombre_comunidad,
+  egc.periodo AS periodo,
+  CONCAT(p.nombres, ' ', p.apellidos) AS propietario,
+  p.email AS email_propietario,
+  p.telefono AS telefono_propietario,
+  ccu.saldo AS saldo,
+  ccu.interes_acumulado AS interes_acumulado,
+  DATE_FORMAT(ccu.created_at, '%Y-%m-%d') AS fecha_creacion,
   ccu.updated_at,
-  egc.observaciones as descripcion
+  egc.observaciones AS descripcion
 FROM cuenta_cobro_unidad ccu
 JOIN comunidad c ON ccu.comunidad_id = c.id
 JOIN unidad u ON ccu.unidad_id = u.id
@@ -134,7 +121,7 @@ LEFT JOIN (
             AND tu2.hasta IS NULL
             AND tu2.created_at > tu1.created_at
       )
-) tu ON u.id = tu.unidad_id
+) AS tu ON u.id = tu.unidad_id
 LEFT JOIN persona p ON tu.persona_id = p.id
 WHERE ccu.id = 1;
 
@@ -144,34 +131,29 @@ WHERE ccu.id = 1;
 -- ===========================================
 SELECT
   ccu.id,
-  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
+  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) AS concepto,
+  -- CORRECCIÓN (Lógica simplificada): Inferir tipo de cargo basado en el tipo de emisión o el estado.
   CASE
-    WHEN egc.periodo LIKE '%Extraordinaria%' THEN 'extraordinaria'
-    WHEN egc.periodo LIKE '%Multa%' THEN 'multa'
-    WHEN egc.periodo LIKE '%Interes%' THEN 'interes'
+    WHEN ccu.interes_acumulado > 0 THEN 'interes'
+    WHEN egc.observaciones LIKE '%Extraordinario%' THEN 'extraordinaria'
     ELSE 'Administración'
-  END as tipo,
-  ccu.monto_total as monto,
-  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fecha_vencimiento,
-  CASE
-    WHEN ccu.estado = 'pendiente' THEN 'pending'
-    WHEN ccu.estado = 'pagado' THEN 'paid'
-    WHEN ccu.estado = 'vencido' THEN 'overdue'
-    WHEN ccu.estado = 'parcial' THEN 'partial'
-    ELSE 'pending'
-  END as estado,
-  u.codigo as unidad,
-  c.razon_social as nombre_comunidad,
-  egc.periodo as periodo,
-  ccu.saldo as saldo,
-  ccu.interes_acumulado as interes_acumulado,
-  DATE_FORMAT(ccu.created_at, '%Y-%m-%d') as fecha_creacion,
+  END AS tipo,
+  ccu.monto_total AS monto,
+  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') AS fecha_vencimiento,
+  -- CORRECCIÓN: Mantener el estado de la base de datos, ya que el mapeo a inglés se hace en la aplicación.
+  ccu.estado,
+  u.codigo AS unidad, -- CORRECCIÓN: Usar u.codigo
+  c.razon_social AS nombre_comunidad,
+  egc.periodo AS periodo,
+  ccu.saldo AS saldo,
+  ccu.interes_acumulado AS interes_acumulado,
+  DATE_FORMAT(ccu.created_at, '%Y-%m-%d') AS fecha_creacion,
   ccu.updated_at
 FROM cuenta_cobro_unidad ccu
 JOIN comunidad c ON ccu.comunidad_id = c.id
 JOIN unidad u ON ccu.unidad_id = u.id
 LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
-WHERE u.codigo = 10
+WHERE u.codigo = '10' -- CORRECCIÓN: Asumiendo que se busca el código de la unidad (VARCHAR)
 ORDER BY ccu.created_at DESC;
 
 -- ===========================================
@@ -180,18 +162,12 @@ ORDER BY ccu.created_at DESC;
 -- ===========================================
 SELECT
   dcu.id,
-  cg.nombre as categoria,
-  dcu.glosa as descripcion,
-  dcu.monto as monto,
-  CASE
-    WHEN dcu.origen = 'gasto' THEN 'Gasto'
-    WHEN dcu.origen = 'multa' THEN 'Multa'
-    WHEN dcu.origen = 'consumo' THEN 'Consumo'
-    WHEN dcu.origen = 'ajuste' THEN 'Ajuste'
-    ELSE 'Otro'
-  END as origen,
-  dcu.origen_id as origen_id,
-  dcu.iva_incluido as iva_incluido
+  cg.nombre AS categoria,
+  dcu.glosa AS descripcion,
+  dcu.monto AS monto,
+  dcu.origen, -- El origen ya es un ENUM válido
+  dcu.origen_id AS origen_id,
+  dcu.iva_incluido AS iva_incluido
 FROM detalle_cuenta_unidad dcu
 LEFT JOIN categoria_gasto cg ON dcu.categoria_id = cg.id
 WHERE dcu.cuenta_cobro_unidad_id = 1
@@ -203,28 +179,16 @@ ORDER BY dcu.id;
 -- ===========================================
 SELECT
   pa.id,
-  p.id as pago_id,
-  DATE_FORMAT(p.fecha, '%Y-%m-%d') as fecha_pago,
-  p.monto as monto_pago,
-  pa.monto as monto_aplicado,
-  CASE
-    WHEN p.medio = 'transferencia' THEN 'bank_transfer'
-    WHEN p.medio = 'webpay' THEN 'webpay'
-    WHEN p.medio = 'khipu' THEN 'khipu'
-    WHEN p.medio = 'servipag' THEN 'servipag'
-    WHEN p.medio = 'efectivo' THEN 'cash'
-    ELSE p.medio
-  END as metodo_pago,
-  p.referencia as referencia,
-  p.comprobante_num as numero_comprobante,
-  CASE
-    WHEN p.estado = 'pendiente' THEN 'pending'
-    WHEN p.estado = 'aplicado' THEN 'applied'
-    WHEN p.estado = 'reversado' THEN 'reversed'
-    ELSE 'pending'
-  END as estado_pago,
-  CONCAT(pers.nombres, ' ', pers.apellidos) as nombre_pagador,
-  pers.email as email_pagador
+  p.id AS pago_id,
+  DATE_FORMAT(p.fecha, '%Y-%m-%d') AS fecha_pago,
+  p.monto AS monto_pago,
+  pa.monto AS monto_aplicado,
+  p.medio AS metodo_pago, -- El medio ya es un ENUM válido
+  p.referencia AS referencia,
+  p.comprobante_num AS numero_comprobante,
+  p.estado AS estado_pago, -- El estado ya es un ENUM válido
+  CONCAT(pers.nombres, ' ', pers.apellidos) AS nombre_pagador,
+  pers.email AS email_pagador
 FROM pago_aplicacion pa
 JOIN pago p ON pa.pago_id = p.id
 LEFT JOIN persona pers ON p.persona_id = pers.id
@@ -236,17 +200,17 @@ ORDER BY p.fecha DESC, pa.id DESC;
 -- Consulta de estadísticas generales de cargos
 -- ===========================================
 SELECT
-  COUNT(*) as total_cargos,
-  SUM(ccu.monto_total) as monto_total,
-  SUM(ccu.saldo) as saldo_total,
-  SUM(ccu.interes_acumulado) as interes_total,
-  AVG(ccu.monto_total) as monto_promedio,
-  COUNT(CASE WHEN ccu.estado = 'pagado' THEN 1 END) as cargos_pagados,
-  COUNT(CASE WHEN ccu.estado = 'pendiente' THEN 1 END) as cargos_pendientes,
-  COUNT(CASE WHEN ccu.estado = 'vencido' THEN 1 END) as cargos_vencidos,
-  COUNT(CASE WHEN ccu.estado = 'parcial' THEN 1 END) as cargos_parciales,
-  MIN(ccu.created_at) as cargo_mas_antiguo,
-  MAX(ccu.created_at) as cargo_mas_reciente
+  COUNT(*) AS total_cargos,
+  SUM(ccu.monto_total) AS monto_total,
+  SUM(ccu.saldo) AS saldo_total,
+  SUM(ccu.interes_acumulado) AS interes_total,
+  AVG(ccu.monto_total) AS monto_promedio,
+  COUNT(CASE WHEN ccu.estado = 'pagado' THEN 1 END) AS cargos_pagados,
+  COUNT(CASE WHEN ccu.estado = 'pendiente' THEN 1 END) AS cargos_pendientes,
+  COUNT(CASE WHEN ccu.estado = 'vencido' THEN 1 END) AS cargos_vencidos,
+  COUNT(CASE WHEN ccu.estado = 'parcial' THEN 1 END) AS cargos_parciales,
+  MIN(ccu.created_at) AS cargo_mas_antiguo,
+  MAX(ccu.created_at) AS cargo_mas_reciente
 FROM cuenta_cobro_unidad ccu
 WHERE ccu.comunidad_id = 1;
 
@@ -255,18 +219,18 @@ WHERE ccu.comunidad_id = 1;
 -- Consulta de cargos agrupados por período de emisión
 -- ===========================================
 SELECT
-  egc.periodo as periodo,
-  COUNT(ccu.id) as cantidad_cargos,
-  SUM(ccu.monto_total) as monto_total,
-  SUM(ccu.saldo) as saldo_total,
-  COUNT(CASE WHEN ccu.estado = 'pagado' THEN 1 END) as cantidad_pagados,
-  COUNT(CASE WHEN ccu.estado = 'pendiente' THEN 1 END) as cantidad_pendientes,
-  COUNT(CASE WHEN ccu.estado = 'vencido' THEN 1 END) as cantidad_vencidos,
-  MIN(egc.fecha_vencimiento) as fecha_vencimiento
+  egc.periodo AS periodo,
+  COUNT(ccu.id) AS cantidad_cargos,
+  SUM(ccu.monto_total) AS monto_total,
+  SUM(ccu.saldo) AS saldo_total,
+  COUNT(CASE WHEN ccu.estado = 'pagado' THEN 1 END) AS cantidad_pagados,
+  COUNT(CASE WHEN ccu.estado = 'pendiente' THEN 1 END) AS cantidad_pendientes,
+  COUNT(CASE WHEN ccu.estado = 'vencido' THEN 1 END) AS cantidad_vencidos,
+  MIN(egc.fecha_vencimiento) AS fecha_vencimiento
 FROM emision_gastos_comunes egc
 LEFT JOIN cuenta_cobro_unidad ccu ON egc.id = ccu.emision_id
 WHERE egc.comunidad_id = 1
-GROUP BY egc.periodo, egc.id
+GROUP BY egc.id, egc.periodo, egc.fecha_vencimiento -- Incluir id y fecha_vencimiento en el GROUP BY para evitar ambigüedad.
 ORDER BY egc.periodo DESC;
 
 -- ===========================================
@@ -275,16 +239,16 @@ ORDER BY egc.periodo DESC;
 -- ===========================================
 SELECT
   ccu.id,
-  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
-  ccu.monto_total as monto,
-  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fecha_vencimiento,
-  DATEDIFF(CURDATE(), egc.fecha_vencimiento) as dias_vencido,
-  ccu.saldo as saldo,
-  ccu.interes_acumulado as interes_acumulado,
-  u.codigo as unidad,
-  CONCAT(p.nombres, ' ', p.apellidos) as propietario,
-  p.email as email_propietario,
-  c.razon_social as nombre_comunidad
+  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) AS concepto,
+  ccu.monto_total AS monto,
+  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') AS fecha_vencimiento,
+  DATEDIFF(CURDATE(), egc.fecha_vencimiento) AS dias_vencido,
+  ccu.saldo AS saldo,
+  ccu.interes_acumulado AS interes_acumulado,
+  u.codigo AS unidad, -- CORRECCIÓN: Usar u.codigo
+  CONCAT(p.nombres, ' ', p.apellidos) AS propietario,
+  p.email AS email_propietario,
+  c.razon_social AS nombre_comunidad
 FROM cuenta_cobro_unidad ccu
 JOIN comunidad c ON ccu.comunidad_id = c.id
 JOIN unidad u ON ccu.unidad_id = u.id
@@ -301,7 +265,7 @@ LEFT JOIN (
             AND tu2.hasta IS NULL
             AND tu2.created_at > tu1.created_at
       )
-) tu ON u.id = tu.unidad_id
+) AS tu ON u.id = tu.unidad_id
 LEFT JOIN persona p ON tu.persona_id = p.id
 WHERE ccu.estado IN ('pendiente', 'parcial', 'vencido')
   AND egc.fecha_vencimiento < CURDATE()
@@ -313,29 +277,17 @@ ORDER BY egc.fecha_vencimiento ASC, ccu.saldo DESC;
 -- Consulta completa del historial de pagos de un cargo
 -- ===========================================
 SELECT
-  p.id as paymentId,
-  DATE_FORMAT(p.fecha, '%Y-%m-%d') as paymentDate,
-  p.monto as totalPaymentAmount,
-  pa.monto as appliedToChargeAmount,
-  CASE
-    WHEN p.medio = 'transferencia' THEN 'bank_transfer'
-    WHEN p.medio = 'webpay' THEN 'webpay'
-    WHEN p.medio = 'khipu' THEN 'khipu'
-    WHEN p.medio = 'servipag' THEN 'servipag'
-    WHEN p.medio = 'efectivo' THEN 'cash'
-    ELSE p.medio
-  END as paymentMethod,
-  p.referencia as reference,
-  p.comprobante_num as receiptNumber,
-  CASE
-    WHEN p.estado = 'pendiente' THEN 'pending'
-    WHEN p.estado = 'aplicado' THEN 'applied'
-    WHEN p.estado = 'reversado' THEN 'reversed'
-    ELSE 'pending'
-  END as paymentStatus,
-  CONCAT(pers.nombres, ' ', pers.apellidos) as payerName,
-  pers.email as payerEmail,
-  p.created_at as paymentCreatedAt
+  p.id AS paymentId,
+  DATE_FORMAT(p.fecha, '%Y-%m-%d') AS paymentDate,
+  p.monto AS totalPaymentAmount,
+  pa.monto AS appliedToChargeAmount,
+  p.medio AS paymentMethod, -- El medio ya es un ENUM válido
+  p.referencia AS reference,
+  p.comprobante_num AS receiptNumber,
+  p.estado AS paymentStatus, -- El estado ya es un ENUM válido
+  CONCAT(pers.nombres, ' ', pers.apellidos) AS payerName,
+  pers.email AS payerEmail,
+  p.created_at AS paymentCreatedAt
 FROM pago_aplicacion pa
 JOIN pago p ON pa.pago_id = p.id
 LEFT JOIN persona pers ON p.persona_id = pers.id
@@ -347,17 +299,11 @@ ORDER BY p.fecha DESC, p.created_at DESC;
 -- Consulta agrupada por estado para dashboard
 -- ===========================================
 SELECT
-  CASE
-    WHEN ccu.estado = 'pendiente' THEN 'pending'
-    WHEN ccu.estado = 'pagado' THEN 'paid'
-    WHEN ccu.estado = 'vencido' THEN 'overdue'
-    WHEN ccu.estado = 'parcial' THEN 'partial'
-    ELSE 'pending'
-  END as estado,
-  COUNT(*) as cantidad,
-  SUM(ccu.monto_total) as monto_total,
-  SUM(ccu.saldo) as saldo_total,
-  AVG(ccu.monto_total) as monto_promedio
+  ccu.estado, -- Mantener el valor ENUM de la columna
+  COUNT(*) AS cantidad,
+  SUM(ccu.monto_total) AS monto_total,
+  SUM(ccu.saldo) AS saldo_total,
+  AVG(ccu.monto_total) AS monto_promedio
 FROM cuenta_cobro_unidad ccu
 WHERE ccu.comunidad_id = 1
 GROUP BY ccu.estado
@@ -376,24 +322,22 @@ ORDER BY
 -- ===========================================
 SELECT
   ccu.id,
+  -- CORRECCIÓN: Se debe hacer un CASE/WHEN para cada condición en el SELECT y luego en el HAVING
   CASE
     WHEN ccu.emision_id IS NULL THEN 'Missing emission reference'
     WHEN ccu.unidad_id IS NULL THEN 'Missing unit reference'
     WHEN ccu.monto_total <= 0 THEN 'Invalid amount'
-    WHEN NOT EXISTS (
-      SELECT 1 FROM detalle_cuenta_unidad dcu
-      WHERE dcu.cuenta_cobro_unidad_id = ccu.id
-    ) THEN 'No charge details found'
+    WHEN COUNT(dcu.id) = 0 THEN 'No charge details found' -- CORRECCIÓN: usar COUNT(dcu.id) después del LEFT JOIN
     ELSE 'Valid'
-  END as estado_validacion,
+  END AS estado_validacion,
   ccu.monto_total,
   ccu.saldo,
-  COUNT(dcu.id) as cantidad_detalles
+  COUNT(dcu.id) AS cantidad_detalles
 FROM cuenta_cobro_unidad ccu
 LEFT JOIN detalle_cuenta_unidad dcu ON ccu.id = dcu.cuenta_cobro_unidad_id
 WHERE ccu.comunidad_id = 10
 GROUP BY ccu.id, ccu.emision_id, ccu.unidad_id, ccu.monto_total, ccu.saldo
-HAVING validation_status != 'Valid'
+HAVING estado_validacion != 'Valid' -- CORRECCIÓN: Usar el alias del campo 'estado_validacion'
 ORDER BY ccu.id;
 
 -- ===========================================
@@ -402,15 +346,15 @@ ORDER BY ccu.id;
 -- ===========================================
 SELECT
   ccu.id,
-  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
-  ccu.monto_total as monto_original,
-  ccu.saldo as saldo_actual,
-  ccu.interes_acumulado as interes_acumulado,
-  (ccu.monto_total + ccu.interes_acumulado) as total_con_interes,
-  DATEDIFF(CURDATE(), egc.fecha_vencimiento) as dias_vencido,
-  u.codigo as unidad,
-  CONCAT(p.nombres, ' ', p.apellidos) as propietario,
-  c.razon_social as nombre_comunidad
+  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) AS concepto,
+  ccu.monto_total AS monto_original,
+  ccu.saldo AS saldo_actual,
+  ccu.interes_acumulado AS interes_acumulado,
+  (ccu.monto_total + ccu.interes_acumulado) AS total_con_interes,
+  DATEDIFF(CURDATE(), egc.fecha_vencimiento) AS dias_vencido,
+  u.codigo AS unidad, -- CORRECCIÓN: Usar u.codigo
+  CONCAT(p.nombres, ' ', p.apellidos) AS propietario,
+  c.razon_social AS nombre_comunidad
 FROM cuenta_cobro_unidad ccu
 JOIN comunidad c ON ccu.comunidad_id = c.id
 JOIN unidad u ON ccu.unidad_id = u.id
@@ -427,7 +371,7 @@ LEFT JOIN (
             AND tu2.hasta IS NULL
             AND tu2.created_at > tu1.created_at
       )
-) tu ON u.id = tu.unidad_id
+) AS tu ON u.id = tu.unidad_id
 LEFT JOIN persona p ON tu.persona_id = p.id
 WHERE ccu.interes_acumulado > 0
   AND ccu.comunidad_id = 1
@@ -438,25 +382,20 @@ ORDER BY ccu.interes_acumulado DESC;
 -- Consulta resumen de pagos aplicados a cada cargo
 -- ===========================================
 SELECT
-  ccu.id as chargeId,
-  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concept,
-  ccu.monto_total as totalAmount,
-  ccu.saldo as remainingBalance,
-  COALESCE(SUM(pa.monto), 0) as totalPaid,
-  COUNT(DISTINCT pa.pago_id) as paymentCount,
-  MAX(p.fecha) as lastPaymentDate,
-  CASE
-    WHEN ccu.saldo <= 0 THEN 'paid'
-    WHEN COALESCE(SUM(pa.monto), 0) > 0 THEN 'partial'
-    WHEN egc.fecha_vencimiento < CURDATE() THEN 'overdue'
-    ELSE 'pending'
-  END as estado_calculado
+  ccu.id AS chargeId,
+  CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) AS concept,
+  ccu.monto_total AS totalAmount,
+  ccu.saldo AS remainingBalance,
+  COALESCE(SUM(pa.monto), 0) AS totalPaid,
+  COUNT(DISTINCT pa.pago_id) AS paymentCount,
+  MAX(p.fecha) AS lastPaymentDate,
+  ccu.estado AS estado_calculado -- CORRECCIÓN: Usar el estado real del cargo que refleja mejor el estado
 FROM cuenta_cobro_unidad ccu
 LEFT JOIN pago_aplicacion pa ON ccu.id = pa.cuenta_cobro_unidad_id
 LEFT JOIN pago p ON pa.pago_id = p.id
 LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
 WHERE ccu.comunidad_id = 1
-GROUP BY ccu.id, ccu.monto_total, ccu.saldo, ccu.created_at, egc.fecha_vencimiento
+GROUP BY ccu.id, ccu.monto_total, ccu.saldo, ccu.created_at, egc.fecha_vencimiento, ccu.estado -- Incluir ccu.estado en GROUP BY
 ORDER BY ccu.created_at DESC;
 
 -- ===========================================
@@ -464,15 +403,15 @@ ORDER BY ccu.created_at DESC;
 -- Análisis de cargos por categoría de gasto
 -- ===========================================
 SELECT
-  cg.nombre as nombre_categoria,
-  cg.tipo as tipo_categoria,
-  COUNT(dcu.id) as cantidad_detalles_cargo,
-  SUM(dcu.monto) as monto_total,
-  AVG(dcu.monto) as monto_promedio,
-  COUNT(DISTINCT ccu.id) as cargos_unicos,
-  COUNT(DISTINCT ccu.unidad_id) as unidades_afectadas
+  cg.nombre AS nombre_categoria,
+  cg.tipo AS tipo_categoria,
+  COUNT(dcu.id) AS cantidad_detalles_cargo,
+  SUM(dcu.monto) AS monto_total,
+  AVG(dcu.monto) AS monto_promedio,
+  COUNT(DISTINCT ccu.id) AS cargos_unicos,
+  COUNT(DISTINCT ccu.unidad_id) AS unidades_afectadas
 FROM categoria_gasto cg
 JOIN detalle_cuenta_unidad dcu ON cg.id = dcu.categoria_id
 JOIN cuenta_cobro_unidad ccu ON dcu.cuenta_cobro_unidad_id = ccu.id
 WHERE cg.comunidad_id = ?
-GROUP BY cg.id, cg.nombre, cg.tipo
+GROUP BY cg.id, cg.nombre, cg.tipo;
