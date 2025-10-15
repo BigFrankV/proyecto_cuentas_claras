@@ -11,7 +11,7 @@
 
 -- 1.1 Obtener todas las comunidades con estadísticas básicas
 -- Usado por: getComunidades() en comunidadesService.ts
-SELECT 
+SELECT
     c.id,
     c.razon_social AS nombre,
     c.direccion,
@@ -28,16 +28,17 @@ SELECT
 FROM comunidad c
 LEFT JOIN (
     -- Conteo de unidades
-    SELECT 
+    SELECT
         comunidad_id,
         COUNT(*) AS total,
+        -- La columna en 'unidad' es 'activa' (TINYINT(1)), se usa directamente.
         SUM(CASE WHEN activa = 1 THEN 1 ELSE 0 END) AS ocupadas
     FROM unidad
     GROUP BY comunidad_id
 ) AS unidades ON c.id = unidades.comunidad_id
 LEFT JOIN (
     -- Conteo de residentes activos
-    SELECT 
+    SELECT
         tu.comunidad_id,
         COUNT(DISTINCT tu.persona_id) AS total
     FROM titulares_unidad tu
@@ -46,13 +47,14 @@ LEFT JOIN (
 ) AS residentes ON c.id = residentes.comunidad_id
 LEFT JOIN (
     -- Estadísticas financieras
-    SELECT 
+    SELECT
         ccu.comunidad_id,
         SUM(ccu.saldo) AS saldo_pendiente,
-        CASE 
-            WHEN COUNT(ccu.id) > 0 
+        CASE
+            WHEN COUNT(ccu.id) > 0
+            -- El ENUM de ccu.estado incluye 'vencido'. La lógica es correcta.
             THEN (SUM(CASE WHEN ccu.estado = 'vencido' THEN 1 ELSE 0 END) * 100.0 / COUNT(ccu.id))
-            ELSE 0 
+            ELSE 0
         END AS morosidad
     FROM cuenta_cobro_unidad ccu
     GROUP BY ccu.comunidad_id
@@ -76,7 +78,7 @@ AND (urc.hasta IS NULL OR urc.hasta > CURDATE());
 
 -- 2.1 Obtener información completa de una comunidad específica
 -- Usado por: getComunidadById(id) en comunidadesService.ts
-SELECT 
+SELECT
     c.id,
     c.razon_social AS nombre,
     c.rut,
@@ -97,7 +99,7 @@ SELECT
     COALESCE(finanzas.morosidad, 0) AS morosidad
 FROM comunidad c
 LEFT JOIN (
-    SELECT comunidad_id, COUNT(*) AS total, 
+    SELECT comunidad_id, COUNT(*) AS total,
            SUM(CASE WHEN activa = 1 THEN 1 ELSE 0 END) AS ocupadas
     FROM unidad GROUP BY comunidad_id
 ) AS unidades ON c.id = unidades.comunidad_id
@@ -109,7 +111,7 @@ LEFT JOIN (
 ) AS residentes ON c.id = residentes.comunidad_id
 LEFT JOIN (
     SELECT ccu.comunidad_id, SUM(ccu.saldo) AS saldo_pendiente,
-           CASE WHEN COUNT(ccu.id) > 0 
+           CASE WHEN COUNT(ccu.id) > 0
                 THEN (SUM(CASE WHEN ccu.estado = 'vencido' THEN 1 ELSE 0 END) * 100.0 / COUNT(ccu.id))
                 ELSE 0 END AS morosidad
     FROM cuenta_cobro_unidad ccu
@@ -124,15 +126,15 @@ WHERE c.id = ?; -- Parámetro: ID de la comunidad
 
 -- 3.1 Obtener amenidades de una comunidad específica
 -- Usado por: getAmenidadesByComunidad(id) en comunidadesService.ts
-SELECT 
+SELECT
     a.id,
     a.nombre,
     a.reglas AS descripcion,
-    CASE 
+    CASE
         WHEN a.requiere_aprobacion = 1 THEN 'Requiere Aprobación'
         ELSE 'Disponible'
     END AS estado,
-    a.requiere_aprobacion AS requiereReserva,
+    a.requiere_aprobacion AS requiereReserva, -- Columna 'requiere_aprobacion' es TINYINT(1)
     a.tarifa AS costoReserva,
     a.capacidad,
     a.created_at,
@@ -148,7 +150,7 @@ ORDER BY a.nombre;
 
 -- 4.1 Obtener edificios de una comunidad específica
 -- Usado por: getEdificiosByComunidad(id) en comunidadesService.ts
-SELECT 
+SELECT
     e.id,
     e.nombre,
     e.codigo,
@@ -169,7 +171,7 @@ ORDER BY e.nombre;
 
 -- 5.1 Obtener contactos de una comunidad (usuarios con acceso)
 -- Usado por: getContactosByComunidad(id) en comunidadesService.ts
-SELECT 
+SELECT
     p.id,
     CONCAT(p.nombres, ' ', p.apellidos) AS nombre,
     p.telefono,
@@ -193,13 +195,13 @@ ORDER BY p.apellidos, p.nombres;
 
 -- 6.1 Obtener documentos de una comunidad específica
 -- Usado por: getDocumentosByComunidad(id) en comunidadesService.ts
-SELECT 
+SELECT
     dc.id,
     dc.titulo AS nombre,
     dc.tipo,
     dc.url,
     dc.created_at AS fechaSubida,
-    0 AS tamano, -- Agregar campo si es necesario
+    0 AS tamano, -- La tabla 'documento_comunidad' no tiene el campo de tamaño. Se deja 0
     dc.periodo,
     dc.visibilidad
 FROM documento_comunidad dc
@@ -222,6 +224,7 @@ SELECT DISTINCT
     p.apellidos,
     p.email,
     p.telefono,
+    p.direccion AS direccionResidente, -- CORRECCIÓN: Se agrega la dirección del residente
     u.codigo AS unidad,
     tu.tipo AS tipoResidente,
     tu.desde AS fechaIngreso,
@@ -242,7 +245,7 @@ ORDER BY p.apellidos, p.nombres;
 
 -- 8.1 Obtener parámetros de cobranza de una comunidad
 -- Usado por: getParametrosByComunidad(id) en comunidadesService.ts
-SELECT 
+SELECT
     pc.id,
     pc.comunidad_id,
     pc.dias_gracia AS diasGracia,
@@ -264,7 +267,7 @@ LIMIT 1;
 
 -- 9.1 Obtener estadísticas financieras
 -- Usado por: getEstadisticasByComunidad(id) en comunidadesService.ts
-SELECT 
+SELECT
     COALESCE(SUM(ccu.monto_total), 0) AS totalIngresos,
     COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) AS ingresosPagados,
     COALESCE(SUM(ccu.saldo), 0) AS ingresosPendientes
@@ -278,7 +281,7 @@ WHERE ccu.comunidad_id = ?; -- Parámetro: ID de la comunidad
 
 -- 10.1 Obtener flujo de caja mensual (resumen de cuentas de cobro)
 -- Usado por: getFlujoCajaByComunidad(id) en comunidadesService.ts
-SELECT 
+SELECT
     e.periodo,
     e.fecha_vencimiento AS fecha,
     COUNT(ccu.id) AS totalCuentas,
@@ -314,16 +317,16 @@ INSERT INTO comunidad (
     created_at,
     updated_at
 ) VALUES (
-    ?, -- nombre/razon_social
-    ?, -- rut
-    ?, -- dv
-    ?, -- giro/descripcion
-    ?, -- direccion
-    ?, -- email
-    ?, -- telefono
+    ?1, -- razon_social
+    ?2, -- rut
+    ?3, -- dv
+    ?4, -- giro
+    ?5, -- direccion
+    ?6, -- email_contacto
+    ?7, -- telefono_contacto
     'CLP', -- moneda por defecto
     'America/Santiago', -- zona horaria por defecto
-    ?, -- usuario que crea
+    ?8, -- created_by (usuario que crea)
     NOW(),
     NOW()
 );
@@ -331,17 +334,17 @@ INSERT INTO comunidad (
 -- 11.2 Actualizar comunidad existente
 -- Usado por: updateComunidad(id, data) en comunidadesService.ts
 UPDATE comunidad
-SET 
-    razon_social = ?,
-    rut = ?,
-    dv = ?,
-    giro = ?,
-    direccion = ?,
-    email_contacto = ?,
-    telefono_contacto = ?,
+SET
+    razon_social = ?1,
+    rut = ?2,
+    dv = ?3,
+    giro = ?4,
+    direccion = ?5,
+    email_contacto = ?6,
+    telefono_contacto = ?7,
     updated_at = NOW(),
-    updated_by = ?
-WHERE id = ?;
+    updated_by = ?8
+WHERE id = ?9;
 
 
 -- =====================================================
@@ -361,8 +364,8 @@ DELETE FROM comunidad WHERE id = ?;
 -- 13.1 Búsqueda por nombre o dirección
 SELECT c.* FROM comunidad c
 WHERE (
-    c.razon_social LIKE CONCAT('%', ?, '%')
-    OR c.direccion LIKE CONCAT('%', ?, '%')
+    c.razon_social LIKE CONCAT('%', ?1, '%')
+    OR c.direccion LIKE CONCAT('%', ?2, '%')
 )
 ORDER BY c.razon_social;
 
@@ -382,7 +385,7 @@ FROM usuario u
 WHERE u.id = ?;
 
 -- 14.2 Obtener membresías de usuario (comunidades asignadas)
-SELECT 
+SELECT
     urc.comunidad_id AS comunidadId,
     c.razon_social AS nombreComunidad,
     urc.rol_id,
@@ -402,4 +405,3 @@ WHERE urc.usuario_id = ?
 AND urc.comunidad_id = ?
 AND urc.activo = 1
 AND (urc.hasta IS NULL OR urc.hasta > CURDATE());
-

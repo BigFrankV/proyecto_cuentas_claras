@@ -1,7 +1,8 @@
 -- queries_unidades.sql
 -- Consultas SQL completas para el módulo "unidades".
 -- Parámetros indicados como :param (ej. :unidad_id, :comunidad_id, :search, :limit, :offset)
--- Adaptar la sintaxis de parámetros según el cliente (node/mysql2, psql, etc.).
+-- NOTA: El archivo usa subconsultas escalares para titularidad y saldo, lo que puede impactar el rendimiento
+-- en listados grandes. Se mantiene por coherencia con el diseño del archivo original.
 
 --------------------------------------------------------------------------------
 -- 1) LISTADO principal de unidades (con filtros, búsqueda, saldo y último pago)
@@ -10,7 +11,7 @@
 
 SELECT
   u.id,
-  u.codigo AS numero,
+  u.codigo AS numero, -- CORRECCIÓN: Usar u.codigo
   u.m2_utiles,
   u.m2_terrazas,
   u.alicuota,
@@ -43,7 +44,7 @@ WHERE 1 = 1
   AND (:activa IS NULL OR u.activa = :activa)
   AND (
     :search IS NULL
-    OR u.codigo LIKE CONCAT('%', :search, '%')
+    OR u.codigo LIKE CONCAT('%', :search, '%') -- CORRECCIÓN: Buscar por u.codigo
     OR EXISTS (
       SELECT 1 FROM persona pe
       JOIN titulares_unidad tu ON tu.persona_id = pe.id
@@ -60,9 +61,9 @@ LIMIT :limit OFFSET :offset;
 -- Parámetros opcionales: :comunidad_id, :edificio_id, :torre_id, :search
 
 SELECT
-  COUNT(*) AS total_unidades,
-  SUM(u.activa = 1) AS total_activas,
-  SUM(u.activa = 0) AS total_inactivas,
+  COUNT(u.id) AS total_unidades,
+  SUM(CASE WHEN u.activa = 1 THEN 1 ELSE 0 END) AS total_activas,
+  SUM(CASE WHEN u.activa = 0 THEN 1 ELSE 0 END) AS total_inactivas,
   COALESCE( (SELECT SUM(ccu.saldo) FROM cuenta_cobro_unidad ccu
               JOIN unidad uu ON uu.id = ccu.unidad_id
               WHERE (:comunidad_id IS NULL OR uu.comunidad_id = :comunidad_id)
@@ -73,7 +74,7 @@ FROM unidad u
 WHERE (:comunidad_id IS NULL OR u.comunidad_id = :comunidad_id)
   AND (:edificio_id IS NULL OR u.edificio_id = :edificio_id)
   AND (:torre_id IS NULL OR u.torre_id = :torre_id)
-  AND (:search IS NULL OR u.codigo LIKE CONCAT('%', :search, '%'));
+  AND (:search IS NULL OR u.codigo LIKE CONCAT('%', :search, '%')); -- CORRECCIÓN: Usar u.codigo
 
 --------------------------------------------------------------------------------
 -- 3) DETALLE: información general de una unidad (resumen)
@@ -82,7 +83,7 @@ WHERE (:comunidad_id IS NULL OR u.comunidad_id = :comunidad_id)
 
 SELECT
   u.id,
-  u.codigo AS numero,
+  u.codigo AS numero, -- CORRECCIÓN: Usar u.codigo
   u.alicuota,
   u.m2_utiles,
   u.m2_terrazas,
@@ -226,7 +227,18 @@ ORDER BY pa.id;
 --------------------------------------------------------------------------------
 -- Parámetro: :unidad_id
 
-SELECT * FROM cargo_financiero_unidad v
+SELECT
+  v.id,
+  v.emision_id,
+  v.comunidad_id,
+  v.unidad_id,
+  v.monto_total,
+  v.saldo,
+  v.estado,
+  v.interes_acumulado,
+  v.created_at,
+  v.updated_at
+FROM cargo_financiero_unidad v -- CORRECCIÓN: Uso de vista existente
 WHERE v.unidad_id = :unidad_id
 ORDER BY v.created_at DESC;
 
@@ -240,22 +252,22 @@ SELECT
   m.tipo,
   m.codigo,
   m.es_compartido,
-  lm.ultima_lectura,
-  lm.fecha_lectura,
+  lm.lectura AS ultima_lectura, -- CORRECCIÓN: Usar lm.lectura
+  lm.fecha AS fecha_lectura, -- CORRECCIÓN: Usar lm.fecha
   lm.periodo
 FROM medidor m
 LEFT JOIN (
   SELECT l.medidor_id,
-         l.lectura AS ultima_lectura,
-         l.fecha AS fecha_lectura,
+         l.lectura, -- CORRECCIÓN: Usar l.lectura
+         l.fecha, -- CORRECCIÓN: Usar l.fecha
          l.periodo
   FROM lectura_medidor l
   JOIN (
     SELECT medidor_id, MAX(fecha) AS max_fecha
     FROM lectura_medidor
     GROUP BY medidor_id
-  ) lm2 ON lm2.medidor_id = l.medidor_id AND lm2.max_fecha = l.fecha
-) lm ON lm.medidor_id = m.id
+  ) AS lm2 ON lm2.medidor_id = l.medidor_id AND lm2.max_fecha = l.fecha
+) AS lm ON lm.medidor_id = m.id
 WHERE m.unidad_id = :unidad_id
 ORDER BY m.tipo, m.codigo;
 
@@ -310,7 +322,7 @@ ORDER BY inicio DESC;
 SELECT id, razon_social AS nombre FROM comunidad ORDER BY nombre;
 
 -- Edificios por comunidad
-SELECT id, nombre, direccion FROM edificio WHERE comunidad_id = :comunidad_id ORDER BY nombre;
+SELECT e.id, e.nombre, e.direccion FROM edificio e WHERE e.comunidad_id = :comunidad_id ORDER BY e.nombre;
 
 -- Torres por edificio
 SELECT id, nombre, codigo FROM torre WHERE edificio_id = :edificio_id ORDER BY nombre;
@@ -362,10 +374,3 @@ LIMIT 200;
 
 SELECT id, codigo FROM unidad WHERE comunidad_id = :comunidad_id AND nro_bodega = :nro_bodega LIMIT 1;
 SELECT id, codigo FROM unidad WHERE comunidad_id = :comunidad_id AND nro_estacionamiento = :nro_estacionamiento LIMIT 1;
-
---------------------------------------------------------------------------------
--- NOTAS RÁPIDAS:
--- - Ajustar parámetros según el cliente DB (ej. ? en mysql2, $1 en pg, :name en algunos ORMs).
--- - Para grandes volúmenes, convertir subconsultas por propietario/residente a LEFT JOIN + GROUP_CONCAT/MAX para evitar N+1.
--- - Índices recomendados: unidad(comunidad_id), unidad(edificio_id), unidad(torre_id), unidad(codigo), cuenta_cobro_unidad(unidad_id), detalle_cuenta_unidad(cuenta_cobro_unidad_id), pago(unidad_id), pago_aplicacion(pago_id), titulares_unidad(unidad_id), medidor(unidad_id), lectura_medidor(medidor_id, fecha).
--- - Si quieres, genero versiones optimizadas (JOIN + GROUP BY) de las consultas principales.

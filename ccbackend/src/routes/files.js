@@ -4,7 +4,6 @@ const fs = require('fs').promises;
 const { upload, validateUploadContext, getFileInfo } = require('../upload');
 const FileService = require('../services/fileService');
 const { authenticate: authenticateToken } = require('../middleware/auth');
-const { requireCommunity } = require('../middleware/tenancy');
 
 const router = express.Router();
 

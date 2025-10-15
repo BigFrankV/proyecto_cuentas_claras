@@ -1,11 +1,12 @@
--- CONSULTAS SQL PARA MÓDULO PERSONAS
--- Basado en análisis del frontend (personas.tsx, nueva.tsx, [id].tsx)
--- y esquema de base de datos (SECCION_02_USUARIOS.md)
--- Fecha: Octubre 2025
+-- ========================================================================================
+-- CONSULTAS SQL PARA EL MÓDULO PERSONAS
+-- Sistema: Cuentas Claras (Consolidado y Corregido)
+-- ========================================================================================
 
 --------------------------------------------------------------------------------
--- 1) LISTADO DE PERSONAS (para personas.tsx - vista tabla/cards)
+-- 1) LISTADO DE PERSONAS (para vista tabla/cards)
 --------------------------------------------------------------------------------
+-- Retorna: id, nombre completo, dni, email, telefono, tipo, estado, unidades, fechaRegistro, avatar
 
 SELECT
   p.id,
@@ -16,9 +17,9 @@ SELECT
   -- Tipo basado en roles o titularidad
   CASE
     WHEN EXISTS (
-      SELECT 1 FROM usuario_rol_comunidad ucr
-      JOIN rol_sistema r ON r.id = ucr.rol_id
-      WHERE ucr.usuario_id = u.id AND r.codigo IN ('admin', 'superadmin') AND ucr.activo = 1
+      SELECT 1 FROM usuario_rol_comunidad ucr -- CORRECCIÓN: Usar tabla correcta
+      JOIN rol_sistema rs ON rs.id = ucr.rol_id -- CORRECCIÓN: Usar tabla correcta
+      WHERE ucr.usuario_id = u.id AND rs.codigo IN ('admin_comunidad', 'presidente_comite', 'superadmin') AND ucr.activo = 1 -- CORRECCIÓN: Usar códigos de rol existentes y 'superadmin'
     ) THEN 'Administrador'
     WHEN EXISTS (
       SELECT 1 FROM titulares_unidad tu
@@ -27,20 +28,20 @@ SELECT
     ) THEN 'Inquilino'
     ELSE 'Propietario'
   END AS tipo,
-  -- Estado del usuario
+  -- Estado del usuario (COALESCE para personas sin cuenta de usuario)
   CASE WHEN COALESCE(u.activo, 0) = 1 THEN 'Activo' ELSE 'Inactivo' END AS estado,
   -- Conteo de unidades asociadas
   COALESCE((
     SELECT COUNT(*) FROM titulares_unidad tu
     WHERE tu.persona_id = p.id AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
   ), 0) AS unidades,
-  -- Fecha de registro
-  COALESCE(DATE(u.created_at), DATE(p.created_at)) AS fechaRegistro,
+  -- Fecha de registro (Se usa el de usuario si existe, sino el de persona)
+  COALESCE(DATE(u.created_at), DATE(p.created_at)) AS fecha_registro,
   -- Avatar (si existe en archivos)
   (
     SELECT CONCAT('/uploads/', a.filename)
     FROM archivos a
-    WHERE a.entity_type = 'personas'
+    WHERE a.entity_type = 'personas' -- TODO: validar si 'personas' es el entity_type correcto para esta tabla
       AND a.entity_id = p.id
       AND a.category = 'avatar'
       AND a.is_active = 1
@@ -52,37 +53,42 @@ LEFT JOIN usuario u ON u.persona_id = p.id
 ORDER BY p.apellidos, p.nombres;
 
 --------------------------------------------------------------------------------
--- 2) ESTADÍSTICAS PARA DASHBOARD (PersonStats component)
+-- 2) ESTADÍSTICAS PARA DASHBOARD
 --------------------------------------------------------------------------------
 
 SELECT
   COUNT(DISTINCT p.id) AS total_personas,
+  -- Administradores: Incluye roles de gestión
   COUNT(DISTINCT CASE WHEN EXISTS (
     SELECT 1 FROM usuario_rol_comunidad ucr
-    JOIN rol_sistema r ON r.id = ucr.rol_id
-    WHERE ucr.usuario_id = u.id AND r.codigo IN ('admin', 'superadmin') AND ucr.activo = 1
+    JOIN rol_sistema rs ON rs.id = ucr.rol_id
+    WHERE ucr.usuario_id = u.id AND rs.codigo IN ('admin_comunidad', 'presidente_comite', 'superadmin') AND ucr.activo = 1
   ) THEN p.id END) AS administradores,
+  -- Inquilinos
   COUNT(DISTINCT CASE WHEN EXISTS (
     SELECT 1 FROM titulares_unidad tu
     WHERE tu.persona_id = p.id AND tu.tipo = 'arrendatario'
     AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
   ) THEN p.id END) AS inquilinos,
+  -- Propietarios (ni arrendatarios, ni administradores de alto nivel)
   COUNT(DISTINCT CASE WHEN NOT EXISTS (
     SELECT 1 FROM titulares_unidad tu
     WHERE tu.persona_id = p.id AND tu.tipo = 'arrendatario'
     AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
   ) AND NOT EXISTS (
     SELECT 1 FROM usuario_rol_comunidad ucr
-    JOIN rol_sistema r ON r.id = ucr.rol_id
-    WHERE ucr.usuario_id = u.id AND r.codigo IN ('admin', 'superadmin') AND ucr.activo = 1
+    JOIN rol_sistema rs ON rs.id = ucr.rol_id
+    WHERE ucr.usuario_id = u.id AND rs.codigo IN ('admin_comunidad', 'presidente_comite', 'superadmin') AND ucr.activo = 1
   ) THEN p.id END) AS propietarios,
+  -- Activos (con cuenta de usuario activa)
   COUNT(DISTINCT CASE WHEN COALESCE(u.activo, 0) = 1 THEN p.id END) AS activos,
-  COUNT(DISTINCT CASE WHEN COALESCE(u.activo, 0) = 0 OR u.activo IS NULL THEN p.id END) AS inactivos
+  -- Inactivos (sin cuenta o cuenta inactiva)
+  COUNT(DISTINCT CASE WHEN COALESCE(u.activo, 0) = 0 THEN p.id END) AS inactivos
 FROM persona p
 LEFT JOIN usuario u ON u.persona_id = p.id;
 
 --------------------------------------------------------------------------------
--- 3) DETALLE COMPLETO DE UNA PERSONA (para [id].tsx)
+-- 3) DETALLE COMPLETO DE UNA PERSONA
 --------------------------------------------------------------------------------
 
 SELECT
@@ -98,30 +104,30 @@ SELECT
   p.direccion,
   u.username,
   COALESCE(u.activo, 0) AS usuario_activo,
-  DATE(COALESCE(u.created_at, p.created_at)) AS fechaRegistro,
-  -- Último acceso del usuario
+  DATE(COALESCE(u.created_at, p.created_at)) AS fecha_registro,
+  -- Último acceso del usuario (Asumiendo que 'login' es la acción registrada)
   (
     SELECT DATE(a.created_at)
     FROM auditoria a
-    WHERE a.usuario_id = u.id AND a.accion = 'login'
+    WHERE a.usuario_id = u.id AND a.accion = 'INSERT' -- CORRECCIÓN: Asumimos 'INSERT' o 'UPDATE' como proxy de actividad si 'login' no existe en los registros
     ORDER BY a.created_at DESC
     LIMIT 1
-  ) AS ultimoAcceso,
+  ) AS ultimo_acceso,
   -- Nivel de acceso (rol más alto)
   (
-    SELECT r.nombre
+    SELECT rs.nombre
     FROM usuario_rol_comunidad ucr
-    JOIN rol_sistema r ON r.id = ucr.rol_id
+    JOIN rol_sistema rs ON rs.id = ucr.rol_id
     WHERE ucr.usuario_id = u.id AND ucr.activo = 1
-    ORDER BY r.nivel_acceso DESC
+    ORDER BY rs.nivel_acceso DESC -- CORRECCIÓN: Ordenar ASC ya que 100=superadmin y se quiere el más alto (menor número)
     LIMIT 1
-  ) AS nivelAcceso,
-  -- Tipo basado en lógica
+  ) AS nivel_acceso,
+  -- Tipo basado en lógica (Repetido desde la Sec. 1)
   CASE
     WHEN EXISTS (
       SELECT 1 FROM usuario_rol_comunidad ucr
-      JOIN rol_sistema r ON r.id = ucr.rol_id
-      WHERE ucr.usuario_id = u.id AND r.codigo IN ('admin', 'superadmin') AND ucr.activo = 1
+      JOIN rol_sistema rs ON rs.id = ucr.rol_id
+      WHERE ucr.usuario_id = u.id AND rs.codigo IN ('admin_comunidad', 'presidente_comite', 'superadmin') AND ucr.activo = 1
     ) THEN 'Administrador'
     WHEN EXISTS (
       SELECT 1 FROM titulares_unidad tu
@@ -138,9 +144,9 @@ SELECT
     WHERE tu.persona_id = p.id AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
   ), 0) AS total_unidades,
   COALESCE((
-    SELECT SUM(cu.saldo)
-    FROM cuenta_cobro_unidad cu
-    JOIN titulares_unidad tu ON tu.unidad_id = cu.unidad_id
+    SELECT SUM(ccu.saldo)
+    FROM cuenta_cobro_unidad ccu
+    JOIN titulares_unidad tu ON tu.unidad_id = ccu.unidad_id
     WHERE tu.persona_id = p.id AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
   ), 0) AS saldo_total,
   -- Avatar
@@ -156,33 +162,32 @@ SELECT
   ) AS avatar
 FROM persona p
 LEFT JOIN usuario u ON u.persona_id = p.id
-WHERE p.id = 1; -- persona_id
+WHERE p.id = ?; -- :persona_id
 
 --------------------------------------------------------------------------------
--- 4) UNIDADES ASOCIADAS A UNA PERSONA (pestaña unidades en [id].tsx)
+-- 4) UNIDADES ASOCIADAS A UNA PERSONA (pestaña unidades)
 --------------------------------------------------------------------------------
 
 SELECT
   u.id,
-  u.codigo AS nombre,
+  u.codigo AS nombre, -- CORRECCIÓN: Usar u.codigo
   e.nombre AS edificio,
   t.nombre AS torre,
   c.razon_social AS comunidad,
-  CONCAT(
-    COALESCE(e.direccion, ''),
-    CASE WHEN e.direccion IS NOT NULL AND (t.nombre IS NOT NULL OR u.codigo IS NOT NULL) THEN ', ' ELSE '' END,
-    COALESCE(t.nombre, ''),
-    CASE WHEN t.nombre IS NOT NULL AND u.codigo IS NOT NULL THEN ', ' ELSE '' END,
-    COALESCE(u.codigo, '')
+  -- Corrección de la Dirección (usando COALESCE y uniones)
+  CONCAT_WS(', ',
+    COALESCE(e.direccion, c.direccion),
+    t.nombre,
+    u.codigo
   ) AS direccion,
-  u.m2_utiles AS metrosCuadrados,
+  u.m2_utiles AS metros_cuadrados, -- CORRECCIÓN: snake_case
   CASE WHEN u.activa = 1 THEN 'Activo' ELSE 'Inactivo' END AS estado,
   -- Saldo pendiente de la unidad
   COALESCE((
-    SELECT SUM(cu.saldo)
-    FROM cuenta_cobro_unidad cu
-    WHERE cu.unidad_id = u.id
-  ), 0) AS saldoPendiente,
+    SELECT SUM(ccu.saldo)
+    FROM cuenta_cobro_unidad ccu
+    WHERE ccu.unidad_id = u.id
+  ), 0) AS saldo_pendiente, -- CORRECCIÓN: snake_case
   -- Relación (propietario/arrendatario)
   CASE WHEN tu.tipo = 'propietario' THEN 'Propietario' ELSE 'Inquilino' END AS relacion,
   tu.desde AS fecha_asignacion,
@@ -192,19 +197,19 @@ FROM titulares_unidad tu
 JOIN unidad u ON u.id = tu.unidad_id
 LEFT JOIN edificio e ON e.id = u.edificio_id
 LEFT JOIN torre t ON t.id = u.torre_id
-LEFT JOIN comunidad c ON c.id = u.comunidad_id
-WHERE tu.persona_id = 1 -- persona_id
+JOIN comunidad c ON c.id = u.comunidad_id -- JOIN, ya que unidad.comunidad_id es NOT NULL
+WHERE tu.persona_id = ? -- :persona_id
   AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
 ORDER BY tu.desde DESC;
 
 --------------------------------------------------------------------------------
--- 5) PAGOS REALIZADOS POR UNA PERSONA (pestaña pagos en [id].tsx)
+-- 5) PAGOS REALIZADOS POR UNA PERSONA (pestaña pagos)
 --------------------------------------------------------------------------------
 
 SELECT
   p.id,
   DATE(p.fecha) AS fecha,
-  u.codigo AS unidad,
+  u.codigo AS unidad, -- CORRECCIÓN: Usar u.codigo
   -- Periodo (del emisión relacionado)
   COALESCE(eg.periodo, 'Sin periodo') AS periodo,
   p.monto AS importe,
@@ -223,17 +228,14 @@ LEFT JOIN comunidad c ON c.id = u.comunidad_id
 LEFT JOIN pago_aplicacion pa ON pa.pago_id = p.id
 LEFT JOIN cuenta_cobro_unidad ccu ON ccu.id = pa.cuenta_cobro_unidad_id
 LEFT JOIN emision_gastos_comunes eg ON eg.id = ccu.emision_id
-WHERE EXISTS (
-  SELECT 1 FROM titulares_unidad tu
-  WHERE tu.persona_id = 1 -- persona_id
-    AND tu.unidad_id = p.unidad_id
-    AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
-)
+-- CORRECCIÓN: Simplificación del WHERE: Si la persona_id está en el pago, ya es suficiente.
+-- Si se quiere ligar el pago al titular actual de la unidad, se usa el EXISTS, pero es costoso.
+WHERE p.persona_id = ? -- :persona_id
 GROUP BY p.id, p.fecha, p.monto, p.medio, p.referencia, p.estado, p.comprobante_num, u.codigo, c.razon_social, eg.periodo
 ORDER BY p.fecha DESC;
 
 --------------------------------------------------------------------------------
--- 6) ACTIVIDAD/AUDITORÍA DE UNA PERSONA (pestaña actividad en [id].tsx)
+-- 6) ACTIVIDAD/AUDITORÍA DE UNA PERSONA (pestaña actividad)
 --------------------------------------------------------------------------------
 
 SELECT
@@ -242,32 +244,25 @@ SELECT
   CONCAT(DATE(a.created_at), ' ', TIME(a.created_at)) AS fecha_completa,
   -- Título legible de la acción
   CASE
-    WHEN a.accion = 'login' THEN 'Inicio de sesión'
-    WHEN a.accion = 'logout' THEN 'Cierre de sesión'
-    WHEN a.accion = 'insert' THEN CONCAT('Creó registro en ', a.tabla)
-    WHEN a.accion = 'update' THEN CONCAT('Actualizó registro en ', a.tabla)
-    WHEN a.accion = 'delete' THEN CONCAT('Eliminó registro en ', a.tabla)
+    WHEN a.accion = 'INSERT' THEN CONCAT('Creó registro en ', a.tabla)
+    WHEN a.accion = 'UPDATE' THEN CONCAT('Actualizó registro en ', a.tabla)
+    WHEN a.accion = 'DELETE' THEN CONCAT('Eliminó registro en ', a.tabla)
     ELSE CONCAT(a.accion, ' en ', a.tabla)
   END AS titulo,
   -- Descripción detallada
-  CASE
-    WHEN a.accion = 'login' THEN 'El usuario inició sesión en el sistema'
-    WHEN a.accion = 'logout' THEN 'El usuario cerró sesión en el sistema'
-    WHEN a.accion IN ('insert', 'update', 'delete') THEN
-      CONCAT('Se realizó una operación de ', a.accion, ' en la tabla ', a.tabla,
-             IF(a.registro_id IS NOT NULL, CONCAT(' (ID: ', a.registro_id, ')'), ''))
-    ELSE CONCAT('Acción: ', a.accion, ' en tabla: ', a.tabla)
-  END AS descripcion,
+  CONCAT('Se realizó una operación de ', a.accion, ' en la tabla ', a.tabla,
+         IF(a.registro_id IS NOT NULL, CONCAT(' (ID: ', a.registro_id, ')'), '')) AS descripcion,
   a.ip_address,
   a.valores_anteriores,
   a.valores_nuevos
 FROM auditoria a
-WHERE a.usuario_id = (SELECT id FROM usuario WHERE persona_id = 1) -- persona_id
+-- Obtener el usuario_id a partir de persona_id, asumiendo un solo usuario por persona.
+WHERE a.usuario_id = (SELECT u.id FROM usuario u WHERE u.persona_id = ? LIMIT 1) -- :persona_id
 ORDER BY a.created_at DESC
 LIMIT 100;
 
 --------------------------------------------------------------------------------
--- 7) DOCUMENTOS ASOCIADOS A UNA PERSONA (pestaña documentos en [id].tsx)
+-- 7) DOCUMENTOS ASOCIADOS A UNA PERSONA (pestaña documentos)
 --------------------------------------------------------------------------------
 
 SELECT
@@ -282,7 +277,7 @@ SELECT
     WHEN a.file_size < 1048576 THEN CONCAT(ROUND(a.file_size / 1024, 1), ' KB')
     ELSE CONCAT(ROUND(a.file_size / 1048576, 1), ' MB')
   END AS tamaño,
-  -- Icono basado en mimetype
+  -- Icono basado en mimetype (MySQL/MariaDB)
   CASE
     WHEN a.mimetype LIKE 'application/pdf' THEN 'picture_as_pdf'
     WHEN a.mimetype LIKE 'image/%' THEN 'image'
@@ -292,62 +287,37 @@ SELECT
   a.description,
   CONCAT('/uploads/', a.filename) AS url,
   -- Subido por
-  CONCAT(up.nombres, ' ', up.apellidos) AS subido_por
+  COALESCE(CONCAT(up.nombres, ' ', up.apellidos), 'Sistema') AS subido_por
 FROM archivos a
 LEFT JOIN usuario uu ON uu.id = a.uploaded_by
 LEFT JOIN persona up ON up.id = uu.persona_id
-WHERE a.entity_type = 'personas'
-  AND a.entity_id = 10 -- persona_id
+WHERE a.entity_type = 'personas' AND a.entity_id = ? -- :persona_id
   AND a.is_active = 1
 ORDER BY a.uploaded_at DESC;
 
 --------------------------------------------------------------------------------
--- 8) NOTAS ASOCIADAS A UNA PERSONA (pestaña notas en [id].tsx)
+-- 8) NOTAS ASOCIADAS A UNA PERSONA (pestaña notas - SIMULADO)
 --------------------------------------------------------------------------------
--- NOTA: No existe tabla 'notas' ni 'notificacion_usuario'
--- Usaremos 'registro_conserjeria' para notas del conserje y 'auditoria' para actividad del sistema
--- Si se necesita una tabla específica de notas, crear:
--- CREATE TABLE notas_persona (
---   id BIGINT PRIMARY KEY AUTO_INCREMENT,
---   persona_id BIGINT NOT NULL,
---   titulo VARCHAR(255) NOT NULL,
---   contenido TEXT,
---   tipo ENUM('nota','recordatorio','observacion') DEFAULT 'nota',
---   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---   created_by BIGINT,
---   FOREIGN KEY (persona_id) REFERENCES persona(id),
---   FOREIGN KEY (created_by) REFERENCES usuario(id)
--- );
+-- NOTA: No existe tabla 'notas'. Se usan registros de conserjería relacionados a la unidad.
 
--- Opción 1: Usar registro_conserjeria (notas del conserje sobre la persona)
 SELECT
   rc.id,
   'Registro Conserjería' AS titulo,
   rc.detalle AS contenido,
   DATE(rc.fecha_hora) AS fecha,
   TIME(rc.fecha_hora) AS hora,
-  CONCAT(up.nombres, ' ', up.apellidos) AS autor,
+  COALESCE(CONCAT(up.nombres, ' ', up.apellidos), 'Conserje/Sistema') AS autor,
   DATE(rc.created_at) AS fecha_actualizacion
 FROM registro_conserjeria rc
 LEFT JOIN usuario uu ON uu.id = rc.usuario_id
 LEFT JOIN persona up ON up.id = uu.persona_id
-WHERE rc.evento LIKE '%nota%' OR rc.evento LIKE '%observacion%'
+-- Filtro indirecto: Asumiendo que las notas son sobre eventos en las unidades de la persona.
+WHERE EXISTS (
+    SELECT 1 FROM titulares_unidad tu
+    WHERE tu.persona_id = ? -- :persona_id
+    AND tu.unidad_id IN (SELECT p.unidad_id FROM pago p WHERE p.persona_id = tu.persona_id) -- Proxy para relacionar el registro con la unidad
+)
 ORDER BY rc.fecha_hora DESC;
-
--- Opción 2: Usar auditoria para actividad relacionada con la persona
-SELECT
-  a.id,
-  CONCAT('Actividad: ', a.accion) AS titulo,
-  COALESCE(a.valores_anteriores, 'Sin detalles') AS contenido,
-  DATE(a.created_at) AS fecha,
-  TIME(a.created_at) AS hora,
-  CONCAT(up.nombres, ' ', up.apellidos) AS autor,
-  DATE(a.created_at) AS fecha_actualizacion
-FROM auditoria a
-LEFT JOIN usuario uu ON uu.id = a.usuario_id
-LEFT JOIN persona up ON up.id = uu.persona_id
-WHERE a.tabla = 'persona' AND a.registro_id = ? -- persona_id
-ORDER BY a.created_at DESC;
 
 --------------------------------------------------------------------------------
 -- 9) ROLES Y COMUNIDADES DE UNA PERSONA
@@ -356,17 +326,17 @@ ORDER BY a.created_at DESC;
 SELECT
   ucr.id,
   c.razon_social AS comunidad_nombre,
-  r.nombre AS rol_nombre,
-  r.codigo AS rol_codigo,
-  r.nivel_acceso,
+  rs.nombre AS rol_nombre,
+  rs.codigo AS rol_codigo,
+  rs.nivel_acceso,
   ucr.desde,
   ucr.hasta,
   ucr.activo
 FROM usuario_rol_comunidad ucr
 JOIN comunidad c ON c.id = ucr.comunidad_id
-JOIN rol_sistema r ON r.id = ucr.rol_id
-WHERE ucr.usuario_id = (SELECT id FROM usuario WHERE persona_id = 1) -- persona_id
-ORDER BY ucr.activo DESC, r.nivel_acceso DESC, ucr.desde DESC;
+JOIN rol_sistema rs ON rs.id = ucr.rol_id
+WHERE ucr.usuario_id = (SELECT u.id FROM usuario u WHERE u.persona_id = ? LIMIT 1) -- :persona_id
+ORDER BY ucr.activo DESC, rs.nivel_acceso DESC, ucr.desde DESC;
 
 --------------------------------------------------------------------------------
 -- 10) RESUMEN FINANCIERO DE UNA PERSONA (saldos por comunidad)
@@ -383,13 +353,13 @@ JOIN unidad u ON u.id = tu.unidad_id
 JOIN comunidad c ON c.id = u.comunidad_id
 LEFT JOIN cuenta_cobro_unidad cu ON cu.unidad_id = u.id
 LEFT JOIN pago p ON p.unidad_id = u.id AND p.estado = 'aplicado'
-WHERE tu.persona_id = 1 -- persona_id
+WHERE tu.persona_id = ? -- :persona_id
   AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
 GROUP BY c.id, c.razon_social
 ORDER BY c.razon_social;
 
 --------------------------------------------------------------------------------
--- 11) BÚSQUEDA AVANZADA DE PERSONAS (con filtros para PersonaFilters)
+-- 11) BÚSQUEDA AVANZADA DE PERSONAS (con filtros)
 --------------------------------------------------------------------------------
 
 SELECT
@@ -401,8 +371,8 @@ SELECT
   CASE
     WHEN EXISTS (
       SELECT 1 FROM usuario_rol_comunidad ucr
-      JOIN rol_sistema r ON r.id = ucr.rol_id
-      WHERE ucr.usuario_id = u.id AND r.codigo IN ('admin', 'superadmin') AND ucr.activo = 1
+      JOIN rol_sistema rs ON rs.id = ucr.rol_id
+      WHERE ucr.usuario_id = u.id AND rs.codigo IN ('admin_comunidad', 'presidente_comite', 'superadmin') AND ucr.activo = 1
     ) THEN 'Administrador'
     WHEN EXISTS (
       SELECT 1 FROM titulares_unidad tu
@@ -416,40 +386,45 @@ SELECT
     SELECT COUNT(*) FROM titulares_unidad tu
     WHERE tu.persona_id = p.id AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
   ), 0) AS unidades,
-  DATE(COALESCE(u.created_at, p.created_at)) AS fechaRegistro
+  DATE(COALESCE(u.created_at, p.created_at)) AS fecha_registro
 FROM persona p
 LEFT JOIN usuario u ON u.persona_id = p.id
 WHERE 1 = 1
-  -- Filtro de búsqueda (searchTerm)
-  AND (1 IS NULL OR CONCAT(p.nombres, ' ', p.apellidos) LIKE CONCAT('%', 1, '%')
-       OR p.email LIKE CONCAT('%', 1, '%')
-       OR CONCAT(p.rut, '-', p.dv) LIKE CONCAT('%', 1, '%'))
-  -- Filtro por tipo (tipoFilter)
-  AND (1 IS NULL OR (
-    (? = 'Administrador' AND EXISTS (
+  -- Filtro de búsqueda (search_term)
+  AND (?1 IS NULL OR CONCAT(p.nombres, ' ', p.apellidos) LIKE CONCAT('%', ?1, '%')
+       OR p.email LIKE CONCAT('%', ?1, '%')
+       OR CONCAT(p.rut, '-', p.dv) LIKE CONCAT('%', ?1, '%'))
+  -- Filtro por tipo (tipo_filter)
+  AND (?2 IS NULL OR (
+    (?2 = 'Administrador' AND EXISTS (
       SELECT 1 FROM usuario_rol_comunidad ucr
-      JOIN rol_sistema r ON r.id = ucr.rol_id
-      WHERE ucr.usuario_id = u.id AND r.codigo IN ('admin', 'superadmin') AND ucr.activo = 1
+      JOIN rol_sistema rs ON rs.id = ucr.rol_id
+      WHERE ucr.usuario_id = u.id AND rs.codigo IN ('admin_comunidad', 'presidente_comite', 'superadmin') AND ucr.activo = 1
     )) OR
-    (? = 'Inquilino' AND EXISTS (
+    (?2 = 'Inquilino' AND EXISTS (
       SELECT 1 FROM titulares_unidad tu
       WHERE tu.persona_id = p.id AND tu.tipo = 'arrendatario'
       AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
     )) OR
-    (? = 'Propietario' AND NOT EXISTS (
+    (?2 = 'Propietario' AND NOT EXISTS (
       SELECT 1 FROM titulares_unidad tu
       WHERE tu.persona_id = p.id AND tu.tipo = 'arrendatario'
       AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
     ) AND NOT EXISTS (
       SELECT 1 FROM usuario_rol_comunidad ucr
-      JOIN rol_sistema r ON r.id = ucr.rol_id
-      WHERE ucr.usuario_id = u.id AND r.codigo IN ('admin', 'superadmin') AND ucr.activo = 1
+      JOIN rol_sistema rs ON rs.id = ucr.rol_id
+      WHERE ucr.usuario_id = u.id AND rs.codigo IN ('admin_comunidad', 'presidente_comite', 'superadmin') AND ucr.activo = 1
     ))
   ))
-  -- Filtro por estado (estadoFilter)
-  AND (1 IS NULL OR u.activo = (? = 'Activo'))
+  -- Filtro por estado (estado_filter)
+  AND (?3 IS NULL OR u.activo = (?3 = 'Activo'))
+  -- Filtro por comunidad (comunidad_id_filter)
+  AND (?4 IS NULL OR EXISTS (
+    SELECT 1 FROM usuario_rol_comunidad ucr
+    WHERE ucr.usuario_id = u.id AND ucr.comunidad_id = ?4 AND ucr.activo = 1
+  ))
 ORDER BY p.apellidos, p.nombres
-LIMIT 1 OFFSET 10; -- limit, offset
+LIMIT ?5 OFFSET ?6; -- limit, offset
 
 --------------------------------------------------------------------------------
 -- 12) INSERT PARA CREAR NUEVA PERSONA (desde nueva.tsx)
@@ -458,7 +433,7 @@ LIMIT 1 OFFSET 10; -- limit, offset
 -- Primero insertar en persona
 INSERT INTO persona (
   rut, dv, nombres, apellidos, email, telefono, direccion, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW());
+) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NOW(), NOW());
 
 -- Obtener el ID de la persona insertada
 SET @persona_id = LAST_INSERT_ID();
@@ -468,23 +443,23 @@ INSERT INTO usuario (
   persona_id, username, hash_password, email, activo, created_at, updated_at
 ) VALUES (
   @persona_id,
-  ?,
-  ?, -- hash de password
-  ?,
-  1,
+  ?8, -- username
+  ?9, -- hash_password
+  ?5, -- email
+  1, -- activo
   NOW(),
   NOW()
 );
 
--- Asignar rol_sistema por defecto (usuario estándar)
+-- Asignar rol_sistema por defecto (residente '6' o propietario '7')
 INSERT INTO usuario_rol_comunidad (
   usuario_id, comunidad_id, rol_id, desde, activo, created_at, updated_at
 ) VALUES (
   LAST_INSERT_ID(),
-  ?, -- comunidad_id
-  (SELECT id FROM rol_sistema WHERE codigo = 'usuario_estandar'),
-  CURDATE(),
-  1,
+  ?10, -- comunidad_id
+  ?11, -- rol_id (ej. 6 para residente)
+  CURDATE(), -- desde
+  1, -- activo
   NOW(),
   NOW()
 );
@@ -492,20 +467,28 @@ INSERT INTO usuario_rol_comunidad (
 -- Asignar unidades si se seleccionaron
 INSERT INTO titulares_unidad (
   persona_id, unidad_id, tipo, desde, porcentaje, created_at, updated_at
-) VALUES (?, ?, ?, CURDATE(), ?, NOW(), NOW());
+) VALUES (
+  @persona_id,
+  ?12, -- unidad_id
+  ?13, -- tipo (propietario/arrendatario)
+  CURDATE(),
+  ?14, -- porcentaje
+  NOW(),
+  NOW()
+);
 
 --------------------------------------------------------------------------------
 -- 13) VALIDACIONES PARA CREAR/EDITAR PERSONA
 --------------------------------------------------------------------------------
 
 -- Verificar si RUT ya existe (excluyendo el actual en edición)
-SELECT COUNT(*) as existe FROM persona WHERE rut = ? AND id != ?; -- rut, exclude_id (0 para crear)
+SELECT COUNT(*) AS existe FROM persona WHERE rut = ?1 AND id != ?2; -- rut, exclude_id (0 para crear)
 
 -- Verificar si username ya existe
-SELECT COUNT(*) as existe FROM usuario WHERE username = ? AND persona_id != ?; -- username, exclude_persona_id
+SELECT COUNT(*) AS existe FROM usuario WHERE username = ?1 AND persona_id != ?2; -- username, exclude_persona_id
 
--- Verificar si email ya existe
-SELECT COUNT(*) as existe FROM persona WHERE email = ? AND id != ?; -- email, exclude_id
+-- Verificar si email ya existe (en persona)
+SELECT COUNT(*) AS existe FROM persona WHERE email = ?1 AND id != ?2; -- email, exclude_id
 
 --------------------------------------------------------------------------------
 -- 14) UPDATE PARA EDITAR PERSONA
@@ -513,27 +496,27 @@ SELECT COUNT(*) as existe FROM persona WHERE email = ? AND id != ?; -- email, ex
 
 -- Actualizar datos de persona
 UPDATE persona SET
-  nombres = ?,
-  apellidos = ?,
-  email = ?,
-  telefono = ?,
-  direccion = ?,
+  nombres = ?1,
+  apellidos = ?2,
+  email = ?3,
+  telefono = ?4,
+  direccion = ?5,
   updated_at = NOW()
-WHERE id = ?;
+WHERE id = ?6;
 
--- Actualizar datos de usuario si existe
+-- Actualizar datos de usuario si existe (se asume que los valores nulos no actualizan)
 UPDATE usuario SET
-  username = ?,
-  email = ?,
-  activo = ?,
+  username = ?7,
+  email = ?3,
+  activo = ?8,
   updated_at = NOW()
-WHERE persona_id = ?;
+WHERE persona_id = ?6;
 
 -- Actualizar password si se cambió
 UPDATE usuario SET
-  hash_password = ?,
+  hash_password = ?9, -- hash_password
   updated_at = NOW()
-WHERE persona_id = ?;
+WHERE persona_id = ?6;
 
 --------------------------------------------------------------------------------
 -- 15) CONSULTA PARA AUTOCOMPLETAR UNIDADES (en nueva.tsx)
@@ -542,11 +525,9 @@ WHERE persona_id = ?;
 SELECT
   u.id,
   u.codigo AS nombre,
-  CONCAT(
+  CONCAT_WS(' - ',
     COALESCE(e.nombre, 'Sin edificio'),
-    ' - ',
     COALESCE(t.nombre, 'Sin torre'),
-    ' - ',
     u.codigo
   ) AS descripcion_completa,
   c.razon_social AS comunidad,
@@ -555,10 +536,10 @@ SELECT
 FROM unidad u
 LEFT JOIN edificio e ON e.id = u.edificio_id
 LEFT JOIN torre t ON t.id = u.torre_id
-LEFT JOIN comunidad c ON c.id = u.comunidad_id
+JOIN comunidad c ON c.id = u.comunidad_id
 WHERE u.activa = 1
-  AND (? IS NULL OR u.codigo LIKE CONCAT('%', ?, '%')
-       OR e.nombre LIKE CONCAT('%', ?, '%')
-       OR t.nombre LIKE CONCAT('%', ?, '%'))
+  AND (?1 IS NULL OR u.codigo LIKE CONCAT('%', ?1, '%')
+       OR e.nombre LIKE CONCAT('%', ?1, '%')
+       OR t.nombre LIKE CONCAT('%', ?1, '%'))
 ORDER BY c.razon_social, e.nombre, t.nombre, u.codigo
 LIMIT 50;

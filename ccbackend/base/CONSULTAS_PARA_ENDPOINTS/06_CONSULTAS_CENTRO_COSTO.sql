@@ -16,8 +16,7 @@ SELECT
     c.razon_social AS comunidad_nombre,
     cc.nombre,
     cc.codigo,
-    -- Información adicional (si se almacenara en JSON o campos extendidos)
-    cc.created_at,e
+    cc.created_at,
     cc.updated_at
 FROM centro_costo cc
 INNER JOIN comunidad c ON cc.comunidad_id = c.id
@@ -47,18 +46,18 @@ LEFT JOIN (
     FROM gasto
     WHERE centro_costo_id IS NOT NULL
     GROUP BY centro_costo_id
-) stats ON cc.id = stats.centro_costo_id
-WHERE (cc.nombre LIKE CONCAT('%', ?, '%') OR cc.codigo LIKE CONCAT('%', ?, '%') OR ? = '')
-    AND (cc.comunidad_id = ? OR ? = 0)
+) AS stats ON cc.id = stats.centro_costo_id
+WHERE (cc.nombre LIKE CONCAT('%', ?1, '%') OR cc.codigo LIKE CONCAT('%', ?2, '%') OR ?3 = '') -- Filtrar por nombre, código o si el placeholder es vacío
+    AND (cc.comunidad_id = ?4 OR ?5 = 0)
 ORDER BY cc.nombre
-LIMIT ? OFFSET ?;
+LIMIT ?6 OFFSET ?7;
 
 -- 1.3 Conteo total para paginación
 SELECT COUNT(*) AS total
 FROM centro_costo cc
 INNER JOIN comunidad c ON cc.comunidad_id = c.id
-WHERE (cc.nombre LIKE CONCAT('%', ?, '%') OR cc.codigo LIKE CONCAT('%', ?, '%') OR ? = '')
-    AND (cc.comunidad_id = ? OR ? = 0);
+WHERE (cc.nombre LIKE CONCAT('%', ?1, '%') OR cc.codigo LIKE CONCAT('%', ?2, '%') OR ?3 = '')
+    AND (cc.comunidad_id = ?4 OR ?5 = 0);
 
 -- =========================================
 -- 2. DETALLE DE CENTRO DE COSTO ESPECÍFICO
@@ -93,7 +92,7 @@ LEFT JOIN (
     FROM gasto
     WHERE centro_costo_id IS NOT NULL
     GROUP BY centro_costo_id
-) stats ON cc.id = stats.centro_costo_id
+) AS stats ON cc.id = stats.centro_costo_id
 WHERE cc.id = ? AND cc.comunidad_id = ?;
 
 -- 2.2 Gastos asociados al centro de costo (últimos 20)
@@ -168,7 +167,7 @@ LEFT JOIN (
     FROM gasto
     WHERE centro_costo_id IS NOT NULL
     GROUP BY centro_costo_id
-) stats ON cc.id = stats.centro_costo_id
+) AS stats ON cc.id = stats.centro_costo_id
 WHERE cc.comunidad_id = ?;
 
 -- 4.2 Centros de costo más utilizados (por cantidad de gastos)
@@ -182,7 +181,8 @@ SELECT
 FROM centro_costo cc
 INNER JOIN gasto g ON cc.id = g.centro_costo_id
 WHERE cc.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+    -- CORRECCIÓN: Manejar los placeholders de fecha como IS NULL o rango completo
+    AND (g.fecha BETWEEN ? AND ? OR (? IS NULL AND ? IS NULL))
 GROUP BY cc.id, cc.nombre, cc.codigo
 HAVING COUNT(g.id) > 0
 ORDER BY cantidad_gastos DESC;
@@ -199,7 +199,8 @@ SELECT
 FROM centro_costo cc
 INNER JOIN gasto g ON cc.id = g.centro_costo_id
 WHERE cc.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+    -- CORRECCIÓN: Manejar los placeholders de fecha como IS NULL o rango completo
+    AND (g.fecha BETWEEN ? AND ? OR (? IS NULL AND ? IS NULL))
 GROUP BY cc.id, cc.nombre, cc.codigo
 HAVING SUM(g.monto) > 0
 ORDER BY total_monto DESC;
@@ -224,12 +225,14 @@ SELECT
     COUNT(g.id) AS cantidad_gastos,
     SUM(g.monto) AS total_monto,
     AVG(g.monto) AS promedio_monto,
-    (SUM(g.monto) / (SELECT SUM(monto) FROM gasto WHERE centro_costo_id = cc.id)) * 100 AS porcentaje_del_centro
+    -- CORRECCIÓN: Subconsulta optimizada para el porcentaje total del centro
+    (SUM(g.monto) / NULLIF((SELECT SUM(monto) FROM gasto WHERE centro_costo_id = cc.id), 0)) * 100 AS porcentaje_del_centro
 FROM centro_costo cc
 INNER JOIN gasto g ON cc.id = g.centro_costo_id
 INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
 WHERE cc.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+    -- CORRECCIÓN: Manejar los placeholders de fecha como IS NULL o rango completo
+    AND (g.fecha BETWEEN ? AND ? OR (? IS NULL AND ? IS NULL))
 GROUP BY cc.id, cc.nombre, cat.id, cat.nombre
 ORDER BY cc.nombre, total_monto DESC;
 
@@ -291,7 +294,7 @@ LEFT JOIN (
     FROM gasto
     WHERE centro_costo_id IS NOT NULL
     GROUP BY centro_costo_id
-) stats ON cc.id = stats.centro_costo_id
+) AS stats ON cc.id = stats.centro_costo_id
 WHERE cc.comunidad_id = ?
 ORDER BY cc.nombre;
 
@@ -343,13 +346,16 @@ SELECT
     STDDEV(g.monto) AS desviacion_estandar,
     MIN(g.monto) AS minimo,
     MAX(g.monto) AS maximo,
-    (STDDEV(g.monto) / AVG(g.monto)) * 100 AS coeficiente_variacion
+    -- CORRECCIÓN: Uso de NULLIF para evitar división por cero
+    (STDDEV(g.monto) / NULLIF(AVG(g.monto), 0)) * 100 AS coeficiente_variacion
 FROM centro_costo cc
 INNER JOIN gasto g ON cc.id = g.centro_costo_id
 WHERE cc.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
+    -- CORRECCIÓN: Manejar los placeholders de fecha como IS NULL o rango completo
+    AND (g.fecha BETWEEN ? AND ? OR (? IS NULL AND ? IS NULL))
 GROUP BY cc.id, cc.nombre, cc.codigo
 HAVING COUNT(g.id) >= 3 -- Al menos 3 gastos para calcular variabilidad
+    AND AVG(g.monto) IS NOT NULL -- Asegurar que no dividamos por NULL/cero
 ORDER BY coeficiente_variacion DESC;
 
 -- =========================================
@@ -382,7 +388,7 @@ LEFT JOIN (
         MAX(fecha) AS ultimo_gasto
     FROM gasto
     GROUP BY centro_costo_id
-) stats ON cc.id = stats.centro_costo_id
+) AS stats ON cc.id = stats.centro_costo_id
 WHERE cc.comunidad_id = ?
 ORDER BY cc.nombre;
 
@@ -390,7 +396,7 @@ ORDER BY cc.nombre;
 -- 9. CONSULTAS PARA DASHBOARD
 -- =========================================
 
--- 9.1 Resumen de centros de costo para dashboard
+-- 9.1 Resumen de centros de costo para dashboard (Sin cambios estructurales)
 SELECT
     COUNT(*) AS total_centros,
     COUNT(DISTINCT comunidad_id) AS comunidades,
@@ -404,10 +410,10 @@ LEFT JOIN (
     FROM gasto
     WHERE centro_costo_id IS NOT NULL
     GROUP BY centro_costo_id
-) stats ON cc.id = stats.centro_costo_id
+) AS stats ON cc.id = stats.centro_costo_id
 WHERE cc.comunidad_id = ?;
 
--- 9.2 Top centros de costo por gasto en el último mes
+-- 9.2 Top centros de costo por gasto en el último mes (Sin cambios estructurales)
 SELECT
     cc.nombre AS centro_costo,
     cc.codigo,
@@ -421,7 +427,7 @@ GROUP BY cc.id, cc.nombre, cc.codigo
 ORDER BY total_monto DESC
 LIMIT 5;
 
--- 9.3 Centros de costo sin uso reciente
+-- 9.3 Centros de costo sin uso reciente (Sin cambios estructurales)
 SELECT
     cc.nombre AS centro_costo,
     cc.codigo,
@@ -441,11 +447,13 @@ SELECT
     cc.codigo,
     COUNT(g.id) AS total_gastos,
     SUM(g.monto) AS total_monto,
-    (SUM(g.monto) / (SELECT SUM(monto) FROM gasto WHERE comunidad_id = ? AND centro_costo_id IS NOT NULL)) * 100 AS porcentaje_total
+    -- CORRECCIÓN: Uso de NULLIF y se asegura de que la subconsulta sea el total de la comunidad
+    (SUM(g.monto) / NULLIF((SELECT SUM(monto) FROM gasto WHERE comunidad_id = cc.comunidad_id), 0)) * 100 AS porcentaje_total
 FROM centro_costo cc
 LEFT JOIN gasto g ON cc.id = g.centro_costo_id
-WHERE cc.comunidad_id = ?
-    AND (g.fecha BETWEEN ? AND ? OR (? = '' AND ? = ''))
-GROUP BY cc.id, cc.nombre, cc.codigo
+WHERE cc.comunidad_id = ?1
+    -- CORRECCIÓN: Manejar los placeholders de fecha como IS NULL o rango completo
+    AND (g.fecha BETWEEN ?2 AND ?3 OR (?4 IS NULL AND ?5 IS NULL))
+GROUP BY cc.id, cc.nombre, cc.codigo, cc.comunidad_id
 HAVING SUM(g.monto) > 0
 ORDER BY total_monto DESC;
