@@ -22,14 +22,14 @@ SELECT
     WHEN egc.estado = 'cerrado' THEN 'paid'
     WHEN egc.estado = 'anulado' THEN 'cancelled'
     ELSE 'ready'
-  END as estado,
-  DATE_FORMAT(egc.created_at, '%Y-%m-%d') as fechaEmision,
-  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fechaVencimiento,
-  COALESCE(SUM(ccu.monto_total), 0) as montoTotal,
-  COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) as montoPagado,
-  COUNT(DISTINCT ccu.unidad_id) as cantidadUnidades,
-  egc.observaciones as descripcion,
-  c.razon_social as nombreComunidad,
+  END as status,
+  DATE_FORMAT(egc.created_at, '%Y-%m-%d') as issueDate,
+  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as dueDate,
+  COALESCE(SUM(ccu.monto_total), 0) as totalAmount,
+  COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) as paidAmount,
+  COUNT(DISTINCT ccu.unidad_id) as unitCount,
+  egc.observaciones as description,
+  c.razon_social as communityName,
   egc.created_at,
   egc.updated_at
 FROM emision_gastos_comunes egc
@@ -79,18 +79,18 @@ SELECT
     WHEN egc.estado = 'cerrado' THEN 'paid'
     WHEN egc.estado = 'anulado' THEN 'cancelled'
     ELSE 'ready'
-  END as estado,
-  DATE_FORMAT(egc.created_at, '%Y-%m-%d') as fechaEmision,
-  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fechaVencimiento,
-  COALESCE(SUM(ccu.monto_total), 0) as montoTotal,
-  COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) as montoPagado,
-  COUNT(DISTINCT ccu.unidad_id) as cantidadUnidades,
-  egc.observaciones as descripcion,
-  c.razon_social as nombreComunidad,
+  END as status,
+  DATE_FORMAT(egc.created_at, '%Y-%m-%d') as issueDate,
+  DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as dueDate,
+  COALESCE(SUM(ccu.monto_total), 0) as totalAmount,
+  COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) as paidAmount,
+  COUNT(DISTINCT ccu.unidad_id) as unitCount,
+  egc.observaciones as description,
+  c.razon_social as communityName,
   -- Información adicional para intereses
-  CASE WHEN egc.periodo LIKE '%Interes%' THEN 1 ELSE 0 END as tieneInteres,
-  COALESCE(pc.tasa_mora_mensual, 2.0) as tasaInteres,
-  COALESCE(pc.dias_gracia, 5) as periodoGracia,
+  CASE WHEN egc.periodo LIKE '%Interes%' THEN 1 ELSE 0 END as hasInterest,
+  COALESCE(pc.tasa_mora_mensual, 2.0) as interestRate,
+  COALESCE(pc.dias_gracia, 5) as gracePeriod,
   egc.created_at,
   egc.updated_at
 FROM emision_gastos_comunes egc
@@ -105,17 +105,17 @@ GROUP BY egc.id, egc.periodo, egc.estado, egc.created_at, egc.fecha_vencimiento,
 -- ===========================================
 SELECT
   deg.id,
-  cg.nombre as nombre,
-  cg.nombre as descripcion,
-  deg.monto as monto,
+  cg.nombre as name,
+  cg.nombre as description,
+  deg.monto as amount,
   CASE
-    WHEN deg.regla_prorrateo = 'coeficiente' THEN 'proporcional'
-    WHEN deg.regla_prorrateo = 'partes_iguales' THEN 'igual'
-    WHEN deg.regla_prorrateo = 'consumo' THEN 'personalizado'
-    WHEN deg.regla_prorrateo = 'fijo_por_unidad' THEN 'personalizado'
-    ELSE 'proporcional'
-  END as tipoDistribucion,
-  cg.nombre as categoria,
+    WHEN deg.regla_prorrateo = 'coeficiente' THEN 'proportional'
+    WHEN deg.regla_prorrateo = 'partes_iguales' THEN 'equal'
+    WHEN deg.regla_prorrateo = 'consumo' THEN 'custom'
+    WHEN deg.regla_prorrateo = 'fijo_por_unidad' THEN 'custom'
+    ELSE 'proportional'
+  END as distributionType,
+  cg.nombre as category,
   deg.created_at
 FROM detalle_emision_gastos deg
 JOIN categoria_gasto cg ON deg.categoria_id = cg.id
@@ -127,18 +127,18 @@ ORDER BY deg.created_at;
 -- ===========================================
 SELECT
   g.id,
-  g.glosa as descripcion,
-  deg.monto as monto,
-  cg.nombre as categoria,
-  p.razon_social as proveedor,
-  DATE_FORMAT(g.fecha, '%Y-%m-%d') as fecha,
-  COALESCE(dc.folio, CONCAT('Gasto #', g.id)) as documento,
+  g.glosa as description,
+  deg.monto as amount,
+  cg.nombre as category,
+  p.razon_social as supplier,
+  DATE_FORMAT(g.fecha, '%Y-%m-%d') as date,
+  COALESCE(dc.folio, CONCAT('Gasto #', g.id)) as document,
   g.created_at
 FROM detalle_emision_gastos deg
 JOIN gasto g ON deg.gasto_id = g.id
 JOIN categoria_gasto cg ON deg.categoria_id = cg.id
+LEFT JOIN proveedor p ON g.proveedor_id = p.id
 LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
-LEFT JOIN proveedor p ON dc.proveedor_id = p.id
 WHERE deg.emision_id = 1 -- Reemplazar con el ID de emisión deseado
 ORDER BY g.fecha DESC;
 
@@ -147,34 +147,36 @@ ORDER BY g.fecha DESC;
 -- ===========================================
 SELECT
   u.id,
-  u.codigo as numero,
+  u.codigo as number,
   CASE
     WHEN u.m2_utiles > 0 THEN 'Departamento'
     WHEN u.nro_estacionamiento IS NOT NULL THEN 'Estacionamiento'
     WHEN u.nro_bodega IS NOT NULL THEN 'Bodega'
     ELSE 'Unidad'
-  END as tipo,
+  END as type,
   COALESCE(
     CONCAT(p.nombres, ' ', p.apellidos),
+    tu.nombre_titular,
     'Sin asignar'
-  ) as propietario,
+  ) as owner,
   COALESCE(
     p.email,
+    tu.email_contacto,
     ''
-  ) as contacto,
-  u.alicuota as participacion,
-  ccu.monto_total as montoTotal,
-  (ccu.monto_total - ccu.saldo) as montoPagado,
+  ) as contact,
+  u.alicuota as participation,
+  ccu.monto_total as totalAmount,
+  (ccu.monto_total - ccu.saldo) as paidAmount,
   CASE
     WHEN ccu.estado = 'pagado' THEN 'paid'
     WHEN ccu.estado = 'parcial' THEN 'partial'
     WHEN ccu.estado = 'vencido' THEN 'pending'
     ELSE 'pending'
-  END as estado,
+  END as status,
   ccu.created_at
 FROM cuenta_cobro_unidad ccu
 JOIN unidad u ON ccu.unidad_id = u.id
-LEFT JOIN titulares_unidad tu ON u.id = tu.unidad_id AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
+LEFT JOIN titulares_unidad tu ON u.id = tu.unidad_id AND tu.activo = 1
 LEFT JOIN persona p ON tu.persona_id = p.id
 WHERE ccu.emision_id = 1 -- Reemplazar con el ID de emisión deseado
 ORDER BY u.codigo;
@@ -184,8 +186,8 @@ ORDER BY u.codigo;
 -- ===========================================
 SELECT
   p.id,
-  DATE_FORMAT(p.fecha, '%Y-%m-%d') as fecha,
-  pa.monto as monto,
+  DATE_FORMAT(p.fecha, '%Y-%m-%d') as date,
+  pa.monto as amount,
   CASE
     WHEN p.medio = 'transferencia' THEN 'Transferencia'
     WHEN p.medio = 'webpay' THEN 'WebPay'
@@ -193,15 +195,15 @@ SELECT
     WHEN p.medio = 'servipag' THEN 'Servipag'
     WHEN p.medio = 'efectivo' THEN 'Efectivo'
     ELSE p.medio
-  END as metodo,
-  p.referencia as referencia,
-  u.codigo as unidad,
+  END as method,
+  p.referencia as reference,
+  u.codigo as unit,
   CASE
     WHEN p.estado = 'aplicado' THEN 'confirmed'
     WHEN p.estado = 'pendiente' THEN 'pending'
     WHEN p.estado = 'reversado' THEN 'rejected'
     ELSE 'pending'
-  END as estado,
+  END as status,
   p.created_at
 FROM pago_aplicacion pa
 JOIN pago p ON pa.pago_id = p.id
@@ -215,20 +217,20 @@ ORDER BY p.fecha DESC, p.created_at DESC;
 -- ===========================================
 SELECT
   a.id,
-  DATE_FORMAT(a.created_at, '%Y-%m-%d %H:%i:%s') as fecha,
+  DATE_FORMAT(a.created_at, '%Y-%m-%d %H:%i:%s') as date,
   CASE
     WHEN a.accion = 'INSERT' THEN 'Emisión creada'
     WHEN a.accion = 'UPDATE' THEN 'Emisión actualizada'
     WHEN a.accion = 'DELETE' THEN 'Emisión eliminada'
     ELSE CONCAT('Acción: ', a.accion)
-  END as accion,
-  COALESCE(u.username, 'Sistema') as usuario,
+  END as action,
+  COALESCE(u.username, 'Sistema') as user,
   CASE
     WHEN a.accion = 'INSERT' THEN 'Se creó la emisión'
     WHEN a.accion = 'UPDATE' THEN 'Se modificaron datos de la emisión'
     WHEN a.accion = 'DELETE' THEN 'Se eliminó la emisión'
     ELSE 'Cambio en emisión'
-  END as descripcion,
+  END as description,
   a.created_at
 FROM auditoria a
 LEFT JOIN usuario u ON a.usuario_id = u.id

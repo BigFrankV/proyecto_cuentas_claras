@@ -5,100 +5,6 @@ import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 
-// API interfaces
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
-interface ApiConciliacionDetail {
-  id: number;
-  codigo?: string;
-  fecha_mov: string;
-  glosa?: string;
-  monto: number;
-  tipo?: 'credito' | 'debito' | 'otro';
-  referencia_bancaria?: string;
-  estado_conciliacion?: 'pendiente' | 'conciliado' | 'diferencia' | 'descartado';
-  pago_id?: number;
-  codigo_pago?: string;
-  referencia_pago?: string;
-  nombre_comunidad?: string;
-  created_at?: string;
-  updated_at?: string;
-  // Información adicional del pago si está vinculado
-  pago?: {
-    id: number;
-    codigo: string;
-    monto: number;
-    estado: string;
-    fecha_pago: string;
-    referencia: string;
-  };
-}
-
-interface ApiTransaction {
-  id: number;
-  fecha_mov: string;
-  glosa?: string;
-  monto: number;
-  referencia?: string;
-  estado: 'pendiente' | 'conciliado' | 'descartado';
-  pago_id?: number;
-  codigo_pago?: string;
-  referencia_pago?: string;
-}
-
-// API functions
-const conciliacionesApi = {
-  async getConciliacionById(id: string): Promise<ApiConciliacionDetail> {
-    const response = await fetch(`${API_BASE_URL}/conciliaciones/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error al obtener conciliación: ${response.statusText}`);
-    }
-
-    return response.json();
-  },
-
-  async getConciliacionTransactions(id: string): Promise<ApiTransaction[]> {
-    // Por ahora usamos el endpoint general, pero podríamos tener uno específico
-    const response = await fetch(`${API_BASE_URL}/conciliaciones?limit=1000`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error al obtener transacciones: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    // Filtrar por conciliación específica si es necesario
-    return data.filter((item: ApiTransaction) => item.id === parseInt(id));
-  },
-
-  async updateConciliacion(id: string, updates: Partial<ApiConciliacionDetail>): Promise<ApiConciliacionDetail> {
-    const response = await fetch(`${API_BASE_URL}/conciliaciones/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updates)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error al actualizar conciliación: ${response.statusText}`);
-    }
-
-    return response.json();
-  }
-};
-
 interface ConciliacionDetail {
   id: string;
   period: string;
@@ -114,14 +20,9 @@ interface ConciliacionDetail {
   totalTransactions: number;
   createdBy: string;
   createdAt: string;
-  completedAt: string | undefined;
+  completedAt?: string;
   notes: string;
   transactions: BankTransaction[];
-  codigo: string | undefined;
-  glosa: string | undefined;
-  monto: number;
-  estado: string;
-  nombreComunidad: string | undefined;
 }
 
 interface BankTransaction {
@@ -148,130 +49,80 @@ export default function ConciliacionDetalle() {
 
   useEffect(() => {
     if (id) {
-      loadConciliacionData();
+      // Simulate API call
+      setTimeout(() => {
+        const mockConciliacion: ConciliacionDetail = {
+          id: id as string,
+          period: '2024-03',
+          bankAccount: '12345678-9',
+          bank: 'Banco de Chile',
+          startDate: '2024-03-01',
+          endDate: '2024-03-31',
+          status: 'completed',
+          bankBalance: 15750000,
+          bookBalance: 15750000,
+          difference: 0,
+          matchedTransactions: 245,
+          totalTransactions: 245,
+          createdBy: 'María González',
+          createdAt: '2024-04-01T10:30:00Z',
+          completedAt: '2024-04-01T16:45:00Z',
+          notes: 'Conciliación completada sin diferencias. Todas las transacciones fueron procesadas correctamente.',
+          transactions: [
+            {
+              id: 1,
+              date: '2024-03-01',
+              description: 'Transferencia recibida - Gastos Comunes Unidad 301',
+              reference: 'TRF001234',
+              amount: 145000,
+              type: 'credit',
+              matched: true,
+              matchStatus: 'matched',
+              bookReference: 'REC-2024-001',
+              notes: 'Pago mensual gastos comunes'
+            },
+            {
+              id: 2,
+              date: '2024-03-02',
+              description: 'Pago proveedor - Mantención Ascensores',
+              reference: 'PAG005678',
+              amount: -85000,
+              type: 'debit',
+              matched: true,
+              matchStatus: 'matched',
+              bookReference: 'PAG-2024-045',
+              notes: 'Mantención mensual ascensores'
+            },
+            {
+              id: 3,
+              date: '2024-03-03',
+              description: 'Transferencia recibida - Gastos Comunes Unidad 302',
+              reference: 'TRF001235',
+              amount: 145000,
+              type: 'credit',
+              matched: true,
+              matchStatus: 'matched',
+              bookReference: 'REC-2024-002'
+            },
+            {
+              id: 4,
+              date: '2024-03-05',
+              description: 'Comisión bancaria',
+              reference: 'COM001',
+              amount: -2500,
+              type: 'debit',
+              matched: true,
+              matchStatus: 'manual',
+              bookReference: 'GAS-2024-012',
+              notes: 'Comisión por mantención de cuenta'
+            }
+          ]
+        };
+        setConciliacion(mockConciliacion);
+        setLoading(false);
+      }, 1000);
     }
   }, [id]);
-
-  const loadConciliacionData = async () => {
-    try {
-      setLoading(true);
-      
-      // Load conciliacion details
-      const apiData = await conciliacionesApi.getConciliacionById(id as string);
-      
-      // Load transactions (for now we'll use mock data, but this could be enhanced)
-      const transactions = await loadTransactions();
-      
-      // Map API data to frontend format
-      const conciliacionData: ConciliacionDetail = mapApiToFrontendDetail(apiData, transactions);
-      
-      setConciliacion(conciliacionData);
-    } catch (error) {
-      console.error('Error loading conciliacion data:', error);
-      // Could set an error state here
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadTransactions = async (): Promise<BankTransaction[]> => {
-    // For now, return mock transactions. This could be enhanced to load real transaction data
-    return [
-      {
-        id: 1,
-        date: '2024-03-01',
-        description: 'Transferencia recibida - Gastos Comunes Unidad 301',
-        reference: 'TRF001234',
-        amount: 145000,
-        type: 'credit',
-        matched: true,
-        matchStatus: 'matched',
-        bookReference: 'REC-2024-001',
-        notes: 'Pago mensual gastos comunes'
-      },
-      {
-        id: 2,
-        date: '2024-03-02',
-        description: 'Pago proveedor - Mantención Ascensores',
-        reference: 'PAG005678',
-        amount: -85000,
-        type: 'debit',
-        matched: true,
-        matchStatus: 'matched',
-        bookReference: 'PAG-2024-045',
-        notes: 'Mantención mensual ascensores'
-      },
-      {
-        id: 3,
-        date: '2024-03-03',
-        description: 'Transferencia recibida - Gastos Comunes Unidad 302',
-        reference: 'TRF001235',
-        amount: 145000,
-        type: 'credit',
-        matched: true,
-        matchStatus: 'matched',
-        bookReference: 'REC-2024-002'
-      },
-      {
-        id: 4,
-        date: '2024-03-05',
-        description: 'Comisión bancaria',
-        reference: 'COM001',
-        amount: -2500,
-        type: 'debit',
-        matched: true,
-        matchStatus: 'manual',
-        bookReference: 'GAS-2024-012',
-        notes: 'Comisión por mantención de cuenta'
-      }
-    ];
-  };
-
-  const mapApiToFrontendDetail = (apiData: ApiConciliacionDetail, transactions: BankTransaction[]): ConciliacionDetail => {
-    // Extract year and month from fecha_mov for period
-    const fecha = new Date(apiData.fecha_mov);
-    const period = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
-    
-    // Map status
-    let status: ConciliacionDetail['status'] = 'draft';
-    switch (apiData.estado_conciliacion) {
-      case 'pendiente':
-        status = 'in-progress';
-        break;
-      case 'conciliado':
-        status = 'completed';
-        break;
-      case 'diferencia':
-      case 'descartado':
-        status = 'with-differences';
-        break;
-    }
-
-    return {
-      id: apiData.id.toString(),
-      period,
-      bankAccount: 'Cuenta Principal', // Default, could be enhanced
-      bank: 'Banco Principal', // Default, could be enhanced
-      startDate: apiData.fecha_mov,
-      endDate: apiData.fecha_mov,
-      status,
-      bankBalance: apiData.monto,
-      bookBalance: apiData.monto, // Simplified
-      difference: 0, // Simplified
-      matchedTransactions: apiData.estado_conciliacion === 'conciliado' ? 1 : 0,
-      totalTransactions: 1,
-      createdBy: 'Sistema', // Default, could be enhanced
-      createdAt: apiData.created_at || new Date().toISOString(),
-      completedAt: apiData.estado_conciliacion === 'conciliado' ? (apiData.updated_at || undefined) : undefined,
-      notes: apiData.glosa || 'Sin notas adicionales',
-      transactions,
-      codigo: apiData.codigo,
-      glosa: apiData.glosa,
-      monto: apiData.monto,
-      estado: apiData.estado_conciliacion || 'pendiente',
-      nombreComunidad: apiData.nombre_comunidad
-    };
-  };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {

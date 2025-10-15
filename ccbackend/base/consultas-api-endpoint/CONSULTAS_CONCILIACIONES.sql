@@ -9,26 +9,26 @@
 -- ===========================================
 SELECT
   cb.id,
-  CONCAT('CONC-', YEAR(cb.fecha_mov), '-', LPAD(cb.id, 4, '0')) as codigo,
-  cb.fecha_mov as fechaMovimiento,
-  cb.glosa,
-  cb.monto as monto,
+  CONCAT('CONC-', YEAR(cb.fecha_movimiento), '-', LPAD(cb.id, 4, '0')) as code,
+  cb.fecha_movimiento as movementDate,
+  cb.descripcion,
+  cb.monto as amount,
   CASE
-    WHEN cb.monto > 0 THEN 'credito'
-    WHEN cb.monto < 0 THEN 'debito'
-    ELSE 'otro'
-  END as tipo,
-  cb.referencia as referenciaBancaria,
+    WHEN cb.tipo = 'credito' THEN 'credit'
+    WHEN cb.tipo = 'debito' THEN 'debit'
+    ELSE cb.tipo
+  END as type,
+  cb.referencia_bancaria as bankReference,
   CASE
-    WHEN cb.estado = 'pendiente' THEN 'pendiente'
-    WHEN cb.estado = 'conciliado' THEN 'conciliado'
-    WHEN cb.estado = 'descartado' THEN 'descartado'
-    ELSE 'pendiente'
-  END as estadoConciliacion,
-  p.id as idPago,
-  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as codigoPago,
-  p.referencia as referenciaPago,
-  c.razon_social as nombreComunidad,
+    WHEN cb.estado_conciliacion = 'pendiente' THEN 'pending'
+    WHEN cb.estado_conciliacion = 'conciliado' THEN 'reconciled'
+    WHEN cb.estado_conciliacion = 'diferencia' THEN 'difference'
+    ELSE 'pending'
+  END as reconciliationStatus,
+  p.id as paymentId,
+  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as paymentCode,
+  p.referencia as paymentReference,
+  c.razon_social as communityName,
   cb.created_at,
   cb.updated_at
 FROM conciliacion_bancaria cb
@@ -37,10 +37,11 @@ JOIN comunidad c ON cb.comunidad_id = c.id
 WHERE 1=1
 -- Filtros opcionales (descomentar según necesidad):
 -- AND cb.comunidad_id = ?
--- AND cb.estado = ?
--- AND cb.fecha_mov >= ?
--- AND cb.fecha_mov <= ?
-ORDER BY cb.fecha_mov DESC, cb.created_at DESC
+-- AND cb.estado_conciliacion = ?
+-- AND cb.fecha_movimiento >= ?
+-- AND cb.fecha_movimiento <= ?
+-- AND cb.tipo = ?
+ORDER BY cb.fecha_movimiento DESC, cb.created_at DESC
 LIMIT 20 OFFSET 0;
 
 -- ===========================================
@@ -53,9 +54,9 @@ JOIN comunidad c ON cb.comunidad_id = c.id
 WHERE 1=1
 -- Filtros opcionales (descomentar según necesidad):
 -- AND cb.comunidad_id = ?
--- AND cb.estado = ?
--- AND cb.fecha_mov >= ?
--- AND cb.fecha_mov <= ?;
+-- AND cb.estado_conciliacion = ?
+-- AND cb.fecha_movimiento >= ?
+-- AND cb.fecha_movimiento <= ?;
 
 -- ===========================================
 -- 3. OBTENER CONCILIACIÓN POR ID (GET /conciliaciones/:id)
@@ -63,35 +64,35 @@ WHERE 1=1
 -- ===========================================
 SELECT
   cb.id,
-  CONCAT('CONC-', YEAR(cb.fecha_mov), '-', LPAD(cb.id, 4, '0')) as codigo,
-  cb.fecha_mov as fechaMovimiento,
-  cb.glosa,
-  cb.monto as monto,
+  CONCAT('CONC-', YEAR(cb.fecha_movimiento), '-', LPAD(cb.id, 4, '0')) as code,
+  cb.fecha_movimiento as movementDate,
+  cb.descripcion,
+  cb.monto as amount,
   CASE
-    WHEN cb.monto > 0 THEN 'credito'
-    WHEN cb.monto < 0 THEN 'debito'
-    ELSE 'otro'
-  END as tipo,
-  cb.referencia as referenciaBancaria,
+    WHEN cb.tipo = 'credito' THEN 'credit'
+    WHEN cb.tipo = 'debito' THEN 'debit'
+    ELSE cb.tipo
+  END as type,
+  cb.referencia_bancaria as bankReference,
   CASE
-    WHEN cb.estado = 'pendiente' THEN 'pendiente'
-    WHEN cb.estado = 'conciliado' THEN 'conciliado'
-    WHEN cb.estado = 'descartado' THEN 'descartado'
-    ELSE 'pendiente'
-  END as estadoConciliacion,
-  p.id as idPago,
-  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as codigoPago,
-  p.referencia as referenciaPago,
-  p.monto as montoPago,
+    WHEN cb.estado_conciliacion = 'pendiente' THEN 'pending'
+    WHEN cb.estado_conciliacion = 'conciliado' THEN 'reconciled'
+    WHEN cb.estado_conciliacion = 'diferencia' THEN 'difference'
+    ELSE 'pending'
+  END as reconciliationStatus,
+  p.id as paymentId,
+  CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) as paymentCode,
+  p.referencia as paymentReference,
+  p.monto as paymentAmount,
   CASE
-    WHEN p.estado = 'pendiente' THEN 'pendiente'
-    WHEN p.estado = 'aplicado' THEN 'aplicado'
-    WHEN p.estado = 'reversado' THEN 'reversado'
-    ELSE 'pendiente'
-  END as estadoPago,
-  c.razon_social as nombreComunidad,
-  u.codigo as numeroUnidad,
-  CONCAT(pers.nombres, ' ', pers.apellidos) as nombreResidente,
+    WHEN p.estado = 'pendiente' THEN 'pending'
+    WHEN p.estado = 'aplicado' THEN 'approved'
+    WHEN p.estado = 'reversado' THEN 'cancelled'
+    ELSE 'pending'
+  END as paymentStatus,
+  c.razon_social as communityName,
+  u.codigo as unitNumber,
+  CONCAT(pers.nombres, ' ', pers.apellidos) as residentName,
   cb.created_at,
   cb.updated_at
 FROM conciliacion_bancaria cb
@@ -107,46 +108,46 @@ WHERE cb.id = 1;
 -- ===========================================
 SELECT
   cb.id,
-  CONCAT('CONC-', YEAR(cb.fecha_mov), '-', LPAD(cb.id, 4, '0')) as codigo,
-  cb.fecha_mov as fechaMovimiento,
-  cb.glosa,
-  cb.monto as monto,
+  CONCAT('CONC-', YEAR(cb.fecha_movimiento), '-', LPAD(cb.id, 4, '0')) as code,
+  cb.fecha_movimiento as movementDate,
+  cb.descripcion,
+  cb.monto as amount,
   CASE
-    WHEN cb.monto > 0 THEN 'credito'
-    WHEN cb.monto < 0 THEN 'debito'
-    ELSE 'otro'
-  END as tipo,
-  cb.referencia as referenciaBancaria,
+    WHEN cb.tipo = 'credito' THEN 'credit'
+    WHEN cb.tipo = 'debito' THEN 'debit'
+    ELSE cb.tipo
+  END as type,
+  cb.referencia_bancaria as bankReference,
   CASE
-    WHEN cb.estado = 'pendiente' THEN 'pendiente'
-    WHEN cb.estado = 'conciliado' THEN 'conciliado'
-    WHEN cb.estado = 'descartado' THEN 'descartado'
-    ELSE 'pendiente'
-  END as estadoConciliacion,
-  p.referencia as referenciaPago,
+    WHEN cb.estado_conciliacion = 'pendiente' THEN 'pending'
+    WHEN cb.estado_conciliacion = 'conciliado' THEN 'reconciled'
+    WHEN cb.estado_conciliacion = 'diferencia' THEN 'difference'
+    ELSE 'pending'
+  END as reconciliationStatus,
+  p.referencia as paymentReference,
   cb.created_at
 FROM conciliacion_bancaria cb
 LEFT JOIN pago p ON cb.pago_id = p.id
 WHERE cb.comunidad_id = 1
-ORDER BY cb.fecha_mov DESC;
+ORDER BY cb.fecha_movimiento DESC;
 
 -- ===========================================
 -- 5. ESTADÍSTICAS DE CONCILIACIONES POR COMUNIDAD
 -- Consulta de estadísticas generales de conciliaciones
 -- ===========================================
 SELECT
-  COUNT(*) as totalMovimientos,
-  COUNT(CASE WHEN cb.estado = 'conciliado' THEN 1 END) as movimientosConciliados,
-  COUNT(CASE WHEN cb.estado = 'pendiente' THEN 1 END) as movimientosPendientes,
-  COUNT(CASE WHEN cb.estado = 'descartado' THEN 1 END) as movimientosDiferencia,
-  SUM(cb.monto) as montoTotal,
-  AVG(cb.monto) as montoPromedio,
-  COUNT(CASE WHEN cb.monto > 0 THEN 1 END) as movimientosCredito,
-  COUNT(CASE WHEN cb.monto < 0 THEN 1 END) as movimientosDebito,
-  MIN(cb.fecha_mov) as movimientoMasAntiguo,
-  MAX(cb.fecha_mov) as movimientoMasNuevo
+  COUNT(*) as totalMovements,
+  COUNT(CASE WHEN cb.estado_conciliacion = 'conciliado' THEN 1 END) as reconciledMovements,
+  COUNT(CASE WHEN cb.estado_conciliacion = 'pendiente' THEN 1 END) as pendingMovements,
+  COUNT(CASE WHEN cb.estado_conciliacion = 'diferencia' THEN 1 END) as differenceMovements,
+  SUM(cb.monto) as totalAmount,
+  AVG(cb.monto) as averageAmount,
+  COUNT(CASE WHEN cb.tipo = 'credito' THEN 1 END) as creditMovements,
+  COUNT(CASE WHEN cb.tipo = 'debito' THEN 1 END) as debitMovements,
+  MIN(cb.fecha_movimiento) as oldestMovement,
+  MAX(cb.fecha_movimiento) as newestMovement
 FROM conciliacion_bancaria cb
-WHERE cb.comunidad_id = 1;
+WHERE cb.comunidad_id = ?;
 
 -- ===========================================
 -- 6. MOVIMIENTOS BANCARIOS PENDIENTES DE CONCILIACIÓN
@@ -154,23 +155,23 @@ WHERE cb.comunidad_id = 1;
 -- ===========================================
 SELECT
   cb.id,
-  CONCAT('CONC-', YEAR(cb.fecha_mov), '-', LPAD(cb.id, 4, '0')) as codigo,
-  cb.fecha_mov as fechaMovimiento,
-  cb.glosa,
-  cb.monto as monto,
+  CONCAT('CONC-', YEAR(cb.fecha_movimiento), '-', LPAD(cb.id, 4, '0')) as code,
+  cb.fecha_movimiento as movementDate,
+  cb.descripcion,
+  cb.monto as amount,
   CASE
-    WHEN cb.monto > 0 THEN 'credito'
-    WHEN cb.monto < 0 THEN 'debito'
-    ELSE 'otro'
-  END as tipo,
-  cb.referencia as referenciaBancaria,
-  c.razon_social as nombreComunidad,
+    WHEN cb.tipo = 'credito' THEN 'credit'
+    WHEN cb.tipo = 'debito' THEN 'debit'
+    ELSE cb.tipo
+  END as type,
+  cb.referencia_bancaria as bankReference,
+  c.razon_social as communityName,
   cb.created_at
 FROM conciliacion_bancaria cb
 JOIN comunidad c ON cb.comunidad_id = c.id
-WHERE cb.estado = 'pendiente'
-  AND cb.comunidad_id = 1
-ORDER BY cb.fecha_mov ASC;
+WHERE cb.estado_conciliacion = 'pendiente'
+  AND cb.comunidad_id = ?
+ORDER BY cb.fecha_movimiento ASC;
 
 -- ===========================================
 -- 7. CONCILIACIONES POR ESTADO
@@ -178,21 +179,21 @@ ORDER BY cb.fecha_mov ASC;
 -- ===========================================
 SELECT
   CASE
-    WHEN cb.estado = 'pendiente' THEN 'pendiente'
-    WHEN cb.estado = 'conciliado' THEN 'conciliado'
-    WHEN cb.estado = 'descartado' THEN 'diferencia'
-    ELSE 'pendiente'
-  END as estado,
-  COUNT(*) as cantidad,
-  SUM(cb.monto) as montoTotal,
-  AVG(cb.monto) as montoPromedio
+    WHEN cb.estado_conciliacion = 'pendiente' THEN 'pending'
+    WHEN cb.estado_conciliacion = 'conciliado' THEN 'reconciled'
+    WHEN cb.estado_conciliacion = 'diferencia' THEN 'difference'
+    ELSE 'pending'
+  END as status,
+  COUNT(*) as count,
+  SUM(cb.monto) as totalAmount,
+  AVG(cb.monto) as averageAmount
 FROM conciliacion_bancaria cb
-WHERE cb.comunidad_id = 1
-GROUP BY cb.estado
+WHERE cb.comunidad_id = ?
+GROUP BY cb.estado_conciliacion
 ORDER BY
-  CASE cb.estado
+  CASE cb.estado_conciliacion
     WHEN 'pendiente' THEN 1
-    WHEN 'descartado' THEN 2
+    WHEN 'diferencia' THEN 2
     WHEN 'conciliado' THEN 3
     ELSE 4
   END;
@@ -203,22 +204,18 @@ ORDER BY
 -- ===========================================
 SELECT
   CASE
-    WHEN cb.monto > 0 THEN 'credito'
-    WHEN cb.monto < 0 THEN 'debito'
-    ELSE 'otro'
-  END as tipo,
-  COUNT(*) as cantidad,
-  SUM(cb.monto) as montoTotal,
-  AVG(cb.monto) as montoPromedio,
-  COUNT(CASE WHEN cb.estado = 'conciliado' THEN 1 END) as cantidadConciliada
+    WHEN cb.tipo = 'credito' THEN 'credit'
+    WHEN cb.tipo = 'debito' THEN 'debit'
+    ELSE cb.tipo
+  END as type,
+  COUNT(*) as count,
+  SUM(cb.monto) as totalAmount,
+  AVG(cb.monto) as averageAmount,
+  COUNT(CASE WHEN cb.estado_conciliacion = 'conciliado' THEN 1 END) as reconciledCount
 FROM conciliacion_bancaria cb
-WHERE cb.comunidad_id = 1
-GROUP BY CASE
-    WHEN cb.monto > 0 THEN 'credito'
-    WHEN cb.monto < 0 THEN 'debito'
-    ELSE 'otro'
-  END
-ORDER BY montoTotal DESC;
+WHERE cb.comunidad_id = ?
+GROUP BY cb.tipo
+ORDER BY totalAmount DESC;
 
 -- ===========================================
 -- 9. MOVIMIENTOS CON DIFERENCIAS
@@ -226,25 +223,25 @@ ORDER BY montoTotal DESC;
 -- ===========================================
 SELECT
   cb.id,
-  CONCAT('CONC-', YEAR(cb.fecha_mov), '-', LPAD(cb.id, 4, '0')) as codigo,
-  cb.fecha_mov as fechaMovimiento,
-  cb.glosa,
-  cb.monto as montoBancario,
-  p.monto as montoPago,
-  (cb.monto - COALESCE(p.monto, 0)) as diferencia,
+  CONCAT('CONC-', YEAR(cb.fecha_movimiento), '-', LPAD(cb.id, 4, '0')) as code,
+  cb.fecha_movimiento as movementDate,
+  cb.descripcion,
+  cb.monto as bankAmount,
+  p.monto as paymentAmount,
+  (cb.monto - COALESCE(p.monto, 0)) as difference,
   CASE
-    WHEN cb.monto > 0 THEN 'credito'
-    WHEN cb.monto < 0 THEN 'debito'
-    ELSE 'otro'
-  END as tipo,
-  cb.referencia as referenciaBancaria,
-  p.referencia as referenciaPago,
-  c.razon_social as nombreComunidad
+    WHEN cb.tipo = 'credito' THEN 'credit'
+    WHEN cb.tipo = 'debito' THEN 'debit'
+    ELSE cb.tipo
+  END as type,
+  cb.referencia_bancaria as bankReference,
+  p.referencia as paymentReference,
+  c.razon_social as communityName
 FROM conciliacion_bancaria cb
 LEFT JOIN pago p ON cb.pago_id = p.id
 JOIN comunidad c ON cb.comunidad_id = c.id
-WHERE cb.estado = 'descartado'
-  AND cb.comunidad_id = 1
+WHERE cb.estado_conciliacion = 'diferencia'
+  AND cb.comunidad_id = ?
 ORDER BY ABS(cb.monto - COALESCE(p.monto, 0)) DESC;
 
 -- ===========================================
@@ -252,50 +249,50 @@ ORDER BY ABS(cb.monto - COALESCE(p.monto, 0)) DESC;
 -- Consulta de conciliaciones agrupadas por mes/año
 -- ===========================================
 SELECT
-  YEAR(cb.fecha_mov) as ano,
-  MONTH(cb.fecha_mov) as mes,
-  DATE_FORMAT(cb.fecha_mov, '%Y-%m') as periodo,
-  COUNT(*) as totalMovimientos,
-  SUM(cb.monto) as montoTotal,
-  COUNT(CASE WHEN cb.estado = 'conciliado' THEN 1 END) as cantidadConciliada,
-  COUNT(CASE WHEN cb.estado = 'descartado' THEN 1 END) as cantidadDiferencia,
-  COUNT(CASE WHEN cb.estado = 'pendiente' THEN 1 END) as cantidadPendiente,
+  YEAR(cb.fecha_movimiento) as year,
+  MONTH(cb.fecha_movimiento) as month,
+  DATE_FORMAT(cb.fecha_movimiento, '%Y-%m') as period,
+  COUNT(*) as totalMovements,
+  SUM(cb.monto) as totalAmount,
+  COUNT(CASE WHEN cb.estado_conciliacion = 'conciliado' THEN 1 END) as reconciledCount,
+  COUNT(CASE WHEN cb.estado_conciliacion = 'diferencia' THEN 1 END) as differenceCount,
+  COUNT(CASE WHEN cb.estado_conciliacion = 'pendiente' THEN 1 END) as pendingCount,
   ROUND(
-    (COUNT(CASE WHEN cb.estado = 'conciliado' THEN 1 END) * 100.0) / COUNT(*),
+    (COUNT(CASE WHEN cb.estado_conciliacion = 'conciliado' THEN 1 END) * 100.0) / COUNT(*),
     2
-  ) as porcentajeConciliacion
+  ) as reconciliationPercentage
 FROM conciliacion_bancaria cb
-WHERE cb.comunidad_id = 1
-GROUP BY YEAR(cb.fecha_mov), MONTH(cb.fecha_mov), DATE_FORMAT(cb.fecha_mov, '%Y-%m')
-ORDER BY ano DESC, mes DESC;
+WHERE cb.comunidad_id = ?
+GROUP BY YEAR(cb.fecha_movimiento), MONTH(cb.fecha_movimiento), DATE_FORMAT(cb.fecha_movimiento, '%Y-%m')
+ORDER BY year DESC, month DESC;
 
 -- ===========================================
 -- 11. SALDOS BANCARIOS VS CONTABLES
 -- Comparación de saldos bancarios contra registros contables
 -- ===========================================
 SELECT
-  YEAR(cb.fecha_mov) as ano,
-  MONTH(cb.fecha_mov) as mes,
-  DATE_FORMAT(cb.fecha_mov, '%Y-%m') as periodo,
+  YEAR(cb.fecha_movimiento) as year,
+  MONTH(cb.fecha_movimiento) as month,
+  DATE_FORMAT(cb.fecha_movimiento, '%Y-%m') as period,
   -- Saldos bancarios
-  SUM(CASE WHEN cb.monto > 0 THEN cb.monto ELSE 0 END) as creditosBancarios,
-  SUM(CASE WHEN cb.monto < 0 THEN cb.monto ELSE 0 END) as debitosBancarios,
+  SUM(CASE WHEN cb.tipo = 'credito' THEN cb.monto ELSE 0 END) as bankCredits,
+  SUM(CASE WHEN cb.tipo = 'debito' THEN cb.monto ELSE 0 END) as bankDebits,
   (
-    SUM(CASE WHEN cb.monto > 0 THEN cb.monto ELSE 0 END) -
-    SUM(CASE WHEN cb.monto < 0 THEN cb.monto ELSE 0 END)
-  ) as saldoBancario,
+    SUM(CASE WHEN cb.tipo = 'credito' THEN cb.monto ELSE 0 END) -
+    SUM(CASE WHEN cb.tipo = 'debito' THEN cb.monto ELSE 0 END)
+  ) as bankBalance,
   -- Saldos contables (pagos)
-  COALESCE(SUM(p.monto), 0) as pagosContables,
+  COALESCE(SUM(p.monto), 0) as bookPayments,
   -- Diferencias
   (
-    SUM(CASE WHEN cb.monto > 0 THEN cb.monto ELSE 0 END) -
-    SUM(CASE WHEN cb.monto < 0 THEN cb.monto ELSE 0 END)
-  ) - COALESCE(SUM(p.monto), 0) as diferencia
+    SUM(CASE WHEN cb.tipo = 'credito' THEN cb.monto ELSE 0 END) -
+    SUM(CASE WHEN cb.tipo = 'debito' THEN cb.monto ELSE 0 END)
+  ) - COALESCE(SUM(p.monto), 0) as difference
 FROM conciliacion_bancaria cb
 LEFT JOIN pago p ON cb.pago_id = p.id AND p.estado = 'aplicado'
-WHERE cb.comunidad_id = 1
-GROUP BY YEAR(cb.fecha_mov), MONTH(cb.fecha_mov), DATE_FORMAT(cb.fecha_mov, '%Y-%m')
-ORDER BY ano DESC, mes DESC;
+WHERE cb.comunidad_id = ?
+GROUP BY YEAR(cb.fecha_movimiento), MONTH(cb.fecha_movimiento), DATE_FORMAT(cb.fecha_movimiento, '%Y-%m')
+ORDER BY year DESC, month DESC;
 
 -- ===========================================
 -- 12. VALIDACIÓN DE CONCILIACIONES
@@ -304,19 +301,21 @@ ORDER BY ano DESC, mes DESC;
 SELECT
   cb.id,
   CASE
-    WHEN cb.comunidad_id IS NULL THEN 'Falta referencia de comunidad'
-    WHEN cb.fecha_mov IS NULL THEN 'Falta fecha de movimiento'
-    WHEN cb.monto = 0 THEN 'Monto inválido'
-    WHEN cb.estado NOT IN ('pendiente', 'conciliado', 'descartado') THEN 'Estado de conciliación inválido'
-    ELSE 'Valido'
-  END as estado_validacion,
+    WHEN cb.comunidad_id IS NULL THEN 'Missing community reference'
+    WHEN cb.fecha_movimiento IS NULL THEN 'Missing movement date'
+    WHEN cb.monto = 0 THEN 'Invalid amount'
+    WHEN cb.tipo NOT IN ('credito', 'debito') THEN 'Invalid movement type'
+    WHEN cb.estado_conciliacion NOT IN ('pendiente', 'conciliado', 'diferencia') THEN 'Invalid reconciliation status'
+    ELSE 'Valid'
+  END as validation_status,
   cb.monto,
-  cb.fecha_mov,
-  cb.estado,
-  CASE WHEN cb.pago_id IS NOT NULL THEN 'Vinculado' ELSE 'Sin vincular' END as estado_vinculacion_pago
+  cb.fecha_movimiento,
+  cb.tipo,
+  cb.estado_conciliacion,
+  CASE WHEN cb.pago_id IS NOT NULL THEN 'Linked' ELSE 'Unlinked' END as payment_link_status
 FROM conciliacion_bancaria cb
 WHERE cb.comunidad_id = ?
-HAVING estado_validacion != 'Valido'
+HAVING validation_status != 'Valid'
 ORDER BY cb.id;
 
 -- ===========================================
@@ -325,71 +324,71 @@ ORDER BY cb.id;
 -- ===========================================
 SELECT
   cb.id,
-  CONCAT('CONC-', YEAR(cb.fecha_mov), '-', LPAD(cb.id, 4, '0')) as codigo,
-  cb.fecha_mov as fechaMovimiento,
-  cb.glosa,
-  cb.monto as monto,
+  CONCAT('CONC-', YEAR(cb.fecha_movimiento), '-', LPAD(cb.id, 4, '0')) as code,
+  cb.fecha_movimiento as movementDate,
+  cb.descripcion,
+  cb.monto as amount,
   CASE
-    WHEN cb.monto > 0 THEN 'credito'
-    WHEN cb.monto < 0 THEN 'debito'
-    ELSE 'otro'
-  END as tipo,
-  cb.referencia as referenciaBancaria,
+    WHEN cb.tipo = 'credito' THEN 'credit'
+    WHEN cb.tipo = 'debito' THEN 'debit'
+    ELSE cb.tipo
+  END as type,
+  cb.referencia_bancaria as bankReference,
   CASE
-    WHEN cb.estado = 'pendiente' THEN 'pendiente'
-    WHEN cb.estado = 'conciliado' THEN 'conciliado'
-    WHEN cb.estado = 'descartado' THEN 'diferencia'
-    ELSE 'pendiente'
-  END as estadoConciliacion,
-  c.razon_social as nombreComunidad,
+    WHEN cb.estado_conciliacion = 'pendiente' THEN 'pending'
+    WHEN cb.estado_conciliacion = 'conciliado' THEN 'reconciled'
+    WHEN cb.estado_conciliacion = 'diferencia' THEN 'difference'
+    ELSE 'pending'
+  END as reconciliationStatus,
+  c.razon_social as communityName,
   cb.created_at
 FROM conciliacion_bancaria cb
 JOIN comunidad c ON cb.comunidad_id = c.id
 WHERE cb.pago_id IS NULL
   AND cb.comunidad_id = ?
-ORDER BY cb.fecha_mov DESC;
+ORDER BY cb.fecha_movimiento DESC;
 
 -- ===========================================
 -- 14. ANÁLISIS DE PRECISIÓN DE CONCILIACIÓN
 -- Estadísticas de precisión por período
 -- ===========================================
 SELECT
-  YEAR(cb.fecha_mov) as ano,
-  MONTH(cb.fecha_mov) as mes,
-  DATE_FORMAT(cb.fecha_mov, '%Y-%m') as periodo,
-  COUNT(*) as totalMovimientos,
-  COUNT(CASE WHEN cb.estado = 'conciliado' THEN 1 END) as movimientosConciliados,
-  COUNT(CASE WHEN cb.estado = 'descartado' THEN 1 END) as movimientosDiferencia,
+  YEAR(cb.fecha_movimiento) as year,
+  MONTH(cb.fecha_movimiento) as month,
+  DATE_FORMAT(cb.fecha_movimiento, '%Y-%m') as period,
+  COUNT(*) as totalMovements,
+  COUNT(CASE WHEN cb.estado_conciliacion = 'conciliado' THEN 1 END) as reconciledMovements,
+  COUNT(CASE WHEN cb.estado_conciliacion = 'diferencia' THEN 1 END) as differenceMovements,
   ROUND(
-    (COUNT(CASE WHEN cb.estado = 'conciliado' THEN 1 END) * 100.0) / COUNT(*),
+    (COUNT(CASE WHEN cb.estado_conciliacion = 'conciliado' THEN 1 END) * 100.0) / COUNT(*),
     2
-  ) as porcentajePrecision,
-  AVG(ABS(cb.monto - COALESCE(p.monto, 0))) as diferenciaPromedio,
-  MAX(ABS(cb.monto - COALESCE(p.monto, 0))) as diferenciaMaxima
+  ) as accuracyPercentage,
+  AVG(ABS(cb.monto - COALESCE(p.monto, 0))) as averageDifference,
+  MAX(ABS(cb.monto - COALESCE(p.monto, 0))) as maxDifference
 FROM conciliacion_bancaria cb
 LEFT JOIN pago p ON cb.pago_id = p.id
 WHERE cb.comunidad_id = ?
-GROUP BY YEAR(cb.fecha_mov), MONTH(cb.fecha_mov), DATE_FORMAT(cb.fecha_mov, '%Y-%m')
-ORDER BY ano DESC, mes DESC;
+GROUP BY YEAR(cb.fecha_movimiento), MONTH(cb.fecha_movimiento), DATE_FORMAT(cb.fecha_movimiento, '%Y-%m')
+ORDER BY year DESC, month DESC;
 
 -- ===========================================
 -- 15. RESUMEN DE CONCILIACIONES POR COMUNIDAD
 -- Vista consolidada de todas las conciliaciones por comunidad
 -- ===========================================
 SELECT
-  c.razon_social as nombreComunidad,
-  COUNT(cb.id) as totalMovimientos,
-  COUNT(CASE WHEN cb.estado = 'conciliado' THEN 1 END) as movimientosConciliados,
-  COUNT(CASE WHEN cb.estado = 'pendiente' THEN 1 END) as movimientosPendientes,
-  COUNT(CASE WHEN cb.estado = 'descartado' THEN 1 END) as movimientosDiferencia,
-  SUM(cb.monto) as montoBancarioTotal,
-  COUNT(DISTINCT p.id) as pagosVinculados,
+  c.razon_social as communityName,
+  COUNT(cb.id) as totalMovements,
+  COUNT(CASE WHEN cb.estado_conciliacion = 'conciliado' THEN 1 END) as reconciledMovements,
+  COUNT(CASE WHEN cb.estado_conciliacion = 'pendiente' THEN 1 END) as pendingMovements,
+  COUNT(CASE WHEN cb.estado_conciliacion = 'diferencia' THEN 1 END) as differenceMovements,
+  SUM(cb.monto) as totalBankAmount,
+  COUNT(DISTINCT p.id) as linkedPayments,
   ROUND(
-    (COUNT(CASE WHEN cb.estado = 'conciliado' THEN 1 END) * 100.0) / COUNT(cb.id),
+    (COUNT(CASE WHEN cb.estado_conciliacion = 'conciliado' THEN 1 END) * 100.0) / COUNT(cb.id),
     2
-  ) as tasaConciliacion,
-  MIN(cb.fecha_mov) as movimientoMasAntiguo,
-  MAX(cb.fecha_mov) as movimientoMasNuevo
+  ) as reconciliationRate,
+  MIN(cb.fecha_movimiento) as oldestMovement,
+  MAX(cb.fecha_movimiento) as newestMovement
 FROM comunidad c
 LEFT JOIN conciliacion_bancaria cb ON c.id = cb.comunidad_id
 LEFT JOIN pago p ON cb.pago_id = p.id

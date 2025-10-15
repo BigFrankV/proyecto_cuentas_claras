@@ -148,22 +148,8 @@ Para detalles de cada endpoint revisa:
 
 ## Base de datos y seeds
 
-- Los scripts SQL están en `ccbackend/base/BBDD+pob_datos/`
-- **Inicialización automática**: Docker carga automáticamente `01_cuentasclaras.sql` al iniciar
-- Para resetear la BD: ejecuta `reset_database.bat` (Windows) o `reset_database.ps1` (PowerShell)
-- Ver documentación completa: [GUIA_BASE_DATOS_DOCKER.md](./GUIA_BASE_DATOS_DOCKER.md)
-
-### 🔄 Sincronizar base de datos entre desarrolladores
-
-```bash
-# Opción 1: Usar script automatizado (Windows)
-reset_database.bat
-
-# Opción 2: Comandos manuales
-docker-compose down
-docker volume rm proyecto_cuentas_claras_db_data
-docker-compose up -d
-```
+- Los scripts SQL y seeds están en `ccbackend/base/` (por ejemplo `schema.sql`, `cuentasclaras.sql`, `z_seed_appdata.sql`).
+- Hay un script para crear superadmin: `create_superadmin.sql`.
 
 ## Variables de entorno
 
