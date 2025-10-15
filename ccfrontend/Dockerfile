@@ -27,8 +27,8 @@ WORKDIR /app
 # Copy built static files
 COPY --from=builder /app/out /usr/share/nginx/html
 
-# Copy custom nginx config to listen on port 5173
-RUN echo 'server { listen 5173; root /usr/share/nginx/html; index index.html; try_files $uri $uri/ /index.html; }' > /etc/nginx/conf.d/default.conf
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose the port
 EXPOSE 5173
