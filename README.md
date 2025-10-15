@@ -1,220 +1,324 @@
-# Cuentas Claras - Proyecto
+# 🏢 Cuentas Claras - Frontend
 
-Este repositorio contiene la aplicación "Cuentas Claras": un sistema para gestión de comunidades, cobros, pagos y documentación asociado a edificios/unidades. Incluye un backend en Node.js/Express (ccbackend) y un frontend en React + TypeScript (ccfrontend). Este README resume características, tecnologías, endpoints principales, estructura del proyecto y cómo ejecutar y desarrollar localmente.
+Sistema moderno de administración de comunidades desarrollado con Next.js, TypeScript y React. Incluye dashboard interactivo con gráficos, gestión completa de gastos, pagos, medidores y más.
 
-## Checklist de requisitos
-- [x] Documentar las características generales de la aplicación
-- [x] Listar endpoints y rutas principales del backend
-- [x] Listar tecnologías utilizadas en frontend y backend
-- [x] Indicar estructura de carpetas y archivos relevantes
-- [x] Documentar mejoras recientes del frontend (diseño moderno, rutas dinámicas, UX/UI)
+## 🌟 Características Principales
 
-## Resumen rápido
+- ✅ **Dashboard Interactivo** con Chart.js y visualizaciones en tiempo real
+- 🏘️ **Gestión de Comunidades** - Edificios, torres, unidades y residentes
+- 💰 **Control Financiero** - Gastos, cargos, pagos y estados de cuenta
+- 📊 **Reportes y Analytics** - Tendencias, estadísticas y análisis
+- 🔧 **Medidores y Consumos** - Lecturas de agua, luz y gas
+- 👥 **Gestión de Usuarios** - Residentes, proveedores y administradores
+- 📱 **Diseño Responsivo** - Optimizado para móviles y tablets
+- 🔐 **Autenticación JWT** - Sistema seguro de login y permisos
 
-- Backend: API REST construida con Node.js y Express; ORM Sequelize para base de datos relacional, Redis para caché/sesiones, Swagger para documentación de API y utilidades como envío de correo y subida de archivos.
-- Frontend: Aplicación SPA con React + TypeScript y Vite; consumo de API vía Axios; componentes reutilizables para CRUD y páginas para administración y usuario.
-- Contenedores: Docker y docker-compose preparados para despliegue local y en entornos.
+## 🛠️ Stack Tecnológico
 
-## Características principales
+- **Framework:** Next.js 14 (App Router)
+- **Lenguaje:** TypeScript 5.2+
+- **UI Library:** React 18
+- **Styling:** Bootstrap 5.3.2 + CSS Custom Properties
+- **Charts:** Chart.js 4.4.0 + react-chartjs-2
+- **State Management:** React Context + Custom Hooks
+- **HTTP Client:** Axios
+- **Authentication:** JWT + LocalStorage
+- **Testing:** Jest + React Testing Library
+- **Code Quality:** ESLint + Prettier + Husky
 
-- Gestión de comunidades, edificios, torres, unidades y personas.
-- Gestión de cobranzas: cargos, pagos, emisiones y conciliaciones.
-- Control de gastos: gastos, categorías, centros de costo y proveedores.
-- Gestión de servicios y recursos: medidores, tarifas de consumo, amenidades y reservas.
-- Manejo de documentos: documentos de compra y soporte (subida/descarga).
-- Administración de usuarios y roles (autenticación y autorización).
-- API documentada con Swagger (archivo `src/swagger.js` en backend).
+## 📁 Estructura del Proyecto
 
-## Tecnologías
-
-- Backend (carpeta `ccbackend`):
-  - Node.js
-  - Express
-  - Sequelize (ORM) + SQL (scripts en `ccbackend/base/`)
-  - Redis (cliente en `src/redisClient.js`)
-  - Swagger (documentación)
-  - Multer / upload utilities (`src/upload.js`) para ficheros
-  - Nodemailer / mailer utilities (`src/mailer.js`)
-  - Testing: tests en `ccbackend/test` (p.ej. `health.test.js`)
-  - Docker (Dockerfile y docker-compose)
-
-- Frontend (carpeta `ccfrontend`):
-  - React + TypeScript + Next.js Pages Router
-  - Vite (bundler / dev server)
-  - Bootstrap 5 + CSS custom properties
-  - Material Icons para interfaz coherente
-  - Axios (cliente HTTP, `src/http/axios.ts`)
-  - Context API para autenticación (`src/auth/AuthContext.tsx`)
-  - Componentes CRUD genéricos (`src/components/GenericCrud.tsx`)
-  - CSS Grid & Flexbox para layouts modernos
-  - Animaciones CSS con cubic-bezier transitions
-  - Diseño responsivo mobile-first
-  - Docker (Dockerfile y docker-compose)
-
-## Mejoras Recientes del Frontend
-
-### 🎨 Sistema de Diseño Moderno
-- **Botones profesionales**: Implementación de sistema `fine-actions-panel` con gradientes lineales, sombras avanzadas y animaciones suaves
-- **Paleta de colores**: Variables CSS personalizadas (`--color-primary`, `--radius`) para consistencia visual
-- **Animaciones modernas**: Transiciones `cubic-bezier` y efectos hover con transformaciones 3D
-- **Iconos actualizados**: Migración a Material Icons más específicos (`credit_card`, `send`, `edit_document`, `delete_sweep`)
-
-### 🛣️ Rutas y Navegación
-- **Rutas dinámicas**: Implementación de Next.js Pages Router con rutas parametrizadas (`pages/multa-detalle/[id].tsx`)
-- **Navegación fluida**: Sistema de breadcrumbs y navegación contextual
-- **Protección de rutas**: Componentes de autenticación y autorización integrados
-
-### 📱 Diseño Responsivo
-- **Mobile-first**: Diseño adaptativo que funciona en todos los tamaños de pantalla
-- **Breakpoints inteligentes**: Adaptación automática para móviles (576px), tablets (768px) y desktop
-- **Componentes flexibles**: Layouts que se ajustan dinámicamente al contenido
-
-### 🧩 Componentes Mejorados
-- **Multas**: Página de detalle completamente rediseñada con paneles de acciones jerárquicas
-- **Estados visuales**: Badges de estado con colores semánticos (pendiente, pagada, vencida, apelada)
-- **Formularios modales**: Diálogos para registro de pagos y edición de multas
-- **Tabulación**: Sistema de pestañas para organización de información (Información General, Evidencia, Pagos, Apelaciones, Comunicaciones)
-
-### 🎯 Mejoras de UX/UI
-- **Jerarquía visual**: Botones primarios prominentes y secundarios diferenciados
-- **Feedback visual**: Estados hover, active y focus con animaciones sutiles
-- **Accesibilidad**: Contraste adecuado y navegación por teclado
-- **Legibilidad**: Corrección de problemas de contraste (botones outline → botones sólidos)
-
-### 🛠️ Tecnologías Adicionales
-- **Bootstrap 5**: Framework CSS integrado con clases personalizadas
-- **CSS Grid & Flexbox**: Layouts modernos y flexibles
-- **CSS Custom Properties**: Variables para temas y colores consistentes
-- **Material Icons**: Biblioteca de iconos para interfaz coherente
-
-## Estructura principal del repositorio
-
-- `ccbackend/` - API server
-  - `src/` - código del servidor: `index.js`, `db.js`, `sequelize.js`, `swagger.js`, `upload.js`, `mailer.js`
-  - `src/routes/` - rutas de la API (many resources)
-  - `base/` - scripts SQL y seeds
-  - `test/` - tests
-  - `Dockerfile`, `docker-compose.yml`, `package.json`
-- `ccfrontend/` - cliente React + TypeScript
-  - `src/` - aplicación: `App.tsx`, `main.tsx`, `api/`, `auth/`, `pages/`, `components/`, `http/axios.ts`
-  - `pages/` - rutas Next.js incluyendo dinámicas (`multa-detalle/[id].tsx`)
-  - `components/` - componentes reutilizables (MultaDetallePage, Layout, etc.)
-  - `styles/` - CSS modular con variables personalizadas y animaciones
-  - `Dockerfile`, `docker-compose.yml`, `package.json`, `vite.config.ts`
-- `docker-compose.yml` en la raíz para orquestar ambos servicios (si aplica)
-
-## Endpoints principales (resumen)
-
-El backend expone una API REST con rutas agrupadas por recurso. A continuación se listan las rutas principales encontradas en `ccbackend/src/routes` (prefijo común: `/api` o similar dependiendo de la configuración en `src/index.js`):
-
-- /auth - Autenticación y gestión de sesión (login, refresh, logout, registro)
-- /personas - CRUD y búsqueda de personas / propietarios / residentes
-- /comunidades - Gestión de comunidades
-- /edificios - Gestión de edificios
-- /torres - Gestión de torres dentro de edificios
-- /unidades - Unidades (departamentos) y su info
-- /cargos - Cargos/line items para facturación
-- /emisiones - Emisiones/periodos de cobro
-- /pagos - Registro y consulta de pagos
-- /conciliaciones - Conciliaciones bancarias / pagos
-- /gastos - Registro y consulta de gastos
-- /categoriasGasto - Categorías de gastos
-- /centrosCosto - Centros de costo
-- /proveedores - Gestión de proveedores
-- /documentosCompra - Subida / descarga / listado de documentos de compra
-- /medidores - Lecturas y medidores (consumo)
-- /tarifasConsumo - Tarifas aplicadas a consumos
-- /amenidades - Gestión de amenidades y reservas
-- /membresias - Gestión de membresías (si aplica)
-- /multas - Registro de multas y sanciones
-- /soporte - Tickets y bitácora de soporte
-- /webhooks - Endpoints para integraciones externas
-- /util - Utilidades varias (p. ej. healthcheck)
-
-Nota: la ruta raíz exacta (por ejemplo `/api/*`) depende del enrutado definido en `ccbackend/src/index.js` o `ccbackend/src/routes/util.js`.
-
-### Ejemplo de endpoints comunes
-
-- POST /auth/login -> Autenticar usuario
-- POST /auth/register -> Registrar nuevo usuario (si habilitado)
-- GET /comunidades -> Listar comunidades
-- GET /comunidades/:id -> Obtener comunidad por id
-- POST /unidades -> Crear unidad
-- GET /pagos?unidadId=... -> Listar pagos de una unidad
-- POST /documentosCompra -> Subir documento (multipart/form-data)
-
-Para detalles de cada endpoint revisa:
-- `ccbackend/endpoints.md` (si existe) y los ficheros en `ccbackend/src/routes/`.
-
-## Base de datos y seeds
-
-- Los scripts SQL y seeds están en `ccbackend/base/` (por ejemplo `schema.sql`, `cuentasclaras.sql`, `z_seed_appdata.sql`).
-- Hay un script para crear superadmin: `create_superadmin.sql`.
-
-## Variables de entorno
-
-- El proyecto incluye plantillas `.env.example` en `ccbackend` y `ccfrontend`. Variables típicas:
-  - BACKEND_PORT, DB_HOST, DB_USER, DB_PASS, DB_NAME
-  - REDIS_URL
-  - JWT_SECRET
-  - SMTP_* (configuración de correo)
-  - VITE_... (en frontend para URL de API)
-
-Configura estas variables antes de ejecutar localmente o mediante Docker compose.
-
-## Desarrollo local (resumen)
-
-Usando Docker (recomendado):
-
-1. Copia los archivos `.env` desde `.env.example` y ajusta valores.
-2. En la raíz (o en las carpetas `ccbackend`/`ccfrontend`) ejecuta:
-
-```bash
-docker-compose up --build
+```
+react/
+├── components/           # Componentes reutilizables
+│   ├── layout/          # Componentes de layout (Sidebar, Navbar)
+│   └── ui/              # Componentes de UI (Cards, Charts, etc.)
+├── pages/               # Páginas de Next.js (routing automático)
+│   ├── api/            # API Routes de Next.js
+│   ├── _app.tsx        # Configuración global de la app
+│   ├── _document.tsx   # Configuración del documento HTML
+│   ├── dashboard.tsx   # Dashboard principal
+│   └── login.tsx       # Página de login
+├── public/             # Archivos estáticos
+├── styles/             # Archivos CSS
+│   ├── globals.css     # Estilos globales
+│   └── components.css  # Estilos de componentes
+├── lib/                # Utilidades y helpers
+├── __tests__/          # Tests unitarios
+├── package.json        # Dependencias y scripts
+├── next.config.js      # Configuración de Next.js
+├── tsconfig.json       # Configuración de TypeScript
+├── jest.config.js      # Configuración de Jest
+└── README.md          # Este archivo
 ```
 
-O bien levantar solo un servicio:
+## 🛠️ Instalación y Configuración
 
-```bash
-cd ccbackend
-docker-compose up --build
+### Prerrequisitos
 
-cd ../ccfrontend
-docker-compose up --build
+- Node.js 18.0.0 o superior
+- npm 8.0.0 o superior
+
+### Instalación
+
+1. **Instalar dependencias:**
+
+   ```bash
+   npm install
+   ```
+
+2. **Ejecutar en modo desarrollo:**
+
+   ```bash
+   npm run dev
+   ```
+
+3. **Abrir en el navegador:**
+   ```
+   http://localhost:5173
+   ```
+
+## 📜 Scripts Disponibles
+
+| Comando                 | Descripción                                      |
+| ----------------------- | ------------------------------------------------ |
+| `npm run dev`           | Ejecuta la aplicación en modo desarrollo         |
+| `npm run build`         | Construye la aplicación para producción          |
+| `npm run start`         | Ejecuta la aplicación en modo producción         |
+| `npm run lint`          | Ejecuta ESLint para revisar el código            |
+| `npm run lint:fix`      | Ejecuta ESLint y corrige errores automáticamente |
+| `npm run type-check`    | Verifica los tipos de TypeScript                 |
+| `npm run test`          | Ejecuta todos los tests                          |
+| `npm run test:watch`    | Ejecuta tests en modo watch                      |
+| `npm run test:coverage` | Ejecuta tests con reporte de cobertura           |
+| `npm run format`        | Formatea el código con Prettier                  |
+| `npm run format:check`  | Verifica el formateo del código                  |
+
+## 🏗️ Arquitectura y Patrones
+
+### Componentes
+
+```typescript
+// Ejemplo de componente funcional con TypeScript
+interface ComponentProps {
+  title: string
+  children: React.ReactNode
+}
+
+export default function Component({ title, children }: ComponentProps) {
+  return (
+    <div className="component">
+      <h2>{title}</h2>
+      {children}
+    </div>
+  )
+}
 ```
 
-Sin Docker (local):
+### Páginas Next.js
 
-Backend:
-1. Entrar a `ccbackend`.
-2. Instalar dependencias: `npm install`.
-3. Crear `.env` a partir de `.env.example`.
-4. Ejecutar migraciones / seeds con Sequelize o ejecutar los scripts SQL provistos.
-5. Iniciar: `npm start` o `npm run dev`.
+```typescript
+// pages/ejemplo.tsx
+import Layout from '@/components/layout/Layout'
 
-Frontend:
-1. Entrar a `ccfrontend`.
-2. `npm install`.
-3. Crear `.env` (p. ej. `VITE_API_URL=http://localhost:3000/api`).
-4. `npm run dev`.
+export default function EjemploPage() {
+  return (
+    <Layout title="Ejemplo - Cuentas Claras">
+      <div className="container-fluid p-4">
+        <h1>Mi Página</h1>
+      </div>
+    </Layout>
+  )
+}
+```
 
-## Testing y verificación rápida
+### Routing
 
-- El backend tiene al menos un test de salud en `ccbackend/test/health.test.js`.
-- Ejecuta tests con el comando configurado en `ccbackend/package.json`, por ejemplo `npm test`.
+Next.js utiliza **file-based routing**:
 
-## Archivos importantes a revisar
+- `pages/dashboard.tsx` → `/dashboard`
+- `pages/usuarios/index.tsx` → `/usuarios`
+- `pages/usuarios/[id].tsx` → `/usuarios/123`
+- `pages/api/users.ts` → `/api/users`
 
-- `ccbackend/src/index.js` — Punto de entrada del servidor y configuración de rutas.
-- `ccbackend/src/routes/` — Implementación de endpoints por recurso.
-- `ccbackend/base/` — SQL y seeds.
-- `ccfrontend/src/pages/` — Páginas principales de la aplicación.
-- `ccfrontend/src/http/axios.ts` — Cliente HTTP configurado para consumir la API.
+## 🎨 Sistema de Diseño
 
-## Siguientes pasos recomendados
+### Variables CSS
 
-- Completar y revisar `ccbackend/endpoints.md` para documentación por endpoint.
-- Añadir ejemplos de request/responses o colección Postman (hay `postman/` en el repo).
-- Integrar CI que ejecute tests y linting.
+```css
+:root {
+  --color-primary: #0d47a1;
+  --color-secondary: #1976d2;
+  --color-accent: #fd5d14;
+  --border-radius: 0.375rem;
+  --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+```
+
+### Componentes Bootstrap + Custom
+
+- **Layout responsive** con sidebar y mobile navbar
+- **Cards** con gradientes y animaciones
+- **Tablas** con hover effects y estado activo
+- **Formularios** con validación visual
+- **Botones** con estados y variantes
+
+## 🧪 Testing
+
+### Configuración
+
+- **Jest** como test runner
+- **Testing Library** para testing de componentes React
+- **jsdom** como entorno de testing
+
+### Ejemplo de Test
+
+```typescript
+import { render, screen } from '@testing-library/react'
+import Component from '../Component'
+
+describe('Component', () => {
+  it('renders correctly', () => {
+    render(<Component title="Test" />)
+    expect(screen.getByText('Test')).toBeInTheDocument()
+  })
+})
+```
+
+### Ejecutar Tests
+
+```bash
+# Ejecutar todos los tests
+npm run test
+
+# Ejecutar tests en modo watch
+npm run test:watch
+
+# Generar reporte de cobertura
+npm run test:coverage
+```
+
+## 📱 Responsive Design
+
+### Breakpoints
+
+- **xs**: < 576px (móviles)
+- **sm**: ≥ 576px (móviles grandes)
+- **md**: ≥ 768px (tablets)
+- **lg**: ≥ 992px (laptops)
+- **xl**: ≥ 1200px (desktops)
+
+### Mobile-First
+
+```css
+/* Móvil primero */
+.component {
+  padding: 1rem;
+}
+
+/* Tablet y superior */
+@media (min-width: 768px) {
+  .component {
+    padding: 2rem;
+  }
+}
+```
+
+## 🔧 Configuración Avanzada
+
+### Variables de Entorno
+
+Crear `.env.local`:
+
+```bash
+NEXTAUTH_SECRET=tu-secreto-aqui
+NEXTAUTH_URL=http://localhost:5173
+API_BASE_URL=http://localhost:8000/api
+```
+
+### Configuración de TypeScript
+
+El proyecto incluye configuración estricta de TypeScript:
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node"
+  }
+}
+```
+
+## 🚀 Deployment
+
+### Vercel (Recomendado)
+
+```bash
+npm install -g vercel
+vercel --prod
+```
+
+### Build para Producción
+
+```bash
+npm run build
+npm run start
+```
+
+## 📚 Recursos y Documentación
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Documentation](https://react.dev)
+- [Bootstrap Documentation](https://getbootstrap.com/docs/5.3/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Jest Documentation](https://jestjs.io/docs/getting-started)
+
+## 🤝 Contribución
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📝 Notas de Desarrollo
+
+### Migrando desde HTML
+
+Para migrar las páginas HTML existentes:
+
+1. **Copiar el contenido** de la página HTML
+2. **Convertir a JSX** (className, onClick, etc.)
+3. **Extraer componentes** reutilizables
+4. **Añadir TypeScript types**
+5. **Implementar tests**
+
+### Agregando Nueva Página
+
+```typescript
+// pages/nueva-pagina.tsx
+import Layout from '@/components/layout/Layout'
+
+export default function NuevaPagina() {
+  return (
+    <Layout title="Nueva Página - Cuentas Claras">
+      {/* Tu contenido aquí */}
+    </Layout>
+  )
+}
+```
+
+### Performance Tips
+
+- Usar `next/image` para imágenes optimizadas
+- Implementar `getStaticProps` para contenido estático
+- Usar `dynamic imports` para componentes pesados
+- Implementar `React.memo` para componentes que no cambian
 
 ---
+
+**Versión:** 1.0.0  
+**Última actualización:** Septiembre 2025  
+**Mantenedor:** Equipo Cuentas Claras

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db
--- Generation Time: Oct 13, 2025 at 05:46 PM
+-- Generation Time: Oct 10, 2025 at 06:34 PM
 -- Server version: 8.0.43
 -- PHP Version: 8.3.26
 
@@ -135,13 +135,13 @@ INSERT INTO `auditoria` (`id`, `usuario_id`, `accion`, `tabla`, `registro_id`, `
 -- (See below for the actual view)
 --
 CREATE TABLE `bitacora_conserjeria` (
-`comunidad_id` bigint
-,`created_at` datetime
-,`detalle` varchar(1000)
-,`evento` varchar(150)
+`id` bigint
+,`comunidad_id` bigint
 ,`fecha_hora` datetime
-,`id` bigint
 ,`usuario_id` bigint
+,`evento` varchar(150)
+,`detalle` varchar(1000)
+,`created_at` datetime
 );
 
 -- --------------------------------------------------------
@@ -151,15 +151,15 @@ CREATE TABLE `bitacora_conserjeria` (
 -- (See below for the actual view)
 --
 CREATE TABLE `cargo_financiero_unidad` (
-`comunidad_id` bigint
-,`created_at` datetime
+`id` bigint
 ,`emision_id` bigint
-,`estado` enum('pendiente','pagado','vencido','parcial')
-,`id` bigint
-,`interes_acumulado` decimal(12,2)
+,`comunidad_id` bigint
+,`unidad_id` bigint
 ,`monto_total` decimal(12,2)
 ,`saldo` decimal(12,2)
-,`unidad_id` bigint
+,`estado` enum('pendiente','pagado','vencido','parcial')
+,`interes_acumulado` decimal(12,2)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -378,15 +378,15 @@ INSERT INTO `cuenta_cobro_unidad` (`id`, `emision_id`, `comunidad_id`, `unidad_i
 -- (See below for the actual view)
 --
 CREATE TABLE `detalle_cargo_unidad` (
-`cargo_unidad_id` bigint
+`id` bigint
+,`cargo_unidad_id` bigint
 ,`categoria_id` bigint
-,`created_at` datetime
 ,`glosa` varchar(250)
-,`id` bigint
-,`iva_incluido` tinyint(1)
 ,`monto` decimal(12,2)
 ,`origen` enum('gasto','multa','consumo','ajuste')
 ,`origen_id` bigint
+,`iva_incluido` tinyint(1)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -534,24 +534,6 @@ INSERT INTO `documento_comunidad` (`id`, `comunidad_id`, `tipo`, `titulo`, `url`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `documento_multa`
---
-
-CREATE TABLE `documento_multa` (
-  `id` bigint NOT NULL,
-  `multa_id` bigint NOT NULL,
-  `nombre_archivo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `ruta_archivo` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `tipo_archivo` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `tamanio_bytes` bigint DEFAULT NULL,
-  `descripcion` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `subido_por` bigint NOT NULL COMMENT 'usuario_id',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `edificio`
 --
 
@@ -621,13 +603,13 @@ INSERT INTO `emision_gastos_comunes` (`id`, `comunidad_id`, `periodo`, `fecha_ve
 -- (See below for the actual view)
 --
 CREATE TABLE `emision_gasto_comun` (
-`comunidad_id` bigint
-,`created_at` datetime
-,`estado` enum('borrador','emitido','cerrado','anulado')
-,`fecha_vencimiento` date
-,`id` bigint
-,`observaciones` varchar(500)
+`id` bigint
+,`comunidad_id` bigint
 ,`periodo` char(7)
+,`fecha_vencimiento` date
+,`estado` enum('borrador','emitido','cerrado','anulado')
+,`observaciones` varchar(500)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -638,14 +620,14 @@ CREATE TABLE `emision_gasto_comun` (
 -- (See below for the actual view)
 --
 CREATE TABLE `emision_gasto_detalle` (
-`categoria_id` bigint
-,`created_at` datetime
+`id` bigint
 ,`emision_id` bigint
 ,`gasto_id` bigint
-,`id` bigint
-,`metadata_json` longtext
+,`categoria_id` bigint
 ,`monto` decimal(12,2)
 ,`regla_prorrateo` enum('coeficiente','partes_iguales','consumo','fijo_por_unidad')
+,`metadata_json` longtext
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -657,20 +639,12 @@ CREATE TABLE `emision_gasto_detalle` (
 
 CREATE TABLE `gasto` (
   `id` bigint NOT NULL,
-  `numero` varchar(20) NOT NULL,
   `comunidad_id` bigint NOT NULL,
   `categoria_id` bigint NOT NULL,
   `centro_costo_id` bigint DEFAULT NULL,
   `documento_compra_id` bigint DEFAULT NULL,
   `fecha` date NOT NULL,
   `monto` decimal(12,2) NOT NULL,
-  `estado` enum('pendiente','aprobado','rechazado','anulado') NOT NULL DEFAULT 'pendiente' COMMENT 'Estado del gasto: pendiente, aprobado, rechazado, anulado',
-  `creado_por` bigint NOT NULL DEFAULT '1' COMMENT 'Usuario que creó el gasto',
-  `aprobado_por` bigint DEFAULT NULL COMMENT 'Usuario que aprobó el gasto',
-  `required_aprobaciones` int NOT NULL DEFAULT '1' COMMENT 'Número de aprobaciones requeridas',
-  `aprobaciones_count` int NOT NULL DEFAULT '0' COMMENT 'Contador de aprobaciones actuales',
-  `anulado_por` bigint DEFAULT NULL COMMENT 'Usuario que anuló el gasto',
-  `fecha_anulacion` datetime DEFAULT NULL COMMENT 'Fecha de anulación del gasto',
   `glosa` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `extraordinario` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -681,49 +655,17 @@ CREATE TABLE `gasto` (
 -- Dumping data for table `gasto`
 --
 
-INSERT INTO `gasto` (`id`, `numero`, `comunidad_id`, `categoria_id`, `centro_costo_id`, `documento_compra_id`, `fecha`, `monto`, `estado`, `creado_por`, `aprobado_por`, `required_aprobaciones`, `aprobaciones_count`, `anulado_por`, `fecha_anulacion`, `glosa`, `extraordinario`, `created_at`, `updated_at`) VALUES
-(1, '', 1, 1, 1, 1, '2025-09-01', 119000.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto Aseo Comunal', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(2, '', 2, 2, 2, 2, '2025-09-02', 59500.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Aporte a Fondo de Reserva', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(3, '', 3, 3, 3, 3, '2025-09-03', 89250.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto Extraordinario Jardinería', 1, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(4, '', 4, 4, 4, 4, '2025-09-04', 35700.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto Multa (no aplica a unidad)', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(5, '', 5, 5, 5, 5, '2025-09-05', 107100.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Consumo Común de Agua Caliente', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(6, '', 6, 6, 6, 6, '2025-09-06', 142800.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto Fijo Contabilidad', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(7, '', 7, 7, 7, 7, '2025-09-07', 95200.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Reparación de Motor de Ascensor', 1, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(8, '', 8, 8, 8, 8, '2025-09-08', 47600.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Compra de Materiales de Mantención', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(9, '', 9, 9, 9, 9, '2025-09-09', 178500.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto de Administración', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(10, '', 10, 10, 10, 10, '2025-09-10', 71400.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Consumo Electricidad Común', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `gasto_aprobacion`
---
-
-CREATE TABLE `gasto_aprobacion` (
-  `id` bigint NOT NULL,
-  `gasto_id` bigint NOT NULL,
-  `usuario_id` bigint NOT NULL COMMENT 'Usuario que aprueba/rechaza',
-  `rol_id` int NOT NULL COMMENT 'Rol con el que aprueba',
-  `accion` enum('aprobar','rechazar') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `historial_gasto`
---
-
-CREATE TABLE `historial_gasto` (
-  `id` bigint NOT NULL,
-  `gasto_id` bigint NOT NULL,
-  `usuario_id` bigint NOT NULL,
-  `campo_modificado` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `valor_anterior` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
-  `valor_nuevo` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+INSERT INTO `gasto` (`id`, `comunidad_id`, `categoria_id`, `centro_costo_id`, `documento_compra_id`, `fecha`, `monto`, `glosa`, `extraordinario`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 1, 1, '2025-09-01', 119000.00, 'Gasto Aseo Comunal', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(2, 2, 2, 2, 2, '2025-09-02', 59500.00, 'Aporte a Fondo de Reserva', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(3, 3, 3, 3, 3, '2025-09-03', 89250.00, 'Gasto Extraordinario Jardinería', 1, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(4, 4, 4, 4, 4, '2025-09-04', 35700.00, 'Gasto Multa (no aplica a unidad)', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(5, 5, 5, 5, 5, '2025-09-05', 107100.00, 'Consumo Común de Agua Caliente', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(6, 6, 6, 6, 6, '2025-09-06', 142800.00, 'Gasto Fijo Contabilidad', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(7, 7, 7, 7, 7, '2025-09-07', 95200.00, 'Reparación de Motor de Ascensor', 1, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(8, 8, 8, 8, 8, '2025-09-08', 47600.00, 'Compra de Materiales de Mantención', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(9, 9, 9, 9, 9, '2025-09-09', 178500.00, 'Gasto de Administración', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(10, 10, 10, 10, 10, '2025-09-10', 71400.00, 'Consumo Electricidad Común', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51');
 
 -- --------------------------------------------------------
 
@@ -805,10 +747,6 @@ CREATE TABLE `multa` (
   `descripcion` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `monto` decimal(12,2) NOT NULL,
   `estado` enum('pendiente','pagada','anulada') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'pendiente',
-  `prioridad` enum('baja','media','alta','critica') NOT NULL DEFAULT 'media' COMMENT 'Prioridad de la multa según gravedad',
-  `creada_por` bigint NOT NULL COMMENT 'usuario_id',
-  `aprobada_por` bigint DEFAULT NULL COMMENT 'usuario_id',
-  `fecha_aprobacion` datetime DEFAULT NULL,
   `fecha` date NOT NULL,
   `fecha_pago` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -819,55 +757,17 @@ CREATE TABLE `multa` (
 -- Dumping data for table `multa`
 --
 
-INSERT INTO `multa` (`id`, `comunidad_id`, `unidad_id`, `persona_id`, `motivo`, `descripcion`, `monto`, `estado`, `prioridad`, `creada_por`, `aprobada_por`, `fecha_aprobacion`, `fecha`, `fecha_pago`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 1, 'Mascota sin correa', NULL, 5000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-01', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
-(2, 2, 3, 3, 'Ruido excesivo', NULL, 15000.00, 'pagada', 'media', 1, NULL, NULL, '2025-09-02', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
-(3, 3, 4, 4, 'Bloqueo de acceso', NULL, 10000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-03', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
-(4, 4, 5, 5, 'Fumar en áreas comunes', NULL, 20000.00, 'anulada', 'media', 1, NULL, NULL, '2025-09-04', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
-(5, 5, 6, 6, 'Daño a propiedad común', NULL, 30000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-05', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
-(6, 6, 7, 7, 'Mascota peligrosa sin bozal', NULL, 12000.00, 'pagada', 'media', 1, NULL, NULL, '2025-09-06', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
-(7, 7, 8, 8, 'Uso no autorizado de ascensor', NULL, 8000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-07', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
-(8, 8, 9, 9, 'Dejar basura en pasillo', NULL, 6000.00, 'pagada', 'media', 1, NULL, NULL, '2025-09-08', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
-(9, 9, 10, 10, 'Instalación de antena sin permiso', NULL, 25000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-09', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
-(10, 10, 10, 10, 'Fiesta hasta tarde', NULL, 18000.00, 'pagada', 'media', 1, NULL, NULL, '2025-09-10', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `multa_apelacion`
---
-
-CREATE TABLE `multa_apelacion` (
-  `id` bigint NOT NULL,
-  `multa_id` bigint NOT NULL,
-  `usuario_id` bigint DEFAULT NULL COMMENT 'Usuario que presenta apelación',
-  `persona_id` bigint NOT NULL COMMENT 'Persona que apela',
-  `comunidad_id` bigint NOT NULL,
-  `fecha_apelacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `motivo_apelacion` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `estado` enum('pendiente','aceptada','rechazada') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'pendiente',
-  `resolucion` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
-  `fecha_resolucion` datetime DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `multa_historial`
---
-
-CREATE TABLE `multa_historial` (
-  `id` bigint NOT NULL,
-  `multa_id` bigint NOT NULL,
-  `usuario_id` bigint NOT NULL,
-  `accion` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `estado_anterior` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `estado_nuevo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+INSERT INTO `multa` (`id`, `comunidad_id`, `unidad_id`, `persona_id`, `motivo`, `descripcion`, `monto`, `estado`, `fecha`, `fecha_pago`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 1, 'Mascota sin correa', NULL, 5000.00, 'pendiente', '2025-09-01', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(2, 2, 3, 3, 'Ruido excesivo', NULL, 15000.00, 'pagada', '2025-09-02', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(3, 3, 4, 4, 'Bloqueo de acceso', NULL, 10000.00, 'pendiente', '2025-09-03', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(4, 4, 5, 5, 'Fumar en áreas comunes', NULL, 20000.00, 'anulada', '2025-09-04', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(5, 5, 6, 6, 'Daño a propiedad común', NULL, 30000.00, 'pendiente', '2025-09-05', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(6, 6, 7, 7, 'Mascota peligrosa sin bozal', NULL, 12000.00, 'pagada', '2025-09-06', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(7, 7, 8, 8, 'Uso no autorizado de ascensor', NULL, 8000.00, 'pendiente', '2025-09-07', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(8, 8, 9, 9, 'Dejar basura en pasillo', NULL, 6000.00, 'pagada', '2025-09-08', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(9, 9, 10, 10, 'Instalación de antena sin permiso', NULL, 25000.00, 'pendiente', '2025-09-09', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(10, 10, 10, 10, 'Fiesta hasta tarde', NULL, 18000.00, 'pagada', '2025-09-10', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15');
 
 -- --------------------------------------------------------
 
@@ -1252,17 +1152,17 @@ INSERT INTO `tarifa_consumo` (`id`, `comunidad_id`, `tipo`, `periodo_desde`, `pe
 -- (See below for the actual view)
 --
 CREATE TABLE `ticket` (
-`asignado_a` bigint
-,`attachments_json` longtext
-,`categoria` varchar(120)
+`id` bigint
 ,`comunidad_id` bigint
-,`created_at` datetime
+,`unidad_id` bigint
+,`categoria` varchar(120)
+,`titulo` varchar(200)
 ,`descripcion` varchar(1000)
 ,`estado` enum('abierto','en_progreso','resuelto','cerrado')
-,`id` bigint
 ,`prioridad` enum('baja','media','alta')
-,`titulo` varchar(200)
-,`unidad_id` bigint
+,`asignado_a` bigint
+,`attachments_json` longtext
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -1345,15 +1245,15 @@ INSERT INTO `titulares_unidad` (`id`, `comunidad_id`, `unidad_id`, `persona_id`,
 -- (See below for the actual view)
 --
 CREATE TABLE `titularidad_unidad` (
-`comunidad_id` bigint
-,`created_at` datetime
+`id` bigint
+,`comunidad_id` bigint
+,`unidad_id` bigint
+,`persona_id` bigint
+,`tipo` enum('propietario','arrendatario')
 ,`desde` date
 ,`hasta` date
-,`id` bigint
-,`persona_id` bigint
 ,`porcentaje` decimal(5,2)
-,`tipo` enum('propietario','arrendatario')
-,`unidad_id` bigint
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -1508,16 +1408,16 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id`, `persona_id`, `username`, `hash_password`, `email`, `activo`, `created_at`, `updated_at`, `is_superadmin`, `totp_secret`, `totp_enabled`) VALUES
-(1, 1, 'pquintanilla', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'pat.quintanilla@duocuc.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:39:18', 1, NULL, 0),
-(2, 2, 'erobledo', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'elisabet@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:17', 0, NULL, 0),
-(3, 3, 'dtrillo', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'dalila@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:18', 0, NULL, 0),
-(4, 4, 'isedano', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'isidora@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:18', 0, NULL, 0),
-(5, 5, 'smolins', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'sigfrido@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:18', 0, NULL, 0),
-(6, 6, 'jconserje', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'jose@conserje.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:19', 0, NULL, 0),
-(7, 7, 'jpiñol', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'jordi@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:19', 0, NULL, 0),
-(8, 8, 'fadmin', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'flora@admin.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:23', 0, NULL, 0),
-(9, 9, 'lalonsop', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'lina@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:24', 0, NULL, 0),
-(10, 10, 'abarros', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'alejandro@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:42', 0, NULL, 0);
+(1, 1, 'pquintanilla', '$2a$12$HASHED_PASSWORD_1', 'pat.quintanilla@duocuc.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:07:28', 1, NULL, 0),
+(2, 2, 'erobledo', '$2a$12$HASHED_PASSWORD_2', 'elisabet@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:07:28', 0, NULL, 0),
+(3, 3, 'dtrillo', '$2a$12$HASHED_PASSWORD_3', 'dalila@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:07:28', 0, NULL, 0),
+(4, 4, 'isedano', '$2a$12$HASHED_PASSWORD_4', 'isidora@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:07:28', 0, NULL, 0),
+(5, 5, 'smolins', '$2a$12$HASHED_PASSWORD_5', 'sigfrido@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:07:28', 0, NULL, 0),
+(6, 6, 'jconserje', '$2a$12$HASHED_PASSWORD_6', 'jose@conserje.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:07:28', 0, NULL, 0),
+(7, 7, 'jpiñol', '$2a$12$HASHED_PASSWORD_7', 'jordi@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:07:28', 0, NULL, 0),
+(8, 8, 'fadmin', '$2a$12$HASHED_PASSWORD_8', 'flora@admin.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:07:28', 0, NULL, 0),
+(9, 9, 'lalonsop', '$2a$12$HASHED_PASSWORD_9', 'lina@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:07:28', 0, NULL, 0),
+(10, 10, 'abarros', '$2a$12$HASHED_PASSWORD_10', 'alejandro@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:07:28', 0, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -1526,14 +1426,14 @@ INSERT INTO `usuario` (`id`, `persona_id`, `username`, `hash_password`, `email`,
 -- (See below for the actual view)
 --
 CREATE TABLE `usuario_miembro_comunidad` (
-`activo` tinyint(1)
+`id` bigint
 ,`comunidad_id` bigint
-,`created_at` datetime
-,`desde` date
-,`hasta` date
-,`id` bigint
 ,`persona_id` bigint
 ,`rol` varchar(50)
+,`desde` date
+,`hasta` date
+,`activo` tinyint(1)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -1742,14 +1642,6 @@ ALTER TABLE `documento_comunidad`
   ADD KEY `fk_docrepo_comunidad` (`comunidad_id`);
 
 --
--- Indexes for table `documento_multa`
---
-ALTER TABLE `documento_multa`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_documento_multa` (`multa_id`),
-  ADD KEY `fk_documento_multa_usuario` (`subido_por`);
-
---
 -- Indexes for table `edificio`
 --
 ALTER TABLE `edificio`
@@ -1768,31 +1660,10 @@ ALTER TABLE `emision_gastos_comunes`
 --
 ALTER TABLE `gasto`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_gasto_numero_comunidad` (`comunidad_id`,`numero`),
   ADD KEY `fk_gasto_comunidad` (`comunidad_id`),
   ADD KEY `fk_gasto_ccosto` (`centro_costo_id`),
   ADD KEY `fk_gasto_doc` (`documento_compra_id`),
-  ADD KEY `ix_gasto_categoria` (`categoria_id`),
-  ADD KEY `fk_gasto_anulado_por` (`anulado_por`),
-  ADD KEY `fk_gasto_aprobado_por` (`aprobado_por`),
-  ADD KEY `fk_gasto_creado_por` (`creado_por`);
-
---
--- Indexes for table `gasto_aprobacion`
---
-ALTER TABLE `gasto_aprobacion`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_aprobacion_gasto` (`gasto_id`),
-  ADD KEY `fk_aprobacion_usuario` (`usuario_id`),
-  ADD KEY `fk_aprobacion_rol` (`rol_id`);
-
---
--- Indexes for table `historial_gasto`
---
-ALTER TABLE `historial_gasto`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_historial_gasto` (`gasto_id`),
-  ADD KEY `fk_historial_usuario` (`usuario_id`);
+  ADD KEY `ix_gasto_categoria` (`categoria_id`);
 
 --
 -- Indexes for table `lectura_medidor`
@@ -1818,27 +1689,7 @@ ALTER TABLE `multa`
   ADD KEY `fk_multa_comunidad` (`comunidad_id`),
   ADD KEY `fk_multa_unidad` (`unidad_id`),
   ADD KEY `fk_multa_persona` (`persona_id`),
-  ADD KEY `ix_multa_estado` (`estado`),
-  ADD KEY `fk_multa_creada_por` (`creada_por`),
-  ADD KEY `fk_multa_aprobada_por` (`aprobada_por`);
-
---
--- Indexes for table `multa_apelacion`
---
-ALTER TABLE `multa_apelacion`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_apelacion_multa` (`multa_id`),
-  ADD KEY `fk_apelacion_usuario` (`usuario_id`),
-  ADD KEY `fk_apelacion_persona` (`persona_id`),
-  ADD KEY `fk_apelacion_comunidad` (`comunidad_id`);
-
---
--- Indexes for table `multa_historial`
---
-ALTER TABLE `multa_historial`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_historial_multa` (`multa_id`),
-  ADD KEY `fk_historial_multa_usuario` (`usuario_id`);
+  ADD KEY `ix_multa_estado` (`estado`);
 
 --
 -- Indexes for table `notificacion_usuario`
@@ -2171,13 +2022,6 @@ ALTER TABLE `documento_comunidad`
   ADD CONSTRAINT `fk_docrepo_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
--- Constraints for table `documento_multa`
---
-ALTER TABLE `documento_multa`
-  ADD CONSTRAINT `fk_documento_multa` FOREIGN KEY (`multa_id`) REFERENCES `multa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_documento_multa_usuario` FOREIGN KEY (`subido_por`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
 -- Constraints for table `edificio`
 --
 ALTER TABLE `edificio`
@@ -2193,28 +2037,10 @@ ALTER TABLE `emision_gastos_comunes`
 -- Constraints for table `gasto`
 --
 ALTER TABLE `gasto`
-  ADD CONSTRAINT `fk_gasto_anulado_por` FOREIGN KEY (`anulado_por`) REFERENCES `usuario` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_gasto_aprobado_por` FOREIGN KEY (`aprobado_por`) REFERENCES `usuario` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_gasto_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categoria_gasto` (`id`),
   ADD CONSTRAINT `fk_gasto_ccosto` FOREIGN KEY (`centro_costo_id`) REFERENCES `centro_costo` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_gasto_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
-  ADD CONSTRAINT `fk_gasto_creado_por` FOREIGN KEY (`creado_por`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_gasto_doc` FOREIGN KEY (`documento_compra_id`) REFERENCES `documento_compra` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `gasto_aprobacion`
---
-ALTER TABLE `gasto_aprobacion`
-  ADD CONSTRAINT `fk_aprobacion_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_aprobacion_rol` FOREIGN KEY (`rol_id`) REFERENCES `rol_sistema` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_aprobacion_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `historial_gasto`
---
-ALTER TABLE `historial_gasto`
-  ADD CONSTRAINT `fk_historial_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_historial_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Constraints for table `lectura_medidor`
@@ -2233,27 +2059,9 @@ ALTER TABLE `medidor`
 -- Constraints for table `multa`
 --
 ALTER TABLE `multa`
-  ADD CONSTRAINT `fk_multa_aprobada_por` FOREIGN KEY (`aprobada_por`) REFERENCES `usuario` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_multa_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
-  ADD CONSTRAINT `fk_multa_creada_por` FOREIGN KEY (`creada_por`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_multa_persona` FOREIGN KEY (`persona_id`) REFERENCES `persona` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_multa_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`);
-
---
--- Constraints for table `multa_apelacion`
---
-ALTER TABLE `multa_apelacion`
-  ADD CONSTRAINT `fk_apelacion_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_apelacion_multa` FOREIGN KEY (`multa_id`) REFERENCES `multa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_apelacion_persona` FOREIGN KEY (`persona_id`) REFERENCES `persona` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_apelacion_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `multa_historial`
---
-ALTER TABLE `multa_historial`
-  ADD CONSTRAINT `fk_historial_multa_multa` FOREIGN KEY (`multa_id`) REFERENCES `multa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_historial_multa_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Constraints for table `notificacion_usuario`

@@ -1,0 +1,11 @@
+<!-- Apple Touch Icon Placeholder -->
+<!DOCTYPE html>
+<html>
+<head><title>Apple Touch Icon</title></head>
+<body style="margin:0;background:#0d47a1;width:180px;height:180px;display:flex;align-items:center;justify-content:center;color:white;font-family:sans-serif;">
+  <div style="text-align:center">
+    <div style="font-size:48px;font-weight:bold;">CC</div>
+    <div style="font-size:12px;">Cuentas Claras</div>
+  </div>
+</body>
+</html>
