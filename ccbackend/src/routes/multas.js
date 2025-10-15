@@ -904,7 +904,7 @@ router.get('/:id/historial',
         INNER JOIN usuario u ON h.usuario_id = u.id
         LEFT JOIN persona p ON u.persona_id = p.id
         WHERE h.multa_id = ?
-        ORDER BY h.fecha DESC
+        ORDER BY h.created_at DESC
       `, [id]);
 
       console.log(`✅ ${rows.length} registros de historial encontrados`);

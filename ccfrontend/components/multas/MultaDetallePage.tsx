@@ -11,386 +11,407 @@ interface MultaDetallePageProps {
 const MultaDetallePage: React.FC<MultaDetallePageProps> = ({ multa, historial }) => {
   const [activeTab, setActiveTab] = useState('overview');
 
-  const getStatusBadge = (status: string) => {
-    const classes = {
-      pending: 'fine-status pending',
-      paid: 'fine-status paid',
-      overdue: 'fine-status overdue',
-      appealed: 'fine-status appealed',
-      cancelled: 'fine-status cancelled'
-    };
-    return classes[status as keyof typeof classes] || 'fine-status pending';
-  };
-
-  const getStatusText = (status: string) => {
-    const texts = {
-      pending: 'Pendiente',
-      paid: 'Pagada',
-      overdue: 'Vencida',
-      appealed: 'Apelada',
-      cancelled: 'Cancelada'
-    };
-    return texts[status as keyof typeof texts] || 'Pendiente';
-  };
+  // Calcular fecha de vencimiento (+15 días)
+  const fechaVencimiento = new Date(new Date(multa.fecha).getTime() + 15 * 24 * 60 * 60 * 1000);
 
   return (
     <Layout title={`Detalle de Multa ${multa.numero}`}>
       <div className='container-fluid p-4'>
-        {/* Header */}
-        <div className='d-flex justify-content-between align-items-center mb-4'>
-          <div className='d-flex align-items-center'>
-            <button className='btn btn-link me-3' onClick={() => window.history.back()}>
-              <i className='material-icons'>arrow_back</i>
-            </button>
-            <div>
-              <h1 className='h3 mb-0'>Multa {multa.numero}</h1>
-              <small className='text-muted'>Torre {multa.torre_nombre} - Unidad {multa.unidad_numero} • {multa.tipo_infraccion}</small>
+        {/* Usar header igual que listado para alinear con el layout y reducir gutter */}
+        <div className='container-fluid px-3 py-3'>
+          <header className='bg-white border-bottom shadow-sm p-3 mb-4'>
+            <div className='d-flex justify-content-between align-items-center'>
+              <div>
+                <div style={{display:'inline-flex', alignItems:'center', gap:8, marginBottom:6}}>
+                  <i className='material-icons'>schedule</i>
+                  <small className='fw-medium'>Pendiente de Pago</small>
+                </div>
+                <h2 className='h5 mb-0'>Multa {multa.numero} — {multa.tipo_infraccion}</h2>
+                <small className='text-muted'>Emitida {new Date(multa.fecha).toLocaleDateString()} • Vence {fechaVencimiento.toLocaleDateString()}</small>
+              </div>
+              <div className='text-end'>
+                <div className='h4 mb-0 text-primary'>${multa.monto.toLocaleString()}</div>
+                <small className='text-muted'>Monto a pagar</small>
+              </div>
             </div>
-          </div>
-          <div className='text-end'>
-            <div className='h4 mb-0 text-primary'>${multa.monto.toLocaleString()}</div>
-            <small className='text-muted'>Monto a pagar</small>
-          </div>
-        </div>
+          </header>
 
-        {/* Status badge and action buttons */}
-        <div className='d-flex justify-content-between align-items-start mb-4'>
-          <div>
-            <div className={getStatusBadge(multa.estado)}>
-              <i className='material-icons me-2'>schedule</i>
-              {getStatusText(multa.estado)}
-            </div>
-            <h2 className='h4 mb-1'>Multa por Ruidos Molestos</h2>
-            <p className='text-muted mb-0'>Emitida el 10/09/2024 • Vence el 25/09/2024</p>
-          </div>
-          <div className='fine-actions-panel'>
-            {/* Botón principal más prominente */}
-            <div className='primary-fine-action mb-3'>
-              <button className='btn btn-fine-primary btn-lg shadow-sm' data-bs-toggle='modal' data-bs-target='#paymentModal'>
-                <i className='material-icons me-2'>credit_card</i>
-                <span className='fw-semibold'>Registrar Pago</span>
-              </button>
-            </div>
-            
-            {/* Botones secundarios en fila */}
-            <div className='secondary-fine-actions d-flex flex-wrap gap-3 justify-content-center'>
-              <button className='btn btn-fine-warning shadow-sm' onClick={() => alert('Recordatorio enviado')}>
-                <i className='material-icons me-2'>send</i>
-                <span>Enviar Recordatorio</span>
-              </button>
-              <button className='btn btn-fine-info shadow-sm' data-bs-toggle='modal' data-bs-target='#editModal'>
-                <i className='material-icons me-2'>edit_document</i>
-                <span className=''>Editar Multa</span>
-              </button>
-              <button className='btn btn-fine-danger shadow-sm' onClick={() => alert('¿Anular multa?')}>
-                <i className='material-icons me-2'>delete_sweep</i>
-                <span>Anular Multa</span>
-              </button>
-            </div>
+          {/* Botones de acción — mantener compactos y alineados con header */}
+          <div className='d-flex flex-wrap align-items-center gap-3 mb-3'>
+            <button className='btn btn-success btn-lg d-flex align-items-center' data-bs-toggle='modal' data-bs-target='#paymentModal'>
+              <i className='material-icons me-2'>payment</i>
+              Registrar Pago
+            </button>
+
+            <button className='btn btn-outline-primary btn-lg d-flex align-items-center' onClick={() => alert('Recordatorio enviado')}>
+              <i className='material-icons me-2'>mail</i>
+              Enviar Recordatorio
+            </button>
+
+            <button className='btn btn-info btn-lg d-flex align-items-center text-white' data-bs-toggle='modal' data-bs-target='#editModal'>
+              <i className='material-icons me-2'>edit</i>
+              Editar Multa
+            </button>
+
+            <button className='btn btn-danger btn-lg d-flex align-items-center' onClick={() => alert('¿Anular multa?')}>
+              <i className='material-icons me-2'>cancel</i>
+              Anular Multa
+            </button>
           </div>
         </div>
 
         <div className='row'>
+          {/* Columna principal */}
           <div className='col-lg-8'>
-
-        {/* Tabs */}
-        <ul className='nav nav-tabs' role='tablist'>
-          <li className='nav-item'>
-            <a
-              className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
-              href='#overview'
-              onClick={() => setActiveTab('overview')}
-            >
-              <i className='material-icons me-2'>info</i>
-              Información General
-            </a>
-          </li>
-          <li className='nav-item'>
-            <a
-              className={`nav-link ${activeTab === 'evidence' ? 'active' : ''}`}
-              href='#evidence'
-              onClick={() => setActiveTab('evidence')}
-            >
-              <i className='material-icons me-2'>attach_file</i>
-              Evidencia
-            </a>
-          </li>
-          <li className='nav-item'>
-            <a
-              className={`nav-link ${activeTab === 'payments' ? 'active' : ''}`}
-              href='#payments'
-              onClick={() => setActiveTab('payments')}
-            >
-              <i className='material-icons me-2'>payment</i>
-              Pagos
-            </a>
-          </li>
-          <li className='nav-item'>
-            <a
-              className={`nav-link ${activeTab === 'appeals' ? 'active' : ''}`}
-              href='#appeals'
-              onClick={() => setActiveTab('appeals')}
-            >
-              <i className='material-icons me-2'>gavel</i>
-              Apelaciones
-            </a>
-          </li>
-          <li className='nav-item'>
-            <a
-              className={`nav-link ${activeTab === 'communications' ? 'active' : ''}`}
-              href='#communications'
-              onClick={() => setActiveTab('communications')}
-            >
-              <i className='material-icons me-2'>message</i>
-              Comunicaciones
-            </a>
-          </li>
-        </ul>
-
-        <div className='tab-content'>
-          {/* Overview Tab */}
-          {/* {activeTab === 'overview' && (
-            <div>
-              <div className='row'>
-                <div className='col-md-6'>
-                  <h6 className='mb-3'>Detalles de la Infracción</h6>
-                  <div className='info-item'>
-                    <span className='info-label'>Fecha y Hora:</span>
-                    <span className='info-value'>10/09/2024 - 23:30</span>
-                  </div>
-                  <div className='info-item'>
-                    <span className='info-label'>Ubicación:</span>
-                    <span className='info-value'>Unidad 4A - Torre Norte</span>
-                  </div>
-                  <div className='info-item'>
-                    <span className='info-label'>Tipo de Infracción:</span>
-                    <span className='info-value'>Ruidos molestos en horario de descanso</span>
-                  </div>
-                  <div className='info-item'>
-                    <span className='info-label'>Reportado por:</span>
-                    <span className='info-value'>Conserje nocturno</span>
-                  </div>
-                  <div className='info-item'>
-                    <span className='info-label'>Prioridad:</span>
-                    <span className='info-value'>
-                      <span className='badge bg-warning'>Media</span>
-                    </span>
-                  </div>
-                </div>
-                <div className='col-md-6'>
-                  <h6 className='mb-3'>Información del Pago</h6>
-                  <div className='info-item'>
-                    <span className='info-label'>Monto Base:</span>
-                    <span className='info-value'>$85.000</span>
-                  </div>
-                  <div className='info-item'>
-                    <span className='info-label'>Recargos:</span>
-                    <span className='info-value'>$0</span>
-                  </div>
-                  <div className='info-item'>
-                    <span className='info-label'>Total a Pagar:</span>
-                    <span className='info-value'><strong>$85.000</strong></span>
-                  </div>
-                  <div className='info-item'>
-                    <span className='info-label'>Fecha de Vencimiento:</span>
-                    <span className='info-value'>25/09/2024</span>
-                  </div>
-                  <div className='info-item'>
-                    <span className='info-label'>Días Restantes:</span>
-                    <span className='info-value text-warning'><strong>10 días</strong></span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className='mt-4'>
-                <h6 className='mb-3'>Descripción Detallada</h6>
-                <div className='bg-light p-3 rounded'>
-                  <p className='mb-0'>
-                    Según reporte del conserje nocturno, se registraron ruidos molestos provenientes de la unidad 4A durante 
-                    el horario de descanso establecido en el reglamento (22:00 - 08:00). Los ruidos consistían en música a 
-                    alto volumen y voces que se escuchaban desde el pasillo. Se realizaron dos llamadas de atención verbales 
-                    sin obtener respuesta antes de proceder con la multa.
-                  </p>
-                </div>
-              </div>
-              
-              <div className='mt-4'>
-                <h6 className='mb-3'>Notas Internas</h6>
-                <div className='bg-light p-3 rounded'>
-                  <p className='mb-0'>
-                    <strong>Administrador:</strong> Segunda infracción del mismo tipo en 3 meses. 
-                    Considerar seguimiento adicional si persiste el comportamiento.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )} */}
-
-          {/* Evidence Tab */}
-
-          {/* Payments Tab */}
-          {activeTab === 'payments' && (
-            <div>
-              <div className='d-flex justify-content-between align-items-center mb-3'>
-                <h5>Historial de pagos</h5>
-                <button className='btn btn-fine-success btn-sm shadow-sm' data-bs-toggle='modal' data-bs-target='#paymentModal'>
-                  <i className='material-icons me-2'>credit_card</i>
-                  <span className='fw-medium'>Registrar pago</span>
+            {/* Tabs */}
+            <ul className='nav nav-tabs' id='fineDetailTabs' role='tablist'>
+              <li className='nav-item'>
+                <button className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
+                  <span className='material-icons me-2'>info</span>
+                  Información General
                 </button>
-              </div>
-              <div className='table-responsive'>
-                <table className='table table-hover'>
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Monto</th>
-                      <th>Método</th>
-                      <th>Referencia</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {historial.map((payment, index) => (
-                      <tr key={index}>
-                        <td>{payment.fecha}</td>
-                        <td>${payment.monto.toLocaleString()}</td>
-                        <td>{payment.metodo}</td>
-                        <td>{payment.referencia}</td>
-                        <td>
-                          <span className='badge bg-warning'>{payment.estado}</span>
-                        </td>
-                        <td>
-                          <button className='btn btn-sm btn-outline-primary'>
-                            <i className='material-icons'>receipt</i>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Appeals Tab */}
-          {activeTab === 'appeals' && (
-            <div>
-              <div className='d-flex justify-content-between align-items-center mb-3'>
-                <h6 className='mb-0'>Historial de Apelaciones</h6>
-              </div>
-              
-              <div className='alert alert-secondary'>
-                <span className='material-icons me-2'>info</span>
-                <strong>Sin apelaciones presentadas.</strong> Esta multa no ha sido apelada.
-              </div>
-              
-              <div className='bg-light p-3 rounded'>
-                <h6>Información sobre Apelaciones</h6>
-                <ul className='mb-0'>
-                  <li>El residente tiene derecho a apelar dentro de 15 días de emitida la multa</li>
-                  <li>La apelación debe presentarse por escrito con la evidencia correspondiente</li>
-                  <li>El administrador tiene 10 días hábiles para responder</li>
-                  <li>Plazo de apelación: hasta el 25/09/2024</li>
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {/* Communications Tab */}
-          {activeTab === 'communications' && (
-            <div>
-              <div className='d-flex justify-content-between align-items-center mb-3'>
-                <h5>Comunicaciones</h5>
-                <button className='btn btn-fine-info btn-sm shadow-sm'>
-                  <i className='material-icons me-2'>send</i>
-                  <span className='fw-medium'>Enviar mensaje</span>
+              </li>
+              <li className='nav-item'>
+                <button className={`nav-link ${activeTab === 'evidence' ? 'active' : ''}`} onClick={() => setActiveTab('evidence')}>
+                  <span className='material-icons me-2'>attach_file</span>
+                  Evidencia
                 </button>
-              </div>
-              <div className='timeline'>
-                {historial.comunicaciones.map((comm, index) => (
-                  <div key={index} className='timeline-item'>
-                    <div className='timeline-content'>
-                      <div className='timeline-date'>{comm.fecha}</div>
-                      <div className='timeline-title'>
-                        <span className={`communication-type ${comm.tipo}`}>
-                          <i className='material-icons me-1'>
-                            {comm.tipo === 'email' ? 'email' : comm.tipo === 'sms' ? 'sms' : 'notifications'}
-                          </i>
-                          {comm.titulo}
+              </li>
+              <li className='nav-item'>
+                <button className={`nav-link ${activeTab === 'payments' ? 'active' : ''}`} onClick={() => setActiveTab('payments')}>
+                  <span className='material-icons me-2'>payment</span>
+                  Pagos
+                </button>
+              </li>
+              <li className='nav-item'>
+                <button className={`nav-link ${activeTab === 'appeals' ? 'active' : ''}`} onClick={() => setActiveTab('appeals')}>
+                  <span className='material-icons me-2'>gavel</span>
+                  Apelaciones
+                </button>
+              </li>
+              <li className='nav-item'>
+                <button className={`nav-link ${activeTab === 'communications' ? 'active' : ''}`} onClick={() => setActiveTab('communications')}>
+                  <span className='material-icons me-2'>message</span>
+                  Comunicaciones
+                </button>
+              </li>
+            </ul>
+
+            <div className='tab-content'>
+              {/* Información General */}
+              {activeTab === 'overview' && (
+                <div className='tab-pane fade show active'>
+                  <div className='row'>
+                    <div className='col-md-6'>
+                      <h6 className='mb-3'>Detalles de la Infracción</h6>
+                      <div className='info-item'>
+                        <span className='info-label'>Fecha y Hora:</span>
+                        <span className='info-value'>{new Date(multa.fecha).toLocaleString()}</span>
+                      </div>
+                      <div className='info-item'>
+                        <span className='info-label'>Ubicación:</span>
+                        <span className='info-value'>{multa.torre_nombre} - {multa.unidad_numero}</span>
+                      </div>
+                      <div className='info-item'>
+                        <span className='info-label'>Tipo de Infracción:</span>
+                        <span className='info-value'>{multa.tipo_infraccion}</span>
+                      </div>
+                      <div className='info-item'>
+                        <span className='info-label'>Reportado por:</span>
+                        <span className='info-value'>Conserje nocturno</span> {/* Estático */}
+                      </div>
+                      <div className='info-item'>
+                        <span className='info-label'>Prioridad:</span>
+                        <span className='info-value'>
+                          <span className={`badge bg-${multa.prioridad === 'alta' ? 'danger' : multa.prioridad === 'media' ? 'warning' : 'success'}`}>{multa.prioridad}</span>
                         </span>
                       </div>
-                      <div className='timeline-description'>{comm.contenido}</div>
+                    </div>
+                    <div className='col-md-6'>
+                      <h6 className='mb-3'>Información del Pago</h6>
+                      <div className='info-item'>
+                        <span className='info-label'>Monto Base:</span>
+                        <span className='info-value'>${multa.monto.toLocaleString()}</span>
+                      </div>
+                      <div className='info-item'>
+                        <span className='info-label'>Recargos:</span>
+                        <span className='info-value'>$0</span> {/* Estático */}
+                      </div>
+                      <div className='info-item'>
+                        <span className='info-label'>Total a Pagar:</span>
+                        <span className='info-value'><strong>${multa.monto.toLocaleString()}</strong></span>
+                      </div>
+                      <div className='info-item'>
+                        <span className='info-label'>Fecha de Vencimiento:</span>
+                        <span className='info-value'>{fechaVencimiento.toLocaleString()}</span>
+                      </div>
+                      <div className='info-item'>
+                        <span className='info-label'>Días Restantes:</span>
+                        <span className='info-value text-warning'><strong>10 días</strong></span> {/* Estático */}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className='mt-4'>
+                    <h6 className='mb-3'>Descripción Detallada</h6>
+                    <div className='bg-light p-3 rounded'>
+                      <p className='mb-0'>{multa.descripcion || 'Sin descripción'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className='mt-4'>
+                    <h6 className='mb-3'>Notas Internas</h6>
+                    <div className='bg-light p-3 rounded'>
+                      <p className='mb-0'>
+                        <strong>Administrador:</strong> Segunda infracción del mismo tipo en 3 meses. 
+                        Considerar seguimiento adicional si persiste el comportamiento.
+                      </p> {/* Estático */}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Evidencia */}
+              {activeTab === 'evidence' && (
+                <div className='tab-pane fade'>
+                  <h6 className='mb-3'>Evidencia Adjunta</h6>
+                  <div className='alert alert-secondary'>
+                    <span className='material-icons me-2'>info</span>
+                    <strong>Sin evidencia adjunta.</strong> No hay archivos asociados a esta multa.
+                  </div> {/* Estático */}
+                  <div className='mt-4'>
+                    <button className='btn btn-outline-primary' onClick={() => alert('Agregar evidencia')}>
+                      <span className='material-icons me-2'>add</span>
+                      Agregar Evidencia
+                    </button> {/* Estático */}
+                  </div>
+                </div>
+              )}
+
+              {/* Pagos */}
+              {activeTab === 'payments' && (
+                <div className='tab-pane fade'>
+                  <div className='d-flex justify-content-between align-items-center mb-3'>
+                    <h6 className='mb-0'>Historial de Pagos</h6>
+                    <button className='btn btn-primary btn-sm' data-bs-toggle='modal' data-bs-target='#paymentModal'>
+                      <span className='material-icons me-1'>add</span>
+                      Registrar Pago
+                    </button>
+                  </div>
+                  
+                  <div className='alert alert-info'>
+                    <span className='material-icons me-2'>info</span>
+                    <strong>Sin pagos registrados.</strong> Esta multa aún no ha sido pagada.
+                  </div> {/* Estático */}
+                  
+                  <div className='bg-light p-3 rounded'>
+                    <h6>Información de Pago</h6>
+                    <div className='row'>
+                      <div className='col-md-6'>
+                        <p><strong>Monto Total:</strong> ${multa.monto.toLocaleString()}</p>
+                        <p><strong>Fecha de Vencimiento:</strong> {fechaVencimiento.toLocaleDateString()}</p>
+                      </div>
+                      <div className='col-md-6'>
+                        <p><strong>Días para Vencimiento:</strong> 10 días</p> {/* Estático */}
+                        <p><strong>Recargo por Atraso:</strong> 5% después del vencimiento</p> {/* Estático */}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Apelaciones */}
+              {activeTab === 'appeals' && (
+                <div className='tab-pane fade'>
+                  <div className='d-flex justify-content-between align-items-center mb-3'>
+                    <h6 className='mb-0'>Historial de Apelaciones</h6>
+                  </div>
+                  
+                  <div className='alert alert-secondary'>
+                    <span className='material-icons me-2'>info</span>
+                    <strong>Sin apelaciones presentadas.</strong> Esta multa no ha sido apelada.
+                  </div> {/* Estático */}
+                  
+                  <div className='bg-light p-3 rounded'>
+                    <h6>Información sobre Apelaciones</h6>
+                    <ul className='mb-0'>
+                      <li>El residente tiene derecho a apelar dentro de 15 días de emitida la multa</li>
+                      <li>La apelación debe presentarse por escrito con la evidencia correspondiente</li>
+                      <li>El administrador tiene 10 días hábiles para responder</li>
+                      <li>Plazo de apelación: hasta el {fechaVencimiento.toLocaleDateString()}</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Comunicaciones */}
+              {activeTab === 'communications' && (
+                <div className='tab-pane fade'>
+                  <div className='d-flex justify-content-between align-items-center mb-3'>
+                    <h6 className='mb-0'>Historial de Comunicaciones</h6>
+                    <button className='btn btn-primary btn-sm' onClick={() => alert('Enviar comunicación')}>
+                      <span className='material-icons me-1'>send</span>
+                      Enviar Comunicación
+                    </button> {/* Estático */}
+                  </div>
+                  
+                  {/* Historial de comunicaciones del historial */}
+                  {historial.filter(h => h.accion === 'comunicacion_enviada').map((comm, index) => (
+                    <div key={index} className='communication-item'>
+                      <div className='communication-header'>
+                        <div>
+                          <span className={`communication-type ${comm.tipo || 'email'}`}>{comm.tipo === 'email' ? 'Email' : 'Notificación'}</span>
+                          <span className='ms-2 fw-bold'>{comm.descripcion || 'Comunicación enviada'}</span>
+                        </div>
+                        <small className='text-muted'>{new Date(comm.created_at).toLocaleDateString()}</small>
+                      </div>
+                      <p className='mb-0'>{comm.descripcion || 'Mensaje enviado al residente'}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Columna lateral */}
+          <div className='col-lg-4'>
+            {/* Información de la Unidad */}
+            <div className='info-card'>
+              <div className='info-card-title'>
+                <span className='material-icons'>apartment</span>
+                Información de la Unidad
+              </div>
+              <div className='info-item'>
+                <span className='info-label'>Unidad:</span>
+                <span className='info-value'>{multa.torre_nombre} - {multa.unidad_numero}</span>
+              </div>
+              <div className='info-item'>
+                <span className='info-label'>Propietario:</span>
+                <span className='info-value'>María González</span> {/* Estático */}
+              </div>
+              <div className='info-item'>
+                <span className='info-label'>Email:</span>
+                <span className='info-value'>maria.gonzalez@email.com</span> {/* Estático */}
+              </div>
+              <div className='info-item'>
+                <span className='info-label'>Teléfono:</span>
+                <span className='info-value'>+56 9 8765 4321</span> {/* Estático */}
+              </div>
+              <div className='info-item'>
+                <span className='info-label'>Tipo:</span>
+                <span className='info-value'>Propietario residente</span> {/* Estático */}
+              </div>
+              <div className='mt-3'>
+                <a href='unidad-detalle.html' className='btn btn-outline-primary btn-sm w-100'>
+                  <span className='material-icons me-1'>visibility</span>
+                  Ver Detalle de Unidad
+                </a> {/* Estático */}
+              </div>
+            </div>
+
+            {/* Estadísticas de Multas */}
+            <div className='info-card'>
+              <div className='info-card-title'>
+                <span className='material-icons'>analytics</span>
+                Historial de Multas
+              </div>
+              <div className='info-item'>
+                <span className='info-label'>Total Multas:</span>
+                <span className='info-value'>3</span> {/* Estático */}
+              </div>
+              <div className='info-item'>
+                <span className='info-label'>Multas Pagadas:</span>
+                <span className='info-value text-success'>1</span> {/* Estático */}
+              </div>
+              <div className='info-item'>
+                <span className='info-label'>Multas Pendientes:</span>
+                <span className='info-value text-warning'>2</span> {/* Estático */}
+              </div>
+              <div className='info-item'>
+                <span className='info-label'>Monto Total Pendiente:</span>
+                <span className='info-value text-danger'>$170.000</span> {/* Estático */}
+              </div>
+              <div className='info-item'>
+                <span className='info-label'>Última Multa:</span>
+                <span className='info-value'>{new Date(multa.fecha).toLocaleDateString()}</span>
+              </div>
+            </div>
+
+            {/* Timeline de Actividades */}
+            <div className='info-card'>
+              <div className='info-card-title'>
+                <span className='material-icons'>timeline</span>
+                Actividades Recientes
+              </div>
+              <div className='timeline'>
+                {historial.slice(0, 3).map((item, index) => (
+                  <div key={index} className='timeline-item'>
+                    <div className='timeline-content'>
+                      <div className='timeline-date'>{new Date(item.created_at).toLocaleDateString()}</div>
+                      <div className='timeline-title'>{item.accion}</div>
+                      <div className='timeline-description'>{item.descripcion || 'Acción realizada'}</div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          )}
-        </div>
-
-        {/* Appeal section */}
-        {multa.estado === 'pending' && (
-          <div className='appeal-section mt-4'>
-            <div className='appeal-header'>
-              <h5>
-                <i className='material-icons me-2'>gavel</i>
-                Apelación
-              </h5>
-              <p>Si considera que esta multa es injusta, puede presentar una apelación.</p>
-            </div>
-            <div className='appeal-status'>
-              <span className='badge bg-secondary'>Sin apelación</span>
-            </div>
-            <button className='btn btn-fine-warning shadow-sm'>
-              <i className='material-icons me-2'>gavel</i>
-              <span className='fw-medium'>Presentar apelación</span>
-            </button>
           </div>
-        )}
+        </div>
       </div>
-    </div>
-  </div>
-
-      {/* Sidebar */}
-      {/* <div className='col-lg-4'> ... </div> */}
-
 
       {/* Modal para registrar pago */}
       <div className='modal fade' id='paymentModal' tabIndex={-1}>
         <div className='modal-dialog'>
           <div className='modal-content'>
             <div className='modal-header'>
-              <h5 className='modal-title'>Registrar Pago</h5>
+              <h5 className='modal-title'>Registrar Pago - Multa #{multa.numero}</h5>
               <button type='button' className='btn-close' data-bs-dismiss='modal'></button>
             </div>
             <div className='modal-body'>
               <form>
                 <div className='mb-3'>
-                  <label className='form-label'>Monto</label>
-                  <input type='number' className='form-control' placeholder='Ingrese el monto' />
+                  <label className='form-label'>Monto Pagado *</label>
+                  <div className='input-group'>
+                    <span className='input-group-text'>$</span>
+                    <input type='number' className='form-control' defaultValue={multa.monto} required />
+                  </div>
                 </div>
                 <div className='mb-3'>
-                  <label className='form-label'>Fecha de pago</label>
-                  <input type='date' className='form-control' />
+                  <label className='form-label'>Fecha de Pago *</label>
+                  <input type='date' className='form-control' required />
                 </div>
                 <div className='mb-3'>
-                  <label className='form-label'>Método de pago</label>
-                  <select className='form-select'>
+                  <label className='form-label'>Método de Pago *</label>
+                  <select className='form-select' required>
                     <option>Efectivo</option>
                     <option>Transferencia</option>
-                    <option>Tarjeta de crédito</option>
+                    <option>Cheque</option>
+                    <option>Tarjeta</option>
+                    <option>Online</option>
                   </select>
                 </div>
                 <div className='mb-3'>
-                  <label className='form-label'>Referencia</label>
-                  <input type='text' className='form-control' placeholder='Número de referencia' />
+                  <label className='form-label'>Número de Comprobante</label>
+                  <input type='text' className='form-control' placeholder='Número de transacción' />
+                </div>
+                <div className='mb-3'>
+                  <label className='form-label'>Observaciones</label>
+                  <textarea className='form-control' rows={3} placeholder='Observaciones...'></textarea>
+                </div>
+                <div className='mb-3'>
+                  <div className='form-check'>
+                    <input className='form-check-input' type='checkbox' defaultChecked />
+                    <label className='form-check-label'>Enviar confirmación de pago al residente</label>
+                  </div>
                 </div>
               </form>
             </div>
             <div className='modal-footer'>
               <button type='button' className='btn btn-secondary' data-bs-dismiss='modal'>Cancelar</button>
-              <button type='button' className='btn btn-primary'>Registrar Pago</button>
+              <button type='button' className='btn btn-success' onClick={() => alert('Pago registrado')}>
+                <span className='material-icons me-1'>payment</span>
+                Registrar Pago
+              </button> {/* Estático */}
             </div>
           </div>
         </div>
@@ -401,36 +422,54 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({ multa, historial })
         <div className='modal-dialog modal-lg'>
           <div className='modal-content'>
             <div className='modal-header'>
-              <h5 className='modal-title'>Editar Multa</h5>
+              <h5 className='modal-title'>Editar Multa #{multa.numero}</h5>
               <button type='button' className='btn-close' data-bs-dismiss='modal'></button>
             </div>
             <div className='modal-body'>
               <form>
+                <div className='row'>
+                  <div className='col-md-6 mb-3'>
+                    <label className='form-label'>Fecha de Infracción</label>
+                    <input type='date' className='form-control' defaultValue={new Date(multa.fecha).toISOString().split('T')[0]} />
+                  </div>
+                  <div className='col-md-6 mb-3'>
+                    <label className='form-label'>Monto de la Multa</label>
+                    <div className='input-group'>
+                      <span className='input-group-text'>$</span>
+                      <input type='number' className='form-control' defaultValue={multa.monto} />
+                    </div>
+                  </div>
+                </div>
                 <div className='mb-3'>
                   <label className='form-label'>Descripción</label>
-                  <textarea className='form-control' rows={3} defaultValue={multa.descripcion}></textarea>
+                  <textarea className='form-control' rows={4} defaultValue={multa.descripcion}></textarea>
+                </div>
+                <div className='row'>
+                  <div className='col-md-6 mb-3'>
+                    <label className='form-label'>Fecha de Vencimiento</label>
+                    <input type='date' className='form-control' defaultValue={fechaVencimiento.toISOString().split('T')[0]} />
+                  </div>
+                  <div className='col-md-6 mb-3'>
+                    <label className='form-label'>Prioridad</label>
+                    <select className='form-select' defaultValue={multa.prioridad}>
+                      <option value='baja'>Baja</option>
+                      <option value='media'>Media</option>
+                      <option value='alta'>Alta</option>
+                    </select>
+                  </div>
                 </div>
                 <div className='mb-3'>
-                  <label className='form-label'>Monto</label>
-                  <input type='number' className='form-control' defaultValue={multa.monto} />
-                </div>
-                <div className='mb-3'>
-                  <label className='form-label'>Fecha de vencimiento</label>
-                  <input type='date' className='form-control' defaultValue={multa.fecha_vencimiento} />
-                </div>
-                <div className='mb-3'>
-                  <label className='form-label'>Prioridad</label>
-                  <select className='form-select' defaultValue={multa.prioridad}>
-                    <option value='low'>Baja</option>
-                    <option value='medium'>Media</option>
-                    <option value='high'>Alta</option>
-                  </select>
+                  <label className='form-label'>Notas Internas</label>
+                  <textarea className='form-control' rows={3} defaultValue='Segunda infracción...'></textarea> {/* Estático */}
                 </div>
               </form>
             </div>
             <div className='modal-footer'>
               <button type='button' className='btn btn-secondary' data-bs-dismiss='modal'>Cancelar</button>
-              <button type='button' className='btn btn-primary'>Guardar Cambios</button>
+              <button type='button' className='btn btn-primary' onClick={() => alert('Multa actualizada')}>
+                <span className='material-icons me-1'>save</span>
+                Guardar Cambios
+              </button> {/* Estático */}
             </div>
           </div>
         </div>
