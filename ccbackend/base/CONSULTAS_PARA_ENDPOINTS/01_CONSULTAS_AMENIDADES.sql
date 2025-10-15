@@ -1,7 +1,7 @@
 -- =========================================
 -- CONSULTAS SQL PARA EL MÓDULO AMENIDADES
 -- Sistema: Cuentas Claras
--- Fecha: 2025-10-13
+-- Fecha: 2025-10-14 (Corregido)
 -- =========================================
 
 -- =========================================
@@ -9,20 +9,35 @@
 -- =========================================
 
 -- 1.1 Listado básico de amenidades con filtros
+-- CORRECCIÓN: Cálculo real de reservas activas y disponibilidad.
 SELECT
     a.id,
     a.nombre,
-    c.razon_social as comunidad,
+    c.razon_social AS comunidad,
     a.reglas,
     a.capacidad,
     a.requiere_aprobacion,
     a.tarifa,
     a.created_at,
     a.updated_at,
-    -- Calcular reservas activas (simulado - ajustar según tabla real)
-    0 as reservas_activas,
-    -- Calcular disponibilidad (simulado - ajustar según tabla real)
-    CASE WHEN a.capacidad > 0 THEN 'Disponible' ELSE 'No disponible' END as estado_disponibilidad
+    -- 🔄 CALCULO REAL DE RESERVAS ACTIVAS (solicitadas o aprobadas)
+    (
+        SELECT COUNT(r.id)
+        FROM reserva_amenidad r
+        WHERE r.amenidad_id = a.id
+          AND r.estado IN ('solicitada', 'aprobada')
+          -- Se asume activa si está en estado de gestión o en el futuro.
+    ) AS reservas_activas,
+    -- 🔄 CALCULO REAL DE ESTADO DE DISPONIBILIDAD (asumiendo disponibilidad total si capacidad > 0 y reservas < capacidad)
+    CASE
+        WHEN a.capacidad > 0 AND (
+            SELECT COUNT(r.id)
+            FROM reserva_amenidad r
+            WHERE r.amenidad_id = a.id AND r.estado IN ('solicitada', 'aprobada', 'cumplida') -- Se podría filtrar por hora/fecha actual
+        ) < a.capacidad THEN 'Disponible (Libre)'
+        WHEN a.capacidad = 0 THEN 'No aplica capacidad'
+        ELSE 'Potencialmente Ocupada'
+    END AS estado_disponibilidad
 FROM amenidad a
 JOIN comunidad c ON a.comunidad_id = c.id
 WHERE
@@ -37,28 +52,39 @@ LIMIT :limit OFFSET :offset;
 
 -- 1.2 Listado de amenidades por comunidad
 SELECT
-    c.razon_social as comunidad,
-    COUNT(a.id) as total_amenidades,
-    COUNT(CASE WHEN a.requiere_aprobacion = 1 THEN 1 END) as requieren_aprobacion,
-    COUNT(CASE WHEN a.tarifa > 0 THEN 1 END) as con_tarifa,
-    SUM(a.capacidad) as capacidad_total,
-    AVG(a.tarifa) as tarifa_promedio
+    c.razon_social AS comunidad,
+    COUNT(a.id) AS total_amenidades,
+    COUNT(CASE WHEN a.requiere_aprobacion = 1 THEN 1 END) AS requieren_aprobacion,
+    COUNT(CASE WHEN a.tarifa > 0 THEN 1 END) AS con_tarifa,
+    SUM(a.capacidad) AS capacidad_total,
+    AVG(a.tarifa) AS tarifa_promedio
 FROM comunidad c
 LEFT JOIN amenidad a ON c.id = a.comunidad_id
 GROUP BY c.id, c.razon_social
 ORDER BY c.razon_social;
 
 -- 1.3 Amenidades disponibles (sin reservas activas)
+-- CORRECCIÓN: Utiliza NOT EXISTS para verificar reservas activas, asumiendo una disponibilidad actual (NOW()).
 SELECT
     a.id,
     a.nombre,
-    c.razon_social as comunidad,
+    c.razon_social AS comunidad,
     a.capacidad,
     a.tarifa,
     a.reglas
 FROM amenidad a
 JOIN comunidad c ON a.comunidad_id = c.id
-WHERE a.capacidad > 0
+WHERE
+    a.capacidad > 0 AND
+    -- Filtra las amenidades que NO tienen una reserva activa en este momento (NOW())
+    NOT EXISTS (
+        SELECT 1
+        FROM reserva_amenidad r
+        WHERE r.amenidad_id = a.id
+          AND r.estado IN ('solicitada', 'aprobada')
+          AND r.inicio <= NOW()
+          AND r.fin >= NOW()
+    )
 ORDER BY c.razon_social, a.nombre;
 
 -- =========================================
@@ -66,42 +92,58 @@ ORDER BY c.razon_social, a.nombre;
 -- =========================================
 
 -- 2.1 Vista detallada de una amenidad específica
+-- CORRECCIÓN: Cálculo real de estadísticas de uso.
 SELECT
     a.id,
     a.nombre,
-    c.razon_social as comunidad,
-    c.direccion as direccion_comunidad,
+    c.razon_social AS comunidad,
+    c.direccion AS direccion_comunidad,
     a.reglas,
     a.capacidad,
     a.requiere_aprobacion,
     a.tarifa,
     a.created_at,
     a.updated_at,
-    -- Información adicional calculada
     CASE
         WHEN a.requiere_aprobacion = 1 THEN 'Requiere aprobación'
         ELSE 'Reserva directa'
-    END as tipo_reserva,
+    END AS tipo_reserva,
     CASE
         WHEN a.tarifa > 0 THEN CONCAT('Costo: $', FORMAT(a.tarifa, 0))
         ELSE 'Gratuito'
-    END as costo,
-    -- Estadísticas de uso (simulado - ajustar según tablas reales)
+    END AS costo,
+    -- 🔄 ESTADÍSTICAS DE USO REALES
     JSON_OBJECT(
-        'reservas_mes_actual', 0,
-        'reservas_mes_anterior', 0,
-        'ocupacion_promedio', 0,
-        'ingresos_mes_actual', 0
-    ) as estadisticas_uso
+        'reservas_mes_actual', (
+            SELECT COUNT(r.id)
+            FROM reserva_amenidad r
+            WHERE r.amenidad_id = a.id
+              AND YEAR(r.inicio) = YEAR(NOW()) AND MONTH(r.inicio) = MONTH(NOW())
+        ),
+        'reservas_mes_anterior', (
+            SELECT COUNT(r.id)
+            FROM reserva_amenidad r
+            WHERE r.amenidad_id = a.id
+              AND YEAR(r.inicio) = YEAR(DATE_SUB(NOW(), INTERVAL 1 MONTH)) AND MONTH(r.inicio) = MONTH(DATE_SUB(NOW(), INTERVAL 1 MONTH))
+        ),
+        'ingresos_mes_actual', (
+            SELECT SUM(a_sub.tarifa)
+            FROM reserva_amenidad r_sub
+            JOIN amenidad a_sub ON r_sub.amenidad_id = a_sub.id
+            WHERE r_sub.amenidad_id = a.id
+              AND YEAR(r_sub.created_at) = YEAR(NOW()) AND MONTH(r_sub.created_at) = MONTH(NOW())
+              AND r_sub.estado IN ('aprobada', 'cumplida')
+        )
+    ) AS estadisticas_uso
 FROM amenidad a
 JOIN comunidad c ON a.comunidad_id = c.id
 WHERE a.id = :amenidad_id;
 
--- 2.2 Vista de amenidades con información completa
+-- 2.2 Vista de amenidades con información completa (Sin cambios estructurales, ya es correcta)
 SELECT
     a.id,
     a.nombre,
-    c.razon_social as comunidad,
+    c.razon_social AS comunidad,
     a.reglas,
     a.capacidad,
     a.requiere_aprobacion,
@@ -124,7 +166,7 @@ SELECT
             'creado', a.created_at,
             'actualizado', a.updated_at
         )
-    ) as informacion_completa
+    ) AS informacion_completa
 FROM amenidad a
 JOIN comunidad c ON a.comunidad_id = c.id
 ORDER BY c.razon_social, a.nombre;
@@ -133,35 +175,35 @@ ORDER BY c.razon_social, a.nombre;
 -- 3. ESTADÍSTICAS
 -- =========================================
 
--- 3.1 Estadísticas generales de amenidades
+-- 3.1 Estadísticas generales de amenidades (Sin cambios estructurales, ya es correcta)
 SELECT
-    COUNT(*) as total_amenidades,
-    COUNT(DISTINCT comunidad_id) as comunidades_con_amenidades,
-    SUM(capacidad) as capacidad_total,
-    AVG(capacidad) as capacidad_promedio,
-    COUNT(CASE WHEN requiere_aprobacion = 1 THEN 1 END) as requieren_aprobacion,
-    COUNT(CASE WHEN tarifa > 0 THEN 1 END) as amenidades_con_costo,
-    COUNT(CASE WHEN tarifa = 0 THEN 1 END) as amenidades_gratuitas,
-    AVG(CASE WHEN tarifa > 0 THEN tarifa END) as tarifa_promedio_costo,
-    MIN(tarifa) as tarifa_minima,
-    MAX(tarifa) as tarifa_maxima
+    COUNT(*) AS total_amenidades,
+    COUNT(DISTINCT comunidad_id) AS comunidades_con_amenidades,
+    SUM(capacidad) AS capacidad_total,
+    AVG(capacidad) AS capacidad_promedio,
+    COUNT(CASE WHEN requiere_aprobacion = 1 THEN 1 END) AS requieren_aprobacion,
+    COUNT(CASE WHEN tarifa > 0 THEN 1 END) AS amenidades_con_costo,
+    COUNT(CASE WHEN tarifa = 0 THEN 1 END) AS amenidades_gratuitas,
+    AVG(CASE WHEN tarifa > 0 THEN tarifa END) AS tarifa_promedio_costo,
+    MIN(tarifa) AS tarifa_minima,
+    MAX(tarifa) AS tarifa_maxima
 FROM amenidad;
 
--- 3.2 Estadísticas por comunidad
+-- 3.2 Estadísticas por comunidad (Sin cambios estructurales, ya es correcta)
 SELECT
-    c.razon_social as comunidad,
-    COUNT(a.id) as num_amenidades,
-    SUM(a.capacidad) as capacidad_total,
-    AVG(a.tarifa) as tarifa_promedio,
-    COUNT(CASE WHEN a.requiere_aprobacion = 1 THEN 1 END) as requieren_aprobacion,
-    COUNT(CASE WHEN a.tarifa > 0 THEN 1 END) as con_costo,
-    SUM(CASE WHEN a.tarifa > 0 THEN a.tarifa ELSE 0 END) as ingresos_potenciales
+    c.razon_social AS comunidad,
+    COUNT(a.id) AS num_amenidades,
+    SUM(a.capacidad) AS capacidad_total,
+    AVG(a.tarifa) AS tarifa_promedio,
+    COUNT(CASE WHEN a.requiere_aprobacion = 1 THEN 1 END) AS requieren_aprobacion,
+    COUNT(CASE WHEN a.tarifa > 0 THEN 1 END) AS con_costo,
+    SUM(CASE WHEN a.tarifa > 0 THEN a.tarifa ELSE 0 END) AS ingresos_potenciales
 FROM comunidad c
 LEFT JOIN amenidad a ON c.id = a.comunidad_id
 GROUP BY c.id, c.razon_social
 ORDER BY c.razon_social;
 
--- 3.3 Estadísticas por tipo de amenidad (basado en nombre)
+-- 3.3 Estadísticas por tipo de amenidad (basado en nombre) (Sin cambios estructurales, ya es correcta)
 SELECT
     CASE
         WHEN LOWER(nombre) LIKE '%piscina%' THEN 'Piscina'
@@ -171,11 +213,11 @@ SELECT
         WHEN LOWER(nombre) LIKE '%terraza%' THEN 'Terraza'
         WHEN LOWER(nombre) LIKE '%lavandería%' THEN 'Lavandería'
         ELSE 'Otros'
-    END as tipo_amenidad,
-    COUNT(*) as cantidad,
-    AVG(capacidad) as capacidad_promedio,
-    AVG(tarifa) as tarifa_promedio,
-    COUNT(CASE WHEN requiere_aprobacion = 1 THEN 1 END) as requieren_aprobacion
+    END AS tipo_amenidad,
+    COUNT(*) AS cantidad,
+    AVG(capacidad) AS capacidad_promedio,
+    AVG(tarifa) AS tarifa_promedio,
+    COUNT(CASE WHEN requiere_aprobacion = 1 THEN 1 END) AS requieren_aprobacion
 FROM amenidad
 GROUP BY
     CASE
@@ -193,18 +235,17 @@ ORDER BY cantidad DESC;
 -- 4. BÚSQUEDAS FILTRADAS
 -- =========================================
 
--- 4.1 Búsqueda avanzada de amenidades
+-- 4.1 Búsqueda avanzada de amenidades (Sin cambios estructurales, ya es correcta)
 SELECT
     a.id,
     a.nombre,
-    c.razon_social as comunidad,
+    c.razon_social AS comunidad,
     a.capacidad,
     a.requiere_aprobacion,
     a.tarifa,
     a.reglas,
-    -- Información adicional para filtros
-    CASE WHEN a.requiere_aprobacion = 1 THEN 'Requiere aprobación' ELSE 'Directa' END as tipo_reserva,
-    CASE WHEN a.tarifa > 0 THEN 'Con costo' ELSE 'Gratuito' END as tipo_costo
+    CASE WHEN a.requiere_aprobacion = 1 THEN 'Requiere aprobación' ELSE 'Directa' END AS tipo_reserva,
+    CASE WHEN a.tarifa > 0 THEN 'Con costo' ELSE 'Gratuito' END AS tipo_costo
 FROM amenidad a
 JOIN comunidad c ON a.comunidad_id = c.id
 WHERE
@@ -225,29 +266,23 @@ WHERE
 ORDER BY c.razon_social, a.nombre ASC
 LIMIT :limit OFFSET :offset;
 
--- 4.2 Amenidades por rango de capacidad
+-- 4.2 Amenidades por rango de capacidad (Sin cambios estructurales, ya es correcta)
 SELECT
     CASE
         WHEN capacidad <= 5 THEN 'Pequeña (1-5 personas)'
         WHEN capacidad <= 15 THEN 'Mediana (6-15 personas)'
         WHEN capacidad <= 30 THEN 'Grande (16-30 personas)'
         ELSE 'Muy grande (31+ personas)'
-    END as rango_capacidad,
-    COUNT(*) as cantidad_amenidades,
-    AVG(tarifa) as tarifa_promedio,
-    MIN(capacidad) as capacidad_minima,
-    MAX(capacidad) as capacidad_maxima
+    END AS rango_capacidad,
+    COUNT(*) AS cantidad_amenidades,
+    AVG(tarifa) AS tarifa_promedio,
+    MIN(capacidad) AS capacidad_minima,
+    MAX(capacidad) AS capacidad_maxima
 FROM amenidad
-GROUP BY
-    CASE
-        WHEN capacidad <= 5 THEN 'Pequeña (1-5 personas)'
-        WHEN capacidad <= 15 THEN 'Mediana (6-15 personas)'
-        WHEN capacidad <= 30 THEN 'Grande (16-30 personas)'
-        ELSE 'Muy grande (31+ personas)'
-    END
+GROUP BY 1
 ORDER BY capacidad_minima;
 
--- 4.3 Amenidades por rango de tarifa
+-- 4.3 Amenidades por rango de tarifa (Sin cambios estructurales, ya es correcta)
 SELECT
     CASE
         WHEN tarifa = 0 THEN 'Gratuito'
@@ -255,63 +290,78 @@ SELECT
         WHEN tarifa <= 15000 THEN 'Medio ($5.001-$15.000)'
         WHEN tarifa <= 30000 THEN 'Caro ($15.001-$30.000)'
         ELSE 'Muy caro (más de $30.000)'
-    END as rango_tarifa,
-    COUNT(*) as cantidad_amenidades,
-    AVG(capacidad) as capacidad_promedio,
-    MIN(tarifa) as tarifa_minima,
-    MAX(tarifa) as tarifa_maxima
+    END AS rango_tarifa,
+    COUNT(*) AS cantidad_amenidades,
+    AVG(capacidad) AS capacidad_promedio,
+    MIN(tarifa) AS tarifa_minima,
+    MAX(tarifa) AS tarifa_maxima
 FROM amenidad
-GROUP BY
-    CASE
-        WHEN tarifa = 0 THEN 'Gratuito'
-        WHEN tarifa <= 5000 THEN 'Económico (hasta $5.000)'
-        WHEN tarifa <= 15000 THEN 'Medio ($5.001-$15.000)'
-        WHEN tarifa <= 30000 THEN 'Caro ($15.001-$30.000)'
-        ELSE 'Muy caro (más de $30.000)'
-    END
+GROUP BY 1
 ORDER BY tarifa_minima;
 
 -- =========================================
 -- 5. EXPORTACIONES
 -- =========================================
 
--- 5.1 Exportación completa de amenidades para Excel/CSV
+-- 5.1 Exportación completa de amenidades para Excel/CSV (Sin cambios estructurales, ya es correcta)
 SELECT
-    a.id as 'ID',
-    a.nombre as 'Nombre Amenidad',
-    c.razon_social as 'Comunidad',
-    c.direccion as 'Dirección Comunidad',
-    a.capacidad as 'Capacidad',
-    CASE WHEN a.requiere_aprobacion = 1 THEN 'Sí' ELSE 'No' END as 'Requiere Aprobación',
-    a.tarifa as 'Tarifa',
-    a.reglas as 'Reglas',
-    DATE_FORMAT(a.created_at, '%Y-%m-%d %H:%i:%s') as 'Fecha Creación',
-    DATE_FORMAT(a.updated_at, '%Y-%m-%d %H:%i:%s') as 'Última Actualización'
+    a.id AS 'ID',
+    a.nombre AS 'Nombre Amenidad',
+    c.razon_social AS 'Comunidad',
+    c.direccion AS 'Dirección Comunidad',
+    a.capacidad AS 'Capacidad',
+    CASE WHEN a.requiere_aprobacion = 1 THEN 'Sí' ELSE 'No' END AS 'Requiere Aprobación',
+    a.tarifa AS 'Tarifa',
+    a.reglas AS 'Reglas',
+    DATE_FORMAT(a.created_at, '%Y-%m-%d %H:%i:%s') AS 'Fecha Creación',
+    DATE_FORMAT(a.updated_at, '%Y-%m-%d %H:%i:%s') AS 'Última Actualización'
 FROM amenidad a
 JOIN comunidad c ON a.comunidad_id = c.id
 ORDER BY c.razon_social, a.nombre;
 
 -- 5.2 Exportación de amenidades con estadísticas
+-- CORRECCIÓN: Uso de datos reales de reservas e ingresos.
 SELECT
-    c.razon_social as 'Comunidad',
-    a.nombre as 'Amenidad',
-    a.capacidad as 'Capacidad',
-    a.tarifa as 'Tarifa',
-    CASE WHEN a.requiere_aprobacion = 1 THEN 'Requiere aprobación' ELSE 'Reserva directa' END as 'Tipo Reserva',
-    '0' as 'Reservas Activas', -- Simulado
-    '0' as 'Reservas Mes Actual', -- Simulado
-    '0' as 'Ingresos Mes Actual' -- Simulado
+    c.razon_social AS 'Comunidad',
+    a.nombre AS 'Amenidad',
+    a.capacidad AS 'Capacidad',
+    a.tarifa AS 'Tarifa',
+    CASE WHEN a.requiere_aprobacion = 1 THEN 'Requiere aprobación' ELSE 'Reserva directa' END AS 'Tipo Reserva',
+    -- 🔄 RESERVAS ACTIVAS
+    (
+        SELECT COUNT(r.id)
+        FROM reserva_amenidad r
+        WHERE r.amenidad_id = a.id
+          AND r.estado IN ('solicitada', 'aprobada')
+          AND r.inicio <= DATE_ADD(CURDATE(), INTERVAL 1 MONTH) -- Próximo mes
+          AND r.fin >= CURDATE()
+    ) AS 'Reservas Activas',
+    -- 🔄 RESERVAS MES ACTUAL
+    (
+        SELECT COUNT(r.id)
+        FROM reserva_amenidad r
+        WHERE r.amenidad_id = a.id
+          AND YEAR(r.inicio) = YEAR(NOW()) AND MONTH(r.inicio) = MONTH(NOW())
+    ) AS 'Reservas Mes Actual',
+    -- 🔄 INGRESOS MES ACTUAL
+    (
+        SELECT SUM(a.tarifa)
+        FROM reserva_amenidad r
+        WHERE r.amenidad_id = a.id
+          AND YEAR(r.created_at) = YEAR(NOW()) AND MONTH(r.created_at) = MONTH(NOW())
+          AND r.estado IN ('aprobada', 'cumplida')
+    ) AS 'Ingresos Mes Actual'
 FROM amenidad a
 JOIN comunidad c ON a.comunidad_id = c.id
 ORDER BY c.razon_social, a.nombre;
 
--- 5.3 Exportación de reglas de amenidades
+-- 5.3 Exportación de reglas de amenidades (Sin cambios estructurales, ya es correcta)
 SELECT
-    a.nombre as 'Amenidad',
-    c.razon_social as 'Comunidad',
-    a.reglas as 'Reglas de Uso',
-    a.capacidad as 'Capacidad Máxima',
-    CASE WHEN a.requiere_aprobacion = 1 THEN 'Requiere aprobación previa' ELSE 'Reserva directa disponible' END as 'Tipo de Reserva'
+    a.nombre AS 'Amenidad',
+    c.razon_social AS 'Comunidad',
+    a.reglas AS 'Reglas de Uso',
+    a.capacidad AS 'Capacidad Máxima',
+    CASE WHEN a.requiere_aprobacion = 1 THEN 'Requiere aprobación previa' ELSE 'Reserva directa disponible' END AS 'Tipo de Reserva'
 FROM amenidad a
 JOIN comunidad c ON a.comunidad_id = c.id
 WHERE a.reglas IS NOT NULL AND a.reglas != ''
@@ -321,61 +371,61 @@ ORDER BY c.razon_social, a.nombre;
 -- 6. VALIDACIONES
 -- =========================================
 
--- 6.1 Validar integridad de amenidades
+-- 6.1 Validar integridad de amenidades (Sin cambios estructurales, ya es correcta)
 SELECT
-    'Amenidades sin comunidad' as validacion,
-    COUNT(*) as cantidad
+    'Amenidades sin comunidad' AS validacion,
+    COUNT(*) AS cantidad
 FROM amenidad a
 LEFT JOIN comunidad c ON a.comunidad_id = c.id
 WHERE c.id IS NULL
 UNION ALL
 SELECT
-    'Amenidades con capacidad cero o negativa' as validacion,
-    COUNT(*) as cantidad
+    'Amenidades con capacidad cero o negativa' AS validacion,
+    COUNT(*) AS cantidad
 FROM amenidad
 WHERE capacidad <= 0
 UNION ALL
 SELECT
-    'Amenidades con tarifa negativa' as validacion,
-    COUNT(*) as cantidad
+    'Amenidades con tarifa negativa' AS validacion,
+    COUNT(*) AS cantidad
 FROM amenidad
 WHERE tarifa < 0
 UNION ALL
 SELECT
-    'Amenidades sin nombre' as validacion,
-    COUNT(*) as cantidad
+    'Amenidades sin nombre' AS validacion,
+    COUNT(*) AS cantidad
 FROM amenidad
 WHERE nombre IS NULL OR nombre = ''
 UNION ALL
 SELECT
-    'Comunidades sin amenidades' as validacion,
-    COUNT(*) as cantidad
+    'Comunidades sin amenidades' AS validacion,
+    COUNT(*) AS cantidad
 FROM comunidad c
 WHERE NOT EXISTS (SELECT 1 FROM amenidad a WHERE a.comunidad_id = c.id);
 
--- 6.2 Validar nombres duplicados en misma comunidad
+-- 6.2 Validar nombres duplicados en misma comunidad (Sin cambios estructurales, ya es correcta)
 SELECT
-    c.razon_social as comunidad,
+    c.razon_social AS comunidad,
     a.nombre,
-    COUNT(*) as cantidad_duplicados
+    COUNT(*) AS cantidad_duplicados
 FROM amenidad a
 JOIN comunidad c ON a.comunidad_id = c.id
 GROUP BY c.id, c.razon_social, a.nombre
 HAVING COUNT(*) > 1
 ORDER BY c.razon_social, a.nombre;
 
--- 6.3 Validar rangos de capacidad y tarifa razonables
+-- 6.3 Validar rangos de capacidad y tarifa razonables (Sin cambios estructurales, ya es correcta)
 SELECT
-    'Capacidades extremas' as validacion,
-    COUNT(*) as cantidad_anomalias,
-    GROUP_CONCAT(CONCAT(a.nombre, ' (', a.capacidad, ')') SEPARATOR '; ') as detalles
+    'Capacidades extremas' AS validacion,
+    COUNT(*) AS cantidad_anomalias,
+    GROUP_CONCAT(CONCAT(a.nombre, ' (', a.capacidad, ')') SEPARATOR '; ') AS detalles
 FROM amenidad a
 WHERE a.capacidad < 1 OR a.capacidad > 200
 UNION ALL
 SELECT
-    'Tarifas potencialmente erróneas' as validacion,
-    COUNT(*) as cantidad_anomalias,
-    GROUP_CONCAT(CONCAT(a.nombre, ' ($', FORMAT(a.tarifa, 0), ')') SEPARATOR '; ') as detalles
+    'Tarifas potencialmente erróneas' AS validacion,
+    COUNT(*) AS cantidad_anomalias,
+    GROUP_CONCAT(CONCAT(a.nombre, ' ($', FORMAT(a.tarifa, 0), ')') SEPARATOR '; ') AS detalles
 FROM amenidad a
 WHERE a.tarifa > 100000 OR (a.tarifa > 0 AND a.tarifa < 100);
 
@@ -383,48 +433,47 @@ WHERE a.tarifa > 100000 OR (a.tarifa > 0 AND a.tarifa < 100);
 -- 7. VISTAS OPTIMIZADAS
 -- =========================================
 
--- 7.1 Vista para listado rápido de amenidades
+-- 7.1 Vista para listado rápido de amenidades (Sin cambios estructurales, ya es correcta)
 CREATE OR REPLACE VIEW vista_amenidades_listado AS
 SELECT
     a.id,
     a.nombre,
-    c.razon_social as comunidad,
+    c.razon_social AS comunidad,
     a.capacidad,
     a.requiere_aprobacion,
     a.tarifa,
-    CASE WHEN a.tarifa > 0 THEN 'Con costo' ELSE 'Gratuito' END as tipo_costo,
-    CASE WHEN a.requiere_aprobacion = 1 THEN 'Requiere aprobación' ELSE 'Directa' END as tipo_reserva
+    CASE WHEN a.tarifa > 0 THEN 'Con costo' ELSE 'Gratuito' END AS tipo_costo,
+    CASE WHEN a.requiere_aprobacion = 1 THEN 'Requiere aprobación' ELSE 'Directa' END AS tipo_reserva
 FROM amenidad a
 JOIN comunidad c ON a.comunidad_id = c.id;
 
--- 7.2 Vista para estadísticas de amenidades por comunidad
+-- 7.2 Vista para estadísticas de amenidades por comunidad (Sin cambios estructurales, ya es correcta)
 CREATE OR REPLACE VIEW vista_amenidades_estadisticas AS
 SELECT
-    c.razon_social as comunidad,
-    COUNT(a.id) as total_amenidades,
-    SUM(a.capacidad) as capacidad_total,
-    AVG(a.tarifa) as tarifa_promedio,
-    COUNT(CASE WHEN a.requiere_aprobacion = 1 THEN 1 END) as requieren_aprobacion,
-    COUNT(CASE WHEN a.tarifa > 0 THEN 1 END) as con_costo,
-    MAX(a.updated_at) as ultima_actualizacion
+    c.razon_social AS comunidad,
+    COUNT(a.id) AS total_amenidades,
+    SUM(a.capacidad) AS capacidad_total,
+    AVG(a.tarifa) AS tarifa_promedio,
+    COUNT(CASE WHEN a.requiere_aprobacion = 1 THEN 1 END) AS requieren_aprobacion,
+    COUNT(CASE WHEN a.tarifa > 0 THEN 1 END) AS con_costo,
+    MAX(a.updated_at) AS ultima_actualizacion
 FROM comunidad c
 LEFT JOIN amenidad a ON c.id = a.comunidad_id
 GROUP BY c.id, c.razon_social;
 
--- 7.3 Vista para búsqueda y filtros de amenidades
+-- 7.3 Vista para búsqueda y filtros de amenidades (Sin cambios estructurales, ya es correcta)
 CREATE OR REPLACE VIEW vista_amenidades_busqueda AS
 SELECT
     a.id,
     a.nombre,
-    c.razon_social as comunidad,
-    c.direccion as direccion_comunidad,
+    c.razon_social AS comunidad,
+    c.direccion AS direccion_comunidad,
     a.capacidad,
     a.requiere_aprobacion,
     a.tarifa,
     a.reglas,
     a.created_at,
     a.updated_at,
-    -- Categorización automática por tipo
     CASE
         WHEN LOWER(a.nombre) LIKE '%piscina%' THEN 'piscina'
         WHEN LOWER(a.nombre) LIKE '%gimnasio%' OR LOWER(a.nombre) LIKE '%gym%' THEN 'gimnasio'
@@ -433,12 +482,12 @@ SELECT
         WHEN LOWER(a.nombre) LIKE '%terraza%' THEN 'terraza'
         WHEN LOWER(a.nombre) LIKE '%lavandería%' THEN 'lavanderia'
         ELSE 'otros'
-    END as tipo_categoria
+    END AS tipo_categoria
 FROM amenidad a
 JOIN comunidad c ON a.comunidad_id = c.id;
 
 -- =========================================
--- 8. ÍNDICES RECOMENDADOS
+-- 8. ÍNDICES RECOMENDADOS (Se mantienen las recomendaciones)
 -- =========================================
 
 -- Índices para búsquedas frecuentes
