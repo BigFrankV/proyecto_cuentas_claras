@@ -8,9 +8,15 @@ import { usePermissions } from '@/lib/usePermissions';
 import { ProtectedRoute } from '@/lib/useAuth';  // Agrega si no está
 
 const MultasListadoPage: React.FC = () => {
+  console.log('🚀 MultasListadoPage - Componente montado');  // ✅ Agrega esto
+
   const router = useRouter();
   const { user } = useAuth();
   const { canCreateMulta } = usePermissions();
+  
+
+  console.log('👤 Usuario en MultasListadoPage:', user);  // ✅ Agrega esto
+
   const [multas, setMultas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,19 +26,22 @@ const MultasListadoPage: React.FC = () => {
   const [totalPaginas, setTotalPaginas] = useState(1);
 
   useEffect(() => {
+    console.log('🔄 useEffect ejecutado en MultasListadoPage');  // ✅ Agrega esto
     cargarMultas();
   }, [filtros, pagina]);
 
   const cargarMultas = async () => {
+    console.log('📡 Cargando multas...');
     setLoading(true);
     setError(null);
     try {
       const response = await multasService.getMultas({ ...filtros, pagina });
+      // ✅ Asegúrate de que response tenga data y totalPaginas
       setMultas(response.data || []);
       setTotalPaginas(response.totalPaginas || 1);
     } catch (err) {
       setError('Error al cargar multas');
-      console.error(err);
+      console.error('Error en cargarMultas:', err);
     } finally {
       setLoading(false);
     }
@@ -65,10 +74,19 @@ const MultasListadoPage: React.FC = () => {
       if (action === 'delete') {
         await Promise.all(selectedFines.map(id => multasService.deleteMulta(id)));
         cargarMultas();
+      } else if (action === 'pay') {
+        // ✅ Agrega acción para marcar pagadas
+        await Promise.all(selectedFines.map(id => multasService.marcarPagada(id)));
+        cargarMultas();
+      } else if (action === 'cancel') {
+        // ✅ Agrega acción para anular
+        await Promise.all(selectedFines.map(id => multasService.anularMulta(id, 'Anulada masivamente')));
+        cargarMultas();
       }
-      // Agrega más acciones si es necesario
+      // ✅ Agrega más si es necesario
     } catch (err) {
       setError('Error en acción masiva');
+      console.error('Error en handleBulkAction:', err);
     }
   };
 
@@ -143,7 +161,7 @@ const MultasListadoPage: React.FC = () => {
           <header className='bg-white border-bottom shadow-sm p-3 mb-4'>
             <div className='d-flex justify-content-between align-items-center'>
               <div className='d-flex align-items-center'>
-                <button className='btn btn-link d-lg-none me-3' onClick={() => {/* toggle sidebar */}}>
+                <button className='btn btn-link d-lg-none me-3' onClick={() => {/* toggle sidebar */ }}>
                   <i className='material-icons'>menu</i>
                 </button>
                 <h1 className='h4 mb-0'>Multas</h1>
@@ -360,9 +378,12 @@ const MultasListadoPage: React.FC = () => {
                 <div className='modal-body'>
                   <div className='mb-3'>
                     <label className='form-label'>Motivo de la apelación</label>
-                    <textarea className='form-control' rows={3} readOnly>
-                      El residente solicita reconsideración debido a circunstancias atenuantes...
-                    </textarea>
+                    <textarea
+                      className='form-control'
+                      rows={3}
+                      readOnly
+                      value="El residente solicita reconsideración debido a circunstancias atenuantes..."
+                    />
                   </div>
                   <div className='mb-3'>
                     <label className='form-label'>Evidencia adjunta</label>

@@ -1,68 +1,15 @@
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 
-const MultaDetallePage: React.FC = () => {
+// Agregar interface
+interface MultaDetallePageProps {
+  multa: Multa;
+  historial: HistorialItem[];
+}
+
+// Cambiar componente
+const MultaDetallePage: React.FC<MultaDetallePageProps> = ({ multa, historial }) => {
   const [activeTab, setActiveTab] = useState('overview');
-
-  // Sample data
-  const fine = {
-    id: 'M-2024-089',
-    violation: 'Ruido excesivo después de las 22:00',
-    unit: 'A-101',
-    resident: 'Juan Pérez',
-    amount: 50000,
-    status: 'pending',
-    date: '2024-09-15',
-    dueDate: '2024-10-15',
-    description: 'El residente fue advertido en múltiples ocasiones sobre el ruido excesivo generado por fiestas nocturnas.',
-    priority: 'medium'
-  };
-
-  const timeline = [
-    {
-      date: '2024-09-15 14:30',
-      title: 'Multa creada',
-      description: 'Multa generada automáticamente por el sistema de monitoreo',
-      type: 'success'
-    },
-    {
-      date: '2024-09-16 09:00',
-      title: 'Notificación enviada',
-      description: 'Correo electrónico y SMS enviados al residente',
-      type: 'success'
-    },
-    {
-      date: '2024-09-20 16:45',
-      title: 'Recordatorio enviado',
-      description: 'Recordatorio automático de pago pendiente',
-      type: 'warning'
-    }
-  ];
-
-  const payments = [
-    {
-      date: '2024-09-16',
-      amount: 0,
-      method: 'N/A',
-      status: 'pending',
-      reference: 'N/A'
-    }
-  ];
-
-  const communications = [
-    {
-      date: '2024-09-16 09:00',
-      type: 'email',
-      title: 'Notificación de multa',
-      content: 'Se le informa que se ha generado una multa por ruido excesivo...'
-    },
-    {
-      date: '2024-09-16 09:05',
-      type: 'sms',
-      title: 'Recordatorio de multa',
-      content: 'Tiene una multa pendiente por $50.000. Fecha límite: 15/10/2024'
-    }
-  ];
 
   const getStatusBadge = (status: string) => {
     const classes = {
@@ -87,7 +34,7 @@ const MultaDetallePage: React.FC = () => {
   };
 
   return (
-    <Layout title={`Detalle de Multa ${fine.id}`}>
+    <Layout title={`Detalle de Multa ${multa.numero}`}>
       <div className='container-fluid p-4'>
         {/* Header */}
         <div className='d-flex justify-content-between align-items-center mb-4'>
@@ -96,12 +43,12 @@ const MultaDetallePage: React.FC = () => {
               <i className='material-icons'>arrow_back</i>
             </button>
             <div>
-              <h1 className='h3 mb-0'>Multa {fine.id}</h1>
-              <small className='text-muted'>Torre Norte - Unidad 4A • Ruidos molestos</small>
+              <h1 className='h3 mb-0'>Multa {multa.numero}</h1>
+              <small className='text-muted'>Torre {multa.torre_nombre} - Unidad {multa.unidad_numero} • {multa.tipo_infraccion}</small>
             </div>
           </div>
           <div className='text-end'>
-            <div className='h4 mb-0 text-primary'>$85.000</div>
+            <div className='h4 mb-0 text-primary'>${multa.monto.toLocaleString()}</div>
             <small className='text-muted'>Monto a pagar</small>
           </div>
         </div>
@@ -109,9 +56,9 @@ const MultaDetallePage: React.FC = () => {
         {/* Status badge and action buttons */}
         <div className='d-flex justify-content-between align-items-start mb-4'>
           <div>
-            <div className={getStatusBadge(fine.status)}>
+            <div className={getStatusBadge(multa.estado)}>
               <i className='material-icons me-2'>schedule</i>
-              {getStatusText(fine.status)}
+              {getStatusText(multa.estado)}
             </div>
             <h2 className='h4 mb-1'>Multa por Ruidos Molestos</h2>
             <p className='text-muted mb-0'>Emitida el 10/09/2024 • Vence el 25/09/2024</p>
@@ -304,14 +251,14 @@ const MultaDetallePage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {payments.map((payment, index) => (
+                    {historial.map((payment, index) => (
                       <tr key={index}>
-                        <td>{payment.date}</td>
-                        <td>${payment.amount.toLocaleString()}</td>
-                        <td>{payment.method}</td>
-                        <td>{payment.reference}</td>
+                        <td>{payment.fecha}</td>
+                        <td>${payment.monto.toLocaleString()}</td>
+                        <td>{payment.metodo}</td>
+                        <td>{payment.referencia}</td>
                         <td>
-                          <span className='badge bg-warning'>{payment.status}</span>
+                          <span className='badge bg-warning'>{payment.estado}</span>
                         </td>
                         <td>
                           <button className='btn btn-sm btn-outline-primary'>
@@ -361,19 +308,19 @@ const MultaDetallePage: React.FC = () => {
                 </button>
               </div>
               <div className='timeline'>
-                {communications.map((comm, index) => (
+                {historial.comunicaciones.map((comm, index) => (
                   <div key={index} className='timeline-item'>
                     <div className='timeline-content'>
-                      <div className='timeline-date'>{comm.date}</div>
+                      <div className='timeline-date'>{comm.fecha}</div>
                       <div className='timeline-title'>
-                        <span className={`communication-type ${comm.type}`}>
+                        <span className={`communication-type ${comm.tipo}`}>
                           <i className='material-icons me-1'>
-                            {comm.type === 'email' ? 'email' : comm.type === 'sms' ? 'sms' : 'notifications'}
+                            {comm.tipo === 'email' ? 'email' : comm.tipo === 'sms' ? 'sms' : 'notifications'}
                           </i>
-                          {comm.title}
+                          {comm.titulo}
                         </span>
                       </div>
-                      <div className='timeline-description'>{comm.content}</div>
+                      <div className='timeline-description'>{comm.contenido}</div>
                     </div>
                   </div>
                 ))}
@@ -383,7 +330,7 @@ const MultaDetallePage: React.FC = () => {
         </div>
 
         {/* Appeal section */}
-        {fine.status === 'pending' && (
+        {multa.estado === 'pending' && (
           <div className='appeal-section mt-4'>
             <div className='appeal-header'>
               <h5>
@@ -461,19 +408,19 @@ const MultaDetallePage: React.FC = () => {
               <form>
                 <div className='mb-3'>
                   <label className='form-label'>Descripción</label>
-                  <textarea className='form-control' rows={3} defaultValue={fine.description}></textarea>
+                  <textarea className='form-control' rows={3} defaultValue={multa.descripcion}></textarea>
                 </div>
                 <div className='mb-3'>
                   <label className='form-label'>Monto</label>
-                  <input type='number' className='form-control' defaultValue={fine.amount} />
+                  <input type='number' className='form-control' defaultValue={multa.monto} />
                 </div>
                 <div className='mb-3'>
                   <label className='form-label'>Fecha de vencimiento</label>
-                  <input type='date' className='form-control' defaultValue={fine.dueDate} />
+                  <input type='date' className='form-control' defaultValue={multa.fecha_vencimiento} />
                 </div>
                 <div className='mb-3'>
                   <label className='form-label'>Prioridad</label>
-                  <select className='form-select' defaultValue={fine.priority}>
+                  <select className='form-select' defaultValue={multa.prioridad}>
                     <option value='low'>Baja</option>
                     <option value='medium'>Media</option>
                     <option value='high'>Alta</option>

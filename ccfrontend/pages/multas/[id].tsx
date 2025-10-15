@@ -4,7 +4,7 @@ import Layout from '@/components/layout/Layout';
 import multasService from '@/lib/multasService';
 import { useAuth } from '@/lib/useAuth';
 import { canRegisterPayment, canEditMulta, canAnularMulta } from '@/lib/usePermissions';
-
+import MultaDetallePage, { MultaDetallePageProps } from '@/components/multas/MultaDetallePage';
 // ============================================
 // TIPOS E INTERFACES
 // ============================================
@@ -68,6 +68,11 @@ interface Apelacion {
   respondido_por?: number;
   fecha_respuesta?: string;
   created_at: string;
+}
+
+interface MultaDetallePageProps {
+  multa: Multa;
+  historial: HistorialItem[];
 }
 
 // ============================================
@@ -188,8 +193,9 @@ export default function MultaDetalle() {
     try {
       const data = await multasService.getMulta(id as string);
       setMulta(data);
-      // Asume que el servicio incluye historial; si no, agrega llamada separada
-      setHistorial(data.historial || []);
+      // ✅ Agrega llamada a historial
+      const hist = await multasService.obtenerHistorial(id as string);
+      setHistorial(hist);
     } catch (err) {
       setError('Error al cargar multa');
       console.error(err);
@@ -224,10 +230,7 @@ export default function MultaDetalle() {
   // Render (copia la estructura del archivo original, reemplaza datos mock con multa y historial)
   return (
     <Layout title={`Detalle de Multa ${multa.numero}`}>
-      {/* Copia el JSX completo, reemplazando datos estáticos con multa.historial, etc. */}
-      {/* Ejemplo: <h1>{multa.numero}</h1> en lugar de datos mock */}
-      {/* Para modales, conecta handlePago, etc. */}
-      {/* ... (estructura completa del archivo original) */}
+      <MultaDetallePage multa={multa} historial={historial} />
     </Layout>
   );
 }

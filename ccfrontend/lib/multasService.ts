@@ -1,4 +1,4 @@
-import  api  from './api';
+import api from './api';
 import {
   Multa,
   MultaFiltros,
@@ -27,21 +27,26 @@ class MultasService {
   }
 
   // ===== CRUD ADAPTADO A TU BACKEND =====
-
-  async getMultas(filtros?: any): Promise<any[]> {
+  async getMultas(filtros?: any): Promise<{ data: any[]; totalPaginas: number }> {
     try {
       const params: any = {};
       if (filtros?.comunidad_id) params.comunidad_id = filtros.comunidad_id;
       if (filtros?.estado) params.estado = filtros.estado;
       if (filtros?.search) params.search = filtros.search;
+      if (filtros?.pagina) params.page = filtros.pagina;  // ✅ Agrega página
       const response = await api.get('/multas', { params });
-      const rows = response.data?.data ?? response.data;
-      return (rows || []).map(r => this.adaptMultaFromBackend(r));
+      const data = response.data?.data ?? response.data;
+      const totalPaginas = response.data?.totalPaginas ?? 1;
+      return {
+        data: (data || []).map(r => this.adaptMultaFromBackend(r)),
+        totalPaginas
+      };
     } catch (err) {
       console.error('❌ Error obteniendo multas:', err);
       throw err;
     }
   }
+
 
   // Helper: adaptar objeto que viene del backend a la forma que espera la UI
   private adaptMultaFromBackend(raw: any): any {
@@ -311,7 +316,7 @@ class MultasService {
   // ===== API HELPERS (aliases usados por las páginas actuales) =====
 
   // Obtener historial de una multa
-  async obtenerHistorial(id: number): Promise<any> {
+  async obtenerHistorial(id: number): Promise<any[]> {
     const response = await api.get(`/multas/${id}/historial`);
     return response.data?.data ?? response.data;
   }
