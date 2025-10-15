@@ -72,9 +72,6 @@ app.use('/', soporteRoutes); // soporte exposes varios paths: tickets, notificac
 app.use('/util', utilRoutes);
 app.use('/files', filesRoutes);
 app.use('/api/valor-utm', valorUtmRoutes);
-// Registrar rutas de apelaciones (añadir cerca de otras app.use)
-const apelacionesRouter = require('./routes/apelaciones');
-app.use('/apelaciones', apelacionesRouter);
 
 app.get('/healthz', (_, res) => res.json({ status: 'ok' }));
 
@@ -109,5 +106,3 @@ async function start() {
 }
 
 start();
-
-module.exports = app;

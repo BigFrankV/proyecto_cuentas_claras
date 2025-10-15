@@ -4,25 +4,64 @@ import StatusBadge from './StatusBadge';
 import TypeBadge from './TypeBadge';
 import AmountCell from './AmountCell';
 import { Cargo } from './CargoCard';
-import { cargosApi } from '@/lib/api/cargos';
-import { useAuth } from '@/lib/useAuth';
 
 export interface CargosListadoProps {
   className?: string;
 }
 
 // Mock data - Replace with actual API calls
-const mockCargos: Cargo[] = [];
+const mockCargos: Cargo[] = [
+  {
+    id: 'CHG-2024-001',
+    concepto: 'Administración Enero 2024',
+    descripcion: 'Cuota de administración mensual',
+    tipo: 'administration',
+    estado: 'paid',
+    monto: 250000,
+    montoAplicado: 250000,
+    unidad: '101-A',
+    periodo: '2024-01',
+    fechaVencimiento: new Date('2024-01-15'),
+    fechaCreacion: new Date('2024-01-01'),
+    cuentaCosto: 'ADM-001',
+  },
+  {
+    id: 'CHG-2024-002',
+    concepto: 'Mantenimiento Ascensor',
+    descripcion: 'Mantenimiento preventivo del ascensor principal',
+    tipo: 'maintenance',
+    estado: 'pending',
+    monto: 180000,
+    montoAplicado: 0,
+    unidad: '102-B',
+    periodo: '2024-02',
+    fechaVencimiento: new Date('2024-02-28'),
+    fechaCreacion: new Date('2024-02-01'),
+    cuentaCosto: 'MNT-002',
+  },
+  {
+    id: 'CHG-2024-003',
+    concepto: 'Seguro Todo Riesgo',
+    descripcion: 'Prima de seguro anual edificio',
+    tipo: 'insurance',
+    estado: 'approved',
+    monto: 450000,
+    montoAplicado: 225000,
+    unidad: '201-A',
+    periodo: '2024-03',
+    fechaVencimiento: new Date('2024-03-30'),
+    fechaCreacion: new Date('2024-03-01'),
+    cuentaCosto: 'SEG-001',
+  },
+];
 
 export default function CargosListado({ className = '' }: CargosListadoProps) {
-  const { user } = useAuth();
-  const [cargos, setCargos] = useState<Cargo[]>([]);
-  const [filteredCargos, setFilteredCargos] = useState<Cargo[]>([]);
+  const [cargos, setCargos] = useState<Cargo[]>(mockCargos);
+  const [filteredCargos, setFilteredCargos] = useState<Cargo[]>(mockCargos);
   const [selectedCargos, setSelectedCargos] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   
   const [filters, setFilters] = useState<FilterOptions>({
     searchTerm: '',
@@ -34,59 +73,6 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
     amountMin: '',
     amountMax: '',
   });
-
-  // Load cargos from API
-  useEffect(() => {
-    const loadCargos = async () => {
-      if (!user?.memberships?.length) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Get cargos for all user communities
-        const allCargos: Cargo[] = [];
-        for (const membership of user.memberships) {
-          if (membership.activo) {
-            try {
-              const communityCargos = await cargosApi.getByComunidad(membership.comunidadId);
-              // Map API response to component format
-              const mappedCargos = communityCargos.map((cargo: any) => ({
-                id: cargo.id_cuenta_cobro_unidad || `CHG-${cargo.id}`,
-                concepto: cargo.concepto || 'Sin concepto',
-                descripcion: cargo.descripcion || '',
-                tipo: cargo.tipo_cargo || 'administration',
-                estado: cargo.estado || 'pending',
-                monto: cargo.monto || 0,
-                montoAplicado: cargo.monto_aplicado || 0,
-                unidad: cargo.unidad || 'N/A',
-                periodo: cargo.periodo || '',
-                fechaVencimiento: cargo.fecha_vencimiento ? new Date(cargo.fecha_vencimiento) : new Date(),
-                fechaCreacion: cargo.fecha_creacion ? new Date(cargo.fecha_creacion) : new Date(),
-                cuentaCosto: cargo.cuenta_costo || '',
-              }));
-              allCargos.push(...mappedCargos);
-            } catch (error) {
-              console.error(`Error loading cargos for community ${membership.comunidadId}:`, error);
-            }
-          }
-        }
-
-        setCargos(allCargos);
-        setFilteredCargos(allCargos);
-      } catch (error) {
-        console.error('Error loading cargos:', error);
-        setError('Error al cargar los cargos');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCargos();
-  }, [user]);
 
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat('es-CO', {
@@ -247,10 +233,8 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
   const totalAmount = filteredCargos.reduce((sum, cargo) => sum + cargo.monto, 0);
 
   useEffect(() => {
-    if (!loading && cargos.length > 0) {
-      applyFilters();
-    }
-  }, [cargos, loading]);
+    applyFilters();
+  }, []);
 
   return (
     <div className={`cargos-listado ${className}`}>
@@ -366,11 +350,6 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
               <div className="spinner-border" role="status">
                 <span className="visually-hidden">Cargando...</span>
               </div>
-            </div>
-          ) : error ? (
-            <div className="alert alert-danger" role="alert">
-              <i className="material-icons me-2">error</i>
-              {error}
             </div>
           ) : filteredCargos.length === 0 ? (
             <div className="empty-state">

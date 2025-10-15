@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: mysql:8.0
@@ -12,7 +10,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD:-apipassword}
     volumes:
       - db_data:/var/lib/mysql
-      - ./ccbackend/base/BBDD+pob_datos:/docker-entrypoint-initdb.d:ro
+      - ./ccbackend/base:/docker-entrypoint-initdb.d:ro
     ports:
       - "3306:3306"
 
@@ -52,6 +50,22 @@ services:
       PMA_PASSWORD: ${DB_PASSWORD:-apipassword}
     ports:
       - "8080:80"
+
+  frontend:
+    build:
+      context: ./ccfrontend
+      dockerfile: Dockerfile
+    container_name: cuentasclaras_frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      - NODE_ENV=production
+      - API_BASE_URL=http://api:3000
+      - NEXT_PUBLIC_APP_NAME=Cuentas Claras
+      - NEXT_PUBLIC_ENVIRONMENT=production
+    ports:
+      - "5173:5173"
 
 
 volumes:
