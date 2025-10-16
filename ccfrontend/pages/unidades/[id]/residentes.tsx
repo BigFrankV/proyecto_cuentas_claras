@@ -3,26 +3,36 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import apiClient from '@/lib/api';
+import { getResidentesUnidad, type Residente } from '@/lib/unidadesService';
 
 export default function ResidentesUnidad() {
   const router = useRouter();
   const { id } = router.query;
-  const [residentes, setResidentes] = useState<any[]>([]);
+  const [residentes, setResidentes] = useState<Residente[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
     let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
-        const res = await apiClient.get(`/unidades/${id}/residentes`);
-        if (mounted) setResidentes(res.data || []);
-      } catch (err) { console.error(err); } finally { setLoading(false); }
+        const data = await getResidentesUnidad(Number(id));
+        if (mounted) {
+          setResidentes(data || []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
   return (
@@ -43,10 +53,16 @@ export default function ResidentesUnidad() {
                   {!loading && residentes.length === 0 && <div className='alert alert-warning'>No hay residentes</div>}
                   {!loading && residentes.length > 0 && (
                     <ul className='list-group'>
-                      {residentes.map(r => (
+                      {residentes.map((r) => (
                         <li key={r.id} className='list-group-item'>
-                          <div className='fw-medium'>{r.nombre}</div>
-                          <div className='small text-muted'>{r.rut || ''}</div>
+                          <div className='fw-medium'>
+                            {r.nombres} {r.apellidos}
+                          </div>
+                          <div className='small text-muted'>
+                            {r.rut && `RUT: ${r.rut}${r.dv ? `-${r.dv}` : ''}`}
+                            {r.tipo && ` • Tipo: ${r.tipo}`}
+                            {r.desde && ` • Desde: ${r.desde}`}
+                          </div>
                         </li>
                       ))}
                     </ul>

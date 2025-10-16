@@ -60,10 +60,22 @@ const nextConfig = {
 
   // Configuración de webpack personalizada
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Configuración personalizada de webpack si es necesaria
+    // Excluir carpeta stories del build
     config.module.rules.push({
       test: /\.svg$/,
       use: ['@svgr/webpack'],
+    });
+
+    // Excluir archivos de stories del build
+    config.module.rules.forEach(rule => {
+      if (rule.test && rule.test.toString().includes('tsx')) {
+        if (rule.exclude) {
+          rule.exclude = Array.isArray(rule.exclude) ? rule.exclude : [rule.exclude];
+          rule.exclude.push(/stories/);
+        } else {
+          rule.exclude = /stories/;
+        }
+      }
     });
 
     return config;

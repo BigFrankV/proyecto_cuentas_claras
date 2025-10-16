@@ -3,7 +3,13 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect, useMemo } from 'react';
-import apiClient from '@/lib/api';
+import {
+  getUnidadesListado,
+  getComunidadesDropdown,
+  getEdificiosDropdown,
+  getTorresDropdown,
+  type Unidad as UnidadAPI,
+} from '@/lib/unidadesService';
 
 interface Unidad {
   id: string;
@@ -17,11 +23,33 @@ interface Unidad {
   dormitorios: number;
   banos: number;
   estado: 'Activa' | 'Inactiva' | 'Mantenimiento';
-  propietario?: string;
-  residente?: string;
+  propietario: string | undefined;
+  residente: string | undefined;
   saldoPendiente: number;
-  ultimoPago?: string;
+  ultimoPago: string | undefined;
   fechaCreacion: string;
+}
+
+// Función para transformar datos de la API al formato del componente
+function transformUnidadFromAPI(u: UnidadAPI): Unidad {
+  return {
+    id: String(u.id),
+    numero: u.codigo,
+    piso: u.piso || 0,
+    torre: u.torre_nombre || 'Sin torre',
+    edificio: u.edificio_nombre || 'Sin edificio',
+    comunidad: u.comunidad_nombre || 'Sin comunidad',
+    tipo: (u.tipo as any) || 'Departamento',
+    superficie: u.m2_utiles || u.superficie || 0,
+    dormitorios: u.dormitorios || 0,
+    banos: u.nro_banos || 0,
+    estado: (u.activa ? 'Activa' : 'Inactiva') as any,
+    propietario: u.propietarios,
+    residente: u.arrendatarios,
+    saldoPendiente: u.saldo_pendiente || 0,
+    ultimoPago: u.ultimo_pago_fecha,
+    fechaCreacion: u.created_at || new Date().toISOString(),
+  };
 }
 
 const mockUnidades: Unidad[] = [
@@ -74,7 +102,9 @@ const mockUnidades: Unidad[] = [
     banos: 2,
     estado: 'Inactiva',
     propietario: 'Luis Martínez',
+    residente: undefined,
     saldoPendiente: 450000,
+    ultimoPago: undefined,
     fechaCreacion: '2021-05-10'
   },
   {
@@ -108,7 +138,9 @@ const mockUnidades: Unidad[] = [
     banos: 3,
     estado: 'Mantenimiento',
     propietario: 'Roberto Torres',
+    residente: undefined,
     saldoPendiente: 320000,
+    ultimoPago: undefined,
     fechaCreacion: '2022-01-08'
   }
 ];
@@ -141,14 +173,18 @@ export default function UnidadesListado() {
     let mounted = true;
     (async () => {
       try {
-  const res = await apiClient.get('/unidades/dropdowns/comunidades');
-  if (!mounted) return;
-  setComunidadesState(res.data || []);
+        const data = await getComunidadesDropdown();
+        if (!mounted) {
+          return;
+        }
+        setComunidadesState(data || []);
       } catch (err) {
         console.error('Error loading comunidades dropdown', err);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -160,14 +196,18 @@ export default function UnidadesListado() {
           setAvailableEdificios([]);
           return;
         }
-        const res = await apiClient.get('/unidades/dropdowns/edificios', { params: { comunidad_id: filters.comunidad } });
-        if (!mounted) return;
-        setAvailableEdificios(res.data || []);
+        const data = await getEdificiosDropdown(Number(filters.comunidad));
+        if (!mounted) {
+          return;
+        }
+        setAvailableEdificios(data || []);
       } catch (err) {
         console.error('Error loading edificios dropdown', err);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [filters.comunidad]);
 
   useEffect(() => {
@@ -179,14 +219,18 @@ export default function UnidadesListado() {
           setAvailableTorres([]);
           return;
         }
-        const res = await apiClient.get('/unidades/dropdowns/torres', { params: { edificio_id: filters.edificio } });
-        if (!mounted) return;
-        setAvailableTorres(res.data || []);
+        const data = await getTorresDropdown(Number(filters.edificio));
+        if (!mounted) {
+          return;
+        }
+        setAvailableTorres(data || []);
       } catch (err) {
         console.error('Error loading torres dropdown', err);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [filters.edificio]);
 
   // (removed legacy useMemo for availableTorres)
@@ -328,48 +372,51 @@ export default function UnidadesListado() {
       setError(null);
       try {
         const params: any = {};
-        // map filters from UI to API params (basic)
-        if (filters.comunidad) params.comunidad_id = filters.comunidad;
-        if (filters.edificio) params.edificio_id = filters.edificio;
-        if (filters.torre) params.torre_id = filters.torre;
-        if (filters.estado) params.activa = filters.estado === 'Activa' ? true : undefined;
-        if (filters.tipo) params.tipo = filters.tipo;
-        if (searchTerm) params.search = searchTerm;
+        // map filters from UI to API params
+        if (filters.comunidad) {
+          params.comunidad_id = Number(filters.comunidad);
+        }
+        if (filters.edificio) {
+          params.edificio_id = Number(filters.edificio);
+        }
+        if (filters.torre) {
+          params.torre_id = Number(filters.torre);
+        }
+        if (filters.estado) {
+          params.activa = filters.estado === 'Activa' ? true : false;
+        }
+        if (searchTerm) {
+          params.search = searchTerm;
+        }
 
-        const resp = await apiClient.get('/unidades', { params });
-        if (!mounted) return;
-        const data = resp.data || [];
-        // Map backend shapes to frontend Unidad as needed (light mapping)
-        const mapped = data.map((u: any) => ({
-          id: String(u.id),
-          numero: u.codigo || u.numero || '',
-          piso: u.piso || 0,
-          torre: u.torre_nombre || u.torre || '',
-          edificio: u.edificio_nombre || u.edificio || '',
-          comunidad: u.comunidad_nombre || u.comunidad || '',
-          tipo: u.tipo || 'Departamento',
-          superficie: u.m2_utiles || u.superficie || 0,
-          dormitorios: u.dormitorios || 0,
-          banos: u.nro_banos || u.banos || 0,
-          estado: u.estado || 'Activa',
-          propietario: u.propietario_nombre || u.propietario || undefined,
-          residente: u.residente_nombre || undefined,
-          saldoPendiente: u.saldo_pendiente || u.saldo || 0,
-          ultimoPago: u.ultimo_pago_fecha || u.ultimoPago || undefined,
-          fechaCreacion: u.created_at || u.fechaCreacion || ''
-        }));
+        const data = await getUnidadesListado(params);
+        if (!mounted) {
+          return;
+        }
+
+        // Transform API data to component format
+        const mapped = data.map(transformUnidadFromAPI);
         setUnidades(mapped);
-        setFilteredUnidades(mapped);
       } catch (err: any) {
         console.error('Error fetching unidades', err);
-        setError(err?.response?.data?.error || err.message || 'Error al cargar unidades');
+        const errorMsg =
+          err?.response?.data?.error || err.message || 'Error al cargar unidades';
+        setError(errorMsg);
       } finally {
         setLoading(false);
       }
     };
     load();
-    return () => { mounted = false; };
-  }, [filters.comunidad, filters.edificio, filters.torre, filters.estado, filters.tipo, searchTerm]);
+    return () => {
+      mounted = false;
+    };
+  }, [
+    filters.comunidad,
+    filters.edificio,
+    filters.torre,
+    filters.estado,
+    searchTerm,
+  ]);
 
   return (
     <ProtectedRoute>

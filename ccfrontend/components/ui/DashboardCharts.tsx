@@ -4,72 +4,77 @@ import GastosPorCategoriaChart from '@/components/charts/GastosPorCategoriaChart
 import EstadoPagosChart from '@/components/charts/EstadoPagosChart';
 import TendenciasEmisionesChart from '@/components/charts/TendenciasEmisionesChart';
 import ConsumosMedidores from '@/components/charts/ConsumosMedidores';
-
-// Datos de ejemplo para demostración visual
-const datosMockGastos = [
-  { categoria: 'Mantención', total: 2500000, color: '#FF6384' },
-  { categoria: 'Servicios Básicos', total: 1800000, color: '#36A2EB' },
-  { categoria: 'Seguridad', total: 1200000, color: '#FFCE56' },
-  { categoria: 'Limpieza', total: 800000, color: '#4BC0C0' },
-  { categoria: 'Administración', total: 600000, color: '#9966FF' },
-  { categoria: 'Jardines', total: 400000, color: '#FF9F40' },
-];
-
-const datosMockPagos = [
-  { tipo: 'Pagos al Día', cantidad: 45, porcentaje: 75, color: '#28a745' },
-  {
-    tipo: 'Atrasados 1-30 días',
-    cantidad: 12,
-    porcentaje: 20,
-    color: '#ffc107',
-  },
-  { tipo: 'Morosos +30 días', cantidad: 3, porcentaje: 5, color: '#dc3545' },
-];
-
-const datosMockEmisiones = [
-  { fecha: '2025-04', monto: 5200000, cantidad: 58 },
-  { fecha: '2025-05', monto: 4800000, cantidad: 58 },
-  { fecha: '2025-06', monto: 5100000, cantidad: 58 },
-  { fecha: '2025-07', monto: 5400000, cantidad: 58 },
-  { fecha: '2025-08', monto: 5600000, cantidad: 58 },
-  { fecha: '2025-09', monto: 5300000, cantidad: 56 },
-];
-
-const datosMockMedidores = [
-  {
-    medidor: 'Agua - Torre A',
-    consumo: 2850,
-    periodo: 'Sep 2025',
-    unidad: 'L',
-  },
-  {
-    medidor: 'Agua - Torre B',
-    consumo: 3200,
-    periodo: 'Sep 2025',
-    unidad: 'L',
-  },
-  {
-    medidor: 'Electricidad - Común',
-    consumo: 1250,
-    periodo: 'Sep 2025',
-    unidad: 'kWh',
-  },
-  { medidor: 'Gas - Caldera', consumo: 180, periodo: 'Sep 2025', unidad: 'm³' },
-  { medidor: 'Agua - Piscina', consumo: 950, periodo: 'Sep 2025', unidad: 'L' },
-];
+import {
+  getGraficoEmisiones,
+  getGraficoEstadoPagos,
+  getGraficoGastosPorCategoria,
+  ChartDataPoint,
+  EstadoPago,
+  GastoPorCategoria,
+  TendenciaEmision
+} from '@/lib/dashboardService';
 
 export default function DashboardCharts() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [emisionesData, setEmisionesData] = useState<TendenciaEmision[]>([]);
+  const [pagosData, setPagosData] = useState<EstadoPago[]>([]);
+  const [gastosData, setGastosData] = useState<GastoPorCategoria[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  // Asumimos que la comunidad por defecto es 1, pero esto debería venir del contexto del usuario
+  const comunidadId = 1;
 
   useEffect(() => {
-    // Simular carga de datos
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    const loadChartData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    return () => clearTimeout(timer);
-  }, []);
+        // Cargar datos de gráficos en paralelo
+        const [emisiones, pagos, gastos] = await Promise.all([
+          getGraficoEmisiones(comunidadId),
+          getGraficoEstadoPagos(comunidadId),
+          getGraficoGastosPorCategoria(comunidadId)
+        ]);
+
+        setEmisionesData(emisiones);
+        setPagosData(pagos);
+        setGastosData(gastos);
+      } catch (err: any) {
+        console.error('Error loading chart data:', err);
+        setError(err.message || 'Error al cargar datos de gráficos');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadChartData();
+  }, [comunidadId]);
+
+  // Datos mockeados para medidores (por ahora, hasta que tengamos el endpoint)
+  const medidoresData = [
+    {
+      medidor: 'Agua - Torre A',
+      consumo: 2850,
+      periodo: 'Sep 2025',
+      unidad: 'L',
+    },
+    {
+      medidor: 'Agua - Torre B',
+      consumo: 3200,
+      periodo: 'Sep 2025',
+      unidad: 'L',
+    },
+    {
+      medidor: 'Electricidad - Común',
+      consumo: 1250,
+      periodo: 'Sep 2025',
+      unidad: 'kWh',
+    },
+    { medidor: 'Gas - Caldera', consumo: 180, periodo: 'Sep 2025', unidad: 'm³' },
+    { medidor: 'Agua - Piscina', consumo: 950, periodo: 'Sep 2025', unidad: 'L' },
+  ];
 
   return (
     <div className='row mb-4'>
@@ -88,7 +93,7 @@ export default function DashboardCharts() {
           </div>
           <div className='chart-container'>
             <TendenciasEmisionesChart
-              data={datosMockEmisiones}
+              data={emisionesData}
               loading={loading}
             />
           </div>
@@ -106,7 +111,7 @@ export default function DashboardCharts() {
             <span className='badge bg-info'>60 unidades</span>
           </div>
           <div className='chart-container'>
-            <EstadoPagosChart data={datosMockPagos} loading={loading} />
+            <EstadoPagosChart data={pagosData} loading={loading} />
           </div>
         </div>
       </div>
@@ -127,7 +132,7 @@ export default function DashboardCharts() {
             </div>
           </div>
           <div className='chart-container'>
-            <GastosPorCategoriaChart data={datosMockGastos} loading={loading} />
+            <GastosPorCategoriaChart data={gastosData} loading={loading} />
           </div>
         </div>
       </div>
@@ -143,7 +148,7 @@ export default function DashboardCharts() {
             <span className='badge bg-secondary'>5 medidores</span>
           </div>
           <div className='chart-container' style={{ minHeight: '300px' }}>
-            <ConsumosMedidores data={datosMockMedidores} loading={loading} />
+            <ConsumosMedidores data={medidoresData} loading={loading} />
           </div>
         </div>
       </div>

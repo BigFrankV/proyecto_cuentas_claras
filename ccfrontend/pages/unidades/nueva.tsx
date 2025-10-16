@@ -3,8 +3,13 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
-import apiClient from '@/lib/api';
+import React, { useState, useEffect } from 'react';
+import {
+  crearUnidad,
+  getComunidadesDropdown,
+  getEdificiosDropdown,
+  getTorresDropdown,
+} from '@/lib/unidadesService';
 
 interface FormData {
   comunidad: string;
@@ -34,27 +39,21 @@ interface Medidor {
   ubicacion: string;
 }
 
-const comunidades = [
-  { id: '1', nombre: 'Las Palmas' },
-  { id: '2', nombre: 'Edificio Central' },
-  { id: '3', nombre: 'Jardines del Este' }
-];
-
-const edificios = [
-  { id: '1', nombre: 'Torre Central', comunidadId: '2' },
-  { id: '2', nombre: 'Edificio Norte', comunidadId: '1' },
-  { id: '3', nombre: 'Jardines del Este', comunidadId: '3' }
-];
-
-const torres = [
-  { id: '1', nombre: 'Torre A', edificioId: '2' },
-  { id: '2', nombre: 'Torre B', edificioId: '1' },
-  { id: '3', nombre: 'Torre C', edificioId: '3' }
-];
+interface DropdownOption {
+  id: number;
+  nombre: string;
+}
 
 const caracteristicasDisponibles = [
-  'Balcón', 'Terraza', 'Luminoso', 'Vista', 'Pet Friendly', 
-  'Amoblado', 'Calefacción', 'Aire acondicionado', 'Chimenea'
+  'Balcón',
+  'Terraza',
+  'Luminoso',
+  'Vista',
+  'Pet Friendly',
+  'Amoblado',
+  'Calefacción',
+  'Aire acondicionado',
+  'Chimenea',
 ];
 
 export default function UnidadNueva() {
@@ -85,28 +84,85 @@ export default function UnidadNueva() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Filtrar edificios según comunidad seleccionada
-  const availableEdificios = edificios.filter(edificio => 
-    !formData.comunidad || edificio.comunidadId === formData.comunidad
-  );
+  // Estados para dropdowns dinámicos
+  const [comunidades, setComunidades] = useState<DropdownOption[]>([]);
+  const [availableEdificios, setAvailableEdificios] = useState<DropdownOption[]>([]);
+  const [availableTorres, setAvailableTorres] = useState<DropdownOption[]>([]);
 
-  // Filtrar torres según edificio seleccionado
-  const availableTorres = torres.filter(torre => 
-    !formData.edificio || torre.edificioId === formData.edificio
-  );
+  // Cargar comunidades al montar
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await getComunidadesDropdown();
+        if (mounted) {
+          setComunidades(data || []);
+        }
+      } catch (err) {
+        console.error('Error loading comunidades', err);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Cargar edificios cuando cambie la comunidad
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!formData.comunidad) {
+        setAvailableEdificios([]);
+        return;
+      }
+      try {
+        const data = await getEdificiosDropdown(Number(formData.comunidad));
+        if (mounted) {
+          setAvailableEdificios(data || []);
+        }
+      } catch (err) {
+        console.error('Error loading edificios', err);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [formData.comunidad]);
+
+  // Cargar torres cuando cambie el edificio
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!formData.edificio) {
+        setAvailableTorres([]);
+        return;
+      }
+      try {
+        const data = await getTorresDropdown(Number(formData.edificio));
+        if (mounted) {
+          setAvailableTorres(data || []);
+        }
+      } catch (err) {
+        console.error('Error loading torres', err);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [formData.edificio]);
 
   // Calcular m² totales automáticamente
   useEffect(() => {
     const totales = formData.m2Utiles + formData.m2Terrazas;
-    setFormData(prev => ({ ...prev, m2Totales: totales }));
+    setFormData((prev) => ({ ...prev, m2Totales: totales }));
   }, [formData.m2Utiles, formData.m2Terrazas]);
 
   const handleInputChange = (field: keyof FormData, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
     // Limpiar errores del campo
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: '' }));
     }
 
     // Resetear campos dependientes
@@ -162,14 +218,15 @@ export default function UnidadNueva() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
 
     setIsSubmitting(true);
-    
+
     try {
       // Construir payload según API
-      const payload = {
+      const payload: any = {
         codigo: formData.codigoUnidad,
         tipo: formData.tipoUnidad,
         piso: formData.piso,
@@ -179,18 +236,23 @@ export default function UnidadNueva() {
         m2_utiles: formData.m2Utiles,
         m2_terraza: formData.m2Terrazas,
         alicuota: formData.alicuota,
-        estacionamiento: formData.estacionamiento ? { numero: formData.estacionamiento, ubicacion: formData.ubicacionEstacionamiento } : null,
-        bodega: formData.bodega ? { numero: formData.bodega, ubicacion: formData.ubicacionBodega } : null,
-        estado: formData.estadoInicial,
-        caracteristicas: selectedCaracteristicas,
-        medidores: medidores.map(m => ({ tipo: m.tipo, numero: m.numero, ubicacion: m.ubicacion }))
+        nro_estacionamiento: formData.estacionamiento || undefined,
+        nro_bodega: formData.bodega || undefined,
+        activa: formData.estadoInicial === 'activa',
       };
 
-      // POST to create unidad on selected comunidad
-      const comunidadId = formData.comunidad;
-      const resp = await apiClient.post(`/unidades/comunidad/${comunidadId}`, payload);
-      // on success, navigate to new unidad detail or list
-      const created = resp.data;
+      // Agregar edificio_id o torre_id
+      if (formData.torre) {
+        payload.torre_id = Number(formData.torre);
+      } else if (formData.edificio) {
+        payload.edificio_id = Number(formData.edificio);
+      }
+
+      // Crear unidad
+      const comunidadId = Number(formData.comunidad);
+      const created = await crearUnidad(comunidadId, payload);
+
+      // Navegar al detalle de la unidad creada
       if (created && created.id) {
         router.push(`/unidades/${created.id}`);
       } else {
@@ -203,8 +265,10 @@ export default function UnidadNueva() {
       const serverErr = error?.response?.data;
       if (serverErr) {
         if (serverErr.errors) {
-          const newErrors: Record<string,string> = {};
-          Object.keys(serverErr.errors).forEach(k => { newErrors[k] = serverErr.errors[k].msg || serverErr.errors[k]; });
+          const newErrors: Record<string, string> = {};
+          Object.keys(serverErr.errors).forEach((k) => {
+            newErrors[k] = serverErr.errors[k].msg || serverErr.errors[k];
+          });
           setErrors(newErrors);
         } else if (serverErr.error) {
           setErrors({ _global: serverErr.error });

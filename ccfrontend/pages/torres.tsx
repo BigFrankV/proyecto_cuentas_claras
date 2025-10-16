@@ -1,57 +1,96 @@
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
-interface Torre {
+import {
+  getTorresListado,
+  getEstadisticasEdificio,
+  Torre,
+  EstadisticasEdificio,
+} from '@/lib/torresService';
+import { ProtectedRoute } from '@/lib/useAuth';
+
+interface TorreView {
   id: string;
   nombre: string;
   codigo: string;
   pisos: number;
   unidades: number;
+  unidadesOcupadas: number;
   estado: 'Activa' | 'Inactiva' | 'Mantenimiento';
   fechaCreacion: string;
-  imagen?: string;
+  imagen?: string | undefined;
 }
 
-const mockTorres: Torre[] = [
-  {
-    id: '1',
-    nombre: 'Torre Norte',
-    codigo: 'TN-001',
-    pisos: 12,
-    unidades: 24,
-    estado: 'Activa',
-    fechaCreacion: '2025-09-05',
-    imagen: 'https://via.placeholder.com/300x200?text=Torre+Norte'
-  },
-  {
-    id: '2',
-    nombre: 'Torre Sur',
-    codigo: 'TS-002',
-    pisos: 12,
-    unidades: 24,
-    estado: 'Activa',
-    fechaCreacion: '2025-09-05',
-    imagen: 'https://via.placeholder.com/300x200?text=Torre+Sur'
-  }
-];
-
 export default function TorresListado() {
+  const [torres, setTorres] = useState<TorreView[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('nombre-asc');
   const [filterBy, setFilterBy] = useState('todas');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
   const [selectedTorres, setSelectedTorres] = useState<string[]>([]);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [stats, setStats] = useState<EstadisticasEdificio>({
+    totalTorres: 0,
+    totalUnidades: 0,
+    promedioUnidadesPorTorre: 0,
+    totalUnidadesOcupadas: 0,
+    totalUnidadesVacantes: 0,
+  });
+
+  // TODO: Obtener edificioId dinámicamente (desde router o contexto)
+  const edificioId = 1;
+
+  // Cargar torres y estadísticas
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Cargar torres y estadísticas en paralelo
+        const [torresData, estadisticas] = await Promise.all([
+          getTorresListado(edificioId),
+          getEstadisticasEdificio(edificioId),
+        ]);
+
+        // Transformar datos de la API al formato del componente
+        const torresView: TorreView[] = torresData.map((torre) => ({
+          id: String(torre.id),
+          nombre: torre.nombre,
+          codigo: torre.codigo,
+          pisos: torre.numPisos || 0,
+          unidades: torre.totalUnidades || 0,
+          unidadesOcupadas: torre.unidadesOcupadas || 0,
+          estado: 'Activa', // TODO: Agregar campo estado en la API
+          fechaCreacion: torre.fechaCreacion || '',
+          imagen: undefined, // TODO: Agregar campo imagen en la API
+        }));
+
+        setTorres(torresView);
+        setStats(estadisticas);
+      } catch (err) {
+        console.error('Error cargando torres:', err);
+        setError('No se pudieron cargar las torres. Por favor, intente nuevamente.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [edificioId]);
 
   // Funciones de filtrado y ordenamiento
   const filteredAndSortedTorres = useMemo(() => {
-    let filtered = mockTorres.filter(torre => {
-      const matchesSearch = torre.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           torre.codigo.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterBy === 'todas' || torre.nombre.toLowerCase().includes(filterBy.toLowerCase());
+    let filtered = torres.filter((torre) => {
+      const matchesSearch =
+        torre.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        torre.codigo.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter =
+        filterBy === 'todas' || torre.nombre.toLowerCase().includes(filterBy.toLowerCase());
       return matchesSearch && matchesFilter;
     });
 
@@ -72,12 +111,12 @@ export default function TorresListado() {
     });
 
     return filtered;
-  }, [searchTerm, sortBy, filterBy]);
+  }, [torres, searchTerm, sortBy, filterBy]);
 
   // Manejo de selección
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedTorres(filteredAndSortedTorres.map(torre => torre.id));
+      setSelectedTorres(filteredAndSortedTorres.map((torre) => torre.id));
     } else {
       setSelectedTorres([]);
     }
@@ -87,26 +126,19 @@ export default function TorresListado() {
     if (checked) {
       setSelectedTorres([...selectedTorres, torreId]);
     } else {
-      setSelectedTorres(selectedTorres.filter(id => id !== torreId));
+      setSelectedTorres(selectedTorres.filter((id) => id !== torreId));
     }
-  };
-
-  // Estadísticas
-  const stats = {
-    totalTorres: mockTorres.length,
-    totalUnidades: mockTorres.reduce((sum, torre) => sum + torre.unidades, 0),
-    promedioUnidades: Math.round(mockTorres.reduce((sum, torre) => sum + torre.unidades, 0) / mockTorres.length)
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-CL', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
-  const getEstadoBadgeClass = (estado: Torre['estado']) => {
+  const getEstadoBadgeClass = (estado: TorreView['estado']) => {
     switch (estado) {
       case 'Activa':
         return 'bg-success';
@@ -118,6 +150,38 @@ export default function TorresListado() {
         return 'bg-secondary';
     }
   };
+
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <Layout title="Torres">
+          <div className="container-fluid py-4">
+            <div className="text-center">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Cargando...</span>
+              </div>
+              <p className="mt-2">Cargando torres...</p>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
+
+  if (error) {
+    return (
+      <ProtectedRoute>
+        <Layout title="Torres">
+          <div className="container-fluid py-4">
+            <div className="alert alert-danger" role="alert">
+              <i className="material-icons align-middle me-2">error</i>
+              {error}
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -197,7 +261,7 @@ export default function TorresListado() {
                           left: '10px', 
                           transform: 'translateY(-50%)', 
                           color: '#6c757d',
-                          fontSize: '20px'
+                          fontSize: '20px',
                         }}>search</i>
                         <input 
                           type="text" 
@@ -265,7 +329,7 @@ export default function TorresListado() {
                       color: 'white',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
                     }}>
                       <i className="material-icons">location_city</i>
                     </div>
@@ -318,7 +382,7 @@ export default function TorresListado() {
                       <i className="material-icons">grid_view</i>
                     </div>
                     <div>
-                      <div className="h3 mb-0">{stats.promedioUnidades}</div>
+                      <div className="h3 mb-0">{stats.promedioUnidadesPorTorre}</div>
                       <div className="text-muted">Promedio Unidades</div>
                     </div>
                   </div>

@@ -3,28 +3,36 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import apiClient from '@/lib/api';
+import { getTenenciasUnidad, type Tenencia } from '@/lib/unidadesService';
 
 export default function TenenciasUnidad() {
   const router = useRouter();
   const { id } = router.query;
-  const [tenencias, setTenencias] = useState<any[]>([]);
+  const [tenencias, setTenencias] = useState<Tenencia[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
     let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
-        const res = await apiClient.get(`/unidades/${id}/tenencias`);
-        if (mounted) setTenencias(res.data || []);
+        const data = await getTenenciasUnidad(Number(id), true);
+        if (mounted) {
+          setTenencias(data || []);
+        }
       } catch (err) {
         console.error('Error loading tenencias', err);
-      } finally { setLoading(false); }
+      } finally {
+        setLoading(false);
+      }
     };
     load();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
   return (
@@ -51,10 +59,19 @@ export default function TenenciasUnidad() {
                   )}
                   {!loading && tenencias.length > 0 && (
                     <ul className='list-group'>
-                      {tenencias.map(t => (
+                      {tenencias.map((t) => (
                         <li key={t.id} className='list-group-item'>
-                          <div className='fw-medium'>{t.persona_nombre || t.nombre}</div>
-                          <div className='small text-muted'>Tipo: {t.tipo} - Desde: {t.desde}</div>
+                          <div className='fw-medium'>
+                            {t.nombres} {t.apellidos}
+                          </div>
+                          <div className='small text-muted'>
+                            Tipo: {t.tipo} • Desde: {t.desde}
+                            {t.hasta && ` • Hasta: ${t.hasta}`}
+                            {t.porcentaje && ` • ${t.porcentaje}%`}
+                          </div>
+                          {t.email && (
+                            <div className='small text-muted'>Email: {t.email}</div>
+                          )}
                         </li>
                       ))}
                     </ul>

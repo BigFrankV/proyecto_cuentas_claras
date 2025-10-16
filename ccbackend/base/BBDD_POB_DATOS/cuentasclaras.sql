@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.2
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
 -- Host: db
--- Generation Time: Oct 07, 2025 at 06:28 PM
+-- Generation Time: Oct 16, 2025 at 10:22 PM
 -- Server version: 8.0.43
--- PHP Version: 8.2.29
+-- PHP Version: 8.3.26
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -44,46 +44,46 @@ CREATE TABLE `amenidad` (
 --
 
 INSERT INTO `amenidad` (`id`, `comunidad_id`, `nombre`, `reglas`, `capacidad`, `requiere_aprobacion`, `tarifa`, `created_at`, `updated_at`) VALUES
-(1, 2, 'Sala multiuso 1', 'No se permite alcohol.', 11, 1, 5100.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(2, 1, 'Sala multiuso 2', 'No se permite alcohol.', 12, 0, 5200.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(3, 4, 'Sala multiuso 3', 'No se permite alcohol.', 13, 1, 5300.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(4, 3, 'Sala multiuso 4', 'No se permite alcohol.', 14, 0, 5400.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(5, 2, 'Sala multiuso 5', 'No se permite alcohol.', 15, 1, 5500.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(6, 4, 'Sala multiuso 6', 'No se permite alcohol.', 16, 0, 5600.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(7, 2, 'Sala multiuso 7', 'No se permite alcohol.', 17, 1, 5700.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(8, 1, 'Sala multiuso 8', 'No se permite alcohol.', 18, 0, 5800.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(9, 5, 'Sala multiuso 9', 'No se permite alcohol.', 19, 1, 5900.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(10, 1, 'Sala multiuso 10', 'No se permite alcohol.', 20, 0, 6000.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(11, 1, 'Sala de Eventos Principal', 'Prohibido fumar. Uso hasta las 23:00 hrs. Deposito de garantía $50.000. Debe dejar el espacio limpio y ordenado. No se permite música con volumen alto después de las 22:00 hrs.', 80, 1, 45000.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
-(12, 1, 'Quincho Techado', 'Uso exclusivo residentes. Máximo 6 horas de arriendo. Prohibido fumar en áreas cerradas. Debe traer sus propios implementos de aseo. Depositar basura en contenedores designados.', 30, 1, 25000.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
-(13, 2, 'Piscina Temperada', 'Uso de gorro obligatorio. Niños menores de 12 años deben estar acompañados. Horario: 08:00 a 21:00 hrs. Prohibido ingresar con alimentos. Ducha obligatoria antes de ingresar.', 40, 0, 0.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
-(14, 2, 'Gimnasio', 'Uso exclusivo mayores de 16 años. Uso de toalla obligatorio. Devolver implementos a su lugar. Horario: 06:00 a 23:00 hrs. No se permite reservar, uso por orden de llegada.', 15, 0, 0.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
-(15, 3, 'Cancha de Tenis', 'Uso de calzado deportivo adecuado obligatorio. Reserva máxima 2 horas. Traer su propia raqueta y pelotas. Iluminación nocturna disponible hasta las 22:00 hrs.', 4, 0, 8000.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
-(16, 3, 'Sala de Juegos Infantil', 'Uso exclusivo niños hasta 12 años. Deben estar acompañados por un adulto responsable. Horario: 09:00 a 20:00 hrs. Prohibido ingresar alimentos. Mantener orden y limpieza.', 20, 0, 0.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
-(17, 4, 'Sala de Estudio/Cowork', 'Silencio obligatorio. Prohibido consumir alimentos. WiFi disponible. Uso máximo 4 horas continuas. Deben traer sus propios dispositivos y materiales. Horario: 08:00 a 22:00 hrs.', 12, 0, 0.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
-(18, 5, 'Terraza con Parrillas', 'Reserva con 48 hrs de anticipación. Uso máximo 6 horas. Traer carbón y utensilios propios. Limpiar parrillas después del uso. Prohibido música con amplificación después de las 22:00 hrs.', 25, 1, 15000.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
-(19, 5, 'Estacionamiento de Visitas', 'Máximo 2 cupos por departamento. Uso máximo 24 horas continuas. Debe registrar patente en conserjería. Sujeto a disponibilidad. No se permite estacionamiento permanente.', 10, 0, 3000.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
-(20, 6, 'Sala de Cine', 'Capacidad limitada, reservar con anticipación. Uso de sistema de audio/video incluido. Prohibido ingresar alimentos desde exterior. Mantener volumen moderado. Duración máxima 4 horas.', 16, 1, 12000.00, '2025-10-06 18:52:24', '2025-10-06 18:52:24'),
-(21, 1, 'Sala de Eventos Principal', 'Prohibido fumar. Uso hasta las 23:00 hrs. Deposito de garantía $50.000. Debe dejar el espacio limpio y ordenado. No se permite música con volumen alto después de las 22:00 hrs.', 80, 1, 45000.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
-(22, 1, 'Quincho Techado', 'Uso exclusivo residentes. Máximo 6 horas de arriendo. Prohibido fumar en áreas cerradas. Debe traer sus propios implementos de aseo. Depositar basura en contenedores designados.', 30, 1, 25000.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
-(23, 2, 'Piscina Temperada', 'Uso de gorro obligatorio. Niños menores de 12 años deben estar acompañados. Horario: 08:00 a 21:00 hrs. Prohibido ingresar con alimentos. Ducha obligatoria antes de ingresar.', 40, 0, 0.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
-(24, 2, 'Gimnasio', 'Uso exclusivo mayores de 16 años. Uso de toalla obligatorio. Devolver implementos a su lugar. Horario: 06:00 a 23:00 hrs. No se permite reservar, uso por orden de llegada.', 15, 0, 0.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
-(25, 3, 'Cancha de Tenis', 'Uso de calzado deportivo adecuado obligatorio. Reserva máxima 2 horas. Traer su propia raqueta y pelotas. Iluminación nocturna disponible hasta las 22:00 hrs.', 4, 0, 8000.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
-(26, 3, 'Sala de Juegos Infantil', 'Uso exclusivo niños hasta 12 años. Deben estar acompañados por un adulto responsable. Horario: 09:00 a 20:00 hrs. Prohibido ingresar alimentos. Mantener orden y limpieza.', 20, 0, 0.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
-(27, 4, 'Sala de Estudio/Cowork', 'Silencio obligatorio. Prohibido consumir alimentos. WiFi disponible. Uso máximo 4 horas continuas. Deben traer sus propios dispositivos y materiales. Horario: 08:00 a 22:00 hrs.', 12, 0, 0.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
-(28, 5, 'Terraza con Parrillas', 'Reserva con 48 hrs de anticipación. Uso máximo 6 horas. Traer carbón y utensilios propios. Limpiar parrillas después del uso. Prohibido música con amplificación después de las 22:00 hrs.', 25, 1, 15000.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
-(29, 5, 'Estacionamiento de Visitas', 'Máximo 2 cupos por departamento. Uso máximo 24 horas continuas. Debe registrar patente en conserjería. Sujeto a disponibilidad. No se permite estacionamiento permanente.', 10, 0, 3000.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
-(30, 6, 'Sala de Cine', 'Capacidad limitada, reservar con anticipación. Uso de sistema de audio/video incluido. Prohibido ingresar alimentos desde exterior. Mantener volumen moderado. Duración máxima 4 horas.', 16, 1, 12000.00, '2025-10-06 18:53:05', '2025-10-06 18:53:05'),
-(31, 7, 'Salón de Yoga y Pilates', 'Traer mat propio. Uso de calcetines antideslizantes. Horario: 07:00 a 21:00 hrs. Reserva máxima 90 minutos. Mantener silencio y respeto.', 12, 0, 0.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
-(32, 8, 'Juegos Infantiles Exterior', 'Uso bajo supervisión de adultos. Horario: 09:00 a 20:00 hrs. Niños hasta 10 años. Prohibido el uso en días de lluvia. Respetar turnos de uso.', 15, 0, 0.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
-(33, 9, 'Bodega de Almacenamiento', 'Arriendo mensual. No se permiten artículos inflamables o peligrosos. Acceso solo con autorización de administración. Seguro del contenido es responsabilidad del arrendatario.', 1, 1, 25000.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
-(34, 10, 'Lavandería Común', 'Uso por orden de llegada. Traer su propio detergente. Retirar ropa inmediatamente al finalizar. Horario: 08:00 a 22:00 hrs. Reportar cualquier desperfecto a conserjería.', 6, 0, 2000.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
-(35, 11, 'Sala de Música', 'Insonorizada. Reserva obligatoria máximo 3 horas. No dañar instrumentos disponibles. Prohibido fumar. Dejar instrumentos ordenados. Horario: 10:00 a 22:00 hrs.', 8, 1, 8000.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
-(36, 12, 'Cancha Multiuso (Fútbol/Básquet)', 'Uso de calzado deportivo apropiado. Reserva máxima 2 horas. Respetar horarios. Iluminación hasta las 23:00 hrs. Reportar cualquier daño a la infraestructura.', 20, 0, 10000.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
-(37, 13, 'Sala de Reuniones Corporativa', 'Proyector y pizarra disponibles. WiFi de alta velocidad. Capacidad para videoconferencias. Uso máximo 4 horas. Dejar sala ordenada. Horario: 08:00 a 20:00 hrs.', 10, 1, 15000.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
-(38, 14, 'Spa y Sauna', 'Uso exclusivo mayores de 18 años. Ducha obligatoria antes de ingresar. Uso de toalla obligatorio. Tiempo máximo 30 minutos. Horario: 09:00 a 21:00 hrs. Prohibido el uso con condiciones médicas específicas.', 8, 0, 5000.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
-(39, 15, 'Zona de Mascotas (Dog Park)', 'Solo perros vacunados y con chip. Dueños responsables de recoger desechos. Supervisión constante obligatoria. Uso de correa al entrar y salir. Horario: 07:00 a 20:00 hrs.', 15, 0, 0.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02'),
-(40, 16, 'Taller de Bicicletas', 'Herramientas básicas disponibles. Uso para reparaciones menores. No se permite lavado de bicicletas. Ordenar herramientas después del uso. Horario: 08:00 a 20:00 hrs.', 4, 0, 0.00, '2025-10-06 19:01:02', '2025-10-06 19:01:02');
+(1, 1, 'Salón de Eventos', 'No ruidos después de las 23:00 hrs.', 50, 1, 30000.00, '2025-10-10 18:07:46', '2025-10-10 18:07:46'),
+(2, 2, 'Quincho Techado', 'Uso máximo 4 horas.', 15, 0, 15000.00, '2025-10-10 18:07:46', '2025-10-10 18:07:46'),
+(3, 3, 'Gimnasio', 'Solo mayores de 18, uso de toalla.', 20, 0, 0.00, '2025-10-10 18:07:46', '2025-10-10 18:07:46'),
+(4, 4, 'Piscina Exterior', 'Abierta de 10 a 20 hrs.', 40, 0, 0.00, '2025-10-10 18:07:46', '2025-10-10 18:07:46'),
+(5, 5, 'Sala Cowork', 'Silencio absoluto.', 10, 0, 0.00, '2025-10-10 18:07:46', '2025-10-10 18:07:46'),
+(6, 6, 'Sala de Cine', 'Reserva con 48 hrs.', 12, 1, 10000.00, '2025-10-10 18:07:46', '2025-10-10 18:07:46'),
+(7, 7, 'Lavandería', 'Máximo 2 cargas por día.', 6, 0, 2500.00, '2025-10-10 18:07:46', '2025-10-10 18:07:46'),
+(8, 8, 'Terraza Panorámica', 'Prohibido parrillas a carbón.', 25, 0, 0.00, '2025-10-10 18:07:46', '2025-10-10 18:07:46'),
+(9, 9, 'Salón de Yoga', 'Traer mat personal.', 8, 0, 0.00, '2025-10-10 18:07:46', '2025-10-10 18:07:46'),
+(10, 10, 'Sala de Juegos', 'Niños deben estar acompañados.', 15, 0, 0.00, '2025-10-10 18:07:46', '2025-10-10 18:07:46'),
+(11, 1, 'Piscina Interior', 'Uso solo con salvavidas.', 30, 0, 0.00, '2025-10-15 21:10:21', '2025-10-15 21:10:21'),
+(12, 2, 'Cancha Multiuso', 'Reservar con 24 hrs.', 20, 0, 5000.00, '2025-10-15 21:10:21', '2025-10-15 21:10:21'),
+(13, 3, 'Sala de Reuniones', 'Máximo 10 personas.', 10, 0, 0.00, '2025-10-15 21:10:21', '2025-10-15 21:10:21'),
+(14, 4, 'Quincho Cerrado', 'Prohibido encender fuego en días de viento.', 12, 1, 18000.00, '2025-10-15 21:10:21', '2025-10-15 21:10:21'),
+(15, 5, 'Biblioteca', 'Silencio absoluto.', 5, 0, 0.00, '2025-10-15 21:10:21', '2025-10-15 21:10:21'),
+(16, 6, 'Zona de Mascotas', 'Recoger siempre los desechos.', 15, 0, 0.00, '2025-10-15 21:10:21', '2025-10-15 21:10:21'),
+(17, 7, 'Sauna', 'Solo mayores de 18.', 4, 1, 4000.00, '2025-10-15 21:10:21', '2025-10-15 21:10:21'),
+(18, 8, 'Sala de Música', 'Uso de audífonos.', 8, 0, 0.00, '2025-10-15 21:10:21', '2025-10-15 21:10:21'),
+(19, 9, 'Muro de Escalada', 'Uso de arnés y bajo supervisión.', 5, 1, 12000.00, '2025-10-15 21:10:21', '2025-10-15 21:10:21'),
+(20, 10, 'Juegos Infantiles', 'Supervisión adulta obligatoria.', 20, 0, 0.00, '2025-10-15 21:10:21', '2025-10-15 21:10:21'),
+(21, 1, 'Cancha de Tenis', 'Solo para residentes activos.', 8, 0, 5000.00, '2025-10-17 11:00:00', '2025-10-17 11:00:00'),
+(22, 2, 'Parrilla Eléctrica', 'Prohibido carbón.', 4, 0, 2000.00, '2025-10-17 11:00:01', '2025-10-17 11:00:01'),
+(23, 3, 'Sala de Música', 'Uso de audífonos después de 20 hrs.', 6, 0, 0.00, '2025-10-17 11:00:02', '2025-10-17 11:00:02'),
+(24, 4, 'Área de Picnic', 'Reservar con 1 hora de anticipación.', 20, 0, 0.00, '2025-10-17 11:00:03', '2025-10-17 11:00:03'),
+(25, 5, 'Salón Gourmet', 'Limpieza post-evento obligatoria.', 15, 1, 40000.00, '2025-10-17 11:00:04', '2025-10-17 11:00:04'),
+(26, 6, 'Piscina Panorámica', 'Solo mayores de 12 años acompañados.', 25, 0, 0.00, '2025-10-17 11:00:05', '2025-10-17 11:00:05'),
+(27, 7, 'Muro de Escalada Interior', 'Uso solo con equipo de seguridad.', 5, 1, 8000.00, '2025-10-17 11:00:06', '2025-10-17 11:00:06'),
+(28, 8, 'Biblioteca Común', 'Silencio absoluto, no consumir alimentos.', 10, 0, 0.00, '2025-10-17 11:00:07', '2025-10-17 11:00:07'),
+(29, 9, 'Sala de Artesanía', 'Reservar mesas con 24 hrs.', 8, 0, 1000.00, '2025-10-17 11:00:08', '2025-10-17 11:00:08'),
+(30, 10, 'Sala de Eventos Pequeña', 'Capacidad máxima 20 personas.', 20, 1, 15000.00, '2025-10-17 11:00:09', '2025-10-17 11:00:09'),
+(31, 11, 'Sala de Juegos Infantiles', 'Supervisión adulta obligatoria.', 15, 0, 0.00, '2025-10-17 11:18:00', '2025-10-17 11:18:00'),
+(32, 12, 'Salón Multiuso', 'Reserva con 48 horas de anticipación.', 50, 1, 25000.00, '2025-10-17 11:18:01', '2025-10-17 11:18:01'),
+(33, 13, 'Gimnasio Exterior', 'Horario de 8 a 22 hrs.', 10, 0, 0.00, '2025-10-17 11:18:02', '2025-10-17 11:18:02'),
+(34, 14, 'Cancha de Fútbol', 'Solo pasto sintético, no tacones.', 22, 1, 10000.00, '2025-10-17 11:18:03', '2025-10-17 11:18:03'),
+(35, 15, 'Sala Cowork Ampliada', 'Incluye café y té.', 20, 0, 0.00, '2025-10-17 11:18:04', '2025-10-17 11:18:04'),
+(36, 16, 'Sauna y Spa', 'Reserva de uso privado por 1 hora.', 4, 1, 5000.00, '2025-10-17 11:18:05', '2025-10-17 11:18:05'),
+(37, 17, 'Lavandería Automática', 'Máximo 3 ciclos por unidad al día.', 8, 0, 2000.00, '2025-10-17 11:18:06', '2025-10-17 11:18:06'),
+(38, 18, 'Terraza Mirador', 'Prohibido encender fuego (solo parrillas a gas).', 30, 0, 0.00, '2025-10-17 11:18:07', '2025-10-17 11:18:07'),
+(39, 19, 'Salón de Eventos Grande', 'Control de ruido estricto.', 100, 1, 50000.00, '2025-10-17 11:18:08', '2025-10-17 11:18:08'),
+(40, 20, 'Zona de Camping', 'Solo en temporada de verano.', 10, 0, 0.00, '2025-10-17 11:18:09', '2025-10-17 11:18:09');
 
 -- --------------------------------------------------------
 
@@ -93,20 +93,56 @@ INSERT INTO `amenidad` (`id`, `comunidad_id`, `nombre`, `reglas`, `capacidad`, `
 
 CREATE TABLE `archivos` (
   `id` bigint NOT NULL,
-  `original_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `filename` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `file_path` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `original_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `filename` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `file_size` bigint NOT NULL,
-  `mimetype` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `mimetype` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `comunidad_id` bigint NOT NULL,
-  `entity_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `entity_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `entity_id` bigint DEFAULT NULL,
-  `category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'general',
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'general',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `uploaded_by` bigint DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `archivos`
+--
+
+INSERT INTO `archivos` (`id`, `original_name`, `filename`, `file_path`, `file_size`, `mimetype`, `comunidad_id`, `entity_type`, `entity_id`, `category`, `description`, `uploaded_at`, `uploaded_by`, `is_active`) VALUES
+(1, 'Reporte_Gas_C2.pdf', 'rep_gas_c2.pdf', '/docs/c2/rep_gas_c2.pdf', 500000, 'application/pdf', 2, 'documento_compra', 10, 'general', NULL, '2025-10-10 18:10:26', 5, 1),
+(2, 'Foto_Grieta.jpg', 'foto_grieta_c8.jpg', '/tickets/c8/foto_grieta.jpg', 1200000, 'image/jpeg', 8, 'ticket_soporte', 8, 'general', NULL, '2025-10-10 18:10:26', 8, 1),
+(3, 'Comprobante_Pago_4.png', 'comp_pago_4.png', '/pagos/c8/comp_pago_4.png', 300000, 'image/png', 8, 'pago', 4, 'general', NULL, '2025-10-10 18:10:26', 9, 1),
+(4, 'Acta_Comite_C7.pdf', 'acta_com_c7.pdf', '/docs/c7/acta_com_c7.pdf', 800000, 'application/pdf', 7, 'documento_comunidad', 7, 'general', NULL, '2025-10-10 18:10:26', 7, 1),
+(5, 'Lectura_105_09.csv', 'lectura_105_09.csv', '/lecturas/c5/lectura_105_09.csv', 10000, 'text/csv', 5, 'lectura_medidor', 6, 'general', NULL, '2025-10-10 18:10:26', 5, 1),
+(6, 'Factura_Aseo_C1.pdf', 'fact_aseo_c1.pdf', '/docs/c1/fact_aseo_c1.pdf', 600000, 'application/pdf', 1, 'documento_compra', 1, 'general', NULL, '2025-10-10 18:10:26', 1, 1),
+(7, 'Foto_Ascensor_C3.jpg', 'foto_asc_c3.jpg', '/tickets/c3/foto_asc_c3.jpg', 900000, 'image/jpeg', 3, 'ticket_soporte', 3, 'general', NULL, '2025-10-10 18:10:26', 3, 1),
+(8, 'Comp_Webpay_C4.pdf', 'comp_wp_c4.pdf', '/pagos/c4/comp_wp_c4.pdf', 250000, 'application/pdf', 4, 'pago', 2, 'general', NULL, '2025-10-10 18:10:26', 4, 1),
+(9, 'Reglamento_Mascotas.pdf', 'regl_mascotas_c6.pdf', '/docs/c6/regl_mascotas_c6.pdf', 700000, 'application/pdf', 6, 'documento_comunidad', 6, 'general', NULL, '2025-10-10 18:10:26', 6, 1),
+(10, 'Multa_Ruido_C2.pdf', 'multa_ruido_c2.pdf', '/multas/c2/multa_ruido_c2.pdf', 150000, 'application/pdf', 2, 'multa', 2, 'general', NULL, '2025-10-10 18:10:26', 3, 1),
+(11, 'Foto_Sauna_C7.jpg', 'foto_sauna_c7.jpg', '/amenidades/c7/foto_sauna.jpg', 1500000, 'image/jpeg', 7, 'reserva_amenidad', 17, 'general', NULL, '2025-10-15 21:13:32', 7, 1),
+(12, 'Comprobante_Pago_12.png', 'comp_pago_12.png', '/pagos/c4/comp_pago_12.png', 400000, 'image/png', 4, 'pago', 12, 'general', NULL, '2025-10-15 21:13:32', 14, 1),
+(13, 'Reglamento_Ascensores_C1.pdf', 'regl_asc_c1.pdf', '/docs/c1/regl_asc_c1.pdf', 900000, 'application/pdf', 1, 'documento_comunidad', 11, 'reglamento', NULL, '2025-10-15 21:13:32', 1, 1),
+(14, 'Factura_Electricidad_C10.pdf', 'fact_elec_c10.pdf', '/docs/c10/fact_elec_c10.pdf', 750000, 'application/pdf', 10, 'documento_compra', 20, 'general', NULL, '2025-10-15 21:13:32', 10, 1),
+(15, 'Lectura_13_10.csv', 'lectura_13_10.csv', '/lecturas/c3/lectura_13_10.csv', 12000, 'text/csv', 3, 'lectura_medidor', 13, 'general', NULL, '2025-10-15 21:13:32', 3, 1),
+(16, 'Boleta_Vigilancia_C7.pdf', 'bol_vig_c7.pdf', '/docs/c7/bol_vig_c7.pdf', 550000, 'application/pdf', 7, 'documento_compra', 17, 'general', NULL, '2025-10-15 21:13:32', 7, 1),
+(17, 'Foto_Jardin_D1002.jpg', 'foto_jardin_c6.jpg', '/multas/c6/foto_jardin.jpg', 1100000, 'image/jpeg', 6, 'multa', 16, 'general', NULL, '2025-10-15 21:13:32', 16, 1),
+(18, 'Comp_Webpay_C10.pdf', 'comp_wp_c10.pdf', '/pagos/c10/comp_wp_c10.pdf', 280000, 'application/pdf', 10, 'pago', 15, 'general', NULL, '2025-10-15 21:13:32', 20, 1),
+(19, 'Acta_Extra_C7.pdf', 'acta_extra_c7.pdf', '/docs/c7/acta_extra_c7.pdf', 650000, 'application/pdf', 7, 'documento_comunidad', 17, 'general', NULL, '2025-10-15 21:13:32', 7, 1),
+(20, 'Multa_Ruido_C5.pdf', 'multa_ruido_c5.pdf', '/multas/c5/multa_ruido_c5.pdf', 180000, 'application/pdf', 5, 'multa', 15, 'general', NULL, '2025-10-15 21:13:32', 16, 1),
+(21, 'Foto_Balcón_D401.jpg', 'foto_balcon_c1.jpg', '/multas/c1/foto_balcon.jpg', 950000, 'image/jpeg', 1, 'multa', 23, 'evidencia', 'Evidencia de parrilla en balcón D401.', '2025-10-17 11:09:00', 6, 1),
+(22, 'Contrato_Fumigación.pdf', 'contrato_fum_c2.pdf', '/docs/c2/contrato_fum.pdf', 700000, 'application/pdf', 2, 'documento_compra', 37, 'contrato', NULL, '2025-10-17 11:09:01', 2, 1),
+(23, 'Informe_Reparacion_Luz.pdf', 'inf_reparacion_c3.pdf', '/tickets/c3/inf_luz.pdf', 450000, 'application/pdf', 3, 'ticket_soporte', 23, 'solucion', 'Informe de reparación de fuga de alcantarillado.', '2025-10-17 11:09:02', 3, 1),
+(24, 'Comprobante_Pago_33.png', 'comp_pago_33.png', '/pagos/c3/comp_pago_33.png', 320000, 'image/png', 3, 'pago', 33, 'general', NULL, '2025-10-17 11:09:03', 33, 1),
+(25, 'Acta_Asamblea_2025.pdf', 'acta_asm_2025_c4.pdf', '/docs/c4/acta_asm_2025.pdf', 1100000, 'application/pdf', 4, 'documento_comunidad', 27, 'acta', NULL, '2025-10-17 11:09:04', 4, 1),
+(26, 'Lectura_D701_10.csv', 'lectura_d701_10.csv', '/lecturas/c5/lectura_d701_10.csv', 15000, 'text/csv', 5, 'lectura_medidor', 25, 'general', NULL, '2025-10-17 11:09:05', 5, 1),
+(27, 'Factura_Mantencion_Piscina.pdf', 'fact_piscina_c6.pdf', '/docs/c6/fact_piscina.pdf', 850000, 'application/pdf', 6, 'documento_compra', 41, 'general', NULL, '2025-10-17 11:09:06', 36, 1),
+(28, 'Foto_Portón_Grieta.jpg', 'foto_porton_grieta_c8.jpg', '/tickets/c8/foto_porton.jpg', 1400000, 'image/jpeg', 8, 'ticket_soporte', 28, 'general', NULL, '2025-10-17 11:09:07', 8, 1),
+(29, 'Comp_Webpay_C9.pdf', 'comp_wp_c9.pdf', '/pagos/c9/comp_wp_c9.pdf', 290000, 'application/pdf', 9, 'pago', 39, 'general', NULL, '2025-10-17 11:09:08', 39, 1),
+(30, 'Reglamento_Mascotas_V2.pdf', 'regl_mascotas_v2_c10.pdf', '/docs/c10/regl_mascotas_v2.pdf', 750000, 'application/pdf', 10, 'documento_comunidad', 28, 'reglamento', 'Nueva versión de reglamento de mascotas.', '2025-10-17 11:09:09', 10, 1);
 
 -- --------------------------------------------------------
 
@@ -131,13 +167,46 @@ CREATE TABLE `auditoria` (
 --
 
 INSERT INTO `auditoria` (`id`, `usuario_id`, `accion`, `tabla`, `registro_id`, `valores_anteriores`, `valores_nuevos`, `ip_address`, `created_at`) VALUES
-(1, 2, 'UPDATE', 'unidad', 1, '{\"campo1\": \"valor anterior\"}', '{\"campo1\": \"valor nuevo\"}', '192.168.0.1', '2025-10-02 18:42:27'),
-(2, 3, 'INSERT', 'unidad', 2, NULL, '{\"campo1\": \"valor nuevo\"}', '192.168.0.2', '2025-10-02 18:42:27'),
-(3, 4, 'DELETE', 'unidad', 3, '{\"campo1\": \"valor anterior\"}', NULL, '192.168.0.3', '2025-10-02 18:42:27'),
-(4, 5, 'UPDATE', 'persona', 4, '{\"nombre\": \"Juan\"}', '{\"nombre\": \"Juan P.\"}', '192.168.0.4', '2025-10-02 18:42:27'),
-(5, 6, 'UPDATE', 'gasto', 5, '{\"monto\": 5000}', '{\"monto\": 6000}', '192.168.0.5', '2025-10-02 18:42:27'),
-(6, 1, 'INSERT', 'torre', NULL, NULL, '{\"codigo\": \"T101\", \"nombre\": \"Torre Test A\"}', '127.0.0.1', '2025-10-06 18:22:08'),
-(7, NULL, 'INSERT', 'torre', NULL, NULL, '{\"codigo\": null, \"nombre\": null}', '127.0.0.1', '2025-10-06 18:37:23');
+(1, 1, 'UPDATE', 'unidad', 1, '{\"alicuota\": \"0.010000\"}', '{\"alicuota\": \"0.015000\"}', '192.168.1.1', '2025-10-10 18:10:29'),
+(2, 2, 'INSERT', 'pago', 1, NULL, '{\"medio\": \"transferencia\", \"monto\": 62000}', '192.168.1.2', '2025-10-10 18:10:29'),
+(3, 3, 'UPDATE', 'multa', 2, '{\"estado\": \"pendiente\"}', '{\"estado\": \"pagada\"}', '192.168.1.3', '2025-10-10 18:10:29'),
+(4, 4, 'INSERT', 'ticket_soporte', 4, NULL, '{\"titulo\": \"Árbol seco\"}', '192.168.1.4', '2025-10-10 18:10:29'),
+(5, 5, 'UPDATE', 'emision_gastos_comunes', 5, '{\"estado\": \"borrador\"}', '{\"estado\": \"emitido\"}', '192.168.1.5', '2025-10-10 18:10:29'),
+(6, 6, 'INSERT', 'registro_conserjeria', 6, NULL, '{\"evento\": \"visita\"}', '192.168.1.6', '2025-10-10 18:10:29'),
+(7, 7, 'UPDATE', 'unidad', 8, '{\"nro_estacionamiento\": \"E105A\"}', '{\"nro_estacionamiento\": \"E152\"}', '192.168.1.7', '2025-10-10 18:10:29'),
+(8, 8, 'INSERT', 'gasto', 8, NULL, '{\"monto\": 47600}', '192.168.1.8', '2025-10-10 18:10:29'),
+(9, 9, 'UPDATE', 'cuenta_cobro_unidad', 9, '{\"saldo\": \"49000.00\"}', '{\"estado\": \"vencido\"}', '192.168.1.9', '2025-10-10 18:10:29'),
+(10, 10, 'INSERT', 'lectura_medidor', 10, NULL, '{\"lectura\": 44.9}', '192.168.1.10', '2025-10-10 18:10:29'),
+(11, 11, 'UPDATE', 'unidad', 11, '{\"alicuota\": \"0.015000\"}', '{\"nro_bodega\": \"B11\"}', '192.168.1.11', '2025-10-15 21:13:30'),
+(12, 12, 'INSERT', 'pago', 11, NULL, '{\"medio\": \"transferencia\", \"monto\": 65000}', '192.168.1.12', '2025-10-15 21:13:30'),
+(13, 13, 'UPDATE', 'multa', 12, '{\"estado\": \"pendiente\"}', '{\"estado\": \"pagada\"}', '192.168.1.13', '2025-10-15 21:13:30'),
+(14, 14, 'INSERT', 'ticket_soporte', 14, NULL, '{\"titulo\": \"Fuga de agua Casa B\"}', '192.168.1.14', '2025-10-15 21:13:30'),
+(15, 15, 'UPDATE', 'emision_gastos_comunes', 15, '{\"estado\": \"borrador\"}', '{\"estado\": \"emitido\"}', '192.168.1.15', '2025-10-15 21:13:30'),
+(16, 16, 'INSERT', 'registro_conserjeria', 16, NULL, '{\"evento\": \"visita\", \"detalle\": \"Abogado por cobranza\"}', '192.168.1.16', '2025-10-15 21:13:30'),
+(17, 17, 'UPDATE', 'unidad', 18, '{\"nro_estacionamiento\": \"E153\"}', '{\"nro_estacionamiento\": \"E200\"}', '192.168.1.17', '2025-10-15 21:13:30'),
+(18, 18, 'INSERT', 'gasto', 18, NULL, '{\"monto\": 89250}', '192.168.1.18', '2025-10-15 21:13:30'),
+(19, 19, 'UPDATE', 'cuenta_cobro_unidad', 19, '{\"saldo\": \"50000.00\"}', '{\"estado\": \"vencido\"}', '192.168.1.19', '2025-10-15 21:13:30'),
+(20, 20, 'INSERT', 'lectura_medidor', 20, NULL, '{\"lectura\": 49.9}', '192.168.1.20', '2025-10-15 21:13:30'),
+(21, 21, 'INSERT', 'unidad', 21, NULL, '{\"codigo\": \"D301\", \"alicuota\": \"0.016000\"}', '192.168.1.21', '2025-10-16 18:31:00'),
+(22, 22, 'INSERT', 'pago', 22, NULL, '{\"medio\": \"webpay\", \"monto\": 70000}', '192.168.1.22', '2025-10-16 18:31:01'),
+(23, 23, 'UPDATE', 'multa', 13, '{\"estado\": \"pendiente\"}', '{\"estado\": \"aprobada\"}', '192.168.1.23', '2025-10-16 18:31:02'),
+(24, 24, 'INSERT', 'ticket_soporte', 11, NULL, '{\"titulo\": \"Luces quemadas\"}', '192.168.1.24', '2025-10-16 18:31:03'),
+(25, 25, 'UPDATE', 'emision_gastos_comunes', 21, '{\"estado\": \"borrador\"}', '{\"estado\": \"emitido\"}', '192.168.1.25', '2025-10-16 18:31:04'),
+(26, 26, 'INSERT', 'registro_conserjeria', 21, NULL, '{\"evento\": \"mantencion_rutinaria\"}', '192.168.1.26', '2025-10-16 18:31:05'),
+(27, 27, 'UPDATE', 'unidad', 27, '{\"nro_bodega\": null}', '{\"nro_bodega\": \"T16-B\"}', '192.168.1.27', '2025-10-16 18:31:06'),
+(28, 28, 'INSERT', 'gasto', 33, NULL, '{\"monto\": 89250}', '192.168.1.28', '2025-10-16 18:31:07'),
+(29, 29, 'UPDATE', 'cuenta_cobro_unidad', 29, '{\"saldo\": \"60000.00\"}', '{\"estado\": \"parcial\"}', '192.168.1.29', '2025-10-16 18:31:08'),
+(30, 30, 'INSERT', 'lectura_medidor', 20, NULL, '{\"lectura\": 50.0}', '192.168.1.30', '2025-10-16 18:31:09'),
+(31, 31, 'INSERT', 'unidad', 31, NULL, '{\"codigo\": \"D401\"}', '192.168.1.31', '2025-10-17 10:21:00'),
+(32, 32, 'INSERT', 'pago', 32, NULL, '{\"monto\": 75000}', '192.168.1.32', '2025-10-17 10:21:01'),
+(33, 33, 'UPDATE', 'multa', 23, '{\"prioridad\": \"critica\"}', '{\"estado\": \"aprobada\"}', '192.168.1.33', '2025-10-17 10:21:02'),
+(34, 34, 'INSERT', 'ticket_soporte', 21, NULL, '{\"titulo\": \"Falta de agua\"}', '192.168.1.34', '2025-10-17 10:21:03'),
+(35, 35, 'UPDATE', 'emision_gastos_comunes', 31, '{\"estado\": \"borrador\"}', '{\"estado\": \"emitido\"}', '192.168.1.35', '2025-10-17 10:21:04'),
+(36, 36, 'INSERT', 'registro_conserjeria', 31, NULL, '{\"evento\": \"visita_tecnico\"}', '192.168.1.36', '2025-10-17 10:21:05'),
+(37, 37, 'UPDATE', 'unidad', 37, '{\"m2_utiles\": 85.0}', '{\"m2_terrazas\": 5.0}', '192.168.1.37', '2025-10-17 10:21:06'),
+(38, 38, 'INSERT', 'gasto', 43, NULL, '{\"monto\": 83300}', '192.168.1.38', '2025-10-17 10:21:07'),
+(39, 39, 'UPDATE', 'cuenta_cobro_unidad', 39, '{\"saldo\": \"65000.00\"}', '{\"estado\": \"pagado\"}', '192.168.1.39', '2025-10-17 10:21:08'),
+(40, 40, 'INSERT', 'lectura_medidor', 30, NULL, '{\"lectura\": 65.0}', '192.168.1.40', '2025-10-17 10:21:09');
 
 -- --------------------------------------------------------
 
@@ -196,26 +265,56 @@ CREATE TABLE `categoria_gasto` (
 --
 
 INSERT INTO `categoria_gasto` (`id`, `comunidad_id`, `nombre`, `tipo`, `cta_contable`, `activa`, `created_at`, `updated_at`) VALUES
-(1, 16, 'Categoría 1', 'multas', '510001', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(2, 14, 'Categoría 2', 'consumo', '510002', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(3, 6, 'Categoría 3', 'consumo', '510003', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(4, 11, 'Categoría 4', 'extraordinario', '510004', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(5, 14, 'Categoría 5', 'consumo', '510005', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(6, 20, 'Categoría 6', 'operacional', '510006', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(7, 16, 'Categoría 7', 'multas', '510007', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(8, 20, 'Categoría 8', 'operacional', '510008', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(9, 7, 'Categoría 9', 'fondo_reserva', '510009', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(10, 3, 'Categoría 10', 'consumo', '510010', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(11, 6, 'Categoría 11', 'multas', '510011', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(12, 7, 'Categoría 12', 'fondo_reserva', '510012', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(13, 7, 'Categoría 13', 'operacional', '510013', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(14, 8, 'Categoría 14', 'operacional', '510014', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(15, 6, 'Categoría 15', 'fondo_reserva', '510015', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(16, 19, 'Categoría 16', 'consumo', '510016', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(17, 11, 'Categoría 17', 'extraordinario', '510017', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(18, 9, 'Categoría 18', 'operacional', '510018', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(19, 5, 'Categoría 19', 'multas', '510019', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(20, 13, 'Categoría 20', 'extraordinario', '510020', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29');
+(1, 1, 'Gasto Común Operacional', 'operacional', 'OP-001', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
+(2, 2, 'Fondo de Reserva', 'fondo_reserva', 'FR-001', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
+(3, 3, 'Gasto Extraordinario', 'extraordinario', 'EX-001', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
+(4, 4, 'Multas por Reglamento', 'multas', 'MT-001', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
+(5, 5, 'Consumo Agua Caliente', 'consumo', 'CO-001', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
+(6, 6, 'Seguros e Impuestos', 'operacional', 'OP-002', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
+(7, 7, 'Reparaciones Mayores', 'extraordinario', 'EX-002', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
+(8, 8, 'Uso de Amenidades (Ingreso)', 'multas', 'MT-002', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
+(9, 9, 'Gasto de Administración', 'operacional', 'OP-003', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
+(10, 10, 'Consumo Electricidad Común', 'consumo', 'CO-002', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
+(11, 1, 'Mantención Eléctrica', 'operacional', 'OP-004', 1, '2025-10-15 21:10:23', '2025-10-15 21:10:23'),
+(12, 2, 'Reparaciones Hidráulicas', 'operacional', 'OP-005', 1, '2025-10-15 21:10:23', '2025-10-15 21:10:23'),
+(13, 3, 'Proyectos de Capital', 'extraordinario', 'EX-003', 1, '2025-10-15 21:10:23', '2025-10-15 21:10:23'),
+(14, 4, 'Penalidades Financieras', 'multas', 'MT-003', 1, '2025-10-15 21:10:23', '2025-10-15 21:10:23'),
+(15, 5, 'Consumo Gas Común', 'consumo', 'CO-003', 1, '2025-10-15 21:10:23', '2025-10-15 21:10:23'),
+(16, 6, 'Contratación Personal', 'operacional', 'OP-006', 1, '2025-10-15 21:10:23', '2025-10-15 21:10:23'),
+(17, 7, 'Servicios de Vigilancia', 'operacional', 'OP-007', 1, '2025-10-15 21:10:23', '2025-10-15 21:10:23'),
+(18, 8, 'Mejoras Estructurales', 'extraordinario', 'EX-004', 1, '2025-10-15 21:10:23', '2025-10-15 21:10:23'),
+(19, 9, 'Fondo de Imprevistos', 'fondo_reserva', 'FR-002', 1, '2025-10-15 21:10:23', '2025-10-15 21:10:23'),
+(20, 10, 'Consumo Agua Común', 'consumo', 'CO-004', 1, '2025-10-15 21:10:23', '2025-10-15 21:10:23'),
+(21, 1, 'Seguridad y Vigilancia', 'operacional', 'OP-008', 1, '2025-10-16 18:19:00', '2025-10-16 18:19:00'),
+(22, 2, 'Mantención Áreas Verdes', 'operacional', 'OP-009', 1, '2025-10-16 18:19:01', '2025-10-16 18:19:01'),
+(23, 3, 'Insumos de Aseo', 'operacional', 'OP-010', 1, '2025-10-16 18:19:02', '2025-10-16 18:19:02'),
+(24, 4, 'Honorarios y Asesorías', 'operacional', 'OP-011', 1, '2025-10-16 18:19:03', '2025-10-16 18:19:03'),
+(25, 5, 'Gastos de Cobranza', 'extraordinario', 'EX-005', 1, '2025-10-16 18:19:04', '2025-10-16 18:19:04'),
+(26, 6, 'Climatización y Calefacción', 'operacional', 'OP-012', 1, '2025-10-16 18:19:05', '2025-10-16 18:19:05'),
+(27, 7, 'Capacitación Personal', 'operacional', 'OP-013', 1, '2025-10-16 18:19:06', '2025-10-16 18:19:06'),
+(28, 8, 'Mejoras Estéticas', 'extraordinario', 'EX-005', 1, '2025-10-16 18:19:07', '2025-10-16 18:19:07'),
+(29, 9, 'Fondo de Mantención', 'fondo_reserva', 'FR-003', 1, '2025-10-16 18:19:08', '2025-10-16 18:19:08'),
+(30, 10, 'Inspección Estructural', 'extraordinario', 'EX-006', 1, '2025-10-16 18:19:09', '2025-10-16 18:19:09'),
+(31, 1, 'Mantención Ascensores', 'operacional', 'OP-014', 1, '2025-10-17 10:09:00', '2025-10-17 10:09:00'),
+(32, 2, 'Control de Plagas', 'operacional', 'OP-015', 1, '2025-10-17 10:09:01', '2025-10-17 10:09:01'),
+(33, 3, 'Reparaciones Eléctricas', 'operacional', 'OP-016', 1, '2025-10-17 10:09:02', '2025-10-17 10:09:02'),
+(34, 4, 'Comunicación Comunitaria', 'operacional', 'OP-017', 1, '2025-10-17 10:09:03', '2025-10-17 10:09:03'),
+(35, 5, 'Servicios de Internet', 'operacional', 'OP-018', 1, '2025-10-17 10:09:04', '2025-10-17 10:09:04'),
+(36, 6, 'Mantención Piscinas', 'operacional', 'OP-019', 1, '2025-10-17 10:09:05', '2025-10-17 10:09:05'),
+(37, 7, 'Mantenimiento Red Gas', 'operacional', 'OP-020', 1, '2025-10-17 10:09:06', '2025-10-17 10:09:06'),
+(38, 8, 'Materiales de Construcción', 'extraordinario', 'EX-007', 1, '2025-10-17 10:09:07', '2025-10-17 10:09:07'),
+(39, 9, 'Paisajismo Extraordinario', 'extraordinario', 'EX-008', 1, '2025-10-17 10:09:08', '2025-10-17 10:09:08'),
+(40, 10, 'Sistemas de Agua', 'operacional', 'OP-021', 1, '2025-10-17 10:09:09', '2025-10-17 10:09:09'),
+(41, 11, 'Servicio de Conserjería', 'operacional', 'OP-022', 1, '2025-10-17 11:19:00', '2025-10-17 11:19:00'),
+(42, 12, 'Reparaciones Menores', 'operacional', 'OP-023', 1, '2025-10-17 11:19:01', '2025-10-17 11:19:01'),
+(43, 13, 'Fondo de Imprevistos', 'fondo_reserva', 'FR-004', 1, '2025-10-17 11:19:02', '2025-10-17 11:19:02'),
+(44, 14, 'Consumo de Agua Individual', 'consumo', 'CO-005', 1, '2025-10-17 11:19:03', '2025-10-17 11:19:03'),
+(45, 15, 'Mantenimiento de Bombas', 'operacional', 'OP-024', 1, '2025-10-17 11:19:04', '2025-10-17 11:19:04'),
+(46, 16, 'Gastos de Personal Extra', 'extraordinario', 'EX-009', 1, '2025-10-17 11:19:05', '2025-10-17 11:19:05'),
+(47, 17, 'Consumo de Gas Común', 'consumo', 'CO-006', 1, '2025-10-17 11:19:06', '2025-10-17 11:19:06'),
+(48, 18, 'Multas de Tesorería', 'multas', 'MT-004', 1, '2025-10-17 11:19:07', '2025-10-17 11:19:07'),
+(49, 19, 'Gasto de Administración Externa', 'operacional', 'OP-025', 1, '2025-10-17 11:19:08', '2025-10-17 11:19:08'),
+(50, 20, 'Reparación de Caminos', 'extraordinario', 'EX-010', 1, '2025-10-17 11:19:09', '2025-10-17 11:19:09');
 
 -- --------------------------------------------------------
 
@@ -237,26 +336,56 @@ CREATE TABLE `centro_costo` (
 --
 
 INSERT INTO `centro_costo` (`id`, `comunidad_id`, `nombre`, `codigo`, `created_at`, `updated_at`) VALUES
-(1, 2, 'Centro 1', 'CC001', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(2, 3, 'Centro 2', 'CC002', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(3, 17, 'Centro 3', 'CC003', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(4, 9, 'Centro 4', 'CC004', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(5, 15, 'Centro 5', 'CC005', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(6, 11, 'Centro 6', 'CC006', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(7, 7, 'Centro 7', 'CC007', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(8, 2, 'Centro 8', 'CC008', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(9, 19, 'Centro 9', 'CC009', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(10, 3, 'Centro 10', 'CC010', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(11, 17, 'Centro 11', 'CC011', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(12, 17, 'Centro 12', 'CC012', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(13, 13, 'Centro 13', 'CC013', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(14, 20, 'Centro 14', 'CC014', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(15, 6, 'Centro 15', 'CC015', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(16, 10, 'Centro 16', 'CC016', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(17, 5, 'Centro 17', 'CC017', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(18, 20, 'Centro 18', 'CC018', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(19, 7, 'Centro 19', 'CC019', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(20, 7, 'Centro 20', 'CC020', '2025-10-02 18:19:29', '2025-10-02 18:19:29');
+(1, 1, 'Aseo y Limpieza', 'CC001', '2025-10-10 18:07:49', '2025-10-10 18:07:49'),
+(2, 2, 'Seguridad 24H', 'CC002', '2025-10-10 18:07:49', '2025-10-10 18:07:49'),
+(3, 3, 'Mantención General', 'CC003', '2025-10-10 18:07:49', '2025-10-10 18:07:49'),
+(4, 4, 'Áreas Verdes', 'CC004', '2025-10-10 18:07:49', '2025-10-10 18:07:49'),
+(5, 5, 'Suministros', 'CC005', '2025-10-10 18:07:49', '2025-10-10 18:07:49'),
+(6, 6, 'Gastos Fijos', 'CC006', '2025-10-10 18:07:49', '2025-10-10 18:07:49'),
+(7, 7, 'Ascensores y Escaleras', 'CC007', '2025-10-10 18:07:49', '2025-10-10 18:07:49'),
+(8, 8, 'Zonas Comunes', 'CC008', '2025-10-10 18:07:49', '2025-10-10 18:07:49'),
+(9, 9, 'Honorarios', 'CC009', '2025-10-10 18:07:49', '2025-10-10 18:07:49'),
+(10, 10, 'Contabilidad', 'CC010', '2025-10-10 18:07:49', '2025-10-10 18:07:49'),
+(11, 1, 'Electricidad y Clima', 'CC011', '2025-10-15 21:10:24', '2025-10-15 21:10:24'),
+(12, 2, 'Fontanería y Tuberías', 'CC012', '2025-10-15 21:10:24', '2025-10-15 21:10:24'),
+(13, 3, 'Proyectos Mayores', 'CC013', '2025-10-15 21:10:24', '2025-10-15 21:10:24'),
+(14, 4, 'Cobranza y Legal', 'CC014', '2025-10-15 21:10:24', '2025-10-15 21:10:24'),
+(15, 5, 'Gas y Calefacción', 'CC015', '2025-10-15 21:10:24', '2025-10-15 21:10:24'),
+(16, 6, 'Recursos Humanos', 'CC016', '2025-10-15 21:10:24', '2025-10-15 21:10:24'),
+(17, 7, 'Vigilancia y Alarmas', 'CC017', '2025-10-15 21:10:24', '2025-10-15 21:10:24'),
+(18, 8, 'Infraestructura', 'CC018', '2025-10-15 21:10:24', '2025-10-15 21:10:24'),
+(19, 9, 'Fondo Reserva', 'CC019', '2025-10-15 21:10:24', '2025-10-15 21:10:24'),
+(20, 10, 'Suministro de Agua', 'CC020', '2025-10-15 21:10:24', '2025-10-15 21:10:24'),
+(21, 1, 'Control de Acceso', 'CC021', '2025-10-16 18:20:00', '2025-10-16 18:20:00'),
+(22, 2, 'Jardinería', 'CC022', '2025-10-16 18:20:01', '2025-10-16 18:20:01'),
+(23, 3, 'Materiales de Consumo', 'CC023', '2025-10-16 18:20:02', '2025-10-16 18:20:02'),
+(24, 4, 'Legal y Asesoría', 'CC024', '2025-10-16 18:20:03', '2025-10-16 18:20:03'),
+(25, 5, 'Administración de Sistemas', 'CC025', '2025-10-16 18:20:04', '2025-10-16 18:20:04'),
+(26, 6, 'Sistemas de Clima', 'CC026', '2025-10-16 18:20:05', '2025-10-16 18:20:05'),
+(27, 7, 'Gestión de Personal', 'CC027', '2025-10-16 18:20:06', '2025-10-16 18:20:06'),
+(28, 8, 'Remodelación Interior', 'CC028', '2025-10-16 18:20:07', '2025-10-16 18:20:07'),
+(29, 9, 'Fondo Específico', 'CC029', '2025-10-16 18:20:08', '2025-10-16 18:20:08'),
+(30, 10, 'Infraestructura Mayor', 'CC030', '2025-10-16 18:20:09', '2025-10-16 18:20:09'),
+(31, 1, 'Movilidad Vertical', 'CC031', '2025-10-17 10:10:00', '2025-10-17 10:10:00'),
+(32, 2, 'Higiene Ambiental', 'CC032', '2025-10-17 10:10:01', '2025-10-17 10:10:01'),
+(33, 3, 'Infraestructura Eléctrica', 'CC033', '2025-10-17 10:10:02', '2025-10-17 10:10:02'),
+(34, 4, 'Comunicaciones', 'CC034', '2025-10-17 10:10:03', '2025-10-17 10:10:03'),
+(35, 5, 'Tecnología', 'CC035', '2025-10-17 10:10:04', '2025-10-17 10:10:04'),
+(36, 6, 'Áreas Acuáticas', 'CC036', '2025-10-17 10:10:05', '2025-10-17 10:10:05'),
+(37, 7, 'Suministro de Gas', 'CC037', '2025-10-17 10:10:06', '2025-10-17 10:10:06'),
+(38, 8, 'Proyectos de Obra Menor', 'CC038', '2025-10-17 10:10:07', '2025-10-17 10:10:07'),
+(39, 9, 'Mejoras de Jardín', 'CC039', '2025-10-17 10:10:08', '2025-10-17 10:10:08'),
+(40, 10, 'Bombas y Presurización', 'CC040', '2025-10-17 10:10:09', '2025-10-17 10:10:09'),
+(41, 11, 'Recursos Humanos/Turnos', 'CC041', '2025-10-17 11:20:00', '2025-10-17 11:20:00'),
+(42, 12, 'Mantención Predictiva', 'CC042', '2025-10-17 11:20:01', '2025-10-17 11:20:01'),
+(43, 13, 'Reserva y Contingencia', 'CC043', '2025-10-17 11:20:02', '2025-10-17 11:20:02'),
+(44, 14, 'Medidores Individuales', 'CC044', '2025-10-17 11:20:03', '2025-10-17 11:20:03'),
+(45, 15, 'Sistemas Hidráulicos', 'CC045', '2025-10-17 11:20:04', '2025-10-17 11:20:04'),
+(46, 16, 'Gastos de Verano', 'CC046', '2025-10-17 11:20:05', '2025-10-17 11:20:05'),
+(47, 17, 'Consumo de Energía Térmica', 'CC047', '2025-10-17 11:20:06', '2025-10-17 11:20:06'),
+(48, 18, 'Cobranza y Penalidades', 'CC048', '2025-10-17 11:20:07', '2025-10-17 11:20:07'),
+(49, 19, 'Fee de Administración', 'CC049', '2025-10-17 11:20:08', '2025-10-17 11:20:08'),
+(50, 20, 'Vías y Accesos', 'CC050', '2025-10-17 11:20:09', '2025-10-17 11:20:09');
 
 -- --------------------------------------------------------
 
@@ -287,29 +416,26 @@ CREATE TABLE `comunidad` (
 --
 
 INSERT INTO `comunidad` (`id`, `razon_social`, `rut`, `dv`, `giro`, `direccion`, `email_contacto`, `telefono_contacto`, `politica_mora_json`, `moneda`, `tz`, `created_at`, `updated_at`, `created_by`, `updated_by`) VALUES
-(1, 'Comunidad Providencia #1', '10629071', '7', 'Administración de edificios', 'Acceso Remedios Barriga #652, Providencia', 'edelmira15@bueno.es', '+34705 39 27 73', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(2, 'Comunidad Las Condes #2', '10609747', 'K', 'Administración de edificios', 'Rambla de Macario Toro #943, Las Condes', 'kcalderon@duran.com', '+34 742134113', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(3, 'Comunidad Ñuñoa #3', '2869069', 'K', 'Administración de edificios', 'Urbanización de María José Rosselló #576, Ñuñoa', 'ltovar@gmail.com', '+34739 788 839', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(4, 'Comunidad La Florida #4', '18608281', '8', 'Administración de edificios', 'Camino Caridad Aznar #237, La Florida', 'vivianacifuentes@yahoo.com', '+34 808 205 869', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(5, 'Comunidad Maipú #5', '8908658', '2', 'Administración de edificios', 'Plaza de Nando Barreda #909, Maipú', 'marizoraida@gallo.es', '+34 729189931', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(6, 'Comunidad Puente Alto #6', '3825858', '3', 'Administración de edificios', 'Via de Julio César Fuente #319, Puente Alto', 'julian45@gmail.com', '+34617 749 516', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(7, 'Comunidad Recoleta #7', '8665376', '1', 'Administración de edificios', 'Pasaje Cipriano Zabala #513, Recoleta', 'amormartinez@gmail.com', '+34635 66 18 45', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(8, 'Comunidad Independencia #8', '3119699', 'K', 'Administración de edificios', 'Glorieta de Ana Sofía Juan #111, Independencia', 'benavidesurbano@vara.es', '+34744 980 552', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(9, 'Comunidad Macul #9', '5592832', '0', 'Administración de edificios', 'Urbanización Cristian Cabañas #401, Macul', 'teresitamadrigal@cabrero.es', '+34741 860 103', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(10, 'Comunidad San Miguel #10', '21940255', '4', 'Administración de edificios', 'Pasaje Marciano Pareja #677, San Miguel', 'boixjose-maria@yahoo.com', '+34707 821 376', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(11, 'Comunidad Lo Barnechea #11', '2186385', '8', 'Administración de edificios', 'Urbanización Felipe Vilaplana #919, Lo Barnechea', 'felisa53@hotmail.com', '+34600619716', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(12, 'Comunidad Vitacura #12', '7821754', '5', 'Administración de edificios', 'Plaza de Guadalupe Amigó #498, Vitacura', 'vascoduenas@hotmail.com', '+34983 42 13 16', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(13, 'Comunidad Santiago #13', '16700137', '8', 'Administración de edificios', 'Cañada de Ariel Marí #256, Santiago', 'xpablo@hotmail.com', '+34 728 29 59 33', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(14, 'Comunidad Providencia #14', '6694659', '2', 'Administración de edificios', 'Urbanización de Reyes Toro #773, Providencia', 'candelas21@batalla.com', '+34710480690', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(15, 'Comunidad Las Condes #15', '11259073', '0', 'Administración de edificios', 'Cuesta de Estrella Alcalde #148, Las Condes', 'tiradoisaac@collado-bertran.com', '+34 729511574', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(16, 'Comunidad Ñuñoa #16', '11223649', 'K', 'Administración de edificios', 'Glorieta de Lino Real #525, Ñuñoa', 'gamezsusana@costa.es', '+34 823151975', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(17, 'Comunidad La Florida #17', '1271048', '8', 'Administración de edificios', 'Alameda Herberto Solana #466, La Florida', 'muria@aguirre-pomares.com', '+34 629 216 748', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(18, 'Comunidad Maipú #15', '13466150', 'K', 'Administración de edificios', 'C. de Vinicio Salazar #46, Maipú', 'ntena@colom.com', '+34 928 57 50 13', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-06 14:11:01', NULL, NULL),
-(19, 'Comunidad Puente Alto #19', '23884158', '5', 'Administración de edificios', 'Callejón Leonor Rodríguez #597, Puente Alto', 'julianbenito@hotmail.com', '+34 728 890 470', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(20, 'Comunidad Recoleta #20', '4164577', '6', 'Administración de edificios', 'Pasaje de Maximiano Alfonso #440, Recoleta', 'angelina85@fabregat-galindo.es', '+34 884 258 433', NULL, 'CLP', 'America/Santiago', '2025-10-02 18:00:09', '2025-10-02 18:00:09', NULL, NULL),
-(21, 'Comunidad QA', '99999999', '9', 'Pruebas', 'Av. QA 123', 'qa@demo.cl', '+56 2 12345678', NULL, 'CLP', 'America/Santiago', '2025-10-06 18:35:12', '2025-10-06 18:35:12', NULL, NULL),
-(100, 'Comunidad Edificio Los Álamos', '76543210', '9', 'Administración de edificios', 'Av. Apoquindo 4500, Las Condes', 'contacto@losalamos.cl', '+56912345678', NULL, 'CLP', 'America/Santiago', '2025-10-06 18:57:25', '2025-10-06 18:57:25', NULL, NULL),
-(101, 'Comunidad Prueba', '76545210', '5', NULL, 'Av. Siempre Viva 123', NULL, NULL, NULL, 'CLP', 'America/Santiago', '2025-10-07 17:02:19', '2025-10-07 17:02:19', NULL, NULL);
+(1, 'Condominio Central Providencia', '76543210', '9', NULL, 'Av. Central 1234, Providencia', 'adm@providencia.cl', NULL, NULL, 'CLP', 'America/Santiago', '2025-10-10 18:07:36', '2025-10-10 18:07:36', NULL, NULL),
+(2, 'Residencial Las Condes 500', '98765432', '1', NULL, 'Calle Principal 500, Las Condes', 'admin@lascondes.cl', NULL, NULL, 'CLP', 'America/Santiago', '2025-10-10 18:07:36', '2025-10-10 18:07:36', NULL, NULL),
+(3, 'Edificio Mirador Ñuñoa', '12345678', '9', NULL, 'Pasaje Los Robles 789, Ñuñoa', 'mirador@nunoa.cl', NULL, NULL, 'CLP', 'America/Santiago', '2025-10-10 18:07:36', '2025-10-10 18:07:36', NULL, NULL),
+(4, 'Loteo Maipú Norte', '87654321', '0', NULL, 'Ruta Maipu 100, Maipú', 'loteo@maipu.cl', NULL, NULL, 'CLP', 'America/Santiago', '2025-10-10 18:07:36', '2025-10-10 18:07:36', NULL, NULL),
+(5, 'Parque Estación Central', '23456789', 'K', NULL, 'Alameda 3000, Estación Central', 'parque@central.cl', NULL, NULL, 'CLP', 'America/Santiago', '2025-10-10 18:07:36', '2025-10-10 18:07:36', NULL, NULL),
+(6, 'Condominio Vitacura Hills', '34567890', '1', NULL, 'Av. Kennedy 8000, Vitacura', 'admin@vitacura.cl', NULL, NULL, 'CLP', 'America/Santiago', '2025-10-10 18:07:36', '2025-10-10 18:07:36', NULL, NULL),
+(7, 'Edificio Metro Santiago', '45678901', '2', NULL, 'Calle Bandera 500, Santiago', 'metro@stgo.cl', NULL, NULL, 'CLP', 'America/Santiago', '2025-10-10 18:07:36', '2025-10-10 18:07:36', NULL, NULL),
+(8, 'Portal La Florida', '56789012', '3', NULL, 'Av. Vicuña Mackenna 9000, La Florida', 'portal@florida.cl', NULL, NULL, 'CLP', 'America/Santiago', '2025-10-10 18:07:36', '2025-10-10 18:07:36', NULL, NULL),
+(9, 'Condominio Quilpué Sur', '67890123', '4', NULL, 'Calle Marga Marga 50, Quilpué', 'sur@quilpue.cl', NULL, NULL, 'CLP', 'America/Santiago', '2025-10-10 18:07:36', '2025-10-10 18:07:36', NULL, NULL),
+(10, 'Loteo San Miguel', '78901234', '5', NULL, 'Av. Llano Subercaseaux 100, San Miguel', 'admin@sanmiguel.cl', NULL, NULL, 'CLP', 'America/Santiago', '2025-10-10 18:07:36', '2025-10-10 18:07:36', NULL, NULL),
+(11, 'Condominio El Bosque', '89012345', '6', 'Administración de Inmuebles', 'Calle Forestal 150, Ñuñoa', 'admin@bosque.cl', '911112222', NULL, 'CLP', 'America/Santiago', '2025-10-17 11:12:00', '2025-10-17 11:12:00', NULL, NULL),
+(12, 'Residencial Plaza Oeste', '90123456', '7', 'Administración de Inmuebles', 'Av. Central 500, Maipú', 'contacto@plazaOeste.cl', '922223333', NULL, 'CLP', 'America/Santiago', '2025-10-17 11:12:01', '2025-10-17 11:12:01', NULL, NULL),
+(13, 'Edificio Puerto Montt', '91234567', '8', 'Administración de Inmuebles', 'Calle Viento 10, Puerto Montt', 'adm@ptomontt.cl', '933334444', NULL, 'CLP', 'America/Santiago', '2025-10-17 11:12:02', '2025-10-17 11:12:02', NULL, NULL),
+(14, 'Loteo Jardines de Chicureo', '92345678', '9', 'Administración de Inmuebles', 'Ruta Norte 55, Chicureo', 'jardines@chicureo.cl', '944445555', NULL, 'CLP', 'America/Santiago', '2025-10-17 11:12:03', '2025-10-17 11:12:03', NULL, NULL),
+(15, 'Parque Central Iquique', '93456789', 'K', 'Administración de Inmuebles', 'Av. Playa 200, Iquique', 'adm@iquique.cl', '955556666', NULL, 'CLP', 'America/Santiago', '2025-10-17 11:12:04', '2025-10-17 11:12:04', NULL, NULL),
+(16, 'Condominio Viña del Mar', '94567890', '1', 'Administración de Inmuebles', 'Calle Agua Santa 100, Viña del Mar', 'admin@vina.cl', '966667777', NULL, 'CLP', 'America/Santiago', '2025-10-17 11:12:05', '2025-10-17 11:12:05', NULL, NULL),
+(17, 'Edificio Los Aromos', '95678901', '2', 'Administración de Inmuebles', 'Pasaje Los Lagos 700, Concepción', 'aromosedif@gmail.com', '977778888', NULL, 'CLP', 'America/Santiago', '2025-10-17 11:12:06', '2025-10-17 11:12:06', NULL, NULL),
+(18, 'Portal Tobalaba', '96789012', '3', 'Administración de Inmuebles', 'Av. Tobalaba 8500, Peñalolén', 'adm@tobalaba.cl', '988889999', NULL, 'CLP', 'America/Santiago', '2025-10-17 11:12:07', '2025-10-17 11:12:07', NULL, NULL),
+(19, 'Condominio La Serena', '97890123', '4', 'Administración de Inmuebles', 'Calle Mar 10, La Serena', 'admin@laserena.cl', '999990000', NULL, 'CLP', 'America/Santiago', '2025-10-17 11:12:08', '2025-10-17 11:12:08', NULL, NULL),
+(20, 'Loteo Bosque Sur', '98901234', '5', 'Administración de Inmuebles', 'Camino Sur 300, Temuco', 'bosquesur@adm.cl', '900001111', NULL, 'CLP', 'America/Santiago', '2025-10-17 11:12:09', '2025-10-17 11:12:09', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -336,11 +462,46 @@ CREATE TABLE `conciliacion_bancaria` (
 --
 
 INSERT INTO `conciliacion_bancaria` (`id`, `comunidad_id`, `fecha_mov`, `monto`, `glosa`, `referencia`, `estado`, `pago_id`, `extracto_id`, `created_at`, `updated_at`) VALUES
-(1, 2, '2025-09-01', 50000.00, 'Pago de GGCC septiembre', 'REF001', 'conciliado', 5, NULL, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(2, 3, '2025-09-03', 75000.00, 'Pago extraordinario', 'REF002', 'pendiente', NULL, NULL, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(3, 1, '2025-09-05', 15000.00, 'Mora por atraso', 'REF003', 'descartado', NULL, NULL, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(4, 2, '2025-09-08', 20000.00, 'Pago parcial GGCC', 'REF004', 'conciliado', 7, NULL, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(5, 4, '2025-09-10', 30000.00, 'Transferencia sin identificar', 'REF005', 'pendiente', NULL, NULL, '2025-10-02 18:42:27', '2025-10-02 18:42:27');
+(1, 2, '2025-10-01', 62000.00, 'Trf 62000 U305', 'TRF-ABC1', 'conciliado', 1, NULL, '2025-10-10 18:10:18', '2025-10-10 18:10:18'),
+(2, 4, '2025-10-02', 31000.00, 'Webpay Pago Casa A', 'WP-XYZ2', 'conciliado', 2, NULL, '2025-10-10 18:10:18', '2025-10-10 18:10:18'),
+(3, 7, '2025-10-03', 55000.00, 'Depósito efectivo D1502', 'EFE-1233', 'conciliado', 3, NULL, '2025-10-10 18:10:18', '2025-10-10 18:10:18'),
+(4, 8, '2025-10-04', 48000.00, 'Transferencia U105', 'TRF-LMN4', 'conciliado', 4, NULL, '2025-10-10 18:10:18', '2025-10-10 18:10:18'),
+(5, 10, '2025-10-05', 68000.00, 'Webpay D202', 'WP-QRS5', 'conciliado', 5, NULL, '2025-10-10 18:10:18', '2025-10-10 18:10:18'),
+(6, 1, '2025-10-06', 45000.00, 'Transferencia sin identificar', 'TRF-IND6', 'pendiente', 6, NULL, '2025-10-10 18:10:18', '2025-10-10 18:10:18'),
+(7, 3, '2025-10-07', 88000.00, 'Pago D402', 'TRF-TUV7', 'pendiente', 7, NULL, '2025-10-10 18:10:18', '2025-10-10 18:10:18'),
+(8, 5, '2025-10-08', 73000.00, 'Pago Pendiente D501', 'WP-UVW8', 'pendiente', 8, NULL, '2025-10-10 18:10:18', '2025-10-10 18:10:18'),
+(9, 9, '2025-10-09', 49000.00, 'Depósito UQ01', 'EFE-XYZ9', 'pendiente', 9, NULL, '2025-10-10 18:10:18', '2025-10-10 18:10:18'),
+(10, 6, '2025-10-10', 95000.00, 'Pago Pendiente D1001', 'TRF-JKL10', 'pendiente', 10, NULL, '2025-10-10 18:10:18', '2025-10-10 18:10:18'),
+(11, 2, '2025-10-06', 65000.00, 'Trf 65000 D306', 'TRF-DEF1', 'conciliado', 11, NULL, '2025-10-15 21:10:57', '2025-10-15 21:10:57'),
+(12, 4, '2025-10-07', 25000.00, 'Webpay Pago Casa B', 'WP-UVW2', 'conciliado', 12, NULL, '2025-10-15 21:10:57', '2025-10-15 21:10:57'),
+(13, 7, '2025-10-08', 60000.00, 'Depósito efectivo D1503', 'EFE-4563', 'conciliado', 13, NULL, '2025-10-15 21:10:57', '2025-10-15 21:10:57'),
+(14, 8, '2025-10-09', 40000.00, 'Transferencia D106', 'TRF-PQR4', 'conciliado', 14, NULL, '2025-10-15 21:10:57', '2025-10-15 21:10:57'),
+(15, 10, '2025-10-10', 70000.00, 'Webpay D203', 'WP-STU5', 'conciliado', 15, NULL, '2025-10-15 21:10:57', '2025-10-15 21:10:57'),
+(16, 1, '2025-10-11', 50000.00, 'Transferencia sin identificar', 'TRF-IND7', 'pendiente', 16, NULL, '2025-10-15 21:10:57', '2025-10-15 21:10:57'),
+(17, 3, '2025-10-12', 90000.00, 'Pago D403', 'TRF-WXY7', 'pendiente', 17, NULL, '2025-10-15 21:10:57', '2025-10-15 21:10:57'),
+(18, 5, '2025-10-13', 75000.00, 'Pago Pendiente D502', 'WP-ZAB8', 'pendiente', 18, NULL, '2025-10-15 21:10:57', '2025-10-15 21:10:57'),
+(19, 9, '2025-10-14', 50000.00, 'Depósito T2', 'EFE-CDE9', 'pendiente', 19, NULL, '2025-10-15 21:10:57', '2025-10-15 21:10:57'),
+(20, 6, '2025-10-15', 100000.00, 'Pago Pendiente D1002', 'TRF-FGH10', 'pendiente', 20, NULL, '2025-10-15 21:10:57', '2025-10-15 21:10:57'),
+(21, 1, '2025-10-16', 55000.00, 'Trf 55000 D301', 'TRF-P021', 'pendiente', 21, NULL, '2025-10-16 18:36:00', '2025-10-16 18:36:00'),
+(22, 2, '2025-10-17', 70000.00, 'Webpay Pago D401', 'WP-P022', 'conciliado', 22, NULL, '2025-10-16 18:36:01', '2025-10-16 18:36:01'),
+(23, 3, '2025-10-18', 95000.00, 'Depósito D501', 'EFE-P023', 'pendiente', 23, NULL, '2025-10-16 18:36:02', '2025-10-16 18:36:02'),
+(24, 4, '2025-10-19', 30000.00, 'Transferencia Casa C', 'TRF-P024', 'conciliado', 24, NULL, '2025-10-16 18:36:03', '2025-10-16 18:36:03'),
+(25, 5, '2025-10-20', 80000.00, 'Webpay D601', 'WP-P025', 'pendiente', 25, NULL, '2025-10-16 18:36:04', '2025-10-16 18:36:04'),
+(26, 6, '2025-10-21', 110000.00, 'Depósito D2001', 'EFE-P026', 'conciliado', 26, NULL, '2025-10-16 18:36:05', '2025-10-16 18:36:05'),
+(27, 7, '2025-10-22', 65000.00, 'Transferencia D1601', 'TRF-P027', 'pendiente', 27, NULL, '2025-10-16 18:36:06', '2025-10-16 18:36:06'),
+(28, 8, '2025-10-23', 85000.00, 'Webpay D201', 'WP-P028', 'conciliado', 28, NULL, '2025-10-16 18:36:07', '2025-10-16 18:36:07'),
+(29, 9, '2025-10-24', 60000.00, 'Depósito D30', 'EFE-P029', 'pendiente', 29, NULL, '2025-10-16 18:36:08', '2025-10-16 18:36:08'),
+(30, 10, '2025-10-25', 75000.00, 'Transferencia D301', 'TRF-P030', 'conciliado', 30, NULL, '2025-10-16 18:36:09', '2025-10-16 18:36:09'),
+(31, 1, '2025-10-26', 60000.00, 'Webpay D401', 'WP-P031', 'conciliado', 31, NULL, '2025-10-17 10:26:00', '2025-10-17 10:26:00'),
+(32, 2, '2025-10-27', 75000.00, 'Trf 75000 D501', 'TRF-P032', 'pendiente', 32, NULL, '2025-10-17 10:26:01', '2025-10-17 10:26:01'),
+(33, 3, '2025-10-28', 100000.00, 'Webpay D601', 'WP-P033', 'conciliado', 33, NULL, '2025-10-17 10:26:02', '2025-10-17 10:26:02'),
+(34, 4, '2025-10-29', 65000.00, 'Depósito Casa D', 'EFE-P034', 'pendiente', 34, NULL, '2025-10-17 10:26:03', '2025-10-17 10:26:03'),
+(35, 5, '2025-10-30', 40000.00, 'Transferencia Parcial D701', 'TRF-P035', 'conciliado', 35, NULL, '2025-10-17 10:26:04', '2025-10-17 10:26:04'),
+(36, 6, '2025-10-31', 115000.00, 'Webpay D3001', 'WP-P036', 'pendiente', 36, NULL, '2025-10-17 10:26:05', '2025-10-17 10:26:05'),
+(37, 7, '2025-11-01', 70000.00, 'Depósito D1701', 'EFE-P037', 'conciliado', 37, NULL, '2025-10-17 10:26:06', '2025-10-17 10:26:06'),
+(38, 8, '2025-11-02', 90000.00, 'Transferencia D301', 'TRF-P038', 'pendiente', 38, NULL, '2025-10-17 10:26:07', '2025-10-17 10:26:07'),
+(39, 9, '2025-11-03', 65000.00, 'Webpay D40', 'WP-P039', 'conciliado', 39, NULL, '2025-10-17 10:26:08', '2025-10-17 10:26:08'),
+(40, 10, '2025-11-04', 80000.00, 'Depósito D401', 'EFE-P040', 'pendiente', 40, NULL, '2025-10-17 10:26:09', '2025-10-17 10:26:09');
 
 -- --------------------------------------------------------
 
@@ -364,9 +525,36 @@ CREATE TABLE `configuracion_interes` (
 --
 
 INSERT INTO `configuracion_interes` (`id`, `comunidad_id`, `aplica_desde`, `tasa_mensual`, `metodo`, `tope_mensual`, `created_at`, `updated_at`) VALUES
-(1, 1, '2025-01-01', 1.20, 'simple', 2.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(2, 2, '2025-01-01', 1.50, 'compuesto', 2.50, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(3, 3, '2025-01-01', 1.00, 'simple', 1.80, '2025-10-02 18:42:27', '2025-10-02 18:42:27');
+(1, 1, '2025-01-01', 1.20, 'simple', 2.00, '2025-10-10 18:07:44', '2025-10-10 18:07:44'),
+(2, 2, '2025-01-01', 1.50, 'compuesto', 2.50, '2025-10-10 18:07:44', '2025-10-10 18:07:44'),
+(3, 3, '2025-01-01', 1.00, 'simple', 1.80, '2025-10-10 18:07:44', '2025-10-10 18:07:44'),
+(4, 4, '2025-02-01', 1.10, 'compuesto', 1.90, '2025-10-10 18:07:44', '2025-10-10 18:07:44'),
+(5, 5, '2025-03-01', 1.30, 'simple', 2.10, '2025-10-10 18:07:44', '2025-10-10 18:07:44'),
+(6, 6, '2025-04-01', 1.40, 'compuesto', 2.30, '2025-10-10 18:07:44', '2025-10-10 18:07:44'),
+(7, 7, '2025-05-01', 1.60, 'simple', 2.60, '2025-10-10 18:07:44', '2025-10-10 18:07:44'),
+(8, 8, '2025-06-01', 1.15, 'compuesto', 1.95, '2025-10-10 18:07:44', '2025-10-10 18:07:44'),
+(9, 9, '2025-07-01', 1.25, 'simple', 2.05, '2025-10-10 18:07:44', '2025-10-10 18:07:44'),
+(10, 10, '2025-08-01', 1.55, 'compuesto', 2.45, '2025-10-10 18:07:44', '2025-10-10 18:07:44'),
+(11, 1, '2026-01-01', 1.30, 'compuesto', 2.20, '2025-10-17 11:01:00', '2025-10-17 11:01:00'),
+(12, 2, '2026-01-01', 1.60, 'simple', 2.80, '2025-10-17 11:01:01', '2025-10-17 11:01:01'),
+(13, 3, '2026-01-01', 1.10, 'compuesto', 1.90, '2025-10-17 11:01:02', '2025-10-17 11:01:02'),
+(14, 4, '2026-02-01', 1.20, 'simple', 2.10, '2025-10-17 11:01:03', '2025-10-17 11:01:03'),
+(15, 5, '2026-03-01', 1.40, 'compuesto', 2.30, '2025-10-17 11:01:04', '2025-10-17 11:01:04'),
+(16, 6, '2026-04-01', 1.50, 'simple', 2.50, '2025-10-17 11:01:05', '2025-10-17 11:01:05'),
+(17, 7, '2026-05-01', 1.70, 'compuesto', 2.70, '2025-10-17 11:01:06', '2025-10-17 11:01:06'),
+(18, 8, '2026-06-01', 1.25, 'simple', 2.05, '2025-10-17 11:01:07', '2025-10-17 11:01:07'),
+(19, 9, '2026-07-01', 1.35, 'compuesto', 2.15, '2025-10-17 11:01:08', '2025-10-17 11:01:08'),
+(20, 10, '2026-08-01', 1.65, 'simple', 2.55, '2025-10-17 11:01:09', '2025-10-17 11:01:09'),
+(21, 11, '2026-01-01', 1.20, 'simple', 2.00, '2025-10-17 11:14:00', '2025-10-17 11:14:00'),
+(22, 12, '2026-01-01', 1.50, 'compuesto', 2.50, '2025-10-17 11:14:01', '2025-10-17 11:14:01'),
+(23, 13, '2026-01-01', 1.00, 'simple', 1.80, '2025-10-17 11:14:02', '2025-10-17 11:14:02'),
+(24, 14, '2026-02-01', 1.10, 'compuesto', 1.90, '2025-10-17 11:14:03', '2025-10-17 11:14:03'),
+(25, 15, '2026-03-01', 1.30, 'simple', 2.10, '2025-10-17 11:14:04', '2025-10-17 11:14:04'),
+(26, 16, '2026-04-01', 1.40, 'compuesto', 2.30, '2025-10-17 11:14:05', '2025-10-17 11:14:05'),
+(27, 17, '2026-05-01', 1.60, 'simple', 2.60, '2025-10-17 11:14:06', '2025-10-17 11:14:06'),
+(28, 18, '2026-06-01', 1.15, 'compuesto', 1.95, '2025-10-17 11:14:07', '2025-10-17 11:14:07'),
+(29, 19, '2026-07-01', 1.25, 'simple', 2.05, '2025-10-17 11:14:08', '2025-10-17 11:14:08'),
+(30, 20, '2026-08-01', 1.55, 'compuesto', 2.45, '2025-10-17 11:14:09', '2025-10-17 11:14:09');
 
 -- --------------------------------------------------------
 
@@ -392,26 +580,46 @@ CREATE TABLE `cuenta_cobro_unidad` (
 --
 
 INSERT INTO `cuenta_cobro_unidad` (`id`, `emision_id`, `comunidad_id`, `unidad_id`, `monto_total`, `saldo`, `estado`, `interes_acumulado`, `created_at`, `updated_at`) VALUES
-(1, 15, 12, 10, 63292.00, 21108.27, 'pagado', 2554.14, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(2, 17, 9, 12, 133550.00, 29706.09, 'pagado', 3896.02, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(3, 8, 10, 3, 76354.00, 29990.36, 'vencido', 742.51, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(4, 11, 10, 9, 114512.00, 114240.48, 'vencido', 808.10, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(5, 6, 11, 18, 109843.00, 88458.11, 'vencido', 4708.44, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(6, 17, 6, 10, 116198.00, 85386.59, 'vencido', 2776.15, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(7, 17, 2, 12, 119183.00, 35370.51, 'vencido', 1134.76, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(8, 8, 11, 9, 116769.00, 107915.67, 'pendiente', 2498.04, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(9, 6, 10, 8, 143831.00, 91550.05, 'pendiente', 1556.19, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(10, 17, 19, 20, 71667.00, 18917.64, 'pendiente', 41.70, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(11, 18, 16, 13, 83194.00, 65086.39, 'pendiente', 1067.18, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(12, 13, 5, 15, 132692.00, 16576.22, 'parcial', 4261.58, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(13, 8, 16, 1, 145107.00, 73559.21, 'vencido', 3677.99, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(14, 14, 2, 20, 51079.00, 22114.73, 'pagado', 2384.07, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(15, 16, 6, 8, 112169.00, 52713.49, 'pendiente', 124.75, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(16, 1, 2, 15, 93793.00, 47761.70, 'parcial', 4354.75, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(17, 18, 11, 12, 133757.00, 77169.94, 'vencido', 1539.94, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(18, 18, 14, 13, 86820.00, 55728.48, 'parcial', 4104.05, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(19, 17, 9, 7, 134807.00, 74813.79, 'parcial', 3713.13, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(20, 20, 1, 20, 55523.00, 50727.97, 'pendiente', 2505.81, '2025-10-02 18:20:48', '2025-10-02 18:20:48');
+(1, 1, 1, 1, 45000.00, 45000.00, 'pendiente', 0.00, '2025-10-10 18:09:44', '2025-10-10 18:09:44'),
+(2, 2, 2, 3, 62000.00, 0.00, 'pagado', 0.00, '2025-10-10 18:09:44', '2025-10-10 18:09:44'),
+(3, 3, 3, 4, 88000.00, 88000.00, 'vencido', 1500.00, '2025-10-10 18:09:44', '2025-10-10 18:09:44'),
+(4, 4, 4, 5, 51000.00, 20000.00, 'parcial', 0.00, '2025-10-10 18:09:44', '2025-10-10 18:09:44'),
+(5, 5, 5, 6, 73000.00, 73000.00, 'pendiente', 0.00, '2025-10-10 18:09:44', '2025-10-10 18:09:44'),
+(6, 6, 6, 7, 95000.00, 95000.00, 'pendiente', 0.00, '2025-10-10 18:09:44', '2025-10-10 18:09:44'),
+(7, 7, 7, 8, 55000.00, 0.00, 'pagado', 0.00, '2025-10-10 18:09:44', '2025-10-10 18:09:44'),
+(8, 8, 8, 9, 78000.00, 30000.00, 'parcial', 500.00, '2025-10-10 18:09:44', '2025-10-10 18:09:44'),
+(9, 9, 9, 10, 49000.00, 49000.00, 'vencido', 800.00, '2025-10-10 18:09:44', '2025-10-10 18:09:44'),
+(10, 10, 10, 10, 68000.00, 0.00, 'pagado', 0.00, '2025-10-10 18:09:44', '2025-10-10 18:09:44'),
+(11, 11, 1, 11, 50000.00, 50000.00, 'pendiente', 0.00, '2025-10-15 21:10:52', '2025-10-15 21:10:52'),
+(12, 12, 2, 13, 65000.00, 0.00, 'pagado', 0.00, '2025-10-15 21:10:52', '2025-10-15 21:10:52'),
+(13, 13, 3, 14, 90000.00, 90000.00, 'vencido', 1800.00, '2025-10-15 21:10:52', '2025-10-15 21:10:52'),
+(14, 14, 4, 15, 55000.00, 30000.00, 'parcial', 0.00, '2025-10-15 21:10:52', '2025-10-15 21:10:52'),
+(15, 15, 5, 16, 75000.00, 75000.00, 'pendiente', 0.00, '2025-10-15 21:10:52', '2025-10-15 21:10:52'),
+(16, 16, 6, 17, 100000.00, 100000.00, 'pendiente', 0.00, '2025-10-15 21:10:52', '2025-10-15 21:10:52'),
+(17, 17, 7, 18, 60000.00, 0.00, 'pagado', 0.00, '2025-10-15 21:10:52', '2025-10-15 21:10:52'),
+(18, 18, 8, 19, 80000.00, 40000.00, 'parcial', 600.00, '2025-10-15 21:10:52', '2025-10-15 21:10:52'),
+(19, 19, 9, 20, 50000.00, 50000.00, 'vencido', 900.00, '2025-10-15 21:10:52', '2025-10-15 21:10:52'),
+(20, 20, 10, 10, 70000.00, 0.00, 'pagado', 0.00, '2025-10-15 21:10:52', '2025-10-15 21:10:52'),
+(21, 21, 1, 21, 55000.00, 55000.00, 'pendiente', 0.00, '2025-10-16 18:26:00', '2025-10-16 18:26:00'),
+(22, 22, 2, 22, 70000.00, 70000.00, 'pendiente', 0.00, '2025-10-16 18:26:01', '2025-10-16 18:26:01'),
+(23, 23, 3, 23, 95000.00, 95000.00, 'pendiente', 0.00, '2025-10-16 18:26:02', '2025-10-16 18:26:02'),
+(24, 24, 4, 24, 60000.00, 60000.00, 'pendiente', 0.00, '2025-10-16 18:26:03', '2025-10-16 18:26:03'),
+(25, 25, 5, 25, 80000.00, 80000.00, 'pendiente', 0.00, '2025-10-16 18:26:04', '2025-10-16 18:26:04'),
+(26, 26, 6, 26, 110000.00, 110000.00, 'pendiente', 0.00, '2025-10-16 18:26:05', '2025-10-16 18:26:05'),
+(27, 27, 7, 27, 65000.00, 65000.00, 'pendiente', 0.00, '2025-10-16 18:26:06', '2025-10-16 18:26:06'),
+(28, 28, 8, 28, 85000.00, 85000.00, 'pendiente', 0.00, '2025-10-16 18:26:07', '2025-10-16 18:26:07'),
+(29, 29, 9, 29, 60000.00, 60000.00, 'pendiente', 0.00, '2025-10-16 18:26:08', '2025-10-16 18:26:08'),
+(30, 30, 10, 30, 75000.00, 75000.00, 'pendiente', 0.00, '2025-10-16 18:26:09', '2025-10-16 18:26:09'),
+(31, 31, 1, 31, 60000.00, 60000.00, 'pendiente', 0.00, '2025-10-17 10:16:00', '2025-10-17 10:16:00'),
+(32, 32, 2, 32, 75000.00, 75000.00, 'pendiente', 0.00, '2025-10-17 10:16:01', '2025-10-17 10:16:01'),
+(33, 33, 3, 33, 100000.00, 100000.00, 'pendiente', 0.00, '2025-10-17 10:16:02', '2025-10-17 10:16:02'),
+(34, 34, 4, 34, 65000.00, 65000.00, 'pendiente', 0.00, '2025-10-17 10:16:03', '2025-10-17 10:16:03'),
+(35, 35, 5, 35, 85000.00, 85000.00, 'pendiente', 0.00, '2025-10-17 10:16:04', '2025-10-17 10:16:04'),
+(36, 36, 6, 36, 115000.00, 115000.00, 'pendiente', 0.00, '2025-10-17 10:16:05', '2025-10-17 10:16:05'),
+(37, 37, 7, 37, 70000.00, 70000.00, 'pendiente', 0.00, '2025-10-17 10:16:06', '2025-10-17 10:16:06'),
+(38, 38, 8, 38, 90000.00, 90000.00, 'pendiente', 0.00, '2025-10-17 10:16:07', '2025-10-17 10:16:07'),
+(39, 39, 9, 39, 65000.00, 65000.00, 'pendiente', 0.00, '2025-10-17 10:16:08', '2025-10-17 10:16:08'),
+(40, 40, 10, 40, 80000.00, 80000.00, 'pendiente', 0.00, '2025-10-17 10:16:09', '2025-10-17 10:16:09');
 
 -- --------------------------------------------------------
 
@@ -456,26 +664,46 @@ CREATE TABLE `detalle_cuenta_unidad` (
 --
 
 INSERT INTO `detalle_cuenta_unidad` (`id`, `cuenta_cobro_unidad_id`, `categoria_id`, `glosa`, `monto`, `origen`, `origen_id`, `iva_incluido`, `created_at`, `updated_at`) VALUES
-(1, 1, 19, 'Detalle gasto 1', 36207.00, 'gasto', 8, 0, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(2, 2, 3, 'Detalle gasto 2', 30153.00, 'consumo', 1, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(3, 3, 3, 'Detalle gasto 3', 46011.00, 'multa', 5, 0, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(4, 4, 3, 'Detalle gasto 4', 38502.00, 'gasto', 12, 0, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(5, 5, 7, 'Detalle gasto 5', 36010.00, 'multa', 11, 0, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(6, 6, 10, 'Detalle gasto 6', 23202.00, 'gasto', 6, 0, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(7, 7, 12, 'Detalle gasto 7', 14552.00, 'consumo', 4, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(8, 8, 3, 'Detalle gasto 8', 29917.00, 'gasto', 11, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(9, 9, 4, 'Detalle gasto 9', 16099.00, 'multa', 7, 0, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(10, 10, 14, 'Detalle gasto 10', 22823.00, 'multa', 6, 0, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(11, 11, 10, 'Detalle gasto 11', 26696.00, 'multa', 7, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(12, 12, 2, 'Detalle gasto 12', 29570.00, 'consumo', 11, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(13, 13, 17, 'Detalle gasto 13', 20408.00, 'gasto', 18, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(14, 14, 7, 'Detalle gasto 14', 23192.00, 'gasto', 1, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(15, 15, 8, 'Detalle gasto 15', 47887.00, 'multa', 5, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(16, 16, 12, 'Detalle gasto 16', 49291.00, 'consumo', 15, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(17, 17, 4, 'Detalle gasto 17', 40765.00, 'multa', 16, 0, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(18, 18, 18, 'Detalle gasto 18', 22567.00, 'multa', 14, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(19, 19, 9, 'Detalle gasto 19', 16596.00, 'consumo', 10, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(20, 20, 12, 'Detalle gasto 20', 19810.00, 'consumo', 2, 0, '2025-10-02 18:20:48', '2025-10-02 18:20:48');
+(1, 1, 1, 'Gasto Base Operacional', 45000.00, 'gasto', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
+(2, 2, 2, 'Aporte Fondo Reserva', 62000.00, 'gasto', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
+(3, 3, 3, 'Cuota por Gasto Extraordinario', 88000.00, 'ajuste', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
+(4, 4, 4, 'Multa por Atraso', 10000.00, 'multa', NULL, 0, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
+(5, 4, 5, 'Consumo Agua Caliente', 41000.00, 'consumo', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
+(6, 5, 6, 'Gastos Fijos y Seguros', 73000.00, 'gasto', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
+(7, 6, 7, 'Cuota por Reparación Ascensores', 95000.00, 'ajuste', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
+(8, 7, 8, 'Recargo uso Amenidades', 55000.00, 'multa', NULL, 0, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
+(9, 8, 9, 'Gasto de Administración', 78000.00, 'gasto', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
+(10, 9, 10, 'Consumo Electricidad', 49000.00, 'consumo', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
+(11, 11, 11, 'Gasto Mantención Eléctrica', 50000.00, 'gasto', NULL, 1, '2025-10-15 21:10:53', '2025-10-15 21:10:53'),
+(12, 12, 12, 'Aporte Fondo Hidráulico', 65000.00, 'gasto', NULL, 1, '2025-10-15 21:10:53', '2025-10-15 21:10:53'),
+(13, 13, 13, 'Cuota Proyecto Capital', 90000.00, 'ajuste', NULL, 1, '2025-10-15 21:10:53', '2025-10-15 21:10:53'),
+(14, 14, 14, 'Multa por Cobranza', 15000.00, 'multa', NULL, 0, '2025-10-15 21:10:53', '2025-10-15 21:10:53'),
+(15, 14, 15, 'Consumo Gas', 40000.00, 'consumo', NULL, 1, '2025-10-15 21:10:53', '2025-10-15 21:10:53'),
+(16, 15, 16, 'Gastos de RR.HH.', 75000.00, 'gasto', NULL, 1, '2025-10-15 21:10:53', '2025-10-15 21:10:53'),
+(17, 16, 17, 'Cuota Vigilancia', 100000.00, 'ajuste', NULL, 1, '2025-10-15 21:10:53', '2025-10-15 21:10:53'),
+(18, 17, 18, 'Recargo uso Sauna', 60000.00, 'multa', NULL, 0, '2025-10-15 21:10:53', '2025-10-15 21:10:53'),
+(19, 18, 19, 'Gasto Infraestructura', 80000.00, 'gasto', NULL, 1, '2025-10-15 21:10:53', '2025-10-15 21:10:53'),
+(20, 19, 20, 'Consumo Agua', 50000.00, 'consumo', NULL, 1, '2025-10-15 21:10:53', '2025-10-15 21:10:53'),
+(21, 21, 21, 'Gasto Seguridad y Vigilancia', 55000.00, 'gasto', NULL, 1, '2025-10-16 18:27:00', '2025-10-16 18:27:00'),
+(22, 22, 22, 'Gasto Mantención Áreas Verdes', 70000.00, 'gasto', NULL, 1, '2025-10-16 18:27:01', '2025-10-16 18:27:01'),
+(23, 23, 23, 'Gasto Insumos de Aseo', 95000.00, 'gasto', NULL, 1, '2025-10-16 18:27:02', '2025-10-16 18:27:02'),
+(24, 24, 24, 'Gasto Honorarios Contables', 60000.00, 'gasto', NULL, 1, '2025-10-16 18:27:03', '2025-10-16 18:27:03'),
+(25, 25, 25, 'Cuota Gasto de Cobranza Legal', 80000.00, 'ajuste', NULL, 1, '2025-10-16 18:27:04', '2025-10-16 18:27:04'),
+(26, 26, 26, 'Gasto Climatización y Calefacción', 110000.00, 'gasto', NULL, 1, '2025-10-16 18:27:05', '2025-10-16 18:27:05'),
+(27, 27, 27, 'Gasto Capacitación Personal', 65000.00, 'gasto', NULL, 1, '2025-10-16 18:27:06', '2025-10-16 18:27:06'),
+(28, 28, 28, 'Cuota Mejoras Estéticas (Pintura)', 85000.00, 'ajuste', NULL, 1, '2025-10-16 18:27:07', '2025-10-16 18:27:07'),
+(29, 29, 29, 'Aporte a Fondo de Mantención', 60000.00, 'gasto', NULL, 1, '2025-10-16 18:27:08', '2025-10-16 18:27:08'),
+(30, 30, 30, 'Cuota Inspección Estructural', 75000.00, 'ajuste', NULL, 1, '2025-10-16 18:27:09', '2025-10-16 18:27:09'),
+(31, 31, 31, 'Cuota Mantención Ascensores', 60000.00, 'gasto', NULL, 1, '2025-10-17 10:17:00', '2025-10-17 10:17:00'),
+(32, 32, 32, 'Servicio Control de Plagas', 75000.00, 'gasto', NULL, 1, '2025-10-17 10:17:01', '2025-10-17 10:17:01'),
+(33, 33, 33, 'Reparaciones Eléctricas Comunes', 100000.00, 'gasto', NULL, 1, '2025-10-17 10:17:02', '2025-10-17 10:17:02'),
+(34, 34, 34, 'Costo Comunicación Comunitaria', 65000.00, 'gasto', NULL, 1, '2025-10-17 10:17:03', '2025-10-17 10:17:03'),
+(35, 35, 35, 'Gasto Servicio de Internet', 85000.00, 'gasto', NULL, 1, '2025-10-17 10:17:04', '2025-10-17 10:17:04'),
+(36, 36, 36, 'Cuota Mantención de Piscinas', 115000.00, 'gasto', NULL, 1, '2025-10-17 10:17:05', '2025-10-17 10:17:05'),
+(37, 37, 37, 'Mantención Red de Gas Común', 70000.00, 'gasto', NULL, 1, '2025-10-17 10:17:06', '2025-10-17 10:17:06'),
+(38, 38, 38, 'Aporte Extraordinario Materiales', 90000.00, 'ajuste', NULL, 1, '2025-10-17 10:17:07', '2025-10-17 10:17:07'),
+(39, 39, 39, 'Cuota Extraordinaria Paisajismo', 65000.00, 'ajuste', NULL, 1, '2025-10-17 10:17:08', '2025-10-17 10:17:08'),
+(40, 40, 40, 'Gasto Reparación Sistemas de Agua', 80000.00, 'gasto', NULL, 1, '2025-10-17 10:17:09', '2025-10-17 10:17:09');
 
 -- --------------------------------------------------------
 
@@ -500,26 +728,46 @@ CREATE TABLE `detalle_emision_gastos` (
 --
 
 INSERT INTO `detalle_emision_gastos` (`id`, `emision_id`, `gasto_id`, `categoria_id`, `monto`, `regla_prorrateo`, `metadata_json`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 1, 145000.00, 'coeficiente', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(2, 1, 2, 3, 58000.00, 'partes_iguales', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(3, 2, 3, 5, 12000.00, 'consumo', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(4, 2, 4, 4, 33000.00, 'fijo_por_unidad', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(5, 3, 5, 2, 91500.00, 'coeficiente', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(6, 3, 6, 6, 47400.00, 'consumo', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(7, 4, 7, 7, 23800.00, 'partes_iguales', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(8, 4, 8, 3, 9900.00, 'fijo_por_unidad', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(9, 5, 9, 1, 61200.00, 'coeficiente', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(10, 5, 10, 5, 43000.00, 'partes_iguales', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(11, 6, 11, 8, 22000.00, 'consumo', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(12, 6, 12, 4, 37000.00, 'fijo_por_unidad', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(13, 7, 13, 3, 28000.00, 'coeficiente', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(14, 7, 14, 6, 15800.00, 'consumo', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(15, 8, 15, 2, 56000.00, 'fijo_por_unidad', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(16, 8, 16, 9, 49900.00, 'partes_iguales', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(17, 9, 17, 5, 86000.00, 'consumo', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(18, 9, 18, 8, 30000.00, 'coeficiente', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(19, 10, 19, 10, 12000.00, 'partes_iguales', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(20, 10, 20, 7, 18900.00, 'fijo_por_unidad', '{}', '2025-10-02 18:42:27', '2025-10-02 18:42:27');
+(1, 1, 1, 1, 119000.00, 'coeficiente', NULL, '2025-10-10 18:07:54', '2025-10-10 18:07:54'),
+(2, 2, 2, 2, 59500.00, 'partes_iguales', NULL, '2025-10-10 18:07:54', '2025-10-10 18:07:54'),
+(3, 3, 3, 3, 89250.00, 'coeficiente', NULL, '2025-10-10 18:07:54', '2025-10-10 18:07:54'),
+(4, 4, 4, 4, 35700.00, 'fijo_por_unidad', NULL, '2025-10-10 18:07:54', '2025-10-10 18:07:54'),
+(5, 5, 5, 5, 107100.00, 'consumo', NULL, '2025-10-10 18:07:54', '2025-10-10 18:07:54'),
+(6, 6, 6, 6, 142800.00, 'coeficiente', NULL, '2025-10-10 18:07:54', '2025-10-10 18:07:54'),
+(7, 7, 7, 7, 95200.00, 'partes_iguales', NULL, '2025-10-10 18:07:54', '2025-10-10 18:07:54'),
+(8, 8, 8, 8, 47600.00, 'fijo_por_unidad', NULL, '2025-10-10 18:07:54', '2025-10-10 18:07:54'),
+(9, 9, 9, 9, 178500.00, 'coeficiente', NULL, '2025-10-10 18:07:54', '2025-10-10 18:07:54'),
+(10, 10, 10, 10, 71400.00, 'consumo', NULL, '2025-10-10 18:07:54', '2025-10-10 18:07:54'),
+(11, 1, 21, 11, 142800.00, 'coeficiente', NULL, '2025-10-15 21:10:30', '2025-10-15 21:10:30'),
+(12, 2, 22, 12, 95200.00, 'partes_iguales', NULL, '2025-10-15 21:10:30', '2025-10-15 21:10:30'),
+(13, 3, 23, 13, 47600.00, 'coeficiente', NULL, '2025-10-15 21:10:30', '2025-10-15 21:10:30'),
+(14, 4, 24, 14, 178500.00, 'fijo_por_unidad', NULL, '2025-10-15 21:10:30', '2025-10-15 21:10:30'),
+(15, 5, 25, 15, 71400.00, 'consumo', NULL, '2025-10-15 21:10:30', '2025-10-15 21:10:30'),
+(16, 6, 16, 16, 119000.00, 'coeficiente', NULL, '2025-10-15 21:10:30', '2025-10-15 21:10:30'),
+(17, 7, 17, 17, 59500.00, 'partes_iguales', NULL, '2025-10-15 21:10:30', '2025-10-15 21:10:30'),
+(18, 8, 18, 18, 89250.00, 'fijo_por_unidad', NULL, '2025-10-15 21:10:30', '2025-10-15 21:10:30'),
+(19, 9, 19, 19, 35700.00, 'coeficiente', NULL, '2025-10-15 21:10:30', '2025-10-15 21:10:30'),
+(20, 10, 20, 20, 107100.00, 'consumo', NULL, '2025-10-15 21:10:30', '2025-10-15 21:10:30'),
+(21, 21, 26, 21, 178500.00, 'coeficiente', NULL, '2025-10-16 18:25:00', '2025-10-16 18:25:00'),
+(22, 22, 27, 22, 59500.00, 'partes_iguales', NULL, '2025-10-16 18:25:01', '2025-10-16 18:25:01'),
+(23, 23, 28, 23, 95200.00, 'coeficiente', NULL, '2025-10-16 18:25:02', '2025-10-16 18:25:02'),
+(24, 24, 29, 24, 35700.00, 'fijo_por_unidad', NULL, '2025-10-16 18:25:03', '2025-10-16 18:25:03'),
+(25, 25, 30, 25, 142800.00, 'coeficiente', NULL, '2025-10-16 18:25:04', '2025-10-16 18:25:04'),
+(26, 26, 31, 26, 119000.00, 'partes_iguales', NULL, '2025-10-16 18:25:05', '2025-10-16 18:25:05'),
+(27, 27, 32, 27, 47600.00, 'coeficiente', NULL, '2025-10-16 18:25:06', '2025-10-16 18:25:06'),
+(28, 28, 33, 28, 89250.00, 'fijo_por_unidad', NULL, '2025-10-16 18:25:07', '2025-10-16 18:25:07'),
+(29, 29, 34, 29, 59500.00, 'coeficiente', NULL, '2025-10-16 18:25:08', '2025-10-16 18:25:08'),
+(30, 30, 35, 30, 178500.00, 'partes_iguales', NULL, '2025-10-16 18:25:09', '2025-10-16 18:25:09'),
+(31, 31, 36, 31, 107100.00, 'coeficiente', NULL, '2025-10-17 10:15:00', '2025-10-17 10:15:00'),
+(32, 32, 37, 32, 47600.00, 'partes_iguales', NULL, '2025-10-17 10:15:01', '2025-10-17 10:15:01'),
+(33, 33, 38, 33, 77350.00, 'coeficiente', NULL, '2025-10-17 10:15:02', '2025-10-17 10:15:02'),
+(34, 34, 39, 34, 29750.00, 'fijo_por_unidad', NULL, '2025-10-17 10:15:03', '2025-10-17 10:15:03'),
+(35, 35, 40, 35, 95200.00, 'coeficiente', NULL, '2025-10-17 10:15:04', '2025-10-17 10:15:04'),
+(36, 36, 41, 36, 154700.00, 'partes_iguales', NULL, '2025-10-17 10:15:05', '2025-10-17 10:15:05'),
+(37, 37, 42, 37, 53550.00, 'coeficiente', NULL, '2025-10-17 10:15:06', '2025-10-17 10:15:06'),
+(38, 38, 43, 38, 83300.00, 'fijo_por_unidad', NULL, '2025-10-17 10:15:07', '2025-10-17 10:15:07'),
+(39, 39, 44, 39, 65450.00, 'coeficiente', NULL, '2025-10-17 10:15:08', '2025-10-17 10:15:08'),
+(40, 40, 45, 40, 119000.00, 'partes_iguales', NULL, '2025-10-17 10:15:09', '2025-10-17 10:15:09');
 
 -- --------------------------------------------------------
 
@@ -548,26 +796,46 @@ CREATE TABLE `documento_compra` (
 --
 
 INSERT INTO `documento_compra` (`id`, `comunidad_id`, `proveedor_id`, `tipo_doc`, `folio`, `fecha_emision`, `neto`, `iva`, `exento`, `total`, `glosa`, `created_at`, `updated_at`) VALUES
-(1, 12, 13, 'factura', '6736', '2025-05-24', 251654.00, 47814.00, 0.00, 299468.00, 'Compra de servicios 1', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(2, 15, 15, 'boleta', '1657', '2025-01-28', 167918.00, 31904.00, 0.00, 199822.00, 'Compra de servicios 2', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(3, 17, 15, 'boleta', '1303', '2025-04-07', 63268.00, 12020.00, 0.00, 75288.00, 'Compra de servicios 3', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(4, 6, 20, 'factura', '4358', '2025-01-02', 242317.00, 46040.00, 0.00, 288357.00, 'Compra de servicios 4', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(5, 8, 20, 'factura', '6620', '2025-05-29', 86610.00, 16455.00, 0.00, 103065.00, 'Compra de servicios 5', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(6, 13, 5, 'boleta', '3679', '2024-10-16', 175225.00, 33292.00, 0.00, 208517.00, 'Compra de servicios 6', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(7, 7, 4, 'factura', '7900', '2025-01-13', 128139.00, 24346.00, 0.00, 152485.00, 'Compra de servicios 7', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(8, 11, 4, 'factura', '5642', '2025-08-28', 94042.00, 17867.00, 0.00, 111909.00, 'Compra de servicios 8', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(9, 1, 20, 'boleta', '1360', '2024-10-14', 157910.00, 30002.00, 0.00, 187912.00, 'Compra de servicios 9', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(10, 4, 3, 'factura', '1851', '2024-10-01', 77420.00, 14709.00, 0.00, 92129.00, 'Compra de servicios 10', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(11, 14, 7, 'factura', '5340', '2024-11-02', 228572.00, 43428.00, 0.00, 272000.00, 'Compra de servicios 11', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(12, 19, 14, 'boleta', '8730', '2025-07-09', 184382.00, 35032.00, 0.00, 219414.00, 'Compra de servicios 12', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(13, 9, 13, 'boleta', '7256', '2025-04-23', 141311.00, 26849.00, 0.00, 168160.00, 'Compra de servicios 13', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(14, 3, 13, 'boleta', '3529', '2025-08-08', 70274.00, 13352.00, 0.00, 83626.00, 'Compra de servicios 14', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(15, 14, 6, 'factura', '2355', '2024-11-08', 140925.00, 26775.00, 0.00, 167700.00, 'Compra de servicios 15', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(16, 11, 20, 'factura', '9673', '2024-12-17', 244206.00, 46399.00, 0.00, 290605.00, 'Compra de servicios 16', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(17, 7, 16, 'boleta', '3630', '2024-10-09', 130343.00, 24765.00, 0.00, 155108.00, 'Compra de servicios 17', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(18, 15, 12, 'boleta', '3095', '2025-07-17', 235971.00, 44834.00, 0.00, 280805.00, 'Compra de servicios 18', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(19, 2, 11, 'boleta', '2352', '2025-05-14', 130337.00, 24764.00, 0.00, 155101.00, 'Compra de servicios 19', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(20, 20, 10, 'factura', '8298', '2025-03-31', 63465.00, 12058.00, 0.00, 75523.00, 'Compra de servicios 20', '2025-10-02 18:19:29', '2025-10-02 18:19:29');
+(1, 1, 1, 'factura', 'F-1001', '2025-09-01', 100000.00, 19000.00, 0.00, 119000.00, 'Servicio de Aseo Septiembre', '2025-10-10 18:07:50', '2025-10-10 18:07:50'),
+(2, 2, 2, 'boleta', 'B-2005', '2025-09-02', 50000.00, 9500.00, 0.00, 59500.00, 'Compra de cámara de repuesto', '2025-10-10 18:07:50', '2025-10-10 18:07:50'),
+(3, 3, 3, 'factura', 'F-3010', '2025-09-03', 75000.00, 14250.00, 0.00, 89250.00, 'Mantención Jardines Trimestral', '2025-10-10 18:07:50', '2025-10-10 18:07:50'),
+(4, 4, 4, 'boleta', 'B-4001', '2025-09-04', 30000.00, 5700.00, 0.00, 35700.00, 'Reparación de válvula principal', '2025-10-10 18:07:50', '2025-10-10 18:07:50'),
+(5, 5, 5, 'factura', 'F-5015', '2025-09-05', 90000.00, 17100.00, 0.00, 107100.00, 'Reparación de luminaria exterior', '2025-10-10 18:07:50', '2025-10-10 18:07:50'),
+(6, 6, 6, 'factura', 'F-6002', '2025-09-06', 120000.00, 22800.00, 0.00, 142800.00, 'Honorarios Contables Septiembre', '2025-10-10 18:07:50', '2025-10-10 18:07:50'),
+(7, 7, 7, 'factura', 'F-7007', '2025-09-07', 80000.00, 15200.00, 0.00, 95200.00, 'Mantención Ascensores', '2025-10-10 18:07:50', '2025-10-10 18:07:50'),
+(8, 8, 8, 'boleta', 'B-8003', '2025-09-08', 40000.00, 7600.00, 0.00, 47600.00, 'Compra de pintura para pasillos', '2025-10-10 18:07:50', '2025-10-10 18:07:50'),
+(9, 9, 9, 'factura', 'F-9011', '2025-09-09', 150000.00, 28500.00, 0.00, 178500.00, 'Fee Administración Septiembre', '2025-10-10 18:07:50', '2025-10-10 18:07:50'),
+(10, 10, 10, 'boleta', 'B-1002', '2025-09-10', 60000.00, 11400.00, 0.00, 71400.00, 'Revisión técnica de red de gas', '2025-10-10 18:07:50', '2025-10-10 18:07:50'),
+(16, 6, 16, 'factura', 'F-6004', '2025-10-10', 100000.00, 19000.00, 0.00, 119000.00, 'Licencia Software Adm.', '2025-10-15 21:10:27', '2025-10-15 21:10:27'),
+(17, 7, 17, 'boleta', 'B-7008', '2025-10-11', 50000.00, 9500.00, 0.00, 59500.00, 'Compra de radios portátiles.', '2025-10-15 21:10:27', '2025-10-15 21:10:27'),
+(18, 8, 18, 'factura', 'F-8012', '2025-10-12', 75000.00, 14250.00, 0.00, 89250.00, 'Materiales para reparación muro.', '2025-10-15 21:10:27', '2025-10-15 21:10:27'),
+(19, 9, 19, 'boleta', 'B-9004', '2025-10-13', 30000.00, 5700.00, 0.00, 35700.00, 'Asesoría por cobro judicial.', '2025-10-15 21:10:27', '2025-10-15 21:10:27'),
+(20, 10, 20, 'factura', 'F-1004', '2025-10-14', 90000.00, 17100.00, 0.00, 107100.00, 'Informe financiero trimestral.', '2025-10-15 21:10:27', '2025-10-15 21:10:27'),
+(21, 1, 11, 'boleta', 'B-1007', '2025-10-15', 120000.00, 22800.00, 0.00, 142800.00, 'Reparación de iluminación exterior.', '2025-10-15 21:10:27', '2025-10-15 21:10:27'),
+(22, 2, 12, 'factura', 'F-2012', '2025-10-16', 80000.00, 15200.00, 0.00, 95200.00, 'Arreglo de bomba de agua.', '2025-10-15 21:10:27', '2025-10-15 21:10:27'),
+(23, 3, 13, 'boleta', 'B-3004', '2025-10-17', 40000.00, 7600.00, 0.00, 47600.00, 'Compra de fertilizante.', '2025-10-15 21:10:27', '2025-10-15 21:10:27'),
+(24, 4, 14, 'factura', 'F-4012', '2025-10-18', 150000.00, 28500.00, 0.00, 178500.00, 'Reparación de muro perimetral.', '2025-10-15 21:10:27', '2025-10-15 21:10:27'),
+(25, 5, 15, 'boleta', 'B-5004', '2025-10-19', 60000.00, 11400.00, 0.00, 71400.00, 'Inspección de ascensor.', '2025-10-15 21:10:27', '2025-10-15 21:10:27'),
+(26, 1, 21, 'factura', 'F-1005', '2025-10-15', 150000.00, 28500.00, 0.00, 178500.00, 'Servicios de Vigilancia Octubre', '2025-10-16 18:18:00', '2025-10-16 18:18:00'),
+(27, 2, 22, 'boleta', 'B-2015', '2025-10-16', 50000.00, 9500.00, 0.00, 59500.00, 'Fertilizantes y semillas', '2025-10-16 18:18:01', '2025-10-16 18:18:01'),
+(28, 3, 23, 'factura', 'F-3011', '2025-10-17', 80000.00, 15200.00, 0.00, 95200.00, 'Insumos de limpieza trimestral', '2025-10-16 18:18:02', '2025-10-16 18:18:02'),
+(29, 4, 24, 'boleta', 'B-4005', '2025-10-18', 30000.00, 5700.00, 0.00, 35700.00, 'Honorarios Contables Q3', '2025-10-16 18:18:03', '2025-10-16 18:18:03'),
+(30, 5, 25, 'factura', 'F-5016', '2025-10-19', 120000.00, 22800.00, 0.00, 142800.00, 'Asesoría legal por morosos', '2025-10-16 18:18:04', '2025-10-16 18:18:04'),
+(31, 6, 26, 'factura', 'F-6005', '2025-10-20', 100000.00, 19000.00, 0.00, 119000.00, 'Mantención Climatización 6 meses', '2025-10-16 18:18:05', '2025-10-16 18:18:05'),
+(32, 7, 27, 'boleta', 'B-7009', '2025-10-21', 40000.00, 7600.00, 0.00, 47600.00, 'Capacitación nuevo personal', '2025-10-16 18:18:06', '2025-10-16 18:18:06'),
+(33, 8, 28, 'factura', 'F-8013', '2025-10-22', 75000.00, 14250.00, 0.00, 89250.00, 'Pintura para áreas comunes B3', '2025-10-16 18:18:07', '2025-10-16 18:18:07'),
+(34, 9, 29, 'boleta', 'B-9005', '2025-10-23', 50000.00, 9500.00, 0.00, 59500.00, 'Informe financiero trimestral', '2025-10-16 18:18:08', '2025-10-16 18:18:08'),
+(35, 10, 30, 'factura', 'F-1005', '2025-10-24', 150000.00, 28500.00, 0.00, 178500.00, 'Inspección estructural anual', '2025-10-16 18:18:09', '2025-10-16 18:18:09'),
+(36, 1, 31, 'factura', 'F-1006', '2025-11-01', 90000.00, 17100.00, 0.00, 107100.00, 'Mantención Ascensores Noviembre', '2025-10-17 10:08:00', '2025-10-17 10:08:00'),
+(37, 2, 32, 'boleta', 'B-2016', '2025-11-02', 40000.00, 7600.00, 0.00, 47600.00, 'Servicio de fumigación general', '2025-10-17 10:08:01', '2025-10-17 10:08:01'),
+(38, 3, 33, 'factura', 'F-3012', '2025-11-03', 65000.00, 12350.00, 0.00, 77350.00, 'Reparación circuito eléctrico', '2025-10-17 10:08:02', '2025-10-17 10:08:02'),
+(39, 4, 34, 'boleta', 'B-4006', '2025-11-04', 25000.00, 4750.00, 0.00, 29750.00, 'Diseño de encuesta de satisfacción', '2025-10-17 10:08:03', '2025-10-17 10:08:03'),
+(40, 5, 35, 'factura', 'F-5017', '2025-11-05', 80000.00, 15200.00, 0.00, 95200.00, 'Servicio de internet áreas comunes', '2025-10-17 10:08:04', '2025-10-17 10:08:04'),
+(41, 6, 36, 'factura', 'F-6006', '2025-11-06', 130000.00, 24700.00, 0.00, 154700.00, 'Mantención trimestral de piscina', '2025-10-17 10:08:05', '2025-10-17 10:08:05'),
+(42, 7, 37, 'boleta', 'B-7010', '2025-11-07', 45000.00, 8550.00, 0.00, 53550.00, 'Revisión red de gas central', '2025-10-17 10:08:06', '2025-10-17 10:08:06'),
+(43, 8, 38, 'factura', 'F-8014', '2025-11-08', 70000.00, 13300.00, 0.00, 83300.00, 'Compra de cemento y arena', '2025-10-17 10:08:07', '2025-10-17 10:08:07'),
+(44, 9, 39, 'boleta', 'B-9006', '2025-11-09', 55000.00, 10450.00, 0.00, 65450.00, 'Diseño de nuevo jardín temático', '2025-10-17 10:08:08', '2025-10-17 10:08:08'),
+(45, 10, 40, 'factura', 'F-1006', '2025-11-10', 100000.00, 19000.00, 0.00, 119000.00, 'Reparación de bomba de agua N°2', '2025-10-17 10:08:09', '2025-10-17 10:08:09');
 
 -- --------------------------------------------------------
 
@@ -592,10 +860,62 @@ CREATE TABLE `documento_comunidad` (
 --
 
 INSERT INTO `documento_comunidad` (`id`, `comunidad_id`, `tipo`, `titulo`, `url`, `periodo`, `visibilidad`, `created_at`, `updated_at`) VALUES
-(1, 1, 'circular', 'Cambio de reglamento', 'https://docs.cuentasclaras.cl/doc1.pdf', '2025-09', 'publico', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(2, 2, 'acta', 'Reunión mensual agosto', 'https://docs.cuentasclaras.cl/doc2.pdf', '2025-08', 'privado', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(3, 3, 'reglamento', 'Reglamento interno', 'https://docs.cuentasclaras.cl/doc3.pdf', NULL, 'publico', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(4, 4, 'boletin', 'Boletín de noticias', 'https://docs.cuentasclaras.cl/doc4.pdf', '2025-10', 'publico', '2025-10-02 18:42:27', '2025-10-02 18:42:27');
+(1, 1, 'circular', 'Aviso corte de agua', 'https://docs.cc/c1/circular-agua.pdf', '2025-10', 'publico', '2025-10-10 18:10:17', '2025-10-10 18:10:17'),
+(2, 2, 'acta', 'Acta Asamblea Anual 2024', 'https://docs.cc/c2/acta-2024.pdf', '2024-12', 'privado', '2025-10-10 18:10:17', '2025-10-10 18:10:17'),
+(3, 3, 'reglamento', 'Reglamento de Copropiedad', 'https://docs.cc/c3/reglamento.pdf', NULL, 'publico', '2025-10-10 18:10:17', '2025-10-10 18:10:17'),
+(4, 4, 'boletin', 'Boletín N°10 Octubre', 'https://docs.cc/c4/boletin-10.pdf', '2025-10', 'publico', '2025-10-10 18:10:17', '2025-10-10 18:10:17'),
+(5, 5, 'otro', 'Informe Técnico Ascensores', 'https://docs.cc/c5/informe-asc.pdf', '2025-09', 'privado', '2025-10-10 18:10:17', '2025-10-10 18:10:17'),
+(6, 6, 'circular', 'Cambio en Horario de Piscina', 'https://docs.cc/c6/circ-piscina.pdf', '2025-10', 'publico', '2025-10-10 18:10:17', '2025-10-10 18:10:17'),
+(7, 7, 'acta', 'Acta Reunión Comité', 'https://docs.cc/c7/acta-comite-10.pdf', '2025-10', 'privado', '2025-10-10 18:10:17', '2025-10-10 18:10:17'),
+(8, 8, 'reglamento', 'Uso de Estacionamientos', 'https://docs.cc/c8/regl-estac.pdf', NULL, 'publico', '2025-10-10 18:10:17', '2025-10-10 18:10:17'),
+(9, 9, 'boletin', 'Resumen Gastos Q3', 'https://docs.cc/c9/resumen-q3.pdf', '2025-09', 'privado', '2025-10-10 18:10:17', '2025-10-10 18:10:17'),
+(10, 10, 'otro', 'Certificado Recepción Final', 'https://docs.cc/c10/cert-final.pdf', NULL, 'privado', '2025-10-10 18:10:17', '2025-10-10 18:10:17'),
+(11, 1, 'circular', 'Aviso de Mantención de Piscina', 'https://docs.cc/c1/circ-piscina.pdf', '2025-11', 'publico', '2025-10-15 21:11:41', '2025-10-15 21:11:41'),
+(12, 2, 'acta', 'Acta Reunión Comité Nov', 'https://docs.cc/c2/acta-nov.pdf', '2025-11', 'privado', '2025-10-15 21:11:41', '2025-10-15 21:11:41'),
+(13, 3, 'reglamento', 'Reglamento de Sala de Reuniones', 'https://docs.cc/c3/regl-reuniones.pdf', NULL, 'publico', '2025-10-15 21:11:41', '2025-10-15 21:11:41'),
+(14, 4, 'boletin', 'Boletín N°11 Noviembre', 'https://docs.cc/c4/boletin-11.pdf', '2025-11', 'publico', '2025-10-15 21:11:41', '2025-10-15 21:11:41'),
+(15, 5, 'otro', 'Plan de Emergencia', 'https://docs.cc/c5/plan-emerg.pdf', NULL, 'privado', '2025-10-15 21:11:41', '2025-10-15 21:11:41'),
+(16, 6, 'circular', 'Normativa de Zona Mascotas', 'https://docs.cc/c6/circ-mascotas.pdf', '2025-11', 'publico', '2025-10-15 21:11:41', '2025-10-15 21:11:41'),
+(17, 7, 'acta', 'Acta Asamblea Extraordinaria', 'https://docs.cc/c7/acta-extra.pdf', '2025-11', 'privado', '2025-10-15 21:11:41', '2025-10-15 21:11:41'),
+(18, 8, 'reglamento', 'Uso de Sala de Música', 'https://docs.cc/c8/regl-musica.pdf', NULL, 'publico', '2025-10-15 21:11:41', '2025-10-15 21:11:41'),
+(19, 9, 'boletin', 'Resumen Gastos Q4 Proyectado', 'https://docs.cc/c9/resumen-q4.pdf', '2025-11', 'privado', '2025-10-15 21:11:41', '2025-10-15 21:11:41'),
+(20, 10, 'otro', 'Manual de Convivencia', 'https://docs.cc/c10/manual-conv.pdf', NULL, 'publico', '2025-10-15 21:11:41', '2025-10-15 21:11:41'),
+(21, 1, 'circular', 'Aviso cambio de administración', 'https://docs.cc/c1/circ-adm.pdf', '2025-11', 'privado', '2025-10-17 11:03:00', '2025-10-17 11:03:00'),
+(22, 2, 'acta', 'Acta Reunión Extraordinaria', 'https://docs.cc/c2/acta-extra.pdf', '2025-12', 'privado', '2025-10-17 11:03:01', '2025-10-17 11:03:01'),
+(23, 3, 'reglamento', 'Reglamento de Uso de Piscina', 'https://docs.cc/c3/regl-piscina.pdf', NULL, 'publico', '2025-10-17 11:03:02', '2025-10-17 11:03:02'),
+(24, 4, 'boletin', 'Boletín N°12 Diciembre', 'https://docs.cc/c4/boletin-12.pdf', '2025-12', 'publico', '2025-10-17 11:03:03', '2025-10-17 11:03:03'),
+(25, 5, 'otro', 'Certificado de Habitabilidad', 'https://docs.cc/c5/cert-hab.pdf', NULL, 'privado', '2025-10-17 11:03:04', '2025-10-17 11:03:04'),
+(26, 6, 'circular', 'Cierre de Gimnasio por Mantención', 'https://docs.cc/c6/circ-gimnasio.pdf', '2025-11', 'publico', '2025-10-17 11:03:05', '2025-10-17 11:03:05'),
+(27, 7, 'acta', 'Acta Asamblea de Propietarios', 'https://docs.cc/c7/acta-prop.pdf', '2025-12', 'privado', '2025-10-17 11:03:06', '2025-10-17 11:03:06'),
+(28, 8, 'reglamento', 'Normativa de Mudanzas', 'https://docs.cc/c8/regl-mudanza.pdf', NULL, 'publico', '2025-10-17 11:03:07', '2025-10-17 11:03:07'),
+(29, 9, 'boletin', 'Resumen Gastos Anual Proyectado', 'https://docs.cc/c9/resumen-anual.pdf', '2025-12', 'privado', '2025-10-17 11:03:08', '2025-10-17 11:03:08'),
+(30, 10, 'otro', 'Plan de Seguridad Comunal', 'https://docs.cc/c10/plan-seguridad.pdf', NULL, 'privado', '2025-10-17 11:03:09', '2025-10-17 11:03:09');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `documento_multa`
+--
+
+CREATE TABLE `documento_multa` (
+  `id` bigint NOT NULL,
+  `multa_id` bigint NOT NULL,
+  `nombre_archivo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `ruta_archivo` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `tipo_archivo` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `tamanio_bytes` bigint DEFAULT NULL,
+  `descripcion` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `subido_por` bigint NOT NULL COMMENT 'usuario_id',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `documento_multa`
+--
+
+INSERT INTO `documento_multa` (`id`, `multa_id`, `nombre_archivo`, `ruta_archivo`, `tipo_archivo`, `tamanio_bytes`, `descripcion`, `subido_por`, `created_at`) VALUES
+(11, 1, 'Foto_Mascota_D101.jpg', '/multas/c1/foto_m1.jpg', 'image/jpeg', 850000, 'Evidencia gráfica de la infracción de mascota.', 6, '2025-10-14 10:00:00'),
+(12, 3, 'Ticket_Bloqueo_C4.pdf', '/multas/c3/ticket_m3.pdf', 'application/pdf', 120000, 'Ticket de infracción emitido por Conserje.', 6, '2025-10-14 11:30:00');
 
 -- --------------------------------------------------------
 
@@ -618,30 +938,56 @@ CREATE TABLE `edificio` (
 --
 
 INSERT INTO `edificio` (`id`, `comunidad_id`, `nombre`, `direccion`, `codigo`, `created_at`, `updated_at`) VALUES
-(1, 10, 'Edificio Via Melchor Mancebo', 'Pasadizo Pilar Rueda 92, Lugo, 92941', 'ED001', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(2, 18, 'Edificio Plaza de Irma Amador', 'Rambla Eugenio Fiol 19 Piso 4 , Ourense, 11742', 'ED002', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(3, 20, 'Edificio Callejón Juan Luis Lledó', 'C. Clemente Miguel 445 Piso 9 , Burgos, 62819', 'ED003', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(4, 9, 'Edificio Cuesta de Raúl Oliver', 'Urbanización Clara Meléndez 56 Piso 3 , Soria, 65663', 'ED004', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(5, 2, 'Edificio Calle Severino Martorell', 'Pasadizo Ruy Serra 85 Apt. 64 , Almería, 45665', 'ED005', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(6, 5, 'Edificio Vial Dolores Avilés', 'Pasadizo de Espiridión Bastida 562, Ciudad, 95436', 'ED006', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(7, 16, 'Edificio C. de Ramona Ferrández', 'Callejón de Plácido Arana 13 Piso 4 , Guipúzcoa, 06886', 'ED007', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(8, 17, 'Edificio Callejón de Brígida Sobrino', 'Urbanización Petrona Amor 26 Piso 9 , Soria, 24102', 'ED008', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(9, 3, 'Edificio C. Pablo Cabañas', 'Pasaje Rosa Tur 30, Cáceres, 70528', 'ED009', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(10, 18, 'Edificio Camino Reyna Bermúdez', 'Ronda de Matías Sevilla 43 Apt. 49 , Jaén, 52397', 'ED010', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(11, 18, 'Edificio Urbanización de Griselda Monreal', 'Via de Benita Ferrer 358, Cáceres, 70444', 'ED011', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(12, 10, 'Edificio Cañada Marina Alcántara', 'Avenida de Alicia Lago 60, Soria, 21412', 'ED012', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(13, 4, 'Edificio Camino Ángela Núñez', 'Callejón de Jacobo Castejón 48 Piso 6 , Murcia, 80033', 'ED013', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(14, 10, 'Edificio Alameda Víctor Llorente', 'Cañada de Virgilio Lobo 794, Albacete, 56269', 'ED014', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(15, 7, 'Edificio Ronda Atilio Figuerola', 'Plaza Rómulo Aguilera 98 Apt. 13 , Ciudad, 66884', 'ED015', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(16, 12, 'Edificio Urbanización de Manuel Alberola', 'Avenida de Elodia Morillo 72, Melilla, 46757', 'ED016', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(17, 18, 'Edificio C. Elisa Ferrándiz', 'Paseo de Yaiza Torrens 76 Puerta 3 , Segovia, 49268', 'ED017', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(18, 15, 'Edificio Ronda Teófila Plana', 'Glorieta Cesar Anguita 5 Puerta 2 , Valladolid, 42780', 'ED018', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(19, 7, 'Edificio Plaza Salvador Chacón', 'Pasaje de Ani Blanch 385 Piso 5 , Teruel, 44033', 'ED019', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(20, 14, 'Edificio C. de Lorenza Hurtado', 'Avenida de Palmira Catalá 8 Piso 9 , Albacete, 17883', 'ED020', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(21, 1, 'Edificio Principal Providencia', 'Av. Providencia 1234', NULL, '2025-10-03 15:35:16', '2025-10-03 15:35:16'),
-(22, 1, 'Edificio Central Providencia', 'Av. Providencia 1234', 'EDF-PROV-01', '2025-10-03 15:39:29', '2025-10-03 15:39:29'),
-(100, 100, 'Edificio Los Álamos', 'Av. Apoquindo 4500, Las Condes, Santiago', 'ED-ALM-001', '2025-10-06 18:57:28', '2025-10-06 18:57:28'),
-(103, 20, 'Edificio Norte', 'Av. Siempre Viva 123 - Torre Norte', NULL, '2025-10-07 17:20:49', '2025-10-07 17:20:49');
+(1, 1, 'Edificio Central A', 'Av. Central 1234', 'A', '2025-10-10 18:07:37', '2025-10-10 18:07:37'),
+(2, 2, 'Edificio Norte B', 'Calle Principal 500', 'B', '2025-10-10 18:07:37', '2025-10-10 18:07:37'),
+(3, 3, 'Edificio Único', 'Pasaje Los Robles 789', 'U', '2025-10-10 18:07:37', '2025-10-10 18:07:37'),
+(4, 4, 'Zona Casas 1', 'Ruta Maipu 100', 'C1', '2025-10-10 18:07:37', '2025-10-10 18:07:37'),
+(5, 5, 'Torre Alameda', 'Alameda 3000', 'TA', '2025-10-10 18:07:37', '2025-10-10 18:07:37'),
+(6, 6, 'Torre Lujo', 'Av. Kennedy 8000', 'TL', '2025-10-10 18:07:37', '2025-10-10 18:07:37'),
+(7, 7, 'Torre Histórica', 'Calle Bandera 500', 'TH', '2025-10-10 18:07:37', '2025-10-10 18:07:37'),
+(8, 8, 'Bloque 1', 'Av. Vicuña Mackenna 9000', 'B1', '2025-10-10 18:07:37', '2025-10-10 18:07:37'),
+(9, 9, 'Torre 1', 'Calle Marga Marga 50', 'T1', '2025-10-10 18:07:37', '2025-10-10 18:07:37'),
+(10, 10, 'Torre El Llano', 'Av. Llano Subercaseaux 100', 'LL', '2025-10-10 18:07:37', '2025-10-10 18:07:37'),
+(11, 1, 'Edificio Central B', 'Av. Central 1234, Providencia', 'B', '2025-10-15 21:10:10', '2025-10-15 21:10:10'),
+(12, 2, 'Edificio Sur C', 'Calle Principal 500, Las Condes', 'C', '2025-10-15 21:10:10', '2025-10-15 21:10:10'),
+(13, 3, 'Torre Nueva Ñuñoa', 'Pasaje Los Robles 789, Ñuñoa', 'TN', '2025-10-15 21:10:10', '2025-10-15 21:10:10'),
+(14, 4, 'Zona Casas 2', 'Ruta Maipu 100', 'C2', '2025-10-15 21:10:10', '2025-10-15 21:10:10'),
+(15, 5, 'Torre República', 'Alameda 3000', 'TR', '2025-10-15 21:10:10', '2025-10-15 21:10:10'),
+(16, 6, 'Torre Premium', 'Av. Kennedy 8000', 'TP', '2025-10-15 21:10:10', '2025-10-15 21:10:10'),
+(17, 7, 'Torre Futuro', 'Calle Bandera 500', 'TF', '2025-10-15 21:10:10', '2025-10-15 21:10:10'),
+(18, 8, 'Bloque 2', 'Av. Vicuña Mackenna 9000', 'B2', '2025-10-15 21:10:10', '2025-10-15 21:10:10'),
+(19, 9, 'Torre 2', 'Calle Marga Marga 50', 'T2', '2025-10-15 21:10:10', '2025-10-15 21:10:10'),
+(20, 10, 'Torre San Miguel', 'Av. Llano Subercaseaux 100', 'TSM', '2025-10-15 21:10:10', '2025-10-15 21:10:10'),
+(21, 1, 'Edificio C', 'Av. Central 1234', 'C', '2025-10-16 18:13:00', '2025-10-16 18:13:00'),
+(22, 2, 'Edificio Sur A', 'Calle Principal 500', 'SA', '2025-10-16 18:13:01', '2025-10-16 18:13:01'),
+(23, 3, 'Torre Antigua Ñuñoa', 'Pasaje Los Robles 789', 'TA', '2025-10-16 18:13:02', '2025-10-16 18:13:02'),
+(24, 4, 'Zona Casas 3', 'Ruta Maipu 100', 'C3', '2025-10-16 18:13:03', '2025-10-16 18:13:03'),
+(25, 5, 'Torre Europa', 'Alameda 3000', 'TE', '2025-10-16 18:13:04', '2025-10-16 18:13:04'),
+(26, 6, 'Torre Master', 'Av. Kennedy 8000', 'TM', '2025-10-16 18:13:05', '2025-10-16 18:13:05'),
+(27, 7, 'Torre Moderno', 'Calle Bandera 500', 'TM', '2025-10-16 18:13:06', '2025-10-16 18:13:06'),
+(28, 8, 'Bloque 3', 'Av. Vicuña Mackenna 9000', 'B3', '2025-10-16 18:13:07', '2025-10-16 18:13:07'),
+(29, 9, 'Torre 3', 'Calle Marga Marga 50', 'T3', '2025-10-16 18:13:08', '2025-10-16 18:13:08'),
+(30, 10, 'Torre Sur', 'Av. Llano Subercaseaux 100', 'TS', '2025-10-16 18:13:09', '2025-10-16 18:13:09'),
+(31, 1, 'Edificio D', 'Av. Central 1234', 'D', '2025-10-17 10:03:00', '2025-10-17 10:03:00'),
+(32, 2, 'Edificio Oeste A', 'Calle Principal 500', 'OA', '2025-10-17 10:03:01', '2025-10-17 10:03:01'),
+(33, 3, 'Torre Moderna Ñuñoa', 'Pasaje Los Robles 789', 'TMN', '2025-10-17 10:03:02', '2025-10-17 10:03:02'),
+(34, 4, 'Zona Casas 4', 'Ruta Maipu 100', 'C4', '2025-10-17 10:03:03', '2025-10-17 10:03:03'),
+(35, 5, 'Torre Asia', 'Alameda 3000', 'TA', '2025-10-17 10:03:04', '2025-10-17 10:03:04'),
+(36, 6, 'Torre Jardín', 'Av. Kennedy 8000', 'TJ', '2025-10-17 10:03:05', '2025-10-17 10:03:05'),
+(37, 7, 'Torre Río', 'Calle Bandera 500', 'TR', '2025-10-17 10:03:06', '2025-10-17 10:03:06'),
+(38, 8, 'Bloque 4', 'Av. Vicuña Mackenna 9000', 'B4', '2025-10-17 10:03:07', '2025-10-17 10:03:07'),
+(39, 9, 'Torre 4', 'Calle Marga Marga 50', 'T4', '2025-10-17 10:03:08', '2025-10-17 10:03:08'),
+(40, 10, 'Torre Norte', 'Av. Llano Subercaseaux 100', 'TN', '2025-10-17 10:03:09', '2025-10-17 10:03:09'),
+(41, 11, 'Torre A Bosque', 'Calle Forestal 150', 'EBA', '2025-10-17 11:15:00', '2025-10-17 11:15:00'),
+(42, 12, 'Bloque Principal Oeste', 'Av. Central 500', 'BPO', '2025-10-17 11:15:01', '2025-10-17 11:15:01'),
+(43, 13, 'Torre Costanera', 'Calle Viento 10', 'TC', '2025-10-17 11:15:02', '2025-10-17 11:15:02'),
+(44, 14, 'Sector Parcelas', 'Ruta Norte 55', 'SP', '2025-10-17 11:15:03', '2025-10-17 11:15:03'),
+(45, 15, 'Torre Playa', 'Av. Playa 200', 'TPL', '2025-10-17 11:15:04', '2025-10-17 11:15:04'),
+(46, 16, 'Edificio Central Viña', 'Calle Agua Santa 100', 'ECV', '2025-10-17 11:15:05', '2025-10-17 11:15:05'),
+(47, 17, 'Bloque Único', 'Pasaje Los Lagos 700', 'BU', '2025-10-17 11:15:06', '2025-10-17 11:15:06'),
+(48, 18, 'Torre Este', 'Av. Tobalaba 8500', 'TE', '2025-10-17 11:15:07', '2025-10-17 11:15:07'),
+(49, 19, 'Torre Playa A', 'Calle Mar 10', 'TPA', '2025-10-17 11:15:08', '2025-10-17 11:15:08'),
+(50, 20, 'Sector Casas', 'Camino Sur 300', 'SC', '2025-10-17 11:15:09', '2025-10-17 11:15:09');
 
 -- --------------------------------------------------------
 
@@ -665,26 +1011,46 @@ CREATE TABLE `emision_gastos_comunes` (
 --
 
 INSERT INTO `emision_gastos_comunes` (`id`, `comunidad_id`, `periodo`, `fecha_vencimiento`, `estado`, `observaciones`, `created_at`, `updated_at`) VALUES
-(1, 15, '2025-01', '2025-01-25', 'emitido', 'Emisión GC comunidad 15, periodo 2025-01', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(2, 12, '2025-03', '2025-03-25', 'emitido', 'Emisión GC comunidad 12, periodo 2025-03', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(3, 6, '2024-12', '2024-12-25', 'borrador', 'Emisión GC comunidad 6, periodo 2024-12', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(4, 3, '2025-02', '2025-02-25', 'borrador', 'Emisión GC comunidad 3, periodo 2025-02', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(5, 10, '2025-02', '2025-02-25', 'cerrado', 'Emisión GC comunidad 10, periodo 2025-02', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(6, 1, '2025-09', '2025-09-25', 'borrador', 'Emisión GC comunidad 1, periodo 2025-09', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(7, 14, '2024-12', '2024-12-25', 'cerrado', 'Emisión GC comunidad 14, periodo 2024-12', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(8, 10, '2024-12', '2024-12-25', 'emitido', 'Emisión GC comunidad 10, periodo 2024-12', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(9, 18, '2025-10', '2025-10-25', 'emitido', 'Emisión GC comunidad 18, periodo 2025-10', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(10, 8, '2025-02', '2025-02-25', 'emitido', 'Emisión GC comunidad 8, periodo 2025-02', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(11, 1, '2025-06', '2025-06-25', 'emitido', 'Emisión GC comunidad 1, periodo 2025-06', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(12, 14, '2025-08', '2025-08-25', 'borrador', 'Emisión GC comunidad 14, periodo 2025-08', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(13, 14, '2025-04', '2025-04-25', 'borrador', 'Emisión GC comunidad 14, periodo 2025-04', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(14, 16, '2025-03', '2025-03-25', 'emitido', 'Emisión GC comunidad 16, periodo 2025-03', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(15, 10, '2025-10', '2025-10-25', 'cerrado', 'Emisión GC comunidad 10, periodo 2025-10', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(16, 3, '2025-07', '2025-07-25', 'emitido', 'Emisión GC comunidad 3, periodo 2025-07', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(17, 1, '2024-12', '2024-12-25', 'cerrado', 'Emisión GC comunidad 1, periodo 2024-12', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(18, 20, '2025-03', '2025-03-25', 'borrador', 'Emisión GC comunidad 20, periodo 2025-03', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(19, 2, '2025-04', '2025-04-25', 'borrador', 'Emisión GC comunidad 2, periodo 2025-04', '2025-10-02 19:03:07', '2025-10-02 19:03:07'),
-(20, 7, '2025-08', '2025-08-25', 'emitido', 'Emisión GC comunidad 7, periodo 2025-08', '2025-10-02 19:03:07', '2025-10-02 19:03:07');
+(1, 1, '2025-09', '2025-10-05', 'emitido', 'Emisión Septiembre C1', '2025-10-10 18:07:53', '2025-10-10 18:07:53'),
+(2, 2, '2025-09', '2025-10-06', 'emitido', 'Emisión Septiembre C2', '2025-10-10 18:07:53', '2025-10-10 18:07:53'),
+(3, 3, '2025-09', '2025-10-07', 'cerrado', 'Emisión Septiembre C3', '2025-10-10 18:07:53', '2025-10-10 18:07:53'),
+(4, 4, '2025-09', '2025-10-08', 'emitido', 'Emisión Septiembre C4', '2025-10-10 18:07:53', '2025-10-10 18:07:53'),
+(5, 5, '2025-09', '2025-10-09', 'emitido', 'Emisión Septiembre C5', '2025-10-10 18:07:53', '2025-10-10 18:07:53'),
+(6, 6, '2025-09', '2025-10-10', 'borrador', 'Emisión Septiembre C6', '2025-10-10 18:07:53', '2025-10-10 18:07:53'),
+(7, 7, '2025-09', '2025-10-11', 'emitido', 'Emisión Septiembre C7', '2025-10-10 18:07:53', '2025-10-10 18:07:53'),
+(8, 8, '2025-09', '2025-10-12', 'emitido', 'Emisión Septiembre C8', '2025-10-10 18:07:53', '2025-10-10 18:07:53'),
+(9, 9, '2025-09', '2025-10-13', 'cerrado', 'Emisión Septiembre C9', '2025-10-10 18:07:53', '2025-10-10 18:07:53'),
+(10, 10, '2025-09', '2025-10-14', 'emitido', 'Emisión Septiembre C10', '2025-10-10 18:07:53', '2025-10-10 18:07:53'),
+(11, 1, '2025-10', '2025-11-05', 'borrador', 'Emisión Octubre C1', '2025-10-15 21:10:31', '2025-10-15 21:10:31'),
+(12, 2, '2025-10', '2025-11-06', 'emitido', 'Emisión Octubre C2', '2025-10-15 21:10:31', '2025-10-15 21:10:31'),
+(13, 3, '2025-10', '2025-11-07', 'cerrado', 'Emisión Octubre C3', '2025-10-15 21:10:31', '2025-10-15 21:10:31'),
+(14, 4, '2025-10', '2025-11-08', 'emitido', 'Emisión Octubre C4', '2025-10-15 21:10:31', '2025-10-15 21:10:31'),
+(15, 5, '2025-10', '2025-11-09', 'borrador', 'Emisión Octubre C5', '2025-10-15 21:10:31', '2025-10-15 21:10:31'),
+(16, 6, '2025-10', '2025-11-10', 'emitido', 'Emisión Octubre C6', '2025-10-15 21:10:31', '2025-10-15 21:10:31'),
+(17, 7, '2025-10', '2025-11-11', 'emitido', 'Emisión Octubre C7', '2025-10-15 21:10:31', '2025-10-15 21:10:31'),
+(18, 8, '2025-10', '2025-11-12', 'cerrado', 'Emisión Octubre C8', '2025-10-15 21:10:31', '2025-10-15 21:10:31'),
+(19, 9, '2025-10', '2025-11-13', 'emitido', 'Emisión Octubre C9', '2025-10-15 21:10:31', '2025-10-15 21:10:31'),
+(20, 10, '2025-10', '2025-11-14', 'borrador', 'Emisión Octubre C10', '2025-10-15 21:10:31', '2025-10-15 21:10:31'),
+(21, 1, '2025-11', '2025-12-05', 'borrador', 'Emisión Noviembre C1', '2025-10-16 18:24:00', '2025-10-16 18:24:00'),
+(22, 2, '2025-11', '2025-12-06', 'borrador', 'Emisión Noviembre C2', '2025-10-16 18:24:01', '2025-10-16 18:24:01'),
+(23, 3, '2025-11', '2025-12-07', 'borrador', 'Emisión Noviembre C3', '2025-10-16 18:24:02', '2025-10-16 18:24:02'),
+(24, 4, '2025-11', '2025-12-08', 'borrador', 'Emisión Noviembre C4', '2025-10-16 18:24:03', '2025-10-16 18:24:03'),
+(25, 5, '2025-11', '2025-12-09', 'borrador', 'Emisión Noviembre C5', '2025-10-16 18:24:04', '2025-10-16 18:24:04'),
+(26, 6, '2025-11', '2025-12-10', 'borrador', 'Emisión Noviembre C6', '2025-10-16 18:24:05', '2025-10-16 18:24:05'),
+(27, 7, '2025-11', '2025-12-11', 'borrador', 'Emisión Noviembre C7', '2025-10-16 18:24:06', '2025-10-16 18:24:06'),
+(28, 8, '2025-11', '2025-12-12', 'borrador', 'Emisión Noviembre C8', '2025-10-16 18:24:07', '2025-10-16 18:24:07'),
+(29, 9, '2025-11', '2025-12-13', 'borrador', 'Emisión Noviembre C9', '2025-10-16 18:24:08', '2025-10-16 18:24:08'),
+(30, 10, '2025-11', '2025-12-14', 'borrador', 'Emisión Noviembre C10', '2025-10-16 18:24:09', '2025-10-16 18:24:09'),
+(31, 1, '2025-12', '2026-01-05', 'borrador', 'Emisión Diciembre C1', '2025-10-17 10:14:00', '2025-10-17 10:14:00'),
+(32, 2, '2025-12', '2026-01-06', 'borrador', 'Emisión Diciembre C2', '2025-10-17 10:14:01', '2025-10-17 10:14:01'),
+(33, 3, '2025-12', '2026-01-07', 'borrador', 'Emisión Diciembre C3', '2025-10-17 10:14:02', '2025-10-17 10:14:02'),
+(34, 4, '2025-12', '2026-01-08', 'borrador', 'Emisión Diciembre C4', '2025-10-17 10:14:03', '2025-10-17 10:14:03'),
+(35, 5, '2025-12', '2026-01-09', 'borrador', 'Emisión Diciembre C5', '2025-10-17 10:14:04', '2025-10-17 10:14:04'),
+(36, 6, '2025-12', '2026-01-10', 'borrador', 'Emisión Diciembre C6', '2025-10-17 10:14:05', '2025-10-17 10:14:05'),
+(37, 7, '2025-12', '2026-01-11', 'borrador', 'Emisión Diciembre C7', '2025-10-17 10:14:06', '2025-10-17 10:14:06'),
+(38, 8, '2025-12', '2026-01-12', 'borrador', 'Emisión Diciembre C8', '2025-10-17 10:14:07', '2025-10-17 10:14:07'),
+(39, 9, '2025-12', '2026-01-13', 'borrador', 'Emisión Diciembre C9', '2025-10-17 10:14:08', '2025-10-17 10:14:08'),
+(40, 10, '2025-12', '2026-01-14', 'borrador', 'Emisión Diciembre C10', '2025-10-17 10:14:09', '2025-10-17 10:14:09');
 
 -- --------------------------------------------------------
 
@@ -710,6 +1076,15 @@ CREATE TABLE `emision_gasto_comun` (
 -- (See below for the actual view)
 --
 CREATE TABLE `emision_gasto_detalle` (
+`categoria_id` bigint
+,`created_at` datetime
+,`emision_id` bigint
+,`gasto_id` bigint
+,`id` bigint
+,`metadata_json` longtext
+,`monto` decimal(12,2)
+,`regla_prorrateo` enum('coeficiente','partes_iguales','consumo','fijo_por_unidad')
+,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
@@ -720,12 +1095,20 @@ CREATE TABLE `emision_gasto_detalle` (
 
 CREATE TABLE `gasto` (
   `id` bigint NOT NULL,
+  `numero` varchar(20) NOT NULL,
   `comunidad_id` bigint NOT NULL,
   `categoria_id` bigint NOT NULL,
   `centro_costo_id` bigint DEFAULT NULL,
   `documento_compra_id` bigint DEFAULT NULL,
   `fecha` date NOT NULL,
   `monto` decimal(12,2) NOT NULL,
+  `estado` enum('pendiente','aprobado','rechazado','anulado') NOT NULL DEFAULT 'pendiente' COMMENT 'Estado del gasto: pendiente, aprobado, rechazado, anulado',
+  `creado_por` bigint NOT NULL DEFAULT '1' COMMENT 'Usuario que creó el gasto',
+  `aprobado_por` bigint DEFAULT NULL COMMENT 'Usuario que aprobó el gasto',
+  `required_aprobaciones` int NOT NULL DEFAULT '1' COMMENT 'Número de aprobaciones requeridas',
+  `aprobaciones_count` int NOT NULL DEFAULT '0' COMMENT 'Contador de aprobaciones actuales',
+  `anulado_por` bigint DEFAULT NULL COMMENT 'Usuario que anuló el gasto',
+  `fecha_anulacion` datetime DEFAULT NULL COMMENT 'Fecha de anulación del gasto',
   `glosa` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `extraordinario` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -736,27 +1119,99 @@ CREATE TABLE `gasto` (
 -- Dumping data for table `gasto`
 --
 
-INSERT INTO `gasto` (`id`, `comunidad_id`, `categoria_id`, `centro_costo_id`, `documento_compra_id`, `fecha`, `monto`, `glosa`, `extraordinario`, `created_at`, `updated_at`) VALUES
-(1, 20, 9, 1, 1, '2025-10-01', 460806.00, 'Gasto operativo 1', 0, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(2, 2, 10, 5, 2, '2025-10-01', 250548.00, 'Gasto operativo 2', 0, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(3, 10, 18, 9, 3, '2025-10-01', 182753.00, 'Gasto operativo 3', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(4, 11, 17, 14, 4, '2025-10-01', 332847.00, 'Gasto operativo 4', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(5, 12, 2, 7, 5, '2025-10-01', 303912.00, 'Gasto operativo 5', 0, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(6, 12, 14, 2, 6, '2025-10-01', 491463.00, 'Gasto operativo 6', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(7, 13, 18, 11, 7, '2025-10-01', 299520.00, 'Gasto operativo 7', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(8, 8, 7, 7, 8, '2025-10-01', 149611.00, 'Gasto operativo 8', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(9, 9, 18, 20, 9, '2025-10-01', 117620.00, 'Gasto operativo 9', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(10, 6, 16, 8, 10, '2025-10-01', 204326.00, 'Gasto operativo 10', 0, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(11, 10, 12, 8, 11, '2025-10-01', 447698.00, 'Gasto operativo 11', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(12, 2, 18, 9, 12, '2025-10-01', 206278.00, 'Gasto operativo 12', 0, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(13, 10, 10, 12, 13, '2025-10-01', 326563.00, 'Gasto operativo 13', 0, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(14, 8, 1, 10, 14, '2025-10-01', 476939.00, 'Gasto operativo 14', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(15, 13, 9, 18, 15, '2025-10-01', 95295.00, 'Gasto operativo 15', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(16, 3, 7, 11, 16, '2025-10-01', 194714.00, 'Gasto operativo 16', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(17, 16, 9, 11, 17, '2025-10-01', 311874.00, 'Gasto operativo 17', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(18, 18, 19, 11, 18, '2025-10-01', 193184.00, 'Gasto operativo 18', 0, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(19, 16, 1, 3, 19, '2025-10-01', 245664.00, 'Gasto operativo 19', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(20, 2, 20, 8, 20, '2025-10-01', 433279.00, 'Gasto operativo 20', 1, '2025-10-02 18:19:29', '2025-10-02 18:19:29');
+INSERT INTO `gasto` (`id`, `numero`, `comunidad_id`, `categoria_id`, `centro_costo_id`, `documento_compra_id`, `fecha`, `monto`, `estado`, `creado_por`, `aprobado_por`, `required_aprobaciones`, `aprobaciones_count`, `anulado_por`, `fecha_anulacion`, `glosa`, `extraordinario`, `created_at`, `updated_at`) VALUES
+(1, '', 1, 1, 1, 1, '2025-09-01', 119000.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto Aseo Comunal', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(2, '', 2, 2, 2, 2, '2025-09-02', 59500.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Aporte a Fondo de Reserva', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(3, '', 3, 3, 3, 3, '2025-09-03', 89250.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto Extraordinario Jardinería', 1, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(4, '', 4, 4, 4, 4, '2025-09-04', 35700.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto Multa (no aplica a unidad)', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(5, '', 5, 5, 5, 5, '2025-09-05', 107100.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Consumo Común de Agua Caliente', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(6, '', 6, 6, 6, 6, '2025-09-06', 142800.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto Fijo Contabilidad', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(7, '', 7, 7, 7, 7, '2025-09-07', 95200.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Reparación de Motor de Ascensor', 1, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(8, '', 8, 8, 8, 8, '2025-09-08', 47600.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Compra de Materiales de Mantención', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(9, '', 9, 9, 9, 9, '2025-09-09', 178500.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto de Administración', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(10, '', 10, 10, 10, 10, '2025-09-10', 71400.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Consumo Electricidad Común', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(16, 'G2025-0016', 6, 16, 16, 16, '2025-10-10', 119000.00, 'aprobado', 6, NULL, 1, 0, NULL, NULL, NULL, 0, '2025-10-15 21:10:28', '2025-10-15 21:10:28'),
+(17, 'G2025-0017', 7, 17, 17, 17, '2025-10-11', 59500.00, 'pendiente', 7, NULL, 1, 0, NULL, NULL, NULL, 0, '2025-10-15 21:10:28', '2025-10-15 21:10:28'),
+(18, 'G2025-0018', 8, 18, 18, 18, '2025-10-12', 89250.00, 'aprobado', 8, NULL, 1, 0, NULL, NULL, NULL, 1, '2025-10-15 21:10:28', '2025-10-15 21:10:28'),
+(19, 'G2025-0019', 9, 19, 19, 19, '2025-10-13', 35700.00, 'pendiente', 9, NULL, 1, 0, NULL, NULL, NULL, 0, '2025-10-15 21:10:28', '2025-10-15 21:10:28'),
+(20, 'G2025-0020', 10, 20, 20, 20, '2025-10-14', 107100.00, 'aprobado', 10, NULL, 1, 0, NULL, NULL, NULL, 0, '2025-10-15 21:10:28', '2025-10-15 21:10:28'),
+(21, 'G2025-0021', 1, 11, 11, 21, '2025-10-15', 142800.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, NULL, 0, '2025-10-15 21:10:28', '2025-10-15 21:10:28'),
+(22, 'G2025-0022', 2, 12, 12, 22, '2025-10-16', 95200.00, 'aprobado', 2, NULL, 1, 0, NULL, NULL, NULL, 0, '2025-10-15 21:10:28', '2025-10-15 21:10:28'),
+(23, 'G2025-0023', 3, 13, 13, 23, '2025-10-17', 47600.00, 'pendiente', 3, NULL, 1, 0, NULL, NULL, NULL, 1, '2025-10-15 21:10:28', '2025-10-15 21:10:28'),
+(24, 'G2025-0024', 4, 14, 14, 24, '2025-10-18', 178500.00, 'aprobado', 4, NULL, 1, 0, NULL, NULL, NULL, 1, '2025-10-15 21:10:28', '2025-10-15 21:10:28'),
+(25, 'G2025-0025', 5, 15, 15, 25, '2025-10-19', 71400.00, 'pendiente', 5, NULL, 1, 0, NULL, NULL, NULL, 0, '2025-10-15 21:10:28', '2025-10-15 21:10:28'),
+(26, 'G2025-0026', 1, 21, 21, 26, '2025-10-15', 178500.00, 'aprobado', 1, 1, 1, 1, NULL, NULL, 'Gasto por seguridad perimetral', 0, '2025-10-16 18:21:00', '2025-10-16 18:21:00'),
+(27, 'G2025-0027', 2, 22, 22, 27, '2025-10-16', 59500.00, 'pendiente', 2, NULL, 1, 0, NULL, NULL, 'Compra de insumos de jardín', 0, '2025-10-16 18:21:01', '2025-10-16 18:21:01'),
+(28, 'G2025-0028', 3, 23, 23, 28, '2025-10-17', 95200.00, 'aprobado', 3, 3, 1, 1, NULL, NULL, 'Compra de cloro y desinfectantes', 0, '2025-10-16 18:21:02', '2025-10-16 18:21:02'),
+(29, 'G2025-0029', 4, 24, 24, 29, '2025-10-18', 35700.00, 'pendiente', 4, NULL, 1, 0, NULL, NULL, 'Asesoría contable para balance', 0, '2025-10-16 18:21:03', '2025-10-16 18:21:03'),
+(30, 'G2025-0030', 5, 25, 25, 30, '2025-10-19', 142800.00, 'aprobado', 5, 5, 1, 1, NULL, NULL, 'Gasto de abogado por morosidad', 1, '2025-10-16 18:21:04', '2025-10-16 18:21:04'),
+(31, 'G2025-0031', 6, 26, 26, 31, '2025-10-20', 119000.00, 'pendiente', 6, NULL, 1, 0, NULL, NULL, 'Mantención semestral de calefacción', 0, '2025-10-16 18:21:05', '2025-10-16 18:21:05'),
+(32, 'G2025-0032', 7, 27, 27, 32, '2025-10-21', 47600.00, 'aprobado', 7, 7, 1, 1, NULL, NULL, 'Curso de primeros auxilios conserjes', 0, '2025-10-16 18:21:06', '2025-10-16 18:21:06'),
+(33, 'G2025-0033', 8, 28, 28, 33, '2025-10-22', 89250.00, 'pendiente', 8, NULL, 1, 0, NULL, NULL, 'Compra de pintura para mural común', 1, '2025-10-16 18:21:07', '2025-10-16 18:21:07'),
+(34, 'G2025-0034', 9, 29, 29, 34, '2025-10-23', 59500.00, 'aprobado', 9, 9, 1, 1, NULL, NULL, 'Aporte a Fondo de Mantención', 0, '2025-10-16 18:21:08', '2025-10-16 18:21:08'),
+(35, 'G2025-0035', 10, 30, 30, 35, '2025-10-24', 178500.00, 'pendiente', 10, NULL, 1, 0, NULL, NULL, 'Inspección de daños estructurales', 1, '2025-10-16 18:21:09', '2025-10-16 18:21:09'),
+(36, 'G2025-0036', 1, 31, 31, 36, '2025-11-01', 107100.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Mantención mensual de ascensores', 0, '2025-10-17 10:11:00', '2025-10-17 10:11:00'),
+(37, 'G2025-0037', 2, 32, 32, 37, '2025-11-02', 47600.00, 'aprobado', 2, 2, 1, 1, NULL, NULL, 'Servicio de control de plagas', 0, '2025-10-17 10:11:01', '2025-10-17 10:11:01'),
+(38, 'G2025-0038', 3, 33, 33, 38, '2025-11-03', 77350.00, 'pendiente', 3, NULL, 1, 0, NULL, NULL, 'Reparación de iluminación de emergencia', 0, '2025-10-17 10:11:02', '2025-10-17 10:11:02'),
+(39, 'G2025-0039', 4, 34, 34, 39, '2025-11-04', 29750.00, 'aprobado', 4, 4, 1, 1, NULL, NULL, 'Gasto de comunicación vecinal', 0, '2025-10-17 10:11:03', '2025-10-17 10:11:03'),
+(40, 'G2025-0040', 5, 35, 35, 40, '2025-11-05', 95200.00, 'pendiente', 5, NULL, 1, 0, NULL, NULL, 'Internet y Wi-Fi comunal', 0, '2025-10-17 10:11:04', '2025-10-17 10:11:04'),
+(41, 'G2025-0041', 6, 36, 36, 41, '2025-11-06', 154700.00, 'aprobado', 6, 6, 1, 1, NULL, NULL, 'Mantención de piscinas', 0, '2025-10-17 10:11:05', '2025-10-17 10:11:05'),
+(42, 'G2025-0042', 7, 37, 37, 42, '2025-11-07', 53550.00, 'pendiente', 7, NULL, 1, 0, NULL, NULL, 'Inspección de red de gas', 0, '2025-10-17 10:11:06', '2025-10-17 10:11:06'),
+(43, 'G2025-0043', 8, 38, 38, 43, '2025-11-08', 83300.00, 'aprobado', 8, 8, 1, 1, NULL, NULL, 'Compra de materiales de construcción', 1, '2025-10-17 10:11:07', '2025-10-17 10:11:07'),
+(44, 'G2025-0044', 9, 39, 39, 44, '2025-11-09', 65450.00, 'pendiente', 9, NULL, 1, 0, NULL, NULL, 'Diseño de paisajismo en entrada', 1, '2025-10-17 10:11:08', '2025-10-17 10:11:08'),
+(45, 'G2025-0045', 10, 40, 40, 45, '2025-11-10', 119000.00, 'aprobado', 10, 10, 1, 1, NULL, NULL, 'Reparación de bomba de agua', 0, '2025-10-17 10:11:09', '2025-10-17 10:11:09');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `gasto_aprobacion`
+--
+
+CREATE TABLE `gasto_aprobacion` (
+  `id` bigint NOT NULL,
+  `gasto_id` bigint NOT NULL,
+  `usuario_id` bigint NOT NULL COMMENT 'Usuario que aprueba/rechaza',
+  `rol_id` int NOT NULL COMMENT 'Rol con el que aprueba',
+  `accion` enum('aprobar','rechazar') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `gasto_aprobacion`
+--
+
+INSERT INTO `gasto_aprobacion` (`id`, `gasto_id`, `usuario_id`, `rol_id`, `accion`, `observaciones`, `created_at`) VALUES
+(11, 1, 1, 7, 'aprobar', 'Aprobación del gasto de Aseo Comunal.', '2025-10-14 12:00:00'),
+(12, 3, 3, 6, 'aprobar', 'El gasto de jardinería es necesario para la temporada.', '2025-10-14 12:15:00'),
+(13, 5, 5, 2, 'aprobar', 'Aprobación final del Admin sobre el consumo de agua.', '2025-10-14 12:30:00'),
+(14, 7, 7, 6, 'rechazar', 'El monto de la reparación de ascensor es demasiado alto. Pedir nueva cotización.', '2025-10-14 13:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `historial_gasto`
+--
+
+CREATE TABLE `historial_gasto` (
+  `id` bigint NOT NULL,
+  `gasto_id` bigint NOT NULL,
+  `usuario_id` bigint NOT NULL,
+  `campo_modificado` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `valor_anterior` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+  `valor_nuevo` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `historial_gasto`
+--
+
+INSERT INTO `historial_gasto` (`id`, `gasto_id`, `usuario_id`, `campo_modificado`, `valor_anterior`, `valor_nuevo`, `created_at`) VALUES
+(16, 1, 1, 'estado', 'pendiente', 'aprobado', '2025-10-14 12:00:01'),
+(17, 3, 3, 'estado', 'pendiente', 'aprobado', '2025-10-14 12:15:01'),
+(18, 7, 7, 'estado', 'pendiente', 'rechazado', '2025-10-14 13:00:01'),
+(19, 7, 7, 'glosa', 'Reparación de Motor de Ascensor', 'Reparación de Motor de Ascensor (Rechazado, en cotización)', '2025-10-14 13:00:02');
 
 -- --------------------------------------------------------
 
@@ -779,26 +1234,36 @@ CREATE TABLE `lectura_medidor` (
 --
 
 INSERT INTO `lectura_medidor` (`id`, `medidor_id`, `fecha`, `lectura`, `periodo`, `created_at`, `updated_at`) VALUES
-(1, 1, '2025-09-30', 124.530, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(2, 2, '2025-09-30', 98.270, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(3, 3, '2025-09-30', 143.000, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(4, 4, '2025-09-30', 156.340, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(5, 5, '2025-09-30', 87.150, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(6, 6, '2025-09-30', 74.800, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(7, 7, '2025-09-30', 62.300, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(8, 8, '2025-09-30', 91.550, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(9, 9, '2025-09-30', 120.600, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(10, 10, '2025-09-30', 103.870, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(11, 11, '2025-09-30', 55.900, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(12, 12, '2025-09-30', 66.420, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(13, 13, '2025-09-30', 88.130, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(14, 14, '2025-09-30', 112.800, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(15, 15, '2025-09-30', 99.500, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(16, 16, '2025-09-30', 131.650, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(17, 17, '2025-09-30', 149.200, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(18, 18, '2025-09-30', 76.420, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(19, 19, '2025-09-30', 90.310, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(20, 20, '2025-09-30', 67.000, '2025-09', '2025-10-02 18:42:27', '2025-10-02 18:42:27');
+(1, 1, '2025-09-30', 50.500, '2025-09', '2025-10-10 18:07:58', '2025-10-10 18:07:58'),
+(2, 2, '2025-09-30', 120.300, '2025-09', '2025-10-10 18:07:58', '2025-10-10 18:07:58'),
+(3, 3, '2025-09-30', 90.100, '2025-09', '2025-10-10 18:07:58', '2025-10-10 18:07:58'),
+(4, 4, '2025-09-30', 65.800, '2025-09', '2025-10-10 18:07:58', '2025-10-10 18:07:58'),
+(5, 5, '2025-09-30', 150.000, '2025-09', '2025-10-10 18:07:58', '2025-10-10 18:07:58'),
+(6, 6, '2025-09-30', 88.700, '2025-09', '2025-10-10 18:07:58', '2025-10-10 18:07:58'),
+(7, 7, '2025-09-30', 105.200, '2025-09', '2025-10-10 18:07:58', '2025-10-10 18:07:58'),
+(8, 8, '2025-09-30', 130.400, '2025-09', '2025-10-10 18:07:58', '2025-10-10 18:07:58'),
+(9, 9, '2025-09-30', 75.600, '2025-09', '2025-10-10 18:07:58', '2025-10-10 18:07:58'),
+(10, 10, '2025-09-30', 44.900, '2025-09', '2025-10-10 18:07:58', '2025-10-10 18:07:58'),
+(11, 11, '2025-10-31', 60.120, '2025-10', '2025-10-16 18:23:00', '2025-10-16 18:23:00'),
+(12, 12, '2025-10-31', 135.500, '2025-10', '2025-10-16 18:23:01', '2025-10-16 18:23:01'),
+(13, 13, '2025-10-31', 100.800, '2025-10', '2025-10-16 18:23:02', '2025-10-16 18:23:02'),
+(14, 14, '2025-10-31', 75.200, '2025-10', '2025-10-16 18:23:03', '2025-10-16 18:23:03'),
+(15, 15, '2025-10-31', 165.000, '2025-10', '2025-10-16 18:23:04', '2025-10-16 18:23:04'),
+(16, 16, '2025-10-31', 95.300, '2025-10', '2025-10-16 18:23:05', '2025-10-16 18:23:05'),
+(17, 17, '2025-10-31', 115.100, '2025-10', '2025-10-16 18:23:06', '2025-10-16 18:23:06'),
+(18, 18, '2025-10-31', 140.900, '2025-10', '2025-10-16 18:23:07', '2025-10-16 18:23:07'),
+(19, 19, '2025-10-31', 80.700, '2025-10', '2025-10-16 18:23:08', '2025-10-16 18:23:08'),
+(20, 20, '2025-10-31', 50.000, '2025-10', '2025-10-16 18:23:09', '2025-10-16 18:23:09'),
+(21, 21, '2025-10-31', 85.000, '2025-10', '2025-10-17 10:13:00', '2025-10-17 10:13:00'),
+(22, 22, '2025-10-31', 110.000, '2025-10', '2025-10-17 10:13:01', '2025-10-17 10:13:01'),
+(23, 23, '2025-10-31', 70.000, '2025-10', '2025-10-17 10:13:02', '2025-10-17 10:13:02'),
+(24, 24, '2025-10-31', 145.000, '2025-10', '2025-10-17 10:13:03', '2025-10-17 10:13:03'),
+(25, 25, '2025-10-31', 60.000, '2025-10', '2025-10-17 10:13:04', '2025-10-17 10:13:04'),
+(26, 26, '2025-10-31', 125.000, '2025-10', '2025-10-17 10:13:05', '2025-10-17 10:13:05'),
+(27, 27, '2025-10-31', 95.000, '2025-10', '2025-10-17 10:13:06', '2025-10-17 10:13:06'),
+(28, 28, '2025-10-31', 75.000, '2025-10', '2025-10-17 10:13:07', '2025-10-17 10:13:07'),
+(29, 29, '2025-10-31', 105.000, '2025-10', '2025-10-17 10:13:08', '2025-10-17 10:13:08'),
+(30, 30, '2025-10-31', 65.000, '2025-10', '2025-10-17 10:13:09', '2025-10-17 10:13:09');
 
 -- --------------------------------------------------------
 
@@ -822,26 +1287,36 @@ CREATE TABLE `medidor` (
 --
 
 INSERT INTO `medidor` (`id`, `comunidad_id`, `unidad_id`, `tipo`, `codigo`, `es_compartido`, `created_at`, `updated_at`) VALUES
-(1, 19, 4, 'electricidad', 'MED-001', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(2, 16, 13, 'gas', 'MED-002', 1, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(3, 4, 18, 'electricidad', 'MED-003', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(4, 10, 11, 'electricidad', 'MED-004', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(5, 10, 11, 'agua', 'MED-005', 1, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(6, 5, 10, 'gas', 'MED-006', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(7, 1, 15, 'electricidad', 'MED-007', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(8, 18, 1, 'agua', 'MED-008', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(9, 14, 17, 'gas', 'MED-009', 1, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(10, 8, 7, 'electricidad', 'MED-010', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(11, 13, 2, 'agua', 'MED-011', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(12, 17, 12, 'electricidad', 'MED-012', 1, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(13, 2, 6, 'gas', 'MED-013', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(14, 7, 9, 'agua', 'MED-014', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(15, 6, 5, 'electricidad', 'MED-015', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(16, 15, 3, 'gas', 'MED-016', 1, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(17, 3, 8, 'agua', 'MED-017', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(18, 9, 16, 'electricidad', 'MED-018', 1, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(19, 20, 19, 'gas', 'MED-019', 0, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(20, 11, 14, 'agua', 'MED-020', 1, '2025-10-02 18:42:27', '2025-10-02 18:42:27');
+(1, 1, 1, 'agua', 'AGUA-101', 0, '2025-10-10 18:07:56', '2025-10-10 18:07:56'),
+(2, 1, 2, 'electricidad', 'ELEC-201', 0, '2025-10-10 18:07:56', '2025-10-10 18:07:56'),
+(3, 2, 3, 'gas', 'GAS-305', 0, '2025-10-10 18:07:56', '2025-10-10 18:07:56'),
+(4, 3, 4, 'agua', 'AGUA-402', 0, '2025-10-10 18:07:56', '2025-10-10 18:07:56'),
+(5, 4, 5, 'electricidad', 'ELEC-CASA-A', 0, '2025-10-10 18:07:56', '2025-10-10 18:07:56'),
+(6, 5, 6, 'gas', 'GAS-501', 0, '2025-10-10 18:07:56', '2025-10-10 18:07:56'),
+(7, 6, 7, 'agua', 'AGUA-1001', 0, '2025-10-10 18:07:56', '2025-10-10 18:07:56'),
+(8, 7, 8, 'electricidad', 'ELEC-1502', 0, '2025-10-10 18:07:56', '2025-10-10 18:07:56'),
+(9, 8, 9, 'gas', 'GAS-105', 0, '2025-10-10 18:07:56', '2025-10-10 18:07:56'),
+(10, 9, 9, 'agua', 'AGUA-105-C9', 0, '2025-10-10 18:07:56', '2025-10-10 18:07:56'),
+(11, 1, 21, 'gas', 'GAS-301', 0, '2025-10-16 18:22:00', '2025-10-16 18:22:00'),
+(12, 2, 22, 'agua', 'AGUA-401', 0, '2025-10-16 18:22:01', '2025-10-16 18:22:01'),
+(13, 3, 23, 'electricidad', 'ELEC-501', 0, '2025-10-16 18:22:02', '2025-10-16 18:22:02'),
+(14, 4, 24, 'gas', 'GAS-CASA-C', 0, '2025-10-16 18:22:03', '2025-10-16 18:22:03'),
+(15, 5, 25, 'agua', 'AGUA-601', 0, '2025-10-16 18:22:04', '2025-10-16 18:22:04'),
+(16, 6, 26, 'electricidad', 'ELEC-2001', 0, '2025-10-16 18:22:05', '2025-10-16 18:22:05'),
+(17, 7, 27, 'gas', 'GAS-1601', 0, '2025-10-16 18:22:06', '2025-10-16 18:22:06'),
+(18, 8, 28, 'agua', 'AGUA-201', 0, '2025-10-16 18:22:07', '2025-10-16 18:22:07'),
+(19, 9, 29, 'electricidad', 'ELEC-30', 0, '2025-10-16 18:22:08', '2025-10-16 18:22:08'),
+(20, 10, 30, 'gas', 'GAS-301-C10', 0, '2025-10-16 18:22:09', '2025-10-16 18:22:09'),
+(21, 1, 31, 'electricidad', 'ELEC-401', 0, '2025-10-17 10:12:00', '2025-10-17 10:12:00'),
+(22, 2, 32, 'gas', 'GAS-501', 0, '2025-10-17 10:12:01', '2025-10-17 10:12:01'),
+(23, 3, 33, 'agua', 'AGUA-601', 0, '2025-10-17 10:12:02', '2025-10-17 10:12:02'),
+(24, 4, 34, 'electricidad', 'ELEC-CASA-D', 0, '2025-10-17 10:12:03', '2025-10-17 10:12:03'),
+(25, 5, 35, 'gas', 'GAS-701', 0, '2025-10-17 10:12:04', '2025-10-17 10:12:04'),
+(26, 6, 36, 'agua', 'AGUA-3001', 0, '2025-10-17 10:12:05', '2025-10-17 10:12:05'),
+(27, 7, 37, 'electricidad', 'ELEC-1701', 0, '2025-10-17 10:12:06', '2025-10-17 10:12:06'),
+(28, 8, 38, 'gas', 'GAS-301', 0, '2025-10-17 10:12:07', '2025-10-17 10:12:07'),
+(29, 9, 39, 'agua', 'AGUA-40-C9', 0, '2025-10-17 10:12:08', '2025-10-17 10:12:08'),
+(30, 10, 40, 'electricidad', 'ELEC-401-C10', 0, '2025-10-17 10:12:09', '2025-10-17 10:12:09');
 
 -- --------------------------------------------------------
 
@@ -858,6 +1333,10 @@ CREATE TABLE `multa` (
   `descripcion` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `monto` decimal(12,2) NOT NULL,
   `estado` enum('pendiente','pagada','anulada') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'pendiente',
+  `prioridad` enum('baja','media','alta','critica') NOT NULL DEFAULT 'media' COMMENT 'Prioridad de la multa según gravedad',
+  `creada_por` bigint NOT NULL COMMENT 'usuario_id',
+  `aprobada_por` bigint DEFAULT NULL COMMENT 'usuario_id',
+  `fecha_aprobacion` datetime DEFAULT NULL,
   `fecha` date NOT NULL,
   `fecha_pago` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -868,27 +1347,104 @@ CREATE TABLE `multa` (
 -- Dumping data for table `multa`
 --
 
-INSERT INTO `multa` (`id`, `comunidad_id`, `unidad_id`, `persona_id`, `motivo`, `descripcion`, `monto`, `estado`, `fecha`, `fecha_pago`, `created_at`, `updated_at`) VALUES
-(1, 7, 7, 5, 'Infracción 1', 'Descripción de la multa 1', 47953.00, 'anulada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(2, 17, 6, 18, 'Infracción 2', 'Descripción de la multa 2', 28418.00, 'anulada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(3, 15, 9, 7, 'Infracción 3', 'Descripción de la multa 3', 33945.00, 'pendiente', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(4, 9, 5, 2, 'Infracción 4', 'Descripción de la multa 4', 40177.00, 'anulada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(5, 3, 16, 14, 'Infracción 5', 'Descripción de la multa 5', 41843.00, 'pagada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(6, 4, 6, 6, 'Infracción 6', 'Descripción de la multa 6', 18771.00, 'pendiente', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(7, 13, 2, 15, 'Infracción 7', 'Descripción de la multa 7', 39377.00, 'pagada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(8, 16, 6, 19, 'Infracción 8', 'Descripción de la multa 8', 10075.00, 'pendiente', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(9, 16, 19, 8, 'Infracción 9', 'Descripción de la multa 9', 52550.00, 'pagada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(10, 12, 10, 11, 'Infracción 10', 'Descripción de la multa 10', 22113.00, 'anulada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(11, 12, 4, 9, 'Infracción 11', 'Descripción de la multa 11', 48335.00, 'pendiente', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(12, 5, 16, 15, 'Infracción 12', 'Descripción de la multa 12', 51374.00, 'pagada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(13, 9, 10, 3, 'Infracción 13', 'Descripción de la multa 13', 44744.00, 'anulada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(14, 20, 3, 8, 'Infracción 14', 'Descripción de la multa 14', 40828.00, 'anulada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(15, 2, 9, 1, 'Infracción 15', 'Descripción de la multa 15', 58139.00, 'anulada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(16, 9, 20, 4, 'Infracción 16', 'Descripción de la multa 16', 10983.00, 'pendiente', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(17, 14, 14, 15, 'Infracción 17', 'Descripción de la multa 17', 45808.00, 'pendiente', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(18, 20, 16, 13, 'Infracción 18', 'Descripción de la multa 18', 56897.00, 'pagada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(19, 20, 19, 20, 'Infracción 19', 'Descripción de la multa 19', 14663.00, 'pagada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09'),
-(20, 3, 15, 12, 'Infracción 20', 'Descripción de la multa 20', 24043.00, 'pagada', '2025-10-01', NULL, '2025-10-02 18:21:09', '2025-10-02 18:21:09');
+INSERT INTO `multa` (`id`, `comunidad_id`, `unidad_id`, `persona_id`, `motivo`, `descripcion`, `monto`, `estado`, `prioridad`, `creada_por`, `aprobada_por`, `fecha_aprobacion`, `fecha`, `fecha_pago`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 1, 'Mascota sin correa', NULL, 5000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-01', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(2, 2, 3, 3, 'Ruido excesivo', NULL, 15000.00, 'pagada', 'media', 1, NULL, NULL, '2025-09-02', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(3, 3, 4, 4, 'Bloqueo de acceso', NULL, 10000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-03', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(4, 4, 5, 5, 'Fumar en áreas comunes', NULL, 20000.00, 'anulada', 'media', 1, NULL, NULL, '2025-09-04', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(5, 5, 6, 6, 'Daño a propiedad común', NULL, 30000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-05', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(6, 6, 7, 7, 'Mascota peligrosa sin bozal', NULL, 12000.00, 'pagada', 'media', 1, NULL, NULL, '2025-09-06', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(7, 7, 8, 8, 'Uso no autorizado de ascensor', NULL, 8000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-07', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(8, 8, 9, 9, 'Dejar basura en pasillo', NULL, 6000.00, 'pagada', 'media', 1, NULL, NULL, '2025-09-08', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(9, 9, 10, 10, 'Instalación de antena sin permiso', NULL, 25000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-09', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(10, 10, 10, 10, 'Fiesta hasta tarde', NULL, 18000.00, 'pagada', 'media', 1, NULL, NULL, '2025-09-10', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15'),
+(11, 1, 21, 21, 'Estacionar en zona prohibida', 'Vehículo bloqueando acceso a bodega.', 10000.00, 'pendiente', 'alta', 6, NULL, NULL, '2025-10-15', NULL, '2025-10-16 18:28:00', '2025-10-16 18:28:00'),
+(12, 2, 22, 22, 'Tender ropa en balcón', NULL, 5000.00, 'pagada', 'media', 6, NULL, NULL, '2025-10-16', '2025-10-16 21:54:02', '2025-10-16 18:28:01', '2025-10-16 18:28:01'),
+(13, 3, 23, 23, 'Uso inadecuado de gimnasio', 'Dejó pesas tiradas y sucio.', 12000.00, 'pendiente', 'media', 6, NULL, NULL, '2025-10-17', NULL, '2025-10-16 18:28:02', '2025-10-16 18:28:02'),
+(14, 4, 24, 24, 'Riego excesivo área común', 'Inundó camino peatonal.', 8000.00, 'anulada', 'baja', 6, NULL, NULL, '2025-10-18', NULL, '2025-10-16 18:28:03', '2025-10-16 18:28:03'),
+(15, 5, 25, 25, 'Mascota sin identificación', NULL, 3000.00, 'pendiente', 'baja', 6, NULL, NULL, '2025-10-19', NULL, '2025-10-16 18:28:04', '2025-10-16 18:28:04'),
+(16, 6, 26, 26, 'Obstrucción de salida de emergencia', NULL, 20000.00, 'pagada', 'critica', 6, NULL, NULL, '2025-10-20', '2025-10-16 21:54:02', '2025-10-16 18:28:05', '2025-10-16 18:28:05'),
+(17, 7, 27, 27, 'Instalación no autorizada de aire acondicionado', NULL, 15000.00, 'pendiente', 'alta', 6, NULL, NULL, '2025-10-21', NULL, '2025-10-16 18:28:06', '2025-10-16 18:28:06'),
+(18, 8, 28, 28, 'Daño a jardín infantil', 'Rompieron un juego.', 25000.00, 'pendiente', 'media', 6, NULL, NULL, '2025-10-22', NULL, '2025-10-16 18:28:07', '2025-10-16 18:28:07'),
+(19, 9, 29, 29, 'Ruido excesivo después de 23h', NULL, 18000.00, 'pendiente', 'alta', 6, NULL, NULL, '2025-10-23', NULL, '2025-10-16 18:28:08', '2025-10-16 18:28:08'),
+(20, 10, 30, 30, 'Uso de pirotecnia en balcón', NULL, 30000.00, 'pendiente', 'critica', 6, NULL, NULL, '2025-10-24', NULL, '2025-10-16 18:28:09', '2025-10-16 18:28:09'),
+(21, 1, 31, 31, 'Desechar muebles en área común', NULL, 25000.00, 'pendiente', 'alta', 6, NULL, NULL, '2025-10-25', NULL, '2025-10-17 10:18:00', '2025-10-17 10:18:00'),
+(22, 2, 32, 32, 'No registrar visita de contratista', NULL, 8000.00, 'pagada', 'media', 6, NULL, NULL, '2025-10-26', '2025-10-16 21:59:03', '2025-10-17 10:18:01', '2025-10-17 10:18:01'),
+(23, 3, 33, 33, 'Parrilla en balcón', NULL, 20000.00, 'pendiente', 'critica', 6, NULL, NULL, '2025-10-27', NULL, '2025-10-17 10:18:02', '2025-10-17 10:18:02'),
+(24, 4, 34, 34, 'Circulación de mascotas sin correa', NULL, 5000.00, 'anulada', 'baja', 6, NULL, NULL, '2025-10-28', NULL, '2025-10-17 10:18:03', '2025-10-17 10:18:03'),
+(25, 5, 35, 35, 'Usar la sala de cine sin reserva', NULL, 10000.00, 'pendiente', 'media', 6, NULL, NULL, '2025-10-29', NULL, '2025-10-17 10:18:04', '2025-10-17 10:18:04'),
+(26, 6, 36, 36, 'Modificación de fachada sin permiso', NULL, 30000.00, 'pagada', 'critica', 6, NULL, NULL, '2025-10-30', '2025-10-16 21:59:03', '2025-10-17 10:18:05', '2025-10-17 10:18:05'),
+(27, 7, 37, 37, 'Demora en pago de cuota extra', NULL, 4000.00, 'pendiente', 'media', 6, NULL, NULL, '2025-10-31', NULL, '2025-10-17 10:18:06', '2025-10-17 10:18:06'),
+(28, 8, 38, 38, 'Uso de áreas verdes para mudanza', NULL, 12000.00, 'pendiente', 'media', 6, NULL, NULL, '2025-11-01', NULL, '2025-10-17 10:18:07', '2025-10-17 10:18:07'),
+(29, 9, 39, 39, 'Niños sin supervisión en juegos', NULL, 7000.00, 'pendiente', 'baja', 6, NULL, NULL, '2025-11-02', NULL, '2025-10-17 10:18:08', '2025-10-17 10:18:08'),
+(30, 10, 40, 40, 'Incumplimiento de horario de escombros', NULL, 15000.00, 'pendiente', 'alta', 6, NULL, NULL, '2025-11-03', NULL, '2025-10-17 10:18:09', '2025-10-17 10:18:09');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `multa_apelacion`
+--
+
+CREATE TABLE `multa_apelacion` (
+  `id` bigint NOT NULL,
+  `multa_id` bigint NOT NULL,
+  `usuario_id` bigint DEFAULT NULL COMMENT 'Usuario que presenta apelación',
+  `persona_id` bigint NOT NULL COMMENT 'Persona que apela',
+  `comunidad_id` bigint NOT NULL,
+  `fecha_apelacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `motivo_apelacion` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `estado` enum('pendiente','aceptada','rechazada') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'pendiente',
+  `resolucion` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+  `fecha_resolucion` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `multa_apelacion`
+--
+
+INSERT INTO `multa_apelacion` (`id`, `multa_id`, `usuario_id`, `persona_id`, `comunidad_id`, `fecha_apelacion`, `motivo_apelacion`, `estado`, `resolucion`, `fecha_resolucion`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 1, 1, '2025-10-01 10:00:00', 'Mascota es de apoyo emocional, no requiere correa.', 'aceptada', 'Revisión documental exitosa. Multa anulada.', '2025-10-02 15:30:00', '2025-10-01 10:00:00', '2025-10-02 15:30:00'),
+(2, 2, 3, 3, 2, '2025-10-02 11:30:00', 'El ruido no provino de mi unidad, sino de la vecina.', 'rechazada', 'Registro de bitácora y evidencia de cámaras confirman la infracción.', '2025-10-04 09:00:00', '2025-10-02 11:30:00', '2025-10-04 09:00:00'),
+(3, 3, 4, 4, 3, '2025-10-03 14:00:00', 'El vehículo estaba cargando/descargando, no bloqueando acceso permanente.', 'pendiente', NULL, NULL, '2025-10-03 14:00:00', '2025-10-03 14:00:00'),
+(4, 4, 5, 5, 4, '2025-10-04 09:15:00', 'El reglamento de fumar no estaba visible en el área.', 'aceptada', 'Se anula la multa por falta de señalización visible.', '2025-10-05 16:00:00', '2025-10-04 09:15:00', '2025-10-05 16:00:00'),
+(5, 5, 6, 6, 5, '2025-10-06 17:45:00', 'El daño fue preexistente, solo lo reporté.', 'pendiente', NULL, NULL, '2025-10-06 17:45:00', '2025-10-06 17:45:00'),
+(6, 6, 7, 7, 6, '2025-10-07 10:10:00', 'Mi perro no es peligroso, solo jugaba brusco.', 'rechazada', 'Las fotos del incidente demuestran que el bozal era necesario.', '2025-10-10 11:00:00', '2025-10-07 10:10:00', '2025-10-10 11:00:00'),
+(7, 7, 8, 8, 7, '2025-10-08 12:20:00', 'Usé el ascensor de carga con permiso de conserje, fue mal ingresado.', 'aceptada', 'Se verifica permiso, error de categoría en la multa. Aceptada.', '2025-10-08 18:00:00', '2025-10-08 12:20:00', '2025-10-08 18:00:00'),
+(8, 8, 9, 9, 8, '2025-09-18 08:30:00', 'La bolsa se cayó por accidente, no fue intencional.', 'pendiente', NULL, NULL, '2025-09-18 08:30:00', '2025-09-18 08:30:00'),
+(9, 9, 10, 10, 9, '2025-10-05 15:50:00', 'La antena es removible y no afecta la estética, según normativa interna.', 'rechazada', 'La normativa es clara en que se requiere aprobación previa, la cual no fue solicitada.', '2025-10-10 17:00:00', '2025-10-05 15:50:00', '2025-10-10 17:00:00'),
+(10, 10, 10, 10, 10, '2025-10-11 19:30:00', 'La música fue bajada al primer aviso de conserjería.', 'pendiente', NULL, NULL, '2025-10-11 19:30:00', '2025-10-11 19:30:00'),
+(11, 1, 2, 1, 1, '2025-10-12 11:00:00', 'Apelo nuevamente, mi mascota es indispensable para mi salud.', 'rechazada', 'Apelación previa fue aceptada, esta multa es nueva y tiene reglamento diferente.', '2025-10-12 18:00:00', '2025-10-12 11:00:00', '2025-10-12 18:00:00'),
+(12, 2, 3, 3, 2, '2025-10-13 10:00:00', 'Pido una reducción de la multa por ser primera vez.', 'pendiente', NULL, NULL, '2025-10-13 10:00:00', '2025-10-13 10:00:00'),
+(13, 3, 4, 4, 3, '2025-10-14 12:00:00', 'Presento comprobante de carga y descarga de suministros (máximo 15 min).', 'aceptada', 'Se comprueba uso temporal del acceso. Multa retirada.', '2025-10-14 18:00:00', '2025-10-14 12:00:00', '2025-10-14 18:00:00'),
+(14, 5, 6, 6, 5, '2025-10-14 14:30:00', 'El daño lo cubrió mi seguro de hogar, adjunto póliza.', 'pendiente', NULL, NULL, '2025-10-14 14:30:00', '2025-10-14 14:30:00'),
+(15, 7, 8, 8, 7, '2025-10-14 15:45:00', 'El foco estaba defectuoso antes de que lo reportara.', 'pendiente', NULL, NULL, '2025-10-14 15:45:00', '2025-10-14 15:45:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `multa_historial`
+--
+
+CREATE TABLE `multa_historial` (
+  `id` bigint NOT NULL,
+  `multa_id` bigint NOT NULL,
+  `usuario_id` bigint NOT NULL,
+  `accion` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `estado_anterior` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `estado_nuevo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `multa_historial`
+--
+
+INSERT INTO `multa_historial` (`id`, `multa_id`, `usuario_id`, `accion`, `estado_anterior`, `estado_nuevo`, `observaciones`, `created_at`) VALUES
+(1, 1, 1, 'creacion', NULL, 'pendiente', 'Multa creada por mascota sin correa.', '2025-09-01 18:00:00'),
+(2, 2, 1, 'cambio_estado', 'pendiente', 'pagada', 'Pago registrado por el sistema.', '2025-10-02 11:30:00');
 
 -- --------------------------------------------------------
 
@@ -914,26 +1470,36 @@ CREATE TABLE `notificacion_usuario` (
 --
 
 INSERT INTO `notificacion_usuario` (`id`, `comunidad_id`, `persona_id`, `tipo`, `titulo`, `mensaje`, `leida`, `objeto_tipo`, `objeto_id`, `fecha_creacion`) VALUES
-(1, 5, 17, 'alerta', 'Notificación 1', 'Este es el contenido de la notificación 1 para la persona 17.', 1, 'unidad', 11, '2025-10-02 18:42:27'),
-(2, 9, 15, 'recordatorio', 'Notificación 2', 'Este es el contenido de la notificación 2 para la persona 15.', 0, 'pago', 14, '2025-10-02 18:42:27'),
-(3, 10, 4, 'info', 'Notificación 3', 'Este es el contenido de la notificación 3 para la persona 4.', 0, 'ticket', 1, '2025-10-02 18:42:27'),
-(4, 1, 5, 'recordatorio', 'Notificación 4', 'Este es el contenido de la notificación 4 para la persona 5.', 0, 'ticket', 9, '2025-10-02 18:42:27'),
-(5, 6, 1, 'recordatorio', 'Notificación 5', 'Este es el contenido de la notificación 5 para la persona 1.', 1, 'soporte', 17, '2025-10-02 18:42:27'),
-(6, 3, 13, 'info', 'Notificación 6', 'Este es el contenido de la notificación 6 para la persona 13.', 0, 'soporte', 8, '2025-10-02 18:42:27'),
-(7, 2, 3, 'info', 'Notificación 7', 'Este es el contenido de la notificación 7 para la persona 3.', 0, 'unidad', 9, '2025-10-02 18:42:27'),
-(8, 3, 18, 'info', 'Notificación 8', 'Este es el contenido de la notificación 8 para la persona 18.', 0, 'pago', 11, '2025-10-02 18:42:27'),
-(9, 4, 12, 'info', 'Notificación 9', 'Este es el contenido de la notificación 9 para la persona 12.', 0, 'ticket', 20, '2025-10-02 18:42:27'),
-(10, 9, 4, 'info', 'Notificación 10', 'Este es el contenido de la notificación 10 para la persona 4.', 1, 'pago', 14, '2025-10-02 18:42:27'),
-(11, 9, 5, 'alerta', 'Notificación 11', 'Este es el contenido de la notificación 11 para la persona 5.', 1, 'pago', 5, '2025-10-02 18:42:27'),
-(12, 9, 19, 'recordatorio', 'Notificación 12', 'Este es el contenido de la notificación 12 para la persona 19.', 0, 'soporte', 9, '2025-10-02 18:42:27'),
-(13, 2, 17, 'alerta', 'Notificación 13', 'Este es el contenido de la notificación 13 para la persona 17.', 1, 'ticket', 17, '2025-10-02 18:42:27'),
-(14, 9, 7, 'recordatorio', 'Notificación 14', 'Este es el contenido de la notificación 14 para la persona 7.', 0, 'pago', 17, '2025-10-02 18:42:27'),
-(15, 9, 15, 'recordatorio', 'Notificación 15', 'Este es el contenido de la notificación 15 para la persona 15.', 1, 'soporte', 20, '2025-10-02 18:42:27'),
-(16, 6, 3, 'recordatorio', 'Notificación 16', 'Este es el contenido de la notificación 16 para la persona 3.', 1, 'unidad', 16, '2025-10-02 18:42:27'),
-(17, 1, 13, 'alerta', 'Notificación 17', 'Este es el contenido de la notificación 17 para la persona 13.', 0, 'unidad', 15, '2025-10-02 18:42:27'),
-(18, 6, 6, 'recordatorio', 'Notificación 18', 'Este es el contenido de la notificación 18 para la persona 6.', 1, 'unidad', 3, '2025-10-02 18:42:27'),
-(19, 10, 5, 'info', 'Notificación 19', 'Este es el contenido de la notificación 19 para la persona 5.', 1, 'pago', 7, '2025-10-02 18:42:27'),
-(20, 8, 3, 'recordatorio', 'Notificación 20', 'Este es el contenido de la notificación 20 para la persona 3.', 0, 'soporte', 9, '2025-10-02 18:42:27');
+(1, 1, 1, 'alerta', 'Pago Vencido', 'Su gasto común de septiembre está vencido.', 0, 'cuenta_cobro_unidad', 1, '2025-10-10 18:10:22'),
+(2, 2, 3, 'info', 'Pago Aplicado', 'Su pago ha sido aplicado con éxito.', 1, 'pago', 1, '2025-10-10 18:10:22'),
+(3, 3, 4, 'recordatorio', 'Próxima Votación', 'Vote por el presupuesto del próximo año.', 0, 'documento_comunidad', 7, '2025-10-10 18:10:22'),
+(4, 4, 5, 'info', 'Reserva Aprobada', 'Su solicitud de piscina para el 2025-10-25 ha sido aprobada.', 1, 'reserva_amenidad', 5, '2025-10-10 18:10:22'),
+(5, 5, 6, 'alerta', 'Ticket Asignado', 'Se le asignó el ticket N°5 de seguridad.', 0, 'ticket_soporte', 5, '2025-10-10 18:10:22'),
+(6, 6, 7, 'recordatorio', 'Mantención General', 'Recordatorio de la mantención del ascensor mañana.', 0, 'registro_conserjeria', 6, '2025-10-10 18:10:22'),
+(7, 7, 8, 'info', 'Nueva Multa', 'Se ha generado una multa a su unidad.', 0, 'multa', 7, '2025-10-10 18:10:22'),
+(8, 8, 9, 'alerta', 'Saldo Pendiente', 'Su saldo parcial tiene intereses acumulados.', 0, 'cuenta_cobro_unidad', 8, '2025-10-10 18:10:22'),
+(9, 9, 10, 'recordatorio', 'Entrega de Paquete', 'Tiene un paquete pendiente de retiro en conserjería.', 1, 'registro_conserjeria', 9, '2025-10-10 18:10:22'),
+(10, 10, 10, 'info', 'Cierre de Emisión', 'El periodo de gasto común 2025-09 ha sido cerrado.', 1, 'emision_gastos_comunes', 10, '2025-10-10 18:10:22'),
+(11, 1, 21, 'alerta', 'Multa de Estacionamiento', 'Se ha generado una multa por estacionar en zona prohibida.', 0, 'multa', 11, '2025-10-16 18:32:00'),
+(12, 2, 22, 'info', 'Pago Aplicado con Éxito', 'Su pago de gasto común ha sido procesado.', 1, 'pago', 22, '2025-10-16 18:32:01'),
+(13, 3, 23, 'recordatorio', 'Reserva Aprobada', 'Su reserva del gimnasio para el 2025-11-01 ha sido aprobada.', 0, 'reserva_amenidad', 22, '2025-10-16 18:32:02'),
+(14, 4, 24, 'info', 'Nuevo Documento', 'Se ha subido el boletín N°12 de Diciembre.', 1, 'documento_comunidad', 21, '2025-10-16 18:32:03'),
+(15, 5, 25, 'alerta', 'Gasto Extraordinario', 'Se ha cargado una cuota de gasto extraordinario por cobro legal.', 0, 'cuenta_cobro_unidad', 25, '2025-10-16 18:32:04'),
+(16, 6, 26, 'recordatorio', 'Conserjería: Visita Programada', 'Se registró el ingreso de un técnico HVAC a su torre.', 0, 'registro_conserjeria', 26, '2025-10-16 18:32:05'),
+(17, 7, 27, 'info', 'Gasto Aprobado', 'El gasto de capacitación para conserjes ha sido aprobado.', 0, 'gasto', 32, '2025-10-16 18:32:06'),
+(18, 8, 28, 'alerta', 'Ticket Resuelto', 'Su ticket de soporte sobre la grieta ha sido resuelto.', 0, 'ticket_soporte', 8, '2025-10-16 18:32:07'),
+(19, 9, 29, 'recordatorio', 'Fondo de Reserva', 'Se ha cargado un aporte a Fondo de Mantención.', 1, 'detalle_cuenta_unidad', 29, '2025-10-16 18:32:08'),
+(20, 10, 30, 'info', 'Emisión Creada', 'La liquidación de gastos comunes de Noviembre está disponible.', 1, 'emision_gastos_comunes', 30, '2025-10-16 18:32:09'),
+(21, 1, 31, 'alerta', 'Pago Atrasado', 'Su gasto común de noviembre está pendiente.', 0, 'cuenta_cobro_unidad', 31, '2025-10-17 10:22:00'),
+(22, 2, 32, 'info', 'Pago Procesado', 'Se ha aplicado su pago de $75,000.', 1, 'pago', 31, '2025-10-17 10:22:01'),
+(23, 3, 33, 'recordatorio', 'Asamblea Extraordinaria', 'Recordatorio de votación para el proyecto eléctrico.', 0, 'documento_comunidad', 23, '2025-10-17 10:22:02'),
+(24, 4, 34, 'info', 'Multa Anulada', 'La multa N°24 por mascotas fue anulada.', 1, 'multa', 24, '2025-10-17 10:22:03'),
+(25, 5, 35, 'alerta', 'Bloqueo de Servicio', 'Su servicio de Internet será suspendido por saldo vencido.', 0, 'cuenta_cobro_unidad', 35, '2025-10-17 10:22:04'),
+(26, 6, 36, 'recordatorio', 'Reserva Aprobada', 'Su reserva de Salón de Eventos para Navidad ha sido aprobada.', 0, 'reserva_amenidad', 26, '2025-10-17 10:22:05'),
+(27, 7, 37, 'info', 'Mantenimiento Programado', 'Corte de gas programado para el 2025-11-15.', 0, 'registro_conserjeria', 37, '2025-10-17 10:22:06'),
+(28, 8, 38, 'alerta', 'Ticket Crítico', 'Se ha reportado una falla crítica de infraestructura (Ticket 18).', 0, 'ticket_soporte', 18, '2025-10-17 10:22:07'),
+(29, 9, 39, 'recordatorio', 'Retiro de Paquete', 'Tiene un paquete grande pendiente en conserjería.', 1, 'registro_conserjeria', 29, '2025-10-17 10:22:08'),
+(30, 10, 40, 'info', 'Nuevo Gasto Común', 'Se ha generado la emisión de gastos comunes de Diciembre.', 1, 'emision_gastos_comunes', 40, '2025-10-17 10:22:09');
 
 -- --------------------------------------------------------
 
@@ -961,26 +1527,46 @@ CREATE TABLE `pago` (
 --
 
 INSERT INTO `pago` (`id`, `comunidad_id`, `unidad_id`, `persona_id`, `fecha`, `monto`, `medio`, `referencia`, `estado`, `comprobante_num`, `created_at`, `updated_at`) VALUES
-(1, 10, 2, 11, '2025-10-01', 41176.00, 'webpay', 'REF-3506', 'aplicado', 'COMP-8427', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(2, 20, 12, 3, '2025-10-01', 91068.00, 'efectivo', 'REF-2153', 'aplicado', 'COMP-1542', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(3, 13, 2, 2, '2025-10-01', 21663.00, 'transferencia', 'REF-5788', 'aplicado', 'COMP-8853', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(4, 6, 5, 2, '2025-10-01', 77031.00, 'webpay', 'REF-8059', 'pendiente', 'COMP-5875', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(5, 15, 16, 14, '2025-10-01', 76873.00, 'transferencia', 'REF-5265', 'pendiente', 'COMP-4693', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(6, 1, 6, 10, '2025-10-01', 24414.00, 'transferencia', 'REF-9764', 'aplicado', 'COMP-7613', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(7, 1, 11, 15, '2025-10-01', 63021.00, 'webpay', 'REF-7365', 'aplicado', 'COMP-5348', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(8, 18, 18, 13, '2025-10-01', 85989.00, 'webpay', 'REF-1829', 'aplicado', 'COMP-3484', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(9, 1, 18, 2, '2025-10-01', 76226.00, 'transferencia', 'REF-4926', 'aplicado', 'COMP-4976', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(10, 12, 17, 17, '2025-10-01', 70871.00, 'efectivo', 'REF-3537', 'aplicado', 'COMP-4270', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(11, 13, 18, 6, '2025-10-01', 45092.00, 'webpay', 'REF-9479', 'pendiente', 'COMP-6868', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(12, 3, 18, 18, '2025-10-01', 81221.00, 'webpay', 'REF-8996', 'pendiente', 'COMP-7382', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(13, 20, 8, 20, '2025-10-01', 71392.00, 'transferencia', 'REF-1194', 'pendiente', 'COMP-4345', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(14, 13, 10, 1, '2025-10-01', 30685.00, 'transferencia', 'REF-4496', 'pendiente', 'COMP-4496', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(15, 5, 12, 17, '2025-10-01', 88339.00, 'efectivo', 'REF-9485', 'aplicado', 'COMP-6243', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(16, 11, 19, 4, '2025-10-01', 92283.00, 'efectivo', 'REF-1708', 'aplicado', 'COMP-6649', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(17, 7, 4, 17, '2025-10-01', 89551.00, 'transferencia', 'REF-4881', 'aplicado', 'COMP-7680', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(18, 17, 4, 18, '2025-10-01', 31263.00, 'transferencia', 'REF-8889', 'pendiente', 'COMP-8149', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(19, 16, 13, 3, '2025-10-01', 68743.00, 'webpay', 'REF-9784', 'pendiente', 'COMP-5236', '2025-10-02 18:21:25', '2025-10-02 18:21:25'),
-(20, 11, 5, 3, '2025-10-01', 40810.00, 'efectivo', 'REF-4823', 'aplicado', 'COMP-6990', '2025-10-02 18:21:25', '2025-10-02 18:21:25');
+(1, 2, 3, 3, '2025-10-01', 62000.00, 'transferencia', 'REF-P001', 'aplicado', NULL, '2025-10-10 18:08:52', '2025-10-10 18:08:52'),
+(2, 4, 5, 5, '2025-10-02', 31000.00, 'webpay', 'REF-P002', 'aplicado', NULL, '2025-10-10 18:08:52', '2025-10-10 18:08:52'),
+(3, 7, 8, 8, '2025-10-03', 55000.00, 'efectivo', 'REF-P003', 'aplicado', NULL, '2025-10-10 18:08:52', '2025-10-10 18:08:52'),
+(4, 8, 9, 9, '2025-10-04', 48000.00, 'transferencia', 'REF-P004', 'aplicado', NULL, '2025-10-10 18:08:52', '2025-10-10 18:08:52'),
+(5, 10, 10, 10, '2025-10-05', 68000.00, 'webpay', 'REF-P005', 'aplicado', NULL, '2025-10-10 18:08:52', '2025-10-10 18:08:52'),
+(6, 1, 1, 1, '2025-10-06', 45000.00, 'efectivo', 'REF-P006', 'pendiente', NULL, '2025-10-10 18:08:52', '2025-10-10 18:08:52'),
+(7, 3, 4, 4, '2025-10-07', 88000.00, 'transferencia', 'REF-P007', 'pendiente', NULL, '2025-10-10 18:08:52', '2025-10-10 18:08:52'),
+(8, 5, 6, 6, '2025-10-08', 73000.00, 'webpay', 'REF-P008', 'pendiente', NULL, '2025-10-10 18:08:52', '2025-10-10 18:08:52'),
+(9, 9, 10, 10, '2025-10-09', 49000.00, 'efectivo', 'REF-P009', 'pendiente', NULL, '2025-10-10 18:08:52', '2025-10-10 18:08:52'),
+(10, 6, 7, 7, '2025-10-10', 95000.00, 'transferencia', 'REF-P010', 'pendiente', NULL, '2025-10-10 18:08:52', '2025-10-10 18:08:52'),
+(11, 2, 13, 13, '2025-10-06', 65000.00, 'transferencia', 'REF-P011', 'aplicado', NULL, '2025-10-15 21:10:54', '2025-10-15 21:10:54'),
+(12, 4, 15, 15, '2025-10-07', 25000.00, 'webpay', 'REF-P012', 'aplicado', NULL, '2025-10-15 21:10:54', '2025-10-15 21:10:54'),
+(13, 7, 18, 18, '2025-10-08', 60000.00, 'efectivo', 'REF-P013', 'aplicado', NULL, '2025-10-15 21:10:54', '2025-10-15 21:10:54'),
+(14, 8, 19, 19, '2025-10-09', 40000.00, 'transferencia', 'REF-P014', 'aplicado', NULL, '2025-10-15 21:10:54', '2025-10-15 21:10:54'),
+(15, 10, 10, 20, '2025-10-10', 70000.00, 'webpay', 'REF-P015', 'aplicado', NULL, '2025-10-15 21:10:54', '2025-10-15 21:10:54'),
+(16, 1, 11, 11, '2025-10-11', 50000.00, 'efectivo', 'REF-P016', 'pendiente', NULL, '2025-10-15 21:10:54', '2025-10-15 21:10:54'),
+(17, 3, 14, 14, '2025-10-12', 90000.00, 'transferencia', 'REF-P017', 'pendiente', NULL, '2025-10-15 21:10:54', '2025-10-15 21:10:54'),
+(18, 5, 16, 16, '2025-10-13', 75000.00, 'webpay', 'REF-P018', 'pendiente', NULL, '2025-10-15 21:10:54', '2025-10-15 21:10:54'),
+(19, 9, 20, 20, '2025-10-14', 50000.00, 'efectivo', 'REF-P019', 'pendiente', NULL, '2025-10-15 21:10:54', '2025-10-15 21:10:54'),
+(20, 6, 17, 17, '2025-10-15', 100000.00, 'transferencia', 'REF-P020', 'pendiente', NULL, '2025-10-15 21:10:54', '2025-10-15 21:10:54'),
+(21, 1, 21, 21, '2025-10-16', 55000.00, 'transferencia', 'REF-P021', 'pendiente', NULL, '2025-10-16 18:29:00', '2025-10-16 18:29:00'),
+(22, 2, 22, 22, '2025-10-17', 70000.00, 'webpay', 'REF-P022', 'aplicado', NULL, '2025-10-16 18:29:01', '2025-10-16 18:29:01'),
+(23, 3, 23, 23, '2025-10-18', 95000.00, 'efectivo', 'REF-P023', 'pendiente', NULL, '2025-10-16 18:29:02', '2025-10-16 18:29:02'),
+(24, 4, 24, 24, '2025-10-19', 30000.00, 'transferencia', 'REF-P024', 'aplicado', NULL, '2025-10-16 18:29:03', '2025-10-16 18:29:03'),
+(25, 5, 25, 25, '2025-10-20', 80000.00, 'webpay', 'REF-P025', 'pendiente', NULL, '2025-10-16 18:29:04', '2025-10-16 18:29:04'),
+(26, 6, 26, 26, '2025-10-21', 110000.00, 'efectivo', 'REF-P026', 'aplicado', NULL, '2025-10-16 18:29:05', '2025-10-16 18:29:05'),
+(27, 7, 27, 27, '2025-10-22', 65000.00, 'transferencia', 'REF-P027', 'pendiente', NULL, '2025-10-16 18:29:06', '2025-10-16 18:29:06'),
+(28, 8, 28, 28, '2025-10-23', 85000.00, 'webpay', 'REF-P028', 'aplicado', NULL, '2025-10-16 18:29:07', '2025-10-16 18:29:07'),
+(29, 9, 29, 29, '2025-10-24', 60000.00, 'efectivo', 'REF-P029', 'pendiente', NULL, '2025-10-16 18:29:08', '2025-10-16 18:29:08'),
+(30, 10, 30, 30, '2025-10-25', 75000.00, 'transferencia', 'REF-P030', 'aplicado', NULL, '2025-10-16 18:29:09', '2025-10-16 18:29:09'),
+(31, 1, 31, 31, '2025-10-26', 60000.00, 'webpay', 'REF-P031', 'aplicado', NULL, '2025-10-17 10:19:00', '2025-10-17 10:19:00'),
+(32, 2, 32, 32, '2025-10-27', 75000.00, 'transferencia', 'REF-P032', 'pendiente', NULL, '2025-10-17 10:19:01', '2025-10-17 10:19:01'),
+(33, 3, 33, 33, '2025-10-28', 100000.00, 'webpay', 'REF-P033', 'aplicado', NULL, '2025-10-17 10:19:02', '2025-10-17 10:19:02'),
+(34, 4, 34, 34, '2025-10-29', 65000.00, 'efectivo', 'REF-P034', 'pendiente', NULL, '2025-10-17 10:19:03', '2025-10-17 10:19:03'),
+(35, 5, 35, 35, '2025-10-30', 40000.00, 'transferencia', 'REF-P035', 'aplicado', NULL, '2025-10-17 10:19:04', '2025-10-17 10:19:04'),
+(36, 6, 36, 36, '2025-10-31', 115000.00, 'webpay', 'REF-P036', 'pendiente', NULL, '2025-10-17 10:19:05', '2025-10-17 10:19:05'),
+(37, 7, 37, 37, '2025-11-01', 70000.00, 'efectivo', 'REF-P037', 'aplicado', NULL, '2025-10-17 10:19:06', '2025-10-17 10:19:06'),
+(38, 8, 38, 38, '2025-11-02', 90000.00, 'transferencia', 'REF-P038', 'pendiente', NULL, '2025-10-17 10:19:07', '2025-10-17 10:19:07'),
+(39, 9, 39, 39, '2025-11-03', 65000.00, 'webpay', 'REF-P039', 'aplicado', NULL, '2025-10-17 10:19:08', '2025-10-17 10:19:08'),
+(40, 10, 40, 40, '2025-11-04', 80000.00, 'efectivo', 'REF-P040', 'pendiente', NULL, '2025-10-17 10:19:09', '2025-10-17 10:19:09');
 
 -- --------------------------------------------------------
 
@@ -1003,26 +1589,26 @@ CREATE TABLE `pago_aplicacion` (
 --
 
 INSERT INTO `pago_aplicacion` (`id`, `pago_id`, `cuenta_cobro_unidad_id`, `monto`, `prioridad`, `created_at`, `updated_at`) VALUES
-(1, 1, 12, 17058.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(2, 2, 4, 26657.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(3, 3, 11, 11616.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(4, 4, 10, 28547.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(5, 5, 2, 15755.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(6, 6, 20, 21222.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(7, 7, 8, 23990.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(8, 8, 19, 22286.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(9, 9, 9, 29346.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(10, 10, 18, 12559.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(11, 11, 6, 13010.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(12, 12, 3, 21486.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(13, 13, 15, 17365.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(14, 14, 18, 20455.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(15, 15, 19, 29705.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(16, 16, 17, 11455.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(17, 17, 9, 22339.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(18, 18, 20, 24222.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(19, 19, 6, 11392.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48'),
-(20, 20, 9, 17829.00, 1, '2025-10-02 18:20:48', '2025-10-02 18:20:48');
+(1, 1, 2, 62000.00, 1, '2025-10-10 18:10:12', '2025-10-10 18:10:12'),
+(2, 2, 4, 31000.00, 1, '2025-10-10 18:10:12', '2025-10-10 18:10:12'),
+(3, 3, 7, 55000.00, 1, '2025-10-10 18:10:12', '2025-10-10 18:10:12'),
+(4, 4, 8, 48000.00, 1, '2025-10-10 18:10:12', '2025-10-10 18:10:12'),
+(5, 5, 10, 68000.00, 1, '2025-10-10 18:10:12', '2025-10-10 18:10:12'),
+(6, 6, 1, 45000.00, 1, '2025-10-10 18:10:12', '2025-10-10 18:10:12'),
+(7, 7, 3, 88000.00, 1, '2025-10-10 18:10:12', '2025-10-10 18:10:12'),
+(8, 8, 5, 73000.00, 1, '2025-10-10 18:10:12', '2025-10-10 18:10:12'),
+(9, 9, 9, 49000.00, 1, '2025-10-10 18:10:12', '2025-10-10 18:10:12'),
+(10, 10, 6, 95000.00, 1, '2025-10-10 18:10:12', '2025-10-10 18:10:12'),
+(11, 11, 12, 65000.00, 1, '2025-10-15 21:10:56', '2025-10-15 21:10:56'),
+(12, 12, 14, 25000.00, 1, '2025-10-15 21:10:56', '2025-10-15 21:10:56'),
+(13, 13, 17, 60000.00, 1, '2025-10-15 21:10:56', '2025-10-15 21:10:56'),
+(14, 14, 18, 40000.00, 1, '2025-10-15 21:10:56', '2025-10-15 21:10:56'),
+(15, 15, 20, 70000.00, 1, '2025-10-15 21:10:56', '2025-10-15 21:10:56'),
+(16, 16, 11, 50000.00, 1, '2025-10-15 21:10:56', '2025-10-15 21:10:56'),
+(17, 17, 13, 90000.00, 1, '2025-10-15 21:10:56', '2025-10-15 21:10:56'),
+(18, 18, 15, 75000.00, 1, '2025-10-15 21:10:56', '2025-10-15 21:10:56'),
+(19, 19, 19, 50000.00, 1, '2025-10-15 21:10:56', '2025-10-15 21:10:56'),
+(20, 20, 16, 100000.00, 1, '2025-10-15 21:10:56', '2025-10-15 21:10:56');
 
 -- --------------------------------------------------------
 
@@ -1048,9 +1634,26 @@ CREATE TABLE `parametros_cobranza` (
 --
 
 INSERT INTO `parametros_cobranza` (`id`, `comunidad_id`, `dias_gracia`, `tasa_mora_mensual`, `mora_calculo`, `redondeo`, `interes_max_mensual`, `aplica_interes_sobre`, `created_at`, `updated_at`) VALUES
-(1, 1, 5, 1.50, 'mensual', 'normal', 2.00, 'saldo', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(2, 2, 7, 2.00, 'diaria', 'abajo', 2.50, 'capital', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(3, 3, 10, 1.20, 'mensual', 'arriba', NULL, 'saldo', '2025-10-02 18:42:27', '2025-10-02 18:42:27');
+(1, 1, 5, 1.50, 'mensual', 'normal', 2.00, 'saldo', '2025-10-10 18:07:42', '2025-10-10 18:07:42'),
+(2, 2, 7, 2.00, 'diaria', 'abajo', 2.50, 'capital', '2025-10-10 18:07:42', '2025-10-10 18:07:42'),
+(3, 3, 10, 1.20, 'mensual', 'arriba', NULL, 'saldo', '2025-10-10 18:07:42', '2025-10-10 18:07:42'),
+(4, 4, 3, 1.80, 'diaria', 'normal', 2.20, 'capital', '2025-10-10 18:07:42', '2025-10-10 18:07:42'),
+(5, 5, 8, 1.00, 'mensual', 'abajo', 1.50, 'saldo', '2025-10-10 18:07:42', '2025-10-10 18:07:42'),
+(6, 6, 6, 1.60, 'diaria', 'arriba', 2.10, 'capital', '2025-10-10 18:07:42', '2025-10-10 18:07:42'),
+(7, 7, 4, 1.30, 'mensual', 'normal', NULL, 'saldo', '2025-10-10 18:07:42', '2025-10-10 18:07:42'),
+(8, 8, 9, 2.10, 'diaria', 'abajo', 2.80, 'capital', '2025-10-10 18:07:42', '2025-10-10 18:07:42'),
+(9, 9, 2, 1.70, 'mensual', 'arriba', 1.90, 'saldo', '2025-10-10 18:07:42', '2025-10-10 18:07:42'),
+(10, 10, 11, 2.30, 'diaria', 'normal', 3.00, 'capital', '2025-10-10 18:07:42', '2025-10-10 18:07:42'),
+(21, 11, 5, 1.50, 'mensual', 'normal', 2.00, 'saldo', '2025-10-17 11:13:00', '2025-10-17 11:13:00'),
+(22, 12, 7, 2.00, 'diaria', 'abajo', 2.50, 'capital', '2025-10-17 11:13:01', '2025-10-17 11:13:01'),
+(23, 13, 10, 1.20, 'mensual', 'arriba', NULL, 'saldo', '2025-10-17 11:13:02', '2025-10-17 11:13:02'),
+(24, 14, 3, 1.80, 'diaria', 'normal', 2.20, 'capital', '2025-10-17 11:13:03', '2025-10-17 11:13:03'),
+(25, 15, 8, 1.00, 'mensual', 'abajo', 1.50, 'saldo', '2025-10-17 11:13:04', '2025-10-17 11:13:04'),
+(26, 16, 6, 1.60, 'diaria', 'arriba', 2.10, 'capital', '2025-10-17 11:13:05', '2025-10-17 11:13:05'),
+(27, 17, 4, 1.30, 'mensual', 'normal', NULL, 'saldo', '2025-10-17 11:13:06', '2025-10-17 11:13:06'),
+(28, 18, 9, 2.10, 'diaria', 'abajo', 2.80, 'capital', '2025-10-17 11:13:07', '2025-10-17 11:13:07'),
+(29, 19, 2, 1.70, 'mensual', 'arriba', 1.90, 'saldo', '2025-10-17 11:13:08', '2025-10-17 11:13:08'),
+(30, 20, 11, 2.30, 'diaria', 'normal', 3.00, 'capital', '2025-10-17 11:13:09', '2025-10-17 11:13:09');
 
 -- --------------------------------------------------------
 
@@ -1076,42 +1679,46 @@ CREATE TABLE `persona` (
 --
 
 INSERT INTO `persona` (`id`, `rut`, `dv`, `nombres`, `apellidos`, `email`, `telefono`, `direccion`, `created_at`, `updated_at`) VALUES
-(1, '18514420', '8', 'Patricio', 'Quintanilla', 'pat.quintanilla@duocuc.cl', '+34817829633', 'Rambla Roxana Ortega 5, Zamora, 02237', '2025-10-02 18:00:09', '2025-10-07 12:50:16'),
-(2, '11243882', '3', 'Elisabet', 'Robledo', 'marcosblasco@iglesias.es', '+34747 970 941', 'Plaza de Nuria Sosa 66 Puerta 3 , Almería, 85513', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(3, '21141366', '2', 'Dalila', 'Trillo', 'candelarioguardiola@gmail.com', '+34662 265 789', 'Camino de Dolores Álvaro 23 Puerta 6 , Toledo, 78909', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(4, '9793463', '0', 'Isidora', 'Sedano', 'casalsteofilo@requena-bermejo.org', '+34722553671', 'C. Paloma Santiago 72 Piso 1 , Toledo, 04314', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(5, '2569079', '6', 'Sigfrido', 'Molins', 'vinascurro@guillen.com', '+34735 438 670', 'Paseo Lucio Duarte 758 Piso 2 , Lleida, 52993', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(6, '24317602', '6', 'José', 'Álvaro', 'dquiros@cuenca.com', '+34 700 568 329', 'Camino María Pilar Gascón 4 Piso 7 , Ourense, 29204', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(7, '21596168', '0', 'Jordi', 'Piñol', 'graciana71@yahoo.com', '+34 718 30 61 91', 'Callejón Perlita Pérez 92 Piso 8 , Ciudad, 39093', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(8, '17147778', '6', 'Flora', 'Olivares', 'carlosrio@gmail.com', '+34 744255609', 'Plaza de Reynaldo Casanova 4, Salamanca, 60639', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(9, '9974052', '3', 'Lina', 'Alonso', 'elpidio14@yahoo.com', '+34685452794', 'Plaza Gregorio Naranjo 80, Ciudad, 24056', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(10, '11788735', '9', 'Alejandro', 'Barros', 'bguardiola@palomino.com', '+34722 378 565', 'Cañada de Atilio Solana 31, Ciudad, 28746', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(11, '3710552', 'K', 'Almudena', 'Vigil', 'ucolomer@sabater.com', '+34 727175045', 'Urbanización de Mohamed Santiago 57, Jaén, 57332', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(12, '20045825', '7', 'Fortunata', 'Morata', 'dionisia40@ribas-cerda.org', '+34 712 21 98 21', 'Ronda Vilma Pardo 5, Ceuta, 00814', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(13, '4555786', '3', 'Dafne', 'Bertrán', 'chidalgo@ortega-villalba.es', '+34 809763799', 'Rambla de Teodora Águila 307, Navarra, 06990', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(14, '8604517', '6', 'Hernando', 'Español', 'alfonsopinedo@elorza-francisco.com', '+34912 51 64 52', 'Callejón de Susanita Arce 94 Apt. 22 , Barcelona, 60790', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(15, '12651003', '9', 'Lope', 'Conesa', 'acunarosario@barral.es', '+34674 39 47 51', 'Plaza de Manolo Acosta 81 Puerta 6 , Burgos, 28744', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(16, '16222694', '0', 'Ricarda', 'Alvarez', 'domingo91@hotmail.com', '+34 648 983 048', 'Alameda Rufina Ferrán 36 Piso 7 , Vizcaya, 64870', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(17, '14584777', 'K', 'Albino', 'Nicolás', 'salomeduran@hotmail.com', '+34950 315 479', 'Alameda Manu Calatayud 19 Puerta 6 , Albacete, 85684', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(18, '5163812', '3', 'Nidia', 'Santiago', 'xmorata@raya.net', '+34 718 536 165', 'Alameda Elba Torrents 206 Apt. 73 , Zamora, 81227', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(19, '4439658', '0', 'Candelas', 'Berenguer', 'marianela97@acuna.com', '+34994 64 38 76', 'Alameda de Iker Aguirre 31 Puerta 5 , Ávila, 19392', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(20, '13051081', '7', 'Jenny', 'Carnero', 'goyoarias@yahoo.com', '+34 706 33 85 67', 'Urbanización Mohamed Soriano 8, Salamanca, 19993', '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(21, '12345672', '9', 'Juan Carlos', 'Pérez González', 'nuevousuari2o@ejemplo.com', NULL, NULL, '2025-10-03 14:34:33', '2025-10-03 14:34:33'),
-(100, '12345678', '9', 'Juan Carlos', 'González Pérez', 'juan.gonzalez@email.com', '+56912345678', 'Calle Principal 123', '2025-10-06 13:28:58', '2025-10-06 13:28:58'),
-(101, '23456789', '0', 'María Elena', 'Rodríguez Silva', 'maria.rodriguez@email.com', '+56923456789', 'Avenida Central 456', '2025-10-06 13:28:58', '2025-10-06 13:28:58'),
-(102, '34567890', '1', 'Pedro Antonio', 'Martínez López', 'pedro.martinez@email.com', '+56934567890', 'Pasaje Los Robles 789', '2025-10-06 13:28:58', '2025-10-06 13:28:58'),
-(103, '45678901', '2', 'Ana Sofía', 'Fernández Torres', 'ana.fernandez@email.com', '+56945678901', 'Calle Las Flores 321', '2025-10-06 13:28:58', '2025-10-06 13:28:58'),
-(104, '56789012', '3', 'Luis Alberto', 'Muñoz Vargas', 'luis.munoz@email.com', '+56956789012', 'Avenida Los Pinos 654', '2025-10-06 13:28:58', '2025-10-06 13:28:58'),
-(105, '67890123', '4', 'Carmen Gloria', 'Sánchez Rojas', 'carmen.sanchez@email.com', '+56967890123', 'Paseo Las Palmas 987', '2025-10-06 13:29:04', '2025-10-06 13:29:04'),
-(106, '78901234', '5', 'Roberto Carlos', 'Díaz Hernández', 'roberto.diaz@email.com', '+56978901234', 'Calle Los Álamos 147', '2025-10-06 13:29:04', '2025-10-06 13:29:04'),
-(107, '89012345', '6', 'Patricia Isabel', 'Gómez Castro', 'patricia.gomez@email.com', '+56989012345', 'Avenida Las Acacias 258', '2025-10-06 13:29:04', '2025-10-06 13:29:04'),
-(108, '90123456', '7', 'Francisco Javier', 'Ramírez Flores', 'francisco.ramirez@email.com', '+56990123456', 'Pasaje Los Cipreses 369', '2025-10-06 13:29:04', '2025-10-06 13:29:04'),
-(109, '11223344', '8', 'Claudia Andrea', 'Morales Espinoza', 'claudia.morales@email.com', '+56911223344', 'Calle Los Naranjos 741', '2025-10-06 13:29:09', '2025-10-06 13:29:09'),
-(110, '22334455', '9', 'Andrés Felipe', 'Contreras Vega', 'andres.contreras@email.com', '+56922334455', 'Avenida Los Cerezos 852', '2025-10-06 13:29:09', '2025-10-06 13:29:09'),
-(111, '33445566', 'K', 'Gabriela Alejandra', 'Núñez Ponce', 'gabriela.nunez@email.com', '+56933445566', 'Pasaje Los Laureles 963', '2025-10-06 13:29:09', '2025-10-06 13:29:09'),
-(112, '55555555', '5', 'Ana', 'Prueba', 'ana.prueba@demo.cl', '+56 9 11111111', 'Calle Falsa 123', '2025-10-06 18:21:40', '2025-10-06 18:21:40'),
-(113, '66666666', '6', 'Bruno', 'Demo', 'bruno.demo@demo.cl', '+56 9 22222222', 'Av. Siempre Viva 742', '2025-10-06 18:21:40', '2025-10-06 18:21:40'),
-(114, '77777777', '7', 'Carla', 'Test', 'carla.test@demo.cl', '+56 9 33333333', 'Ruta S/N', '2025-10-06 18:21:40', '2025-10-06 18:21:40');
+(1, '18514420', '8', 'Patricio', 'Quintanilla', 'pat.quintanilla@duocuc.cl', '+56987654321', NULL, '2025-10-10 18:07:27', '2025-10-10 18:07:27'),
+(2, '11243882', '3', 'Elisabet', 'Robledo', 'elisabet@email.cl', '+56912345678', NULL, '2025-10-10 18:07:27', '2025-10-10 18:07:27'),
+(3, '21141366', '2', 'Dalila', 'Trillo', 'dalila@email.cl', '+56923456789', NULL, '2025-10-10 18:07:27', '2025-10-10 18:07:27'),
+(4, '9793463', '0', 'Isidora', 'Sedano', 'isidora@email.cl', '+56934567890', NULL, '2025-10-10 18:07:27', '2025-10-10 18:07:27'),
+(5, '2569079', '6', 'Sigfrido', 'Molins', 'sigfrido@email.cl', '+56945678901', NULL, '2025-10-10 18:07:27', '2025-10-10 18:07:27'),
+(6, '24317602', '6', 'José', 'Álvaro', 'jose@conserje.cl', '+56956789012', NULL, '2025-10-10 18:07:27', '2025-10-10 18:07:27'),
+(7, '21596168', '0', 'Jordi', 'Piñol', 'jordi@email.cl', '+56967890123', NULL, '2025-10-10 18:07:27', '2025-10-10 18:07:27'),
+(8, '17147778', '6', 'Flora', 'Olivares', 'flora@admin.cl', '+56978901234', NULL, '2025-10-10 18:07:27', '2025-10-10 18:07:27'),
+(9, '9974052', '3', 'Lina', 'Alonso', 'lina@email.cl', '+56989012345', NULL, '2025-10-10 18:07:27', '2025-10-10 18:07:27'),
+(10, '11788735', '9', 'Alejandro', 'Barros', 'alejandro@email.cl', '+56990123456', NULL, '2025-10-10 18:07:27', '2025-10-10 18:07:27'),
+(11, '23456789', '0', 'Laura', 'Sánchez', 'laura.sanchez@email.cl', '+56901234567', 'Calle Falsa 123', '2025-10-15 21:10:14', '2025-10-15 21:10:14'),
+(12, '24567890', '1', 'Carlos', 'Gómez', 'carlos.gomez@email.cl', '+56912345670', 'Av. Siempre Viva 45', '2025-10-15 21:10:14', '2025-10-15 21:10:14'),
+(13, '25678901', 'K', 'María', 'Fernández', 'maria.fernandez@email.cl', '+56923456701', 'Plaza Central 78', '2025-10-15 21:10:14', '2025-10-15 21:10:14'),
+(14, '26789012', '3', 'Javier', 'Díaz', 'javier.diaz@email.cl', '+56934567012', 'Ruta 5 Norte 90', '2025-10-15 21:10:14', '2025-10-15 21:10:14'),
+(15, '27890123', '4', 'Ana', 'López', 'ana.lopez@email.cl', '+56945670123', 'Las Américas 10', '2025-10-15 21:10:14', '2025-10-15 21:10:14'),
+(16, '28901234', '5', 'Roberto', 'Martínez', 'roberto.martinez@email.cl', '+56956701234', 'El Bosque 20', '2025-10-15 21:10:14', '2025-10-15 21:10:14'),
+(17, '29012345', '6', 'Elena', 'Ruiz', 'elena.ruiz@email.cl', '+56967012345', 'Calle Sol 30', '2025-10-15 21:10:14', '2025-10-15 21:10:14'),
+(18, '30123456', '7', 'Pedro', 'Hernández', 'pedro.hernandez@email.cl', '+56970123456', 'Av. Luna 40', '2025-10-15 21:10:14', '2025-10-15 21:10:14'),
+(19, '31234567', '8', 'Sofía', 'Vargas', 'sofia.vargas@email.cl', '+56901234560', 'Mar del Plata 50', '2025-10-15 21:10:14', '2025-10-15 21:10:14'),
+(20, '32345678', '9', 'Diego', 'Rojas', 'diego.rojas@email.cl', '+56912345611', 'Los Pinos 60', '2025-10-15 21:10:14', '2025-10-15 21:10:14'),
+(21, '33456789', '0', 'Gabriel', 'Tapia', 'gabriel.tapia@email.cl', '+56900000001', 'Calle Falsa 123', '2025-10-16 18:10:00', '2025-10-16 18:10:00'),
+(22, '34567890', '1', 'Daniela', 'Flores', 'daniela.flores@email.cl', '+56900000002', 'Av. Siempre Viva 45', '2025-10-16 18:10:01', '2025-10-16 18:10:01'),
+(23, '35678901', '2', 'Andrés', 'Muñoz', 'andres.munoz@email.cl', '+56900000003', 'Plaza Central 78', '2025-10-16 18:10:02', '2025-10-16 18:10:02'),
+(24, '36789012', '3', 'Camila', 'Reyes', 'camila.reyes@email.cl', '+56900000004', 'Ruta 5 Norte 90', '2025-10-16 18:10:03', '2025-10-16 18:10:03'),
+(25, '37890123', '4', 'Felipe', 'Morales', 'felipe.morales@email.cl', '+56900000005', 'Las Américas 10', '2025-10-16 18:10:04', '2025-10-16 18:10:04'),
+(26, '38901234', '5', 'Valeria', 'Núñez', 'valeria.nunez@email.cl', '+56900000006', 'El Bosque 20', '2025-10-16 18:10:05', '2025-10-16 18:10:05'),
+(27, '39012345', '6', 'Ricardo', 'Soto', 'ricardo.soto@email.cl', '+56900000007', 'Calle Sol 30', '2025-10-16 18:10:06', '2025-10-16 18:10:06'),
+(28, '40123456', '7', 'Javiera', 'Pérez', 'javiera.perez@email.cl', '+56900000008', 'Av. Luna 40', '2025-10-16 18:10:07', '2025-10-16 18:10:07'),
+(29, '41234567', '8', 'Ignacio', 'Herrera', 'ignacio.herrera@email.cl', '+56900000009', 'Mar del Plata 50', '2025-10-16 18:10:08', '2025-10-16 18:10:08'),
+(30, '42345678', '9', 'Constanza', 'Díaz', 'constanza.diaz@email.cl', '+56900000010', 'Los Pinos 60', '2025-10-16 18:10:09', '2025-10-16 18:10:09'),
+(31, '43456789', '0', 'Manuel', 'Silva', 'manuel.silva@duocuc.cl', '+56900000011', 'Av. Sur 100', '2025-10-17 10:00:00', '2025-10-17 10:00:00'),
+(32, '44567890', '1', 'Fernanda', 'Castro', 'fernanda.castro@email.cl', '+56900000012', 'Paseo Norte 200', '2025-10-17 10:00:01', '2025-10-17 10:00:01'),
+(33, '45678901', '2', 'Gustavo', 'Pizarro', 'gustavo.pizarro@email.cl', '+56900000013', 'Calle Central 300', '2025-10-17 10:00:02', '2025-10-17 10:00:02'),
+(34, '46789012', '3', 'Lorena', 'Vera', 'lorena.vera@email.cl', '+56900000014', 'Ruta 6 Sur 400', '2025-10-17 10:00:03', '2025-10-17 10:00:03'),
+(35, '47890123', '4', 'Sebastián', 'Fuentes', 'sebastian.fuentes@email.cl', '+56900000015', 'Plaza Oeste 500', '2025-10-17 10:00:04', '2025-10-17 10:00:04'),
+(36, '48901234', '5', 'Claudia', 'Torres', 'claudia.torres@email.cl', '+56900000016', 'Av. Mar 600', '2025-10-17 10:00:05', '2025-10-17 10:00:05'),
+(37, '49012345', '6', 'Fabián', 'Sepúlveda', 'fabian.sepulveda@email.cl', '+56900000017', 'Calle Montaña 700', '2025-10-17 10:00:06', '2025-10-17 10:00:06'),
+(38, '50123456', '7', 'Jessica', 'Ramos', 'jessica.ramos@email.cl', '+56900000018', 'Pasaje Río 800', '2025-10-17 10:00:07', '2025-10-17 10:00:07'),
+(39, '51234567', '8', 'Nicolás', 'Garrido', 'nicolas.garrido@email.cl', '+56900000019', 'Alameda 900', '2025-10-17 10:00:08', '2025-10-17 10:00:08'),
+(40, '52345678', '9', 'Andrea', 'León', 'andrea.leon@email.cl', '+56900000020', 'Costanera 1000', '2025-10-17 10:00:09', '2025-10-17 10:00:09');
 
 -- --------------------------------------------------------
 
@@ -1139,26 +1746,56 @@ CREATE TABLE `proveedor` (
 --
 
 INSERT INTO `proveedor` (`id`, `comunidad_id`, `rut`, `dv`, `razon_social`, `giro`, `email`, `telefono`, `direccion`, `activo`, `created_at`, `updated_at`) VALUES
-(1, 1, '1668344', '2', 'Carranza, Izquierdo and Bernal Ltda.', 'Scientist, physiological', 'iaranda@romero.es', '+34731 01 93 99', 'Via Teodora Gilabert 507 Apt. 82 , Burgos, 46465', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(2, 6, '23515615', '6', 'Godoy LLC Ltda.', 'Training and development officer', 'lgomez@ferrando.com', '+34 705 082 873', 'Acceso de Aurelia Landa 12, León, 96566', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(3, 13, '15190837', '3', 'Arroyo-Campillo Ltda.', 'Education officer, community', 'dimas19@cazorla.com', '+34 837 22 10 28', 'Ronda de Álvaro Delgado 10, Murcia, 36699', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(4, 3, '17829130', '0', 'Gracia, Pinto and Tello Ltda.', 'Occupational psychologist', 'goyoquesada@jurado-yanez.com', '+34733254507', 'Pasadizo Ángela Agustí 509 Piso 0 , Cantabria, 32363', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(5, 14, '8745088', '0', 'Lucas-Ibáñez Ltda.', 'Exhibition designer', 'naguilar@bas.com', '+34745 43 45 87', 'Urbanización Esperanza Garrido 90 Puerta 0 , Huelva, 81567', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(6, 9, '21074587', '4', 'Gallo, Egea and Valbuena Ltda.', 'Engineer, energy', 'hectorpatino@lluch.com', '+34 702 322 985', 'Rambla Atilio Grande 683 Apt. 65 , Segovia, 98403', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(7, 18, '16764395', '7', 'Córdoba Ltd Ltda.', 'Garment/textile technologist', 'lara58@calderon.com', '+34730 788 387', 'Avenida Candelaria Gascón 30, Santa Cruz de Tenerife, 87899', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(8, 11, '15494654', '3', 'Luna Ltd Ltda.', 'Tax inspector', 'qrivas@villaverde.net', '+34855650887', 'Glorieta de Íngrid Benítez 145 Apt. 64 , Tarragona, 03296', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(9, 6, '22835711', '1', 'Arnau-Mendoza Ltda.', 'Insurance broker', 'lastraanselmo@nogues.com', '+34737965563', 'Urbanización Beatriz Alfonso 66, Pontevedra, 61350', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(10, 20, '11474595', '2', 'Salamanca Inc Ltda.', 'Commercial/residential surveyor', 'oteroedgar@sastre-munoz.es', '+34933 700 560', 'Cuesta de Rosario Valenzuela 66 Apt. 22 , Navarra, 61669', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(11, 2, '10392877', 'K', 'Oller-Vilaplana Ltda.', 'Ship broker', 'juliavalero@almagro-luna.es', '+34987 27 51 76', 'C. Serafina Borja 1 Piso 3 , Palencia, 22723', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(12, 10, '6298524', '0', 'Trujillo, Leon and Palacio Ltda.', 'Scientist, research (maths)', 'valentinamurillo@guillen.net', '+34719 906 951', 'Calle de Gabriel Salinas 1 Apt. 96 , Baleares, 09978', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(13, 10, '1573846', '4', 'Cabañas, Andrés and Barberá Ltda.', 'Outdoor activities/education manager', 'fuertesbruno@roma.es', '+34 712229870', 'Ronda Andrés Felipe Barreda 900 Puerta 8 , Cuenca, 73860', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(14, 6, '18004790', '5', 'Niño PLC Ltda.', 'Travel agency manager', 'chamorromodesta@villalonga.es', '+34 875057627', 'Cañada de Jimena Alcántara 40 Puerta 0 , La Coruña, 26687', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(15, 17, '5826803', '8', 'Rivas LLC Ltda.', 'Designer, industrial/product', 'anacleto52@trujillo.es', '+34 700 18 98 64', 'Rambla José María Zorrilla 18, Tarragona, 40316', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(16, 16, '5900452', '2', 'Ureña LLC Ltda.', 'Engineer, civil (contracting)', 'gvillalba@sevillano-girona.net', '+34620904969', 'Callejón Che Patiño 3, Cuenca, 40987', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(17, 18, '4754134', '4', 'Ballester LLC Ltda.', 'Claims inspector/assessor', 'yayllon@nogueira.com', '+34 974609521', 'Alameda de Rafael Acuña 319 Apt. 45 , Toledo, 14095', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(18, 20, '14654064', '3', 'Mayoral Ltd Ltda.', 'Scientist, marine', 'wbayona@tapia.com', '+34 905851301', 'Plaza de Juliana Castilla 18 Puerta 3 , Guadalajara, 54238', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(19, 14, '8717061', '6', 'Martorell, Calzada and Gallo Ltda.', 'Tour manager', 'olmoagata@blanes-armas.es', '+34808 85 89 85', 'Alameda de Sabas Artigas 27, Cuenca, 87978', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(20, 8, '23656610', '2', 'Ropero and Sons Ltda.', 'Rural practice surveyor', 'zuritaartemio@manrique-guardiola.org', '+34742 35 81 55', 'Pasaje de Andrés Agullo 1 Piso 7 , Almería, 69938', 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09');
+(1, 1, '20123456', '7', 'Aseo Brillante Ltda.', 'Servicios de limpieza', 'aseo@brillante.cl', NULL, NULL, 1, '2025-10-10 18:07:45', '2025-10-10 18:07:45'),
+(2, 2, '20234567', '8', 'Tecnoseguridad SA', 'Vigilancia y alarmas', 'contacto@tecno.cl', NULL, NULL, 1, '2025-10-10 18:07:45', '2025-10-10 18:07:45'),
+(3, 3, '20345678', '9', 'Jardín Perfecto SpA', 'Mantención áreas verdes', 'jardin@perfecto.cl', NULL, NULL, 1, '2025-10-10 18:07:45', '2025-10-10 18:07:45'),
+(4, 4, '20456789', 'K', 'Plomería Rápida', 'Servicios de plomería', 'plomeria@rapida.cl', NULL, NULL, 1, '2025-10-10 18:07:45', '2025-10-10 18:07:45'),
+(5, 5, '20567890', '1', 'ElectriCity Chile', 'Electricidad y redes', 'electri@city.cl', NULL, NULL, 1, '2025-10-10 18:07:45', '2025-10-10 18:07:45'),
+(6, 6, '20678901', '2', 'Contadores Asoc.', 'Servicios de contabilidad', 'info@contadores.cl', NULL, NULL, 1, '2025-10-10 18:07:45', '2025-10-10 18:07:45'),
+(7, 7, '20789012', '3', 'Ascensores Up', 'Mantención de ascensores', 'soporte@ascensoresup.cl', NULL, NULL, 1, '2025-10-10 18:07:45', '2025-10-10 18:07:45'),
+(8, 8, '20890123', '4', 'Ferretería Maestra', 'Suministro de materiales', 'ventas@ferreteria.cl', NULL, NULL, 1, '2025-10-10 18:07:45', '2025-10-10 18:07:45'),
+(9, 9, '20901234', '5', 'Administración Total', 'Administración Externa', 'admin@total.cl', NULL, NULL, 1, '2025-10-10 18:07:45', '2025-10-10 18:07:45'),
+(10, 10, '21012345', '6', 'Servicio Técnico Gas', 'Mantención red de gas', 'gas@servicio.cl', NULL, NULL, 1, '2025-10-10 18:07:45', '2025-10-10 18:07:45'),
+(11, 1, '21123456', '7', 'Electricistas Ltda.', 'Servicios eléctricos', 'electrico@serv.cl', NULL, NULL, 1, '2025-10-15 21:10:20', '2025-10-15 21:10:20'),
+(12, 2, '21234567', '8', 'Plomería Rápida', 'Servicios de plomería', 'plomeria@serv.cl', NULL, NULL, 1, '2025-10-15 21:10:20', '2025-10-15 21:10:20'),
+(13, 3, '21345678', '9', 'Jardinería Fina', 'Mantención áreas verdes', 'jardin@fina.cl', NULL, NULL, 1, '2025-10-15 21:10:20', '2025-10-15 21:10:20'),
+(14, 4, '21456789', 'K', 'Albañilería Integral', 'Construcción y reparaciones', 'albañileria@serv.cl', NULL, NULL, 1, '2025-10-15 21:10:20', '2025-10-15 21:10:20'),
+(15, 5, '21567890', '1', 'Mantención Ascensores A', 'Mantenimiento de ascensores', 'ascensores@mant.cl', NULL, NULL, 1, '2025-10-15 21:10:20', '2025-10-15 21:10:20'),
+(16, 6, '21678901', '2', 'Software de Adm. SAS', 'Servicios de administración', 'software@adm.cl', NULL, NULL, 1, '2025-10-15 21:10:20', '2025-10-15 21:10:20'),
+(17, 7, '21789012', '3', 'Seguridad Blindada', 'Vigilancia 24/7', 'seguridad@blindada.cl', NULL, NULL, 1, '2025-10-15 21:10:20', '2025-10-15 21:10:20'),
+(18, 8, '21890123', '4', 'Materiales Constructivos', 'Suministro de materiales', 'ventas@matcons.cl', NULL, NULL, 1, '2025-10-15 21:10:20', '2025-10-15 21:10:20'),
+(19, 9, '21901234', '5', 'Asesoría Legal', 'Servicios legales y cobranza', 'legal@asesoria.cl', NULL, NULL, 1, '2025-10-15 21:10:20', '2025-10-15 21:10:20'),
+(20, 10, '22012345', '6', 'Consultoría Financiera', 'Consultoría contable y finanzas', 'consulta@finan.cl', NULL, NULL, 1, '2025-10-15 21:10:20', '2025-10-15 21:10:20'),
+(21, 1, '22123456', '8', 'Seguridad Plus Ltda.', 'Vigilancia 24/7', 'seguridad@plus.cl', NULL, NULL, 1, '2025-10-16 18:17:00', '2025-10-16 18:17:00'),
+(22, 2, '22234567', '9', 'Jardinería Urbana SpA', 'Mantención áreas verdes', 'jardineria@urbana.cl', NULL, NULL, 1, '2025-10-16 18:17:01', '2025-10-16 18:17:01'),
+(23, 3, '22345678', 'K', 'Suministros Aseo Total', 'Venta de insumos de limpieza', 'suministros@aseo.cl', NULL, NULL, 1, '2025-10-16 18:17:02', '2025-10-16 18:17:02'),
+(24, 4, '22456789', '1', 'Contabilidad Online', 'Servicios contables', 'contacto@contables.cl', NULL, NULL, 1, '2025-10-16 18:17:03', '2025-10-16 18:17:03'),
+(25, 5, '22567890', '2', 'Servicios Legales y Cobranza', 'Asesoría jurídica', 'legal@serv.cl', NULL, NULL, 1, '2025-10-16 18:17:04', '2025-10-16 18:17:04'),
+(26, 6, '22678901', '3', 'Mantención HVAC', 'Climatización y ventilación', 'hvac@mant.cl', NULL, NULL, 1, '2025-10-16 18:17:05', '2025-10-16 18:17:05'),
+(27, 7, '22789012', '4', 'Recursos Humanos Outsourcing', 'Gestión de personal', 'rrhh@outsource.cl', NULL, NULL, 1, '2025-10-16 18:17:06', '2025-10-16 18:17:06'),
+(28, 8, '22890123', '5', 'Tienda de Pinturas', 'Venta de pinturas y revestimientos', 'pinturas@tienda.cl', NULL, NULL, 1, '2025-10-16 18:17:07', '2025-10-16 18:17:07'),
+(29, 9, '22901234', '6', 'Consultoría Financiera', 'Asesoría y planificación financiera', 'finanzas@consulta.cl', NULL, NULL, 1, '2025-10-16 18:17:08', '2025-10-16 18:17:08'),
+(30, 10, '23012345', '7', 'Ingeniería Estructural', 'Inspección y reparaciones mayores', 'estructural@ing.cl', NULL, NULL, 1, '2025-10-16 18:17:09', '2025-10-16 18:17:09'),
+(31, 1, '23123456', '9', 'Mantención Ascensores B', 'Mantenimiento de ascensores', 'ascensores@mantb.cl', NULL, NULL, 1, '2025-10-17 10:07:00', '2025-10-17 10:07:00'),
+(32, 2, '23234567', 'K', 'Control de Plagas Chile', 'Servicios de fumigación', 'plagas@control.cl', NULL, NULL, 1, '2025-10-17 10:07:01', '2025-10-17 10:07:01'),
+(33, 3, '23345678', '1', 'Electricidad Express', 'Reparaciones eléctricas', 'electricidad@express.cl', NULL, NULL, 1, '2025-10-17 10:07:02', '2025-10-17 10:07:02'),
+(34, 4, '23456789', '2', 'Marketing Vecinal SpA', 'Comunicación y encuestas', 'vecinal@marketing.cl', NULL, NULL, 1, '2025-10-17 10:07:03', '2025-10-17 10:07:03'),
+(35, 5, '23567890', '3', 'Servicios de Internet Comunal', 'Suministro de red Wi-Fi', 'internet@comunal.cl', NULL, NULL, 1, '2025-10-17 10:07:04', '2025-10-17 10:07:04'),
+(36, 6, '23678901', '4', 'Piscina Limpia Ltda.', 'Mantención de piscinas', 'piscina@limpia.cl', NULL, NULL, 1, '2025-10-17 10:07:05', '2025-10-17 10:07:05'),
+(37, 7, '23789012', '5', 'Servicio de Gas Central', 'Revisión y mantenimiento de gas', 'gas@central.cl', NULL, NULL, 1, '2025-10-17 10:07:06', '2025-10-17 10:07:06'),
+(38, 8, '23890123', '6', 'Materiales de Construcción Z', 'Venta de materiales', 'ventas@matz.cl', NULL, NULL, 1, '2025-10-17 10:07:07', '2025-10-17 10:07:07'),
+(39, 9, '23901234', '7', 'Paisajismo Premium', 'Diseño y mantención de jardines', 'paisaje@premium.cl', NULL, NULL, 1, '2025-10-17 10:07:08', '2025-10-17 10:07:08'),
+(40, 10, '24012345', '8', 'Sistemas de Bombeo', 'Mantenimiento de bombas de agua', 'bombas@sistemas.cl', NULL, NULL, 1, '2025-10-17 10:07:09', '2025-10-17 10:07:09'),
+(41, 11, '24123456', '9', 'RRHH Conserjería Ltda.', 'Suministro de personal', 'rrhh@conserje.cl', NULL, NULL, 1, '2025-10-17 11:21:00', '2025-10-17 11:21:00'),
+(42, 12, '24234567', 'K', 'Maestros del Condominio', 'Servicios de reparaciones varias', 'repara@maestros.cl', NULL, NULL, 1, '2025-10-17 11:21:01', '2025-10-17 11:21:01'),
+(43, 13, '24345678', '1', 'Fondo Mutuo Inmobiliario', 'Administración de fondos', 'fondo@mutuo.cl', NULL, NULL, 1, '2025-10-17 11:21:02', '2025-10-17 11:21:02'),
+(44, 14, '24456789', '2', 'Aguas del Loteo S.A.', 'Suministro de agua potable', 'aguas@loteo.cl', NULL, NULL, 1, '2025-10-17 11:21:03', '2025-10-17 11:21:03'),
+(45, 15, '24567890', '3', 'Bombas y Servicios Ltda.', 'Mantenimiento de sistemas de bombeo', 'bombas@servicios.cl', NULL, NULL, 1, '2025-10-17 11:21:04', '2025-10-17 11:21:04'),
+(46, 16, '24678901', '4', 'Animación y Eventos Playa', 'Servicios de recreación', 'eventos@playa.cl', NULL, NULL, 1, '2025-10-17 11:21:05', '2025-10-17 11:21:05'),
+(47, 17, '24789012', '5', 'Metrogas Concepción', 'Suministro de gas', 'contacto@metrogas.cl', NULL, NULL, 1, '2025-10-17 11:21:06', '2025-10-17 11:21:06'),
+(48, 18, '24890123', '6', 'Abogados de Cobranza', 'Asesoría legal y judicial', 'legal@cobranza.cl', NULL, NULL, 1, '2025-10-17 11:21:07', '2025-10-17 11:21:07'),
+(49, 19, '24901234', '7', 'Gestión Comunal S.A.', 'Administración Externa', 'gestion@comunal.cl', NULL, NULL, 1, '2025-10-17 11:21:08', '2025-10-17 11:21:08'),
+(50, 20, '25012345', '8', 'Constructora Rutas', 'Reparación de caminos y obras civiles', 'obras@rutas.cl', NULL, NULL, 1, '2025-10-17 11:21:09', '2025-10-17 11:21:09');
 
 -- --------------------------------------------------------
 
@@ -1181,26 +1818,46 @@ CREATE TABLE `registro_conserjeria` (
 --
 
 INSERT INTO `registro_conserjeria` (`id`, `comunidad_id`, `fecha_hora`, `usuario_id`, `evento`, `detalle`, `created_at`) VALUES
-(1, 3, '2025-09-06 16:42:27', 15, 'entrega', 'Registro 1 de conserjería relacionado al evento entrega.', '2025-10-02 18:42:27'),
-(2, 12, '2025-09-28 06:42:27', 17, 'otro', 'Registro 2 de conserjería relacionado al evento otro.', '2025-10-02 18:42:27'),
-(3, 20, '2025-09-12 00:42:27', 12, 'visita', 'Registro 3 de conserjería relacionado al evento visita.', '2025-10-02 18:42:27'),
-(4, 17, '2025-09-21 05:42:27', 6, 'visita', 'Registro 4 de conserjería relacionado al evento visita.', '2025-10-02 18:42:27'),
-(5, 9, '2025-09-24 16:42:27', 4, 'retiro', 'Registro 5 de conserjería relacionado al evento retiro.', '2025-10-02 18:42:27'),
-(6, 18, '2025-09-14 09:42:27', 10, 'otro', 'Registro 6 de conserjería relacionado al evento otro.', '2025-10-02 18:42:27'),
-(7, 12, '2025-09-07 16:42:27', 1, 'visita', 'Registro 7 de conserjería relacionado al evento visita.', '2025-10-02 18:42:27'),
-(8, 8, '2025-09-20 05:42:27', 19, 'visita', 'Registro 8 de conserjería relacionado al evento visita.', '2025-10-02 18:42:27'),
-(9, 14, '2025-09-04 01:42:27', 19, 'otro', 'Registro 9 de conserjería relacionado al evento otro.', '2025-10-02 18:42:27'),
-(10, 13, '2025-09-07 00:42:27', 5, 'visita', 'Registro 10 de conserjería relacionado al evento visita.', '2025-10-02 18:42:27'),
-(11, 18, '2025-09-12 15:42:27', 8, 'reporte', 'Registro 11 de conserjería relacionado al evento reporte.', '2025-10-02 18:42:27'),
-(12, 4, '2025-09-22 13:42:27', 1, 'reporte', 'Registro 12 de conserjería relacionado al evento reporte.', '2025-10-02 18:42:27'),
-(13, 4, '2025-09-04 18:42:27', 12, 'visita', 'Registro 13 de conserjería relacionado al evento visita.', '2025-10-02 18:42:27'),
-(14, 13, '2025-09-17 04:42:27', 18, 'otro', 'Registro 14 de conserjería relacionado al evento otro.', '2025-10-02 18:42:27'),
-(15, 11, '2025-09-11 15:42:27', 8, 'visita', 'Registro 15 de conserjería relacionado al evento visita.', '2025-10-02 18:42:27'),
-(16, 15, '2025-09-29 22:42:27', 7, 'reporte', 'Registro 16 de conserjería relacionado al evento reporte.', '2025-10-02 18:42:27'),
-(17, 1, '2025-09-06 04:42:27', 18, 'otro', 'Registro 17 de conserjería relacionado al evento otro.', '2025-10-02 18:42:27'),
-(18, 5, '2025-09-20 23:42:27', 7, 'visita', 'Registro 18 de conserjería relacionado al evento visita.', '2025-10-02 18:42:27'),
-(19, 1, '2025-09-16 17:42:27', 14, 'reporte', 'Registro 19 de conserjería relacionado al evento reporte.', '2025-10-02 18:42:27'),
-(20, 2, '2025-09-16 00:42:27', 4, 'visita', 'Registro 20 de conserjería relacionado al evento visita.', '2025-10-02 18:42:27');
+(1, 1, '2025-10-01 08:30:00', 6, 'entrega', 'Paquete grande recibido para D101.', '2025-10-10 18:10:20'),
+(2, 2, '2025-10-01 15:45:00', 6, 'visita', 'Ingreso de técnico de ascensores.', '2025-10-10 18:10:20'),
+(3, 3, '2025-10-02 10:00:00', 6, 'reporte', 'Fuga de agua menor reportada en piso 1.', '2025-10-10 18:10:20'),
+(4, 4, '2025-10-02 19:20:00', 6, 'retiro', 'Unidad Casa A retira llave de piscina.', '2025-10-10 18:10:20'),
+(5, 5, '2025-10-03 07:00:00', 6, 'otro', 'Cambio de turno de seguridad B.', '2025-10-10 18:10:20'),
+(6, 6, '2025-10-03 13:30:00', 6, 'visita', 'Visita de contratista para Torre Lujo.', '2025-10-10 18:10:20'),
+(7, 7, '2025-10-04 11:00:00', 6, 'reporte', 'Alarma de incendio activada por error.', '2025-10-10 18:10:20'),
+(8, 8, '2025-10-04 18:40:00', 6, 'entrega', 'Correspondencia certificada para D105.', '2025-10-10 18:10:20'),
+(9, 9, '2025-10-05 05:00:00', 6, 'otro', 'Prueba de grupo electrógeno OK.', '2025-10-10 18:10:20'),
+(10, 10, '2025-10-05 17:15:00', 6, 'visita', 'Amigo visita a residente de D202.', '2025-10-10 18:10:20'),
+(11, 1, '2025-10-06 09:00:00', 6, 'visita', 'Ingreso de técnico de ascensores. Torre 1.', '2025-10-15 21:11:43'),
+(12, 2, '2025-10-07 14:30:00', 6, 'entrega', 'Paquete para D306.', '2025-10-15 21:11:43'),
+(13, 3, '2025-10-08 11:00:00', 6, 'reporte', 'Vandalismo en área común, se tomó foto.', '2025-10-15 21:11:43'),
+(14, 4, '2025-10-09 18:00:00', 6, 'retiro', 'Casa B retira paquete grande.', '2025-10-15 21:11:43'),
+(15, 5, '2025-10-10 07:30:00', 6, 'otro', 'Prueba de luces de emergencia OK.', '2025-10-15 21:11:43'),
+(16, 6, '2025-10-11 15:00:00', 6, 'visita', 'Abogado por tema de cobranza. D1002', '2025-10-15 21:11:43'),
+(17, 7, '2025-10-12 10:30:00', 6, 'entrega', 'Correspondencia certificada para D1503.', '2025-10-15 21:11:43'),
+(18, 8, '2025-10-13 17:00:00', 6, 'reporte', 'Falla en portón de acceso.', '2025-10-15 21:11:43'),
+(19, 9, '2025-10-14 06:00:00', 6, 'retiro', 'D20 retira llaves de quincho.', '2025-10-15 21:11:43'),
+(20, 10, '2025-10-15 13:00:00', 6, 'visita', 'Instalador de fibra óptica. D203.', '2025-10-15 21:11:43'),
+(21, 1, '2025-10-16 09:30:00', 6, 'reporte', 'Se reporta mal olor en el conducto de basura de Torre 4.', '2025-10-16 18:33:00'),
+(22, 2, '2025-10-16 16:45:00', 6, 'entrega', 'Paquete para D401, se deja en custodia.', '2025-10-16 18:33:01'),
+(23, 3, '2025-10-17 11:15:00', 6, 'reporte', 'Persona ajena usando la piscina, se retiró.', '2025-10-16 18:33:02'),
+(24, 4, '2025-10-17 20:00:00', 6, 'retiro', 'Casa C retira llave de quincho.', '2025-10-16 18:33:03'),
+(25, 5, '2025-10-18 08:00:00', 6, 'otro', 'Revisión periódica de extintores en Torre Europa.', '2025-10-16 18:33:04'),
+(26, 6, '2025-10-18 14:00:00', 6, 'visita', 'Técnico de climatización ingresa a D2001.', '2025-10-16 18:33:05'),
+(27, 7, '2025-10-19 12:30:00', 6, 'reporte', 'Gato en el tejado, se llamó a control animal.', '2025-10-16 18:33:06'),
+(28, 8, '2025-10-19 19:10:00', 6, 'entrega', 'Correspondencia certificada para D201.', '2025-10-16 18:33:07'),
+(29, 9, '2025-10-20 06:30:00', 6, 'otro', 'Limpieza profunda de ascensor de Torre 3.', '2025-10-16 18:33:08'),
+(30, 10, '2025-10-20 17:30:00', 6, 'visita', 'Instalador de gas para D301.', '2025-10-16 18:33:09'),
+(31, 1, '2025-10-21 08:30:00', 6, 'reporte', 'Falla en ascensor de Torre 5, se llamó a Mantención Ascensores B.', '2025-10-17 10:23:00'),
+(32, 2, '2025-10-21 16:00:00', 6, 'visita', 'Ingreso de furgón de Control de Plagas Chile.', '2025-10-17 10:23:01'),
+(33, 3, '2025-10-22 10:30:00', 6, 'entrega', 'Paquete certificado para D601.', '2025-10-17 10:23:02'),
+(34, 4, '2025-10-22 19:30:00', 6, 'otro', 'Se repartió boletín informativo N°12 en buzones.', '2025-10-17 10:23:03'),
+(35, 5, '2025-10-23 07:15:00', 6, 'reporte', 'Vandalismo menor en la Sala Cowork. Foto adjunta.', '2025-10-17 10:23:04'),
+(36, 6, '2025-10-23 14:30:00', 6, 'retiro', 'D3001 retira llave de Sala de Cine.', '2025-10-17 10:23:05'),
+(37, 7, '2025-10-24 11:45:00', 6, 'visita', 'Técnico de Servicio de Gas Central para inspección.', '2025-10-17 10:23:06'),
+(38, 8, '2025-10-24 18:30:00', 6, 'reporte', 'Ruidos molestos de taladro en Bloque 4 después de las 18:00 hrs.', '2025-10-17 10:23:07'),
+(39, 9, '2025-10-25 05:45:00', 6, 'entrega', 'Correspondencia masiva de la Administración.', '2025-10-17 10:23:08'),
+(40, 10, '2025-10-25 17:00:00', 6, 'otro', 'Se repara luz quemada en estacionamiento B41.', '2025-10-17 10:23:09');
 
 -- --------------------------------------------------------
 
@@ -1226,10 +1883,46 @@ CREATE TABLE `reserva_amenidad` (
 --
 
 INSERT INTO `reserva_amenidad` (`id`, `comunidad_id`, `amenidad_id`, `unidad_id`, `persona_id`, `inicio`, `fin`, `estado`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 2, 5, '2025-10-05 15:00:00', '2025-10-05 18:00:00', 'aprobada', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(2, 1, 2, 4, 6, '2025-10-10 10:00:00', '2025-10-10 12:00:00', 'solicitada', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(3, 2, 3, 5, 7, '2025-10-12 20:00:00', '2025-10-12 22:00:00', 'rechazada', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(4, 3, 1, 6, 9, '2025-10-07 17:00:00', '2025-10-07 19:00:00', 'cumplida', '2025-10-02 18:42:27', '2025-10-02 18:42:27');
+(1, 1, 1, 1, 1, '2025-10-15 19:00:00', '2025-10-15 22:00:00', 'aprobada', '2025-10-10 18:10:16', '2025-10-10 18:10:16'),
+(2, 2, 2, 3, 3, '2025-10-16 12:00:00', '2025-10-16 16:00:00', 'solicitada', '2025-10-10 18:10:16', '2025-10-10 18:10:16'),
+(3, 3, 3, 4, 4, '2025-10-17 07:00:00', '2025-10-17 08:00:00', 'cumplida', '2025-10-10 18:10:16', '2025-10-10 18:10:16'),
+(4, 4, 4, 5, 5, '2025-10-18 14:00:00', '2025-10-18 18:00:00', 'rechazada', '2025-10-10 18:10:16', '2025-10-10 18:10:16'),
+(5, 5, 5, 6, 6, '2025-10-19 09:00:00', '2025-10-19 13:00:00', 'aprobada', '2025-10-10 18:10:16', '2025-10-10 18:10:16'),
+(6, 6, 6, 7, 7, '2025-10-20 20:00:00', '2025-10-20 23:00:00', 'solicitada', '2025-10-10 18:10:16', '2025-10-10 18:10:16'),
+(7, 7, 7, 8, 8, '2025-10-21 10:00:00', '2025-10-21 12:00:00', 'aprobada', '2025-10-10 18:10:16', '2025-10-10 18:10:16'),
+(8, 8, 8, 9, 9, '2025-10-22 17:00:00', '2025-10-22 21:00:00', 'cumplida', '2025-10-10 18:10:16', '2025-10-10 18:10:16'),
+(9, 9, 9, 10, 10, '2025-10-23 11:00:00', '2025-10-23 12:30:00', 'cancelada', '2025-10-10 18:10:16', '2025-10-10 18:10:16'),
+(10, 10, 10, 10, 10, '2025-10-24 16:00:00', '2025-10-24 18:00:00', 'aprobada', '2025-10-10 18:10:16', '2025-10-10 18:10:16'),
+(11, 1, 11, 11, 11, '2025-11-15 10:00:00', '2025-11-15 12:00:00', 'aprobada', '2025-10-15 21:11:40', '2025-10-15 21:11:40'),
+(12, 2, 12, 13, 13, '2025-11-16 14:00:00', '2025-11-16 18:00:00', 'solicitada', '2025-10-15 21:11:40', '2025-10-15 21:11:40'),
+(13, 3, 13, 14, 14, '2025-11-17 09:00:00', '2025-11-17 10:30:00', 'cumplida', '2025-10-15 21:11:40', '2025-10-15 21:11:40'),
+(14, 4, 14, 15, 15, '2025-11-18 19:00:00', '2025-11-18 23:00:00', 'rechazada', '2025-10-15 21:11:40', '2025-10-15 21:11:40'),
+(15, 5, 15, 16, 16, '2025-11-19 11:00:00', '2025-11-19 14:00:00', 'aprobada', '2025-10-15 21:11:40', '2025-10-15 21:11:40'),
+(16, 6, 16, 17, 17, '2025-11-20 16:00:00', '2025-11-20 18:00:00', 'solicitada', '2025-10-15 21:11:40', '2025-10-15 21:11:40'),
+(17, 7, 17, 18, 18, '2025-11-21 21:00:00', '2025-11-21 22:00:00', 'aprobada', '2025-10-15 21:11:40', '2025-10-15 21:11:40'),
+(18, 8, 18, 19, 19, '2025-11-22 15:00:00', '2025-11-22 17:00:00', 'cumplida', '2025-10-15 21:11:40', '2025-10-15 21:11:40'),
+(19, 9, 19, 20, 20, '2025-11-23 18:00:00', '2025-11-23 19:00:00', 'cancelada', '2025-10-15 21:11:40', '2025-10-15 21:11:40'),
+(20, 10, 20, 10, 10, '2025-11-24 10:00:00', '2025-11-24 12:00:00', 'aprobada', '2025-10-15 21:11:40', '2025-10-15 21:11:40'),
+(21, 1, 1, 21, 21, '2025-12-01 19:00:00', '2025-12-01 23:00:00', 'solicitada', '2025-10-16 18:34:00', '2025-10-16 18:34:00'),
+(22, 2, 2, 22, 22, '2025-12-02 11:00:00', '2025-12-02 15:00:00', 'aprobada', '2025-10-16 18:34:01', '2025-10-16 18:34:01'),
+(23, 3, 3, 23, 23, '2025-12-03 06:30:00', '2025-12-03 07:30:00', 'solicitada', '2025-10-16 18:34:02', '2025-10-16 18:34:02'),
+(24, 4, 4, 24, 24, '2025-12-04 15:00:00', '2025-12-04 19:00:00', 'aprobada', '2025-10-16 18:34:03', '2025-10-16 18:34:03'),
+(25, 5, 5, 25, 25, '2025-12-05 10:00:00', '2025-12-05 12:00:00', 'cumplida', '2025-10-16 18:34:04', '2025-10-16 18:34:04'),
+(26, 6, 6, 26, 26, '2025-12-06 20:30:00', '2025-12-06 23:30:00', 'rechazada', '2025-10-16 18:34:05', '2025-10-16 18:34:05'),
+(27, 7, 7, 27, 27, '2025-12-07 09:30:00', '2025-12-07 11:30:00', 'solicitada', '2025-10-16 18:34:06', '2025-10-16 18:34:06'),
+(28, 8, 8, 28, 28, '2025-12-08 18:00:00', '2025-12-08 22:00:00', 'aprobada', '2025-10-16 18:34:07', '2025-10-16 18:34:07'),
+(29, 9, 9, 29, 29, '2025-12-09 13:00:00', '2025-12-09 14:30:00', 'cancelada', '2025-10-16 18:34:08', '2025-10-16 18:34:08'),
+(30, 10, 10, 30, 30, '2025-12-10 17:00:00', '2025-12-10 19:00:00', 'solicitada', '2025-10-16 18:34:09', '2025-10-16 18:34:09'),
+(31, 1, 1, 31, 31, '2025-12-11 19:00:00', '2025-12-11 22:00:00', 'aprobada', '2025-10-17 10:24:00', '2025-10-17 10:24:00'),
+(32, 2, 2, 32, 32, '2025-12-12 12:00:00', '2025-12-12 16:00:00', 'solicitada', '2025-10-17 10:24:01', '2025-10-17 10:24:01'),
+(33, 3, 3, 33, 33, '2025-12-13 08:00:00', '2025-12-13 09:00:00', 'cumplida', '2025-10-17 10:24:02', '2025-10-17 10:24:02'),
+(34, 4, 4, 34, 34, '2025-12-14 14:00:00', '2025-12-14 18:00:00', 'rechazada', '2025-10-17 10:24:03', '2025-10-17 10:24:03'),
+(35, 5, 5, 35, 35, '2025-12-15 09:00:00', '2025-12-15 13:00:00', 'aprobada', '2025-10-17 10:24:04', '2025-10-17 10:24:04'),
+(36, 6, 6, 36, 36, '2025-12-16 20:00:00', '2025-12-16 23:00:00', 'solicitada', '2025-10-17 10:24:05', '2025-10-17 10:24:05'),
+(37, 7, 7, 37, 37, '2025-12-17 10:00:00', '2025-12-17 12:00:00', 'cumplida', '2025-10-17 10:24:06', '2025-10-17 10:24:06'),
+(38, 8, 8, 38, 38, '2025-12-18 17:00:00', '2025-12-18 21:00:00', 'aprobada', '2025-10-17 10:24:07', '2025-10-17 10:24:07'),
+(39, 9, 9, 39, 39, '2025-12-19 11:00:00', '2025-12-19 12:30:00', 'cancelada', '2025-10-17 10:24:08', '2025-10-17 10:24:08'),
+(40, 10, 10, 40, 40, '2025-12-20 16:00:00', '2025-12-20 18:00:00', 'solicitada', '2025-10-17 10:24:09', '2025-10-17 10:24:09');
 
 -- --------------------------------------------------------
 
@@ -1252,26 +1945,16 @@ CREATE TABLE `rol_sistema` (
 --
 
 INSERT INTO `rol_sistema` (`id`, `codigo`, `nombre`, `descripcion`, `nivel_acceso`, `es_rol_sistema`, `created_at`) VALUES
-(1, 'superadmin', 'Superadmin', 'Acceso total a toda la plataforma', 100, 1, '2025-10-02 18:53:13'),
-(2, 'admin_comunidad', 'Admin Comunidad', 'Administrador de una comunidad específica', 80, 0, '2025-10-02 18:53:13'),
-(3, 'conserje', 'Conserje', 'Registro de eventos, visitas y bitácoras', 50, 0, '2025-10-02 18:53:13'),
-(4, 'contador', 'Contador', 'Gestión financiera y de gastos comunes', 70, 0, '2025-10-02 18:53:13'),
-(5, 'proveedor_servicio', 'Proveedor Servicio', 'Emisión de documentos de compra', 30, 0, '2025-10-02 18:53:13'),
-(6, 'residente', 'Residente', 'Acceso a pagos, reservas y notificaciones', 10, 0, '2025-10-02 18:53:13'),
-(7, 'propietario', 'Propietario', 'Dueño de una unidad habitacional', 20, 0, '2025-10-02 18:53:13'),
-(8, 'inquilino', 'Inquilino', 'Arrendatario registrado', 15, 0, '2025-10-02 18:53:13'),
-(9, 'auditor_externo', 'Auditor Externo', 'Acceso de solo lectura a informes', 40, 1, '2025-10-02 18:53:13'),
-(10, 'soporte_tecnico', 'Soporte Tecnico', 'Soporte técnico interno', 90, 1, '2025-10-02 18:53:13'),
-(11, 'tesorero', 'Tesorero', 'Gestión de cobros y cuentas', 60, 0, '2025-10-02 18:53:13'),
-(12, 'moderador_comunidad', 'Moderador Comunidad', 'Modera eventos y publicaciones', 35, 0, '2025-10-02 18:53:13'),
-(13, 'secretario', 'Secretario', 'Apoyo documental y comunicacional', 25, 0, '2025-10-02 18:53:13'),
-(14, 'presidente_comite', 'Presidente Comite', 'Lidera el comité de administración', 85, 0, '2025-10-02 18:53:13'),
-(15, 'revisor_cuentas', 'Revisor Cuentas', 'Revisión de balances y movimientos', 45, 0, '2025-10-02 18:53:13'),
-(16, 'coordinador_reservas', 'Coordinador Reservas', 'Gestión de amenidades comunes', 20, 0, '2025-10-02 18:53:13'),
-(17, 'sindico', 'Sindico', 'Rol legal según reglamento', 75, 0, '2025-10-02 18:53:13'),
-(18, 'admin_externo', 'Admin Externo', 'Administrador contratado', 70, 1, '2025-10-02 18:53:13'),
-(19, 'visitante_autorizado', 'Visitante Autorizado', 'Acceso temporal', 5, 0, '2025-10-02 18:53:13'),
-(20, 'sistema', 'Sistema', 'Acciones automáticas del sistema', 100, 1, '2025-10-02 18:53:13');
+(1, 'superadmin', 'Super Administrador', NULL, 100, 1, '2025-10-10 18:07:30'),
+(2, 'admin_comunidad', 'Admin Comunidad', NULL, 80, 0, '2025-10-10 18:07:30'),
+(3, 'conserje', 'Conserje', NULL, 50, 0, '2025-10-10 18:07:30'),
+(4, 'contador', 'Contador', NULL, 70, 0, '2025-10-10 18:07:30'),
+(5, 'proveedor_servicio', 'Proveedor Servicio', NULL, 30, 0, '2025-10-10 18:07:30'),
+(6, 'residente', 'Residente', NULL, 10, 0, '2025-10-10 18:07:30'),
+(7, 'propietario', 'Propietario', NULL, 20, 0, '2025-10-10 18:07:30'),
+(8, 'inquilino', 'Inquilino', NULL, 15, 0, '2025-10-10 18:07:30'),
+(9, 'tesorero', 'Tesorero', NULL, 60, 0, '2025-10-10 18:07:30'),
+(10, 'presidente_comite', 'Presidente Comité', NULL, 85, 0, '2025-10-10 18:07:30');
 
 -- --------------------------------------------------------
 
@@ -1294,11 +1977,36 @@ CREATE TABLE `sesion_usuario` (
 --
 
 INSERT INTO `sesion_usuario` (`id`, `usuario_id`, `ip_address`, `user_agent`, `data`, `last_activity`, `created_at`) VALUES
-('1', 19, '195.62.237.142', 'Mozilla/5.0 (iPad; CPU iPad OS 3_1_3 like Mac OS X) AppleWebKit/531.1 (KHTML, like Gecko) FxiOS/13.1g4003.0 Mobile/83U012 Safari/531.1', NULL, '2025-10-02 09:45:10', '2025-10-02 18:42:27'),
-('2', 6, '172.210.206.43', 'Mozilla/5.0 (compatible; MSIE 6.0; Windows NT 4.0; Trident/4.1)', NULL, '2025-10-02 03:57:00', '2025-10-02 18:42:27'),
-('3', 10, '22.136.83.159', 'Mozilla/5.0 (X11; Linux x86_64; rv:1.9.6.20) Gecko/2018-01-07 20:17:03 Firefox/7.0', NULL, '2025-10-02 09:24:22', '2025-10-02 18:42:27'),
-('4', 9, '113.11.30.223', 'Mozilla/5.0 (Macintosh; PPC Mac OS X 10_8_5) AppleWebKit/535.0 (KHTML, like Gecko) Chrome/32.0.889.0 Safari/535.0', NULL, '2025-10-01 21:06:11', '2025-10-02 18:42:27'),
-('5', 2, '185.233.20.15', 'Mozilla/5.0 (Windows; U; Windows NT 6.0; Trident/3.0; en-US)', NULL, '2025-10-02 07:12:55', '2025-10-02 18:42:27');
+('SES-01', 1, '192.168.1.1', 'Mozilla/5.0 (Windows NT 10.0)', NULL, '2025-10-10 17:00:00', '2025-10-10 18:10:23'),
+('SES-02', 2, '192.168.1.2', 'Mozilla/5.0 (Macintosh)', NULL, '2025-10-10 16:30:00', '2025-10-10 18:10:23'),
+('SES-03', 3, '192.168.1.3', 'Mozilla/5.0 (iPhone)', NULL, '2025-10-10 15:50:00', '2025-10-10 18:10:23'),
+('SES-04', 4, '192.168.1.4', 'Mozilla/5.0 (Android)', NULL, '2025-10-09 10:00:00', '2025-10-10 18:10:23'),
+('SES-05', 5, '192.168.1.5', 'Mozilla/5.0 (Linux)', NULL, '2025-10-10 14:15:00', '2025-10-10 18:10:23'),
+('SES-06', 6, '192.168.1.6', 'Mozilla/5.0 (iPad)', NULL, '2025-10-10 13:45:00', '2025-10-10 18:10:23'),
+('SES-07', 7, '192.168.1.7', 'Mozilla/5.0 (Tablet)', NULL, '2025-10-08 11:20:00', '2025-10-10 18:10:23'),
+('SES-08', 8, '192.168.1.8', 'Mozilla/5.0 (Smart TV)', NULL, '2025-10-10 12:05:00', '2025-10-10 18:10:23'),
+('SES-09', 9, '192.168.1.9', 'Mozilla/5.0 (Windows NT 6.1)', NULL, '2025-10-10 11:30:00', '2025-10-10 18:10:23'),
+('SES-10', 10, '192.168.1.10', 'Mozilla/5.0 (Windows NT 5.1)', NULL, '2025-10-10 10:00:00', '2025-10-10 18:10:23'),
+('SES-11', 11, '192.168.1.11', 'Mozilla/5.0 (Windows NT 10.0)', NULL, '2025-10-15 21:10:19', '2025-10-15 21:10:19'),
+('SES-12', 12, '192.168.1.12', 'Mozilla/5.0 (Macintosh)', NULL, '2025-10-15 21:10:19', '2025-10-15 21:10:19'),
+('SES-13', 13, '192.168.1.13', 'Mozilla/5.0 (iPhone)', NULL, '2025-10-15 21:10:19', '2025-10-15 21:10:19'),
+('SES-14', 14, '192.168.1.14', 'Mozilla/5.0 (Android)', NULL, '2025-10-15 21:10:19', '2025-10-15 21:10:19'),
+('SES-15', 15, '192.168.1.15', 'Mozilla/5.0 (Linux)', NULL, '2025-10-15 21:10:19', '2025-10-15 21:10:19'),
+('SES-16', 16, '192.168.1.16', 'Mozilla/5.0 (iPad)', NULL, '2025-10-15 21:10:19', '2025-10-15 21:10:19'),
+('SES-17', 17, '192.168.1.17', 'Mozilla/5.0 (Tablet)', NULL, '2025-10-15 21:10:19', '2025-10-15 21:10:19'),
+('SES-18', 18, '192.168.1.18', 'Mozilla/5.0 (Smart TV)', NULL, '2025-10-15 21:10:19', '2025-10-15 21:10:19'),
+('SES-19', 19, '192.168.1.19', 'Mozilla/5.0 (Windows NT 6.1)', NULL, '2025-10-15 21:10:19', '2025-10-15 21:10:19'),
+('SES-20', 20, '192.168.1.20', 'Mozilla/5.0 (Windows NT 5.1)', NULL, '2025-10-15 21:10:19', '2025-10-15 21:10:19'),
+('SES-21', 21, '192.168.1.21', 'Mozilla/5.0 (Windows NT 10.0)', NULL, '2025-10-17 10:00:00', '2025-10-17 11:08:00'),
+('SES-22', 22, '192.168.1.22', 'Mozilla/5.0 (Macintosh)', NULL, '2025-10-17 09:30:00', '2025-10-17 11:08:01'),
+('SES-23', 23, '192.168.1.23', 'Mozilla/5.0 (iPhone)', NULL, '2025-10-17 08:50:00', '2025-10-17 11:08:02'),
+('SES-24', 24, '192.168.1.24', 'Mozilla/5.0 (Android)', NULL, '2025-10-16 23:00:00', '2025-10-17 11:08:03'),
+('SES-25', 25, '192.168.1.25', 'Mozilla/5.0 (Linux)', NULL, '2025-10-17 07:15:00', '2025-10-17 11:08:04'),
+('SES-26', 26, '192.168.1.26', 'Mozilla/5.0 (iPad)', NULL, '2025-10-17 06:45:00', '2025-10-17 11:08:05'),
+('SES-27', 27, '192.168.1.27', 'Mozilla/5.0 (Tablet)', NULL, '2025-10-15 05:20:00', '2025-10-17 11:08:06'),
+('SES-28', 28, '192.168.1.28', 'Mozilla/5.0 (Smart TV)', NULL, '2025-10-17 05:05:00', '2025-10-17 11:08:07'),
+('SES-29', 29, '192.168.1.29', 'Mozilla/5.0 (Windows NT 6.1)', NULL, '2025-10-17 04:30:00', '2025-10-17 11:08:08'),
+('SES-30', 30, '192.168.1.30', 'Mozilla/5.0 (Windows NT 5.1)', NULL, '2025-10-17 03:00:00', '2025-10-17 11:08:09');
 
 -- --------------------------------------------------------
 
@@ -1323,16 +2031,36 @@ CREATE TABLE `tarifa_consumo` (
 --
 
 INSERT INTO `tarifa_consumo` (`id`, `comunidad_id`, `tipo`, `periodo_desde`, `periodo_hasta`, `precio_por_unidad`, `cargo_fijo`, `created_at`, `updated_at`) VALUES
-(1, 1, 'agua', '2025-08', NULL, 0.650000, 1800.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(2, 2, 'gas', '2025-08', NULL, 1.200000, 2200.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(3, 3, 'electricidad', '2025-08', NULL, 0.950000, 2500.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(4, 4, 'agua', '2025-08', NULL, 0.700000, 1900.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(5, 5, 'gas', '2025-08', NULL, 1.300000, 2000.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(6, 6, 'electricidad', '2025-08', NULL, 1.000000, 2600.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(7, 7, 'agua', '2025-08', NULL, 0.600000, 1700.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(8, 8, 'gas', '2025-08', NULL, 1.250000, 2100.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(9, 9, 'electricidad', '2025-08', NULL, 0.900000, 2400.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(10, 10, 'agua', '2025-08', NULL, 0.680000, 1850.00, '2025-10-02 18:42:27', '2025-10-02 18:42:27');
+(1, 1, 'agua', '2025-09', NULL, 0.650000, 1800.00, '2025-10-10 18:07:57', '2025-10-10 18:07:57'),
+(2, 2, 'gas', '2025-09', NULL, 1.200000, 2200.00, '2025-10-10 18:07:57', '2025-10-10 18:07:57'),
+(3, 3, 'electricidad', '2025-09', NULL, 0.950000, 2500.00, '2025-10-10 18:07:57', '2025-10-10 18:07:57'),
+(4, 4, 'agua', '2025-09', NULL, 0.700000, 1900.00, '2025-10-10 18:07:57', '2025-10-10 18:07:57'),
+(5, 5, 'gas', '2025-09', NULL, 1.300000, 2000.00, '2025-10-10 18:07:57', '2025-10-10 18:07:57'),
+(6, 6, 'electricidad', '2025-09', NULL, 1.000000, 2600.00, '2025-10-10 18:07:57', '2025-10-10 18:07:57'),
+(7, 7, 'agua', '2025-09', NULL, 0.600000, 1700.00, '2025-10-10 18:07:57', '2025-10-10 18:07:57'),
+(8, 8, 'gas', '2025-09', NULL, 1.250000, 2100.00, '2025-10-10 18:07:57', '2025-10-10 18:07:57'),
+(9, 9, 'electricidad', '2025-09', NULL, 0.900000, 2400.00, '2025-10-10 18:07:57', '2025-10-10 18:07:57'),
+(10, 10, 'agua', '2025-09', NULL, 0.680000, 1850.00, '2025-10-10 18:07:57', '2025-10-10 18:07:57'),
+(11, 1, 'agua', '2025-10', NULL, 0.700000, 1900.00, '2025-10-15 21:10:32', '2025-10-15 21:10:32'),
+(12, 2, 'gas', '2025-10', NULL, 1.300000, 2300.00, '2025-10-15 21:10:32', '2025-10-15 21:10:32'),
+(13, 3, 'electricidad', '2025-10', NULL, 0.980000, 2600.00, '2025-10-15 21:10:32', '2025-10-15 21:10:32'),
+(14, 4, 'agua', '2025-10', NULL, 0.750000, 2000.00, '2025-10-15 21:10:32', '2025-10-15 21:10:32'),
+(15, 5, 'gas', '2025-10', NULL, 1.400000, 2100.00, '2025-10-15 21:10:32', '2025-10-15 21:10:32'),
+(16, 6, 'electricidad', '2025-10', NULL, 1.050000, 2700.00, '2025-10-15 21:10:32', '2025-10-15 21:10:32'),
+(17, 7, 'agua', '2025-10', NULL, 0.650000, 1800.00, '2025-10-15 21:10:32', '2025-10-15 21:10:32'),
+(18, 8, 'gas', '2025-10', NULL, 1.350000, 2200.00, '2025-10-15 21:10:32', '2025-10-15 21:10:32'),
+(19, 9, 'electricidad', '2025-10', NULL, 0.930000, 2500.00, '2025-10-15 21:10:32', '2025-10-15 21:10:32'),
+(20, 10, 'agua', '2025-10', NULL, 0.720000, 1950.00, '2025-10-15 21:10:32', '2025-10-15 21:10:32'),
+(21, 1, 'electricidad', '2025-11', NULL, 0.900000, 2400.00, '2025-10-17 11:04:00', '2025-10-17 11:04:00'),
+(22, 2, 'electricidad', '2025-11', NULL, 1.050000, 2800.00, '2025-10-17 11:04:01', '2025-10-17 11:04:01'),
+(23, 3, 'gas', '2025-11', NULL, 1.350000, 2250.00, '2025-10-17 11:04:02', '2025-10-17 11:04:02'),
+(24, 4, 'gas', '2025-11', NULL, 1.450000, 2150.00, '2025-10-17 11:04:03', '2025-10-17 11:04:03'),
+(25, 5, 'electricidad', '2025-11', NULL, 1.100000, 2900.00, '2025-10-17 11:04:04', '2025-10-17 11:04:04'),
+(26, 6, 'gas', '2025-11', NULL, 1.500000, 2350.00, '2025-10-17 11:04:05', '2025-10-17 11:04:05'),
+(27, 7, 'electricidad', '2025-11', NULL, 0.920000, 2550.00, '2025-10-17 11:04:06', '2025-10-17 11:04:06'),
+(28, 8, 'gas', '2025-11', NULL, 1.380000, 2280.00, '2025-10-17 11:04:07', '2025-10-17 11:04:07'),
+(29, 9, 'electricidad', '2025-11', NULL, 0.950000, 2650.00, '2025-10-17 11:04:08', '2025-10-17 11:04:08'),
+(30, 10, 'gas', '2025-11', NULL, 1.420000, 2180.00, '2025-10-17 11:04:09', '2025-10-17 11:04:09');
 
 -- --------------------------------------------------------
 
@@ -1341,6 +2069,18 @@ INSERT INTO `tarifa_consumo` (`id`, `comunidad_id`, `tipo`, `periodo_desde`, `pe
 -- (See below for the actual view)
 --
 CREATE TABLE `ticket` (
+`asignado_a` bigint
+,`attachments_json` longtext
+,`categoria` varchar(120)
+,`comunidad_id` bigint
+,`created_at` datetime
+,`descripcion` varchar(1000)
+,`estado` enum('abierto','en_progreso','resuelto','cerrado')
+,`id` bigint
+,`prioridad` enum('baja','media','alta')
+,`titulo` varchar(200)
+,`unidad_id` bigint
+,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
@@ -1369,26 +2109,26 @@ CREATE TABLE `ticket_soporte` (
 --
 
 INSERT INTO `ticket_soporte` (`id`, `comunidad_id`, `unidad_id`, `categoria`, `titulo`, `descripcion`, `estado`, `prioridad`, `asignado_a`, `attachments_json`, `created_at`, `updated_at`) VALUES
-(1, 5, 8, 'Mantención', 'Problema con portón eléctrico', 'El portón no abre con el control remoto.', 'abierto', 'alta', 3, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(2, 3, 5, 'Limpieza', 'Basura acumulada', 'Hay basura acumulada en el pasillo del tercer piso.', 'en_progreso', 'media', 7, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(3, 7, 2, 'Ascensor', 'Ascensor detenido', 'El ascensor del edificio B no funciona desde ayer.', 'cerrado', 'alta', 4, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(4, 10, 12, 'Infraestructura', 'Grieta en el muro', 'Se detectó una grieta en el muro del pasillo.', 'abierto', 'baja', NULL, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(5, 2, 3, 'Seguridad', 'Cámara sin funcionamiento', 'La cámara de seguridad de la entrada está apagada.', 'en_progreso', 'alta', 2, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(6, 4, 9, 'Mantención', 'Fuga de agua', 'Se detecta fuga en el estacionamiento.', 'resuelto', 'media', 6, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(7, 6, NULL, 'Iluminación', 'Luces quemadas', 'Pasillos sin luz en torre 2.', 'cerrado', 'media', 5, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(8, 8, 11, 'Jardinería', 'Árbol caído', 'Árbol bloqueando entrada de vehículos.', 'abierto', 'alta', 3, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(9, 1, 4, 'Ascensor', 'Puerta trabada', 'La puerta del ascensor se tranca al cerrar.', 'en_progreso', 'alta', 7, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(10, 2, 5, 'Mantención', 'Pérdida de presión', 'Problemas con presión de agua en el piso 7.', 'cerrado', 'media', 4, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(11, 5, 1, 'Seguridad', 'Reja dañada', 'Reja perimetral fue forzada.', 'resuelto', 'alta', 8, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(12, 9, 13, 'Limpieza', 'Vidrios sucios', 'Los ventanales del primer piso no han sido limpiados.', 'abierto', 'baja', NULL, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(13, 3, NULL, 'Infraestructura', 'Humedad en muro', 'Manchas de humedad en pasillos comunes.', 'en_progreso', 'media', 6, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(14, 7, 7, 'Ascensor', 'Ruidos extraños', 'El ascensor hace ruido al moverse.', 'cerrado', 'baja', 5, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(15, 6, 10, 'Jardinería', 'Plantas secas', 'Falta riego en áreas verdes.', 'resuelto', 'media', 1, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(16, 8, 6, 'Mantención', 'Revisión de gas', 'Solicitud de revisión preventiva de red de gas.', 'abierto', 'alta', NULL, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(17, 10, 2, 'Seguridad', 'Puerta de emergencia abierta', 'Puerta trasera permanece abierta de noche.', 'cerrado', 'alta', 2, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(18, 1, NULL, 'Infraestructura', 'Filtración en techo', 'Gotea en el hall de acceso.', 'en_progreso', 'alta', 3, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(19, 4, 14, 'Iluminación', 'Timbre sin sonido', 'El timbre de conserjería no suena.', 'abierto', 'media', 6, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27'),
-(20, 2, 12, 'Ascensor', 'No marca piso', 'Pantalla no muestra el piso actual.', 'resuelto', 'baja', 5, '[]', '2025-10-02 18:42:27', '2025-10-02 18:42:27');
+(1, 1, 1, 'Electricidad', 'Problema con medidor', 'Medidor no marca correctamente.', 'abierto', 'alta', 8, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21'),
+(2, 2, 3, 'Limpieza', 'Basura en pasillo', 'Basura acumulada cerca del ducto.', 'en_progreso', 'media', 6, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21'),
+(3, 3, 4, 'Ascensor', 'Ascensor detenido', 'Ascensor principal no funciona.', 'cerrado', 'alta', 7, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21'),
+(4, 4, 5, 'Jardinería', 'Árbol seco', 'Árbol frontal necesita ser retirado.', 'abierto', 'baja', NULL, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21'),
+(5, 5, 6, 'Seguridad', 'Cámara apagada', 'Cámara de seguridad N°5 no enciende.', 'en_progreso', 'alta', 2, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21'),
+(6, 6, 7, 'Mantención', 'Filtración en techo', 'Mancha de humedad en techo de unidad D1001.', 'resuelto', 'media', 1, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21'),
+(7, 7, 8, 'Iluminación', 'Foco quemado', 'Foco quemado en pasillo piso 15.', 'cerrado', 'media', 5, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21'),
+(8, 8, 9, 'Infraestructura', 'Grieta en muro exterior', 'Grieta visible en bloque 1.', 'abierto', 'alta', NULL, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21'),
+(9, 9, 10, 'Ascensor', 'Ruidos extraños', 'Ascensor hace ruidos al frenar.', 'en_progreso', 'alta', 3, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21'),
+(10, 10, 10, 'Electricidad', 'Cortocircuito', 'Olor a quemado cerca de la sala eléctrica.', 'cerrado', 'alta', 4, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21'),
+(11, 1, 21, 'Fontanería', 'Fuga de agua en el techo', 'Goteo constante en la cocina de D301.', 'abierto', 'alta', 8, NULL, '2025-10-16 18:35:00', '2025-10-16 18:35:00'),
+(12, 2, 22, 'Mantenimiento', 'Pared con hongos', 'Humedad en pared exterior de D401.', 'en_progreso', 'media', 6, NULL, '2025-10-16 18:35:01', '2025-10-16 18:35:01'),
+(13, 3, 23, 'Limpieza', 'Basura acumulada', 'Bolsas de basura en área de tránsito.', 'abierto', 'media', 7, NULL, '2025-10-16 18:35:02', '2025-10-16 18:35:02'),
+(14, 4, 24, 'Electricidad', 'Foco de acceso quemado', 'Foco de entrada principal a Casa C no enciende.', 'resuelto', 'baja', 1, NULL, '2025-10-16 18:35:03', '2025-10-16 18:35:03'),
+(15, 5, 25, 'Seguridad', 'Portón automático averiado', 'Portón de acceso vehicular no cierra correctamente.', 'en_progreso', 'alta', 2, NULL, '2025-10-16 18:35:04', '2025-10-16 18:35:04'),
+(16, 6, 26, 'Climatización', 'Aire acondicionado sin funcionar', 'El sistema central de D2001 no enfría.', 'abierto', 'media', 1, NULL, '2025-10-16 18:35:05', '2025-10-16 18:35:05'),
+(17, 7, 27, 'Ascensor', 'Botón de piso dañado', 'Botón del piso 16 en Torre Moderno roto.', 'cerrado', 'media', 5, NULL, '2025-10-16 18:35:06', '2025-10-16 18:35:06'),
+(18, 8, 28, 'Infraestructura', 'Suelo desnivelado', 'Baldosas levantadas en pasillo exterior de Bloque 3.', 'abierto', 'alta', NULL, NULL, '2025-10-16 18:35:07', '2025-10-16 18:35:07'),
+(19, 9, 29, 'Jardinería', 'Poda de árbol requerida', 'Árbol tocando ventana de D30, peligroso con viento.', 'en_progreso', 'baja', 3, NULL, '2025-10-16 18:35:08', '2025-10-16 18:35:08'),
+(20, 10, 30, 'Fontanería', 'Inodoro con fuga', 'Fuga de agua en el inodoro de D301.', 'abierto', 'media', 4, NULL, '2025-10-16 18:35:09', '2025-10-16 18:35:09');
 
 -- --------------------------------------------------------
 
@@ -1414,41 +2154,46 @@ CREATE TABLE `titulares_unidad` (
 --
 
 INSERT INTO `titulares_unidad` (`id`, `comunidad_id`, `unidad_id`, `persona_id`, `tipo`, `desde`, `hasta`, `porcentaje`, `created_at`, `updated_at`) VALUES
-(1, 12, 1, 8, 'arrendatario', '2020-10-15', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(2, 17, 2, 15, 'arrendatario', '2021-12-03', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(3, 20, 3, 5, 'arrendatario', '2022-05-25', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(4, 12, 4, 3, 'arrendatario', '2021-09-25', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(5, 19, 5, 10, 'propietario', '2022-07-12', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(6, 13, 6, 9, 'arrendatario', '2020-11-24', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(7, 14, 7, 17, 'propietario', '2021-07-20', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(8, 6, 8, 9, 'arrendatario', '2022-11-15', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(9, 6, 9, 18, 'propietario', '2022-08-26', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(10, 18, 10, 6, 'arrendatario', '2023-03-01', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(11, 15, 11, 5, 'arrendatario', '2022-05-06', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(12, 15, 12, 17, 'arrendatario', '2023-02-08', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(13, 16, 13, 3, 'propietario', '2021-01-18', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(14, 15, 14, 20, 'arrendatario', '2022-02-18', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(15, 13, 15, 11, 'arrendatario', '2022-10-04', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(16, 6, 16, 3, 'propietario', '2021-07-17', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(17, 20, 17, 14, 'arrendatario', '2022-02-06', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(18, 10, 18, 18, 'arrendatario', '2022-01-01', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(19, 19, 19, 1, 'propietario', '2021-10-23', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(20, 8, 20, 19, 'arrendatario', '2022-08-19', NULL, 100.00, '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(100, 1, 100, 100, 'propietario', '2023-01-15', NULL, 100.00, '2025-10-06 13:29:35', '2025-10-06 13:29:35'),
-(101, 1, 101, 101, 'propietario', '2022-06-01', NULL, 100.00, '2025-10-06 13:29:43', '2025-10-06 13:29:43'),
-(102, 1, 101, 102, 'arrendatario', '2024-01-01', NULL, 100.00, '2025-10-06 13:29:43', '2025-10-06 13:29:43'),
-(103, 1, 102, 103, 'arrendatario', '2023-03-01', '2024-12-31', 100.00, '2025-10-06 13:29:55', '2025-10-06 13:29:55'),
-(104, 1, 103, 104, 'propietario', '2023-08-10', NULL, 50.00, '2025-10-06 13:30:04', '2025-10-06 13:30:04'),
-(105, 1, 103, 105, 'propietario', '2023-08-10', NULL, 50.00, '2025-10-06 13:30:04', '2025-10-06 13:30:04'),
-(106, 1, 104, 106, 'propietario', '2024-02-20', NULL, 100.00, '2025-10-06 13:30:04', '2025-10-06 13:30:04'),
-(107, 2, 105, 105, 'propietario', '2022-11-05', NULL, 100.00, '2025-10-06 13:30:12', '2025-10-06 13:30:12'),
-(108, 2, 106, 106, 'arrendatario', '2023-04-12', NULL, 100.00, '2025-10-06 13:30:12', '2025-10-06 13:30:12'),
-(109, 2, 107, 107, 'propietario', '2023-09-22', NULL, 100.00, '2025-10-06 13:30:12', '2025-10-06 13:30:12'),
-(110, 2, 108, 108, 'arrendatario', '2024-06-01', NULL, 100.00, '2025-10-06 13:30:12', '2025-10-06 13:30:12'),
-(111, 3, 109, 109, 'propietario', '2023-05-18', NULL, 100.00, '2025-10-06 13:30:20', '2025-10-06 13:30:20'),
-(112, 3, 110, 110, 'arrendatario', '2024-03-10', NULL, 100.00, '2025-10-06 13:30:20', '2025-10-06 13:30:20'),
-(113, 3, 111, 111, 'propietario', '2022-12-01', NULL, 100.00, '2025-10-06 13:30:20', '2025-10-06 13:30:20'),
-(114, 3, 111, 100, 'arrendatario', '2024-08-15', NULL, 100.00, '2025-10-06 13:30:20', '2025-10-06 13:30:20');
+(1, 1, 1, 1, 'propietario', '2024-01-01', NULL, 100.00, '2025-10-10 18:07:55', '2025-10-10 18:07:55'),
+(2, 1, 2, 2, 'arrendatario', '2024-02-01', NULL, 100.00, '2025-10-10 18:07:55', '2025-10-10 18:07:55'),
+(3, 2, 3, 3, 'propietario', '2024-03-01', NULL, 100.00, '2025-10-10 18:07:55', '2025-10-10 18:07:55'),
+(4, 3, 4, 4, 'arrendatario', '2024-04-01', NULL, 100.00, '2025-10-10 18:07:55', '2025-10-10 18:07:55'),
+(5, 4, 5, 5, 'propietario', '2024-05-01', NULL, 100.00, '2025-10-10 18:07:55', '2025-10-10 18:07:55'),
+(6, 5, 6, 6, 'arrendatario', '2024-06-01', NULL, 100.00, '2025-10-10 18:07:55', '2025-10-10 18:07:55'),
+(7, 6, 7, 7, 'propietario', '2024-07-01', NULL, 100.00, '2025-10-10 18:07:55', '2025-10-10 18:07:55'),
+(8, 7, 8, 8, 'arrendatario', '2024-08-01', NULL, 100.00, '2025-10-10 18:07:55', '2025-10-10 18:07:55'),
+(9, 8, 9, 9, 'propietario', '2024-09-01', NULL, 100.00, '2025-10-10 18:07:55', '2025-10-10 18:07:55'),
+(10, 9, 9, 10, 'arrendatario', '2024-10-01', NULL, 100.00, '2025-10-10 18:07:55', '2025-10-10 18:07:55'),
+(11, 1, 11, 11, 'propietario', '2025-01-01', NULL, 100.00, '2025-10-15 21:11:39', '2025-10-15 21:11:39'),
+(12, 1, 12, 12, 'arrendatario', '2025-02-01', NULL, 100.00, '2025-10-15 21:11:39', '2025-10-15 21:11:39'),
+(13, 2, 13, 13, 'propietario', '2025-03-01', NULL, 100.00, '2025-10-15 21:11:39', '2025-10-15 21:11:39'),
+(14, 3, 14, 14, 'arrendatario', '2025-04-01', NULL, 100.00, '2025-10-15 21:11:39', '2025-10-15 21:11:39'),
+(15, 4, 15, 15, 'propietario', '2025-05-01', NULL, 100.00, '2025-10-15 21:11:39', '2025-10-15 21:11:39'),
+(16, 5, 16, 16, 'arrendatario', '2025-06-01', NULL, 100.00, '2025-10-15 21:11:39', '2025-10-15 21:11:39'),
+(17, 6, 17, 17, 'propietario', '2025-07-01', NULL, 100.00, '2025-10-15 21:11:39', '2025-10-15 21:11:39'),
+(18, 7, 18, 18, 'arrendatario', '2025-08-01', NULL, 100.00, '2025-10-15 21:11:39', '2025-10-15 21:11:39'),
+(19, 8, 19, 19, 'propietario', '2025-09-01', NULL, 100.00, '2025-10-15 21:11:39', '2025-10-15 21:11:39'),
+(20, 9, 20, 20, 'arrendatario', '2025-10-01', NULL, 100.00, '2025-10-15 21:11:39', '2025-10-15 21:11:39'),
+(21, 1, 21, 21, 'propietario', '2025-10-01', NULL, 100.00, '2025-10-16 18:16:00', '2025-10-16 18:16:00'),
+(22, 2, 22, 22, 'arrendatario', '2025-10-01', NULL, 100.00, '2025-10-16 18:16:01', '2025-10-16 18:16:01'),
+(23, 3, 23, 23, 'propietario', '2025-10-01', NULL, 100.00, '2025-10-16 18:16:02', '2025-10-16 18:16:02'),
+(24, 4, 24, 24, 'arrendatario', '2025-10-01', NULL, 100.00, '2025-10-16 18:16:03', '2025-10-16 18:16:03'),
+(25, 5, 25, 25, 'propietario', '2025-10-01', NULL, 100.00, '2025-10-16 18:16:04', '2025-10-16 18:16:04'),
+(26, 6, 26, 26, 'arrendatario', '2025-10-01', NULL, 100.00, '2025-10-16 18:16:05', '2025-10-16 18:16:05'),
+(27, 7, 27, 27, 'propietario', '2025-10-01', NULL, 100.00, '2025-10-16 18:16:06', '2025-10-16 18:16:06'),
+(28, 8, 28, 28, 'arrendatario', '2025-10-01', NULL, 100.00, '2025-10-16 18:16:07', '2025-10-16 18:16:07'),
+(29, 9, 29, 29, 'propietario', '2025-10-01', NULL, 100.00, '2025-10-16 18:16:08', '2025-10-16 18:16:08'),
+(30, 10, 30, 30, 'arrendatario', '2025-10-01', NULL, 100.00, '2025-10-16 18:16:09', '2025-10-16 18:16:09'),
+(31, 1, 31, 31, 'arrendatario', '2025-10-17', NULL, 100.00, '2025-10-17 10:06:00', '2025-10-17 10:06:00'),
+(32, 2, 32, 32, 'propietario', '2025-10-17', NULL, 100.00, '2025-10-17 10:06:01', '2025-10-17 10:06:01'),
+(33, 3, 33, 33, 'arrendatario', '2025-10-17', NULL, 100.00, '2025-10-17 10:06:02', '2025-10-17 10:06:02'),
+(34, 4, 34, 34, 'propietario', '2025-10-17', NULL, 100.00, '2025-10-17 10:06:03', '2025-10-17 10:06:03'),
+(35, 5, 35, 35, 'arrendatario', '2025-10-17', NULL, 100.00, '2025-10-17 10:06:04', '2025-10-17 10:06:04'),
+(36, 6, 36, 36, 'propietario', '2025-10-17', NULL, 100.00, '2025-10-17 10:06:05', '2025-10-17 10:06:05'),
+(37, 7, 37, 37, 'arrendatario', '2025-10-17', NULL, 100.00, '2025-10-17 10:06:06', '2025-10-17 10:06:06'),
+(38, 8, 38, 38, 'propietario', '2025-10-17', NULL, 100.00, '2025-10-17 10:06:07', '2025-10-17 10:06:07'),
+(39, 9, 39, 39, 'arrendatario', '2025-10-17', NULL, 100.00, '2025-10-17 10:06:08', '2025-10-17 10:06:08'),
+(40, 10, 40, 40, 'propietario', '2025-10-17', NULL, 100.00, '2025-10-17 10:06:09', '2025-10-17 10:06:09');
 
 -- --------------------------------------------------------
 
@@ -1489,33 +2234,56 @@ CREATE TABLE `torre` (
 --
 
 INSERT INTO `torre` (`id`, `edificio_id`, `nombre`, `codigo`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Torre B', 'T001', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(2, 2, 'Torre C', 'T002', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(3, 3, 'Torre D', 'T003', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(4, 4, 'Torre E', 'T004', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(5, 5, 'Torre F', 'T005', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(6, 6, 'Torre G', 'T006', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(7, 7, 'Torre H', 'T007', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(8, 8, 'Torre I', 'T008', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(9, 9, 'Torre J', 'T009', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(10, 10, 'Torre K', 'T010', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(11, 11, 'Torre L', 'T011', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(12, 12, 'Torre M', 'T012', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(13, 13, 'Torre N', 'T013', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(14, 14, 'Torre O', 'T014', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(15, 15, 'Torre P', 'T015', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(16, 16, 'Torre Q', 'T016', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(17, 17, 'Torre R', 'T017', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(18, 18, 'Torre S', 'T018', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(19, 19, 'Torre T', 'T019', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(20, 20, 'Torre U', 'T020', '2025-10-02 18:19:29', '2025-10-02 18:19:29'),
-(21, 1, 'Torre Test A', 'T101', '2025-10-06 18:23:54', '2025-10-06 18:23:54'),
-(100, 100, 'Torre A', 'TA-001', '2025-10-06 18:57:30', '2025-10-06 18:57:30'),
-(101, 100, 'Torre B', 'TB-001', '2025-10-06 18:57:30', '2025-10-06 18:57:30'),
-(102, 100, 'Torre C', 'TC-001', '2025-10-06 18:57:30', '2025-10-06 18:57:30'),
-(103, 100, 'Torre D', 'TD-001', '2025-10-06 18:57:30', '2025-10-06 18:57:30'),
-(104, 100, 'Torre E', 'TE-001', '2025-10-06 18:57:30', '2025-10-06 18:57:30'),
-(106, 15, 'Torre A', 'TA', '2025-10-07 17:21:11', '2025-10-07 17:21:11');
+(1, 1, 'Torre 1', 'T01', '2025-10-10 18:07:38', '2025-10-10 18:07:38'),
+(2, 1, 'Torre 2', 'T02', '2025-10-10 18:07:38', '2025-10-10 18:07:38'),
+(3, 2, 'Torre Norte', 'TN', '2025-10-10 18:07:38', '2025-10-10 18:07:38'),
+(4, 3, 'Única Torre', 'UT', '2025-10-10 18:07:38', '2025-10-10 18:07:38'),
+(5, 4, 'Sector A', 'SA', '2025-10-10 18:07:38', '2025-10-10 18:07:38'),
+(6, 5, 'Alameda A', 'AA', '2025-10-10 18:07:38', '2025-10-10 18:07:38'),
+(7, 6, 'Luxury A', 'LA', '2025-10-10 18:07:38', '2025-10-10 18:07:38'),
+(8, 7, 'Central A', 'CA', '2025-10-10 18:07:38', '2025-10-10 18:07:38'),
+(9, 8, 'Bloque Principal', 'BP', '2025-10-10 18:07:38', '2025-10-10 18:07:38'),
+(10, 10, 'Torre 1', 'T1', '2025-10-10 18:07:38', '2025-10-10 18:07:38'),
+(11, 1, 'Torre 3', 'T03', '2025-10-15 21:10:11', '2025-10-15 21:10:11'),
+(12, 2, 'Torre Sur', 'TS', '2025-10-15 21:10:11', '2025-10-15 21:10:11'),
+(13, 3, 'Torre Este', 'TE', '2025-10-15 21:10:11', '2025-10-15 21:10:11'),
+(14, 4, 'Sector B', 'SB', '2025-10-15 21:10:11', '2025-10-15 21:10:11'),
+(15, 5, 'Alameda B', 'AB', '2025-10-15 21:10:11', '2025-10-15 21:10:11'),
+(16, 6, 'Luxury B', 'LB', '2025-10-15 21:10:11', '2025-10-15 21:10:11'),
+(17, 7, 'Central B', 'CB', '2025-10-15 21:10:11', '2025-10-15 21:10:11'),
+(18, 8, 'Bloque Posterior', 'BP2', '2025-10-15 21:10:11', '2025-10-15 21:10:11'),
+(19, 9, 'Torre 3', 'T3', '2025-10-15 21:10:11', '2025-10-15 21:10:11'),
+(20, 10, 'Torre El Llano B', 'LLB', '2025-10-15 21:10:11', '2025-10-15 21:10:11'),
+(21, 21, 'Torre 4', 'T04', '2025-10-16 18:14:00', '2025-10-16 18:14:00'),
+(22, 22, 'Torre Oeste', 'TO', '2025-10-16 18:14:01', '2025-10-16 18:14:01'),
+(23, 23, 'Torre Central', 'TC', '2025-10-16 18:14:02', '2025-10-16 18:14:02'),
+(24, 24, 'Sector C', 'SC', '2025-10-16 18:14:03', '2025-10-16 18:14:03'),
+(25, 25, 'Europa A', 'EA', '2025-10-16 18:14:04', '2025-10-16 18:14:04'),
+(26, 26, 'Master A', 'MA', '2025-10-16 18:14:05', '2025-10-16 18:14:05'),
+(27, 27, 'Moderno A', 'MA', '2025-10-16 18:14:06', '2025-10-16 18:14:06'),
+(28, 28, 'Bloque Anexo', 'BA', '2025-10-16 18:14:07', '2025-10-16 18:14:07'),
+(29, 29, 'Torre 4', 'T4', '2025-10-16 18:14:08', '2025-10-16 18:14:08'),
+(30, 30, 'Torre Sur A', 'TSA', '2025-10-16 18:14:09', '2025-10-16 18:14:09'),
+(31, 31, 'Torre 5', 'T05', '2025-10-17 10:04:00', '2025-10-17 10:04:00'),
+(32, 32, 'Torre Oeste B', 'OB', '2025-10-17 10:04:01', '2025-10-17 10:04:01'),
+(33, 33, 'Torre Sur', 'TS', '2025-10-17 10:04:02', '2025-10-17 10:04:02'),
+(34, 34, 'Sector D', 'SD', '2025-10-17 10:04:03', '2025-10-17 10:04:03'),
+(35, 35, 'Asia A', 'AA', '2025-10-17 10:04:04', '2025-10-17 10:04:04'),
+(36, 36, 'Jardín A', 'JA', '2025-10-17 10:04:05', '2025-10-17 10:04:05'),
+(37, 37, 'Río A', 'RA', '2025-10-17 10:04:06', '2025-10-17 10:04:06'),
+(38, 38, 'Bloque Céntrico', 'BC', '2025-10-17 10:04:07', '2025-10-17 10:04:07'),
+(39, 39, 'Torre 5', 'T5', '2025-10-17 10:04:08', '2025-10-17 10:04:08'),
+(40, 40, 'Norte A', 'NA', '2025-10-17 10:04:09', '2025-10-17 10:04:09'),
+(41, 41, 'Torre 1', 'T1', '2025-10-17 11:16:00', '2025-10-17 11:16:00'),
+(42, 41, 'Torre 2', 'T2', '2025-10-17 11:16:01', '2025-10-17 11:16:01'),
+(43, 42, 'Bloque A', 'BA', '2025-10-17 11:16:02', '2025-10-17 11:16:02'),
+(44, 43, 'Torre Principal', 'TP', '2025-10-17 11:16:03', '2025-10-17 11:16:03'),
+(45, 44, 'Parcela 1', 'P1', '2025-10-17 11:16:04', '2025-10-17 11:16:04'),
+(46, 45, 'Torre A', 'TA', '2025-10-17 11:16:05', '2025-10-17 11:16:05'),
+(47, 46, 'Edificio Mar', 'EM', '2025-10-17 11:16:06', '2025-10-17 11:16:06'),
+(48, 47, 'Torre Norte', 'TN', '2025-10-17 11:16:07', '2025-10-17 11:16:07'),
+(49, 48, 'Bloque Alto', 'BA', '2025-10-17 11:16:08', '2025-10-17 11:16:08'),
+(50, 49, 'Torre Sol', 'TS', '2025-10-17 11:16:09', '2025-10-17 11:16:09');
 
 -- --------------------------------------------------------
 
@@ -1533,12 +2301,26 @@ CREATE TABLE `uf_valor` (
 --
 
 INSERT INTO `uf_valor` (`fecha`, `valor`) VALUES
-('2025-09-28', 36500.1234),
-('2025-09-29', 36510.5678),
-('2025-09-30', 36520.0000),
 ('2025-10-01', 36525.1234),
 ('2025-10-02', 36530.4567),
-('2025-10-03', 39485.6500);
+('2025-10-03', 36535.7890),
+('2025-10-04', 36540.1223),
+('2025-10-05', 36545.4556),
+('2025-10-06', 36550.7889),
+('2025-10-07', 36555.1222),
+('2025-10-08', 36560.4555),
+('2025-10-09', 36565.7888),
+('2025-10-10', 36570.1221),
+('2025-10-11', 36575.4554),
+('2025-10-12', 36580.7887),
+('2025-10-13', 36585.1220),
+('2025-10-14', 36590.4553),
+('2025-10-15', 36595.7886),
+('2025-10-16', 36600.1219),
+('2025-10-17', 36605.4552),
+('2025-10-18', 36610.7885),
+('2025-10-19', 36615.1218),
+('2025-10-20', 36620.4551);
 
 -- --------------------------------------------------------
 
@@ -1567,61 +2349,56 @@ CREATE TABLE `unidad` (
 --
 
 INSERT INTO `unidad` (`id`, `comunidad_id`, `edificio_id`, `torre_id`, `codigo`, `alicuota`, `m2_utiles`, `m2_terrazas`, `nro_bodega`, `nro_estacionamiento`, `activa`, `created_at`, `updated_at`) VALUES
-(1, 16, 7, 7, 'U001', 0.021523, 65.88, 7.60, 'B001', 'E001', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(2, 20, 3, 13, 'U002', 0.010362, 70.73, 13.13, 'B002', 'E002', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(3, 15, 18, 2, 'U003', 0.006624, 118.30, 18.93, 'B003', 'E003', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(4, 10, 14, 9, 'U004', 0.017598, 75.79, 9.82, 'B004', 'E004', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(5, 2, 5, 4, 'U005', 0.018412, 58.61, 5.42, 'B005', 'E005', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(6, 2, 5, 13, 'U006', 0.009389, 66.45, 19.46, 'B006', 'E006', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(7, 2, 5, 11, 'U007', 0.017770, 87.06, 14.33, 'B007', 'E007', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(8, 18, 11, 2, 'U008', 0.020005, 74.86, 9.55, 'B008', 'E008', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(9, 4, 13, 6, 'U009', 0.024811, 42.86, 5.36, 'B009', 'E009', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(10, 15, 18, 7, 'U010', 0.023610, 54.17, 14.47, 'B010', 'E010', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(11, 18, 17, 20, 'U011', 0.022403, 45.74, 6.71, 'B011', 'E011', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(12, 2, 5, 16, 'U012', 0.017768, 85.03, 5.80, 'B012', 'E012', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(13, 14, 20, 4, 'U013', 0.020766, 95.13, 8.55, 'B013', 'E013', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(14, 7, 15, 8, 'U014', 0.015158, 64.60, 6.68, 'B014', 'E014', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(15, 18, 11, 7, 'U015', 0.019276, 111.38, 15.99, 'B015', 'E015', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(16, 2, 5, 5, 'U016', 0.005108, 117.70, 15.11, 'B016', 'E016', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(17, 7, 15, 7, 'U017', 0.024073, 98.57, 5.21, 'B017', 'E017', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(18, 18, 10, 14, 'U018', 0.022069, 75.53, 13.53, 'B018', 'E018', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(19, 12, 16, 17, 'U019', 0.013526, 49.13, 14.08, 'B019', 'E019', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(20, 12, 16, 2, 'U020', 0.015334, 63.84, 17.38, 'B020', 'E020', 1, '2025-10-02 18:19:29', '2025-10-03 15:34:14'),
-(25, 1, 21, NULL, '101', 0.025000, 65.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
-(26, 1, 21, NULL, '102', 0.025000, 65.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
-(27, 1, 21, NULL, '103', 0.025000, 70.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
-(28, 1, 21, NULL, '201', 0.030000, 80.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
-(29, 1, 21, NULL, '202', 0.030000, 80.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
-(30, 1, 21, NULL, '203', 0.030000, 85.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
-(31, 1, 21, NULL, '301', 0.035000, 90.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
-(32, 1, 21, NULL, '302', 0.035000, 90.00, NULL, NULL, NULL, 1, '2025-10-03 15:40:30', '2025-10-03 15:42:49'),
-(100, 1, 1, 1, 'DEPTO-101', 0.025000, 85.50, 12.00, 'BOD-101', 'EST-101', 1, '2025-10-06 13:29:16', '2025-10-06 13:29:16'),
-(101, 1, 1, 1, 'DEPTO-102', 0.025000, 92.30, 15.50, 'BOD-102', 'EST-102', 1, '2025-10-06 13:29:16', '2025-10-06 13:29:16'),
-(102, 1, 1, 1, 'DEPTO-103', 0.025000, 78.80, 10.00, 'BOD-103', 'EST-103', 1, '2025-10-06 13:29:16', '2025-10-06 13:29:16'),
-(103, 1, 1, 1, 'DEPTO-201', 0.025000, 85.50, 12.00, 'BOD-201', 'EST-201', 1, '2025-10-06 13:29:16', '2025-10-06 13:29:16'),
-(104, 1, 1, 1, 'DEPTO-202', 0.025000, 92.30, 15.50, 'BOD-202', 'EST-202', 1, '2025-10-06 13:29:16', '2025-10-06 13:29:16'),
-(105, 2, 5, 5, 'CASA-A1', 0.033333, 120.00, 25.00, 'BOD-A1', 'EST-A1', 1, '2025-10-06 13:29:22', '2025-10-06 13:29:22'),
-(106, 2, 5, 5, 'CASA-A2', 0.033333, 115.50, 20.00, 'BOD-A2', 'EST-A2', 1, '2025-10-06 13:29:22', '2025-10-06 13:29:22'),
-(107, 2, 5, 5, 'CASA-B1', 0.033333, 135.80, 30.00, 'BOD-B1', 'EST-B1', 1, '2025-10-06 13:29:22', '2025-10-06 13:29:22'),
-(108, 2, 5, 5, 'CASA-B2', 0.033333, 128.40, 28.00, 'BOD-B2', 'EST-B2', 1, '2025-10-06 13:29:22', '2025-10-06 13:29:22'),
-(109, 3, 9, 9, 'TORRE-A-301', 0.020000, 68.90, 8.50, 'BOD-301', 'EST-301', 1, '2025-10-06 13:29:27', '2025-10-06 13:29:27'),
-(110, 3, 9, 9, 'TORRE-A-302', 0.020000, 72.40, 9.00, 'BOD-302', 'EST-302', 1, '2025-10-06 13:29:27', '2025-10-06 13:29:27'),
-(111, 3, 9, 9, 'TORRE-B-401', 0.020000, 65.30, 7.80, 'BOD-401', 'EST-401', 1, '2025-10-06 13:29:27', '2025-10-06 13:29:27'),
-(112, 100, 100, 100, '01-A', 0.025000, 85.50, 12.00, 'B-001', 'E-001', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(113, 100, 100, 100, '02-A', 0.025000, 85.50, 12.00, 'B-002', 'E-002', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(114, 100, 100, 100, '03-A', 0.025000, 85.50, 12.00, 'B-003', 'E-003', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(115, 100, 100, 100, '04-A', 0.025000, 85.50, 12.00, 'B-004', 'E-004', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(1004, 100, 100, 101, '01-B', 0.028000, 95.00, 15.00, 'B-005', 'E-005', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(1005, 100, 100, 101, '02-B', 0.028000, 95.00, 15.00, 'B-006', 'E-006', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(1006, 100, 100, 101, '03-B', 0.028000, 95.00, 15.00, 'B-007', 'E-007', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(1007, 100, 100, 101, '04-B', 0.028000, 95.00, 15.00, 'B-008', 'E-008', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(1008, 100, 100, 102, '01-C', 0.022000, 75.00, 10.00, 'B-009', 'E-009', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(1009, 100, 100, 102, '02-C', 0.022000, 75.00, 10.00, 'B-010', 'E-010', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(1010, 100, 100, 102, '03-C', 0.022000, 75.00, 10.00, 'B-011', 'E-011', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(1011, 100, 100, 103, '01-D', 0.030000, 110.00, 20.00, 'B-012', 'E-012', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(1012, 100, 100, 103, '02-D', 0.030000, 110.00, 20.00, 'B-013', 'E-013', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(1013, 100, 100, 104, '01-E', 0.020000, 65.00, 8.00, 'B-014', 'E-014', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53'),
-(1014, 100, 100, 104, '02-E', 0.020000, 65.00, 8.00, 'B-015', 'E-015', 1, '2025-10-06 18:59:53', '2025-10-06 18:59:53');
+(1, 1, 1, 1, 'D101', 0.015000, 60.50, NULL, NULL, 'E101', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
+(2, 1, 1, 2, 'D201', 0.020000, 75.80, NULL, NULL, 'E201', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
+(3, 2, 2, 3, 'D305', 0.018000, 68.20, NULL, NULL, 'E305', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
+(4, 3, 3, 4, 'D402', 0.025000, 85.00, NULL, NULL, 'E402', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
+(5, 4, 4, 5, 'Casa A', 0.030000, 120.00, NULL, NULL, 'CPA', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
+(6, 5, 5, 6, 'D501', 0.012000, 55.00, NULL, NULL, 'E501', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
+(7, 6, 6, 7, 'D1001', 0.040000, 150.90, NULL, NULL, 'EL1', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
+(8, 7, 7, 8, 'D1502', 0.022000, 78.10, NULL, NULL, 'E152', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
+(9, 8, 8, 9, 'D105', 0.017000, 63.40, NULL, NULL, 'E105', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
+(10, 10, 10, 10, 'D202', 0.019000, 70.30, NULL, NULL, 'E202', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
+(11, 1, 1, 11, 'D102', 0.015000, 60.50, 5.00, 'B11', 'E102', 1, '2025-10-15 21:10:13', '2025-10-15 21:10:13'),
+(12, 1, 1, 11, 'D202', 0.020000, 75.80, 8.00, 'B22', 'E202', 1, '2025-10-15 21:10:13', '2025-10-15 21:10:13'),
+(13, 2, 2, 12, 'D306', 0.018000, 68.20, 0.00, NULL, 'E306', 1, '2025-10-15 21:10:13', '2025-10-15 21:10:13'),
+(14, 3, 3, 13, 'D403', 0.025000, 85.00, 10.00, 'B43', 'E403', 1, '2025-10-15 21:10:13', '2025-10-15 21:10:13'),
+(15, 4, 4, 14, 'Casa B', 0.030000, 120.00, 20.00, NULL, 'CPB', 1, '2025-10-15 21:10:13', '2025-10-15 21:10:13'),
+(16, 5, 5, 15, 'D502', 0.012000, 55.00, 4.00, 'B52', 'E502', 1, '2025-10-15 21:10:13', '2025-10-15 21:10:13'),
+(17, 6, 6, 16, 'D1002', 0.040000, 150.90, 30.00, 'EL2', 'EL2', 1, '2025-10-15 21:10:13', '2025-10-15 21:10:13'),
+(18, 7, 7, 17, 'D1503', 0.022000, 78.10, 0.00, NULL, 'E153', 1, '2025-10-15 21:10:13', '2025-10-15 21:10:13'),
+(19, 8, 8, 18, 'D106', 0.017000, 63.40, 6.00, 'B16', 'E106', 1, '2025-10-15 21:10:13', '2025-10-15 21:10:13'),
+(20, 10, 10, 20, 'D203', 0.019000, 70.30, 0.00, NULL, 'E203', 1, '2025-10-15 21:10:13', '2025-10-15 21:10:13'),
+(21, 1, 21, 21, 'D301', 0.016000, 65.50, 0.00, 'B31', 'E301', 1, '2025-10-16 18:15:00', '2025-10-16 18:15:00'),
+(22, 2, 22, 22, 'D401', 0.019000, 70.00, 4.00, NULL, 'E401', 1, '2025-10-16 18:15:01', '2025-10-16 18:15:01'),
+(23, 3, 23, 23, 'D501', 0.026000, 90.00, 12.00, 'B51', 'E501', 1, '2025-10-16 18:15:02', '2025-10-16 18:15:02'),
+(24, 4, 24, 24, 'Casa C', 0.035000, 130.00, 25.00, NULL, 'CPC', 1, '2025-10-16 18:15:03', '2025-10-16 18:15:03'),
+(25, 5, 25, 25, 'D601', 0.013000, 60.00, 0.00, 'B61', 'E601', 1, '2025-10-16 18:15:04', '2025-10-16 18:15:04'),
+(26, 6, 26, 26, 'D2001', 0.045000, 160.00, 40.00, 'EL3', 'EL3', 1, '2025-10-16 18:15:05', '2025-10-16 18:15:05'),
+(27, 7, 27, 27, 'D1601', 0.023000, 80.00, 0.00, NULL, 'E161', 1, '2025-10-16 18:15:06', '2025-10-16 18:15:06'),
+(28, 8, 28, 28, 'D201', 0.018000, 65.00, 7.00, 'B21', 'E201', 1, '2025-10-16 18:15:07', '2025-10-16 18:15:07'),
+(29, 9, 29, 29, 'D30', 0.015000, 58.00, 0.00, NULL, 'E30', 1, '2025-10-16 18:15:08', '2025-10-16 18:15:08'),
+(30, 10, 30, 30, 'D301', 0.020000, 75.00, 0.00, 'B31', 'E301', 1, '2025-10-16 18:15:09', '2025-10-16 18:15:09'),
+(31, 1, 31, 31, 'D401', 0.017000, 70.00, 8.00, 'B41', 'E401', 1, '2025-10-17 10:05:00', '2025-10-17 10:05:00'),
+(32, 2, 32, 32, 'D501', 0.020000, 75.00, 5.00, NULL, 'E501', 1, '2025-10-17 10:05:01', '2025-10-17 10:05:01'),
+(33, 3, 33, 33, 'D601', 0.027000, 95.00, 10.00, 'B61', 'E601', 1, '2025-10-17 10:05:02', '2025-10-17 10:05:02'),
+(34, 4, 34, 34, 'Casa D', 0.032000, 140.00, 30.00, NULL, 'CPD', 1, '2025-10-17 10:05:03', '2025-10-17 10:05:03'),
+(35, 5, 35, 35, 'D701', 0.014000, 65.00, 0.00, 'B71', 'E701', 1, '2025-10-17 10:05:04', '2025-10-17 10:05:04'),
+(36, 6, 36, 36, 'D3001', 0.042000, 170.00, 35.00, 'EL4', 'EL4', 1, '2025-10-17 10:05:05', '2025-10-17 10:05:05'),
+(37, 7, 37, 37, 'D1701', 0.024000, 85.00, 0.00, NULL, 'E171', 1, '2025-10-17 10:05:06', '2025-10-17 10:05:06'),
+(38, 8, 38, 38, 'D301', 0.019000, 70.00, 6.00, 'B31', 'E301', 1, '2025-10-17 10:05:07', '2025-10-17 10:05:07'),
+(39, 9, 39, 39, 'D40', 0.016000, 60.00, 0.00, NULL, 'E40', 1, '2025-10-17 10:05:08', '2025-10-17 10:05:08'),
+(40, 10, 40, 40, 'D401', 0.021000, 80.00, 0.00, 'B41', 'E401', 1, '2025-10-17 10:05:09', '2025-10-17 10:05:09'),
+(41, 11, 41, 41, 'D101', 0.015000, 60.00, 5.00, 'B11', 'E11', 1, '2025-10-17 11:17:00', '2025-10-17 11:17:00'),
+(42, 11, 41, 42, 'D201', 0.020000, 75.00, 8.00, 'B21', 'E21', 1, '2025-10-17 11:17:01', '2025-10-17 11:17:01'),
+(43, 12, 42, 43, 'D301', 0.018000, 68.00, 0.00, NULL, 'E31', 1, '2025-10-17 11:17:02', '2025-10-17 11:17:02'),
+(44, 13, 43, 44, 'D401', 0.025000, 85.00, 10.00, 'B41', 'E41', 1, '2025-10-17 11:17:03', '2025-10-17 11:17:03'),
+(45, 14, 44, 45, 'Casa 1', 0.030000, 150.00, 30.00, NULL, 'CP1', 1, '2025-10-17 11:17:04', '2025-10-17 11:17:04'),
+(46, 15, 45, 46, 'D501', 0.012000, 55.00, 4.00, 'B51', 'E51', 1, '2025-10-17 11:17:05', '2025-10-17 11:17:05'),
+(47, 16, 46, 47, 'D601', 0.040000, 160.00, 35.00, 'EL1', 'EL1', 1, '2025-10-17 11:17:06', '2025-10-17 11:17:06'),
+(48, 17, 47, 48, 'D701', 0.022000, 78.00, 0.00, NULL, 'E71', 1, '2025-10-17 11:17:07', '2025-10-17 11:17:07'),
+(49, 18, 48, 49, 'D801', 0.017000, 63.00, 6.00, 'B81', 'E81', 1, '2025-10-17 11:17:08', '2025-10-17 11:17:08'),
+(50, 19, 49, 50, 'D901', 0.019000, 70.00, 0.00, NULL, 'E91', 1, '2025-10-17 11:17:09', '2025-10-17 11:17:09');
 
 -- --------------------------------------------------------
 
@@ -1642,26 +2419,26 @@ CREATE TABLE `user_preferences` (
 --
 
 INSERT INTO `user_preferences` (`id`, `user_id`, `preferences`, `created_at`, `updated_at`) VALUES
-(1, 1, '{\"tema\": \"claro\", \"idioma\": \"es\", \"notificaciones\": \"on\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(2, 2, '{\"tema\": \"claro\", \"idioma\": \"en\", \"notificaciones\": \"off\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(3, 3, '{\"tema\": \"claro\", \"idioma\": \"es\", \"notificaciones\": \"on\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(4, 4, '{\"tema\": \"claro\", \"notificaciones\": \"on\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(5, 5, '{\"tema\": \"oscuro\", \"notificaciones\": \"on\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(6, 6, '{\"tema\": \"claro\", \"idioma\": \"es\", \"notificaciones\": \"off\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(7, 7, '{\"tema\": \"claro\", \"idioma\": \"off\", \"notificaciones\": \"off\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(8, 8, '{\"tema\": \"claro\", \"notificaciones\": \"on\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(9, 9, '{}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(10, 10, '{\"notificaciones\": \"on\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(11, 11, '{\"tema\": \"oscuro\", \"idioma\": \"en\", \"notificaciones\": \"on\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(12, 12, '{\"idioma\": \"en\", \"notificaciones\": \"on\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(13, 13, '{\"tema\": \"oscuro\", \"idioma\": \"off\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(14, 14, '{\"tema\": \"oscuro\", \"idioma\": \"es\", \"notificaciones\": \"off\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(15, 15, '{\"notificaciones\": \"on\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(16, 16, '{\"idioma\": \"off\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(17, 17, '{}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(18, 18, '{\"tema\": \"oscuro\", \"notificaciones\": \"on\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(19, 19, '{\"tema\": \"claro\", \"idioma\": \"en\", \"notificaciones\": \"off\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04'),
-(20, 20, '{\"tema\": \"claro\", \"notificaciones\": \"on\"}', '2025-10-02 19:15:04', '2025-10-02 19:15:04');
+(1, 1, '{\"tema\": \"oscuro\", \"idioma\": \"es\", \"notificaciones\": \"on\"}', '2025-10-10 18:10:24', '2025-10-10 18:10:24'),
+(2, 2, '{\"tema\": \"claro\", \"idioma\": \"es\", \"notificaciones\": \"off\"}', '2025-10-10 18:10:24', '2025-10-10 18:10:24'),
+(3, 3, '{\"tema\": \"claro\", \"idioma\": \"en\", \"notificaciones\": \"on\"}', '2025-10-10 18:10:24', '2025-10-10 18:10:24'),
+(4, 4, '{\"tema\": \"oscuro\", \"idioma\": \"es\", \"notificaciones\": \"on\"}', '2025-10-10 18:10:24', '2025-10-10 18:10:24'),
+(5, 5, '{\"tema\": \"claro\", \"idioma\": \"en\", \"notificaciones\": \"on\"}', '2025-10-10 18:10:24', '2025-10-10 18:10:24'),
+(6, 6, '{\"tema\": \"oscuro\", \"idioma\": \"es\", \"notificaciones\": \"on\"}', '2025-10-10 18:10:24', '2025-10-10 18:10:24'),
+(7, 7, '{\"tema\": \"claro\", \"idioma\": \"es\", \"notificaciones\": \"off\"}', '2025-10-10 18:10:24', '2025-10-10 18:10:24'),
+(8, 8, '{\"tema\": \"oscuro\", \"idioma\": \"en\", \"notificaciones\": \"on\"}', '2025-10-10 18:10:24', '2025-10-10 18:10:24'),
+(9, 9, '{\"tema\": \"claro\", \"idioma\": \"es\", \"notificaciones\": \"on\"}', '2025-10-10 18:10:24', '2025-10-10 18:10:24'),
+(10, 10, '{\"tema\": \"oscuro\", \"idioma\": \"es\", \"notificaciones\": \"off\"}', '2025-10-10 18:10:24', '2025-10-10 18:10:24'),
+(11, 11, '{\"tema\": \"oscuro\", \"idioma\": \"es\", \"notificaciones\": \"on\"}', '2025-10-17 11:07:00', '2025-10-17 11:07:00'),
+(12, 12, '{\"tema\": \"claro\", \"idioma\": \"es\", \"notificaciones\": \"off\"}', '2025-10-17 11:07:01', '2025-10-17 11:07:01'),
+(13, 13, '{\"tema\": \"oscuro\", \"idioma\": \"en\", \"notificaciones\": \"on\"}', '2025-10-17 11:07:02', '2025-10-17 11:07:02'),
+(14, 14, '{\"tema\": \"claro\", \"idioma\": \"es\", \"notificaciones\": \"on\"}', '2025-10-17 11:07:03', '2025-10-17 11:07:03'),
+(15, 15, '{\"tema\": \"oscuro\", \"idioma\": \"en\", \"notificaciones\": \"off\"}', '2025-10-17 11:07:04', '2025-10-17 11:07:04'),
+(16, 16, '{\"tema\": \"claro\", \"idioma\": \"es\", \"notificaciones\": \"on\"}', '2025-10-17 11:07:05', '2025-10-17 11:07:05'),
+(17, 17, '{\"tema\": \"oscuro\", \"idioma\": \"es\", \"notificaciones\": \"off\"}', '2025-10-17 11:07:06', '2025-10-17 11:07:06'),
+(18, 18, '{\"tema\": \"claro\", \"idioma\": \"en\", \"notificaciones\": \"on\"}', '2025-10-17 11:07:07', '2025-10-17 11:07:07'),
+(19, 19, '{\"tema\": \"oscuro\", \"idioma\": \"es\", \"notificaciones\": \"on\"}', '2025-10-17 11:07:08', '2025-10-17 11:07:08'),
+(20, 20, '{\"tema\": \"claro\", \"idioma\": \"es\", \"notificaciones\": \"off\"}', '2025-10-17 11:07:09', '2025-10-17 11:07:09');
 
 -- --------------------------------------------------------
 
@@ -1688,27 +2465,46 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id`, `persona_id`, `username`, `hash_password`, `email`, `activo`, `created_at`, `updated_at`, `is_superadmin`, `totp_secret`, `totp_enabled`) VALUES
-(1, 1, 'Patricio', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'pat.quintanilla@duocuc.cl', 1, '2025-10-02 18:00:09', '2025-10-07 12:49:22', 1, NULL, 0),
-(2, 2, 'user2', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'marcosblasco@iglesias.es', 1, '2025-10-02 18:00:09', '2025-10-03 14:25:05', 0, NULL, 0),
-(3, 3, 'user3', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'candelarioguardiola@gmail.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:25:10', 0, NULL, 0),
-(4, 4, 'user4', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'casalsteofilo@requena-bermejo.org', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(5, 5, 'user5', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'vinascurro@guillen.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(6, 6, 'user6', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'dquiros@cuenca.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(7, 7, 'user7', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'graciana71@yahoo.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(8, 8, 'user8', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'carlosrio@gmail.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(9, 9, 'user9', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'elpidio14@yahoo.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(10, 10, 'user10', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'bguardiola@palomino.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(11, 11, 'user11', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'ucolomer@sabater.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(12, 12, 'user12', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'dionisia40@ribas-cerda.org', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(13, 13, 'user13', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'chidalgo@ortega-villalba.es', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(14, 14, 'user14', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'alfonsopinedo@elorza-francisco.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(15, 15, 'user15', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'acunarosario@barral.es', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(16, 16, 'user16', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'domingo91@hotmail.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(17, 17, 'user17', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'salomeduran@hotmail.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:14', 0, NULL, 0),
-(18, 18, 'user18', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'xmorata@raya.net', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:15', 0, NULL, 0),
-(19, 19, 'user19', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'marianela97@acuna.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:15', 0, NULL, 0),
-(20, 20, 'user20', '$2a$12$QwR.N8eN8AsJqwNP2gNhPeDogFnQBgF07WREUi9onWGb1tc7T9KMS', 'goyoarias@yahoo.com', 1, '2025-10-02 18:00:09', '2025-10-03 14:26:15', 0, NULL, 0),
-(21, 21, 'nuevousuario2', '$2a$10$vySTIzC4F5KD0B107l.3deLwhyK7Of5YMgkZfeIBPlZ6YrpErgCMC', 'nuevousuari2o@ejemplo.com', 1, '2025-10-03 14:34:33', '2025-10-03 14:34:33', 0, NULL, 0);
+(1, 1, 'pquintanilla', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'pat.quintanilla@duocuc.cl', 1, '2025-10-10 18:07:28', '2025-10-16 20:23:45', 1, NULL, 0),
+(2, 2, 'erobledo', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'elisabet@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:17', 0, NULL, 0),
+(3, 3, 'dtrillo', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'dalila@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:18', 0, NULL, 0),
+(4, 4, 'isedano', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'isidora@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:18', 0, NULL, 0),
+(5, 5, 'smolins', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'sigfrido@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:18', 0, NULL, 0),
+(6, 6, 'jconserje', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'jose@conserje.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:19', 0, NULL, 0),
+(7, 7, 'jpiñol', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'jordi@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:19', 0, NULL, 0),
+(8, 8, 'fadmin', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'flora@admin.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:23', 0, NULL, 0),
+(9, 9, 'lalonsop', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'lina@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:24', 0, NULL, 0),
+(10, 10, 'abarros', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'alejandro@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:42', 0, NULL, 0),
+(11, 11, 'lauras', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'laura.sanchez@email.cl', 1, '2025-10-15 21:10:16', '2025-10-15 21:10:16', 0, NULL, 0),
+(12, 12, 'carlosg', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'carlos.gomez@email.cl', 1, '2025-10-15 21:10:16', '2025-10-15 21:10:16', 0, NULL, 0),
+(13, 13, 'mariaf', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'maria.fernandez@email.cl', 1, '2025-10-15 21:10:16', '2025-10-15 21:10:16', 0, NULL, 0),
+(14, 14, 'javierd', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'javier.diaz@email.cl', 1, '2025-10-15 21:10:16', '2025-10-15 21:10:16', 0, NULL, 0),
+(15, 15, 'anal', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'ana.lopez@email.cl', 1, '2025-10-15 21:10:16', '2025-10-15 21:10:16', 0, NULL, 0),
+(16, 16, 'robertom', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'roberto.martinez@email.cl', 1, '2025-10-15 21:10:16', '2025-10-15 21:10:16', 0, NULL, 0),
+(17, 17, 'elenar', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'elena.ruiz@email.cl', 1, '2025-10-15 21:10:16', '2025-10-15 21:10:16', 0, NULL, 0),
+(18, 18, 'pedroh', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'pedro.hernandez@email.cl', 1, '2025-10-15 21:10:16', '2025-10-15 21:10:16', 0, NULL, 0),
+(19, 19, 'sofiav', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'sofia.vargas@email.cl', 1, '2025-10-15 21:10:16', '2025-10-15 21:10:16', 0, NULL, 0),
+(20, 20, 'diegor', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'diego.rojas@email.cl', 1, '2025-10-15 21:10:16', '2025-10-15 21:10:16', 0, NULL, 0),
+(21, 21, 'gabrielt', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'gabriel.tapia@email.cl', 1, '2025-10-16 18:11:00', '2025-10-16 18:11:00', 0, NULL, 0),
+(22, 22, 'danielaf', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'daniela.flores@email.cl', 1, '2025-10-16 18:11:01', '2025-10-16 18:11:01', 0, NULL, 0),
+(23, 23, 'andresm', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'andres.munoz@email.cl', 1, '2025-10-16 18:11:02', '2025-10-16 18:11:02', 0, NULL, 0),
+(24, 24, 'camilare', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'camila.reyes@email.cl', 1, '2025-10-16 18:11:03', '2025-10-16 18:11:03', 0, NULL, 0),
+(25, 25, 'felipem', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'felipe.morales@email.cl', 1, '2025-10-16 18:11:04', '2025-10-16 18:11:04', 0, NULL, 0),
+(26, 26, 'valerian', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'valeria.nunez@email.cl', 1, '2025-10-16 18:11:05', '2025-10-16 18:11:05', 0, NULL, 0),
+(27, 27, 'ricardos', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'ricardo.soto@email.cl', 1, '2025-10-16 18:11:06', '2025-10-16 18:11:06', 0, NULL, 0),
+(28, 28, 'javierap', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'javiera.perez@email.cl', 1, '2025-10-16 18:11:07', '2025-10-16 18:11:07', 0, NULL, 0),
+(29, 29, 'ignacioh', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'ignacio.herrera@email.cl', 1, '2025-10-16 18:11:08', '2025-10-16 18:11:08', 0, NULL, 0),
+(30, 30, 'constanzad', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'constanza.diaz@email.cl', 1, '2025-10-16 18:11:09', '2025-10-16 18:11:09', 0, NULL, 0),
+(31, 31, 'manuels', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'manuel.silva@duocuc.cl', 1, '2025-10-17 10:01:00', '2025-10-17 10:01:00', 0, NULL, 0),
+(32, 32, 'fernandac', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'fernanda.castro@email.cl', 1, '2025-10-17 10:01:01', '2025-10-17 10:01:01', 0, NULL, 0),
+(33, 33, 'gustavop', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'gustavo.pizarro@email.cl', 1, '2025-10-17 10:01:02', '2025-10-17 10:01:02', 0, NULL, 0),
+(34, 34, 'lorenav', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'lorena.vera@email.cl', 1, '2025-10-17 10:01:03', '2025-10-17 10:01:03', 0, NULL, 0),
+(35, 35, 'sebastianf', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'sebastian.fuentes@email.cl', 1, '2025-10-17 10:01:04', '2025-10-17 10:01:04', 0, NULL, 0),
+(36, 36, 'claudiat', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'claudia.torres@email.cl', 1, '2025-10-17 10:01:05', '2025-10-17 10:01:05', 0, NULL, 0),
+(37, 37, 'fabians', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'fabian.sepulveda@email.cl', 1, '2025-10-17 10:01:06', '2025-10-17 10:01:06', 0, NULL, 0),
+(38, 38, 'jessicar', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'jessica.ramos@email.cl', 1, '2025-10-17 10:01:07', '2025-10-17 10:01:07', 0, NULL, 0),
+(39, 39, 'nicolasg', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'nicolas.garrido@email.cl', 1, '2025-10-17 10:01:08', '2025-10-17 10:01:08', 0, NULL, 0),
+(40, 40, 'andreal', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'andrea.leon@email.cl', 1, '2025-10-17 10:01:09', '2025-10-17 10:01:09', 0, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -1751,26 +2547,46 @@ CREATE TABLE `usuario_rol_comunidad` (
 --
 
 INSERT INTO `usuario_rol_comunidad` (`id`, `usuario_id`, `comunidad_id`, `rol_id`, `desde`, `hasta`, `activo`, `created_at`, `updated_at`) VALUES
-(1, 1, 6, 6, '2023-02-04', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(2, 2, 7, 2, '2023-11-18', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(3, 3, 15, 4, '2023-12-22', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(4, 4, 5, 2, '2024-09-29', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(5, 5, 13, 2, '2023-09-01', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(6, 6, 16, 3, '2023-03-26', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(7, 7, 6, 3, '2023-08-21', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(8, 8, 10, 3, '2023-01-10', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(9, 9, 2, 7, '2023-08-03', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(10, 10, 5, 6, '2024-04-07', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(11, 11, 13, 7, '2024-01-24', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(12, 12, 16, 7, '2024-04-28', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(13, 13, 17, 2, '2022-10-31', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(14, 14, 15, 4, '2022-10-24', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(15, 15, 14, 6, '2023-05-29', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(16, 16, 4, 6, '2023-10-15', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(17, 17, 17, 4, '2024-08-30', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(18, 18, 14, 3, '2024-08-29', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(19, 19, 11, 7, '2024-07-25', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09'),
-(20, 20, 13, 2, '2023-01-19', NULL, 1, '2025-10-02 18:00:09', '2025-10-02 18:00:09');
+(1, 1, 1, 7, '2024-01-01', NULL, 1, '2025-10-10 18:07:41', '2025-10-10 18:07:41'),
+(2, 2, 2, 8, '2024-02-15', NULL, 1, '2025-10-10 18:07:41', '2025-10-10 18:07:41'),
+(3, 3, 3, 6, '2024-03-20', NULL, 1, '2025-10-10 18:07:41', '2025-10-10 18:07:41'),
+(4, 4, 4, 7, '2024-04-10', NULL, 1, '2025-10-10 18:07:41', '2025-10-10 18:07:41'),
+(5, 5, 5, 2, '2024-05-01', NULL, 1, '2025-10-10 18:07:41', '2025-10-10 18:07:41'),
+(6, 6, 6, 3, '2024-06-25', NULL, 1, '2025-10-10 18:07:41', '2025-10-10 18:07:41'),
+(7, 7, 7, 6, '2024-07-07', NULL, 1, '2025-10-10 18:07:41', '2025-10-10 18:07:41'),
+(8, 8, 8, 10, '2024-08-18', NULL, 1, '2025-10-10 18:07:41', '2025-10-10 18:07:41'),
+(9, 9, 9, 4, '2024-09-01', NULL, 1, '2025-10-10 18:07:41', '2025-10-10 18:07:41'),
+(10, 10, 10, 9, '2024-10-05', NULL, 1, '2025-10-10 18:07:41', '2025-10-10 18:07:41'),
+(11, 11, 1, 7, '2025-01-01', NULL, 1, '2025-10-15 21:10:17', '2025-10-15 21:10:17'),
+(12, 12, 2, 8, '2025-02-15', NULL, 1, '2025-10-15 21:10:17', '2025-10-15 21:10:17'),
+(13, 13, 3, 6, '2025-03-20', NULL, 1, '2025-10-15 21:10:17', '2025-10-15 21:10:17'),
+(14, 14, 4, 7, '2025-04-10', NULL, 1, '2025-10-15 21:10:17', '2025-10-15 21:10:17'),
+(15, 15, 5, 2, '2025-05-01', NULL, 1, '2025-10-15 21:10:17', '2025-10-15 21:10:17'),
+(16, 16, 6, 3, '2025-06-25', NULL, 1, '2025-10-15 21:10:17', '2025-10-15 21:10:17'),
+(17, 17, 7, 6, '2025-07-07', NULL, 1, '2025-10-15 21:10:17', '2025-10-15 21:10:17'),
+(18, 18, 8, 10, '2025-08-18', NULL, 1, '2025-10-15 21:10:17', '2025-10-15 21:10:17'),
+(19, 19, 9, 4, '2025-09-01', NULL, 1, '2025-10-15 21:10:17', '2025-10-15 21:10:17'),
+(20, 20, 10, 9, '2025-10-05', NULL, 1, '2025-10-15 21:10:17', '2025-10-15 21:10:17'),
+(21, 21, 1, 7, '2025-10-16', NULL, 1, '2025-10-16 18:12:00', '2025-10-16 18:12:00'),
+(22, 22, 2, 8, '2025-10-16', NULL, 1, '2025-10-16 18:12:01', '2025-10-16 18:12:01'),
+(23, 23, 3, 6, '2025-10-16', NULL, 1, '2025-10-16 18:12:02', '2025-10-16 18:12:02'),
+(24, 24, 4, 7, '2025-10-16', NULL, 1, '2025-10-16 18:12:03', '2025-10-16 18:12:03'),
+(25, 25, 5, 2, '2025-10-16', NULL, 1, '2025-10-16 18:12:04', '2025-10-16 18:12:04'),
+(26, 26, 6, 3, '2025-10-16', NULL, 1, '2025-10-16 18:12:05', '2025-10-16 18:12:05'),
+(27, 27, 7, 6, '2025-10-16', NULL, 1, '2025-10-16 18:12:06', '2025-10-16 18:12:06'),
+(28, 28, 8, 10, '2025-10-16', NULL, 1, '2025-10-16 18:12:07', '2025-10-16 18:12:07'),
+(29, 29, 9, 4, '2025-10-16', NULL, 1, '2025-10-16 18:12:08', '2025-10-16 18:12:08'),
+(30, 30, 10, 9, '2025-10-16', NULL, 1, '2025-10-16 18:12:09', '2025-10-16 18:12:09'),
+(31, 31, 1, 6, '2025-10-17', NULL, 1, '2025-10-17 10:02:00', '2025-10-17 10:02:00'),
+(32, 32, 2, 7, '2025-10-17', NULL, 1, '2025-10-17 10:02:01', '2025-10-17 10:02:01'),
+(33, 33, 3, 8, '2025-10-17', NULL, 1, '2025-10-17 10:02:02', '2025-10-17 10:02:02'),
+(34, 34, 4, 9, '2025-10-17', NULL, 1, '2025-10-17 10:02:03', '2025-10-17 10:02:03'),
+(35, 35, 5, 10, '2025-10-17', NULL, 1, '2025-10-17 10:02:04', '2025-10-17 10:02:04'),
+(36, 36, 6, 2, '2025-10-17', NULL, 1, '2025-10-17 10:02:05', '2025-10-17 10:02:05'),
+(37, 37, 7, 3, '2025-10-17', NULL, 1, '2025-10-17 10:02:06', '2025-10-17 10:02:06'),
+(38, 38, 8, 4, '2025-10-17', NULL, 1, '2025-10-17 10:02:07', '2025-10-17 10:02:07'),
+(39, 39, 9, 7, '2025-10-17', NULL, 1, '2025-10-17 10:02:08', '2025-10-17 10:02:08'),
+(40, 40, 10, 6, '2025-10-17', NULL, 1, '2025-10-17 10:02:09', '2025-10-17 10:02:09');
 
 -- --------------------------------------------------------
 
@@ -1788,8 +2604,37 @@ CREATE TABLE `utm_valor` (
 --
 
 INSERT INTO `utm_valor` (`fecha`, `valor`) VALUES
-('2023-01-01', 66016.62),
-('2023-01-02', 65824.03);
+('2025-10-01', 65344.17),
+('2025-10-02', 68148.97),
+('2025-10-03', 68736.87),
+('2025-10-04', 69106.69),
+('2025-10-05', 67311.87),
+('2025-10-06', 66974.94),
+('2025-10-07', 65985.37),
+('2025-10-08', 66620.53),
+('2025-10-09', 67012.59),
+('2025-10-10', 60880.97),
+('2025-10-11', 61200.55),
+('2025-10-12', 61505.77),
+('2025-10-13', 61810.99),
+('2025-10-14', 62116.21),
+('2025-10-15', 62421.43),
+('2025-10-16', 62726.65),
+('2025-10-17', 63031.87),
+('2025-10-18', 63337.09),
+('2025-10-19', 63642.31),
+('2025-10-20', 63947.53);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `vista_apelaciones_dashboard`
+-- (See below for the actual view)
+--
+CREATE TABLE `vista_apelaciones_dashboard` (
+`tipo` varchar(24)
+,`valor` decimal(21,1)
+);
 
 -- --------------------------------------------------------
 
@@ -1812,10 +2657,26 @@ CREATE TABLE `webhook_pago` (
 --
 
 INSERT INTO `webhook_pago` (`id`, `comunidad_id`, `proveedor`, `payload_json`, `fecha_recepcion`, `procesado`, `pago_id`) VALUES
-(1, 1, 'webpay', '{\"transaccion_id\": \"abc123\", \"monto\": 45000}', '2025-10-02 18:00:00', 1, 1),
-(2, 2, 'khipu', '{\"transaccion_id\": \"xyz789\", \"monto\": 32000}', '2025-10-02 18:05:00', 0, NULL),
-(3, 1, 'otro', '{\"detalle\": \"pago manual\"}', '2025-10-02 18:10:00', 1, 2),
-(4, 3, 'transferencia', '{\"referencia\": \"TRX456\", \"banco\": \"BancoEstado\"}', '2025-10-02 18:15:00', 0, NULL);
+(1, 2, 'transferencia', '{\"tx_id\": \"tr1\", \"monto\": 62000}', '2025-10-10 18:10:28', 1, 1),
+(2, 4, 'webpay', '{\"tx_id\": \"wp2\", \"monto\": 31000}', '2025-10-10 18:10:28', 1, 2),
+(3, 7, 'otro', '{\"detalle\": \"efectivo 55000\"}', '2025-10-10 18:10:28', 1, 3),
+(4, 8, 'transferencia', '{\"tx_id\": \"tr4\", \"monto\": 48000}', '2025-10-10 18:10:28', 1, 4),
+(5, 10, 'webpay', '{\"tx_id\": \"wp5\", \"monto\": 68000}', '2025-10-10 18:10:28', 1, 5),
+(6, 1, 'transferencia', '{\"tx_id\": \"tr6\", \"monto\": 45000}', '2025-10-10 18:10:28', 0, NULL),
+(7, 3, 'transferencia', '{\"tx_id\": \"tr7\", \"monto\": 88000}', '2025-10-10 18:10:28', 0, NULL),
+(8, 5, 'webpay', '{\"tx_id\": \"wp8\", \"monto\": 73000}', '2025-10-10 18:10:28', 0, NULL),
+(9, 9, 'otro', '{\"detalle\": \"efectivo 49000\"}', '2025-10-10 18:10:28', 0, NULL),
+(10, 6, 'transferencia', '{\"tx_id\": \"tr10\", \"monto\": 95000}', '2025-10-10 18:10:28', 0, NULL),
+(11, 2, 'transferencia', '{\"tx_id\": \"tr11\", \"monto\": 65000}', '2025-10-15 21:10:58', 1, 11),
+(12, 4, 'webpay', '{\"tx_id\": \"wp12\", \"monto\": 25000}', '2025-10-15 21:10:58', 1, 12),
+(13, 7, 'otro', '{\"detalle\": \"efectivo 60000\"}', '2025-10-15 21:10:58', 1, 13),
+(14, 8, 'transferencia', '{\"tx_id\": \"tr14\", \"monto\": 40000}', '2025-10-15 21:10:58', 1, 14),
+(15, 10, 'webpay', '{\"tx_id\": \"wp15\", \"monto\": 70000}', '2025-10-15 21:10:58', 1, 15),
+(16, 1, 'transferencia', '{\"tx_id\": \"tr16\", \"monto\": 50000}', '2025-10-15 21:10:58', 0, NULL),
+(17, 3, 'transferencia', '{\"tx_id\": \"tr17\", \"monto\": 90000}', '2025-10-15 21:10:58', 0, NULL),
+(18, 5, 'webpay', '{\"tx_id\": \"wp18\", \"monto\": 75000}', '2025-10-15 21:10:58', 0, NULL),
+(19, 9, 'otro', '{\"detalle\": \"efectivo 50000\"}', '2025-10-15 21:10:58', 0, NULL),
+(20, 6, 'transferencia', '{\"tx_id\": \"tr20\", \"monto\": 100000}', '2025-10-15 21:10:58', 0, NULL);
 
 --
 -- Indexes for dumped tables
@@ -1827,7 +2688,16 @@ INSERT INTO `webhook_pago` (`id`, `comunidad_id`, `proveedor`, `payload_json`, `
 ALTER TABLE `amenidad`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_amenidad_comunidad` (`comunidad_id`),
-  ADD KEY `idx_comunidad_id` (`comunidad_id`);
+  ADD KEY `idx_comunidad_id` (`comunidad_id`),
+  ADD KEY `idx_amenidad_comunidad_id` (`comunidad_id`),
+  ADD KEY `idx_amenidad_requiere_aprobacion` (`requiere_aprobacion`),
+  ADD KEY `idx_amenidad_capacidad` (`capacidad`),
+  ADD KEY `idx_amenidad_tarifa` (`tarifa`),
+  ADD KEY `idx_amenidad_created_at` (`created_at` DESC),
+  ADD KEY `idx_amenidad_nombre` (`nombre`),
+  ADD KEY `idx_amenidad_comunidad_nombre` (`comunidad_id`,`nombre`),
+  ADD KEY `idx_amenidad_filtros` (`comunidad_id`,`requiere_aprobacion`,`capacidad`,`tarifa`),
+  ADD KEY `idx_amenidad_validaciones` (`comunidad_id`,`nombre`,`capacidad`,`tarifa`);
 
 --
 -- Indexes for table `archivos`
@@ -1929,6 +2799,14 @@ ALTER TABLE `documento_comunidad`
   ADD KEY `fk_docrepo_comunidad` (`comunidad_id`);
 
 --
+-- Indexes for table `documento_multa`
+--
+ALTER TABLE `documento_multa`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_documento_multa` (`multa_id`),
+  ADD KEY `fk_documento_multa_usuario` (`subido_por`);
+
+--
 -- Indexes for table `edificio`
 --
 ALTER TABLE `edificio`
@@ -1947,10 +2825,31 @@ ALTER TABLE `emision_gastos_comunes`
 --
 ALTER TABLE `gasto`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_gasto_numero_comunidad` (`comunidad_id`,`numero`),
   ADD KEY `fk_gasto_comunidad` (`comunidad_id`),
   ADD KEY `fk_gasto_ccosto` (`centro_costo_id`),
   ADD KEY `fk_gasto_doc` (`documento_compra_id`),
-  ADD KEY `ix_gasto_categoria` (`categoria_id`);
+  ADD KEY `ix_gasto_categoria` (`categoria_id`),
+  ADD KEY `fk_gasto_anulado_por` (`anulado_por`),
+  ADD KEY `fk_gasto_aprobado_por` (`aprobado_por`),
+  ADD KEY `fk_gasto_creado_por` (`creado_por`);
+
+--
+-- Indexes for table `gasto_aprobacion`
+--
+ALTER TABLE `gasto_aprobacion`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_aprobacion_gasto` (`gasto_id`),
+  ADD KEY `fk_aprobacion_usuario` (`usuario_id`),
+  ADD KEY `fk_aprobacion_rol` (`rol_id`);
+
+--
+-- Indexes for table `historial_gasto`
+--
+ALTER TABLE `historial_gasto`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_historial_gasto` (`gasto_id`),
+  ADD KEY `fk_historial_usuario` (`usuario_id`);
 
 --
 -- Indexes for table `lectura_medidor`
@@ -1976,7 +2875,37 @@ ALTER TABLE `multa`
   ADD KEY `fk_multa_comunidad` (`comunidad_id`),
   ADD KEY `fk_multa_unidad` (`unidad_id`),
   ADD KEY `fk_multa_persona` (`persona_id`),
-  ADD KEY `ix_multa_estado` (`estado`);
+  ADD KEY `ix_multa_estado` (`estado`),
+  ADD KEY `fk_multa_creada_por` (`creada_por`),
+  ADD KEY `fk_multa_aprobada_por` (`aprobada_por`);
+
+--
+-- Indexes for table `multa_apelacion`
+--
+ALTER TABLE `multa_apelacion`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_apelacion_multa` (`multa_id`),
+  ADD KEY `fk_apelacion_usuario` (`usuario_id`),
+  ADD KEY `fk_apelacion_persona` (`persona_id`),
+  ADD KEY `fk_apelacion_comunidad` (`comunidad_id`),
+  ADD KEY `idx_multa_apelacion_multa_id` (`multa_id`),
+  ADD KEY `idx_multa_apelacion_usuario_id` (`usuario_id`),
+  ADD KEY `idx_multa_apelacion_estado` (`estado`),
+  ADD KEY `idx_multa_apelacion_created_at` (`created_at` DESC),
+  ADD KEY `idx_multa_apelacion_fecha_resolucion` (`fecha_resolucion`),
+  ADD KEY `idx_multa_apelacion_estado_fecha` (`estado`,`created_at` DESC),
+  ADD KEY `idx_multa_apelacion_usuario_estado` (`usuario_id`,`estado`),
+  ADD KEY `idx_multa_apelacion_multa_estado` (`multa_id`,`estado`),
+  ADD KEY `idx_multa_apelacion_comunidad_id` (`comunidad_id`),
+  ADD KEY `idx_multa_apelacion_resolucion` (`created_at`,`fecha_resolucion`);
+
+--
+-- Indexes for table `multa_historial`
+--
+ALTER TABLE `multa_historial`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_historial_multa` (`multa_id`),
+  ADD KEY `fk_historial_multa_usuario` (`usuario_id`);
 
 --
 -- Indexes for table `notificacion_usuario`
@@ -2153,232 +3082,6 @@ ALTER TABLE `webhook_pago`
   ADD KEY `fk_wh_comunidad` (`comunidad_id`),
   ADD KEY `fk_wh_pago` (`pago_id`);
 
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `amenidad`
---
-ALTER TABLE `amenidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
-
---
--- AUTO_INCREMENT for table `archivos`
---
-ALTER TABLE `archivos`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `auditoria`
---
-ALTER TABLE `auditoria`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
-
---
--- AUTO_INCREMENT for table `categoria_gasto`
---
-ALTER TABLE `categoria_gasto`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `centro_costo`
---
-ALTER TABLE `centro_costo`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `comunidad`
---
-ALTER TABLE `comunidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
-
---
--- AUTO_INCREMENT for table `conciliacion_bancaria`
---
-ALTER TABLE `conciliacion_bancaria`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT for table `configuracion_interes`
---
-ALTER TABLE `configuracion_interes`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT for table `cuenta_cobro_unidad`
---
-ALTER TABLE `cuenta_cobro_unidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `detalle_cuenta_unidad`
---
-ALTER TABLE `detalle_cuenta_unidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `detalle_emision_gastos`
---
-ALTER TABLE `detalle_emision_gastos`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `documento_compra`
---
-ALTER TABLE `documento_compra`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `documento_comunidad`
---
-ALTER TABLE `documento_comunidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT for table `edificio`
---
-ALTER TABLE `edificio`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
-
---
--- AUTO_INCREMENT for table `emision_gastos_comunes`
---
-ALTER TABLE `emision_gastos_comunes`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `gasto`
---
-ALTER TABLE `gasto`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `lectura_medidor`
---
-ALTER TABLE `lectura_medidor`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `medidor`
---
-ALTER TABLE `medidor`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `multa`
---
-ALTER TABLE `multa`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `notificacion_usuario`
---
-ALTER TABLE `notificacion_usuario`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `pago`
---
-ALTER TABLE `pago`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `pago_aplicacion`
---
-ALTER TABLE `pago_aplicacion`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `parametros_cobranza`
---
-ALTER TABLE `parametros_cobranza`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT for table `persona`
---
-ALTER TABLE `persona`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1010;
-
---
--- AUTO_INCREMENT for table `proveedor`
---
-ALTER TABLE `proveedor`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `registro_conserjeria`
---
-ALTER TABLE `registro_conserjeria`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `reserva_amenidad`
---
-ALTER TABLE `reserva_amenidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT for table `rol_sistema`
---
-ALTER TABLE `rol_sistema`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `tarifa_consumo`
---
-ALTER TABLE `tarifa_consumo`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT for table `ticket_soporte`
---
-ALTER TABLE `ticket_soporte`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `titulares_unidad`
---
-ALTER TABLE `titulares_unidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=115;
-
---
--- AUTO_INCREMENT for table `torre`
---
-ALTER TABLE `torre`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
-
---
--- AUTO_INCREMENT for table `unidad`
---
-ALTER TABLE `unidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1021;
-
---
--- AUTO_INCREMENT for table `user_preferences`
---
-ALTER TABLE `user_preferences`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `usuario`
---
-ALTER TABLE `usuario`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
-
---
--- AUTO_INCREMENT for table `usuario_rol_comunidad`
---
-ALTER TABLE `usuario_rol_comunidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=143;
-
---
--- AUTO_INCREMENT for table `webhook_pago`
---
-ALTER TABLE `webhook_pago`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
 -- --------------------------------------------------------
 
 --
@@ -2422,7 +3125,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `em
 --
 DROP TABLE IF EXISTS `emision_gasto_detalle`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `emision_gasto_detalle`  AS SELECT `detalle_emision`.`id` AS `id`, `detalle_emision`.`emision_id` AS `emision_id`, `detalle_emision`.`gasto_id` AS `gasto_id`, `detalle_emision`.`categoria_id` AS `categoria_id`, `detalle_emision`.`monto` AS `monto`, `detalle_emision`.`regla_prorrateo` AS `regla_prorrateo`, `detalle_emision`.`metadata_json` AS `metadata_json`, `detalle_emision`.`created_at` AS `created_at`, `detalle_emision`.`updated_at` AS `updated_at` FROM `detalle_emision` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `emision_gasto_detalle`  AS SELECT `detalle_emision_gastos`.`id` AS `id`, `detalle_emision_gastos`.`emision_id` AS `emision_id`, `detalle_emision_gastos`.`gasto_id` AS `gasto_id`, `detalle_emision_gastos`.`categoria_id` AS `categoria_id`, `detalle_emision_gastos`.`monto` AS `monto`, `detalle_emision_gastos`.`regla_prorrateo` AS `regla_prorrateo`, `detalle_emision_gastos`.`metadata_json` AS `metadata_json`, `detalle_emision_gastos`.`created_at` AS `created_at`, `detalle_emision_gastos`.`updated_at` AS `updated_at` FROM `detalle_emision_gastos` ;
 
 -- --------------------------------------------------------
 
@@ -2431,7 +3134,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `em
 --
 DROP TABLE IF EXISTS `ticket`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `ticket`  AS SELECT `solicitud_soporte`.`id` AS `id`, `solicitud_soporte`.`comunidad_id` AS `comunidad_id`, `solicitud_soporte`.`unidad_id` AS `unidad_id`, `solicitud_soporte`.`categoria` AS `categoria`, `solicitud_soporte`.`titulo` AS `titulo`, `solicitud_soporte`.`descripcion` AS `descripcion`, `solicitud_soporte`.`estado` AS `estado`, `solicitud_soporte`.`prioridad` AS `prioridad`, `solicitud_soporte`.`asignado_a` AS `asignado_a`, `solicitud_soporte`.`attachments_json` AS `attachments_json`, `solicitud_soporte`.`created_at` AS `created_at`, `solicitud_soporte`.`updated_at` AS `updated_at` FROM `solicitud_soporte` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `ticket`  AS SELECT `ticket_soporte`.`id` AS `id`, `ticket_soporte`.`comunidad_id` AS `comunidad_id`, `ticket_soporte`.`unidad_id` AS `unidad_id`, `ticket_soporte`.`categoria` AS `categoria`, `ticket_soporte`.`titulo` AS `titulo`, `ticket_soporte`.`descripcion` AS `descripcion`, `ticket_soporte`.`estado` AS `estado`, `ticket_soporte`.`prioridad` AS `prioridad`, `ticket_soporte`.`asignado_a` AS `asignado_a`, `ticket_soporte`.`attachments_json` AS `attachments_json`, `ticket_soporte`.`created_at` AS `created_at`, `ticket_soporte`.`updated_at` AS `updated_at` FROM `ticket_soporte` ;
 
 -- --------------------------------------------------------
 
@@ -2449,7 +3152,16 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `ti
 --
 DROP TABLE IF EXISTS `usuario_miembro_comunidad`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY INVOKER VIEW `usuario_miembro_comunidad`  AS SELECT `urc`.`id` AS `id`, `urc`.`comunidad_id` AS `comunidad_id`, `u`.`persona_id` AS `persona_id`, `r`.`codigo` AS `rol`, `urc`.`desde` AS `desde`, `urc`.`hasta` AS `hasta`, `urc`.`activo` AS `activo`, `urc`.`created_at` AS `created_at`, `urc`.`updated_at` AS `updated_at` FROM ((`usuario_rol_comunidad` `urc` join `usuario` `u` on((`u`.`id` = `urc`.`usuario_id`))) join `rol_sistema` `r` on((`r`.`id` = `urc`.`rol_id`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `usuario_miembro_comunidad`  AS SELECT `urc`.`id` AS `id`, `urc`.`comunidad_id` AS `comunidad_id`, `u`.`persona_id` AS `persona_id`, `r`.`codigo` AS `rol`, `urc`.`desde` AS `desde`, `urc`.`hasta` AS `hasta`, `urc`.`activo` AS `activo`, `urc`.`created_at` AS `created_at`, `urc`.`updated_at` AS `updated_at` FROM ((`usuario_rol_comunidad` `urc` join `usuario` `u` on((`u`.`id` = `urc`.`usuario_id`))) join `rol_sistema` `r` on((`r`.`id` = `urc`.`rol_id`))) ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `vista_apelaciones_dashboard`
+--
+DROP TABLE IF EXISTS `vista_apelaciones_dashboard`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `vista_apelaciones_dashboard`  AS SELECT 'total' AS `tipo`, count(0) AS `valor` FROM `multa_apelacion`union all select 'pendientes' AS `tipo`,count(0) AS `valor` from `multa_apelacion` where (`multa_apelacion`.`estado` = 'pendiente') union all select 'aprobadas' AS `tipo`,count(0) AS `valor` from `multa_apelacion` where (`multa_apelacion`.`estado` = 'aceptada') union all select 'rechazadas' AS `tipo`,count(0) AS `valor` from `multa_apelacion` where (`multa_apelacion`.`estado` = 'rechazada') union all select 'dias_promedio_resolucion' AS `tipo`,round(avg((case when (`multa_apelacion`.`fecha_resolucion` is not null) then (to_days(`multa_apelacion`.`fecha_resolucion`) - to_days(`multa_apelacion`.`created_at`)) end)),1) AS `valor` from `multa_apelacion`  ;
 
 --
 -- Constraints for dumped tables
@@ -2477,30 +3189,26 @@ ALTER TABLE `auditoria`
 -- Constraints for table `categoria_gasto`
 --
 ALTER TABLE `categoria_gasto`
-  ADD CONSTRAINT `fk_categoria_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
-  ADD CONSTRAINT `fk_catgasto_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
+  ADD CONSTRAINT `fk_categoria_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
 -- Constraints for table `centro_costo`
 --
 ALTER TABLE `centro_costo`
-  ADD CONSTRAINT `fk_ccosto_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
-  ADD CONSTRAINT `fk_centro_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
+  ADD CONSTRAINT `fk_ccosto_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
 -- Constraints for table `conciliacion_bancaria`
 --
 ALTER TABLE `conciliacion_bancaria`
   ADD CONSTRAINT `fk_conc_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
-  ADD CONSTRAINT `fk_conc_pago` FOREIGN KEY (`pago_id`) REFERENCES `pago` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_conciliacion_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
+  ADD CONSTRAINT `fk_conc_pago` FOREIGN KEY (`pago_id`) REFERENCES `pago` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `configuracion_interes`
 --
 ALTER TABLE `configuracion_interes`
-  ADD CONSTRAINT `fk_cint_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
-  ADD CONSTRAINT `fk_configuracion_interes_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
+  ADD CONSTRAINT `fk_cint_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
 -- Constraints for table `cuenta_cobro_unidad`
@@ -2530,15 +3238,20 @@ ALTER TABLE `detalle_emision_gastos`
 --
 ALTER TABLE `documento_compra`
   ADD CONSTRAINT `fk_doc_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
-  ADD CONSTRAINT `fk_doc_proveedor` FOREIGN KEY (`proveedor_id`) REFERENCES `proveedor` (`id`),
-  ADD CONSTRAINT `fk_documento_compra_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
+  ADD CONSTRAINT `fk_doc_proveedor` FOREIGN KEY (`proveedor_id`) REFERENCES `proveedor` (`id`);
 
 --
 -- Constraints for table `documento_comunidad`
 --
 ALTER TABLE `documento_comunidad`
-  ADD CONSTRAINT `fk_docrepo_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
-  ADD CONSTRAINT `fk_documento_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
+  ADD CONSTRAINT `fk_docrepo_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
+
+--
+-- Constraints for table `documento_multa`
+--
+ALTER TABLE `documento_multa`
+  ADD CONSTRAINT `fk_documento_multa` FOREIGN KEY (`multa_id`) REFERENCES `multa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_documento_multa_usuario` FOREIGN KEY (`subido_por`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Constraints for table `edificio`
@@ -2556,10 +3269,28 @@ ALTER TABLE `emision_gastos_comunes`
 -- Constraints for table `gasto`
 --
 ALTER TABLE `gasto`
+  ADD CONSTRAINT `fk_gasto_anulado_por` FOREIGN KEY (`anulado_por`) REFERENCES `usuario` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_gasto_aprobado_por` FOREIGN KEY (`aprobado_por`) REFERENCES `usuario` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_gasto_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categoria_gasto` (`id`),
   ADD CONSTRAINT `fk_gasto_ccosto` FOREIGN KEY (`centro_costo_id`) REFERENCES `centro_costo` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_gasto_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
+  ADD CONSTRAINT `fk_gasto_creado_por` FOREIGN KEY (`creado_por`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_gasto_doc` FOREIGN KEY (`documento_compra_id`) REFERENCES `documento_compra` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `gasto_aprobacion`
+--
+ALTER TABLE `gasto_aprobacion`
+  ADD CONSTRAINT `fk_aprobacion_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_aprobacion_rol` FOREIGN KEY (`rol_id`) REFERENCES `rol_sistema` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_aprobacion_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Constraints for table `historial_gasto`
+--
+ALTER TABLE `historial_gasto`
+  ADD CONSTRAINT `fk_historial_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_historial_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Constraints for table `lectura_medidor`
@@ -2578,9 +3309,27 @@ ALTER TABLE `medidor`
 -- Constraints for table `multa`
 --
 ALTER TABLE `multa`
+  ADD CONSTRAINT `fk_multa_aprobada_por` FOREIGN KEY (`aprobada_por`) REFERENCES `usuario` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_multa_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
+  ADD CONSTRAINT `fk_multa_creada_por` FOREIGN KEY (`creada_por`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_multa_persona` FOREIGN KEY (`persona_id`) REFERENCES `persona` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_multa_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`);
+
+--
+-- Constraints for table `multa_apelacion`
+--
+ALTER TABLE `multa_apelacion`
+  ADD CONSTRAINT `fk_apelacion_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_apelacion_multa` FOREIGN KEY (`multa_id`) REFERENCES `multa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_apelacion_persona` FOREIGN KEY (`persona_id`) REFERENCES `persona` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_apelacion_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `multa_historial`
+--
+ALTER TABLE `multa_historial`
+  ADD CONSTRAINT `fk_historial_multa_multa` FOREIGN KEY (`multa_id`) REFERENCES `multa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_historial_multa_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Constraints for table `notificacion_usuario`

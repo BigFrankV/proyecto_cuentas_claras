@@ -1,9 +1,12 @@
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
+import { useState, useRef, useEffect } from 'react';
+
+import apiClient from '@/lib/api';
+import { crearTorre, getSiguienteCodigo, validarCodigoTorre } from '@/lib/torresService';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 interface TorreFormData {
   edificioId: string;
@@ -42,8 +45,19 @@ const initialFormData: TorreFormData = {
   activa: true,
   visibleEnPortal: false,
   facturacionIndependiente: false,
-  observaciones: ''
+  observaciones: '',
 };
+
+interface Edificio {
+  id: number;
+  nombre: string;
+}
+
+interface Administrador {
+  id: number;
+  nombre: string;
+  apellidos: string;
+}
 
 export default function TorreNueva() {
   const router = useRouter();
@@ -52,25 +66,52 @@ export default function TorreNueva() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [edificios, setEdificios] = useState<Edificio[]>([]);
+  const [administradores, setAdministradores] = useState<Administrador[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
 
-  // Datos mock para selects
-  const edificios = [
-    { id: '1', nombre: 'Torre Central' },
-    { id: '2', nombre: 'Edificio Norte' },
-    { id: '3', nombre: 'Condominio Jardines' },
-    { id: '4', nombre: 'Edificio Mirador' }
-  ];
+  // Cargar edificios y administradores
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoadingData(true);
+        const [edificiosRes, administradoresRes] = await Promise.all([
+          apiClient.get('/edificios'),
+          apiClient.get('/personas?rol=administrador'),
+        ]);
+        setEdificios(edificiosRes.data || []);
+        setAdministradores(administradoresRes.data || []);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Error cargando datos:', err);
+      } finally {
+        setLoadingData(false);
+      }
+    };
 
-  const administradores = [
-    { id: '1', nombre: 'Patricia Contreras' },
-    { id: '2', nombre: 'Juan Pérez' },
-    { id: '3', nombre: 'María González' }
-  ];
+    loadData();
+  }, []);
 
-  const handleInputChange = (field: keyof TorreFormData, value: any) => {
-    setFormData(prev => ({
+  // Obtener siguiente código cuando se selecciona un edificio
+  useEffect(() => {
+    if (formData.edificioId && !formData.codigo) {
+      const loadSiguienteCodigo = async () => {
+        try {
+          const { siguienteCodigo } = await getSiguienteCodigo(Number(formData.edificioId));
+          setFormData((prev) => ({ ...prev, codigo: siguienteCodigo }));
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error('Error obteniendo siguiente código:', err);
+        }
+      };
+      loadSiguienteCodigo();
+    }
+  }, [formData.edificioId, formData.codigo]);
+
+  const handleInputChange = (field: keyof TorreFormData, value: unknown) => {
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
 
     // Limpiar error cuando el usuario empieza a escribir
@@ -153,7 +194,7 @@ export default function TorreNueva() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -161,20 +202,63 @@ export default function TorreNueva() {
     setLoading(true);
 
     try {
-      // Simular llamada API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Datos de la torre:', formData);
-      
+      // Validar código único
+      if (formData.edificioId && formData.codigo) {
+        const { existe } = await validarCodigoTorre(
+          Number(formData.edificioId),
+          formData.codigo,
+        );
+        if (existe) {
+          setErrors((prev) => ({
+            ...prev,
+            codigo: 'Este código ya está en uso',
+          }));
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Crear torre
+      const torreData = {
+        edificio_id: Number(formData.edificioId),
+        nombre: formData.nombre,
+        codigo: formData.codigo,
+        descripcion: formData.descripcion || undefined,
+        // TODO: Agregar más campos según la API lo soporte
+      };
+
+      await crearTorre(torreData);
+
       // Redirigir al listado de torres
       router.push('/torres');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error al crear torre:', error);
-      // Aquí manejarías el error de la API
+      setErrors((prev) => ({
+        ...prev,
+        general: 'Error al crear la torre. Por favor, intente nuevamente.',
+      }));
     } finally {
       setLoading(false);
     }
   };
+
+  if (loadingData) {
+    return (
+      <ProtectedRoute>
+        <Layout title="Nueva Torre">
+          <div className="container-fluid py-4">
+            <div className="text-center">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Cargando...</span>
+              </div>
+              <p className="mt-2">Cargando datos del formulario...</p>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -333,7 +417,7 @@ export default function TorreNueva() {
                             <option value="">Seleccionar administrador</option>
                             {administradores.map((admin) => (
                               <option key={admin.id} value={admin.id}>
-                                {admin.nombre}
+                                {admin.nombre} {admin.apellidos}
                               </option>
                             ))}
                           </select>
