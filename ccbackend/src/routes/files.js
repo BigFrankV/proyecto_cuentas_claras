@@ -10,8 +10,10 @@ const router = express.Router();
 // Middleware de autenticación para todas las rutas
 router.use(authenticateToken);
 
-// Inicializar tabla de archivos
-FileService.initializeFileTable().catch(console.error);
+// Inicializar tabla de archivos solo si no estamos en modo test
+if (process.env.NODE_ENV !== 'test') {
+  FileService.initializeFileTable().catch(console.error);
+}
 
 /**
  * @swagger
@@ -338,3 +340,20 @@ router.post('/cleanup', async (req, res) => {
 });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE ARCHIVOS (FILES)
+// =========================================
+
+// // SUBIDA Y DESCARGA
+// POST: /files/upload
+// GET: /files/:id
+
+// // LISTADO Y GESTIÓN
+// GET: /files
+// DELETE: /files/:id
+
+// // UTILIDADES Y ESTADÍSTICAS
+// GET: /files/stats
+// POST: /files/cleanup

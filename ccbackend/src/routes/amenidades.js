@@ -1039,3 +1039,46 @@ router.post(
 );
 
 module.exports = router;
+// =========================================
+// ENDPOINTS DE AMENIDADES
+// =========================================
+
+// // 1. LISTADOS BÁSICOS CON FILTROS
+// GET: /amenidades
+// GET: /amenidades/por-comunidad
+// GET: /amenidades/disponibles
+
+// // 2. VISTAS DETALLADAS
+// GET: /amenidades/:id/detalle
+// GET: /amenidades/completas
+
+// // 3. ESTADÍSTICAS
+// GET: /amenidades/estadisticas/generales
+// GET: /amenidades/estadisticas/comunidad
+// GET: /amenidades/estadisticas/tipo
+
+// // 4. BÚSQUEDAS FILTRADAS
+// GET: /amenidades/buscar
+// GET: /amenidades/por-capacidad
+// GET: /amenidades/por-tarifa
+
+// // 5. EXPORTACIONES
+// GET: /amenidades/exportar/completo
+// GET: /amenidades/exportar/estadisticas
+// GET: /amenidades/exportar/reglas
+
+// // 6. VALIDACIONES
+// GET: /amenidades/validar/integridad
+// GET: /amenidades/validar/duplicados
+// GET: /amenidades/validar/anomalias
+
+// // 7. CRUD BÁSICO POR COMUNIDAD
+// GET: /amenidades/comunidad/:comunidadId
+// POST: /amenidades/comunidad/:comunidadId
+// GET: /amenidades/:id
+// PATCH: /amenidades/:id
+// DELETE: /amenidades/:id
+
+// // 8. RESERVAS DE AMENIDADES
+// GET: /amenidades/:id/reservas
+// POST: /amenidades/:id/reservas

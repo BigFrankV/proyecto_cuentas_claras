@@ -1181,3 +1181,50 @@ router.get('/comunidad/:comunidadId/dashboard/distribucion-tipo', authenticate, 
 });
 
 module.exports = router;
+
+// =========================================
+// ENDPOINTS DE CATEGORÍAS DE GASTO
+// =========================================
+
+// // LISTADOS, FILTROS Y DETALLES
+// GET: /categorias-gasto/comunidad/:comunidadId
+// GET: /categorias-gasto/comunidad/:comunidadId/filtrar
+// GET: /categorias-gasto/:id/detalle
+// GET: /categorias-gasto/:id/ultimos-gastos
+// GET: /categorias-gasto/:id
+
+// // OPERACIONES CRUD
+// POST: /categorias-gasto/comunidad/:comunidadId
+// PATCH: /categorias-gasto/:id
+// DELETE: /categorias-gasto/:id
+// PATCH: /categorias-gasto/:id/activar
+
+// // ESTADÍSTICAS Y REPORTES
+// GET: /categorias-gasto/comunidad/:comunidadId/estadisticas/generales
+// GET: /categorias-gasto/comunidad/:comunidadId/estadisticas/por-tipo
+// GET: /categorias-gasto/comunidad/:comunidadId/mas-utilizadas
+// GET: /categorias-gasto/comunidad/:comunidadId/mas-costosas
+// GET: /categorias-gasto/comunidad/:comunidadId/sin-uso
+// GET: /categorias-gasto/comunidad/:comunidadId/reporte/por-mes
+// GET: /categorias-gasto/comunidad/:comunidadId/reporte/comparativo
+// GET: /categorias-gasto/comunidad/:comunidadId/reporte/variabilidad
+
+// // VALIDACIONES
+// GET: /categorias-gasto/:id/existe
+// GET: /categorias-gasto/comunidad/:comunidadId/validar-nombre
+// GET: /categorias-gasto/:id/tiene-gastos
+// GET: /categorias-gasto/validar-tipo
+
+// // LISTAS DESPLEGABLES
+// GET: /categorias-gasto/comunidad/:comunidadId/activas
+// GET: /categorias-gasto/comunidad/:comunidadId/tipos
+// GET: /categorias-gasto/comunidad/:comunidadId/por-tipo/:tipo
+
+// // EXPORTACIÓN
+// GET: /categorias-gasto/comunidad/:comunidadId/exportar
+
+// // DASHBOARD
+// GET: /categorias-gasto/comunidad/:comunidadId/dashboard/resumen
+// GET: /categorias-gasto/comunidad/:comunidadId/dashboard/top-mes
+// GET: /categorias-gasto/comunidad/:comunidadId/dashboard/sin-uso-reciente
+// GET: /categorias-gasto/comunidad/:comunidadId/dashboard/distribucion-tipo

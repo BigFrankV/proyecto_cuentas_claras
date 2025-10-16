@@ -1077,3 +1077,41 @@ router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req
 });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE TICKETS
+// =========================================
+
+// // 1. LISTADOS BÁSICOS CON FILTROS
+// GET: /tickets/comunidad/:comunidadId
+// GET: /tickets/comunidad/:comunidadId/estadisticas
+// GET: /tickets/comunidad/:comunidadId/proximos-vencer
+
+// // 2. VISTAS DETALLADAS
+// GET: /tickets/:id
+// GET: /tickets/todos/completos
+
+// // 3. ESTADÍSTICAS
+// GET: /tickets/estadisticas/generales
+// GET: /tickets/estadisticas/por-estado
+// GET: /tickets/estadisticas/por-prioridad
+// GET: /tickets/estadisticas/por-categoria
+// GET: /tickets/estadisticas/mensuales
+
+// // 4. BÚSQUEDAS AVANZADAS
+// GET: /tickets/busqueda/avanzada
+// GET: /tickets/por-asignado/estadisticas
+
+// // 5. EXPORTACIÓN
+// GET: /tickets/export/completo
+// GET: /tickets/export/abiertos
+// GET: /tickets/export/estadisticas-resolucion
+
+// // 6. VALIDACIONES
+// GET: /tickets/validacion/integridad
+
+// // 7. CRUD BÁSICO
+// POST: /tickets/comunidad/:comunidadId
+// PATCH: /tickets/:id
+// DELETE: /tickets/:id

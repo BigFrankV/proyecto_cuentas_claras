@@ -910,3 +910,38 @@ router.get('/:id/consumos', authenticate, async (req, res) => {
 });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE MEDIDORES
+// =========================================
+
+// // 1. LISTADOS Y FILTROS
+// GET: /medidores/comunidad/:comunidadId
+// GET: /medidores/comunidad/:comunidadId/search
+
+// // 2. VISTA DETALLADA
+// GET: /medidores/:id
+
+// // 3. ESTADÍSTICAS
+// GET: /medidores/comunidad/:comunidadId/estadisticas
+// GET: /medidores/comunidad/:comunidadId/estadisticas/tipo
+// GET: /medidores/comunidad/:comunidadId/estadisticas/edificio
+
+// // 4. EXPORTACIÓN
+// GET: /medidores/comunidad/:comunidadId/export
+// GET: /medidores/comunidad/:comunidadId/export/lecturas
+
+// // 5. VALIDACIONES
+// GET: /medidores/comunidad/:comunidadId/validar/lecturas-inconsistentes
+// GET: /medidores/comunidad/:comunidadId/validar/integridad
+
+// // 6. CRUD BÁSICO
+// POST: /medidores/comunidad/:comunidadId
+// PATCH: /medidores/:id
+// DELETE: /medidores/:id
+
+// // 7. GESTIÓN DE LECTURAS
+// GET: /medidores/:id/lecturas
+// POST: /medidores/:id/lecturas
+// GET: /medidores/:id/consumos

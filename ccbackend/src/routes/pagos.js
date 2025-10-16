@@ -11,6 +11,237 @@ const { requireCommunity } = require('../middleware/tenancy');
  * tags:
  *   - name: Pagos
  *     description: Gestión de pagos, aplicaciones a cuentas de cobro y reversos
+ * 
+ * components:
+ *   schemas:
+ *     Payment:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: ID único del pago
+ *           example: 123
+ *         order_id:
+ *           type: string
+ *           description: Código único de orden
+ *           example: "PAY-2025-0123"
+ *         amount:
+ *           type: number
+ *           format: float
+ *           description: Monto del pago
+ *           example: 150000.00
+ *         payment_date:
+ *           type: string
+ *           format: date
+ *           description: Fecha del pago
+ *           example: "2025-10-16"
+ *         status:
+ *           type: string
+ *           enum: [pending, approved, cancelled]
+ *           description: Estado del pago
+ *           example: "approved"
+ *         payment_method:
+ *           type: string
+ *           enum: [bank_transfer, webpay, khipu, servipag, cash]
+ *           description: Método de pago
+ *           example: "bank_transfer"
+ *         reference:
+ *           type: string
+ *           description: Referencia o número de transacción
+ *           example: "TRX-123456789"
+ *         receipt_number:
+ *           type: string
+ *           description: Número de comprobante
+ *           example: "COMP-001"
+ *         community_name:
+ *           type: string
+ *           description: Nombre de la comunidad
+ *           example: "Condominio Los Aromos"
+ *         unit_number:
+ *           type: string
+ *           description: Número de unidad
+ *           example: "101"
+ *         resident_name:
+ *           type: string
+ *           description: Nombre del residente
+ *           example: "Juan Pérez"
+ *         resident_email:
+ *           type: string
+ *           format: email
+ *           description: Email del residente
+ *           example: "juan.perez@email.com"
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: Fecha de creación
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: Fecha de última actualización
+ * 
+ *     PaymentCreate:
+ *       type: object
+ *       required:
+ *         - fecha
+ *         - monto
+ *       properties:
+ *         unidad_id:
+ *           type: integer
+ *           description: ID de la unidad
+ *           example: 45
+ *         persona_id:
+ *           type: integer
+ *           description: ID de la persona
+ *           example: 12
+ *         fecha:
+ *           type: string
+ *           format: date
+ *           description: Fecha del pago
+ *           example: "2025-10-16"
+ *         monto:
+ *           type: number
+ *           format: float
+ *           description: Monto del pago
+ *           example: 150000.00
+ *         medio:
+ *           type: string
+ *           enum: [transferencia, webpay, khipu, servipag, efectivo]
+ *           description: Medio de pago
+ *           example: "transferencia"
+ *         referencia:
+ *           type: string
+ *           description: Referencia de la transacción
+ *           example: "TRX-123456789"
+ *         comprobante_num:
+ *           type: string
+ *           description: Número de comprobante
+ *           example: "COMP-001"
+ * 
+ *     PaymentApplication:
+ *       type: object
+ *       required:
+ *         - assignments
+ *       properties:
+ *         assignments:
+ *           type: array
+ *           description: Lista de asignaciones del pago a cuentas
+ *           items:
+ *             type: object
+ *             required:
+ *               - cuenta_cobro_unidad_id
+ *               - monto
+ *             properties:
+ *               cuenta_cobro_unidad_id:
+ *                 type: integer
+ *                 description: ID de la cuenta de cobro
+ *                 example: 234
+ *               cargo_unidad_id:
+ *                 type: integer
+ *                 description: ID del cargo (alternativo)
+ *                 example: 234
+ *               monto:
+ *                 type: number
+ *                 format: float
+ *                 description: Monto a aplicar
+ *                 example: 75000.00
+ *       example:
+ *         assignments:
+ *           - cuenta_cobro_unidad_id: 234
+ *             monto: 75000.00
+ *           - cuenta_cobro_unidad_id: 235
+ *             monto: 50000.00
+ * 
+ *     PaymentStats:
+ *       type: object
+ *       properties:
+ *         total_payments:
+ *           type: integer
+ *           description: Total de pagos
+ *           example: 150
+ *         approved_payments:
+ *           type: integer
+ *           description: Pagos aprobados
+ *           example: 120
+ *         pending_payments:
+ *           type: integer
+ *           description: Pagos pendientes
+ *           example: 25
+ *         cancelled_payments:
+ *           type: integer
+ *           description: Pagos cancelados
+ *           example: 5
+ *         total_amount:
+ *           type: number
+ *           format: float
+ *           description: Monto total
+ *           example: 22500000.00
+ *         average_amount:
+ *           type: number
+ *           format: float
+ *           description: Monto promedio
+ *           example: 150000.00
+ *         oldest_payment:
+ *           type: string
+ *           format: date
+ *           description: Pago más antiguo
+ *           example: "2024-01-15"
+ *         newest_payment:
+ *           type: string
+ *           format: date
+ *           description: Pago más reciente
+ *           example: "2025-10-16"
+ *         approved_amount:
+ *           type: number
+ *           format: float
+ *           description: Monto aprobado total
+ *           example: 18000000.00
+ * 
+ *     PaginatedPayments:
+ *       type: object
+ *       properties:
+ *         data:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Payment'
+ *         pagination:
+ *           type: object
+ *           properties:
+ *             total:
+ *               type: integer
+ *               description: Total de registros
+ *               example: 150
+ *             limit:
+ *               type: integer
+ *               description: Límite por página
+ *               example: 20
+ *             offset:
+ *               type: integer
+ *               description: Desplazamiento
+ *               example: 0
+ *             hasMore:
+ *               type: boolean
+ *               description: Hay más registros
+ *               example: true
+ * 
+ *     ErrorResponse:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           description: Mensaje de error
+ *           example: "Error al procesar la solicitud"
+ *         errors:
+ *           type: array
+ *           description: Lista de errores de validación
+ *           items:
+ *             type: object
+ *             properties:
+ *               msg:
+ *                 type: string
+ *                 example: "Campo requerido"
+ *               param:
+ *                 type: string
+ *                 example: "monto"
  */
 
 // =========================================
@@ -23,45 +254,90 @@ const { requireCommunity } = require('../middleware/tenancy');
  *   get:
  *     tags: [Pagos]
  *     summary: Listar pagos con filtros avanzados
+ *     description: Obtiene un listado paginado de pagos con múltiples opciones de filtrado
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: comunidadId
  *         in: path
  *         required: true
+ *         description: ID de la comunidad
  *         schema:
  *           type: integer
+ *           example: 1
  *       - name: estado
  *         in: query
+ *         description: Filtrar por estado del pago
  *         schema:
  *           type: string
  *           enum: [pendiente, aplicado, reversado]
+ *           example: aplicado
  *       - name: medio
  *         in: query
+ *         description: Filtrar por medio de pago
  *         schema:
  *           type: string
+ *           enum: [transferencia, webpay, khipu, servipag, efectivo]
+ *           example: transferencia
  *       - name: fecha_desde
  *         in: query
+ *         description: Fecha inicial del rango
  *         schema:
  *           type: string
  *           format: date
+ *           example: "2025-01-01"
  *       - name: fecha_hasta
  *         in: query
+ *         description: Fecha final del rango
  *         schema:
  *           type: string
  *           format: date
+ *           example: "2025-12-31"
  *       - name: search
  *         in: query
+ *         description: Búsqueda por referencia, nombre o unidad
  *         schema:
  *           type: string
+ *           example: "Juan"
  *       - name: limit
  *         in: query
+ *         description: Cantidad de registros por página
  *         schema:
  *           type: integer
  *           default: 20
+ *           example: 20
  *       - name: offset
  *         in: query
+ *         description: Desplazamiento para paginación
  *         schema:
  *           type: integer
  *           default: 0
+ *           example: 0
+ *     responses:
+ *       200:
+ *         description: Lista de pagos obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PaginatedPayments'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: No autorizado para esta comunidad
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
@@ -180,6 +456,36 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
  *   get:
  *     tags: [Pagos]
  *     summary: Obtener pago por ID con detalles completos
+ *     description: Retorna toda la información detallada de un pago específico
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID del pago
+ *         schema:
+ *           type: integer
+ *           example: 123
+ *     responses:
+ *       200:
+ *         description: Pago encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Payment'
+ *       404:
+ *         description: Pago no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Pago no encontrado"
+ *       401:
+ *         description: No autenticado
+ *       500:
+ *         description: Error del servidor
  */
 router.get('/:id', authenticate, async (req, res) => {
   try {
@@ -244,6 +550,30 @@ router.get('/:id', authenticate, async (req, res) => {
  *   get:
  *     tags: [Pagos]
  *     summary: Estadísticas generales de pagos por comunidad
+ *     description: Retorna métricas consolidadas de todos los pagos de una comunidad
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         description: ID de la comunidad
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Estadísticas obtenidas exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PaymentStats'
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       500:
+ *         description: Error del servidor
  */
 router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
@@ -279,6 +609,45 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
  *   get:
  *     tags: [Pagos]
  *     summary: Estadísticas agrupadas por estado
+ *     description: Retorna métricas agrupadas por estado del pago (pending, approved, cancelled)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Estadísticas por estado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   status:
+ *                     type: string
+ *                     enum: [pending, approved, cancelled]
+ *                     example: "approved"
+ *                   count:
+ *                     type: integer
+ *                     example: 120
+ *                   total_amount:
+ *                     type: number
+ *                     format: float
+ *                     example: 18000000.00
+ *                   average_amount:
+ *                     type: number
+ *                     format: float
+ *                     example: 150000.00
+ *       401:
+ *         description: No autenticado
+ *       500:
+ *         description: Error del servidor
  */
 router.get('/comunidad/:comunidadId/estadisticas/estado', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
@@ -322,6 +691,42 @@ router.get('/comunidad/:comunidadId/estadisticas/estado', authenticate, requireC
  *   get:
  *     tags: [Pagos]
  *     summary: Estadísticas agrupadas por método de pago
+ *     description: Retorna métricas agrupadas por medio de pago utilizado
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Estadísticas por método de pago
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   payment_method:
+ *                     type: string
+ *                     example: "bank_transfer"
+ *                   count:
+ *                     type: integer
+ *                     example: 85
+ *                   total_amount:
+ *                     type: number
+ *                     example: 12750000.00
+ *                   average_amount:
+ *                     type: number
+ *                     example: 150000.00
+ *       401:
+ *         description: No autenticado
+ *       500:
+ *         description: Error del servidor
  */
 router.get('/comunidad/:comunidadId/estadisticas/metodo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
@@ -361,6 +766,57 @@ router.get('/comunidad/:comunidadId/estadisticas/metodo', authenticate, requireC
  *   get:
  *     tags: [Pagos]
  *     summary: Estadísticas agrupadas por período (mes/año)
+ *     description: Retorna métricas mensuales de pagos para análisis de tendencias
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Estadísticas por período
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   year:
+ *                     type: integer
+ *                     example: 2025
+ *                   month:
+ *                     type: integer
+ *                     example: 10
+ *                   period:
+ *                     type: string
+ *                     example: "2025-10"
+ *                   payment_count:
+ *                     type: integer
+ *                     example: 45
+ *                   total_amount:
+ *                     type: number
+ *                     example: 6750000.00
+ *                   average_amount:
+ *                     type: number
+ *                     example: 150000.00
+ *                   approved_count:
+ *                     type: integer
+ *                     example: 40
+ *                   pending_count:
+ *                     type: integer
+ *                     example: 3
+ *                   cancelled_count:
+ *                     type: integer
+ *                     example: 2
+ *       401:
+ *         description: No autenticado
+ *       500:
+ *         description: Error del servidor
  */
 router.get('/comunidad/:comunidadId/estadisticas/periodo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
@@ -402,6 +858,58 @@ router.get('/comunidad/:comunidadId/estadisticas/periodo', authenticate, require
  *   get:
  *     tags: [Pagos]
  *     summary: Pagos pendientes de aplicación completa
+ *     description: Lista todos los pagos que tienen saldo remanente sin aplicar a cuentas
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Lista de pagos pendientes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 123
+ *                   order_id:
+ *                     type: string
+ *                     example: "PAY-2025-0123"
+ *                   total_payment:
+ *                     type: number
+ *                     example: 150000.00
+ *                   applied_amount:
+ *                     type: number
+ *                     example: 75000.00
+ *                   remaining_amount:
+ *                     type: number
+ *                     example: 75000.00
+ *                   payment_date:
+ *                     type: string
+ *                     format: date
+ *                     example: "2025-10-16"
+ *                   unit_number:
+ *                     type: string
+ *                     example: "101"
+ *                   resident_name:
+ *                     type: string
+ *                     example: "Juan Pérez"
+ *                   reference:
+ *                     type: string
+ *                     example: "TRX-123456789"
+ *       401:
+ *         description: No autenticado
+ *       500:
+ *         description: Error del servidor
  */
 router.get('/comunidad/:comunidadId/pendientes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
@@ -444,6 +952,65 @@ router.get('/comunidad/:comunidadId/pendientes', authenticate, requireCommunity(
  *   get:
  *     tags: [Pagos]
  *     summary: Ver cómo se aplicó un pago a cargos
+ *     description: Muestra el detalle de las aplicaciones del pago a diferentes cuentas de cobro
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID del pago
+ *         schema:
+ *           type: integer
+ *           example: 123
+ *     responses:
+ *       200:
+ *         description: Lista de aplicaciones del pago
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 456
+ *                   applied_amount:
+ *                     type: number
+ *                     example: 75000.00
+ *                   prioridad:
+ *                     type: integer
+ *                     example: 1
+ *                   charge_id:
+ *                     type: integer
+ *                     example: 234
+ *                   charge_code:
+ *                     type: string
+ *                     example: "CHG-2025-0234"
+ *                   charge_total:
+ *                     type: number
+ *                     example: 150000.00
+ *                   charge_balance:
+ *                     type: number
+ *                     example: 75000.00
+ *                   period:
+ *                     type: string
+ *                     example: "2025-10"
+ *                   due_date:
+ *                     type: string
+ *                     format: date
+ *                     example: "2025-10-05"
+ *                   unit_number:
+ *                     type: string
+ *                     example: "101"
+ *                   resident_name:
+ *                     type: string
+ *                     example: "Juan Pérez"
+ *       401:
+ *         description: No autenticado
+ *       500:
+ *         description: Error del servidor
  */
 router.get('/:id/aplicaciones', authenticate, async (req, res) => {
   try {
@@ -491,6 +1058,56 @@ router.get('/:id/aplicaciones', authenticate, async (req, res) => {
  *   get:
  *     tags: [Pagos]
  *     summary: Historial completo de pagos de una unidad
+ *     description: Retorna todos los pagos realizados por una unidad específica
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: unidadId
+ *         in: path
+ *         required: true
+ *         description: ID de la unidad
+ *         schema:
+ *           type: integer
+ *           example: 45
+ *     responses:
+ *       200:
+ *         description: Historial de pagos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 123
+ *                   order_id:
+ *                     type: string
+ *                     example: "PAY-2025-0123"
+ *                   payment_date:
+ *                     type: string
+ *                     format: date
+ *                     example: "2025-10-16"
+ *                   amount:
+ *                     type: number
+ *                     example: 150000.00
+ *                   status:
+ *                     type: string
+ *                     example: "approved"
+ *                   payment_method:
+ *                     type: string
+ *                     example: "bank_transfer"
+ *                   reference:
+ *                     type: string
+ *                     example: "TRX-123456789"
+ *                   applied_amount:
+ *                     type: number
+ *                     example: 150000.00
+ *       401:
+ *         description: No autenticado
+ *       500:
+ *         description: Error del servidor
  */
 router.get('/unidad/:unidadId/historial', authenticate, async (req, res) => {
   try {
@@ -540,6 +1157,64 @@ router.get('/unidad/:unidadId/historial', authenticate, async (req, res) => {
  *   get:
  *     tags: [Pagos]
  *     summary: Resumen de pagos por residente
+ *     description: Muestra estadísticas consolidadas de pagos agrupadas por residente
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Resumen por residente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   resident_id:
+ *                     type: integer
+ *                     example: 12
+ *                   resident_name:
+ *                     type: string
+ *                     example: "Juan Pérez"
+ *                   resident_email:
+ *                     type: string
+ *                     example: "juan.perez@email.com"
+ *                   unit_number:
+ *                     type: string
+ *                     example: "101"
+ *                   total_payments:
+ *                     type: integer
+ *                     example: 24
+ *                   total_paid:
+ *                     type: number
+ *                     example: 3600000.00
+ *                   average_payment:
+ *                     type: number
+ *                     example: 150000.00
+ *                   last_payment_date:
+ *                     type: string
+ *                     format: date
+ *                     example: "2025-10-16"
+ *                   approved_payments:
+ *                     type: integer
+ *                     example: 22
+ *                   pending_payments:
+ *                     type: integer
+ *                     example: 2
+ *                   cancelled_payments:
+ *                     type: integer
+ *                     example: 0
+ *       401:
+ *         description: No autenticado
+ *       500:
+ *         description: Error del servidor
  */
 router.get('/comunidad/:comunidadId/por-residente', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
@@ -589,6 +1264,67 @@ router.get('/comunidad/:comunidadId/por-residente', authenticate, requireCommuni
  *   get:
  *     tags: [Pagos]
  *     summary: Movimientos bancarios para conciliación
+ *     description: Lista movimientos bancarios y su estado de conciliación con pagos
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Movimientos bancarios
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 789
+ *                   movement_date:
+ *                     type: string
+ *                     format: date
+ *                     example: "2025-10-16"
+ *                   glosa:
+ *                     type: string
+ *                     example: "Transferencia entrante"
+ *                   monto:
+ *                     type: number
+ *                     example: 150000.00
+ *                   type:
+ *                     type: string
+ *                     example: "bank_transfer"
+ *                   bank_reference:
+ *                     type: string
+ *                     example: "REF-987654"
+ *                   payment_id:
+ *                     type: integer
+ *                     nullable: true
+ *                     example: 123
+ *                   payment_code:
+ *                     type: string
+ *                     nullable: true
+ *                     example: "PAY-2025-0123"
+ *                   payment_reference:
+ *                     type: string
+ *                     nullable: true
+ *                     example: "TRX-123456789"
+ *                   reconciliation_status:
+ *                     type: string
+ *                     enum: [pending, reconciled, discarded]
+ *                     example: "reconciled"
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado (requiere rol admin)
+ *       500:
+ *         description: Error del servidor
  */
 router.get('/comunidad/:comunidadId/conciliacion', authenticate, requireCommunity('comunidadId', ['admin', 'superadmin']), async (req, res) => {
   try {
@@ -636,6 +1372,53 @@ router.get('/comunidad/:comunidadId/conciliacion', authenticate, requireCommunit
  *   get:
  *     tags: [Pagos]
  *     summary: Webhooks recibidos para un pago
+ *     description: Lista todos los webhooks recibidos de pasarelas de pago para un pago específico
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID del pago
+ *         schema:
+ *           type: integer
+ *           example: 123
+ *     responses:
+ *       200:
+ *         description: Lista de webhooks
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 567
+ *                   evento:
+ *                     type: string
+ *                     example: "payment.success"
+ *                   payload:
+ *                     type: object
+ *                     description: Datos JSON del webhook
+ *                   procesado:
+ *                     type: boolean
+ *                     example: true
+ *                   received_at:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2025-10-16T14:30:00Z"
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2025-10-16T14:30:05Z"
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado (requiere rol admin)
+ *       500:
+ *         description: Error del servidor
  */
 router.get('/:id/webhooks', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
   try {
@@ -673,6 +1456,56 @@ router.get('/:id/webhooks', authenticate, authorize('admin', 'superadmin'), asyn
  *   get:
  *     tags: [Pagos]
  *     summary: Validar integridad de pagos
+ *     description: Identifica pagos con problemas de integridad o datos inválidos
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Lista de pagos con problemas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 123
+ *                   validation_status:
+ *                     type: string
+ *                     enum: [Valid, Missing community reference, Invalid amount, Missing payment date, Invalid status]
+ *                     example: "Invalid amount"
+ *                   monto:
+ *                     type: number
+ *                     example: -100.00
+ *                   fecha:
+ *                     type: string
+ *                     format: date
+ *                     nullable: true
+ *                     example: "2025-10-16"
+ *                   estado:
+ *                     type: string
+ *                     example: "pendiente"
+ *                   application_count:
+ *                     type: integer
+ *                     example: 0
+ *                   applied_amount:
+ *                     type: number
+ *                     example: 0.00
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado (requiere rol admin)
+ *       500:
+ *         description: Error del servidor
  */
 router.get('/comunidad/:comunidadId/validar', authenticate, requireCommunity('comunidadId', ['admin', 'superadmin']), async (req, res) => {
   try {
@@ -720,6 +1553,79 @@ router.get('/comunidad/:comunidadId/validar', authenticate, requireCommunity('co
  *   post:
  *     tags: [Pagos]
  *     summary: Registrar un nuevo pago
+ *     description: Crea un nuevo registro de pago en el sistema
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         description: ID de la comunidad
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PaymentCreate'
+ *           examples:
+ *             transferencia:
+ *               summary: Pago por transferencia
+ *               value:
+ *                 unidad_id: 45
+ *                 persona_id: 12
+ *                 fecha: "2025-10-16"
+ *                 monto: 150000.00
+ *                 medio: "transferencia"
+ *                 referencia: "TRX-123456789"
+ *                 comprobante_num: "COMP-001"
+ *             efectivo:
+ *               summary: Pago en efectivo
+ *               value:
+ *                 unidad_id: 45
+ *                 persona_id: 12
+ *                 fecha: "2025-10-16"
+ *                 monto: 75000.00
+ *                 medio: "efectivo"
+ *                 comprobante_num: "REC-045"
+ *     responses:
+ *       201:
+ *         description: Pago creado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 123
+ *                 fecha:
+ *                   type: string
+ *                   format: date
+ *                   example: "2025-10-16"
+ *                 monto:
+ *                   type: number
+ *                   example: 150000.00
+ *                 medio:
+ *                   type: string
+ *                   example: "transferencia"
+ *                 estado:
+ *                   type: string
+ *                   example: "pendiente"
+ *       400:
+ *         description: Datos de entrada inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       500:
+ *         description: Error del servidor
  */
 router.post('/comunidad/:comunidadId', [
   authenticate,
@@ -756,6 +1662,89 @@ router.post('/comunidad/:comunidadId', [
  *   post:
  *     tags: [Pagos]
  *     summary: Aplicar un pago a cuentas de cobro específicas
+ *     description: Asigna el monto del pago a una o más cuentas de cobro de unidades. El sistema valida que los montos no excedan el saldo pendiente de cada cuenta.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID del pago a aplicar
+ *         schema:
+ *           type: integer
+ *           example: 123
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PaymentApplication'
+ *           examples:
+ *             aplicacion_simple:
+ *               summary: Aplicar a una cuenta
+ *               value:
+ *                 assignments:
+ *                   - cuenta_cobro_unidad_id: 234
+ *                     monto: 150000.00
+ *             aplicacion_multiple:
+ *               summary: Aplicar a múltiples cuentas
+ *               value:
+ *                 assignments:
+ *                   - cuenta_cobro_unidad_id: 234
+ *                     monto: 75000.00
+ *                   - cuenta_cobro_unidad_id: 235
+ *                     monto: 50000.00
+ *                   - cuenta_cobro_unidad_id: 236
+ *                     monto: 25000.00
+ *     responses:
+ *       200:
+ *         description: Pago aplicado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 pago_id:
+ *                   type: integer
+ *                   example: 123
+ *                 assigned:
+ *                   type: number
+ *                   description: Monto total asignado
+ *                   example: 150000.00
+ *       400:
+ *         description: Datos inválidos o monto excede saldo
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               sin_assignments:
+ *                 summary: Sin asignaciones
+ *                 value:
+ *                   error: "Se requiere array de assignments"
+ *               pago_reversado:
+ *                 summary: Pago ya reversado
+ *                 value:
+ *                   error: "Pago reversado no puede ser aplicado"
+ *               excede_saldo:
+ *                 summary: Monto excede saldo
+ *                 value:
+ *                   error: "El monto excede el saldo de la cuenta 234"
+ *       404:
+ *         description: Pago o cuenta no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado (requiere rol admin)
+ *       500:
+ *         description: Error del servidor
  */
 router.post('/:id/aplicar', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
   const pagoId = Number(req.params.id);
@@ -855,6 +1844,56 @@ router.post('/:id/aplicar', authenticate, authorize('admin', 'superadmin'), asyn
  *   post:
  *     tags: [Pagos]
  *     summary: Reversar un pago aplicado
+ *     description: Revierte todas las aplicaciones de un pago, devolviendo los montos a las cuentas de cobro y marcando el pago como reversado. Esta operación no puede deshacerse.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID del pago a reversar
+ *         schema:
+ *           type: integer
+ *           example: 123
+ *     responses:
+ *       200:
+ *         description: Pago reversado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 pago_id:
+ *                   type: integer
+ *                   example: 123
+ *                 message:
+ *                   type: string
+ *                   example: "Pago reversado exitosamente"
+ *       400:
+ *         description: Pago ya está reversado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Pago ya está reversado"
+ *       404:
+ *         description: Pago no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               error: "Pago no encontrado"
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado (requiere rol admin)
+ *       500:
+ *         description: Error del servidor
  */
 router.post('/:id/reversar', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
   const pagoId = Number(req.params.id);
@@ -906,3 +1945,39 @@ router.post('/:id/reversar', authenticate, authorize('admin', 'superadmin'), asy
 });
 
 module.exports = router;
+
+// =========================================
+// ENDPOINTS DE PAGOS
+// =========================================
+
+// // 1. LISTADOS Y FILTROS
+// GET: /pagos/comunidad/:comunidadId
+// GET: /pagos/:id
+
+// // 2. ESTADÍSTICAS
+// GET: /pagos/comunidad/:comunidadId/estadisticas
+// GET: /pagos/comunidad/:comunidadId/estadisticas/estado
+// GET: /pagos/comunidad/:comunidadId/estadisticas/metodo
+// GET: /pagos/comunidad/:comunidadId/estadisticas/periodo
+
+// // 3. PAGOS PENDIENTES Y APLICACIONES
+// GET: /pagos/comunidad/:comunidadId/pendientes
+// GET: /pagos/:id/aplicaciones
+
+// // 4. HISTORIAL Y CONSULTAS POR UNIDAD/RESIDENTE
+// GET: /pagos/unidad/:unidadId/historial
+// GET: /pagos/comunidad/:comunidadId/por-residente
+
+// // 5. CONCILIACIÓN BANCARIA
+// GET: /pagos/comunidad/:comunidadId/conciliacion
+
+// // 6. WEBHOOKS
+// GET: /pagos/:id/webhooks
+
+// // 7. VALIDACIONES
+// GET: /pagos/comunidad/:comunidadId/validar
+
+// // 8. CRUD BÁSICO
+// POST: /pagos/comunidad/:comunidadId
+// POST: /pagos/:id/aplicar
+// POST: /pagos/:id/reversar

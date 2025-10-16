@@ -1175,3 +1175,54 @@ router.get('/comunidad/:comunidadId/dashboard/distribucion', authenticate, requi
 });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE CENTROS DE COSTO
+// =========================================
+
+// // 1. LISTADO CON FILTROS Y PAGINACIÓN
+// GET: /centros-costo/comunidad/:comunidadId
+// GET: /centros-costo/comunidad/:comunidadId/filtrar
+
+// // 2. DETALLE DE CENTRO DE COSTO ESPECÍFICO
+// GET: /centros-costo/:id/detalle
+// GET: /centros-costo/:id/gastos
+// GET: /centros-costo/:id/resumen-mensual
+// GET: /centros-costo/:id
+
+// // 3. OPERACIONES CRUD
+// POST: /centros-costo/comunidad/:comunidadId
+// PATCH: /centros-costo/:id
+// DELETE: /centros-costo/:id
+
+// // 4. ESTADÍSTICAS Y REPORTES
+// GET: /centros-costo/comunidad/:comunidadId/estadisticas/generales
+// GET: /centros-costo/comunidad/:comunidadId/mas-utilizados
+// GET: /centros-costo/comunidad/:comunidadId/mas-costosos
+// GET: /centros-costo/comunidad/:comunidadId/sin-uso
+// GET: /centros-costo/comunidad/:comunidadId/analisis-por-categoria
+
+// // 5. VALIDACIONES
+// GET: /centros-costo/:id/existe
+// GET: /centros-costo/comunidad/:comunidadId/validar-nombre
+// GET: /centros-costo/comunidad/:comunidadId/validar-codigo
+// GET: /centros-costo/:id/tiene-gastos
+
+// // 6. LISTAS DESPLEGABLES
+// GET: /centros-costo/comunidad/:comunidadId/dropdown
+// GET: /centros-costo/comunidad/:comunidadId/con-estadisticas
+
+// // 7. REPORTES AVANZADOS
+// GET: /centros-costo/comunidad/:comunidadId/reporte/por-mes
+// GET: /centros-costo/comunidad/:comunidadId/reporte/comparativo
+// GET: /centros-costo/comunidad/:comunidadId/reporte/variabilidad
+
+// // 8. EXPORTACIÓN
+// GET: /centros-costo/comunidad/:comunidadId/exportar
+
+// // 9. DASHBOARD
+// GET: /centros-costo/comunidad/:comunidadId/dashboard/resumen
+// GET: /centros-costo/comunidad/:comunidadId/dashboard/top-mes
+// GET: /centros-costo/comunidad/:comunidadId/dashboard/sin-uso-reciente
+// GET: /centros-costo/comunidad/:comunidadId/dashboard/distribucion

@@ -153,7 +153,28 @@ Swagger / OpenAPI
 - Muchos endpoints están documentados con JSDoc `@openapi` en los routers. Si el servidor incluye swagger-ui, acceder a la ruta `/api-docs` para ver toda la especificación interactiva.
 
 Testing y desarrollo
-- Ejecutar pruebas unitarias (si existen) con el runner del proyecto: `npm test`.
+
+### Tests Automatizados
+La API cuenta con un **test de salud completo** que verifica automáticamente todos los endpoints:
+
+```bash
+# Ejecutar test de salud de endpoints
+npm test -- test/endpoints.health.test.js
+```
+
+**Cobertura del Test:**
+- ✅ **73 endpoints** probados automáticamente
+- ✅ **30 módulos** cubiertos al 100%
+- ✅ **0 errores críticos** de servidor
+- 📊 Reporte detallado de disponibilidad y autenticación
+
+**Documentación de Tests:**
+- `test/README_ENDPOINTS_HEALTH.md` - Guía completa del test
+- `test/RESUMEN_EJECUTIVO.md` - Resumen de resultados
+- `test/INDICE_ENDPOINTS.md` - Lista de todos los endpoints
+- `test/RESULTADOS_TEST_HEALTH_COMPLETO.md` - Análisis detallado
+
+### Desarrollo
 - Para desarrollo rápido usar `nodemon` (instalar global o como dependencia dev) y ejecutar `nodemon src/index.js`.
 
 

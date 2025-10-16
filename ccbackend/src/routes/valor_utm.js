@@ -1003,3 +1003,45 @@ router.get('/disponibilidad', authenticate, async (req, res) => {
 });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE VALOR UTM
+// // =========================================
+
+// // 1. CONSULTAS BÁSICAS
+// GET: /valor-utm/actual
+// GET: /valor-utm/periodo/:mes/:ano
+// GET: /valor-utm/rango
+
+// // 2. HISTÓRICO ANUAL
+// GET: /valor-utm/historico/:ano
+// GET: /valor-utm/resumen-anual/:ano
+// GET: /valor-utm/resumen-anos
+
+// // 3. VARIACIONES Y TENDENCIAS
+// GET: /valor-utm/variacion-mensual
+// GET: /valor-utm/variacion-interanual/:ano
+
+// // 4. ANÁLISIS TRIMESTRAL Y SEMESTRAL
+// GET: /valor-utm/trimestral
+// GET: /valor-utm/semestral
+
+// // 5. COMPARACIONES ENTRE AÑOS
+// GET: /valor-utm/comparacion-anos
+
+// // 6. ESTADÍSTICAS Y RANKINGS
+// GET: /valor-utm/top-valores
+// GET: /valor-utm/estadisticas
+
+// // 7. DASHBOARD Y RESUMEN EJECUTIVO
+// GET: /valor-utm/dashboard
+// GET: /valor-utm/grafico
+
+// // 8. CONVERSIONES Y CÁLCULOS
+// GET: /valor-utm/conversion/tabla
+// GET: /valor-utm/conversion/pesos-a-utm
+// GET: /valor-utm/conversion/utm-a-pesos
+
+// // 9. DISPONIBILIDAD DE DATOS
+// GET: /valor-utm/disponibilidad

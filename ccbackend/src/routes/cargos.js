@@ -1579,3 +1579,33 @@ router.post('/:id/recalcular-interes', authenticate, authorize('admin','superadm
 router.post('/:id/notificar', authenticate, authorize('admin','superadmin'), async (req, res) => { res.json({ ok: true, note: 'stub: notify about charge' }); });
 
 module.exports = router;
+
+
+// // =========================================
+// // ENDPOINTS DE CUENTAS DE COBRO (CARGOS)
+// // =========================================
+
+// // LISTADOS, FILTROS Y DETALLES
+// GET: /cargos/comunidad/:comunidadId
+// GET: /cargos/:id
+// GET: /cargos/unidad/:id
+// GET: /cargos/:id/detalle
+// GET: /cargos/:id/pagos
+// GET: /cargos/:id/historial-pagos
+// GET: /cargos/comunidad/:comunidadId/vencidos
+// GET: /cargos/comunidad/:comunidadId/con-interes
+
+// // OPERACIONES CRUD
+// POST: /cargos
+
+// // ESTADÍSTICAS Y REPORTES
+// GET: /cargos/comunidad/:comunidadId/estadisticas
+// GET: /cargos/comunidad/:comunidadId/periodo/:periodo
+// GET: /cargos/comunidad/:comunidadId/por-estado
+// GET: /cargos/comunidad/:comunidadId/resumen-pagos
+// GET: /cargos/comunidad/:comunidadId/por-categoria
+
+// // VALIDACIONES Y OTROS STUBS
+// POST: /cargos/:id/recalcular-interes
+// POST: /cargos/:id/notificar
+// GET: /cargos/comunidad/:comunidadId/validacion

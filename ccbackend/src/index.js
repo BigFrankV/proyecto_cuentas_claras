@@ -29,6 +29,11 @@ const soporteRoutes = require('./routes/soporte');
 const utilRoutes = require('./routes/util');
 const filesRoutes = require('./routes/files');
 const valorUtmRoutes = require('./routes/valor_utm');
+const dashboardRoutes = require('./routes/dashboard');
+const reportesRoutes = require('./routes/reportes');
+const notificacionesRoutes = require('./routes/notificaciones');
+const ticketsRoutes = require('./routes/tickets');
+const paymentGatewayRoutes = require('./routes/paymentGateway');
 const sequelize = require('./sequelize');
 const logger = require('./logger');
 const { setupSwagger } = require('./swagger');
@@ -72,6 +77,11 @@ app.use('/', soporteRoutes); // soporte exposes varios paths: tickets, notificac
 app.use('/util', utilRoutes);
 app.use('/files', filesRoutes);
 app.use('/api/valor-utm', valorUtmRoutes);
+app.use('/dashboard', dashboardRoutes);
+app.use('/reportes', reportesRoutes);
+app.use('/notificaciones', notificacionesRoutes);
+app.use('/tickets', ticketsRoutes);
+app.use('/gateway', paymentGatewayRoutes);
 
 app.get('/healthz', (_, res) => res.json({ status: 'ok' }));
 
@@ -105,4 +115,10 @@ async function start() {
 	});
 }
 
-start();
+// Solo inicia el servidor si no estamos en modo test
+if (require.main === module) {
+	start();
+}
+
+// Exportar app para tests
+module.exports = app;

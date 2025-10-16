@@ -730,3 +730,38 @@ router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req
 });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE TARIFAS DE CONSUMO
+// =========================================
+
+// // 1. LISTADOS BÁSICOS CON FILTROS
+// GET: /tarifas-consumo/comunidad/:comunidadId
+// GET: /tarifas-consumo/comunidad/:comunidadId/por-tipo
+
+// // 2. VISTAS DETALLADAS
+// GET: /tarifas-consumo/:id
+// GET: /tarifas-consumo/todas/con-estructura
+
+// // 3. ESTADÍSTICAS
+// GET: /tarifas-consumo/estadisticas/generales
+// GET: /tarifas-consumo/estadisticas/por-servicio
+// GET: /tarifas-consumo/estadisticas/precios
+
+// // 4. BÚSQUEDAS AVANZADAS
+// GET: /tarifas-consumo/busqueda/avanzada
+// GET: /tarifas-consumo/busqueda/por-rango-precio
+
+// // 5. EXPORTACIÓN
+// GET: /tarifas-consumo/export/completo
+// GET: /tarifas-consumo/export/por-servicio
+
+// // 6. VALIDACIONES
+// GET: /tarifas-consumo/validacion/integridad
+// GET: /tarifas-consumo/validacion/solapamiento
+
+// // 7. CRUD BÁSICO
+// POST: /tarifas-consumo/comunidad/:comunidadId
+// PATCH: /tarifas-consumo/:id
+// DELETE: /tarifas-consumo/:id
