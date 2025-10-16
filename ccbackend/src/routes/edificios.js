@@ -1549,3 +1549,40 @@ router.get('/:id/validar-codigo', [
 });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE EDIFICIOS
+// =========================================
+
+// // LISTADOS, FILTROS Y ESTADÍSTICAS
+// GET: /edificios
+// GET: /edificios/stats
+// GET: /edificios/comunidades-opciones
+// GET: /edificios/servicios
+// GET: /edificios/amenidades-disponibles
+// GET: /edificios/comunidad/:comunidadId
+// GET: /edificios/buscar
+
+// // VISTAS DETALLADAS Y RESUMEN
+// GET: /edificios/:id
+// GET: /edificios/:id/torres
+// GET: /edificios/:id/unidades
+// GET: /edificios/:id/amenidades
+// GET: /edificios/:id/resumen
+
+// // CRUD DE EDIFICIO
+// POST: /edificios
+// POST: /edificios/comunidad/:comunidadId
+// PATCH: /edificios/:id
+// PUT: /edificios/:id
+// DELETE: /edificios/:id
+
+// // CRUD DE SUB-ENTIDADES
+// POST: /edificios/:id/torres
+// POST: /edificios/:id/unidades
+
+// // VALIDACIONES
+// GET: /edificios/:id/check-dependencies
+// GET: /edificios/:id/validar-codigo
+// GET: /edificios/:id/filtros-opciones

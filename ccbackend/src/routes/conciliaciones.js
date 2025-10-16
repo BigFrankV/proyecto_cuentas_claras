@@ -844,3 +844,40 @@ router.patch('/:id/descartar', authenticate, authorize('admin', 'superadmin', 'c
 });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE CONCILIACIONES
+// =========================================
+
+// // 1. LISTAR CONCILIACIONES CON FILTROS
+// GET: /conciliaciones
+// GET: /conciliaciones/:id
+
+// // 2. CONCILIACIONES POR COMUNIDAD
+// GET: /conciliaciones/comunidad/:comunidadId
+// POST: /conciliaciones/comunidad/:comunidadId
+
+// // 3. ESTADÍSTICAS DE CONCILIACIONES
+// GET: /conciliaciones/comunidad/:comunidadId/estadisticas
+// GET: /conciliaciones/comunidad/:comunidadId/pendientes
+// GET: /conciliaciones/comunidad/:comunidadId/por-estado
+// GET: /conciliaciones/comunidad/:comunidadId/por-tipo
+
+// // 4. ANÁLISIS DE DIFERENCIAS
+// GET: /conciliaciones/comunidad/:comunidadId/con-diferencias
+// GET: /conciliaciones/comunidad/:comunidadId/sin-pago
+
+// // 5. REPORTES HISTÓRICOS
+// GET: /conciliaciones/comunidad/:comunidadId/historial-periodo
+// GET: /conciliaciones/comunidad/:comunidadId/saldos
+// GET: /conciliaciones/comunidad/:comunidadId/analisis-precision
+// GET: /conciliaciones/comunidad/:comunidadId/resumen
+
+// // 6. VALIDACIONES
+// GET: /conciliaciones/comunidad/:comunidadId/validar
+
+// // 7. ACTUALIZACIÓN DE CONCILIACIONES
+// PATCH: /conciliaciones/:id
+// PATCH: /conciliaciones/:id/conciliar
+// PATCH: /conciliaciones/:id/descartar

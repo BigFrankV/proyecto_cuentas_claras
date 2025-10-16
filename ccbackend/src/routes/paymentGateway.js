@@ -488,3 +488,20 @@ router.post('/webhook/webpay', async (req, res) => {
 });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE PASARELA DE PAGO (GATEWAY)
+// =========================================
+
+// // INTEGRACIÓN
+// GET: /gateway/available
+// POST: /gateway/create-payment
+// POST: /gateway/confirm-payment
+
+// // TRANSACCIONES
+// GET: /gateway/transaction/:orderId
+// GET: /gateway/community/:communityId/transactions
+
+// // WEBHOOKS
+// POST: /gateway/webhook/webpay

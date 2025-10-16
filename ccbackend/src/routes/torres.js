@@ -1620,3 +1620,44 @@ router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, 
 router.delete('/:id', authenticate, authorize('superadmin','admin'), async (req, res) => { const id = req.params.id; try { await db.query('DELETE FROM torre WHERE id = ?', [id]); res.status(204).end(); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE TORRES
+// =========================================
+
+// // LISTADO Y FILTROS
+// GET: /torres/edificio/:edificioId/listado
+// GET: /torres/edificio/:edificioId/buscar
+// GET: /torres/comunidad/:comunidadId
+// GET: /torres/edificio/:edificioId
+// GET: /torres/buscar
+// GET: /torres/edificio/:edificioId/dropdown
+
+// // VISTAS DETALLADAS
+// GET: /torres/:id
+// GET: /torres/:id/detalle
+// GET: /torres/:id/unidades
+// GET: /torres/:id/unidades/filtradas
+
+// // ESTADÍSTICAS
+// GET: /torres/edificio/:edificioId/estadisticas
+// GET: /torres/:id/estadisticas-por-piso
+// GET: /torres/estadisticas-globales
+// GET: /torres/edificio/:edificioId/distribucion
+// GET: /torres/edificio/:edificioId/comparativa-superficies
+// GET: /torres/top-unidades
+
+// // CRUD
+// POST: /torres/edificio/:edificioId
+// PATCH: /torres/:id
+// DELETE: /torres/:id
+
+// // VALIDACIONES
+// GET: /torres/edificio/:edificioId/validar-codigo
+// GET: /torres/edificio/:edificioId/siguiente-codigo
+// GET: /torres/:id/puede-eliminar
+
+// // REPORTES
+// GET: /torres/reportes/completo
+// GET: /torres/reportes/ocupacion

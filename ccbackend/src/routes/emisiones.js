@@ -957,3 +957,40 @@ router.post('/:id/generar-cargos', authenticate, authorize('admin','superadmin')
 });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE EMISIONES
+// =========================================
+
+// // LISTADOS Y CRUD DE EMISIONES
+// GET: /emisiones/comunidad/:comunidadId
+// GET: /emisiones/comunidad/:comunidadId/count
+// POST: /emisiones/comunidad/:comunidadId
+// GET: /emisiones/:id
+// GET: /emisiones/:id/detalle-completo
+// PATCH: /emisiones/:id
+// DELETE: /emisiones/:id
+
+// // GESTIÓN DE DETALLES Y GASTOS
+// POST: /emisiones/:id/detalles
+// GET: /emisiones/:id/detalles
+// GET: /emisiones/:id/gastos
+// GET: /emisiones/:id/unidades
+// GET: /emisiones/:id/pagos
+// GET: /emisiones/:id/auditoria
+
+// // CÁLCULO Y GENERACIÓN DE CARGOS (STUBS)
+// GET: /emisiones/:id/previsualizar-prorrateo
+// POST: /emisiones/:id/generar-cargos
+
+// // ESTADÍSTICAS
+// GET: /emisiones/estadisticas/general
+// GET: /emisiones/estadisticas/por-mes
+// GET: /emisiones/estadisticas/cobranza
+
+// // VALIDACIONES
+// GET: /emisiones/validar/existencia
+// GET: /emisiones/validar/gastos/:id
+// GET: /emisiones/validar/cuentas/:id
+// GET: /emisiones/validar/cobertura/:comunidadId/:emisionId

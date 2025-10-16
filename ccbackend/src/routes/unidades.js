@@ -1233,3 +1233,83 @@ router.delete('/tickets/:id', [authenticate, authorize('admin','superadmin')], a
 router.post('/:id/cuentas', [authenticate, authorize('admin','superadmin'), body('monto_total').isFloat({ gt: 0 })], async (req, res) => { const unidadId = req.params.id; const errors = validationResult(req); if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() }); try { const { emision_id, monto_total, estado = 'emitida' } = req.body; const [result] = await db.query('INSERT INTO cuenta_cobro_unidad (unidad_id, emision_id, comunidad_id, monto_total, saldo, estado) VALUES (?,?,?,?,?,?)', [unidadId, emision_id || null, null, monto_total, monto_total, estado]); const [row] = await db.query('SELECT * FROM cuenta_cobro_unidad WHERE id = ? LIMIT 1', [result.insertId]); res.status(201).json(row[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
 
 router.post('/cuentas/:cuentaId/detalle', [authenticate, authorize('admin','superadmin'), body('categoria_id').isInt(), body('monto').isFloat({ gt: 0 })], async (req, res) => { const cuentaId = req.params.cuentaId; const errors = validationResult(req); if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() }); try { const { categoria_id, glosa, monto, origen, origen_id, iva_incluido } = req.body; const [result] = await db.query('INSERT INTO detalle_cuenta_unidad (cuenta_cobro_unidad_id, categoria_id, glosa, monto, origen, origen_id, iva_incluido) VALUES (?,?,?,?,?,?,?)', [cuentaId, categoria_id, glosa || null, monto, origen || null, origen_id || null, iva_incluido ? 1 : 0]); const [row] = await db.query('SELECT * FROM detalle_cuenta_unidad WHERE id = ? LIMIT 1', [result.insertId]); res.status(201).json(row[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
+
+
+// =========================================
+// ENDPOINTS DE UNIDADES
+// =========================================
+
+// // LISTADOS, FILTROS Y BÚSQUEDA
+// GET: /unidades/comunidad/:comunidadId
+// GET: /unidades
+// GET: /unidades/:id/residentes
+// GET: /unidades/search
+// GET: /unidades/validate/bodega
+// GET: /unidades/validate/estacionamiento
+
+// // VISTAS DETALLADAS Y FINANCIERAS
+// GET: /unidades/:id
+// GET: /unidades/:id/summary
+// GET: /unidades/:id/cuentas
+// GET: /unidades/cuentas/:cuentaId/detalle
+// GET: /unidades/:id/cuentas_full
+// GET: /unidades/:id/pagos
+// GET: /unidades/cuentas/:cuentaId/aplicaciones
+// GET: /unidades/:id/financiero
+// GET: /unidades/:id/medidores
+// GET: /unidades/medidores/:medidorId/lecturas
+// GET: /unidades/:id/tickets
+// GET: /unidades/:id/multas
+// GET: /unidades/:id/reservas
+
+// // CRUD BÁSICO
+// POST: /unidades/comunidad/:comunidadId
+// PATCH: /unidades/:id
+// DELETE: /unidades/:id
+
+// // CRUD DE TENENCIAS (TITULARIDADES)
+// GET: /unidades/:id/tenencias
+// POST: /unidades/:id/tenencias
+// PATCH: /unidades/tenencias/:tenenciaId
+// DELETE: /unidades/tenencias/:tenenciaId
+
+// // CRUD DE PAGOS ASOCIADOS A UNIDAD
+// POST: /unidades/:id/pagos
+// PATCH: /unidades/pagos/:pagoId
+// DELETE: /unidades/pagos/:pagoId
+// POST: /unidades/pagos/:pagoId/aplicaciones
+// DELETE: /unidades/pago_aplicaciones/:id
+
+// // CRUD DE MEDIDORES ASOCIADOS A UNIDAD
+// POST: /unidades/:id/medidores
+// PATCH: /unidades/medidores/:medidorId
+// DELETE: /unidades/medidores/:medidorId
+// POST: /unidades/medidores/:medidorId/lecturas
+
+// // CRUD DE MULTAS ASOCIADAS A UNIDAD (Stubbed routes for unit-context)
+// POST: /unidades/:id/multas
+// PATCH: /unidades/multas/:id
+// DELETE: /unidades/multas/:id
+
+// // CRUD DE RESERVAS ASOCIADAS A UNIDAD (Stubbed routes for unit-context)
+// POST: /unidades/:id/reservas
+// PATCH: /unidades/reservas/:id
+// DELETE: /unidades/reservas/:id
+
+// // CRUD DE TICKETS ASOCIADOS A UNIDAD (Stubbed routes for unit-context)
+// POST: /unidades/:id/tickets
+// PATCH: /unidades/tickets/:id
+// DELETE: /unidades/tickets/:id
+
+// // CRUD DE CUENTAS DE COBRO (Cargos)
+// POST: /unidades/:id/cuentas
+// POST: /unidades/cuentas/:cuentaId/detalle
+
+// // REPORTES
+// GET: /unidades/report/saldos
+
+// // DROPDOWNS
+// GET: /unidades/dropdowns/comunidades
+// GET: /unidades/dropdowns/edificios
+// GET: /unidades/dropdowns/torres
+// GET: /unidades/dropdowns/unidades

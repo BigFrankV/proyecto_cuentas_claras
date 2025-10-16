@@ -331,3 +331,29 @@ router.get('/utm/historico', async (req, res) => {
 });
 
 module.exports = router;
+
+// =========================================
+// ENDPOINTS DE UTILIDADES (UTIL)
+// =========================================
+
+// // INFORMACIÓN BÁSICA
+// GET: /util/health
+// GET: /util/version
+
+// // INDICADORES BÁSICOS
+// GET: /util/uf
+// GET: /util/utm
+// GET: /util/indicadores
+
+// // HISTÓRICOS
+// GET: /util/uf/historico
+// GET: /util/utm/historico
+
+// // UTILIDADES
+// GET: /util/validar-rut
+
+// // SINCRONIZACIÓN (SCHEDULER/CRON)
+// POST: /util/sync
+// GET: /util/sync/status
+// POST: /util/sync/init
+// POST: /util/sync/manual

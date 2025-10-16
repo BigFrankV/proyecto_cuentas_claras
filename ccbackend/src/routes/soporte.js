@@ -202,3 +202,32 @@ router.patch('/comunidad/:comunidadId/parametros-cobranza', [authenticate, requi
 });
 
 module.exports = router;
+
+
+
+// // =========================================
+// // ENDPOINTS DE SOPORTE
+// // =========================================
+
+// // TICKETS
+// GET: /soporte/comunidad/:comunidadId/tickets
+// POST: /soporte/comunidad/:comunidadId/tickets
+// GET: /soporte/tickets/:id
+// PATCH: /soporte/tickets/:id
+
+// // NOTIFICACIONES
+// GET: /soporte/comunidad/:comunidadId/notificaciones
+// POST: /soporte/comunidad/:comunidadId/notificaciones
+
+// // DOCUMENTOS
+// GET: /soporte/comunidad/:comunidadId/documentos
+// POST: /soporte/comunidad/:comunidadId/documentos
+// DELETE: /soporte/documentos/:id
+
+// // BITÁCORA DE CONSERJERÍA
+// GET: /soporte/comunidad/:comunidadId/bitacora
+// POST: /soporte/comunidad/:comunidadId/bitacora
+
+// // PARÁMETROS DE COBRANZA
+// GET: /soporte/comunidad/:comunidadId/parametros-cobranza
+// PATCH: /soporte/comunidad/:comunidadId/parametros-cobranza

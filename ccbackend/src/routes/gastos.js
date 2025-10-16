@@ -1557,3 +1557,48 @@ router.get('/dashboard/alertas-gastos-altos/:comunidadId', authenticate, require
 });
 
 module.exports = router;
+
+// =========================================
+// ENDPOINTS DE GASTOS
+// =========================================
+
+// // LISTADOS, FILTROS Y CRUD
+// GET: /gastos/comunidad/:comunidadId
+// GET: /gastos/comunidad/:comunidadId/count
+// POST: /gastos/comunidad/:comunidadId
+// GET: /gastos/:id
+// GET: /gastos/:id/archivos
+// PATCH: /gastos/:id
+// DELETE: /gastos/:id
+
+// // ESTADÍSTICAS
+// GET: /gastos/estadisticas/general/:comunidadId
+// GET: /gastos/estadisticas/por-categoria/:comunidadId
+// GET: /gastos/estadisticas/por-centro-costo/:comunidadId
+// GET: /gastos/estadisticas/por-proveedor/:comunidadId
+// GET: /gastos/estadisticas/mensuales/:comunidadId
+// GET: /gastos/estadisticas/extraordinarios-vs-operativos/:comunidadId
+
+// // VALIDACIONES
+// GET: /gastos/validar/existe/:id
+// GET: /gastos/validar/categoria/:id
+// GET: /gastos/validar/duplicado
+
+// // LISTAS DESPLEGABLES
+// GET: /gastos/listas/categorias/:comunidadId
+// GET: /gastos/listas/centros-costo/:comunidadId
+// GET: /gastos/listas/proveedores/:comunidadId
+// GET: /gastos/listas/documentos-disponibles/:comunidadId
+
+// // REPORTES AVANZADOS
+// GET: /gastos/reportes/periodo-comparativo/:comunidadId
+// GET: /gastos/reportes/top-proveedores/:comunidadId
+// GET: /gastos/reportes/por-dia-semana/:comunidadId
+
+// // EXPORTACIÓN
+// GET: /gastos/exportar/:comunidadId
+
+// // DASHBOARD
+// GET: /gastos/dashboard/resumen-mensual/:comunidadId
+// GET: /gastos/dashboard/top-categorias-mes/:comunidadId
+// GET: /gastos/dashboard/alertas-gastos-altos/:comunidadId

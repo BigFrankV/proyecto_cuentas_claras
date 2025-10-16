@@ -597,3 +597,21 @@ router.get('/catalogos/estados', authenticate, async (req, res) => {
  */
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE MEMBRESIAS
+// =========================================
+
+// // LISTADOS Y FILTROS
+// GET: /membresias
+// GET: /membresias/:id
+
+// // CRUD
+// POST: /membresias
+// PATCH: /membresias/:id
+// DELETE: /membresias/:id
+
+// // CATÁLOGOS
+// GET: /membresias/catalogos/planes
+// GET: /membresias/catalogos/estados

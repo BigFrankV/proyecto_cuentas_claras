@@ -891,3 +891,34 @@ async function obtenerTasaMorosidad(comunidadId) {
 }
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE DASHBOARD
+// =========================================
+
+// // 1. KPIs PRINCIPALES
+// GET: /dashboard/comunidad/:comunidadId/kpis
+// GET: /dashboard/comunidad/:comunidadId/saldo-total
+// GET: /dashboard/comunidad/:comunidadId/ingresos-mes
+// GET: /dashboard/comunidad/:comunidadId/gastos-mes
+// GET: /dashboard/comunidad/:comunidadId/tasa-morosidad
+
+// // 2. DATOS PARA GRÁFICOS
+// GET: /dashboard/comunidad/:comunidadId/grafico-emisiones
+// GET: /dashboard/comunidad/:comunidadId/grafico-estado-pagos
+// GET: /dashboard/comunidad/:comunidadId/grafico-gastos-categoria
+
+// // 3. TABLAS DE DATOS
+// GET: /dashboard/comunidad/:comunidadId/pagos-recientes
+// GET: /dashboard/comunidad/:comunidadId/unidades-morosas
+// GET: /dashboard/comunidad/:comunidadId/proximas-actividades
+// GET: /dashboard/comunidad/:comunidadId/reservas-amenidades
+
+// // 4. NOTIFICACIONES
+// GET: /dashboard/comunidad/:comunidadId/notificaciones
+
+// // 5. MÉTRICAS ADICIONALES
+// GET: /dashboard/comunidad/:comunidadId/efectividad-cobranza
+// GET: /dashboard/comunidad/:comunidadId/tendencia-ingresos
+// GET: /dashboard/comunidad/:comunidadId/resumen-completo

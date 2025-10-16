@@ -33,3 +33,16 @@ router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, 
 router.delete('/:id', authenticate, authorize('superadmin','admin'), async (req, res) => { const id = req.params.id; try { await db.query('DELETE FROM documento_compra WHERE id = ?', [id]); res.status(204).end(); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
 
 module.exports = router;
+
+
+
+// =========================================
+// ENDPOINTS DE DOCUMENTOS DE COMPRA
+// =========================================
+
+// // LISTADOS Y CRUD
+// GET: /documentos-compra/comunidad/:comunidadId
+// POST: /documentos-compra/comunidad/:comunidadId
+// GET: /documentos-compra/:id
+// PATCH: /documentos-compra/:id
+// DELETE: /documentos-compra/:id

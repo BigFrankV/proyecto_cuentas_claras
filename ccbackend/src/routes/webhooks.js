@@ -49,3 +49,12 @@ router.post('/pagos/khipu', async (req, res) => {
  *         description: OK
  */
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE WEBHOOKS
+// =========================================
+
+// // PAGOS
+// POST: /webhooks/pagos/webpay
+// POST: /webhooks/pagos/khipu

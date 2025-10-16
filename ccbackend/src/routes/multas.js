@@ -1147,3 +1147,43 @@ router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req
 });
 
 module.exports = router;
+
+// =========================================
+// ENDPOINTS DE MULTAS
+// =========================================
+
+// // 1. LISTADOS Y FILTROS
+// GET: /multas/comunidad/:comunidadId
+// GET: /multas/comunidad/:comunidadId/estadisticas-comunidad
+// GET: /multas/comunidad/:comunidadId/proximas-vencer
+// GET: /multas/comunidad/:comunidadId/buscar
+
+// // 2. VISTA DETALLADA
+// GET: /multas/:id
+// GET: /multas/comunidad/:comunidadId/completas
+
+// // 3. ESTADÍSTICAS
+// GET: /multas/estadisticas/generales
+// GET: /multas/comunidad/:comunidadId/estadisticas/tipo
+// GET: /multas/comunidad/:comunidadId/estadisticas/prioridad
+// GET: /multas/comunidad/:comunidadId/estadisticas/mensuales
+
+// // 4. BÚSQUEDAS AVANZADAS
+// GET: /multas/comunidad/:comunidadId/por-propietario
+// GET: /multas/comunidad/:comunidadId/por-unidad
+
+// // 5. EXPORTACIÓN
+// GET: /multas/comunidad/:comunidadId/export
+// GET: /multas/comunidad/:comunidadId/export/pendientes
+// GET: /multas/comunidad/:comunidadId/export/estadisticas
+
+// // 6. VALIDACIONES
+// GET: /multas/comunidad/:comunidadId/validar/integridad
+// GET: /multas/comunidad/:comunidadId/validar/rangos-monto
+
+// // 7. CRUD BÁSICO
+// GET: /multas/unidad/:unidadId
+// POST: /multas/unidad/:unidadId
+// PATCH: /multas/:id
+// PATCH: /multas/:id/anular
+// DELETE: /multas/:id

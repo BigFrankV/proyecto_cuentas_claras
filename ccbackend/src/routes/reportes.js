@@ -1043,3 +1043,41 @@ router.get('/comunidad/:comunidadId/reporte-completo', authenticate, requireComm
 });
 
 module.exports = router;
+
+// =========================================
+// ENDPOINTS DE REPORTES
+// =========================================
+
+// // 1. RESUMEN FINANCIERO
+// GET: /reportes/comunidad/:comunidadId/resumen-financiero
+// GET: /reportes/comunidad/:comunidadId/kpis-financieros
+// GET: /reportes/comunidad/:comunidadId/tendencias-mensuales
+
+// // 2. REPORTES DE MOROSIDAD
+// GET: /reportes/comunidad/:comunidadId/morosidad-unidades
+// GET: /reportes/comunidad/:comunidadId/estadisticas-morosidad
+
+// // 3. REPORTES DE GASTOS
+// GET: /reportes/comunidad/:comunidadId/gastos-detallados
+// GET: /reportes/comunidad/:comunidadId/gastos-por-categoria
+
+// // 4. REPORTES DE CONSUMOS
+// GET: /reportes/comunidad/:comunidadId/consumo-servicios
+// GET: /reportes/comunidad/:comunidadId/estadisticas-consumo
+
+// // 5. REPORTES DE TICKETS
+// GET: /reportes/comunidad/:comunidadId/tickets-soporte
+
+// // 6. REPORTES DE AMENIDADES
+// GET: /reportes/comunidad/:comunidadId/reservas-amenidades
+// GET: /reportes/comunidad/:comunidadId/ingresos-amenidades
+
+// // 7. REPORTES DE MULTAS
+// GET: /reportes/comunidad/:comunidadId/multas-sanciones
+// GET: /reportes/comunidad/:comunidadId/estadisticas-multas
+
+// // 8. REPORTES DE CONSERJERÍA
+// GET: /reportes/comunidad/:comunidadId/bitacora-conserjeria
+
+// // 9. REPORTES PERSONALIZADOS/EXPORTACIÓN
+// GET: /reportes/comunidad/:comunidadId/reporte-completo

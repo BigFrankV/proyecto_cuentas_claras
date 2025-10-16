@@ -1046,3 +1046,31 @@ router.get('/mis-membresias', authenticate, async (req, res) => {
 });
 
 module.exports = router;
+
+// // =========================================
+// // ENDPOINTS DE COMUNIDADES
+// // =========================================
+
+// // LISTADOS Y DETALLES
+// GET: /comunidades
+// GET: /comunidades/:id
+// GET: /comunidades/:id/amenidades
+// GET: /comunidades/:id/edificios
+// GET: /comunidades/:id/contactos
+// GET: /comunidades/:id/documentos
+// GET: /comunidades/:id/residentes
+// GET: /comunidades/:id/miembros
+// GET: /comunidades/mis-membresias
+
+// // OPERACIONES CRUD
+// POST: /comunidades
+// PATCH: /comunidades/:id
+// DELETE: /comunidades/:id
+
+// // FINANZAS Y PARÁMETROS
+// GET: /comunidades/:id/parametros
+// GET: /comunidades/:id/estadisticas
+// GET: /comunidades/:id/flujo-caja
+
+// // VALIDACIÓN
+// GET: /comunidades/verificar-acceso/:id

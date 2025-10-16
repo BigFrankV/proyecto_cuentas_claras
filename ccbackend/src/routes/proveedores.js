@@ -954,3 +954,42 @@ router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req
 });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE PROVEEDORES
+// =========================================
+
+// // 1. LISTADOS CON ESTADÍSTICAS
+// GET: /proveedores/comunidad/:comunidadId
+// GET: /proveedores/comunidad/:comunidadId/estadisticas
+
+// // 2. DETALLE COMPLETO
+// GET: /proveedores/:id
+// GET: /proveedores/:id/historial-gastos
+// GET: /proveedores/:id/documentos
+
+// // 3. REPORTES Y ANÁLISIS
+// GET: /proveedores/comunidad/:comunidadId/top-volumen
+// GET: /proveedores/comunidad/:comunidadId/inactivos
+// GET: /proveedores/comunidad/:comunidadId/analisis-mensual
+// GET: /proveedores/comunidad/:comunidadId/por-categoria
+// GET: /proveedores/comunidad/:comunidadId/comparativa
+
+// // 4. DASHBOARD Y MÉTRICAS
+// GET: /proveedores/comunidad/:comunidadId/dashboard
+// GET: /proveedores/comunidad/:comunidadId/top-mes
+// GET: /proveedores/comunidad/:comunidadId/distribucion
+
+// // 5. VALIDACIONES
+// POST: /proveedores/comunidad/:comunidadId/validar-rut
+// GET: /proveedores/:id/validar-eliminacion
+
+// // 6. EXPORTACIÓN Y UTILIDADES
+// GET: /proveedores/comunidad/:comunidadId/export
+// GET: /proveedores/comunidad/:comunidadId/dropdown
+
+// // 7. CRUD BÁSICO
+// POST: /proveedores/comunidad/:comunidadId
+// PATCH: /proveedores/:id
+// DELETE: /proveedores/:id

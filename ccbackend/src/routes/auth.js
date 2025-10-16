@@ -1135,3 +1135,42 @@ router.patch('/preferences', authenticate, async (req, res) => {
 });
 
 module.exports = router;
+
+
+// // =========================================
+// // ENDPOINTS DE AUTENTICACIÓN (AUTH)
+// // =========================================
+
+// // REGISTRO Y LOGIN
+// POST: /auth/register
+// POST: /auth/login
+
+// // GESTIÓN DE TOKEN
+// POST: /auth/refresh
+// POST: /auth/logout
+
+// // 2FA
+// POST: /auth/verify-2fa
+// POST: /auth/2fa/verify
+// GET: /auth/2fa/setup
+// POST: /auth/2fa/enable
+// POST: /auth/2fa/disable
+
+// // RECUPERACIÓN DE CONTRASEÑA
+// POST: /auth/forgot-password
+// POST: /auth/reset-password
+// POST: /auth/change-password
+
+// // PERFIL DE USUARIO Y PERSONA
+// GET: /auth/me
+// PATCH: /auth/profile
+// PATCH: /auth/profile/persona
+
+// // SESIONES
+// GET: /auth/sessions
+// DELETE: /auth/sessions/:sessionId
+// DELETE: /auth/sessions
+
+// // PREFERENCIAS
+// GET: /auth/preferences
+// PATCH: /auth/preferences

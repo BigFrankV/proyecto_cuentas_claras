@@ -338,3 +338,20 @@ router.post('/cleanup', async (req, res) => {
 });
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE ARCHIVOS (FILES)
+// =========================================
+
+// // SUBIDA Y DESCARGA
+// POST: /files/upload
+// GET: /files/:id
+
+// // LISTADO Y GESTIÓN
+// GET: /files
+// DELETE: /files/:id
+
+// // UTILIDADES Y ESTADÍSTICAS
+// GET: /files/stats
+// POST: /files/cleanup

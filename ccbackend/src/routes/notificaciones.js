@@ -1013,3 +1013,41 @@ router.delete('/:id', authenticate, async (req, res) => {
 });
 
 module.exports = router;
+
+// =========================================
+// ENDPOINTS DE NOTIFICACIONES
+// =========================================
+
+// // 1. LISTADOS BÁSICOS CON FILTROS
+// GET: /notificaciones/comunidad/:comunidadId
+// GET: /notificaciones/comunidad/:comunidadId/estadisticas-general
+// GET: /notificaciones/comunidad/:comunidadId/pendientes
+
+// // 2. VISTAS DETALLADAS
+// GET: /notificaciones/:id
+// GET: /notificaciones/comunidad/:comunidadId/listado-completo
+
+// // 3. ESTADÍSTICAS
+// GET: /notificaciones/estadisticas/generales
+// GET: /notificaciones/estadisticas/por-estado
+// GET: /notificaciones/estadisticas/por-tipo
+// GET: /notificaciones/estadisticas/por-canal
+// GET: /notificaciones/estadisticas/mensuales
+
+// // 4. BÚSQUEDAS FILTRADAS
+// GET: /notificaciones/buscar
+// GET: /notificaciones/por-comunidad
+// GET: /notificaciones/por-audiencia
+
+// // 5. EXPORTACIONES
+// GET: /notificaciones/exportar/completo
+// GET: /notificaciones/exportar/enviadas
+// GET: /notificaciones/exportar/estadisticas-mensuales
+
+// // 6. VALIDACIONES
+// GET: /notificaciones/validaciones/integridad
+
+// // 7. OPERACIONES CRUD
+// POST: /notificaciones
+// PATCH: /notificaciones/:id/marcar-leida
+// DELETE: /notificaciones/:id
