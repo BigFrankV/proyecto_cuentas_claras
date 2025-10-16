@@ -4,12 +4,29 @@ import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { getApelacion } from '@/lib/apelacionesService';
 import Layout from '@/components/layout/Layout';
 import ApelacionDetail from '@/components/apelaciones/ApelacionDetail';
+import { GetServerSideProps } from 'next';
+import api from '@/lib/api'; // axios client que incluye cookies o token
 
-export default function ApelacionDetallePage() {
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const { id } = ctx.params;
+  const cookie = ctx.req.headers.cookie || '';
+  try {
+    const res = await api.get(`/apelaciones/${id}`, { headers: { cookie } });
+    const data = res.data?.data ?? res.data;
+    // puedes verificar rol del usuario desde la sesión (si tu backend devuelve user en sesión)
+    // si no autorizado:
+    // return { redirect: { destination: '/login', permanent: false } };
+    return { props: { inicialApelacion: data } };
+  } catch (err) {
+    return { notFound: true };
+  }
+};
+
+export default function ApelacionDetallePage({ inicialApelacion }: any) {
   const router = useRouter();
   const { id } = router.query;
   const { token } = useAuth();
-  const [apelacion, setApelacion] = useState<any>(null);
+  const [apelacion, setApelacion] = useState<any>(inicialApelacion ?? null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -18,7 +35,7 @@ export default function ApelacionDetallePage() {
       setLoading(true);
       try {
         const r = await getApelacion(Number(id), token);
-        setApelacion(r);
+        setApelacion(r?.data ?? r);
       } catch (err) {
         console.error('getApelacion.error', err);
       } finally {

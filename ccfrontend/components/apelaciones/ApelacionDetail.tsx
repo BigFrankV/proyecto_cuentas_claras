@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/lib/useAuth';
+import useAuth from '@/lib/useAuth';
+import usePermissions from '@/lib/usePermissions';
 import { resolveApelacion } from '@/lib/apelacionesService';
 
-export default function ApelacionDetail({ apelacion, onResolved, onUpdated }: { apelacion: any, onResolved?: Function, onUpdated?: Function }) {
+const ApelacionDetail = ({ apelacion, onResolved, onUpdated }: { apelacion: any, onResolved?: Function, onUpdated?: Function }) => {
   const { user, token } = useAuth();
+  const { can } = usePermissions();
   const [resolucion, setResolucion] = useState('');
   const [loading, setLoading] = useState(false);
-
-  function isManager() {
-    if (!user) return false;
-    if (user.is_superadmin) return true;
-    return (user.memberships || []).some((m:any) => ['presidente_comite','admin_comunidad','sindico','contador','admin','gestor','sistema'].includes((m.rol_slug||m.rol||'').toLowerCase()));
-  }
 
   async function handleResolve(accion: 'aceptar'|'rechazar') {
     setLoading(true);
@@ -37,13 +33,10 @@ export default function ApelacionDetail({ apelacion, onResolved, onUpdated }: { 
       <p><strong>Fecha apelación:</strong> {apelacion.fecha_apelacion ? new Date(apelacion.fecha_apelacion).toLocaleString() : '—'}</p>
       {apelacion.resolucion && <p><strong>Resolución:</strong> {apelacion.resolucion}</p>}
       <div className="mt-3">
-        {isManager() && apelacion.estado === 'pendiente' && (
+        {apelacion.estado === 'pendiente' && can('apelaciones.resolve') && (
           <>
-            <textarea className="form-control mb-2" placeholder="Texto de resolución" value={resolucion} onChange={e=>setResolucion(e.target.value)} />
-            <div className="d-flex">
-              <button className="btn btn-success me-2" disabled={loading} onClick={()=>handleResolve('aceptar')}>Aprobar</button>
-              <button className="btn btn-danger" disabled={loading} onClick={()=>handleResolve('rechazar')}>Rechazar</button>
-            </div>
+            <button className="btn btn-success me-2" disabled={loading} onClick={()=>handleResolve('aceptar')}>Aprobar</button>
+            <button className="btn btn-danger" disabled={loading} onClick={()=>handleResolve('rechazar')}>Rechazar</button>
           </>
         )}
 
@@ -54,3 +47,5 @@ export default function ApelacionDetail({ apelacion, onResolved, onUpdated }: { 
     </div>
   );
 }
+
+export default ApelacionDetail;

@@ -23,7 +23,7 @@ async function obtenerComunidadesUsuario(userId, personaId, isSuperAdmin) {
       FROM usuario_rol_comunidad 
       WHERE usuario_id = ? AND activo = 1
     `, [userId]);
-    console.log('🏘️ Comunidades obtenidas:', memberships.map(m => m.comunidad_id));  // ✅ Agregar
+    console.log('🏘️ Comunidades obtenidas:', memberships.map(m => m.comunidad_id));
     return memberships.map(m => m.comunidad_id);
   } catch (error) {
     console.error('❌ Error obteniendo comunidades del usuario:', error);
@@ -88,6 +88,22 @@ async function generarNumeroMulta(comunidadId) {
 }
 
 // ============================================
+// HELPER: Resolver id o numero (M-2025-0001)
+// ============================================
+async function resolveMultaId(idOrNumero) {
+  if (!idOrNumero) return null;
+  if (!isNaN(Number(idOrNumero))) return Number(idOrNumero);
+  try {
+    const [rows] = await db.query('SELECT id FROM multa WHERE numero = ? LIMIT 1', [idOrNumero]);
+    if (!rows.length) return null;
+    return rows[0].id;
+  } catch (e) {
+    console.error('❌ Error resolviendo multa por numero:', e);
+    return null;
+  }
+}
+
+// ============================================
 // GET /multas - LISTAR MULTAS
 // ============================================
 router.get('/',
@@ -136,7 +152,7 @@ router.get('/',
         params.push(req.user.persona_id);
         console.log(`🔒 Filtro aplicado: solo multas de persona_id=${req.user.persona_id}`);
       } else if (!req.user?.is_superadmin) {
-        // ✅ CORRECCIÓN: Cargar comunidades desde BD
+        // Cargar comunidades desde BD
         const comunidadIds = await obtenerComunidadesUsuario(
           req.user.sub,
           req.user.persona_id,
@@ -182,7 +198,7 @@ router.get('/',
         params.push(s, s, s);
       }
 
-      // Total count (usar pattern que admita newlines)
+      // Total count
       const countQuery = sql.replace(/SELECT[\s\S]*?FROM/i, 'SELECT COUNT(*) as total FROM');
       const [countResult] = await db.query(countQuery, params);
       const total = countResult[0].total;
@@ -195,12 +211,9 @@ router.get('/',
 
       const [rows] = await db.query(sql, params);
 
-      // ✅ Agregar debug
       console.log('🔍 SQL ejecutado:', sql);
       console.log('📊 Parámetros:', params);
       console.log('📊 Filas encontradas:', rows.length);
-
-      console.log(`✅ ${rows.length} multas devueltas en esta página`);
 
       res.json({
         success: true,
@@ -237,12 +250,10 @@ router.get('/estadisticas',
       let whereClause = 'WHERE 1=1';
       const params = [];
 
-      // ✅ CORRECCIÓN: Filtrar por permisos usando función helper
       if (req.viewOnlyOwn && req.user.persona_id) {
         whereClause += ' AND persona_id = ?';
         params.push(req.user.persona_id);
       } else if (!req.user?.is_superadmin) {
-        // ✅ CORRECCIÓN: Cargar comunidades desde BD
         const comunidadIds = await obtenerComunidadesUsuario(
           req.user.sub,
           req.user.persona_id,
@@ -258,7 +269,6 @@ router.get('/estadisticas',
         params.push(...comunidadIds);
       }
 
-      // Filtro opcional por comunidad
       if (req.query.comunidad_id) {
         whereClause += ' AND comunidad_id = ?';
         params.push(req.query.comunidad_id);
@@ -329,7 +339,6 @@ router.post('/',
     body('unidad_id').notEmpty().isInt().withMessage('unidad_id es requerido y debe ser un número'),
     body('tipo_infraccion').notEmpty().isLength({ min: 5, max: 120 }).withMessage('tipo_infraccion es requerido (5-120 caracteres)'),
     body('monto').isFloat({ min: 0.01 }).withMessage('monto debe ser mayor a 0'),
-    // fechas opcionales
     body('fecha_infraccion').optional().isISO8601().withMessage('fecha_infraccion debe ser una fecha válida')
       .custom(fecha => {
         if (fecha && new Date(fecha) > new Date()) {
@@ -386,7 +395,7 @@ router.post('/',
 
       const comunidad_id = unidadRows[0].comunidad_id;
 
-      // ✅ Verificar permisos sobre la comunidad
+      // Verificar permisos sobre la comunidad
       if (!req.user.is_superadmin) {
         const comunidadIds = await obtenerComunidadesUsuario(
           req.user.sub,
@@ -428,7 +437,7 @@ router.post('/',
       // Registrar en historial
       await registrarHistorial(
         result.insertId,
-        req.user.sub, // ✅ Usar req.user.sub en lugar de req.user.id
+        req.user.sub,
         'creada',
         `Multa ${numero} creada`,
         {
@@ -476,11 +485,13 @@ router.post('/',
 router.get('/:id',
   authenticate,
   MultasPermissions.canView,
-  param('id').isInt(),
+  param('id').notEmpty(),
   async (req, res) => {
-    const id = req.params.id;
-
+    const idParam = req.params.id;
     try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
       console.log(`🔍 GET /multas/${id} - Usuario:`, req.user?.username);
 
       let query = `
@@ -508,7 +519,6 @@ router.get('/:id',
 
       const params = [id];
 
-      // Verificar permisos
       if (req.viewOnlyOwn && req.user.persona_id) {
         query += ' AND m.persona_id = ?';
         params.push(req.user.persona_id);
@@ -527,7 +537,7 @@ router.get('/:id',
       res.json({ success: true, data: rows[0] });
 
     } catch (error) {
-      console.error(`❌ Error obteniendo multa ${id}:`, error);
+      console.error(`❌ Error obteniendo multa ${idParam}:`, error);
       res.status(500).json({
         success: false,
         error: 'Error del servidor',
@@ -544,7 +554,7 @@ router.patch('/:id',
   authenticate,
   MultasPermissions.canEdit,
   [
-    param('id').isInt(),
+    param('id').notEmpty(),
     body('tipo_infraccion').optional().isLength({ min: 5, max: 120 }),
     body('monto').optional().isFloat({ min: 0.01 }),
     body('prioridad').optional().isIn(['baja', 'media', 'alta', 'critica']),
@@ -552,13 +562,14 @@ router.patch('/:id',
     body('fecha_vencimiento').optional().isISO8601()
   ],
   async (req, res) => {
-    const id = req.params.id;
-
+    const idParam = req.params.id;
     try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
       console.log(`📝 PATCH /multas/${id} - Usuario:`, req.user?.username);
       console.log('📝 Datos recibidos:', req.body);
 
-      // Verificar que multa existe
       const [existingRows] = await db.query(
         'SELECT * FROM multa WHERE id = ? LIMIT 1',
         [id]
@@ -573,7 +584,6 @@ router.patch('/:id',
 
       const multaAnterior = existingRows[0];
 
-      // No permitir editar multas pagadas o anuladas
       if (['pagado', 'anulada'].includes(multaAnterior.estado)) {
         return res.status(400).json({
           success: false,
@@ -581,7 +591,6 @@ router.patch('/:id',
         });
       }
 
-      // Mapear campos del frontend a la BD
       const fieldMapping = {
         'tipo_infraccion': 'motivo',
         'fecha_infraccion': 'fecha'
@@ -623,10 +632,9 @@ router.patch('/:id',
 
       await db.query(updateQuery, values);
 
-      // Registrar en historial
       await registrarHistorial(
         id,
-        req.user.sub, // ✅ Usar req.user.sub en lugar de req.user.id
+        req.user.sub,
         'editada',
         `Multa ${multaAnterior.numero} editada`,
         {
@@ -636,7 +644,6 @@ router.patch('/:id',
         }
       );
 
-      // Obtener multa actualizada
       const [rows] = await db.query(`
         SELECT 
           m.*,
@@ -650,7 +657,7 @@ router.patch('/:id',
       res.json({ success: true, data: rows[0] });
 
     } catch (err) {
-      console.error(`❌ Error actualizando multa ${id}:`, err);
+      console.error(`❌ Error actualizando multa ${idParam}:`, err);
       res.status(500).json({
         success: false,
         error: 'Error del servidor',
@@ -667,10 +674,11 @@ router.patch('/:id/anular',
   authenticate,
   MultasPermissions.canAnular,
   [
-    param('id').isInt(),
+    param('id').notEmpty(),
     body('motivo_anulacion').notEmpty().withMessage('motivo_anulacion es requerido')
   ],
   async (req, res) => {
+    const idParam = req.params.id;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -680,13 +688,14 @@ router.patch('/:id/anular',
       });
     }
 
-    const id = req.params.id;
     const { motivo_anulacion } = req.body;
 
     try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
       console.log(`🚫 PATCH /multas/${id}/anular - Usuario:`, req.user?.username);
 
-      // Verificar multa
       const [existingRows] = await db.query(
         'SELECT * FROM multa WHERE id = ?',
         [id]
@@ -715,19 +724,18 @@ router.patch('/:id/anular',
         });
       }
 
-      // Anular multa
+      // Anular multa usando fecha_anulacion (columna en la BD)
       await db.query(
         `UPDATE multa 
          SET estado = 'anulada', 
              motivo_anulacion = ?, 
              anulado_por = ?, 
-             anulado_en = NOW(),
+             fecha_anulacion = NOW(),
              updated_at = NOW()
          WHERE id = ?`,
         [motivo_anulacion, req.user.sub, id]
       );
 
-      // Registrar en historial
       await registrarHistorial(
         id,
         req.user.sub,
@@ -740,7 +748,6 @@ router.patch('/:id/anular',
         }
       );
 
-      // Obtener multa actualizada
       const [rows] = await db.query(
         'SELECT * FROM multa WHERE id = ?',
         [id]
@@ -755,7 +762,7 @@ router.patch('/:id/anular',
       });
 
     } catch (error) {
-      console.error(`❌ Error anulando multa ${id}:`, error);
+      console.error(`❌ Error anulando multa ${idParam}:`, error);
       res.status(500).json({
         success: false,
         error: 'Error del servidor'
@@ -771,12 +778,13 @@ router.post('/:id/registrar-pago',
   authenticate,
   MultasPermissions.canRegistrarPago,
   [
-    param('id').isInt(),
+    param('id').notEmpty(),
     body('fecha_pago').isISO8601().withMessage('fecha_pago debe ser una fecha válida'),
     body('metodo_pago').optional().isString(),
     body('referencia').optional().isString()
   ],
   async (req, res) => {
+    const idParam = req.params.id;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -786,13 +794,14 @@ router.post('/:id/registrar-pago',
       });
     }
 
-    const id = req.params.id;
     const { fecha_pago, metodo_pago, referencia } = req.body;
 
     try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
       console.log(`💰 POST /multas/${id}/registrar-pago - Usuario:`, req.user?.username);
 
-      // Verificar multa
       const [existingRows] = await db.query(
         'SELECT * FROM multa WHERE id = ?',
         [id]
@@ -821,7 +830,6 @@ router.post('/:id/registrar-pago',
         });
       }
 
-      // Registrar pago
       await db.query(
         `UPDATE multa 
          SET estado = 'pagado', 
@@ -830,10 +838,9 @@ router.post('/:id/registrar-pago',
         [fecha_pago, id]
       );
 
-      // Registrar en historial
       await registrarHistorial(
         id,
-        req.user.sub, // ✅ Usar req.user.sub en lugar de req.user.id
+        req.user.sub,
         'pago_registrado',
         `Pago registrado para multa ${multa.numero}`,
         {
@@ -844,7 +851,6 @@ router.post('/:id/registrar-pago',
         }
       );
 
-      // Obtener multa actualizada
       const [rows] = await db.query(
         'SELECT * FROM multa WHERE id = ?',
         [id]
@@ -859,7 +865,7 @@ router.post('/:id/registrar-pago',
       });
 
     } catch (error) {
-      console.error(`❌ Error registrando pago ${id}:`, error);
+      console.error(`❌ Error registrando pago ${idParam}:`, error);
       res.status(500).json({
         success: false,
         error: 'Error del servidor'
@@ -874,27 +880,15 @@ router.post('/:id/registrar-pago',
 router.get('/:id/historial',
   authenticate,
   MultasPermissions.canView,
-  param('id').isInt(),
+  param('id').notEmpty(),
   async (req, res) => {
-    const id = req.params.id;
-
+    const idParam = req.params.id;
     try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
       console.log(`📜 GET /multas/${id}/historial - Usuario:`, req.user?.username);
 
-      // Verificar que la multa existe
-      const [multaRows] = await db.query(
-        'SELECT id FROM multa WHERE id = ?',
-        [id]
-      );
-
-      if (!multaRows.length) {
-        return res.status(404).json({
-          success: false,
-          error: 'Multa no encontrada'
-        });
-      }
-
-      // Obtener historial
       const [rows] = await db.query(`
         SELECT 
           h.*,
@@ -916,7 +910,7 @@ router.get('/:id/historial',
       });
 
     } catch (error) {
-      console.error(`❌ Error obteniendo historial ${id}:`, error);
+      console.error(`❌ Error obteniendo historial ${idParam}:`, error);
       res.status(500).json({
         success: false,
         error: 'Error del servidor'
@@ -932,11 +926,12 @@ router.post('/:id/apelacion',
   authenticate,
   MultasPermissions.canApelar,
   [
-    param('id').isInt(),
+    param('id').notEmpty(),
     body('motivo').notEmpty().isLength({ min: 20 }).withMessage('motivo debe tener al menos 20 caracteres'),
     body('documentos_json').optional().isArray()
   ],
   async (req, res) => {
+    const idParam = req.params.id;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -946,13 +941,14 @@ router.post('/:id/apelacion',
       });
     }
 
-    const id = req.params.id;
     const { motivo, documentos_json } = req.body;
 
     try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
       console.log(`📝 POST /multas/${id}/apelacion - Usuario:`, req.user?.username);
 
-      // Verificar multa
       const [multaRows] = await db.query(
         'SELECT * FROM multa WHERE id = ?',
         [id]
@@ -981,7 +977,6 @@ router.post('/:id/apelacion',
         });
       }
 
-      // Verificar si ya tiene apelación pendiente
       const [existingApelacion] = await db.query(
         "SELECT id FROM multa_apelacion WHERE multa_id = ? AND estado = 'pendiente'",
         [id]
@@ -994,26 +989,30 @@ router.post('/:id/apelacion',
         });
       }
 
-      // Crear apelación
+      // Insertar apelación usando columnas reales: motivo_apelacion, y referenciando persona/comunidad si están
       const [result] = await db.query(
         `INSERT INTO multa_apelacion (
-          multa_id, usuario_id, motivo, documentos_json, estado
-        ) VALUES (?, ?, ?, ?, 'pendiente')`,
+          multa_id,
+          usuario_id,
+          persona_id,
+          comunidad_id,
+          motivo_apelacion,
+          estado
+        ) VALUES (?, ?, ?, ?, ?, 'pendiente')`,
         [
           id,
-          req.user.sub,  // ✅ CORREGIDO: Ahora usa req.user.sub
-          motivo,
-          documentos_json ? JSON.stringify(documentos_json) : null
+          req.user.sub,
+          multa.persona_id || null,
+          multa.comunidad_id || null,
+          motivo
         ]
       );
 
-      // Cambiar estado de la multa a "apelada"
       await db.query(
         "UPDATE multa SET estado = 'apelada' WHERE id = ?",
         [id]
       );
 
-      // Registrar en historial
       await registrarHistorial(
         id,
         req.user.sub,
@@ -1026,7 +1025,6 @@ router.post('/:id/apelacion',
         }
       );
 
-      // Obtener apelación creada
       const [rows] = await db.query(
         'SELECT * FROM multa_apelacion WHERE id = ?',
         [result.insertId]
@@ -1041,7 +1039,7 @@ router.post('/:id/apelacion',
       });
 
     } catch (error) {
-      console.error(`❌ Error creando apelación ${id}:`, error);
+      console.error(`❌ Error creando apelación ${idParam}:`, error);
       res.status(500).json({
         success: false,
         error: 'Error del servidor'
@@ -1056,14 +1054,15 @@ router.post('/:id/apelacion',
 router.delete('/:id',
   authenticate,
   MultasPermissions.canDelete,
-  param('id').isInt(),
+  param('id').notEmpty(),
   async (req, res) => {
-    const id = req.params.id;
-
+    const idParam = req.params.id;
     try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
       console.log(`🗑️ DELETE /multas/${id} - Usuario:`, req.user?.username);
 
-      // Verificar multa
       const [existingRows] = await db.query(
         'SELECT * FROM multa WHERE id = ?',
         [id]
@@ -1078,7 +1077,6 @@ router.delete('/:id',
 
       const multa = existingRows[0];
 
-      // No permitir eliminar multas pagadas
       if (multa.estado === 'pagado') {
         return res.status(400).json({
           success: false,
@@ -1086,10 +1084,9 @@ router.delete('/:id',
         });
       }
 
-      // Registrar en historial antes de eliminar
       await registrarHistorial(
         id,
-        req.user.sub, // ✅ Usar req.user.sub en lugar de req.user.id
+        req.user.sub,
         'eliminada',
         `Multa ${multa.numero} eliminada`,
         {
@@ -1099,7 +1096,6 @@ router.delete('/:id',
         }
       );
 
-      // Eliminar multa (CASCADE eliminará historial y apelaciones)
       await db.query('DELETE FROM multa WHERE id = ?', [id]);
 
       console.log('✅ Multa eliminada exitosamente');
@@ -1110,7 +1106,7 @@ router.delete('/:id',
       });
 
     } catch (err) {
-      console.error(`❌ Error eliminando multa ${id}:`, err);
+      console.error(`❌ Error eliminando multa ${idParam}:`, err);
       res.status(500).json({
         success: false,
         error: 'Error del servidor'
@@ -1122,24 +1118,6 @@ router.delete('/:id',
 // ============================================
 // GET /multas/unidad/:unidadId - MULTAS DE UNA UNIDAD
 // ============================================
-/**
- * @openapi
- * /unidades/{unidadId}/multas:
- *   get:
- *     tags: [Multas]
- *     summary: Listar multas de una unidad
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: unidadId
- *         schema:
- *           type: integer
- *         required: true
- *     responses:
- *       200:
- *         description: Lista de multas
- */
 router.get('/unidad/:unidadId',
   authenticate,
   async (req, res) => {
@@ -1186,137 +1164,43 @@ router.get('/unidad/:unidadId',
 );
 
 // ============================================
-// POST /multas/unidad/:unidadId - CREAR MULTA DESDE UNIDAD
+// GET /multas/:id/apelaciones
 // ============================================
-/**
- * @openapi
- * /unidades/{unidadId}/multas:
- *   post:
- *     tags: [Multas]
- *     summary: Crear una multa para una unidad
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: unidadId
- *         schema:
- *           type: integer
- *         required: true
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               persona_id:
- *                 type: integer
- *               tipo_infraccion:
- *                 type: string
- *               descripcion:
- *                 type: string
- *               monto:
- *                 type: number
- *               fecha_infraccion:
- *                 type: string
- *                 format: date
- *               fecha_vencimiento:
- *                 type: string
- *                 format: date
- *               prioridad:
- *                 type: string
- *                 enum: [baja, media, alta, critica]
- *     responses:
- *       201:
- *         description: Created
- */
-router.post('/unidad/:unidadId',
+router.get('/:id/apelaciones',
   authenticate,
-  MultasPermissions.canCreate,
-  [
-    body('tipo_infraccion').notEmpty(),
-    body('monto').isNumeric(),
-    body('fecha_infraccion').optional().isISO8601() // antes .notEmpty()
-  ],
+  MultasPermissions.canView,
+  param('id').notEmpty(),
   async (req, res) => {
-    const unidadId = req.params.unidadId;
-    const {
-      persona_id,
-      tipo_infraccion,
-      descripcion,
-      monto,
-      fecha_infraccion,
-      fecha_vencimiento,
-      prioridad = 'media'
-    } = req.body;
-
+    const idParam = req.params.id;
     try {
-      console.log(`📝 POST /multas/unidad/${unidadId}`);
-
-      // Obtener comunidad_id de la unidad
-      const [unidadRows] = await db.query(
-        'SELECT comunidad_id FROM unidad WHERE id = ?',
-        [unidadId]
-      );
-
-      if (!unidadRows.length) {
-        return res.status(404).json({
-          success: false,
-          error: 'Unidad no encontrada'
-        });
-      }
-
-      const comunidad_id = unidadRows[0].comunidad_id;
-      const numero = await generarNumeroMulta(comunidad_id);
-
-      // Insertar multa
-      const [result] = await db.query(
-        `INSERT INTO multa (
-          numero, comunidad_id, unidad_id, persona_id, motivo, descripcion, 
-          monto, fecha, fecha_vencimiento, prioridad
-        ) SELECT ?, unidad.comunidad_id, ?, ?, ?, ?, ?, ?, ?, ? 
-        FROM unidad WHERE id = ?`,
-        [
-          numero,
-          unidadId,
-          persona_id || null,
-          tipo_infraccion,
-          descripcion || null,
-          monto,
-          fecha_infraccion,
-          fecha_vencimiento || null,
-          prioridad,
-          unidadId
-        ]
-      );
-
-      // Registrar en historial
-      await registrarHistorial(
-        result.insertId,
-        req.user.sub, // ✅ Usar req.user.sub en lugar de req.user.id
-        'creada',
-        `Multa ${numero} creada desde unidad ${unidadId}`,
-        {
-          estado_nuevo: 'pendiente',
-          ip_address: req.ip
-        }
-      );
-
-      // Obtener multa creada
-      const [row] = await db.query(
-        'SELECT id, numero, motivo as tipo_infraccion, monto, estado, prioridad FROM multa WHERE id = ? LIMIT 1',
-        [result.insertId]
-      );
-
-      console.log('✅ Multa creada desde unidad');
-      res.status(201).json({ success: true, data: row[0] });
-
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+      const [rows] = await db.query('SELECT * FROM multa_apelacion WHERE multa_id = ? ORDER BY created_at DESC', [id]);
+      res.json({ success: true, data: rows });
     } catch (err) {
-      console.error('❌ Error creando multa desde unidad:', err);
-      res.status(500).json({
-        success: false,
-        error: 'Error del servidor'
-      });
+      console.error(err);
+      res.status(500).json({ success: false, error: 'Error del servidor' });
+    }
+  }
+);
+
+// ============================================
+// GET /multas/:id/documentos
+// ============================================
+router.get('/:id/documentos',
+  authenticate,
+  MultasPermissions.canView,
+  param('id').notEmpty(),
+  async (req, res) => {
+    const idParam = req.params.id;
+    try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+      const [rows] = await db.query('SELECT * FROM documento_multa WHERE multa_id = ? ORDER BY created_at DESC', [id]);
+      res.json({ success: true, data: rows });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, error: 'Error del servidor' });
     }
   }
 );

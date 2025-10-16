@@ -315,9 +315,26 @@ class MultasService {
 
   // ===== API HELPERS (aliases usados por las páginas actuales) =====
 
-  // Obtener historial de una multa
+  // Obtener historial de una multa (alias en español e inglés)
   async obtenerHistorial(id: number): Promise<any[]> {
     const response = await api.get(`/multas/${id}/historial`);
+    return response.data?.data ?? response.data;
+  }
+
+  // Alias en inglés usado por el componente
+  async getHistorial(id: number): Promise<any[]> {
+    return this.obtenerHistorial(id);
+  }
+
+  // Obtener documentos/evidencias
+  async getDocumentos(id: number): Promise<any[]> {
+    const response = await api.get(`/multas/${id}/documentos`);
+    return response.data?.data ?? response.data;
+  }
+
+  // Obtener apelaciones (lista)
+  async getApelaciones(id: number): Promise<any[]> {
+    const response = await api.get(`/multas/${id}/apelaciones`);
     return response.data?.data ?? response.data;
   }
 
