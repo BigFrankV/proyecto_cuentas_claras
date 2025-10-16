@@ -70,3 +70,4 @@ workbox-*.js.map
 
 # Bundle analyzer
 .bundle-analyzer/
+*storybook.log

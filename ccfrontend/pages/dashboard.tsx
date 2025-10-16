@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
@@ -8,10 +9,78 @@ import {
 } from '@/lib/usePermissions';
 import Head from 'next/head';
 import DashboardCharts from '@/components/ui/DashboardCharts';
+import {
+  getDashboardKPIs,
+  getPagosRecientes,
+  getUnidadesMorosas,
+  getProximasActividades,
+  getReservasAmenidades,
+  getNotificacionesRecientes,
+  type DashboardKPIs,
+  type PagoReciente,
+  type UnidadMorosa,
+  type ActividadProxima,
+  type ReservaAmenidad,
+  type Notificacion
+} from '@/lib/dashboardService';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { isSuperUser, currentRole } = usePermissions();
+
+  // Estado para datos del dashboard
+  const [kpis, setKpis] = useState<DashboardKPIs | null>(null);
+  const [pagosRecientes, setPagosRecientes] = useState<PagoReciente[]>([]);
+  const [unidadesMorosas, setUnidadesMorosas] = useState<UnidadMorosa[]>([]);
+  const [proximasActividades, setProximasActividades] = useState<ActividadProxima[]>([]);
+  const [reservasAmenidades, setReservasAmenidades] = useState<ReservaAmenidad[]>([]);
+  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // ID de comunidad por defecto (debería venir del contexto del usuario)
+  const comunidadId = 1;
+
+  // Cargar datos del dashboard
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Cargar todos los datos en paralelo
+        const [
+          kpisData,
+          pagosData,
+          morosasData,
+          actividadesData,
+          reservasData,
+          notificacionesData
+        ] = await Promise.all([
+          getDashboardKPIs(comunidadId),
+          getPagosRecientes(comunidadId),
+          getUnidadesMorosas(comunidadId),
+          getProximasActividades(comunidadId),
+          getReservasAmenidades(comunidadId),
+          getNotificacionesRecientes(comunidadId)
+        ]);
+
+        setKpis(kpisData);
+        setPagosRecientes(pagosData);
+        setUnidadesMorosas(morosasData);
+        setProximasActividades(actividadesData);
+        setReservasAmenidades(reservasData);
+        setNotificaciones(notificacionesData);
+      } catch (err: any) {
+        console.error('Error loading dashboard data:', err);
+        setError(err.message || 'Error al cargar datos del dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, [comunidadId]);
 
   return (
     <ProtectedRoute>
@@ -122,6 +191,14 @@ export default function Dashboard() {
 
         {/* Contenido del dashboard */}
         <main className='container-fluid py-4'>
+          {error && (
+            <div className='alert alert-danger d-flex align-items-center mb-4'>
+              <span className='material-icons me-2'>error</span>
+              <div>
+                <strong>Error al cargar datos del dashboard:</strong> {error}
+              </div>
+            </div>
+          )}
           <div className='d-flex justify-content-between align-items-center mb-4'>
             <div>
               <h1 className='h3 mb-0'>
@@ -249,15 +326,17 @@ export default function Dashboard() {
                     <span className='text-muted small d-block'>
                       Saldo Total
                     </span>
-                    <h4 className='mb-0'>$124,568,945</h4>
-                    <div className='small text-success'>
+                    <h4 className='mb-0'>
+                      {loading ? '...' : kpis?.saldo_total?.valor ? `$${kpis.saldo_total.valor.toLocaleString('es-CL')}` : '$0'}
+                    </h4>
+                    <div className={`small ${kpis?.saldo_total?.variacion_porcentual && kpis.saldo_total.variacion_porcentual > 0 ? 'text-success' : 'text-danger'}`}>
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        arrow_upward
+                        {kpis?.saldo_total?.variacion_porcentual && kpis.saldo_total.variacion_porcentual > 0 ? 'arrow_upward' : 'arrow_downward'}
                       </span>
-                      <span>3.2% vs mes anterior</span>
+                      <span>{kpis?.saldo_total?.variacion_porcentual ? `${Math.abs(kpis.saldo_total.variacion_porcentual)}%` : '0%'} vs mes anterior</span>
                     </div>
                   </div>
                 </div>
@@ -283,15 +362,17 @@ export default function Dashboard() {
                     <span className='text-muted small d-block'>
                       Ingresos del Mes
                     </span>
-                    <h4 className='mb-0'>$5,872,500</h4>
-                    <div className='small text-success'>
+                    <h4 className='mb-0'>
+                      {loading ? '...' : kpis?.ingresos_mes?.valor ? `$${kpis.ingresos_mes.valor.toLocaleString('es-CL')}` : '$0'}
+                    </h4>
+                    <div className={`small ${kpis?.ingresos_mes?.variacion_porcentual && kpis.ingresos_mes.variacion_porcentual > 0 ? 'text-success' : 'text-danger'}`}>
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        arrow_upward
+                        {kpis?.ingresos_mes?.variacion_porcentual && kpis.ingresos_mes.variacion_porcentual > 0 ? 'arrow_upward' : 'arrow_downward'}
                       </span>
-                      <span>7.5% vs mes anterior</span>
+                      <span>{kpis?.ingresos_mes?.variacion_porcentual ? `${Math.abs(kpis.ingresos_mes.variacion_porcentual)}%` : '0%'} vs mes anterior</span>
                     </div>
                   </div>
                 </div>
@@ -314,15 +395,17 @@ export default function Dashboard() {
                     <span className='text-muted small d-block'>
                       Gastos del Mes
                     </span>
-                    <h4 className='mb-0'>$3,845,790</h4>
-                    <div className='small text-danger'>
+                    <h4 className='mb-0'>
+                      {loading ? '...' : kpis?.gastos_mes?.valor ? `$${kpis.gastos_mes.valor.toLocaleString('es-CL')}` : '$0'}
+                    </h4>
+                    <div className={`small ${kpis?.gastos_mes?.variacion_porcentual && kpis.gastos_mes.variacion_porcentual > 0 ? 'text-danger' : 'text-success'}`}>
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        arrow_upward
+                        {kpis?.gastos_mes?.variacion_porcentual && kpis.gastos_mes.variacion_porcentual > 0 ? 'arrow_upward' : 'arrow_downward'}
                       </span>
-                      <span>2.1% vs mes anterior</span>
+                      <span>{kpis?.gastos_mes?.variacion_porcentual ? `${Math.abs(kpis.gastos_mes.variacion_porcentual)}%` : '0%'} vs mes anterior</span>
                     </div>
                   </div>
                 </div>
@@ -348,15 +431,17 @@ export default function Dashboard() {
                     <span className='text-muted small d-block'>
                       Tasa de Morosidad
                     </span>
-                    <h4 className='mb-0'>8.5%</h4>
-                    <div className='small text-success'>
+                    <h4 className='mb-0'>
+                      {loading ? '...' : kpis?.morosidad?.valor !== undefined ? `${kpis.morosidad.valor}%` : '0%'}
+                    </h4>
+                    <div className={`small ${kpis?.morosidad?.variacion_porcentual && kpis.morosidad.variacion_porcentual < 0 ? 'text-success' : 'text-danger'}`}>
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        arrow_downward
+                        {kpis?.morosidad?.variacion_porcentual && kpis.morosidad.variacion_porcentual < 0 ? 'arrow_downward' : 'arrow_upward'}
                       </span>
-                      <span>1.3% vs mes anterior</span>
+                      <span>{kpis?.morosidad?.variacion_porcentual ? `${Math.abs(kpis.morosidad.variacion_porcentual)}%` : '0%'} vs mes anterior</span>
                     </div>
                   </div>
                 </div>
@@ -389,48 +474,35 @@ export default function Dashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>A-101</td>
-                        <td>$45,000</td>
-                        <td>12/09/2025</td>
-                        <td>
-                          <span className='badge bg-success'>Conciliado</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>B-202</td>
-                        <td>$50,000</td>
-                        <td>11/09/2025</td>
-                        <td>
-                          <span className='badge bg-success'>Conciliado</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>C-303</td>
-                        <td>$42,500</td>
-                        <td>10/09/2025</td>
-                        <td>
-                          <span className='badge bg-warning text-dark'>
-                            Pendiente
-                          </span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>A-102</td>
-                        <td>$45,000</td>
-                        <td>09/09/2025</td>
-                        <td>
-                          <span className='badge bg-success'>Conciliado</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>B-203</td>
-                        <td>$50,000</td>
-                        <td>08/09/2025</td>
-                        <td>
-                          <span className='badge bg-success'>Conciliado</span>
-                        </td>
-                      </tr>
+                      {loading ? (
+                        <tr>
+                          <td colSpan={4} className="text-center py-4">
+                            <div className="spinner-border spinner-border-sm" role="status">
+                              <span className="visually-hidden">Cargando...</span>
+                            </div>
+                            <div className="mt-2">Cargando pagos recientes...</div>
+                          </td>
+                        </tr>
+                      ) : pagosRecientes.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="text-center py-4 text-muted">
+                            No hay pagos recientes
+                          </td>
+                        </tr>
+                      ) : (
+                        pagosRecientes.map((pago: PagoReciente) => (
+                          <tr key={pago.id}>
+                            <td>{pago.unidad_codigo}</td>
+                            <td>${pago.monto ? pago.monto.toLocaleString('es-CL') : '0'}</td>
+                            <td>{new Date(pago.fecha).toLocaleDateString('es-CL')}</td>
+                            <td>
+                              <span className={`badge ${pago.estado === 'aplicado' ? 'bg-success' : 'bg-warning text-dark'}`}>
+                                {pago.estado === 'aplicado' ? 'Conciliado' : 'Pendiente'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -458,58 +530,40 @@ export default function Dashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>C-303</td>
-                        <td>Juan Pérez</td>
-                        <td>
-                          <span className='badge bg-warning text-dark'>2</span>
-                        </td>
-                        <td>$90,000</td>
-                        <td>
-                          <button className='btn btn-sm btn-outline-primary'>
-                            Notificar
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>D-404</td>
-                        <td>María López</td>
-                        <td>
-                          <span className='badge bg-danger'>3</span>
-                        </td>
-                        <td>$135,000</td>
-                        <td>
-                          <button className='btn btn-sm btn-outline-primary'>
-                            Notificar
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>A-105</td>
-                        <td>Carlos González</td>
-                        <td>
-                          <span className='badge bg-warning text-dark'>1</span>
-                        </td>
-                        <td>$45,000</td>
-                        <td>
-                          <button className='btn btn-sm btn-outline-primary'>
-                            Notificar
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>B-206</td>
-                        <td>Ana Martínez</td>
-                        <td>
-                          <span className='badge bg-danger'>4</span>
-                        </td>
-                        <td>$180,000</td>
-                        <td>
-                          <button className='btn btn-sm btn-outline-primary'>
-                            Notificar
-                          </button>
-                        </td>
-                      </tr>
+                      {loading ? (
+                        <tr>
+                          <td colSpan={5} className="text-center py-4">
+                            <div className="spinner-border spinner-border-sm" role="status">
+                              <span className="visually-hidden">Cargando...</span>
+                            </div>
+                            <div className="mt-2">Cargando unidades morosas...</div>
+                          </td>
+                        </tr>
+                      ) : unidadesMorosas.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="text-center py-4 text-muted">
+                            No hay unidades morosas
+                          </td>
+                        </tr>
+                      ) : (
+                        unidadesMorosas.map((unidad: UnidadMorosa) => (
+                          <tr key={unidad.unidad_id}>
+                            <td>{unidad.codigo_unidad}</td>
+                            <td>{unidad.propietario || 'Sin propietario'}</td>
+                            <td>
+                              <span className={`badge ${unidad.meses_morosos > 2 ? 'bg-danger' : 'bg-warning text-dark'}`}>
+                                {unidad.meses_morosos}
+                              </span>
+                            </td>
+                            <td>${unidad.deuda_total ? unidad.deuda_total.toLocaleString('es-CL') : '0'}</td>
+                            <td>
+                              <button className='btn btn-sm btn-outline-primary'>
+                                Notificar
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -529,58 +583,36 @@ export default function Dashboard() {
                   </button>
                 </div>
                 <div className='list-group list-group-flush'>
-                  <div className='list-group-item'>
-                    <div className='d-flex w-100 justify-content-between align-items-center'>
-                      <div>
-                        <h6 className='mb-1'>Asamblea General</h6>
-                        <p className='mb-0 text-muted'>
-                          Presentación de presupuesto anual
-                        </p>
+                  {loading ? (
+                    <div className='list-group-item text-center py-4'>
+                      <div className="spinner-border spinner-border-sm" role="status">
+                        <span className="visually-hidden">Cargando...</span>
                       </div>
-                      <div className='text-end'>
-                        <span className='badge bg-primary'>20/09/2025</span>
-                      </div>
+                      <div className="mt-2">Cargando actividades...</div>
                     </div>
-                  </div>
-                  <div className='list-group-item'>
-                    <div className='d-flex w-100 justify-content-between align-items-center'>
-                      <div>
-                        <h6 className='mb-1'>Emisión Mensual</h6>
-                        <p className='mb-0 text-muted'>
-                          Generación de cargos de octubre
-                        </p>
-                      </div>
-                      <div className='text-end'>
-                        <span className='badge bg-primary'>30/09/2025</span>
-                      </div>
+                  ) : proximasActividades.length === 0 ? (
+                    <div className='list-group-item text-center py-4 text-muted'>
+                      No hay actividades próximas
                     </div>
-                  </div>
-                  <div className='list-group-item'>
-                    <div className='d-flex w-100 justify-content-between align-items-center'>
-                      <div>
-                        <h6 className='mb-1'>Mantención de Ascensores</h6>
-                        <p className='mb-0 text-muted'>
-                          Servicio técnico programado
-                        </p>
+                  ) : (
+                    proximasActividades.map((actividad: ActividadProxima, index: number) => (
+                      <div key={index} className='list-group-item'>
+                        <div className='d-flex w-100 justify-content-between align-items-center'>
+                          <div>
+                            <h6 className='mb-1'>{actividad.titulo}</h6>
+                            <p className='mb-0 text-muted'>
+                              {actividad.descripcion}
+                            </p>
+                          </div>
+                          <div className='text-end'>
+                            <span className={`badge ${actividad.estado_relativo === 'hoy' ? 'bg-warning text-dark' : actividad.estado_relativo === 'vencida' ? 'bg-danger' : 'bg-primary'}`}>
+                              {actividad.fecha_formateada}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className='text-end'>
-                        <span className='badge bg-primary'>02/10/2025</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className='list-group-item'>
-                    <div className='d-flex w-100 justify-content-between align-items-center'>
-                      <div>
-                        <h6 className='mb-1'>Cierre Contable</h6>
-                        <p className='mb-0 text-muted'>
-                          Revisión de estado financiero mensual
-                        </p>
-                      </div>
-                      <div className='text-end'>
-                        <span className='badge bg-primary'>05/10/2025</span>
-                      </div>
-                    </div>
-                  </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -598,89 +630,50 @@ export default function Dashboard() {
                   </a>
                 </div>
                 <div className='card-body p-0'>
-                  <div className='p-3 border-bottom'>
-                    <div className='d-flex justify-content-between align-items-center mb-3'>
-                      <div>
-                        <h6 className='mb-0'>Salón de Eventos</h6>
-                        <small className='text-muted'>
-                          18/09/2025, 18:00 - 22:00
-                        </small>
+                  {loading ? (
+                    <div className='p-3 text-center py-4'>
+                      <div className="spinner-border spinner-border-sm" role="status">
+                        <span className="visually-hidden">Cargando...</span>
                       </div>
-                      <span className='badge bg-success'>Confirmada</span>
+                      <div className="mt-2">Cargando reservas...</div>
                     </div>
-                    <div className='d-flex align-items-center text-muted'>
-                      <span
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        apartment
-                      </span>
-                      <span className='me-3'>A-103</span>
-                      <span
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        person
-                      </span>
-                      <span>María González</span>
+                  ) : reservasAmenidades.length === 0 ? (
+                    <div className='p-3 text-center py-4 text-muted'>
+                      No hay reservas próximas
                     </div>
-                  </div>
-                  <div className='p-3 border-bottom'>
-                    <div className='d-flex justify-content-between align-items-center mb-3'>
-                      <div>
-                        <h6 className='mb-0'>Quincho</h6>
-                        <small className='text-muted'>
-                          20/09/2025, 12:00 - 18:00
-                        </small>
+                  ) : (
+                    reservasAmenidades.map((reserva: ReservaAmenidad, index: number) => (
+                      <div key={reserva.id} className={`p-3 ${index < reservasAmenidades.length - 1 ? 'border-bottom' : ''}`}>
+                        <div className='d-flex justify-content-between align-items-center mb-3'>
+                          <div>
+                            <h6 className='mb-0'>{reserva.amenidad}</h6>
+                            <small className='text-muted'>
+                              {reserva.fecha_inicio} - {reserva.fecha_fin}
+                            </small>
+                          </div>
+                          <span className={`badge ${reserva.estado_descripcion === 'Confirmada' ? 'bg-success' : 'bg-warning text-dark'}`}>
+                            {reserva.estado_descripcion}
+                          </span>
+                        </div>
+                        <div className='d-flex align-items-center text-muted'>
+                          <span
+                            className='material-icons me-1'
+                            style={{ fontSize: '16px' }}
+                          >
+                            apartment
+                          </span>
+                          <span className='me-3'>{reserva.unidad_reserva}</span>
+                          <span
+                            className='material-icons me-1'
+                            style={{ fontSize: '16px' }}
+                          >
+                            person
+                          </span>
+                          <span>{reserva.reservado_por}</span>
+                        </div>
                       </div>
-                      <span className='badge bg-warning text-dark'>
-                        Pendiente
-                      </span>
-                    </div>
-                    <div className='d-flex align-items-center text-muted'>
-                      <span
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        apartment
-                      </span>
-                      <span className='me-3'>B-205</span>
-                      <span
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        person
-                      </span>
-                      <span>Carlos Ruiz</span>
-                    </div>
-                  </div>
-                  <div className='p-3'>
-                    <div className='d-flex justify-content-between align-items-center mb-3'>
-                      <div>
-                        <h6 className='mb-0'>Piscina</h6>
-                        <small className='text-muted'>
-                          22/09/2025, 15:00 - 19:00
-                        </small>
-                      </div>
-                      <span className='badge bg-success'>Confirmada</span>
-                    </div>
-                    <div className='d-flex align-items-center text-muted'>
-                      <span
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        apartment
-                      </span>
-                      <span className='me-3'>C-301</span>
-                      <span
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        person
-                      </span>
-                      <span>Ana Morales</span>
-                    </div>
-                  </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

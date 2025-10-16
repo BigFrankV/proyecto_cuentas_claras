@@ -1,25 +1,21 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-import apiClient from '@/lib/api';
 
-interface Torre {
-  id: string;
-  nombre: string;
-  codigo: string;
+import Layout from '@/components/layout/Layout';
+import {
+  getTorreDetalle,
+  getUnidadesTorre,
+  type TorreDetalle,
+} from '@/lib/torresService';
+import { ProtectedRoute } from '@/lib/useAuth';
+
+interface TorreView extends TorreDetalle {
   estado: 'Activa' | 'Inactiva' | 'Mantenimiento';
   anoConstruction: number;
-  numPisos: number;
-  totalUnidades: number;
-  unidadesOcupadas: number;
   unidadesPorPiso: number;
-  superficieTotal: number;
   administrador: string;
-  fechaCreacion: string;
-  ultimaActualizacion: string;
   descripcion: string;
   caracteristicas: string[];
   servicios: {
@@ -31,7 +27,7 @@ interface Torre {
   };
 }
 
-interface Unidad {
+interface UnidadView {
   id: string;
   numero: string;
   piso: number;
@@ -40,106 +36,111 @@ interface Unidad {
   dormitorios: number;
   banos: number;
   estado: 'Ocupada' | 'Vacante' | 'Mantenimiento';
-  propietario?: string;
-  arrendatario?: string;
+  propietario?: string | undefined;
+  arrendatario?: string | undefined;
 }
-
-const mockTorre: Torre = {
-  id: '1',
-  nombre: 'Torre A',
-  codigo: 'TA-001',
-  estado: 'Activa',
-  anoConstruction: 2018,
-  numPisos: 15,
-  totalUnidades: 45,
-  unidadesOcupadas: 42,
-  unidadesPorPiso: 3,
-  superficieTotal: 4500,
-  administrador: 'Patricia Contreras',
-  fechaCreacion: '2025-03-15',
-  ultimaActualizacion: '2025-09-02',
-  descripcion: 'Torre residencial moderna ubicada en Las Condes con excelentes terminaciones y vista panorámica de la cordillera.',
-  caracteristicas: [
-    'Vista panorámica', 
-    'Terminaciones premium', 
-    'Balcón en todas las unidades',
-    'Calefacción central',
-    'Agua caliente central'
-  ],
-  servicios: {
-    ascensor: true,
-    porteria: true,
-    estacionamiento: true,
-    gimnasio: true,
-    salaEventos: false
-  }
-};
-
-// Unidades will be loaded from API per tower
 
 export default function TorreDetalle() {
   const router = useRouter();
   const { id } = router.query;
-  const [torre, setTorre] = useState<Torre>(mockTorre);
-  const [unidades, setUnidades] = useState<Unidad[]>([]);
+  const [torre, setTorre] = useState<TorreView | null>(null);
+  const [unidades, setUnidades] = useState<UnidadView[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('info');
   const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState<Torre>(mockTorre);
-  const [filteredUnidades, setFilteredUnidades] = useState<Unidad[]>([]);
+  const [formData, setFormData] = useState<TorreView | null>(null);
+  const [filteredUnidades, setFilteredUnidades] = useState<UnidadView[]>([]);
   const [unidadFilter, setUnidadFilter] = useState('todas');
   const [unidadSearch, setUnidadSearch] = useState('');
 
+  // Cargar datos de la torre
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+
+    const loadTorreData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const torreId = Number(id);
+        const [torreData, unidadesData] = await Promise.all([
+          getTorreDetalle(torreId),
+          getUnidadesTorre(torreId),
+        ]);
+
+        // Transformar datos de la torre
+        const torreView: TorreView = {
+          ...torreData,
+          estado: 'Activa', // TODO: Agregar campo estado en la API
+          anoConstruction: 2018, // TODO: Agregar campo en la API
+          unidadesPorPiso: torreData.numPisos
+            ? Math.ceil((torreData.totalUnidades || 0) / torreData.numPisos)
+            : 0,
+          administrador: 'Patricia Contreras', // TODO: Agregar campo en la API
+          descripcion: torreData.descripcion || '',
+          caracteristicas: [], // TODO: Agregar campo en la API
+          servicios: {
+            ascensor: false,
+            porteria: false,
+            estacionamiento: false,
+            gimnasio: false,
+            salaEventos: false,
+          }, // TODO: Agregar campo en la API
+        };
+
+        // Transformar datos de unidades
+        const unidadesView: UnidadView[] = unidadesData.map((unidad) => ({
+          id: String(unidad.id),
+          numero: unidad.numero,
+          piso: unidad.piso,
+          tipo: unidad.tipo || 'Departamento',
+          superficie: unidad.superficie || unidad.m2_utiles || 0,
+          dormitorios: unidad.dormitorios || 0,
+          banos: unidad.nro_banos || 0,
+          estado: unidad.estadoOcupacion || 'Vacante',
+          propietario: unidad.propietarios,
+          arrendatario: unidad.arrendatarios,
+        }));
+
+        setTorre(torreView);
+        setFormData(torreView);
+        setUnidades(unidadesView);
+      } catch (err) {
+        setError('Error al cargar los datos de la torre');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTorreData();
+  }, [id]);
+
   useEffect(() => {
     // Filtrar unidades
-    let filtered = unidades;
-    
-    if (unidadFilter !== 'todas') {
-      filtered = filtered.filter(unidad => 
-        unidad.estado.toLowerCase() === unidadFilter.toLowerCase()
-      );
-    }
-    
-    if (unidadSearch) {
-      filtered = filtered.filter(unidad => 
+    const filtered = unidades.filter((unidad) => {
+      const matchesFilter =
+        unidadFilter === 'todas' ||
+        unidad.estado.toLowerCase() === unidadFilter.toLowerCase();
+
+      const matchesSearch =
+        !unidadSearch ||
         unidad.numero.toLowerCase().includes(unidadSearch.toLowerCase()) ||
         unidad.propietario?.toLowerCase().includes(unidadSearch.toLowerCase()) ||
-        unidad.arrendatario?.toLowerCase().includes(unidadSearch.toLowerCase())
-      );
-    }
-    
+        unidad.arrendatario?.toLowerCase().includes(unidadSearch.toLowerCase());
+
+      return matchesFilter && matchesSearch;
+    });
+
     setFilteredUnidades(filtered);
   }, [unidades, unidadFilter, unidadSearch]);
 
-  // Load unidades for this tower
-  useEffect(() => {
-    if (!id) return;
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await apiClient.get('/unidades', { params: { torre_id: id } });
-        if (!mounted) return;
-        const data = res.data || [];
-        const mapped = data.map((u:any) => ({
-          id: String(u.id),
-          numero: u.codigo || u.numero || '',
-          piso: u.piso || 0,
-          tipo: u.tipo || '',
-          superficie: u.m2_utiles || u.superficie || 0,
-          dormitorios: u.dormitorios || 0,
-          banos: u.nro_banos || 0,
-          estado: u.estado || 'Ocupada',
-          propietario: u.propietario_nombre || undefined,
-          arrendatario: u.arrendatario_nombre || undefined
-        }));
-        setUnidades(mapped);
-      } catch (err) {
-        console.error('Error loading unidades for torre', err);
-      }
-    })();
-    return () => { mounted = false; };
-  }, [id]);
-
   const handleEditToggle = () => {
+    if (!torre) {
+      return;
+    }
     setEditMode(!editMode);
     if (!editMode) {
       setFormData({ ...torre });
@@ -147,22 +148,30 @@ export default function TorreDetalle() {
   };
 
   const handleSave = () => {
+    if (!formData) {
+      return;
+    }
     setTorre({ ...formData });
     setEditMode(false);
-    // Aquí harías la llamada a la API
-    console.log('Guardando torre:', formData);
+    // TODO: Aquí harías la llamada a la API para actualizar la torre
   };
 
   const handleCancel = () => {
+    if (!torre) {
+      return;
+    }
     setFormData({ ...torre });
     setEditMode(false);
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) {
+      return '';
+    }
     return new Date(dateString).toLocaleDateString('es-CL', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -182,10 +191,49 @@ export default function TorreDetalle() {
   };
 
   const getUnidadTypeIcon = (tipo: string) => {
-    if (tipo.includes('3D')) return 'king_bed';
-    if (tipo.includes('2D')) return 'single_bed';
+    if (tipo.includes('3D')) {
+      return 'king_bed';
+    }
+    if (tipo.includes('2D')) {
+      return 'single_bed';
+    }
     return 'bed';
   };
+
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <Layout title="Torre">
+          <div className="container-fluid py-4">
+            <div className="text-center">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Cargando...</span>
+              </div>
+              <p className="mt-2">Cargando información de la torre...</p>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
+
+  if (error || !torre) {
+    return (
+      <ProtectedRoute>
+        <Layout title="Torre">
+          <div className="container-fluid py-4">
+            <div className="alert alert-danger" role="alert">
+              <i className="material-icons align-middle me-2">error</i>
+              {error || 'No se encontró la torre'}
+            </div>
+            <Link href="/torres" className="btn btn-primary">
+              Volver al listado
+            </Link>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -210,7 +258,9 @@ export default function TorreDetalle() {
               <li className="breadcrumb-item">
                 <Link href="/torres">Torres</Link>
               </li>
-              <li className="breadcrumb-item active" aria-current="page">{torre.nombre}</li>
+              <li className="breadcrumb-item active" aria-current="page">
+                {torre.nombre}
+              </li>
             </ol>
           </nav>
 
@@ -221,7 +271,7 @@ export default function TorreDetalle() {
               background: 'linear-gradient(135deg, var(--color-primary) 0%, #2c5282 100%)',
               color: 'white',
               position: 'relative',
-              overflow: 'hidden'
+              overflow: 'hidden',
             }}
           >
             <div 
@@ -233,7 +283,7 @@ export default function TorreDetalle() {
                 height: '300px',
                 background: 'rgba(255,255,255,0.1)',
                 borderRadius: '50%',
-                transform: 'translate(100px, -100px)'
+                transform: 'translate(100px, -100px)',
               }}
             />
             <div className="card-body" style={{ padding: '2rem', position: 'relative', zIndex: 1 }}>
@@ -246,25 +296,34 @@ export default function TorreDetalle() {
                     Edificio Los Álamos • Las Condes, Santiago
                   </div>
                   <div style={{ opacity: 0.8 }}>
-                    Construida en {torre.anoConstruction} • {torre.numPisos} pisos • {torre.totalUnidades} unidades habitacionales
+                    Construida en {torre.anoConstruction} • {torre.numPisos} pisos •{' '}
+                    {torre.totalUnidades || 0} unidades habitacionales
                   </div>
                 </div>
                 <div className="col-lg-4">
                   <div className="row text-center">
                     <div className="col-3">
-                      <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{torre.totalUnidades}</div>
+                      <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                        {torre.totalUnidades || 0}
+                      </div>
                       <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Unidades</div>
                     </div>
                     <div className="col-3">
-                      <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{torre.unidadesOcupadas}</div>
+                      <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                        {torre.unidadesOcupadas || 0}
+                      </div>
                       <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Ocupadas</div>
                     </div>
                     <div className="col-3">
-                      <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{torre.numPisos}</div>
+                      <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                        {torre.numPisos}
+                      </div>
                       <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Pisos</div>
                     </div>
                     <div className="col-3">
-                      <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{torre.totalUnidades - torre.unidadesOcupadas}</div>
+                      <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                        {(torre.totalUnidades || 0) - (torre.unidadesOcupadas || 0)}
+                      </div>
                       <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Vacantes</div>
                     </div>
                   </div>
@@ -315,7 +374,7 @@ export default function TorreDetalle() {
                 type="button"
               >
                 <i className="material-icons align-middle me-1">apartment</i>
-                Unidades ({torre.totalUnidades})
+                Unidades ({torre.totalUnidades || 0})
               </button>
             </li>
             <li className="nav-item" role="presentation">
@@ -385,7 +444,9 @@ export default function TorreDetalle() {
                           </div>
                           <div className="row mb-3">
                             <div className="col-sm-3"><strong>Superficie Total:</strong></div>
-                            <div className="col-sm-9">{torre.superficieTotal.toLocaleString('es-CL')} m²</div>
+                            <div className="col-sm-9">
+                              {torre.superficieTotal?.toLocaleString('es-CL') || 0} m²
+                            </div>
                           </div>
                           <div className="row mb-3">
                             <div className="col-sm-3"><strong>Administrador:</strong></div>
@@ -393,11 +454,17 @@ export default function TorreDetalle() {
                           </div>
                           <div className="row mb-3">
                             <div className="col-sm-3"><strong>Fecha de Creación:</strong></div>
-                            <div className="col-sm-9">{formatDate(torre.fechaCreacion)}</div>
+                            <div className="col-sm-9">
+                              {torre.fechaCreacion ? formatDate(torre.fechaCreacion) : 'N/A'}
+                            </div>
                           </div>
                           <div className="row mb-3">
                             <div className="col-sm-3"><strong>Última Actualización:</strong></div>
-                            <div className="col-sm-9">{formatDate(torre.ultimaActualizacion)}</div>
+                            <div className="col-sm-9">
+                              {torre.ultimaActualizacion
+                                ? formatDate(torre.ultimaActualizacion)
+                                : 'N/A'}
+                            </div>
                           </div>
                           {torre.descripcion && (
                             <div className="row mb-3">
@@ -424,16 +491,25 @@ export default function TorreDetalle() {
                                 <input 
                                   type="text" 
                                   className="form-control" 
-                                  value={formData.nombre}
-                                  onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                                  value={formData?.nombre || ''}
+                                  onChange={(e) =>
+                                    formData &&
+                                    setFormData({ ...formData, nombre: e.target.value })
+                                  }
                                 />
                               </div>
                               <div className="col-md-6 mb-3">
                                 <label className="form-label">Estado</label>
                                 <select 
                                   className="form-select"
-                                  value={formData.estado}
-                                  onChange={(e) => setFormData({...formData, estado: e.target.value as Torre['estado']})}
+                                  value={formData?.estado}
+                                  onChange={(e) =>
+                                    formData &&
+                                    setFormData({
+                                      ...formData,
+                                      estado: e.target.value as TorreView['estado'],
+                                    })
+                                  }
                                 >
                                   <option value="Activa">Activa</option>
                                   <option value="Inactiva">Inactiva</option>
@@ -448,8 +524,14 @@ export default function TorreDetalle() {
                                 <input 
                                   type="number" 
                                   className="form-control" 
-                                  value={formData.anoConstruction}
-                                  onChange={(e) => setFormData({...formData, anoConstruction: parseInt(e.target.value)})}
+                                  value={formData?.anoConstruction || ''}
+                                  onChange={(e) =>
+                                    formData &&
+                                    setFormData({
+                                      ...formData,
+                                      anoConstruction: parseInt(e.target.value),
+                                    })
+                                  }
                                   min="1900" 
                                   max="2030"
                                 />
@@ -459,8 +541,11 @@ export default function TorreDetalle() {
                                 <input 
                                   type="number" 
                                   className="form-control" 
-                                  value={formData.numPisos}
-                                  onChange={(e) => setFormData({...formData, numPisos: parseInt(e.target.value)})}
+                                  value={formData?.numPisos || ''}
+                                  onChange={(e) =>
+                                    formData &&
+                                    setFormData({ ...formData, numPisos: parseInt(e.target.value) })
+                                  }
                                   min="1" 
                                   max="100"
                                 />
@@ -473,8 +558,14 @@ export default function TorreDetalle() {
                                 <input 
                                   type="number" 
                                   className="form-control" 
-                                  value={formData.totalUnidades}
-                                  onChange={(e) => setFormData({...formData, totalUnidades: parseInt(e.target.value)})}
+                                  value={formData?.totalUnidades || ''}
+                                  onChange={(e) =>
+                                    formData &&
+                                    setFormData({
+                                      ...formData,
+                                      totalUnidades: parseInt(e.target.value),
+                                    })
+                                  }
                                   min="1"
                                 />
                               </div>
@@ -483,8 +574,14 @@ export default function TorreDetalle() {
                                 <input 
                                   type="number" 
                                   className="form-control" 
-                                  value={formData.unidadesPorPiso}
-                                  onChange={(e) => setFormData({...formData, unidadesPorPiso: parseInt(e.target.value)})}
+                                  value={formData?.unidadesPorPiso || ''}
+                                  onChange={(e) =>
+                                    formData &&
+                                    setFormData({
+                                      ...formData,
+                                      unidadesPorPiso: parseInt(e.target.value),
+                                    })
+                                  }
                                   min="1"
                                 />
                               </div>
@@ -496,8 +593,14 @@ export default function TorreDetalle() {
                                 <input 
                                   type="number" 
                                   className="form-control" 
-                                  value={formData.superficieTotal}
-                                  onChange={(e) => setFormData({...formData, superficieTotal: parseInt(e.target.value)})}
+                                  value={formData?.superficieTotal || ''}
+                                  onChange={(e) =>
+                                    formData &&
+                                    setFormData({
+                                      ...formData,
+                                      superficieTotal: parseInt(e.target.value),
+                                    })
+                                  }
                                   min="1" 
                                   step="0.01"
                                 />
@@ -506,8 +609,11 @@ export default function TorreDetalle() {
                                 <label className="form-label">Administrador</label>
                                 <select 
                                   className="form-select"
-                                  value={formData.administrador}
-                                  onChange={(e) => setFormData({...formData, administrador: e.target.value})}
+                                  value={formData?.administrador}
+                                  onChange={(e) =>
+                                    formData &&
+                                    setFormData({ ...formData, administrador: e.target.value })
+                                  }
                                 >
                                   <option value="Patricia Contreras">Patricia Contreras</option>
                                   <option value="Juan Pérez">Juan Pérez</option>
@@ -522,8 +628,11 @@ export default function TorreDetalle() {
                               <textarea 
                                 className="form-control" 
                                 rows={4}
-                                value={formData.descripcion}
-                                onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
+                                value={formData?.descripcion || ''}
+                                onChange={(e) =>
+                                  formData &&
+                                  setFormData({ ...formData, descripcion: e.target.value })
+                                }
                                 placeholder="Descripción detallada de la torre..."
                               />
                             </div>

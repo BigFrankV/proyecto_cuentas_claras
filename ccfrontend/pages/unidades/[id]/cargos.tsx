@@ -3,26 +3,36 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
-import apiClient from '@/lib/api';
+import { getCuentasCobroUnidad, type CuentaCobro } from '@/lib/unidadesService';
 
 export default function CargosUnidad() {
   const router = useRouter();
   const { id } = router.query;
-  const [cargos, setCargos] = useState<any[]>([]);
+  const [cargos, setCargos] = useState<CuentaCobro[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
     let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
-        const res = await apiClient.get(`/unidades/${id}/cuentas`);
-        if (mounted) setCargos(res.data || []);
-      } catch (err) { console.error(err); } finally { setLoading(false); }
+        const data = await getCuentasCobroUnidad(Number(id));
+        if (mounted) {
+          setCargos(data || []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
   return (
@@ -59,15 +69,39 @@ export default function CargosUnidad() {
                   {!loading && cargos.length === 0 && <div className='alert alert-warning'>No hay cargos</div>}
                   {!loading && cargos.length > 0 && (
                     <ul className='list-group'>
-                      {cargos.map(c => (
-                        <li key={c.id} className='list-group-item d-flex justify-content-between align-items-center'>
+                      {cargos.map((c) => (
+                        <li
+                          key={c.id}
+                          className='list-group-item d-flex justify-content-between align-items-center'
+                        >
                           <div>
-                            <div className='fw-medium'>{c.periodo || c.concepto || 'Periodo'}</div>
-                            <div className='small text-muted'>{c.concepto || ''}</div>
+                            <div className='fw-medium'>
+                              {c.periodo || c.concepto || 'Periodo'}
+                            </div>
+                            <div className='small text-muted'>
+                              {c.concepto || ''} • Vence: {c.fecha_vencimiento}
+                            </div>
                           </div>
                           <div className='text-end'>
-                            <div className='fw-medium'>{new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP'}).format(c.monto || c.total || 0)}</div>
-                            <div className='small text-muted'>{c.estado || ''}</div>
+                            <div className='fw-medium'>
+                              {new Intl.NumberFormat('es-CL', {
+                                style: 'currency',
+                                currency: 'CLP',
+                              }).format(c.monto || c.total || 0)}
+                            </div>
+                            <div className='small'>
+                              <span
+                                className={`badge ${
+                                  c.estado === 'pagado'
+                                    ? 'bg-success'
+                                    : c.estado === 'vencido'
+                                      ? 'bg-danger'
+                                      : 'bg-warning'
+                                }`}
+                              >
+                                {c.estado || 'pendiente'}
+                              </span>
+                            </div>
                           </div>
                         </li>
                       ))}
