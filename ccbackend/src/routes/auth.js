@@ -318,11 +318,11 @@ router.post('/register', [
  *               identifier:
  *                 type: string
  *                 description: Email, RUT, DNI o nombre de usuario
- *                 example: "usuario@example.com"
+ *                 example: "pat.quintanilla@duocuc.cl"
  *               password:
  *                 type: string
  *                 description: Contraseña del usuario
- *                 example: "MiPassword123!"
+ *                 example: "123456"
  *     responses:
  *       200:
  *         description: Login exitoso
