@@ -8,7 +8,9 @@
     "dev": "nodemon src/index.js",
     "lint": "eslint . --ext .js",
     "format": "prettier --write .",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "test:health": "jest --runInBand test/health/",
+    "test:health:verbose": "jest --runInBand --verbose test/health/"
   },
   "engines": {
     "node": ">=18"

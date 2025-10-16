@@ -2,6 +2,9 @@
  * Configuración compartida para todos los tests de health
  */
 
+// Cargar variables de entorno del archivo .env.test
+require('dotenv').config({ path: '.env.test' });
+
 // Configurar variables de entorno antes de cargar la app
 process.env.SKIP_DB_CONNECT = 'true';
 process.env.NODE_ENV = 'test';
@@ -48,8 +51,8 @@ async function initializeTestSetup() {
     const loginResponse = await request(app)
       .post('/auth/login')
       .send({
-        username: 'pat.quintanilla@duocuc.cl',
-        password: '123456'
+        identifier: process.env.TEST_USER_EMAIL || 'admin@test.com',
+        password: process.env.TEST_USER_PASSWORD || 'admin123'
       });
 
     if (loginResponse.status === 200 && loginResponse.body.token) {
@@ -57,6 +60,8 @@ async function initializeTestSetup() {
       console.log('✅ Autenticación exitosa');
     } else {
       console.log('⚠️  No se pudo autenticar, tests pueden fallar');
+      console.log('   Status:', loginResponse.status);
+      console.log('   Body:', JSON.stringify(loginResponse.body, null, 2));
     }
   } catch (error) {
     console.log('⚠️  Error en autenticación:', error.message);
@@ -101,6 +106,10 @@ async function initializeTestSetup() {
  * Limpia recursos después de los tests
  */
 async function cleanupTestSetup() {
+  // Guardar resultados temporales para el reporte final
+  const { saveResultsToTemp } = require('./helpers');
+  saveResultsToTemp();
+  
   try {
     await db.end();
   } catch (error) {
@@ -108,11 +117,21 @@ async function cleanupTestSetup() {
   }
 }
 
+/**
+ * Obtiene el token de autenticación, inicializando si es necesario
+ */
+async function getAuthToken() {
+  if (!authToken) {
+    await initializeTestSetup();
+  }
+  return authToken;
+}
+
 module.exports = {
   app,
   db,
   testIds,
-  getAuthToken: () => authToken,
+  getAuthToken,
   initializeTestSetup,
   cleanupTestSetup
 };
