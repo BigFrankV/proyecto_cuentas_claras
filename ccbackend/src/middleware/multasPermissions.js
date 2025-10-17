@@ -1,187 +1,152 @@
-// ✅ CREAR ARCHIVO: ccbackend/src/middleware/multasPermissions.js
-
-const { hasRole, isSuperAdmin } = require('./authorize');
 const db = require('../db');
 
 /**
- * Middleware de permisos para MULTAS
- * Basado en los 20 roles del sistema
+ * Permisos para multas — roles según tabla de la base de datos.
+ * Roles disponibles: superadmin, admin_comunidad, conserje, contador,
+ * proveedor_servicio, residente, propietario, inquilino, tesorero, presidente_comite
  */
-const MultasPermissions = {
-  
-  /**
-   * VER MULTAS
-   * - Superadmin, Sistema, Soporte: Ven todas las comunidades
-   * - Roles administrativos: Ven todas de su comunidad
-   * - Propietario, Inquilino, Residente: Solo ven SUS multas
-   */
+
+const rolesVerTodas = ['admin_comunidad', 'presidente_comite', 'contador', 'tesorero'];
+const rolesSoloSuyas = ['propietario', 'inquilino', 'residente'];
+
+const rolesCrear = ['admin_comunidad', 'presidente_comite', 'contador', 'tesorero', 'conserje'];
+const rolesEditar = ['admin_comunidad', 'presidente_comite', 'contador', 'tesorero'];
+const rolesAnular = ['admin_comunidad', 'presidente_comite', 'contador', 'tesorero'];
+const rolesRegistrarPago = ['tesorero', 'contador', 'admin_comunidad'];
+const rolesApelar = ['propietario', 'inquilino', 'residente'];
+
+function isSuperAdminFn(req) {
+  if (!req || !req.user) return false;
+  if (req.user.is_superadmin) return true;
+  const roles = (req.user.roles || []).map(r => String(r).toLowerCase());
+  return roles.includes('superadmin');
+}
+
+function hasAnyRole(req, rolesList) {
+  if (!req || !req.user) return false;
+  const userRoles = (req.user.roles || []).map(r => String(r).toLowerCase());
+  return rolesList.some(r => userRoles.includes(String(r).toLowerCase()));
+}
+
+function isOwnerOfRecord(req) {
+  const personaId = req.user && (req.user.persona_id || req.user.sub || req.user.id);
+  if (!personaId) return false;
+  if (req.multa && (req.multa.creador_persona_id || req.multa.persona_id)) {
+    return String(personaId) === String(req.multa.creador_persona_id || req.multa.persona_id);
+  }
+  if (req.body && (req.body.creador_persona_id || req.body.persona_id)) {
+    return String(personaId) === String(req.body.creador_persona_id || req.body.persona_id);
+  }
+  return false;
+}
+
+module.exports = {
   canView: (req, res, next) => {
-    const user = req.user;
-
-    // Roles que pueden ver todas las multas de la comunidad
-    const rolesVerTodas = [
-      'superadmin', 'sistema', 'soporte_tecnico',
-      'presidente_comite', 'admin_comunidad', 'sindico', 'contador', 'admin_externo',
-      'tesorero', 'conserje', 'revisor_cuentas', 'auditor_externo',
-      'moderador_comunidad', 'secretario'
-    ];
-
-    // Roles que solo ven sus propias multas
-    const rolesSoloSuyas = ['propietario', 'inquilino', 'residente'];
-
-    if (isSuperAdmin(req) || hasRole(req, rolesVerTodas)) {
-      req.canViewAll = true;
-      return next();
-    }
-
-    if (hasRole(req, rolesSoloSuyas)) {
-      req.canViewAll = false;
-      req.viewOnlyOwn = true;
-      return next();
-    }
-
-    return res.status(403).json({ 
-      success: false, 
-      error: 'No tiene permisos para ver multas' 
-    });
-  },
-
-  /**
-   * CREAR MULTAS
-   */
-  canCreate: (req, res, next) => {
-    const rolesPermitidos = [
-      'superadmin',
-      // 'sistema', // QUITADO: sistema no debe crear según el mapa
-      'presidente_comite', 'admin_comunidad', 'sindico',
-      'contador', 'admin_externo', 'conserje'
-    ];
-
-    if (isSuperAdmin(req) || hasRole(req, rolesPermitidos)) {
-      return next();
-    }
-    return res.status(403).json({ success: false, error: 'No tiene permisos para crear multas' });
-  },
-
-  /**
-   * EDITAR MULTAS
-   */
-  canEdit: (req, res, next) => {
-    const rolesPermitidos = [
-      'superadmin', 'soporte_tecnico', 'sistema', // AÑADIDO 'sistema'
-      'presidente_comite', 'admin_comunidad', 'sindico',
-      'contador', 'admin_externo'
-    ];
-
-    if (isSuperAdmin(req) || hasRole(req, rolesPermitidos)) {
-      return next();
-    }
-    return res.status(403).json({ success: false, error: 'No tiene permisos para editar multas' });
-  },
-
-  /**
-   * ANULAR MULTAS
-   */
-  canAnular: (req, res, next) => {
-    const rolesPermitidos = [
-      'superadmin',
-      'presidente_comite', 'admin_comunidad'
-    ];
-
-    if (isSuperAdmin(req) || hasRole(req, rolesPermitidos)) {
-      return next();
-    }
-
-    return res.status(403).json({ 
-      success: false, 
-      error: 'Solo Presidente o Admin puede anular multas' 
-    });
-  },
-
-  /**
-   * REGISTRAR PAGO
-   */
-  canRegistrarPago: (req, res, next) => {
-    const rolesPermitidos = [
-      'superadmin',
-      'presidente_comite', 'admin_comunidad', 'sindico',
-      'contador', 'tesorero',
-      'sistema', 'soporte_tecnico' // AÑADIDOS: sistema y soporte_tecnico
-    ];
-
-    if (isSuperAdmin(req) || hasRole(req, rolesPermitidos)) {
-      return next();
-    }
-    return res.status(403).json({ success: false, error: 'No tiene permisos para registrar pagos' });
-  },
-
-  /**
-   * ELIMINAR MULTAS
-   */
-  canDelete: (req, res, next) => {
-    const rolesPermitidos = [
-      'superadmin' // RESTRINGIDO: solo superadmin
-    ];
-
-    if (isSuperAdmin(req) || hasRole(req, rolesPermitidos)) {
-      return next();
-    }
-    return res.status(403).json({ success: false, error: 'Solo superadmin puede eliminar multas' });
-  },
-
-  /**
-   * CREAR APELACIÓN
-   */
-  canApelar: async (req, res, next) => {
-    const user = req.user;
-    const multaId = req.params.id;
-
-    if (isSuperAdmin(req)) {
-      return next();
-    }
-
-    if (!hasRole(req, ['propietario', 'inquilino', 'residente'])) {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Solo propietarios e inquilinos pueden apelar' 
-      });
-    }
-
     try {
-      const [multa] = await db.query(
-        'SELECT unidad_id FROM multa WHERE id = ?',
-        [multaId]
-      );
+      if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+      if (isSuperAdminFn(req)) return next();
 
-      if (!multa.length) {
-        return res.status(404).json({ 
-          success: false, 
-          error: 'Multa no encontrada' 
-        });
+      if (req.membership && rolesVerTodas.includes(String(req.membership.rol).toLowerCase())) {
+        req.canViewAll = true;
+        return next();
       }
 
-      const [relacion] = await db.query(`
-        SELECT 1 FROM persona_unidad 
-        WHERE persona_id = ? AND unidad_id = ? AND activo = 1
-      `, [user.persona_id, multa[0].unidad_id]);
-
-      if (!relacion.length) {
-        return res.status(403).json({ 
-          success: false, 
-          error: 'Solo puede apelar multas de su unidad' 
-        });
+      if (hasAnyRole(req, rolesVerTodas)) {
+        req.canViewAll = true;
+        return next();
       }
 
-      return next();
+      if (hasAnyRole(req, rolesSoloSuyas)) {
+        req.canViewAll = false;
+        req.viewOnlyOwn = true;
+        return next();
+      }
 
-    } catch (error) {
-      console.error('Error verificando permisos de apelación:', error);
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Error verificando permisos' 
-      });
+      return res.status(403).json({ error: 'forbidden' });
+    } catch (err) {
+      console.error('multasPermissions.canView error', err);
+      return res.status(500).json({ error: 'server error' });
+    }
+  },
+
+  canCreate: (req, res, next) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+      if (isSuperAdminFn(req)) return next();
+      if (req.membership && rolesCrear.includes(String(req.membership.rol).toLowerCase())) return next();
+      if (hasAnyRole(req, rolesCrear)) return next();
+      return res.status(403).json({ error: 'forbidden' });
+    } catch (err) {
+      console.error('multasPermissions.canCreate error', err);
+      return res.status(500).json({ error: 'server error' });
+    }
+  },
+
+  canEdit: (req, res, next) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+      if (isSuperAdminFn(req)) return next();
+      if (req.membership && rolesEditar.includes(String(req.membership.rol).toLowerCase())) return next();
+      if (hasAnyRole(req, rolesEditar)) return next();
+      if (isOwnerOfRecord(req)) return next();
+      return res.status(403).json({ error: 'forbidden' });
+    } catch (err) {
+      console.error('multasPermissions.canEdit error', err);
+      return res.status(500).json({ error: 'server error' });
+    }
+  },
+
+  canAnular: (req, res, next) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+      if (isSuperAdminFn(req)) return next();
+      if (req.membership && rolesAnular.includes(String(req.membership.rol).toLowerCase())) return next();
+      if (hasAnyRole(req, rolesAnular)) return next();
+      if (isOwnerOfRecord(req)) return next();
+      return res.status(403).json({ error: 'forbidden' });
+    } catch (err) {
+      console.error('multasPermissions.canAnular error', err);
+      return res.status(500).json({ error: 'server error' });
+    }
+  },
+
+  canRegistrarPago: (req, res, next) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+      if (isSuperAdminFn(req)) return next();
+      if (req.membership && rolesRegistrarPago.includes(String(req.membership.rol).toLowerCase())) return next();
+      if (hasAnyRole(req, rolesRegistrarPago)) return next();
+      return res.status(403).json({ error: 'forbidden' });
+    } catch (err) {
+      console.error('multasPermissions.canRegistrarPago error', err);
+      return res.status(500).json({ error: 'server error' });
+    }
+  },
+
+  canApelar: (req, res, next) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+      if (isSuperAdminFn(req)) return next();
+      if (hasAnyRole(req, rolesApelar)) return next();
+      if (isOwnerOfRecord(req)) return next();
+      return res.status(403).json({ error: 'forbidden' });
+    } catch (err) {
+      console.error('multasPermissions.canApelar error', err);
+      return res.status(500).json({ error: 'server error' });
+    }
+  },
+
+  canDelete: (req, res, next) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+      if (isSuperAdminFn(req)) return next();
+      if (req.membership && rolesEditar.includes(String(req.membership.rol).toLowerCase())) return next();
+      if (hasAnyRole(req, rolesEditar)) return next();
+      if (isOwnerOfRecord(req)) return next();
+      return res.status(403).json({ error: 'forbidden' });
+    } catch (err) {
+      console.error('multasPermissions.canDelete error', err);
+      return res.status(500).json({ error: 'server error' });
     }
   }
 };
-
-module.exports = MultasPermissions;

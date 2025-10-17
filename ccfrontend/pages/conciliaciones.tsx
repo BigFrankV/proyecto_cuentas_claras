@@ -20,12 +20,7 @@ interface Conciliacion {
   totalTransactions: number;
   createdBy: string;
   createdAt: string;
-  completedAt: string | undefined;
-  codigo: string | undefined;
-  glosa: string | undefined;
-  monto: number;
-  estado: string;
-  nombreComunidad: string | undefined;
+  completedAt?: string;
 }
 
 interface Filters {
@@ -35,197 +30,11 @@ interface Filters {
   period: string;
   dateFrom: string;
   dateTo: string;
-  comunidad_id?: string;
-  estado?: string;
-  fecha_desde?: string;
-  fecha_hasta?: string;
 }
-
-// API interfaces
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
-interface ApiConciliacion {
-  id: number;
-  codigo?: string;
-  fecha_mov: string;
-  glosa?: string;
-  monto: number;
-  tipo?: 'credito' | 'debito' | 'otro';
-  referencia_bancaria?: string;
-  estado_conciliacion?: 'pendiente' | 'conciliado' | 'diferencia' | 'descartado';
-  pago_id?: number;
-  codigo_pago?: string;
-  referencia_pago?: string;
-  nombre_comunidad?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface ApiEstadisticas {
-  totalMovimientos: number;
-  movimientosConciliados: number;
-  movimientosPendientes: number;
-  movimientosDiferencia: number;
-  montoTotal: number;
-  montoPromedio: number;
-  movimientosCredito: number;
-  movimientosDebito: number;
-  movimientoMasAntiguo?: string;
-  movimientoMasNuevo?: string;
-}
-
-interface ApiResumen {
-  nombreComunidad?: string;
-  totalMovimientos: number;
-  movimientosConciliados: number;
-  movimientosPendientes: number;
-  movimientosDiferencia: number;
-  montoBancarioTotal: number;
-  pagosVinculados: number;
-  tasaConciliacion: number;
-  movimientoMasAntiguo?: string;
-  movimientoMasNuevo?: string;
-}
-
-// API functions
-const conciliacionesApi = {
-  async getConciliaciones(filters: Partial<Filters> = {}, page = 1, limit = 20): Promise<{conciliaciones: ApiConciliacion[], total: number}> {
-    const params = new URLSearchParams();
-    
-    if (filters.comunidad_id) params.append('comunidad_id', filters.comunidad_id);
-    if (filters.estado) params.append('estado', filters.estado);
-    if (filters.fecha_desde) params.append('fecha_desde', filters.fecha_desde);
-    if (filters.fecha_hasta) params.append('fecha_hasta', filters.fecha_hasta);
-    params.append('limit', limit.toString());
-    params.append('offset', ((page - 1) * limit).toString());
-
-    const response = await fetch(`${API_BASE_URL}/conciliaciones?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error al obtener conciliaciones: ${response.statusText}`);
-    }
-
-    const conciliaciones = await response.json();
-    
-    // Get total count
-    const countResponse = await fetch(`${API_BASE_URL}/conciliaciones/count?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    const countData = await countResponse.json();
-    const total = countData.total || 0;
-
-    return { conciliaciones, total };
-  },
-
-  async getEstadisticas(comunidadId?: string): Promise<ApiEstadisticas> {
-    const endpoint = comunidadId 
-      ? `${API_BASE_URL}/conciliaciones/comunidad/${comunidadId}/estadisticas`
-      : `${API_BASE_URL}/conciliaciones/estadisticas`;
-
-    const response = await fetch(endpoint, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error al obtener estadísticas: ${response.statusText}`);
-    }
-
-    return response.json();
-  },
-
-  async getResumen(comunidadId?: string): Promise<ApiResumen> {
-    const endpoint = comunidadId 
-      ? `${API_BASE_URL}/conciliaciones/comunidad/${comunidadId}/resumen`
-      : `${API_BASE_URL}/conciliaciones/resumen`;
-
-    const response = await fetch(endpoint, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error al obtener resumen: ${response.statusText}`);
-    }
-
-    return response.json();
-  }
-};
-
-// Helper function to map API data to frontend format
-const mapApiToFrontend = (apiConciliacion: ApiConciliacion): Conciliacion => {
-  // Extract year and month from fecha_mov for period
-  const fecha = new Date(apiConciliacion.fecha_mov);
-  const period = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
-  
-  // Map status
-  let status: Conciliacion['status'] = 'draft';
-  switch (apiConciliacion.estado_conciliacion) {
-    case 'pendiente':
-      status = 'in-progress';
-      break;
-    case 'conciliado':
-      status = 'completed';
-      break;
-    case 'diferencia':
-    case 'descartado':
-      status = 'with-differences';
-      break;
-  }
-
-  return {
-    id: apiConciliacion.id,
-    period,
-    bankAccount: 'Cuenta Principal', // Default, could be enhanced
-    bank: 'Banco Principal', // Default, could be enhanced
-    startDate: apiConciliacion.fecha_mov,
-    endDate: apiConciliacion.fecha_mov,
-    status,
-    bankBalance: apiConciliacion.monto,
-    bookBalance: apiConciliacion.monto, // Simplified, could be enhanced with pago data
-    difference: 0, // Simplified, could be calculated
-    matchedTransactions: apiConciliacion.estado_conciliacion === 'conciliado' ? 1 : 0,
-    totalTransactions: 1,
-    createdBy: 'Sistema', // Default, could be enhanced
-    createdAt: apiConciliacion.created_at || new Date().toISOString(),
-    completedAt: apiConciliacion.estado_conciliacion === 'conciliado' ? (apiConciliacion.updated_at || undefined) : undefined,
-    codigo: apiConciliacion.codigo,
-    glosa: apiConciliacion.glosa,
-    monto: apiConciliacion.monto,
-    estado: apiConciliacion.estado_conciliacion || 'pendiente',
-    nombreComunidad: apiConciliacion.nombre_comunidad
-  };
-};
 
 export default function ConciliacionesListado() {
   const [conciliaciones, setConciliaciones] = useState<Conciliacion[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState({
-    total: 0,
-    completed: 0,
-    inProgress: 0,
-    withDifferences: 0
-  });
-  const [summaryData, setSummaryData] = useState({
-    totalBalance: 0,
-    precision: 0,
-    daysAverage: 0,
-    accountsCount: 0
-  });
   const [filters, setFilters] = useState<Filters>({
     search: '',
     status: '',
@@ -235,77 +44,83 @@ export default function ConciliacionesListado() {
     dateTo: ''
   });
 
-  // Load data from API
-  const loadConciliaciones = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Map frontend filters to API filters
-      const apiFilters: Partial<Filters> = {};
-      if (filters.status) {
-        switch (filters.status) {
-          case 'draft':
-            apiFilters.estado = 'pendiente';
-            break;
-          case 'in-progress':
-            apiFilters.estado = 'pendiente';
-            break;
-          case 'completed':
-            apiFilters.estado = 'conciliado';
-            break;
-          case 'with-differences':
-            apiFilters.estado = 'descartado';
-            break;
-        }
-      }
-      if (filters.dateFrom) apiFilters.fecha_desde = filters.dateFrom;
-      if (filters.dateTo) apiFilters.fecha_hasta = filters.dateTo;
-
-      const { conciliaciones: apiData } = await conciliacionesApi.getConciliaciones(apiFilters);
-      const mappedData = apiData.map(mapApiToFrontend);
-      setConciliaciones(mappedData);
-
-      // Load statistics
-      try {
-        const estadisticas = await conciliacionesApi.getEstadisticas();
-        setStats({
-          total: estadisticas.totalMovimientos,
-          completed: estadisticas.movimientosConciliados,
-          inProgress: estadisticas.movimientosPendientes,
-          withDifferences: estadisticas.movimientosDiferencia
-        });
-
-        setSummaryData({
-          totalBalance: estadisticas.montoTotal,
-          precision: estadisticas.totalMovimientos > 0 
-            ? (estadisticas.movimientosConciliados / estadisticas.totalMovimientos) * 100 
-            : 0,
-          daysAverage: 2.3, // This would need to be calculated from actual data
-          accountsCount: 4 // This would need to be fetched from accounts API
-        });
-      } catch (statsError) {
-        console.warn('Could not load statistics:', statsError);
-        // Set default stats
-        setStats({
-          total: mappedData.length,
-          completed: mappedData.filter(c => c.status === 'completed').length,
-          inProgress: mappedData.filter(c => c.status === 'in-progress').length,
-          withDifferences: mappedData.filter(c => c.status === 'with-differences').length
-        });
-      }
-
-    } catch (err) {
-      console.error('Error loading conciliaciones:', err);
-      setError(err instanceof Error ? err.message : 'Error desconocido al cargar conciliaciones');
-    } finally {
-      setLoading(false);
+  // Mock data
+  const mockConciliaciones: Conciliacion[] = [
+    {
+      id: 1,
+      period: '2024-03',
+      bankAccount: '12345678-9',
+      bank: 'Banco de Chile',
+      startDate: '2024-03-01',
+      endDate: '2024-03-31',
+      status: 'completed',
+      bankBalance: 15750000,
+      bookBalance: 15750000,
+      difference: 0,
+      matchedTransactions: 245,
+      totalTransactions: 245,
+      createdBy: 'María González',
+      createdAt: '2024-04-01T10:30:00Z',
+      completedAt: '2024-04-01T16:45:00Z'
+    },
+    {
+      id: 2,
+      period: '2024-04',
+      bankAccount: '12345678-9',
+      bank: 'Banco de Chile',
+      startDate: '2024-04-01',
+      endDate: '2024-04-30',
+      status: 'with-differences',
+      bankBalance: 18950000,
+      bookBalance: 18962500,
+      difference: -12500,
+      matchedTransactions: 198,
+      totalTransactions: 203,
+      createdBy: 'Carlos Mendoza',
+      createdAt: '2024-05-01T09:15:00Z',
+      completedAt: '2024-05-02T14:20:00Z'
+    },
+    {
+      id: 3,
+      period: '2024-05',
+      bankAccount: '87654321-0',
+      bank: 'Banco Santander',
+      startDate: '2024-05-01',
+      endDate: '2024-05-31',
+      status: 'in-progress',
+      bankBalance: 22150000,
+      bookBalance: 22150000,
+      difference: 0,
+      matchedTransactions: 156,
+      totalTransactions: 189,
+      createdBy: 'Ana Silva',
+      createdAt: '2024-06-01T11:00:00Z'
+    },
+    {
+      id: 4,
+      period: '2024-06',
+      bankAccount: '11223344-5',
+      bank: 'Banco Estado',
+      startDate: '2024-06-01',
+      endDate: '2024-06-30',
+      status: 'draft',
+      bankBalance: 0,
+      bookBalance: 0,
+      difference: 0,
+      matchedTransactions: 0,
+      totalTransactions: 167,
+      createdBy: 'Roberto Torres',
+      createdAt: '2024-07-01T08:30:00Z'
     }
-  };
+  ];
 
   useEffect(() => {
-    loadConciliaciones();
-  }, [filters.status, filters.dateFrom, filters.dateTo]);
+    // Simulate loading
+    setTimeout(() => {
+      setConciliaciones(mockConciliaciones);
+      setLoading(false);
+    }, 1000);
+  }, []);
 
   const handleFilterChange = (field: keyof Filters, value: string) => {
     setFilters(prev => ({
@@ -356,6 +171,14 @@ export default function ConciliacionesListado() {
 
   const getProgressPercentage = (matched: number, total: number) => {
     return total > 0 ? Math.round((matched / total) * 100) : 0;
+  };
+
+  // Stats calculation
+  const stats = {
+    total: conciliaciones.length,
+    completed: conciliaciones.filter(c => c.status === 'completed').length,
+    inProgress: conciliaciones.filter(c => c.status === 'in-progress').length,
+    withDifferences: conciliaciones.filter(c => c.status === 'with-differences').length
   };
 
   return (

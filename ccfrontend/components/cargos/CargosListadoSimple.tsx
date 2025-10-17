@@ -1,7 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { cargosApi } from '@/lib/api/cargos';
-import { Cargo } from '@/types/cargos';
-import { useAuth } from '@/lib/useAuth';
+import React, { useState, useMemo } from 'react';
 
 // Interfaces
 interface Charge {
@@ -18,90 +15,72 @@ interface Charge {
   paymentAmount?: number;
 }
 
+// Mock data
+const mockCharges: Charge[] = [
+  {
+    id: 'CHG-2024-001',
+    concept: 'Administración Enero 2024',
+    type: 'administration',
+    amount: 45000,
+    dueDate: '2024-01-31',
+    status: 'paid',
+    unit: 'APT-101',
+    description: 'Cuota de administración mensual',
+    createdAt: '2024-01-01',
+    paymentDate: '2024-01-25',
+    paymentAmount: 45000
+  },
+  {
+    id: 'CHG-2024-002',
+    concept: 'Mantenimiento Ascensores',
+    type: 'maintenance',
+    amount: 25000,
+    dueDate: '2024-02-15',
+    status: 'pending',
+    unit: 'APT-102',
+    description: 'Mantenimiento preventivo ascensores',
+    createdAt: '2024-02-01'
+  },
+  {
+    id: 'CHG-2024-003',
+    concept: 'Servicio de Seguridad',
+    type: 'service',
+    amount: 35000,
+    dueDate: '2024-02-28',
+    status: 'approved',
+    unit: 'APT-103',
+    description: 'Servicio de vigilancia 24/7',
+    createdAt: '2024-02-01'
+  },
+  {
+    id: 'CHG-2024-004',
+    concept: 'Seguro Edificio',
+    type: 'insurance',
+    amount: 50000,
+    dueDate: '2024-03-15',
+    status: 'partial',
+    unit: 'APT-104',
+    description: 'Prima anual seguro integral',
+    createdAt: '2024-02-15',
+    paymentAmount: 25000
+  },
+  {
+    id: 'CHG-2024-005',
+    concept: 'Multa Parqueo',
+    type: 'other',
+    amount: 15000,
+    dueDate: '2024-02-20',
+    status: 'rejected',
+    unit: 'APT-105',
+    description: 'Parqueo en zona no autorizada',
+    createdAt: '2024-02-10'
+  }
+];
+
 const CargosListado: React.FC = () => {
-  const { user } = useAuth();
-  const [charges, setCharges] = useState<Charge[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [charges] = useState<Charge[]>(mockCharges);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-
-  useEffect(() => {
-    const fetchCharges = async () => {
-      if (!user?.memberships?.length) {
-        console.log('⚠️ Usuario no tiene membresías activas');
-        setCharges([]);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        console.log('🔍 Cargando lista de cargos para comunidades del usuario...');
-
-        // Obtener cargos de todas las comunidades del usuario
-        const allCharges: Charge[] = [];
-
-        for (const membership of user.memberships) {
-          if (membership.activo !== false) { // Si no está explícitamente inactivo
-            try {
-              console.log(`🏢 Obteniendo cargos de comunidad ${membership.comunidadId}`);
-              const comunidadCharges = await cargosApi.getByComunidad(membership.comunidadId);
-
-              // Mapear los datos de la API al formato del componente
-              const mappedCharges: Charge[] = comunidadCharges.map(cargo => {
-                // Función helper para convertir fecha a string
-                const formatDate = (date: any): string => {
-                  if (date instanceof Date) {
-                    return date.toISOString().split('T')[0]!;
-                  }
-                  if (typeof date === 'string') {
-                    return date.split('T')[0]!;
-                  }
-                  return new Date().toISOString().split('T')[0]!;
-                };
-
-                return {
-                  id: cargo.id.toString(),
-                  concept: cargo.concepto,
-                  type: cargo.tipo.toLowerCase().includes('administración') ? 'administration' :
-                        cargo.tipo.toLowerCase().includes('mantenimiento') ? 'maintenance' :
-                        cargo.tipo.toLowerCase().includes('servicio') ? 'service' :
-                        cargo.tipo.toLowerCase().includes('seguro') ? 'insurance' : 'other',
-                  amount: cargo.monto,
-                  dueDate: formatDate(cargo.fechaVencimiento),
-                  status: cargo.estado === 'pendiente' ? 'pending' :
-                          cargo.estado === 'pagado' ? 'paid' :
-                          cargo.estado === 'parcial' ? 'partial' : 'pending',
-                  unit: cargo.unidad,
-                  description: cargo.descripcion || '',
-                  createdAt: formatDate(cargo.fechaCreacion),
-                  paymentAmount: cargo.monto - cargo.saldo
-                };
-              });
-
-              allCharges.push(...mappedCharges);
-            } catch (comunidadError) {
-              console.error(`❌ Error obteniendo cargos de comunidad ${membership.comunidadId}:`, comunidadError);
-              // Continuar con otras comunidades
-            }
-          }
-        }
-
-        console.log(`✅ Total de cargos cargados: ${allCharges.length}`);
-        setCharges(allCharges);
-      } catch (err) {
-        console.error('❌ Error al cargar cargos:', err);
-        setError(err instanceof Error ? err.message : 'Error desconocido al cargar los cargos');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCharges();
-  }, [user]);
 
   // Formatear moneda
   const formatCurrency = (value: number) => {
@@ -171,45 +150,6 @@ const CargosListado: React.FC = () => {
       }).length
     };
   }, [charges]);
-
-  // Estados de carga y error
-  if (loading) {
-    return (
-      <div className="container-fluid py-4">
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-          <div className="text-center">
-            <div className="spinner-border mb-3" role="status">
-              <span className="visually-hidden">Cargando...</span>
-            </div>
-            <p className="text-muted">Cargando lista de cargos...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container-fluid py-4">
-        <div className="row justify-content-center">
-          <div className="col-md-6">
-            <div className="text-center">
-              <i className="material-icons display-1 text-muted">error_outline</i>
-              <h2 className="mt-3">Error al cargar cargos</h2>
-              <p className="text-muted mb-4">{error}</p>
-              <button
-                className="btn btn-primary"
-                onClick={() => window.location.reload()}
-              >
-                <i className="material-icons me-2">refresh</i>
-                Reintentar
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container-fluid py-4">

@@ -4,1393 +4,1601 @@ const router = express.Router();
 const db = require('../db');
 const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
-const { checkGastoPermission } = require('../middleware/gastosPermissions');
-const { requiredApprovalsForAmount } = require('../lib/aprobaciones');
+const { authorize } = require('../middleware/authorize');
+const { requireCommunity } = require('../middleware/tenancy');
 
-// Documentación Swagger de gastos
-require('./gastos.swagger');
 /**
- * Listar gastos por comunidad (con filtros y paginación)
+ * @swagger
+ * tags:
+ *   - name: Gastos
+ *     description: |
+ *       Gestión completa de gastos operativos y extraordinarios.
+ *       Incluye filtros avanzados, estadísticas, reportes y validaciones.
  */
-router.get('/comunidad/:comunidadId', [
-  authenticate,
-  checkGastoPermission('read')
-], async (req, res) => {
+
+/**
+ * @swagger
+ * /gastos/comunidad/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Listar gastos de una comunidad con filtros avanzados
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 100
+ *       - in: query
+ *         name: categoria
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: proveedor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: fecha_desde
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: fecha_hasta
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: monto_min
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: monto_max
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: categoria_id
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: centro_costo_id
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: extraordinario
+ *         schema:
+ *           type: integer
+ *           enum: [0, 1, -1]
+ *     responses:
+ *       200:
+ *         description: Lista de gastos
+ */
+router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { 
+    page = 1, 
+    limit = 100, 
+    categoria = '', 
+    proveedor = '', 
+    fecha_desde = '', 
+    fecha_hasta = '', 
+    monto_min = 0, 
+    monto_max = 0,
+    categoria_id = 0,
+    centro_costo_id = 0,
+    extraordinario = -1
+  } = req.query;
+  
+  const offset = (page - 1) * limit;
+  
   try {
-    const comunidadId = Number(req.params.comunidadId);
-    const {
-      page = 1,
-      limit = 20,
-      estado,
-      categoria,
-      fechaDesde,
-      fechaHasta,
-      busqueda,
-      ordenar = 'fecha',
-      direccion = 'DESC'
-    } = req.query;
-
-    const offset = (Number(page) - 1) * Number(limit);
-
-    // Construir WHERE dinámico (comunidadId <=0 => sin filtro)
-    let whereClause = 'WHERE 1=1';
-    const queryParams = [];
-    if (comunidadId > 0) {
-      whereClause += ' AND g.comunidad_id = ?';
-      queryParams.push(comunidadId);
+    // Construir cláusulas WHERE dinámicas
+    let whereFecha = '';
+    let whereMonto = '';
+    const params = [comunidadId];
+    
+    // Solo agregar filtro de fecha si ambos valores están presentes
+    if (fecha_desde && fecha_hasta) {
+      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+      params.push(fecha_desde, fecha_hasta);
     }
-
-    // Si el membership del request restringe, aplicar
-    // Los nombres del creador y el aprobador se obtienen de la tabla `persona`
-    if (req.membership && ['residente', 'propietario'].includes((req.membership.rol || '').toString().toLowerCase())) {
-      whereClause += ' AND g.estado IN ("aprobado", "pagado")';
+    
+    // Solo agregar filtro de monto si ambos valores son mayores a 0
+    if (monto_min > 0 && monto_max > 0) {
+      whereMonto = 'AND g.monto BETWEEN ? AND ?';
+      params.push(Number(monto_min), Number(monto_max));
     }
-
-    if (estado) {
-      whereClause += ' AND g.estado = ?';
-      queryParams.push(estado);
-    }
-
-    if (categoria) {
-      whereClause += ' AND g.categoria_id = ?';
-      queryParams.push(Number(categoria));
-    }
-
-    if (fechaDesde && fechaHasta) {
-      whereClause += ' AND g.fecha BETWEEN ? AND ?';
-      queryParams.push(fechaDesde, fechaHasta);
-    } else if (fechaDesde) {
-      whereClause += ' AND g.fecha >= ?';
-      queryParams.push(fechaDesde);
-    } else if (fechaHasta) {
-      whereClause += ' AND g.fecha <= ?';
-      queryParams.push(fechaHasta);
-    }
-
-    if (busqueda) {
-      // Para búsquedas rápidas, usamos campos directos del gasto y de la categoría.
-      whereClause += ' AND (g.glosa LIKE ? OR cg.nombre LIKE ? OR g.numero LIKE ?)';
-      const term = `%${busqueda}%`;
-      queryParams.push(term, term, term);
-    }
-
-    // Sanitizar campo de orden
-    const allowedOrderFields = ['fecha', 'monto', 'created_at', 'numero', 'estado'];
-    const orderField = allowedOrderFields.includes(ordenar) ? ordenar : 'fecha';
-    const orderDirection = ['ASC', 'DESC'].includes((direccion || '').toString().toUpperCase()) ? direccion.toString().toUpperCase() : 'DESC';
-
-    const baseQuery = `
+    
+    // Agregar resto de parámetros
+    params.push(
+      categoria, categoria,
+      proveedor, proveedor,
+      categoria_id, categoria_id,
+      centro_costo_id, centro_costo_id,
+      extraordinario, extraordinario,
+      Number(limit), Number(offset)
+    );
+    
+    const [rows] = await db.query(`
       SELECT
         g.id,
-        g.numero,
-        g.comunidad_id,
-        g.categoria_id,
-        g.centro_costo_id,
-        g.documento_compra_id,
         g.fecha,
         g.monto,
-        g.glosa,
+        g.glosa AS descripcion,
+        cat.nombre AS categoria,
+        cc.nombre AS centro_costo,
+        p.razon_social AS proveedor,
+        dc.folio AS documento_numero,
+        CASE WHEN COUNT(a.id) > 0 THEN 1 ELSE 0 END AS tiene_adjuntos,
         g.extraordinario,
-        g.estado,
-        g.creado_por,
-        g.aprobado_por,
-        g.created_at,
-        g.updated_at,
-        cg.nombre AS categoria_nombre,
-        cc.nombre AS centro_costo_nombre,
-        CONCAT(creador.nombres, ' ', creador.apellidos) AS creado_por_nombre,
-        CONCAT(aprobador.nombres, ' ', aprobador.apellidos) AS aprobado_por_nombre,
-        COUNT(*) OVER() AS total
+        g.created_at
       FROM gasto g
-      LEFT JOIN categoria_gasto cg ON g.categoria_id = cg.id
+      INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
       LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
-      LEFT JOIN usuario u_creador ON g.creado_por = u_creador.id 
-      LEFT JOIN persona creador ON u_creador.persona_id = creador.id 
-      LEFT JOIN usuario u_aprobador ON g.aprobado_por = u_aprobador.id 
-      LEFT JOIN persona aprobador ON u_aprobador.persona_id = aprobador.id 
-      ${whereClause}
-      ORDER BY g.${orderField} ${orderDirection}
+      LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
+      LEFT JOIN proveedor p ON dc.proveedor_id = p.id
+      LEFT JOIN archivos a ON a.entity_type = 'gasto' AND a.entity_id = g.id AND a.is_active = 1
+      WHERE g.comunidad_id = ?
+        ${whereFecha}
+        ${whereMonto}
+        AND (cat.nombre LIKE CONCAT('%', ?, '%') OR ? = '')
+        AND (p.razon_social LIKE CONCAT('%', ?, '%') OR ? = '')
+        AND (g.categoria_id = ? OR ? = 0)
+        AND (g.centro_costo_id = ? OR ? = 0)
+        AND (g.extraordinario = ? OR ? = -1)
+      GROUP BY g.id
+      ORDER BY g.fecha DESC, g.created_at DESC
       LIMIT ? OFFSET ?
-    `;
-
-    queryParams.push(Number(limit), Number(offset));
-    const [rows] = await db.query(baseQuery, queryParams);
-
-    const total = rows.length > 0 ? Number(rows[0].total || 0) : 0;
-    const gastos = rows.map(({ total: _t, monto, extraordinario, ...g }) => ({
-      ...g,
-      monto: parseFloat(monto || 0),
-      extraordinario: !!extraordinario
-    }));
-
-    return res.json({
-      success: true,
-      data: gastos,
-      pagination: {
-        total,
-        page: Number(page),
-        limit: Number(limit),
-        pages: total > 0 ? Math.ceil(total / Number(limit)) : 0
-      }
-    });
-  } catch (error) {
-    console.error('Error listing gastos:', error);
-    return res.status(500).json({ success: false, error: 'Error interno del servidor', message: error.message });
-  }
-});
-
-/**
- * Obtener detalle de gasto (incluye aprobaciones e historial)
- */
-router.get('/:id', [ authenticate ], async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const [[gasto]] = await db.query(`
-      SELECT 
-        g.*, 
-        cg.nombre AS categoria_nombre, 
-        cc.nombre AS centro_costo_nombre,
-        -- Se corrigió el mapeo de ID's de usuario a nombres de persona en el JOIN
-        CONCAT(p_creador.nombres,' ',p_creador.apellidos) AS creado_por_nombre,
-        CONCAT(p_aprobador.nombres,' ',p_aprobador.apellidos) AS aprobado_por_nombre
-      FROM gasto g
-      LEFT JOIN categoria_gasto cg ON g.categoria_id = cg.id
-      LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
-      -- JOIN para el creador
-      LEFT JOIN usuario u_creador ON g.creado_por = u_creador.id
-      LEFT JOIN persona p_creador ON u_creador.persona_id = p_creador.id 
-      -- JOIN para el aprobador
-      LEFT JOIN usuario u_aprobador ON g.aprobado_por = u_aprobador.id
-      LEFT JOIN persona p_aprobador ON u_aprobador.persona_id = p_aprobador.id 
-      WHERE g.id = ?
-    `, [id]);
-
-    if (!gasto) return res.status(404).json({ success: false, error: 'Gasto no encontrado' });
-
-    const [aprobaciones] = await db.query(`
-      SELECT ga.*, u.username, rs.codigo AS rol_codigo, rs.nombre AS rol_nombre
-      FROM gasto_aprobacion ga
-      LEFT JOIN usuario u ON ga.usuario_id = u.id
-      LEFT JOIN rol_sistema rs ON ga.rol_id = rs.id
-      WHERE ga.gasto_id = ? ORDER BY ga.created_at ASC
-    `, [id]);
-
-    const [historial] = await db.query(`
-      SELECT 
-        h.*, 
-        u.username,
-        CONCAT(p.nombres, ' ', p.apellidos) AS usuario_nombre -- Se incluye nombre de la persona
-      FROM historial_gasto h
-      LEFT JOIN usuario u ON h.usuario_id = u.id
-      LEFT JOIN persona p ON u.persona_id = p.id -- Se corrige y añade JOIN a persona
-      WHERE h.gasto_id = ? ORDER BY h.created_at ASC -- Se corrige el ORDER BY a created_at
-    `, [id]);
-
-    return res.json({ success: true, data: { gasto, aprobaciones, historial } });
+    `, params);
+    
+    res.json(rows);
   } catch (err) {
-    console.error('Error GET /gastos/:id', err);
-    return res.status(500).json({ success: false, error: 'Server error', message: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
   }
 });
 
 /**
- * Crear gasto
+ * @swagger
+ * /gastos/comunidad/{comunidadId}/count:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Contar gastos con filtros
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Total de gastos
+ */
+router.get('/comunidad/:comunidadId/count', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { 
+    categoria = '', 
+    proveedor = '', 
+    fecha_desde = '', 
+    fecha_hasta = '', 
+    monto_min = 0, 
+    monto_max = 0,
+    categoria_id = 0,
+    centro_costo_id = 0,
+    extraordinario = -1
+  } = req.query;
+  
+  try {
+    // Construir cláusulas WHERE dinámicas
+    let whereFecha = '';
+    let whereMonto = '';
+    const params = [comunidadId];
+    
+    if (fecha_desde && fecha_hasta) {
+      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+      params.push(fecha_desde, fecha_hasta);
+    }
+    
+    if (monto_min > 0 && monto_max > 0) {
+      whereMonto = 'AND g.monto BETWEEN ? AND ?';
+      params.push(Number(monto_min), Number(monto_max));
+    }
+    
+    params.push(
+      categoria, categoria,
+      proveedor, proveedor,
+      categoria_id, categoria_id,
+      centro_costo_id, centro_costo_id,
+      extraordinario, extraordinario
+    );
+    
+    const [[row]] = await db.query(`
+      SELECT COUNT(DISTINCT g.id) AS total
+      FROM gasto g
+      INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
+      LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
+      LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
+      LEFT JOIN proveedor p ON dc.proveedor_id = p.id
+      WHERE g.comunidad_id = ?
+        ${whereFecha}
+        ${whereMonto}
+        AND (cat.nombre LIKE CONCAT('%', ?, '%') OR ? = '')
+        AND (p.razon_social LIKE CONCAT('%', ?, '%') OR ? = '')
+        AND (g.categoria_id = ? OR ? = 0)
+        AND (g.centro_costo_id = ? OR ? = 0)
+        AND (g.extraordinario = ? OR ? = -1)
+    `, params);
+    
+    res.json({ total: row.total });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /gastos/comunidad/{comunidadId}:
+ *   post:
+ *     tags: [Gastos]
+ *     summary: Crear nuevo gasto
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - categoria_id
+ *               - fecha
+ *               - monto
+ *             properties:
+ *               categoria_id:
+ *                 type: integer
+ *               centro_costo_id:
+ *                 type: integer
+ *               documento_compra_id:
+ *                 type: integer
+ *               fecha:
+ *                 type: string
+ *                 format: date
+ *               monto:
+ *                 type: number
+ *               glosa:
+ *                 type: string
+ *               extraordinario:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Gasto creado
  */
 router.post('/comunidad/:comunidadId', [
   authenticate,
-  checkGastoPermission('create'),
-  body('categoria_id').isInt({ min: 1 }).withMessage('Categoría es requerida'),
-  body('fecha').isISO8601().withMessage('Fecha debe ser válida (YYYY-MM-DD)'),
-  body('monto').isFloat({ min: 0.01 }).withMessage('Monto debe ser mayor a 0'),
-  body('glosa').notEmpty().isLength({ min: 3, max: 500 }).withMessage('Glosa debe tener entre 3 y 500 caracteres'),
-  body('centro_costo_id').optional().isInt(),
-  body('proveedor_id').optional().isInt(),
-  body('documento_compra_id').optional().isInt(),
-  body('extraordinario').optional().isBoolean()
+  requireCommunity('comunidadId', ['admin', 'contador']),
+  body('categoria_id').isInt(),
+  body('fecha').notEmpty(),
+  body('monto').isNumeric()
 ], async (req, res) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, error: 'Datos inválidos', details: errors.array() });
-  }
-
-  const conexion = await db.getConnection();
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  
+  const comunidadId = Number(req.params.comunidadId);
+  const { categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario } = req.body;
+  
   try {
-    await conexion.beginTransaction();
-
-    const comunidadId = Number(req.params.comunidadId);
-    const {
-      categoria_id,
-      centro_costo_id,
-      documento_compra_id,
-      proveedor_id, // Variable que ya no se usa, pero se mantiene para claridad
-      fecha,
-      monto,
-      glosa,
-      extraordinario = false
-    } = req.body;
-
-    const [categoria] = await conexion.query(`
-      SELECT id FROM categoria_gasto 
-      WHERE id = ? AND comunidad_id = ? AND activa = 1
-    `, [categoria_id, comunidadId]);
-
-    if (!categoria.length) {
-      await conexion.rollback();
-      return res.status(400).json({ success: false, error: 'Categoría no válida para esta comunidad' });
-    }
-
-    const currentYear = new Date().getFullYear();
-    const [lastGasto] = await conexion.query(`
-      SELECT numero FROM gasto 
-      WHERE comunidad_id = ? AND numero LIKE ?
-      ORDER BY id DESC LIMIT 1
-    `, [comunidadId, `G${currentYear}-%`]);
-
-    let nextNumber = 1;
-    if (lastGasto.length > 0) {
-      const parts = (lastGasto[0].numero || '').split('-');
-      const lastNumber = parseInt(parts[1] || '0') || 0;
-      nextNumber = lastNumber + 1;
-    }
-
-    const numero = `G${currentYear}-${nextNumber.toString().padStart(4, '0')}`;
-    const requiredAprob = requiredApprovalsForAmount(Number(monto));
-
-    const [result] = await conexion.query(`
-      INSERT INTO gasto (
-        comunidad_id, categoria_id, centro_costo_id, documento_compra_id,
-        numero, fecha, monto, glosa, extraordinario, estado, creado_por,
-        required_aprobaciones, aprobaciones_count, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, ?, 0, NOW(), NOW())
-      -- Se usa 'pendiente', un estado válido en la base de datos.
-    `, [
-      comunidadId,
-      categoria_id,
-      centro_costo_id || null,
-      documento_compra_id || null,
-      numero,
-      fecha,
-      monto,
-      glosa,
-      extraordinario ? 1 : 0,
-      req.user.id, // creado_por es usuario_id (req.user.id)
-      requiredAprob,
-    ]);
-
-    const gastoId = result.insertId;
-
-    await conexion.query(`
-      INSERT INTO historial_gasto (gasto_id, campo_modificado, usuario_id, valor_nuevo, created_at) 
-      VALUES (?, 'estado', ?, 'creado/pendiente', NOW()) 
-    `, [gastoId, req.user.id]);
-
-    await conexion.query(`
-      INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address, created_at)
-      VALUES (?, 'CREATE', 'gasto', ?, ?, ?, NOW())
-    `, [
-      req.user.id,
-      gastoId,
-      JSON.stringify({ numero, monto, glosa, categoria_id, estado: 'pendiente' }),
-      req.ip || req.connection.remoteAddress
-    ]);
-
-    const [gastoCreado] = await conexion.query(`
-      SELECT 
-        g.*,
-        cg.nombre as categoria_nombre,
-        cg.tipo as categoria_tipo,
-        CONCAT(p.nombres, ' ', p.apellidos) as creado_por_nombre
-      FROM gasto g
-      LEFT JOIN categoria_gasto cg ON g.categoria_id = cg.id
-      LEFT JOIN usuario u ON g.creado_por = u.id 
-      LEFT JOIN persona p ON u.persona_id = p.id 
-      WHERE g.id = ?
-    `, [gastoId]);
-
-    await conexion.commit();
-
-    return res.status(201).json({
-      success: true,
-      message: 'Gasto creado exitosamente',
-      data: {
-        ...gastoCreado[0],
-        monto: parseFloat(gastoCreado[0].monto || 0),
-        extraordinario: !!gastoCreado[0].extraordinario
-      }
-    });
-  } catch (error) {
-    await conexion.rollback();
-    console.error('Error creating gasto:', error);
-    return res.status(500).json({ success: false, error: 'Error al crear gasto', message: error.message });
-  } finally {
-    conexion.release();
-  }
-});
-
-/**
- * Estadísticas por comunidad (dashboard)
- */
-router.get('/comunidad/:comunidadId/stats', [
-  authenticate,
-  checkGastoPermission('read')
-], async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-    const currentYear = new Date().getFullYear();
-
-    let whereClause = 'WHERE 1=1';
-    const params = [];
-
-    if (comunidadId > 0) {
-      whereClause += ' AND g.comunidad_id = ?';
-      params.push(comunidadId);
-    }
-
-    if (req.membership && ['residente', 'propietario'].includes((req.membership.rol || '').toString().toLowerCase())) {
-      // Se mantiene la lógica: los residentes solo ven aprobados (o pendientes en el flujo de su app)
-      whereClause += ' AND g.estado IN ("aprobado", "pendiente")'; 
-    }
-
-    const [stats] = await db.query(`
-      SELECT 
-        COUNT(*) as total_gastos,
-        COUNT(CASE WHEN g.estado = 'pendiente' AND g.aprobaciones_count = 0 THEN 1 END) as borradores, 
-        COUNT(CASE WHEN g.estado = 'pendiente' AND g.aprobaciones_count > 0 THEN 1 END) as pendientes, 
-        COUNT(CASE WHEN g.estado = 'aprobado' THEN 1 END) as aprobados,
-        COUNT(CASE WHEN g.estado = 'rechazado' THEN 1 END) as rechazados,
-        COUNT(CASE WHEN g.estado = 'pagado' THEN 1 END) as pagados, 
-        COUNT(CASE WHEN g.estado = 'anulado' THEN 1 END) as anulados,
-        COALESCE(SUM(g.monto), 0) as monto_total,
-        COALESCE(SUM(CASE WHEN DATE_FORMAT(g.fecha, '%Y-%m') = ? THEN g.monto ELSE 0 END), 0) as monto_mes_actual,
-        COALESCE(SUM(CASE WHEN YEAR(g.fecha) = ? THEN g.monto ELSE 0 END), 0) as monto_anio_actual,
-        COALESCE(SUM(CASE WHEN g.extraordinario = 1 THEN g.monto ELSE 0 END), 0) as monto_extraordinarios
-      FROM gasto g
-      ${whereClause}
-    `, [currentMonth, currentYear, ...params]);
-
-    const s = stats[0] || {};
-    return res.json({
-      success: true,
-      data: {
-        resumen: {
-          total_gastos: Number(s.total_gastos || 0),
-          borradores: Number(s.borradores || 0),
-          pendientes: Number(s.pendientes || 0),
-          aprobados: Number(s.aprobados || 0),
-          rechazados: Number(s.rechazados || 0),
-          pagados: Number(s.pagados || 0),
-          anulados: Number(s.anulados || 0),
-          monto_total: parseFloat(s.monto_total || 0),
-          monto_mes_actual: parseFloat(s.monto_mes_actual || 0),
-          monto_anio_actual: parseFloat(s.monto_anio_actual || 0),
-          monto_extraordinarios: parseFloat(s.monto_extraordinarios || 0)
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Error getting stats:', error);
-    return res.status(500).json({ success: false, error: 'Error obteniendo estadísticas', message: error.message });
-  }
-});
-
-/**
- * Registrar/actualizar una aprobación (aprobar o rechazar)
- */
-router.post('/:id/aprobaciones', [
-  authenticate,
-  checkGastoPermission('approve')
-], async (req, res) => {
-  const conexion = await db.getConnection();
-  try {
-    const gastoId = Number(req.params.id);
-    const usuarioId = req.user.id;
-    // Se obtiene rol_id del membership (se asume que fue validado en el middleware)
-    const rolId = req.membership?.rol_id || null; 
-    const { decision, observaciones, monto_aprobado } = req.body;
-
-    // Validación: 'decision' debe ser 'aprobar' o 'rechazar' (enum en DB)
-    if (!['aprobar', 'rechazar'].includes(decision)) {
-        await conexion.rollback();
-        return res.status(400).json({ success: false, error: 'Decisión de aprobación no válida' });
-    }
-
-    await conexion.beginTransaction();
-
-    // 1. Insertar registro de aprobación
-    await conexion.query(
-      // Se usa 'accion' que es el nombre de la columna en la BD.
-      `INSERT INTO gasto_aprobacion (gasto_id, usuario_id, rol_id, accion, observaciones, created_at)
-       VALUES (?, ?, ?, ?, ?, NOW())`,
-      [gastoId, usuarioId, rolId, decision, observaciones || null]
+    const [result] = await db.query(
+      'INSERT INTO gasto (comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario) VALUES (?,?,?,?,?,?,?,?)',
+      [comunidadId, categoria_id, centro_costo_id || null, documento_compra_id || null, fecha, monto, glosa || null, extraordinario ? 1 : 0]
     );
-
-    // 2. Registrar en historial_gasto la acción
-    await conexion.query(
-      `INSERT INTO historial_gasto (gasto_id, campo_modificado, usuario_id, valor_nuevo, created_at)
-       VALUES (?, 'aprobacion_accion', ?, ?, NOW())`,
-      [gastoId, usuarioId, decision]
-    );
-
-    // 3. Recalcular conteo de aprobaciones y rechazadas
-    const [[counts]] = await conexion.query(
-      `SELECT SUM(accion='aprobar') AS aprobadas, SUM(accion='rechazar') AS rechazadas
-       FROM gasto_aprobacion WHERE gasto_id = ?`, [gastoId]
-    );
-    const aprobadas = Number(counts?.aprobadas || 0);
-    const rechazadas = Number(counts?.rechazadas || 0);
-
-    // 4. Obtener gasto para determinar required_aprobaciones y estado actual
-    const [[gastoRow]] = await conexion.query(`SELECT required_aprobaciones, aprobaciones_count, estado FROM gasto WHERE id = ? LIMIT 1`, [gastoId]);
-    if (!gastoRow) {
-      await conexion.rollback();
-      return res.status(404).json({ success: false, error: 'Gasto no encontrado' });
-    }
-
-    // 5. Determinar nuevo estado
-    let nuevoEstado = gastoRow.estado;
-    const required = Number(gastoRow.required_aprobaciones || 0);
     
-    if (rechazadas > 0) {
-      nuevoEstado = 'rechazado'; 
-    } else if (aprobadas >= required && required > 0) {
-      nuevoEstado = 'aprobado';
-    } else {
-      nuevoEstado = 'pendiente'; // Se usa 'pendiente' como estado estándar para "en proceso" o "recién creado"
-    }
-
-    // 6. Actualizar estado y aprobaciones_count
-    await conexion.query(`UPDATE gasto SET aprobaciones_count = ?, updated_at = NOW() WHERE id = ?`, [aprobadas, gastoId]);
-    
-    if (nuevoEstado !== gastoRow.estado) {
-      const aprobadorId = (nuevoEstado === 'aprobado') ? usuarioId : null;
-      
-      await conexion.query(`
-        UPDATE gasto SET 
-          estado = ?, 
-          aprobado_por = ?, 
-          updated_at = NOW() 
-        WHERE id = ?
-      `, [nuevoEstado, aprobadorId, gastoId]);
-    }
-
-    // 7. Auditoría de aprobación
-    await conexion.query(`
-      INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address, created_at)
-      VALUES (?, ?, 'gasto', ?, ?, ?, NOW())
-    `, [
-      usuarioId,
-      decision.toUpperCase(), // Se usa la acción (APROBAR/RECHAZAR) para la auditoría
-      gastoId,
-      JSON.stringify({ aprobadas, rechazadas, nuevoEstado, decision, observaciones }),
-      req.ip || req.connection.remoteAddress
-    ]);
-
-    await conexion.commit();
-
-    return res.json({
-      success: true,
-      message: `Gasto ${decision} registrado. Nuevo estado: ${nuevoEstado}`,
-      data: { gasto_id: gastoId, aprobadas, rechazadas, estado: nuevoEstado }
-    });
-  } catch (error) {
-    await conexion.rollback();
-    console.error('Error en POST /gastos/:id/aprobaciones', error);
-    return res.status(500).json({ success: false, error: 'Error registrando aprobación', message: error.message });
-  } finally {
-    conexion.release();
+    const [row] = await db.query('SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1', [result.insertId]);
+    res.status(201).json(row[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
   }
 });
 
 /**
- * Gastos por categoría
+ * @swagger
+ * /gastos/{id}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Obtener detalle completo de un gasto
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Detalle del gasto
+ *       404:
+ *         description: No encontrado
  */
-router.get('/comunidad/:comunidadId/por-categoria', [
-  authenticate,
-  checkGastoPermission('read')
-], async (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
+  const id = req.params.id;
+  
   try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fechaDesde, fechaHasta, estado } = req.query;
-
-    let whereClause = 'WHERE cg.comunidad_id = ? AND cg.activa = 1';
-    const params = [comunidadId];
-
-    let gastoFilters = 'AND g.comunidad_id = ?';
-    const gastoParams = [comunidadId];
-
-    if (fechaDesde) {
-      gastoFilters += ' AND g.fecha >= ?';
-      gastoParams.push(fechaDesde);
-    }
-    if (fechaHasta) {
-      gastoFilters += ' AND g.fecha <= ?';
-      gastoParams.push(fechaHasta);
-    }
-    if (estado) {
-      gastoFilters += ' AND g.estado = ?';
-      gastoParams.push(estado);
-    }
-
-    const [categorias] = await db.query(`
-      SELECT 
-        cg.id as categoryId,
-        cg.nombre as categoryName,
-        cg.tipo as categoryType,
-        COUNT(g.id) as expenseCount,
-        COALESCE(SUM(g.monto), 0) as totalAmount,
-        AVG(g.monto) as averageAmount,
-        MIN(g.monto) as minAmount,
-        MAX(g.monto) as maxAmount,
-        ROUND((COALESCE(SUM(g.monto), 0) / 
-               NULLIF((SELECT SUM(monto) FROM gasto WHERE comunidad_id = ?), 0) * 100), 2) as percentage
-      FROM categoria_gasto cg
-      LEFT JOIN gasto g ON cg.id = g.categoria_id ${gastoFilters}
-      ${whereClause}
-      GROUP BY cg.id, cg.nombre, cg.tipo
-      HAVING expenseCount > 0
-      ORDER BY totalAmount DESC
-    `, [...gastoParams, comunidadId, ...params]);
-
-    return res.json({
-      success: true,
-      data: categorias.map(c => ({
-        ...c,
-        totalAmount: parseFloat(c.totalAmount || 0),
-        averageAmount: parseFloat(c.averageAmount || 0),
-        minAmount: parseFloat(c.minAmount || 0),
-        maxAmount: parseFloat(c.maxAmount || 0),
-        percentage: parseFloat(c.percentage || 0)
-      }))
-    });
-  } catch (error) {
-    console.error('Error getting gastos por categoria:', error);
-    return res.status(500).json({ success: false, error: 'Error obteniendo datos', message: error.message });
-  }
-});
-
-/**
- * Gastos por proveedor
- */
-router.get('/comunidad/:comunidadId/por-proveedor', [
-  authenticate,
-  checkGastoPermission('read')
-], async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fechaDesde, fechaHasta, limite = 10 } = req.query;
-
-    let dateFilters = '';
-    const params = [comunidadId, comunidadId];
-
-    if (fechaDesde) {
-      dateFilters += ' AND dc.fecha_emision >= ?';
-      params.push(fechaDesde);
-    }
-    if (fechaHasta) {
-      dateFilters += ' AND dc.fecha_emision <= ?';
-      params.push(fechaHasta);
-    }
-
-    params.push(Number(limite));
-
-    const [proveedores] = await db.query(`
-      SELECT 
-        p.id as providerId,
-        p.razon_social as providerName,
-        p.rut,
-        p.dv,
-        CONCAT(p.rut, '-', p.dv) as fullRut,
-        COUNT(DISTINCT dc.id) as documentCount,
-        COUNT(DISTINCT g.id) as expenseCount,
-        COALESCE(SUM(dc.total), 0) as totalAmount,
-        AVG(dc.total) as averageAmount,
-        MAX(dc.fecha_emision) as lastPurchaseDate,
-        ROUND((COALESCE(SUM(dc.total), 0) / 
-               NULLIF((SELECT SUM(dc2.total) 
-                FROM documento_compra dc2 
-                WHERE dc2.comunidad_id = ?), 0) * 100), 2) as percentage
-      FROM proveedor p
-      LEFT JOIN documento_compra dc ON p.id = dc.proveedor_id 
-        AND dc.comunidad_id = ? ${dateFilters}
-      LEFT JOIN gasto g ON dc.id = g.documento_compra_id
-      WHERE p.comunidad_id = ? AND p.activo = 1
-      GROUP BY p.id, p.razon_social, p.rut, p.dv
-      HAVING documentCount > 0
-      ORDER BY totalAmount DESC
-      LIMIT ?
-    `, [...params, comunidadId]);
-
-    return res.json({
-      success: true,
-      data: proveedores.map(p => ({
-        ...p,
-        totalAmount: parseFloat(p.totalAmount || 0),
-        averageAmount: parseFloat(p.averageAmount || 0),
-        percentage: parseFloat(p.percentage || 0)
-      }))
-    });
-  } catch (error) {
-    console.error('Error getting gastos por proveedor:', error);
-    return res.status(500).json({ success: false, error: 'Error obteniendo datos', message: error.message });
-  }
-});
-
-/**
- * Gastos por centro de costo
- */
-router.get('/comunidad/:comunidadId/por-centro-costo', [
-  authenticate,
-  checkGastoPermission('read')
-], async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fechaDesde, fechaHasta, estado } = req.query;
-
-    let gastoFilters = 'AND g.comunidad_id = ?';
-    const params = [comunidadId, comunidadId]; 
-
-    if (fechaDesde) {
-      gastoFilters += ' AND g.fecha >= ?';
-      params.push(fechaDesde);
-    }
-    if (fechaHasta) {
-      gastoFilters += ' AND g.fecha <= ?';
-      params.push(fechaHasta);
-    }
-    if (estado) {
-      gastoFilters += ' AND g.estado = ?';
-      params.push(estado);
-    }
-    
-    params.push(comunidadId);
-
-    const [centros] = await db.query(`
-      SELECT 
-        cc.id as costCenterId,
-        cc.nombre as costCenterName,
-        cc.codigo as costCenterCode,
-        COUNT(g.id) as expenseCount,
-        COALESCE(SUM(g.monto), 0) as totalAmount,
-        AVG(g.monto) as averageAmount,
-        ROUND((COALESCE(SUM(g.monto), 0) / 
-               NULLIF((SELECT SUM(monto) FROM gasto WHERE comunidad_id = ?), 0) * 100), 2) as percentage
-      FROM centro_costo cc
-      LEFT JOIN gasto g ON cc.id = g.centro_costo_id ${gastoFilters}
-      WHERE cc.comunidad_id = ?
-      GROUP BY cc.id, cc.nombre, cc.codigo
-      HAVING expenseCount > 0
-      ORDER BY totalAmount DESC
-    `, params);
-
-    return res.json({
-      success: true,
-      data: centros.map(c => ({
-        ...c,
-        totalAmount: parseFloat(c.totalAmount || 0),
-        averageAmount: parseFloat(c.averageAmount || 0),
-        percentage: parseFloat(c.percentage || 0)
-      }))
-    });
-  } catch (error) {
-    console.error('Error getting gastos por centro de costo:', error);
-    return res.status(500).json({ success: false, error: 'Error obteniendo datos', message: error.message });
-  }
-});
-
-/**
- * Evolución temporal de gastos (por mes)
- */
-router.get('/comunidad/:comunidadId/evolucion-temporal', [
-  authenticate,
-  checkGastoPermission('read')
-], async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { meses = 12 } = req.query;
-
-    const [evolucion] = await db.query(`
-      SELECT 
-        DATE_FORMAT(g.fecha, '%Y-%m') as period,
-        DATE_FORMAT(g.fecha, '%Y') as year,
-        DATE_FORMAT(g.fecha, '%m') as month,
-        DATE_FORMAT(g.fecha, '%M %Y') as monthName,
-        COUNT(*) as expenseCount,
-        COALESCE(SUM(g.monto), 0) as totalAmount,
-        AVG(g.monto) as averageAmount,
-        SUM(CASE WHEN g.estado = 'aprobado' THEN 1 ELSE 0 END) as approvedCount,
-        SUM(CASE WHEN g.estado = 'aprobado' THEN g.monto ELSE 0 END) as approvedAmount,
-        SUM(CASE WHEN g.estado = 'pendiente' THEN 1 ELSE 0 END) as pendingCount,
-        SUM(CASE WHEN g.estado = 'pendiente' THEN g.monto ELSE 0 END) as pendingAmount,
-        SUM(CASE WHEN g.extraordinario = 1 THEN g.monto ELSE 0 END) as extraordinaryAmount,
-        SUM(CASE WHEN g.extraordinario = 0 THEN g.monto ELSE 0 END) as regularAmount
-      FROM gasto g
-      WHERE g.comunidad_id = ?
-      AND g.fecha >= DATE_SUB(CURRENT_DATE(), INTERVAL ? MONTH)
-      GROUP BY 
-        DATE_FORMAT(g.fecha, '%Y-%m'),
-        DATE_FORMAT(g.fecha, '%Y'),
-        DATE_FORMAT(g.fecha, '%m'),
-        DATE_FORMAT(g.fecha, '%M %Y')
-      ORDER BY period DESC
-    `, [comunidadId, Number(meses)]);
-
-    return res.json({
-      success: true,
-      data: evolucion.map(e => ({
-        ...e,
-        totalAmount: parseFloat(e.totalAmount || 0),
-        averageAmount: parseFloat(e.averageAmount || 0),
-        approvedAmount: parseFloat(e.approvedAmount || 0),
-        pendingAmount: parseFloat(e.pendingAmount || 0),
-        extraordinaryAmount: parseFloat(e.extraordinaryAmount || 0),
-        regularAmount: parseFloat(e.regularAmount || 0)
-      }))
-    });
-  } catch (error) {
-    console.error('Error getting evolucion temporal:', error);
-    return res.status(500).json({ success: false, error: 'Error obteniendo datos', message: error.message });
-  }
-});
-
-/**
- * Top gastos mayores
- */
-router.get('/comunidad/:comunidadId/top-gastos', [
-  authenticate,
-  checkGastoPermission('read')
-], async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fechaDesde, fechaHasta, estado, limite = 10 } = req.query;
-
-    let whereClause = 'WHERE g.comunidad_id = ?';
-    const params = [comunidadId];
-
-    if (fechaDesde) {
-      whereClause += ' AND g.fecha >= ?';
-      params.push(fechaDesde);
-    }
-    if (fechaHasta) {
-      whereClause += ' AND g.fecha <= ?';
-      params.push(fechaHasta);
-    }
-    if (estado) {
-      whereClause += ' AND g.estado = ?';
-      params.push(estado);
-    }
-
-    params.push(Number(limite));
-
-    const [topGastos] = await db.query(`
-      SELECT 
+    const [rows] = await db.query(`
+      SELECT
         g.id,
-        g.numero,
-        g.glosa as description,
-        g.fecha as date,
-        g.monto as amount,
-        g.estado as status,
-        cg.nombre as category,
-        p.razon_social as provider,
-        cc.nombre as costCenter
+        g.comunidad_id,
+        c.razon_social AS comunidad_nombre,
+        g.categoria_id,
+        cat.nombre AS categoria_nombre,
+        cat.tipo AS categoria_tipo,
+        g.centro_costo_id,
+        cc.nombre AS centro_costo_nombre,
+        cc.codigo AS centro_costo_codigo,
+        g.documento_compra_id,
+        dc.tipo_doc AS documento_tipo,
+        dc.folio AS documento_numero,
+        dc.fecha_emision AS documento_fecha,
+        dc.neto,
+        dc.iva,
+        dc.exento,
+        dc.total,
+        dc.glosa AS documento_glosa,
+        g.fecha,
+        g.monto,
+        g.glosa AS descripcion,
+        g.extraordinario,
+        p.id AS proveedor_id,
+        p.razon_social AS proveedor_nombre,
+        p.rut AS proveedor_rut,
+        p.dv AS proveedor_dv,
+        p.giro AS proveedor_giro,
+        p.email AS proveedor_email,
+        p.telefono AS proveedor_telefono,
+        p.direccion AS proveedor_direccion,
+        g.created_at,
+        g.updated_at
       FROM gasto g
-      LEFT JOIN categoria_gasto cg ON g.categoria_id = cg.id
-      LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
-      LEFT JOIN proveedor p ON dc.proveedor_id = p.id
+      INNER JOIN comunidad c ON g.comunidad_id = c.id
+      INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
       LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
-      ${whereClause}
-      ORDER BY g.monto DESC
-      LIMIT ?
-    `, params);
-
-    return res.json({
-      success: true,
-      data: topGastos.map(g => ({
-        ...g,
-        amount: parseFloat(g.amount || 0)
-      }))
-    });
-  } catch (error) {
-    console.error('Error getting top gastos:', error);
-    return res.status(500).json({ success: false, error: 'Error obteniendo datos', message: error.message });
-  }
-});
-
-/**
- * Gastos pendientes de aprobación
- */
-router.get('/comunidad/:comunidadId/pendientes-aprobacion', [
-  authenticate,
-  checkGastoPermission('read')
-], async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const [pendientes] = await db.query(`
-      SELECT 
-        g.id,
-        g.numero,
-        g.glosa as description,
-        g.fecha as date,
-        g.monto as amount,
-        g.required_aprobaciones as requiredApprovals,
-        g.aprobaciones_count as currentApprovals,
-        (g.required_aprobaciones - g.aprobaciones_count) as pendingApprovals,
-        cg.nombre as category,
-        p.razon_social as provider,
-        per.nombres as creatorFirstName,
-        per.apellidos as creatorLastName,
-        g.created_at as createdAt,
-        DATEDIFF(CURRENT_DATE(), g.created_at) as daysWaiting
-      FROM gasto g
-      LEFT JOIN categoria_gasto cg ON g.categoria_id = cg.id
       LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
       LEFT JOIN proveedor p ON dc.proveedor_id = p.id
-      LEFT JOIN usuario u ON g.creado_por = u.id 
-      LEFT JOIN persona per ON u.persona_id = per.id 
-      WHERE g.comunidad_id = ?
-      AND g.estado = 'pendiente'
-      AND g.aprobaciones_count < g.required_aprobaciones
-      ORDER BY daysWaiting DESC, g.monto DESC
-    `, [comunidadId]);
-
-    return res.json({
-      success: true,
-      data: pendientes.map(p => ({
-        ...p,
-        amount: parseFloat(p.amount || 0)
-      }))
-    });
-  } catch (error) {
-    console.error('Error getting pendientes aprobacion:', error);
-    return res.status(500).json({ success: false, error: 'Error obteniendo datos', message: error.message });
+      WHERE g.id = ?
+      LIMIT 1
+    `, [id]);
+    
+    if (!rows.length) return res.status(404).json({ error: 'not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
   }
 });
 
 /**
- * Alertas de gastos que necesitan atención
+ * @swagger
+ * /gastos/{id}/archivos:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Obtener archivos adjuntos del gasto
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de archivos adjuntos
  */
-router.get('/comunidad/:comunidadId/alertas', [
-  authenticate,
-  checkGastoPermission('read')
-], async (req, res) => {
+router.get('/:id/archivos', authenticate, async (req, res) => {
+  const id = req.params.id;
+  
   try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const [alertas] = await db.query(`
-      SELECT 
-        'Pendientes de aprobación' as alert_type,
-        COUNT(*) as count,
-        SUM(g.monto) as total_amount
-      FROM gasto g
-      WHERE g.comunidad_id = ?
-      AND g.estado = 'pendiente'
-      AND g.aprobaciones_count < g.required_aprobaciones
-
-      UNION ALL
-
-      SELECT 
-        'Vencidos sin aprobar' as alert_type,
-        COUNT(*) as count,
-        SUM(g.monto) as total_amount
-      FROM gasto g
-      WHERE g.comunidad_id = ?
-      AND g.estado = 'pendiente'
-      AND g.fecha < DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
-
-      UNION ALL
-
-      SELECT 
-        'Sin documento adjunto' as alert_type,
-        COUNT(*) as count,
-        SUM(g.monto) as total_amount
-      FROM gasto g
-      WHERE g.comunidad_id = ?
-      AND g.estado = 'aprobado'
-      AND NOT EXISTS (
-        SELECT 1 FROM archivos a 
-        WHERE a.entity_type = 'gasto' 
-        AND a.entity_id = g.id 
-        AND a.is_active = 1
-      )
-    `, [comunidadId, comunidadId, comunidadId]);
-
-    return res.json({
-      success: true,
-      data: alertas.map(a => ({
-        ...a,
-        count: Number(a.count || 0),
-        total_amount: parseFloat(a.total_amount || 0)
-      }))
-    });
-  } catch (error) {
-    console.error('Error getting alertas:', error);
-    return res.status(500).json({ success: false, error: 'Error obteniendo datos', message: error.message });
-  }
-});
-
-/**
- * Historial de cambios de un gasto
- */
-router.get('/:id/historial', [
-  authenticate
-], async (req, res) => {
-  try {
-    const gastoId = Number(req.params.id);
-
-    const [historial] = await db.query(`
-      SELECT 
-        hg.id,
-        hg.gasto_id as expenseId,
-        hg.campo_modificado as field,
-        hg.valor_anterior as oldValue,
-        hg.valor_nuevo as newValue,
-        hg.created_at as changedAt,
-        hg.usuario_id as userId,
-        u.username,
-        CONCAT(p.nombres, ' ', p.apellidos) AS usuario_nombre
-      FROM historial_gasto hg
-      LEFT JOIN usuario u ON hg.usuario_id = u.id
-      LEFT JOIN persona p ON u.persona_id = p.id
-      WHERE hg.gasto_id = ?
-      ORDER BY hg.created_at DESC
-    `, [gastoId]);
-
-    return res.json({
-      success: true,
-      data: historial
-    });
-  } catch (error) {
-    console.error('Error getting historial:', error);
-    return res.status(500).json({ success: false, error: 'Error obteniendo historial', message: error.message });
-  }
-});
-
-/**
- * Historial de aprobaciones de un gasto
- */
-router.get('/:id/aprobaciones', [
-  authenticate
-], async (req, res) => {
-  try {
-    const gastoId = Number(req.params.id);
-
-    const [aprobaciones] = await db.query(`
-      SELECT 
-        ga.id,
-        ga.gasto_id as expenseId,
-        ga.accion as action,
-        ga.observaciones as comments,
-        ga.created_at as approvalDate,
-        ga.usuario_id as userId,
-        u.username,
-        CONCAT(p.nombres, ' ', p.apellidos) AS usuario_nombre, -- Se incluye nombre del aprobador
-        ga.rol_id as roleId,
-        r.nombre as roleName,
-        r.descripcion as roleDescription
-      FROM gasto_aprobacion ga
-      LEFT JOIN usuario u ON ga.usuario_id = u.id
-      LEFT JOIN persona p ON u.persona_id = p.id -- Se añade JOIN a persona
-      LEFT JOIN rol_sistema r ON ga.rol_id = r.id
-      WHERE ga.gasto_id = ?
-      ORDER BY ga.created_at DESC
-    `, [gastoId]);
-
-    return res.json({
-      success: true,
-      data: aprobaciones
-    });
-  } catch (error) {
-    console.error('Error getting aprobaciones:', error);
-    return res.status(500).json({ success: false, error: 'Error obteniendo aprobaciones', message: error.message });
-  }
-});
-
-/**
- * Archivos adjuntos de un gasto
- */
-router.get('/:id/archivos', [
-  authenticate
-], async (req, res) => {
-  try {
-    const gastoId = Number(req.params.id);
-
-    const [archivos] = await db.query(`
-      SELECT 
+    const [rows] = await db.query(`
+      SELECT
         a.id,
-        a.original_name as name,
-        a.filename as storedName,
-        a.file_path as path,
-        a.file_size as size,
-        a.mimetype as type,
+        a.original_name,
+        a.filename,
+        a.file_path,
+        a.file_size,
+        a.mimetype,
         a.category,
         a.description,
-        a.uploaded_at as uploadedAt,
-        a.uploaded_by as uploadedById,
-        u.username as uploadedBy,
-        CONCAT(p.nombres, ' ', p.apellidos) AS uploaderName, -- Se incluye nombre de la persona
-        a.is_active as isActive
+        a.uploaded_at,
+        a.uploaded_by,
+        CONCAT(per.nombres, ' ', per.apellido_paterno, ' ', COALESCE(per.apellido_materno, '')) AS uploaded_by_name
       FROM archivos a
       LEFT JOIN usuario u ON a.uploaded_by = u.id
-      LEFT JOIN persona p ON u.persona_id = p.id -- Se añade JOIN a persona
+      LEFT JOIN persona per ON u.persona_id = per.id
       WHERE a.entity_type = 'gasto'
-      AND a.entity_id = ?
-      AND a.is_active = 1
+        AND a.entity_id = ?
+        AND a.is_active = 1
       ORDER BY a.uploaded_at DESC
-    `, [gastoId]);
-
-    return res.json({
-      success: true,
-      data: archivos.map(a => ({
-        ...a,
-        size: Number(a.size || 0)
-      }))
-    });
-  } catch (error) {
-    console.error('Error getting archivos:', error);
-    return res.status(500).json({ success: false, error: 'Error obteniendo archivos', message: error.message });
-  }
-});
-
-/**
- * Emisiones donde está incluido el gasto
- */
-router.get('/:id/emisiones', [
-  authenticate
-], async (req, res) => {
-  try {
-    const gastoId = Number(req.params.id);
-
-    const [info] = await db.query(`
-      SELECT 
-        g.id as expenseId,
-        COUNT(DISTINCT deg.emision_id) as emissionCount,
-        GROUP_CONCAT(DISTINCT egc.periodo ORDER BY egc.periodo) as periods,
-        SUM(deg.monto) as totalDistributed,
-        (g.monto - COALESCE(SUM(deg.monto), 0)) as remainingAmount
-      FROM gasto g
-      LEFT JOIN detalle_emision_gastos deg ON g.id = deg.gasto_id
-      LEFT JOIN emision_gastos_comunes egc ON deg.emision_id = egc.id
-      WHERE g.id = ?
-      GROUP BY g.id, g.monto
-    `, [gastoId]);
-
-    const [detalles] = await db.query(`
-      SELECT 
-        egc.id as emissionId,
-        egc.periodo,
-        egc.estado as status,
-        deg.monto as distributedAmount,
-        deg.regla_prorrateo as distributionRule,
-        deg.metadata_json as distributionMetadata
-      FROM detalle_emision_gastos deg
-      JOIN emision_gastos_comunes egc ON deg.emision_id = egc.id
-      WHERE deg.gasto_id = ?
-      ORDER BY egc.periodo DESC
-    `, [gastoId]);
-
-    return res.json({
-      success: true,
-      data: {
-        resumen: info[0] ? {
-          ...info[0],
-          emissionCount: Number(info[0].emissionCount || 0),
-          totalDistributed: parseFloat(info[0].totalDistributed || 0),
-          remainingAmount: parseFloat(info[0].remainingAmount || 0)
-        } : null,
-        emisiones: detalles.map(d => ({
-          ...d,
-          distributedAmount: parseFloat(d.distributedAmount || 0),
-          distributionMetadata: d.distributionMetadata ? JSON.parse(d.distributionMetadata) : null
-        }))
-      }
-    });
-  } catch (error) {
-    console.error('Error getting emisiones:', error);
-    return res.status(500).json({ success: false, error: 'Error obteniendo emisiones', message: error.message });
-  }
-});
-
-/**
- * Actualizar gasto
- */
-router.put('/:id', [
-  authenticate,
-  checkGastoPermission('update'),
-  body('categoria_id').optional().isInt({ min: 1 }),
-  body('fecha').optional().isISO8601(),
-  body('monto').optional().isFloat({ min: 0.01 }),
-  body('glosa').optional().notEmpty().isLength({ min: 3, max: 500 }),
-  body('centro_costo_id').optional().isInt(),
-  body('extraordinario').optional().isBoolean()
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, error: 'Datos inválidos', details: errors.array() });
-  }
-
-  const conexion = await db.getConnection();
-  try {
-    await conexion.beginTransaction();
-
-    const gastoId = Number(req.params.id);
-    const {
-      categoria_id,
-      centro_costo_id,
-      fecha,
-      monto,
-      glosa,
-      extraordinario
-    } = req.body;
-
-    // Obtener valores actuales
-    const [[gastoActual]] = await conexion.query('SELECT * FROM gasto WHERE id = ?', [gastoId]);
+    `, [id]);
     
-    if (!gastoActual) {
-      await conexion.rollback();
-      return res.status(404).json({ success: false, error: 'Gasto no encontrado' });
-    }
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
 
-    // Solo permitir edición de borradores o pendientes
-    if (!['pendiente'].includes(gastoActual.estado)) { 
-      await conexion.rollback();
-      return res.status(400).json({ success: false, error: 'Solo se pueden editar gastos en estado pendiente' });
+/**
+ * @swagger
+ * /gastos/{id}:
+ *   patch:
+ *     tags: [Gastos]
+ *     summary: Actualizar gasto
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Gasto actualizado
+ */
+router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
+  const id = req.params.id;
+  const fields = ['categoria_id', 'centro_costo_id', 'documento_compra_id', 'fecha', 'monto', 'glosa', 'extraordinario'];
+  const updates = [];
+  const values = [];
+  
+  fields.forEach(f => {
+    if (req.body[f] !== undefined) {
+      updates.push(`${f} = ?`);
+      values.push(req.body[f]);
     }
+  });
+  
+  if (!updates.length) return res.status(400).json({ error: 'no fields' });
+  
+  values.push(id);
+  
+  try {
+    await db.query(`UPDATE gasto SET ${updates.join(', ')} WHERE id = ?`, values);
+    const [rows] = await db.query('SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1', [id]);
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
 
-    // Registrar cambios en historial
-    const cambios = [];
-    if (monto !== undefined && parseFloat(monto) !== parseFloat(gastoActual.monto)) {
-      cambios.push({ campo: 'monto', anterior: gastoActual.monto, nuevo: monto });
-    }
-    if (glosa !== undefined && glosa !== gastoActual.glosa) {
-      cambios.push({ campo: 'glosa', anterior: gastoActual.glosa, nuevo: glosa });
-    }
-    if (fecha !== undefined && fecha !== gastoActual.fecha) {
-      cambios.push({ campo: 'fecha', anterior: gastoActual.fecha, nuevo: fecha });
-    }
-    if (categoria_id !== undefined && categoria_id !== gastoActual.categoria_id) {
-      cambios.push({ campo: 'categoria_id', anterior: gastoActual.categoria_id, nuevo: categoria_id });
-    }
-    if (centro_costo_id !== undefined && centro_costo_id !== gastoActual.centro_costo_id) {
-      cambios.push({ campo: 'centro_costo_id', anterior: gastoActual.centro_costo_id, nuevo: centro_costo_id });
-    }
+/**
+ * @swagger
+ * /gastos/{id}:
+ *   delete:
+ *     tags: [Gastos]
+ *     summary: Eliminar gasto
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Eliminado
+ */
+router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
+  const id = req.params.id;
+  
+  try {
+    await db.query('DELETE FROM gasto WHERE id = ?', [id]);
+    res.status(204).end();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
 
-    // Insertar cambios en historial
-    for (const cambio of cambios) {
-      await conexion.query(
-        `INSERT INTO historial_gasto (gasto_id, usuario_id, campo_modificado, valor_anterior, valor_nuevo, created_at)
-         VALUES (?, ?, ?, ?, ?, NOW())`,
-        [gastoId, req.user.id, cambio.campo, String(cambio.anterior), String(cambio.nuevo)]
-      );
+// ==================== ESTADÍSTICAS ====================
+
+/**
+ * @swagger
+ * /gastos/estadisticas/general/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Estadísticas generales de gastos
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: fecha_desde
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: fecha_hasta
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Estadísticas generales
+ */
+router.get('/estadisticas/general/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+  
+  try {
+    let whereFecha = '';
+    const params = [comunidadId];
+    
+    if (fecha_desde && fecha_hasta) {
+      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+      params.push(fecha_desde, fecha_hasta);
     }
+    
+    const [[row]] = await db.query(`
+      SELECT
+        COUNT(*) AS total_gastos,
+        SUM(monto) AS total_monto,
+        AVG(monto) AS promedio_monto,
+        MIN(monto) AS monto_minimo,
+        MAX(monto) AS monto_maximo,
+        MIN(fecha) AS fecha_primer_gasto,
+        MAX(fecha) AS fecha_ultimo_gasto
+      FROM gasto
+      WHERE comunidad_id = ?
+        ${whereFecha}
+    `, params);
+    
+    res.json(row);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
 
-    // Actualizar gasto
-    await conexion.query(`
-      UPDATE gasto
-      SET 
-        categoria_id = COALESCE(?, categoria_id),
-        centro_costo_id = COALESCE(?, centro_costo_id),
-        fecha = COALESCE(?, fecha),
-        monto = COALESCE(?, monto),
-        glosa = COALESCE(?, glosa),
-        extraordinario = COALESCE(?, extraordinario),
-        updated_at = NOW()
-      WHERE id = ?
-    `, [
-      categoria_id || null,
-      centro_costo_id || null,
-      fecha || null,
-      monto || null,
-      glosa || null,
-      extraordinario !== undefined ? (extraordinario ? 1 : 0) : null,
-      gastoId
-    ]);
-
-    // Auditoría
-    await conexion.query(`
-      INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address, created_at)
-      VALUES (?, 'UPDATE', 'gasto', ?, ?, ?, NOW())
-    `, [
-      req.user.id,
-      gastoId,
-      JSON.stringify(req.body),
-      req.ip || req.connection.remoteAddress
-    ]);
-
-    await conexion.commit();
-
-    // Obtener gasto actualizado
-    const [[gastoActualizado]] = await conexion.query(`
-      SELECT 
-        g.*,
-        cg.nombre as categoria_nombre,
-        cc.nombre as centro_costo_nombre
+/**
+ * @swagger
+ * /gastos/estadisticas/por-categoria/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Gastos agrupados por categoría
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Gastos por categoría
+ */
+router.get('/estadisticas/por-categoria/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+  
+  try {
+    let whereFecha = '';
+    const params = [comunidadId];
+    
+    if (fecha_desde && fecha_hasta) {
+      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+      params.push(fecha_desde, fecha_hasta);
+    }
+    
+    const [rows] = await db.query(`
+      SELECT
+        cat.nombre AS categoria,
+        cat.tipo,
+        COUNT(g.id) AS cantidad_gastos,
+        SUM(g.monto) AS total_monto,
+        AVG(g.monto) AS promedio_monto,
+        MIN(g.monto) AS monto_minimo,
+        MAX(g.monto) AS monto_maximo
       FROM gasto g
-      LEFT JOIN categoria_gasto cg ON g.categoria_id = cg.id
+      INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
+      WHERE g.comunidad_id = ?
+        ${whereFecha}
+      GROUP BY cat.id, cat.nombre, cat.tipo
+      ORDER BY total_monto DESC
+    `, params);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /gastos/estadisticas/por-centro-costo/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Gastos agrupados por centro de costo
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Gastos por centro de costo
+ */
+router.get('/estadisticas/por-centro-costo/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+  
+  try {
+    let whereFecha = '';
+    const params = [comunidadId];
+    
+    if (fecha_desde && fecha_hasta) {
+      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+      params.push(fecha_desde, fecha_hasta);
+    }
+    
+    const [rows] = await db.query(`
+      SELECT
+        cc.nombre AS centro_costo,
+        cc.codigo,
+        COUNT(g.id) AS cantidad_gastos,
+        SUM(g.monto) AS total_monto,
+        AVG(g.monto) AS promedio_monto
+      FROM gasto g
       LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
-      WHERE g.id = ?
-    `, [gastoId]);
-
-    return res.json({
-      success: true,
-      message: 'Gasto actualizado exitosamente',
-      data: {
-        ...gastoActualizado,
-        monto: parseFloat(gastoActualizado.monto || 0),
-        extraordinario: !!gastoActualizado.extraordinario
-      }
-    });
-  } catch (error) {
-    await conexion.rollback();
-    console.error('Error updating gasto:', error);
-    return res.status(500).json({ success: false, error: 'Error al actualizar gasto', message: error.message });
-  } finally {
-    conexion.release();
-  }
-});
-
-/**
- * Eliminar gasto (solo borradores)
- */
-router.delete('/:id', [
-  authenticate,
-  checkGastoPermission('delete')
-], async (req, res) => {
-  const conexion = await db.getConnection();
-  try {
-    await conexion.beginTransaction();
-
-    const gastoId = Number(req.params.id);
-
-    const [[gasto]] = await conexion.query('SELECT estado FROM gasto WHERE id = ?', [gastoId]);
+      WHERE g.comunidad_id = ?
+        ${whereFecha}
+      GROUP BY cc.id, cc.nombre, cc.codigo
+      ORDER BY total_monto DESC
+    `, params);
     
-    if (!gasto) {
-      await conexion.rollback();
-      return res.status(404).json({ success: false, error: 'Gasto no encontrado' });
-    }
-
-    if (gasto.estado !== 'pendiente') { 
-      await conexion.rollback();
-      return res.status(400).json({ success: false, error: 'Solo se pueden eliminar gastos en estado pendiente' });
-    }
-
-    // Eliminar archivos (soft delete)
-    await conexion.query(
-      `UPDATE archivos SET is_active = 0, uploaded_at = NOW() 
-       WHERE entity_type = 'gasto' AND entity_id = ?`,
-      [gastoId]
-    );
-
-    // Eliminar historial y aprobaciones (Las FK con CASCADE deberían hacer esto, pero se mantiene la limpieza explícita)
-    await conexion.query('DELETE FROM historial_gasto WHERE gasto_id = ?', [gastoId]);
-    await conexion.query('DELETE FROM gasto_aprobacion WHERE gasto_id = ?', [gastoId]);
-
-    // Eliminar gasto
-    await conexion.query('DELETE FROM gasto WHERE id = ?', [gastoId]);
-
-    // Auditoría
-    await conexion.query(`
-      INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, ip_address, created_at)
-      VALUES (?, 'DELETE', 'gasto', ?, ?, NOW())
-    `, [
-      req.user.id,
-      gastoId,
-      req.ip || req.connection.remoteAddress
-    ]);
-
-    await conexion.commit();
-
-    return res.json({
-      success: true,
-      message: 'Gasto eliminado exitosamente'
-    });
-  } catch (error) {
-    await conexion.rollback();
-    console.error('Error deleting gasto:', error);
-    return res.status(500).json({ success: false, error: 'Error al eliminar gasto', message: error.message });
-  } finally {
-    conexion.release();
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
   }
 });
 
 /**
- * Anular gasto
+ * @swagger
+ * /gastos/estadisticas/por-proveedor/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Gastos agrupados por proveedor
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Gastos por proveedor
  */
-router.post('/:id/anular', [
-  authenticate,
-  checkGastoPermission('cancel'),
-  body('motivo').notEmpty().withMessage('El motivo es requerido')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, error: 'Datos inválidos', details: errors.array() });
-  }
-
-  const conexion = await db.getConnection();
+router.get('/estadisticas/por-proveedor/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+  
   try {
-    await conexion.beginTransaction();
-
-    const gastoId = Number(req.params.id);
-    const { motivo } = req.body;
-
-    // Verificar que el gasto no esté en emisiones cerradas
-    const [[emisionesCerradas]] = await conexion.query(
-      `SELECT COUNT(*) as count
-       FROM detalle_emision_gastos deg
-       JOIN emision_gastos_comunes egc ON deg.emision_id = egc.id
-       WHERE deg.gasto_id = ?
-       AND egc.estado IN ('emitido', 'cerrado')`,
-      [gastoId]
-    );
-
-    if (emisionesCerradas.count > 0) {
-      await conexion.rollback();
-      return res.status(400).json({ 
-        success: false, 
-        error: 'No se puede anular un gasto incluido en emisiones cerradas' 
-      });
+    let whereFecha = '';
+    const params = [comunidadId];
+    
+    if (fecha_desde && fecha_hasta) {
+      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+      params.push(fecha_desde, fecha_hasta);
     }
+    
+    const [rows] = await db.query(`
+      SELECT
+        p.razon_social AS proveedor,
+        p.rut,
+        COUNT(g.id) AS cantidad_gastos,
+        SUM(g.monto) AS total_monto,
+        AVG(g.monto) AS promedio_monto,
+        MAX(g.fecha) AS ultimo_gasto
+      FROM gasto g
+      INNER JOIN documento_compra dc ON g.documento_compra_id = dc.id
+      INNER JOIN proveedor p ON dc.proveedor_id = p.id
+      WHERE g.comunidad_id = ?
+        ${whereFecha}
+      GROUP BY p.id, p.razon_social, p.rut
+      ORDER BY total_monto DESC
+    `, params);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
 
-    // Anular gasto
-    await conexion.query(
-      `UPDATE gasto
-       SET estado = 'anulado', anulado_por = ?, fecha_anulacion = NOW(), updated_at = NOW()
-       WHERE id = ?`,
-      [req.user.id, gastoId] // anulado_por es usuario_id (req.user.id)
-    );
+/**
+ * @swagger
+ * /gastos/estadisticas/mensuales/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Gastos mensuales (últimos 12 meses)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Gastos mensuales
+ */
+router.get('/estadisticas/mensuales/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        DATE_FORMAT(fecha, '%Y-%m') AS mes,
+        COUNT(*) AS cantidad_gastos,
+        SUM(monto) AS total_monto,
+        AVG(monto) AS promedio_monto
+      FROM gasto
+      WHERE comunidad_id = ?
+        AND fecha >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
+      GROUP BY DATE_FORMAT(fecha, '%Y-%m')
+      ORDER BY mes DESC
+    `, [comunidadId]);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
 
-    // Registrar en historial
-    await conexion.query(
-      `INSERT INTO historial_gasto (gasto_id, usuario_id, campo_modificado, valor_anterior, valor_nuevo, created_at)
-       VALUES (?, ?, 'estado', 'aprobado', 'anulado', NOW()) -- Asumiendo 'aprobado' como estado anterior para una anulación de gasto activo
-       `,
-      [gastoId, req.user.id]
-    );
+/**
+ * @swagger
+ * /gastos/estadisticas/extraordinarios-vs-operativos/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Comparación gastos extraordinarios vs operativos
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Comparación de gastos
+ */
+router.get('/estadisticas/extraordinarios-vs-operativos/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+  
+  try {
+    let whereFecha = '';
+    const params = [comunidadId, comunidadId];
+    
+    if (fecha_desde && fecha_hasta) {
+      whereFecha = 'AND fecha BETWEEN ? AND ?';
+      params.push(fecha_desde, fecha_hasta);
+    }
+    
+    const [rows] = await db.query(`
+      SELECT
+        CASE
+          WHEN extraordinario = 1 THEN 'Extraordinarios'
+          ELSE 'Operativos'
+        END AS tipo_gasto,
+        COUNT(*) AS cantidad,
+        SUM(monto) AS total_monto,
+        AVG(monto) AS promedio_monto,
+        (SUM(monto) / (SELECT SUM(monto) FROM gasto WHERE comunidad_id = ?)) * 100 AS porcentaje_total
+      FROM gasto
+      WHERE comunidad_id = ?
+        ${whereFecha}
+      GROUP BY extraordinario
+    `, params);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
 
-    // Auditoría
-    await conexion.query(`
-      INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address, created_at)
-      VALUES (?, 'ANULAR', 'gasto', ?, ?, ?, NOW())
-    `, [
-      req.user.id,
-      gastoId,
-      JSON.stringify({ motivo }),
-      req.ip || req.connection.remoteAddress
-    ]);
+// ==================== VALIDACIONES ====================
 
-    await conexion.commit();
+/**
+ * @swagger
+ * /gastos/validar/existe/{id}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Verificar si existe un gasto
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: comunidad_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Resultado de validación
+ */
+router.get('/validar/existe/:id', authenticate, async (req, res) => {
+  const { id } = req.params;
+  const { comunidad_id } = req.query;
+  
+  try {
+    const [[row]] = await db.query('SELECT COUNT(*) > 0 AS existe FROM gasto WHERE id = ? AND comunidad_id = ?', [id, comunidad_id]);
+    res.json(row);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
 
-    return res.json({
-      success: true,
-      message: 'Gasto anulado exitosamente'
-    });
-  } catch (error) {
-    await conexion.rollback();
-    console.error('Error anulando gasto:', error);
-    return res.status(500).json({ success: false, error: 'Error al anular gasto', message: error.message });
-  } finally {
-    conexion.release();
+/**
+ * @swagger
+ * /gastos/validar/categoria/{id}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Verificar si existe categoría de gasto activa
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Resultado de validación
+ */
+router.get('/validar/categoria/:id', authenticate, async (req, res) => {
+  const { id } = req.params;
+  const { comunidad_id } = req.query;
+  
+  try {
+    const [[row]] = await db.query('SELECT COUNT(*) > 0 AS existe FROM categoria_gasto WHERE id = ? AND comunidad_id = ? AND activa = 1', [id, comunidad_id]);
+    res.json(row);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /gastos/validar/duplicado:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Verificar si existe gasto duplicado
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: comunidad_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: folio
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: fecha
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: gasto_id
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Resultado de validación
+ */
+router.get('/validar/duplicado', authenticate, async (req, res) => {
+  const { comunidad_id, folio, fecha, gasto_id = 0 } = req.query;
+  
+  try {
+    const [[row]] = await db.query(`
+      SELECT COUNT(*) > 0 AS existe_duplicado
+      FROM gasto g
+      INNER JOIN documento_compra dc ON g.documento_compra_id = dc.id
+      WHERE g.comunidad_id = ?
+        AND dc.folio = ?
+        AND g.fecha = ?
+        AND g.id != ?
+    `, [comunidad_id, folio, fecha, gasto_id]);
+    
+    res.json(row);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+// ==================== LISTAS DESPLEGABLES ====================
+
+/**
+ * @swagger
+ * /gastos/listas/categorias/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Lista de categorías de gasto activas
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de categorías
+ */
+router.get('/listas/categorias/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        id,
+        nombre,
+        tipo,
+        cta_contable
+      FROM categoria_gasto
+      WHERE comunidad_id = ? AND activa = 1
+      ORDER BY nombre
+    `, [comunidadId]);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /gastos/listas/centros-costo/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Lista de centros de costo
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de centros de costo
+ */
+router.get('/listas/centros-costo/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        id,
+        nombre,
+        codigo
+      FROM centro_costo
+      WHERE comunidad_id = ?
+      ORDER BY nombre
+    `, [comunidadId]);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /gastos/listas/proveedores/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Lista de proveedores activos
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de proveedores
+ */
+router.get('/listas/proveedores/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        id,
+        razon_social,
+        rut,
+        CONCAT(rut, '-', dv) AS rut_completo
+      FROM proveedor
+      WHERE comunidad_id = ? AND activo = 1
+      ORDER BY razon_social
+    `, [comunidadId]);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /gastos/listas/documentos-disponibles/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Lista de documentos de compra no asociados a gastos
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de documentos disponibles
+ */
+router.get('/listas/documentos-disponibles/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        dc.id,
+        dc.tipo_doc,
+        dc.folio,
+        dc.fecha_emision,
+        dc.total,
+        p.razon_social AS proveedor
+      FROM documento_compra dc
+      INNER JOIN proveedor p ON dc.proveedor_id = p.id
+      WHERE dc.comunidad_id = ?
+        AND dc.id NOT IN (
+          SELECT documento_compra_id
+          FROM gasto
+          WHERE documento_compra_id IS NOT NULL
+            AND comunidad_id = ?
+        )
+      ORDER BY dc.fecha_emision DESC
+    `, [comunidadId, comunidadId]);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+// ==================== REPORTES AVANZADOS ====================
+
+/**
+ * @swagger
+ * /gastos/reportes/periodo-comparativo/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Reporte de gastos por período con comparativo
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Reporte con comparativo
+ */
+router.get('/reportes/periodo-comparativo/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+  
+  if (!fecha_desde || !fecha_hasta) {
+    return res.status(400).json({ error: 'fecha_desde y fecha_hasta son requeridos' });
+  }
+  
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        YEAR(fecha) AS anio,
+        MONTH(fecha) AS mes,
+        COUNT(*) AS cantidad_gastos,
+        SUM(monto) AS total_monto,
+        AVG(monto) AS promedio_monto,
+        LAG(SUM(monto)) OVER (ORDER BY YEAR(fecha), MONTH(fecha)) AS monto_mes_anterior,
+        CASE
+          WHEN LAG(SUM(monto)) OVER (ORDER BY YEAR(fecha), MONTH(fecha)) IS NOT NULL
+          THEN ((SUM(monto) - LAG(SUM(monto)) OVER (ORDER BY YEAR(fecha), MONTH(fecha))) /
+                LAG(SUM(monto)) OVER (ORDER BY YEAR(fecha), MONTH(fecha))) * 100
+          ELSE NULL
+        END AS variacion_porcentual
+      FROM gasto
+      WHERE comunidad_id = ?
+        AND fecha BETWEEN ? AND ?
+      GROUP BY YEAR(fecha), MONTH(fecha)
+      ORDER BY anio DESC, mes DESC
+    `, [comunidadId, fecha_desde, fecha_hasta]);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /gastos/reportes/top-proveedores/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Top proveedores por monto
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: min_compras
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Top proveedores
+ */
+router.get('/reportes/top-proveedores/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { fecha_desde = '', fecha_hasta = '', min_compras = 1, limit = 10 } = req.query;
+  
+  try {
+    let whereFecha = '';
+    const params = [comunidadId];
+    
+    if (fecha_desde && fecha_hasta) {
+      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+      params.push(fecha_desde, fecha_hasta);
+    }
+    
+    params.push(min_compras, Number(limit));
+    
+    const [rows] = await db.query(`
+      SELECT
+        p.razon_social AS proveedor,
+        p.rut,
+        COUNT(g.id) AS cantidad_compras,
+        SUM(g.monto) AS total_comprado,
+        AVG(g.monto) AS promedio_compra,
+        MIN(g.fecha) AS primera_compra,
+        MAX(g.fecha) AS ultima_compra,
+        DATEDIFF(MAX(g.fecha), MIN(g.fecha)) AS dias_relacion
+      FROM gasto g
+      INNER JOIN documento_compra dc ON g.documento_compra_id = dc.id
+      INNER JOIN proveedor p ON dc.proveedor_id = p.id
+      WHERE g.comunidad_id = ?
+        ${whereFecha}
+      GROUP BY p.id, p.razon_social, p.rut
+      HAVING COUNT(g.id) >= ?
+      ORDER BY total_comprado DESC
+      LIMIT ?
+    `, params);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /gastos/reportes/por-dia-semana/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Análisis de gastos por día de la semana
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Gastos por día de semana
+ */
+router.get('/reportes/por-dia-semana/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+  
+  try {
+    let whereFecha = '';
+    const params = [comunidadId];
+    
+    if (fecha_desde && fecha_hasta) {
+      whereFecha = 'AND fecha BETWEEN ? AND ?';
+      params.push(fecha_desde, fecha_hasta);
+    }
+    
+    const [rows] = await db.query(`
+      SELECT
+        DAYOFWEEK(fecha) AS dia_semana_num,
+        CASE DAYOFWEEK(fecha)
+          WHEN 1 THEN 'Domingo'
+          WHEN 2 THEN 'Lunes'
+          WHEN 3 THEN 'Martes'
+          WHEN 4 THEN 'Miércoles'
+          WHEN 5 THEN 'Jueves'
+          WHEN 6 THEN 'Viernes'
+          WHEN 7 THEN 'Sábado'
+        END AS dia_semana,
+        COUNT(*) AS cantidad_gastos,
+        SUM(monto) AS total_monto,
+        AVG(monto) AS promedio_monto
+      FROM gasto
+      WHERE comunidad_id = ?
+        ${whereFecha}
+      GROUP BY DAYOFWEEK(fecha), 
+        CASE DAYOFWEEK(fecha)
+          WHEN 1 THEN 'Domingo'
+          WHEN 2 THEN 'Lunes'
+          WHEN 3 THEN 'Martes'
+          WHEN 4 THEN 'Miércoles'
+          WHEN 5 THEN 'Jueves'
+          WHEN 6 THEN 'Viernes'
+          WHEN 7 THEN 'Sábado'
+        END
+      ORDER BY dia_semana_num
+    `, params);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+// ==================== EXPORTACIÓN ====================
+
+/**
+ * @swagger
+ * /gastos/exportar/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Exportación completa de gastos (Excel/CSV)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Datos para exportación
+ */
+router.get('/exportar/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+  
+  try {
+    let whereFecha = '';
+    const params = [comunidadId];
+    
+    if (fecha_desde && fecha_hasta) {
+      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+      params.push(fecha_desde, fecha_hasta);
+    }
+    
+    const [rows] = await db.query(`
+      SELECT
+        g.id AS 'ID Gasto',
+        c.razon_social AS 'Comunidad',
+        cat.nombre AS 'Categoría',
+        cat.tipo AS 'Tipo Categoría',
+        cc.nombre AS 'Centro Costo',
+        p.razon_social AS 'Proveedor',
+        p.rut AS 'RUT Proveedor',
+        dc.tipo_doc AS 'Tipo Documento',
+        dc.folio AS 'Número Documento',
+        DATE_FORMAT(dc.fecha_emision, '%d/%m/%Y') AS 'Fecha Documento',
+        DATE_FORMAT(g.fecha, '%d/%m/%Y') AS 'Fecha Gasto',
+        g.monto AS 'Monto',
+        g.glosa AS 'Descripción',
+        CASE WHEN g.extraordinario = 1 THEN 'Sí' ELSE 'No' END AS 'Extraordinario',
+        CASE WHEN COUNT(a.id) > 0 THEN 'Sí' ELSE 'No' END AS 'Tiene Adjuntos',
+        DATE_FORMAT(g.created_at, '%d/%m/%Y %H:%i:%s') AS 'Fecha Creación',
+        DATE_FORMAT(g.updated_at, '%d/%m/%Y %H:%i:%s') AS 'Fecha Actualización'
+      FROM gasto g
+      INNER JOIN comunidad c ON g.comunidad_id = c.id
+      INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
+      LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
+      LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
+      LEFT JOIN proveedor p ON dc.proveedor_id = p.id
+      LEFT JOIN archivos a ON a.entity_type = 'gasto' AND a.entity_id = g.id AND a.is_active = 1
+      WHERE g.comunidad_id = ?
+        ${whereFecha}
+      GROUP BY g.id
+      ORDER BY g.fecha DESC, g.id DESC
+    `, params);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+// ==================== DASHBOARD ====================
+
+/**
+ * @swagger
+ * /gastos/dashboard/resumen-mensual/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Resumen mensual para dashboard
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: meses
+ *         schema:
+ *           type: integer
+ *           default: 6
+ *     responses:
+ *       200:
+ *         description: Resumen mensual
+ */
+router.get('/dashboard/resumen-mensual/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { meses = 6 } = req.query;
+  
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        DATE_FORMAT(fecha, '%Y-%m') AS periodo,
+        COUNT(*) AS total_gastos,
+        SUM(monto) AS total_monto,
+        AVG(monto) AS promedio_gasto,
+        SUM(CASE WHEN extraordinario = 1 THEN monto ELSE 0 END) AS gastos_extraordinarios,
+        SUM(CASE WHEN extraordinario = 0 THEN monto ELSE 0 END) AS gastos_operativos
+      FROM gasto
+      WHERE comunidad_id = ?
+        AND fecha >= DATE_SUB(CURRENT_DATE, INTERVAL ? MONTH)
+      GROUP BY DATE_FORMAT(fecha, '%Y-%m')
+      ORDER BY periodo DESC
+    `, [comunidadId, Number(meses)]);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /gastos/dashboard/top-categorias-mes/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Top categorías del mes actual
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Top categorías
+ */
+router.get('/dashboard/top-categorias-mes/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        cat.nombre AS categoria,
+        COUNT(g.id) AS cantidad,
+        SUM(g.monto) AS total
+      FROM gasto g
+      INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
+      WHERE g.comunidad_id = ?
+        AND YEAR(g.fecha) = YEAR(CURRENT_DATE)
+        AND MONTH(g.fecha) = MONTH(CURRENT_DATE)
+      GROUP BY cat.id, cat.nombre
+      ORDER BY total DESC
+      LIMIT 5
+    `, [comunidadId]);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /gastos/dashboard/alertas-gastos-altos/{comunidadId}:
+ *   get:
+ *     tags: [Gastos]
+ *     summary: Alertas de gastos altos
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: monto_minimo
+ *         required: true
+ *         schema:
+ *           type: number
+ *     responses:
+ *       200:
+ *         description: Lista de gastos altos
+ */
+router.get('/dashboard/alertas-gastos-altos/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+  const comunidadId = Number(req.params.comunidadId);
+  const { monto_minimo } = req.query;
+  
+  if (!monto_minimo) {
+    return res.status(400).json({ error: 'monto_minimo required' });
+  }
+  
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        g.id,
+        g.fecha,
+        g.monto,
+        g.glosa AS descripcion,
+        cat.nombre AS categoria,
+        p.razon_social AS proveedor
+      FROM gasto g
+      INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
+      LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
+      LEFT JOIN proveedor p ON dc.proveedor_id = p.id
+      WHERE g.comunidad_id = ?
+        AND g.fecha >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
+        AND g.monto > ?
+      ORDER BY g.monto DESC
+    `, [comunidadId, monto_minimo]);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
   }
 });
 
 module.exports = router;
+
+// =========================================
+// ENDPOINTS DE GASTOS
+// =========================================
+
+// // LISTADOS, FILTROS Y CRUD
+// GET: /gastos/comunidad/:comunidadId
+// GET: /gastos/comunidad/:comunidadId/count
+// POST: /gastos/comunidad/:comunidadId
+// GET: /gastos/:id
+// GET: /gastos/:id/archivos
+// PATCH: /gastos/:id
+// DELETE: /gastos/:id
+
+// // ESTADÍSTICAS
+// GET: /gastos/estadisticas/general/:comunidadId
+// GET: /gastos/estadisticas/por-categoria/:comunidadId
+// GET: /gastos/estadisticas/por-centro-costo/:comunidadId
+// GET: /gastos/estadisticas/por-proveedor/:comunidadId
+// GET: /gastos/estadisticas/mensuales/:comunidadId
+// GET: /gastos/estadisticas/extraordinarios-vs-operativos/:comunidadId
+
+// // VALIDACIONES
+// GET: /gastos/validar/existe/:id
+// GET: /gastos/validar/categoria/:id
+// GET: /gastos/validar/duplicado
+
+// // LISTAS DESPLEGABLES
+// GET: /gastos/listas/categorias/:comunidadId
+// GET: /gastos/listas/centros-costo/:comunidadId
+// GET: /gastos/listas/proveedores/:comunidadId
+// GET: /gastos/listas/documentos-disponibles/:comunidadId
+
+// // REPORTES AVANZADOS
+// GET: /gastos/reportes/periodo-comparativo/:comunidadId
+// GET: /gastos/reportes/top-proveedores/:comunidadId
+// GET: /gastos/reportes/por-dia-semana/:comunidadId
+
+// // EXPORTACIÓN
+// GET: /gastos/exportar/:comunidadId
+
+// // DASHBOARD
+// GET: /gastos/dashboard/resumen-mensual/:comunidadId
+// GET: /gastos/dashboard/top-categorias-mes/:comunidadId
+// GET: /gastos/dashboard/alertas-gastos-altos/:comunidadId

@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { EmissionFilters as EmissionFiltersType } from '@/types/emisiones';
 
 // Props para el componente de filtros
 interface EmissionFiltersProps {
-  onFilterChange: (filters: EmissionFiltersType) => void;
+  onFilterChange: (filters: EmissionFilters) => void;
   onClearFilters: () => void;
 }
 
-// Interfaz local para el estado del componente
-interface FiltersState {
+// Interfaz para los filtros
+export interface EmissionFilters {
   search: string;
   status: string;
   type: string;
@@ -19,7 +18,7 @@ interface FiltersState {
 }
 
 export function EmissionFilters({ onFilterChange, onClearFilters }: EmissionFiltersProps) {
-  const [filters, setFilters] = useState<FiltersState>({
+  const [filters, setFilters] = useState<EmissionFilters>({
     search: '',
     status: 'all',
     type: 'all',
@@ -31,26 +30,14 @@ export function EmissionFilters({ onFilterChange, onClearFilters }: EmissionFilt
 
   const [isCollapsed, setIsCollapsed] = useState(true);
 
-  const handleFilterChange = (field: keyof FiltersState, value: string) => {
+  const handleFilterChange = (field: keyof EmissionFilters, value: string) => {
     const newFilters = { ...filters, [field]: value };
     setFilters(newFilters);
-    
-    // Convertir a EmissionFiltersType para la API
-    const apiFilters: Partial<EmissionFiltersType> = {};
-    
-    if (newFilters.search) apiFilters.search = newFilters.search;
-    if (newFilters.status !== 'all') apiFilters.status = newFilters.status as any;
-    if (newFilters.type !== 'all') apiFilters.type = newFilters.type as any;
-    if (newFilters.period !== 'all') apiFilters.period = newFilters.period;
-    if (newFilters.dateFrom) apiFilters.dateFrom = newFilters.dateFrom;
-    if (newFilters.dateTo) apiFilters.dateTo = newFilters.dateTo;
-    if (newFilters.community !== 'all') apiFilters.communityId = parseInt(newFilters.community);
-    
-    onFilterChange(apiFilters as EmissionFiltersType);
+    onFilterChange(newFilters);
   };
 
   const handleClearFilters = () => {
-    const clearedFilters: FiltersState = {
+    const clearedFilters: EmissionFilters = {
       search: '',
       status: 'all',
       type: 'all',

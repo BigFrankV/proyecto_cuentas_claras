@@ -33,16 +33,87 @@ export interface CargoDetalleProps {
   className?: string;
 }
 
-// Mock data for demonstration - REMOVED: Component now receives data via props or shows empty states
-const mockPayments: PaymentRecord[] = [];
-const mockDocuments: Document[] = [];
-const mockTimeline: TimelineItem[] = [];
+// Mock data for demonstration
+const mockPayments: PaymentRecord[] = [
+  {
+    id: 'PAY-001',
+    fecha: new Date('2024-01-10'),
+    monto: 125000,
+    metodo: 'Transferencia Bancaria',
+    referencia: 'TRF-001-2024',
+    estado: 'completed',
+    observaciones: 'Pago parcial inicial'
+  },
+  {
+    id: 'PAY-002',
+    fecha: new Date('2024-01-25'),
+    monto: 125000,
+    metodo: 'PSE',
+    referencia: 'PSE-002-2024',
+    estado: 'completed',
+    observaciones: 'Completar pago restante'
+  }
+];
+
+const mockDocuments: Document[] = [
+  {
+    id: 'DOC-001',
+    nombre: 'Factura_Administracion_Enero_2024.pdf',
+    tipo: 'PDF',
+    tamaño: 256789,
+    fechaSubida: new Date('2024-01-01'),
+    url: '/documents/factura-adm-ene-2024.pdf'
+  },
+  {
+    id: 'DOC-002',
+    nombre: 'Soporte_Pago_Transferencia.jpg',
+    tipo: 'Image',
+    tamaño: 98432,
+    fechaSubida: new Date('2024-01-10'),
+    url: '/documents/soporte-pago-001.jpg'
+  }
+];
+
+const mockTimeline: TimelineItem[] = [
+  {
+    id: 'TL-001',
+    type: 'info',
+    title: 'Cargo Creado',
+    content: 'Se creó el cargo de administración para enero 2024',
+    date: new Date('2024-01-01 09:00:00'),
+    user: 'Sistema Admin'
+  },
+  {
+    id: 'TL-002',
+    type: 'success',
+    title: 'Cargo Aprobado',
+    content: 'El cargo fue aprobado por el administrador',
+    date: new Date('2024-01-02 14:30:00'),
+    user: 'María González'
+  },
+  {
+    id: 'TL-003',
+    type: 'success',
+    title: 'Pago Parcial Recibido',
+    content: 'Se recibió pago parcial por $125.000 vía transferencia bancaria',
+    date: new Date('2024-01-10 16:45:00'),
+    user: 'Sistema Pagos'
+  },
+  {
+    id: 'TL-004',
+    type: 'success',
+    title: 'Pago Completado',
+    content: 'Se completó el pago total del cargo vía PSE',
+    date: new Date('2024-01-25 11:20:00'),
+    user: 'Sistema Pagos'
+  }
+];
 
 export default function CargoDetalle({ 
   cargo, 
-  pagos = [],
-  documentos = [],
-  historial = [],
+  pagos = mockPayments,
+  documentos = mockDocuments,
+  historial = mockTimeline,
   className = '' 
 }: CargoDetalleProps) {
   const [activeTab, setActiveTab] = useState('detalles');

@@ -22,11 +22,11 @@ export interface UnitInfo {
 
 export interface CargosUnidadProps {
   unidad: UnitInfo;
-  cargos: Cargo[];
+  cargos?: Cargo[];
   className?: string;
 }
 
-// Mock data for demonstration - REMOVED: Component now receives data via props
+// Mock data for demonstration
 const mockUnit: UnitInfo = {
   numero: '101-A',
   torre: 'Torre A',
@@ -38,11 +38,68 @@ const mockUnit: UnitInfo = {
   coeficiente: 0.0342
 };
 
-const mockCargosUnidad: Cargo[] = [];
+const mockCargosUnidad: Cargo[] = [
+  {
+    id: 'CHG-2024-001',
+    concepto: 'Administración Enero 2024',
+    descripcion: 'Cuota de administración mensual',
+    tipo: 'administration',
+    estado: 'paid',
+    monto: 250000,
+    montoAplicado: 250000,
+    unidad: '101-A',
+    periodo: '2024-01',
+    fechaVencimiento: new Date('2024-01-15'),
+    fechaCreacion: new Date('2024-01-01'),
+    cuentaCosto: 'ADM-001',
+  },
+  {
+    id: 'CHG-2024-002',
+    concepto: 'Administración Febrero 2024',
+    descripcion: 'Cuota de administración mensual',
+    tipo: 'administration',
+    estado: 'pending',
+    monto: 250000,
+    montoAplicado: 0,
+    unidad: '101-A',
+    periodo: '2024-02',
+    fechaVencimiento: new Date('2024-02-15'),
+    fechaCreacion: new Date('2024-02-01'),
+    cuentaCosto: 'ADM-001',
+  },
+  {
+    id: 'CHG-2024-003',
+    concepto: 'Mantenimiento Ascensor',
+    descripcion: 'Mantenimiento preventivo del ascensor principal',
+    tipo: 'maintenance',
+    estado: 'approved',
+    monto: 180000,
+    montoAplicado: 180000,
+    unidad: '101-A',
+    periodo: '2024-02',
+    fechaVencimiento: new Date('2024-02-28'),
+    fechaCreacion: new Date('2024-02-01'),
+    cuentaCosto: 'MNT-002',
+  },
+  {
+    id: 'CHG-2024-004',
+    concepto: 'Seguro Todo Riesgo',
+    descripcion: 'Prima de seguro anual edificio',
+    tipo: 'insurance',
+    estado: 'partial',
+    monto: 450000,
+    montoAplicado: 225000,
+    unidad: '101-A',
+    periodo: '2024-03',
+    fechaVencimiento: new Date('2024-03-30'),
+    fechaCreacion: new Date('2024-03-01'),
+    cuentaCosto: 'SEG-001',
+  },
+];
 
 export default function CargosUnidad({ 
-  unidad, 
-  cargos,
+  unidad = mockUnit, 
+  cargos = mockCargosUnidad,
   className = '' 
 }: CargosUnidadProps) {
   const [filteredCargos, setFilteredCargos] = useState<Cargo[]>(cargos);
@@ -62,12 +119,6 @@ export default function CargosUnidad({
     amountMin: '',
     amountMax: '',
   });
-
-  // Update filtered cargos when props change
-  useEffect(() => {
-    setFilteredCargos(cargos);
-    setFilters(prev => ({ ...prev, unitNumber: unidad.numero }));
-  }, [cargos, unidad.numero]);
 
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat('es-CO', {

@@ -4,15 +4,16 @@ const fs = require('fs').promises;
 const { upload, validateUploadContext, getFileInfo } = require('../upload');
 const FileService = require('../services/fileService');
 const { authenticate: authenticateToken } = require('../middleware/auth');
-const { requireCommunity } = require('../middleware/tenancy');
 
 const router = express.Router();
 
 // Middleware de autenticación para todas las rutas
 router.use(authenticateToken);
 
-// NOTA: La tabla 'archivos' debe existir en la base de datos.
-// Importar el esquema desde: base/cuentasclaras.sql
+// Inicializar tabla de archivos solo si no estamos en modo test
+if (process.env.NODE_ENV !== 'test') {
+  FileService.initializeFileTable().catch(console.error);
+}
 
 /**
  * @swagger
@@ -338,40 +339,21 @@ router.post('/cleanup', async (req, res) => {
   }
 });
 
-
-// Corrección para DELETE:
-router.delete('/:id', async (req, res) => {
-  try {
-    const fileId = parseInt(req.params.id);
-    const comunidadId = req.user.comunidadId;
-    const userId = req.user.id;
-
-    // 1. Obtener info del archivo y verificar pertenencia a comunidad del usuario
-    const file = await FileService.getFileById(fileId, comunidadId); // Se asume que FileService filtra por comunidadId
-    
-    if (!file) {
-      return res.status(404).json({
-        success: false,
-        message: 'Archivo no encontrado o no pertenece a tu comunidad' // Mensaje más explícito
-      });
-    }
-
-    // 2. Ejecutar eliminación
-    await FileService.deleteFile(fileId, file.comunidad_id, userId); // Se usa file.comunidad_id real
-
-    res.json({
-      success: true,
-      message: 'Archivo eliminado correctamente'
-    });
-
-  } catch (error) {
-    console.error('Error eliminando archivo:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor',
-      error: error.message
-    });
-  }
-});
-
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE ARCHIVOS (FILES)
+// =========================================
+
+// // SUBIDA Y DESCARGA
+// POST: /files/upload
+// GET: /files/:id
+
+// // LISTADO Y GESTIÓN
+// GET: /files
+// DELETE: /files/:id
+
+// // UTILIDADES Y ESTADÍSTICAS
+// GET: /files/stats
+// POST: /files/cleanup

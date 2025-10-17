@@ -1189,3 +1189,31 @@ router.get('/unidades/autocompletar', authenticate, async (req, res) => {
 });
 
 module.exports = router;
+
+// =========================================
+// ENDPOINTS DE PERSONAS
+// =========================================
+
+// // LISTADOS, FILTROS Y CRUD BÁSICO
+// GET: /personas
+// POST: /personas
+// GET: /personas/:id
+// PATCH: /personas/:id
+// PUT: /personas/:id
+// DELETE: /personas/:id
+
+// // ESTADÍSTICAS
+// GET: /personas/estadisticas
+
+// // RELACIONES Y DETALLES
+// GET: /personas/:id/unidades
+// GET: /personas/:id/pagos
+// GET: /personas/:id/actividad
+// GET: /personas/:id/documentos
+// GET: /personas/:id/notas
+// GET: /personas/:id/roles
+// GET: /personas/:id/resumen-financiero
+
+// // UTILIDADES Y VALIDACIÓN
+// GET: /personas/validar
+// GET: /personas/unidades/autocompletar

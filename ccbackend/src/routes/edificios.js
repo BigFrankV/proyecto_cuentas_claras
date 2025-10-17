@@ -1548,79 +1548,41 @@ router.get('/:id/validar-codigo', [
   }
 });
 
-// POST /edificios/:id/unidades - Crear nueva unidad (CORREGIDA)
-router.post('/:id/unidades', [
-  authenticate,
-  authorize('admin', 'superadmin'),
-  body('codigo').notEmpty().withMessage('El código es requerido'),
-  body('m2_utiles').isFloat({ min: 0 }).withMessage('Los m2 útiles deben ser un número positivo'),
-  body('torre_id').optional().isInt(),
-  body('m2_terrazas').optional().isFloat({ min: 0 }),
-  body('nro_estacionamiento').optional().isString(),
-  body('nro_bodega').optional().isString(),
-  body('activa').optional().isBoolean()
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const edificioId = req.params.id;
-    const { codigo, torre_id, m2_utiles, m2_terrazas, nro_estacionamiento, nro_bodega, activa } = req.body;
-    
-    // 1. Verificar que el edificio existe y obtener comunidad_id
-    const [edificioCheck] = await db.query('SELECT id, comunidad_id FROM edificio WHERE id = ?', [edificioId]);
-    if (!edificioCheck.length) {
-      return res.status(404).json({ error: 'Edificio no encontrado' });
-    }
-    const comunidadId = edificioCheck[0].comunidad_id; // Campo requerido por la tabla UNIDAD
-    
-    // Verificar torre si se proporciona
-    if (torre_id) {
-      const [torreCheck] = await db.query('SELECT id FROM torre WHERE id = ? AND edificio_id = ?', [torre_id, edificioId]);
-      if (!torreCheck.length) {
-        return res.status(400).json({ error: 'Torre no encontrada en este edificio' });
-      }
-    }
-    
-    // Verificar código único en la comunidad/edificio (UQ: comunidad_id, codigo)
-    const [codigoCheck] = await db.query('SELECT id FROM unidad WHERE codigo = ? AND comunidad_id = ?', [codigo, comunidadId]);
-    if (codigoCheck.length) {
-      return res.status(400).json({ error: 'El código de unidad ya existe en esta comunidad' });
-    }
-    
-    const [result] = await db.query(
-      `INSERT INTO unidad (comunidad_id, edificio_id, torre_id, codigo, alicuota, m2_utiles, m2_terrazas, nro_estacionamiento, nro_bodega, activa) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        comunidadId, // Se añade el campo comunidad_id (FK obligatoria)
-        edificioId, 
-        torre_id || null, 
-        codigo, 
-        0.000000, // Se inicializa alícuota en 0, debe ser ajustada por el admin
-        m2_utiles, 
-        m2_terrazas || 0, 
-        nro_estacionamiento || null, 
-        nro_bodega || null, 
-        activa !== undefined ? activa : true
-      ]
-    );
-    
-    // Obtener la unidad recién creada
-    const [unidad] = await db.query(`
-      SELECT 
-        u.id, u.codigo AS numero, u.comunidad_id, u.edificio_id, u.m2_utiles AS area
-      FROM unidad u
-      WHERE u.id = ?
-    `, [result.insertId]);
-    
-    res.status(201).json(unidad[0]);
-  } catch (error) {
-    console.error('Error creating unidad:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE EDIFICIOS
+// =========================================
+
+// // LISTADOS, FILTROS Y ESTADÍSTICAS
+// GET: /edificios
+// GET: /edificios/stats
+// GET: /edificios/comunidades-opciones
+// GET: /edificios/servicios
+// GET: /edificios/amenidades-disponibles
+// GET: /edificios/comunidad/:comunidadId
+// GET: /edificios/buscar
+
+// // VISTAS DETALLADAS Y RESUMEN
+// GET: /edificios/:id
+// GET: /edificios/:id/torres
+// GET: /edificios/:id/unidades
+// GET: /edificios/:id/amenidades
+// GET: /edificios/:id/resumen
+
+// // CRUD DE EDIFICIO
+// POST: /edificios
+// POST: /edificios/comunidad/:comunidadId
+// PATCH: /edificios/:id
+// PUT: /edificios/:id
+// DELETE: /edificios/:id
+
+// // CRUD DE SUB-ENTIDADES
+// POST: /edificios/:id/torres
+// POST: /edificios/:id/unidades
+
+// // VALIDACIONES
+// GET: /edificios/:id/check-dependencies
+// GET: /edificios/:id/validar-codigo
+// GET: /edificios/:id/filtros-opciones

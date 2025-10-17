@@ -7,207 +7,17 @@ const { authorize } = require('../middleware/authorize');
 
 /**
  * @swagger
- * /emisiones:
- *   get:
- *     tags: [Emisiones]
- *     summary: Listar todas las emisiones
+ * tags:
+ *   - name: Emisiones
  *     description: |
- *       Obtiene el historial completo de emisiones con filtros opcionales.
- *       Incluye información del período, monto total, estado y comunidad.
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Número de página
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *         description: Registros por página
- *       - in: query
- *         name: comunidad_id
- *         schema:
- *           type: integer
- *         description: Filtrar por ID de comunidad
- *       - in: query
- *         name: periodo
- *         schema:
- *           type: string
- *         description: 'Filtrar por período (ej: 2024-03)'
- *       - in: query
- *         name: estado
- *         schema:
- *           type: string
- *           enum: [borrador, emitido, cerrado, anulado]
- *         description: Filtrar por estado
- *       - in: query
- *         name: fecha_desde
- *         schema:
- *           type: string
- *           format: date
- *         description: Filtrar desde fecha
- *       - in: query
- *         name: fecha_hasta
- *         schema:
- *           type: string
- *           format: date
- *         description: Filtrar hasta fecha
- *     responses:
- *       200:
- *         description: Lista de emisiones
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                       periodo:
- *                         type: string
- *                       tipo:
- *                         type: string
- *                       estado:
- *                         type: string
- *                       fechaEmision:
- *                         type: string
- *                       fechaVencimiento:
- *                         type: string
- *                       montoTotal:
- *                         type: number
- *                       montoPagado:
- *                         type: number
- *                       cantidadUnidades:
- *                         type: integer
- *                       descripcion:
- *                         type: string
- *                       nombreComunidad:
- *                         type: string
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     page:
- *                       type: integer
- *                     limit:
- *                       type: integer
- *                     total:
- *                       type: integer
- *                     pages:
- *                       type: integer
+ *       Gestión de emisiones de gastos comunes mensuales.
+ *       
+ *       **Cambios importantes**:
+ *       - La tabla `emision_gasto_comun` ahora se llama `emision_gastos_comunes`
+ *       - Los detalles se guardan en `detalle_emision` (antes `emision_gasto_comun_detalle`)
+ *       
+ *       Una emisión consolida todos los gastos del mes y genera las cuentas de cobro para cada unidad.
  */
-router.get('/', authenticate, async (req, res) => {
-  const { 
-    page = 1, 
-    limit = 20,
-    comunidad_id,
-    periodo,
-    estado,
-    fecha_desde,
-    fecha_hasta
-  } = req.query;
-  
-  const offset = (page - 1) * limit;
-  
-  try {
-    // Construir filtros dinámicamente
-    let whereConditions = [];
-    let queryParams = [];
-    
-    if (comunidad_id) {
-      whereConditions.push('egc.comunidad_id = ?');
-      queryParams.push(comunidad_id);
-    }
-    
-    if (periodo) {
-      whereConditions.push('egc.periodo LIKE ?');
-      queryParams.push(`%${periodo}%`);
-    }
-    
-    if (estado) {
-      whereConditions.push('egc.estado = ?');
-      queryParams.push(estado);
-    }
-    
-    if (fecha_desde) {
-      whereConditions.push('egc.created_at >= ?');
-      queryParams.push(fecha_desde);
-    }
-    
-    if (fecha_hasta) {
-      whereConditions.push('egc.created_at <= ?');
-      queryParams.push(fecha_hasta);
-    }
-    
-    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
-    
-    // Consulta principal usando la consulta SQL 1
-    const [rows] = await db.query(`
-      SELECT
-        egc.id,
-        egc.periodo,
-        CASE
-          WHEN egc.periodo LIKE '%Extraordinaria%' THEN 'extraordinaria'
-          WHEN egc.periodo LIKE '%Multa%' THEN 'multa'
-          WHEN egc.periodo LIKE '%Interes%' THEN 'interes'
-          ELSE 'gastos_comunes'
-        END as tipo,
-        CASE
-          WHEN egc.estado = 'borrador' THEN 'draft'
-          WHEN egc.estado = 'emitido' THEN 'sent'
-          WHEN egc.estado = 'cerrado' THEN 'paid'
-          WHEN egc.estado = 'anulado' THEN 'cancelled'
-          ELSE 'ready'
-        END as estado,
-        DATE_FORMAT(egc.created_at, '%Y-%m-%d') as fechaEmision,
-        DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fechaVencimiento,
-        COALESCE(SUM(ccu.monto_total), 0) as montoTotal,
-        COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) as montoPagado,
-        COUNT(DISTINCT ccu.unidad_id) as cantidadUnidades,
-        egc.observaciones as descripcion,
-        c.razon_social as nombreComunidad,
-        egc.created_at,
-        egc.updated_at
-      FROM emision_gastos_comunes egc
-      JOIN comunidad c ON egc.comunidad_id = c.id
-      LEFT JOIN cuenta_cobro_unidad ccu ON egc.id = ccu.emision_id
-      ${whereClause}
-      GROUP BY egc.id, egc.periodo, egc.estado, egc.created_at, egc.fecha_vencimiento, egc.observaciones, c.razon_social, egc.updated_at
-      ORDER BY egc.created_at DESC
-      LIMIT ? OFFSET ?
-    `, [...queryParams, Number(limit), Number(offset)]);
-    
-    // Consulta de conteo usando la consulta SQL 2
-    const [countResult] = await db.query(`
-      SELECT COUNT(DISTINCT egc.id) as total
-      FROM emision_gastos_comunes egc
-      JOIN comunidad c ON egc.comunidad_id = c.id
-      LEFT JOIN cuenta_cobro_unidad ccu ON egc.id = ccu.emision_id
-      ${whereClause}
-    `, queryParams);
-    
-    res.json({
-      data: rows,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total: countResult[0].total,
-        pages: Math.ceil(countResult[0].total / limit)
-      }
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
 
 /**
  * @swagger
@@ -269,65 +79,42 @@ router.get('/', authenticate, async (req, res) => {
  */
 
 router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
-  const comunidadId = req.params.comunidadId; 
-  const { page=1, limit=100 } = req.query; 
-  const offset = (page-1) * limit;
-  
+  const comunidadId = req.params.comunidadId; const { page=1, limit=100 } = req.query; const offset=(page-1)*limit;
+  const [rows] = await db.query('SELECT id, periodo, estado, fecha_vencimiento FROM emision_gastos_comunes WHERE comunidad_id = ? ORDER BY periodo DESC LIMIT ? OFFSET ?', [comunidadId, Number(limit), Number(offset)]);
+  res.json(rows);
+});
+/**
+ * @swagger
+ * /emisiones/comunidad/{comunidadId}/count:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Contar emisiones de una comunidad
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la comunidad
+ *     responses:
+ *       200:
+ *         description: Total de emisiones
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: integer
+ */
+// count total emisiones for comunidad (pagination)
+router.get('/comunidad/:comunidadId/count', authenticate, async (req, res) => {
+  const comunidadId = req.params.comunidadId;
   try {
-    // Consulta principal usando la consulta SQL 1
-    const [rows] = await db.query(`
-      SELECT
-        egc.id,
-        egc.periodo,
-        CASE
-          WHEN egc.periodo LIKE '%Extraordinaria%' THEN 'extraordinaria'
-          WHEN egc.periodo LIKE '%Multa%' THEN 'multa'
-          WHEN egc.periodo LIKE '%Interes%' THEN 'interes'
-          ELSE 'gastos_comunes'
-        END as tipo,
-        CASE
-          WHEN egc.estado = 'borrador' THEN 'draft'
-          WHEN egc.estado = 'emitido' THEN 'sent'
-          WHEN egc.estado = 'cerrado' THEN 'paid'
-          WHEN egc.estado = 'anulado' THEN 'cancelled'
-          ELSE 'ready'
-        END as estado,
-        DATE_FORMAT(egc.created_at, '%Y-%m-%d') as fechaEmision,
-        DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fechaVencimiento,
-        COALESCE(SUM(ccu.monto_total), 0) as montoTotal,
-        COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) as montoPagado,
-        COUNT(DISTINCT ccu.unidad_id) as cantidadUnidades,
-        egc.observaciones as descripcion,
-        c.razon_social as nombreComunidad,
-        egc.created_at,
-        egc.updated_at
-      FROM emision_gastos_comunes egc
-      JOIN comunidad c ON egc.comunidad_id = c.id
-      LEFT JOIN cuenta_cobro_unidad ccu ON egc.id = ccu.emision_id
-      WHERE egc.comunidad_id = ?
-      GROUP BY egc.id, egc.periodo, egc.estado, egc.created_at, egc.fecha_vencimiento, egc.observaciones, c.razon_social, egc.updated_at
-      ORDER BY egc.created_at DESC
-      LIMIT ? OFFSET ?
-    `, [comunidadId, Number(limit), Number(offset)]);
-    
-    // Consulta de conteo usando la consulta SQL 2
-    const [countResult] = await db.query(`
-      SELECT COUNT(DISTINCT egc.id) as total
-      FROM emision_gastos_comunes egc
-      JOIN comunidad c ON egc.comunidad_id = c.id
-      LEFT JOIN cuenta_cobro_unidad ccu ON egc.id = ccu.emision_id
-      WHERE egc.comunidad_id = ?
-    `, [comunidadId]);
-    
-    res.json({
-      data: rows,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total: countResult[0].total,
-        pages: Math.ceil(countResult[0].total / limit)
-      }
-    });
+    const [[row]] = await db.query('SELECT COUNT(DISTINCT egc.id) as total FROM emision_gastos_comunes egc WHERE egc.comunidad_id = ?', [comunidadId]);
+    res.json({ total: row.total });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });
@@ -368,64 +155,56 @@ router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
 router.post('/comunidad/:comunidadId', [authenticate, authorize('admin','superadmin'), body('periodo').notEmpty(), body('fecha_vencimiento').notEmpty()], async (req, res) => {
   const errors = validationResult(req); if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
   const comunidadId = req.params.comunidadId; const { periodo, fecha_vencimiento, observaciones } = req.body;
-  
-  const conn = await db.getConnection();
-  try {
-    await conn.beginTransaction();
-    
-    // Crear emisión usando consulta SQL 9
-    const [result] = await conn.query(`
-      INSERT INTO emision_gastos_comunes (
-        comunidad_id,
-        periodo,
-        fecha_vencimiento,
-        estado,
-        observaciones
-      ) VALUES (
-        ?, ?, ?, 'borrador', ?
-      )
-    `, [comunidadId, periodo, fecha_vencimiento, observaciones || null]);
-    
-    const emisionId = result.insertId;
-    
-    // Si se proporcionan detalles de gastos, insertarlos
-    if (req.body.detalles && Array.isArray(req.body.detalles)) {
-      for (const detalle of req.body.detalles) {
-        await conn.query(`
-          INSERT INTO detalle_emision_gastos (
-            emision_id,
-            gasto_id,
-            categoria_id,
-            monto,
-            regla_prorrateo,
-            metadata_json
-          ) VALUES (?, ?, ?, ?, ?, ?)
-        `, [
-          emisionId,
-          detalle.gasto_id || null,
-          detalle.categoria_id,
-          detalle.monto,
-          detalle.regla_prorrateo || 'coeficiente',
-          detalle.metadata_json || null
-        ]);
-      }
-    }
-    
-    await conn.commit();
-    
-    const [row] = await conn.query('SELECT id, periodo, estado, fecha_vencimiento FROM emision_gastos_comunes WHERE id = ? LIMIT 1', [emisionId]);
-    res.status(201).json(row[0]);
-  } catch (err) {
-    console.error(err);
-    try { await conn.rollback(); } catch(e){}
-    res.status(500).json({ error: 'server error' });
-  } finally {
-    try { conn.release(); } catch(e){}
-  }
+  try { const [result] = await db.query('INSERT INTO emision_gastos_comunes (comunidad_id, periodo, fecha_vencimiento, observaciones) VALUES (?,?,?,?)', [comunidadId, periodo, fecha_vencimiento, observaciones || null]); const [row] = await db.query('SELECT id, periodo, estado FROM emision_gastos_comunes WHERE id = ? LIMIT 1', [result.insertId]); res.status(201).json(row[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
 });
 
-router.get('/:id', authenticate, async (req, res) => { 
-  const id = req.params.id; 
+/**
+ * @swagger
+ * /emisiones/{id}:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Obtener emisión por ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la emisión
+ *     responses:
+ *       200:
+ *         description: Emisión
+ *       404:
+ *         description: No encontrado
+ */
+router.get('/:id', authenticate, async (req, res) => { const id = req.params.id; const [rows] = await db.query('SELECT * FROM emision_gastos_comunes WHERE id = ? LIMIT 1', [id]); if (!rows.length) return res.status(404).json({ error: 'not found' }); res.json(rows[0]); });
+
+// enhanced get by id (include totals, interest params)
+/**
+ * @swagger
+ * /emisiones/{id}/detalle-completo:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Obtener emisión con totales y parámetros de cobranza
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la emisión
+ *     responses:
+ *       200:
+ *         description: Emisión detallada
+ *       404:
+ *         description: No encontrado
+ */
+router.get('/:id/detalle-completo', authenticate, async (req, res) => {
+  const id = req.params.id;
   try {
     const [rows] = await db.query(`
       SELECT
@@ -443,18 +222,17 @@ router.get('/:id', authenticate, async (req, res) => {
           WHEN egc.estado = 'cerrado' THEN 'paid'
           WHEN egc.estado = 'anulado' THEN 'cancelled'
           ELSE 'ready'
-        END as estado,
-        DATE_FORMAT(egc.created_at, '%Y-%m-%d') as fechaEmision,
-        DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fechaVencimiento,
-        COALESCE(SUM(ccu.monto_total), 0) as montoTotal,
-        COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) as montoPagado,
-        COUNT(DISTINCT ccu.unidad_id) as cantidadUnidades,
-        egc.observaciones as descripcion,
-        c.razon_social as nombreComunidad,
-        -- Información adicional para intereses
-        CASE WHEN egc.periodo LIKE '%Interes%' THEN 1 ELSE 0 END as tieneInteres,
-        COALESCE(pc.tasa_mora_mensual, 2.0) as tasaInteres,
-        COALESCE(pc.dias_gracia, 5) as periodoGracia,
+        END as status,
+        DATE_FORMAT(egc.created_at, '%Y-%m-%d') as issueDate,
+        DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as dueDate,
+        COALESCE(SUM(ccu.monto_total), 0) as totalAmount,
+        COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) as paidAmount,
+        COUNT(DISTINCT ccu.unidad_id) as unitCount,
+        egc.observaciones as description,
+        c.razon_social as communityName,
+        CASE WHEN egc.periodo LIKE '%Interes%' THEN 1 ELSE 0 END as hasInterest,
+        COALESCE(pc.tasa_mora_mensual, 2.0) as interestRate,
+        COALESCE(pc.dias_gracia, 5) as gracePeriod,
         egc.created_at,
         egc.updated_at
       FROM emision_gastos_comunes egc
@@ -463,109 +241,590 @@ router.get('/:id', authenticate, async (req, res) => {
       LEFT JOIN parametros_cobranza pc ON c.id = pc.comunidad_id
       WHERE egc.id = ?
       GROUP BY egc.id, egc.periodo, egc.estado, egc.created_at, egc.fecha_vencimiento, egc.observaciones, c.razon_social, pc.tasa_mora_mensual, pc.dias_gracia, egc.updated_at
+      LIMIT 1
     `, [id]);
-    
-    if (!rows.length) return res.status(404).json({ error: 'not found' }); 
-    res.json(rows[0]); 
+    if (!rows.length) return res.status(404).json({ error: 'not found' });
+    res.json(rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });
   }
 });
 
-router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => { 
-  const id = req.params.id; 
-  if (!req.body.estado && !req.body.observaciones) return res.status(400).json({ error: 'estado or observaciones required' }); 
-  
-  const conn = await db.getConnection();
-  try {
-    await conn.beginTransaction();
-    
-    const updates = [];
-    const values = [];
-    
-    if (req.body.estado) {
-      updates.push('estado = ?');
-      values.push(req.body.estado);
-    }
-    
-    if (req.body.observaciones !== undefined) {
-      updates.push('observaciones = ?');
-      values.push(req.body.observaciones);
-    }
-    
-    updates.push('updated_at = NOW()');
-    values.push(id);
-    
-    await conn.query(`UPDATE emision_gastos_comunes SET ${updates.join(', ')} WHERE id = ?`, values);
-    
-    await conn.commit();
-    
-    const [rows] = await conn.query('SELECT id, periodo, estado, observaciones FROM emision_gastos_comunes WHERE id = ? LIMIT 1', [id]);
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    try { await conn.rollback(); } catch(e){}
-    res.status(500).json({ error: 'server error' });
-  } finally {
-    try { conn.release(); } catch(e){}
-  }
-});
+router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => { const id = req.params.id; if (!req.body.estado) return res.status(400).json({ error: 'estado required' }); try { await db.query('UPDATE emision_gastos_comunes SET estado = ? WHERE id = ?', [req.body.estado, id]); const [rows] = await db.query('SELECT id, periodo, estado FROM emision_gastos_comunes WHERE id = ? LIMIT 1',[id]); res.json(rows[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
 
 // add detalle
 router.post('/:id/detalles', [authenticate, authorize('admin','superadmin'), body('categoria_id').isInt(), body('monto').isNumeric(), body('regla_prorrateo').notEmpty()], async (req, res) => {
   const errors = validationResult(req); if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const emisionId = req.params.id; 
-  const { gasto_id, categoria_id, monto, regla_prorrateo, metadata_json } = req.body;
-  
+  const emisionId = req.params.id; const { gasto_id, categoria_id, monto, regla_prorrateo, metadata_json } = req.body;
+  try { const [result] = await db.query('INSERT INTO detalle_emision_gastos (emision_id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json) VALUES (?,?,?,?,?,?)', [emisionId, gasto_id || null, categoria_id, monto, regla_prorrateo, metadata_json || null]); const [row] = await db.query('SELECT id, categoria_id, monto, regla_prorrateo FROM detalle_emision_gastos WHERE id = ? LIMIT 1', [result.insertId]); res.status(201).json(row[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
+});
+
+/**
+ * @swagger
+ * /emisiones/{id}/detalles:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Obtener conceptos/prorrateo de una emisión
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la emisión
+ *     responses:
+ *       200:
+ *         description: Lista de detalles
+ */
+
+// obtener conceptos/prorrateo de una emision
+router.get('/:id/detalles', authenticate, async (req, res) => {
+  const emisionId = req.params.id;
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        deg.id,
+        cg.nombre as name,
+        cg.nombre as description,
+        deg.monto as amount,
+        CASE
+          WHEN deg.regla_prorrateo = 'coeficiente' THEN 'proportional'
+          WHEN deg.regla_prorrateo = 'partes_iguales' THEN 'equal'
+          WHEN deg.regla_prorrateo = 'consumo' THEN 'custom'
+          WHEN deg.regla_prorrateo = 'fijo_por_unidad' THEN 'custom'
+          ELSE 'proportional'
+        END as distributionType,
+        cg.nombre as category,
+        deg.created_at
+      FROM detalle_emision_gastos deg
+      JOIN categoria_gasto cg ON deg.categoria_id = cg.id
+      WHERE deg.emision_id = ?
+      ORDER BY deg.created_at
+    `, [emisionId]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /emisiones/{id}/gastos:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Obtener gastos incluidos en una emisión
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la emisión
+ *     responses:
+ *       200:
+ *         description: Lista de gastos
+ */
+// obtener gastos incluidos en una emision
+router.get('/:id/gastos', authenticate, async (req, res) => {
+  const emisionId = req.params.id;
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        g.id,
+        g.glosa as description,
+        deg.monto as amount,
+        cg.nombre as category,
+        p.razon_social as supplier,
+        DATE_FORMAT(g.fecha, '%Y-%m-%d') as date,
+        COALESCE(dc.folio, CONCAT('Gasto #', g.id)) as document,
+        g.created_at
+      FROM detalle_emision_gastos deg
+      LEFT JOIN gasto g ON deg.gasto_id = g.id
+      JOIN categoria_gasto cg ON deg.categoria_id = cg.id
+      LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
+      LEFT JOIN proveedor p ON dc.proveedor_id = p.id
+      WHERE deg.emision_id = ? AND deg.gasto_id IS NOT NULL
+      ORDER BY g.fecha DESC
+    `, [emisionId]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /emisiones/{id}/unidades:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Obtener unidades y su prorrateo para una emisión
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la emisión
+ *     responses:
+ *       200:
+ *         description: Lista de unidades con montos
+ */
+// obtener unidades y prorrateo de una emision
+router.get('/:id/unidades', authenticate, async (req, res) => {
+  const emisionId = req.params.id;
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        u.id,
+        u.codigo as number,
+        CASE
+          WHEN u.m2_utiles > 0 THEN 'Departamento'
+          WHEN u.nro_estacionamiento IS NOT NULL THEN 'Estacionamiento'
+          WHEN u.nro_bodega IS NOT NULL THEN 'Bodega'
+          ELSE 'Unidad'
+        END as type,
+        COALESCE(
+          CONCAT(p.nombres, ' ', p.apellidos),
+          'Sin asignar'
+        ) as owner,
+        COALESCE(
+          p.email,
+          ''
+        ) as contact,
+        u.alicuota as participation,
+        ccu.monto_total as totalAmount,
+        (ccu.monto_total - ccu.saldo) as paidAmount,
+        CASE
+          WHEN ccu.estado = 'pagado' THEN 'paid'
+          WHEN ccu.estado = 'parcial' THEN 'partial'
+          WHEN ccu.estado = 'vencido' THEN 'pending'
+          ELSE 'pending'
+        END as status,
+        ccu.created_at
+      FROM cuenta_cobro_unidad ccu
+      JOIN unidad u ON ccu.unidad_id = u.id
+      LEFT JOIN titulares_unidad tu ON u.id = tu.unidad_id AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
+      LEFT JOIN persona p ON tu.persona_id = p.id
+      WHERE ccu.emision_id = ?
+      ORDER BY u.codigo
+    `, [emisionId]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /emisiones/{id}/pagos:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Obtener pagos aplicados para una emisión
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la emisión
+ *     responses:
+ *       200:
+ *         description: Lista de pagos
+ */
+// obtener pagos realizados para una emision
+router.get('/:id/pagos', authenticate, async (req, res) => {
+  const emisionId = req.params.id;
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        p.id,
+        DATE_FORMAT(p.fecha, '%Y-%m-%d') as date,
+        pa.monto as amount,
+        CASE
+          WHEN p.medio = 'transferencia' THEN 'Transferencia'
+          WHEN p.medio = 'webpay' THEN 'WebPay'
+          WHEN p.medio = 'khipu' THEN 'Khipu'
+          WHEN p.medio = 'servipag' THEN 'Servipag'
+          WHEN p.medio = 'efectivo' THEN 'Efectivo'
+          ELSE p.medio
+        END as method,
+        p.referencia as reference,
+        u.codigo as unit,
+        CASE
+          WHEN p.estado = 'aplicado' THEN 'confirmed'
+          WHEN p.estado = 'pendiente' THEN 'pending'
+          WHEN p.estado = 'reversado' THEN 'rejected'
+          ELSE 'pending'
+        END as status,
+        p.created_at
+      FROM pago_aplicacion pa
+      JOIN pago p ON pa.pago_id = p.id
+      JOIN cuenta_cobro_unidad ccu ON pa.cuenta_cobro_unidad_id = ccu.id
+      JOIN unidad u ON ccu.unidad_id = u.id
+      WHERE ccu.emision_id = ?
+      ORDER BY p.fecha DESC, p.created_at DESC
+    `, [emisionId]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /emisiones/{id}/auditoria:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Historial (auditoría) de una emisión
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la emisión
+ *     responses:
+ *       200:
+ *         description: Lista de auditoría
+ */
+// historial de cambios (auditoria)
+router.get('/:id/auditoria', authenticate, async (req, res) => {
+  const emisionId = req.params.id;
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        a.id,
+        DATE_FORMAT(a.created_at, '%Y-%m-%d %H:%i:%s') as date,
+        CASE
+          WHEN a.accion = 'INSERT' THEN 'Emisión creada'
+          WHEN a.accion = 'UPDATE' THEN 'Emisión actualizada'
+          WHEN a.accion = 'DELETE' THEN 'Emisión eliminada'
+          ELSE CONCAT('Acción: ', a.accion)
+        END as action,
+        COALESCE(u.username, 'Sistema') as user,
+        CASE
+          WHEN a.accion = 'INSERT' THEN 'Se creó la emisión'
+          WHEN a.accion = 'UPDATE' THEN 'Se modificaron datos de la emisión'
+          WHEN a.accion = 'DELETE' THEN 'Se eliminó la emisión'
+          ELSE 'Cambio en emisión'
+        END as description,
+        a.created_at
+      FROM auditoria a
+      LEFT JOIN usuario u ON a.usuario_id = u.id
+      WHERE a.tabla = 'emision_gastos_comunes' AND a.registro_id = ?
+      ORDER BY a.created_at DESC
+    `, [emisionId]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /emisiones/{id}:
+ *   delete:
+ *     tags: [Emisiones]
+ *     summary: Eliminar emisión y dependencias
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la emisión
+ *     responses:
+ *       200:
+ *         description: Eliminado con éxito
+ */
+// eliminar emision y dependencias (admin)
+router.delete('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => {
+  const emisionId = req.params.id;
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
-    
-    // Verificar que la emisión existe y está en estado borrador
-    const [emRows] = await conn.query('SELECT estado FROM emision_gastos_comunes WHERE id = ? LIMIT 1', [emisionId]);
-    if (!emRows.length) {
-      await conn.rollback();
-      return res.status(404).json({ error: 'emision not found' });
-    }
-    
-    if (emRows[0].estado !== 'borrador') {
-      await conn.rollback();
-      return res.status(400).json({ error: 'can only add details to draft emisiones' });
-    }
-    
-    const [result] = await conn.query(`
-      INSERT INTO detalle_emision_gastos (
-        emision_id, 
-        gasto_id, 
-        categoria_id, 
-        monto, 
-        regla_prorrateo, 
-        metadata_json
-      ) VALUES (?, ?, ?, ?, ?, ?)
-    `, [emisionId, gasto_id || null, categoria_id, monto, regla_prorrateo, metadata_json || null]);
-    
+    // delete pago_aplicacion
+    await conn.query('DELETE pa FROM pago_aplicacion pa JOIN cuenta_cobro_unidad ccu ON pa.cuenta_cobro_unidad_id = ccu.id WHERE ccu.emision_id = ?', [emisionId]);
+    // delete cuenta_cobro_unidad
+    await conn.query('DELETE FROM cuenta_cobro_unidad WHERE emision_id = ?', [emisionId]);
+    // delete detalle_emision_gastos
+    await conn.query('DELETE FROM detalle_emision_gastos WHERE emision_id = ?', [emisionId]);
+    // delete emision
+    await conn.query('DELETE FROM emision_gastos_comunes WHERE id = ?', [emisionId]);
     await conn.commit();
-    
-    const [row] = await conn.query(`
-      SELECT 
-        id, 
-        categoria_id, 
-        monto, 
-        regla_prorrateo,
-        gasto_id,
-        metadata_json
-      FROM detalle_emision_gastos 
-      WHERE id = ? LIMIT 1
-    `, [result.insertId]);
-    
-    res.status(201).json(row[0]);
-  } catch (err) {
+    res.json({ ok: true });
+    } catch (err) {
     console.error(err);
-    try { await conn.rollback(); } catch(e){}
+    try { await conn.rollback(); } catch (e) { console.error(e); }
     res.status(500).json({ error: 'server error' });
   } finally {
-    try { conn.release(); } catch(e){}
+    try { conn.release(); } catch (e) { console.error(e); }
+  }
+});
+
+/**
+ * @swagger
+ * /emisiones/estadisticas/general:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Estadísticas generales de emisiones
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Estadísticas
+ */
+// estadisticas: generales
+router.get('/estadisticas/general', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        COUNT(*) as total_emisiones,
+        SUM(CASE WHEN estado = 'emitido' THEN 1 ELSE 0 END) as emitidas,
+        SUM(CASE WHEN estado = 'cerrado' THEN 1 ELSE 0 END) as cerradas,
+        SUM(CASE WHEN estado = 'anulado' THEN 1 ELSE 0 END) as anuladas
+      FROM emision_gastos_comunes
+    `);
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /emisiones/estadisticas/por-mes:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Emisiones por mes y estado
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista por mes
+ */
+// estadisticas: por mes y estado
+router.get('/estadisticas/por-mes', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        DATE_FORMAT(created_at, '%Y-%m') as mes,
+        estado,
+        COUNT(*) as cantidad
+      FROM emision_gastos_comunes
+      GROUP BY DATE_FORMAT(created_at, '%Y-%m'), estado
+      ORDER BY mes DESC, estado
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /emisiones/estadisticas/cobranza:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Cobranza por emisión
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cobranza por emisión
+ */
+// estadisticas: cobranza por emision
+router.get('/estadisticas/cobranza', authenticate, async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        egc.id,
+        egc.periodo,
+        c.razon_social as comunidad,
+        SUM(ccu.monto_total) as total_emitido,
+        SUM(ccu.monto_total - ccu.saldo) as total_cobrado,
+        ROUND((SUM(ccu.monto_total - ccu.saldo) / SUM(ccu.monto_total)) * 100, 2) as porcentaje_cobranza,
+        COUNT(CASE WHEN ccu.estado = 'pagado' THEN 1 END) as unidades_pagadas,
+        COUNT(ccu.unidad_id) as total_unidades
+      FROM emision_gastos_comunes egc
+      JOIN comunidad c ON egc.comunidad_id = c.id
+      LEFT JOIN cuenta_cobro_unidad ccu ON egc.id = ccu.emision_id
+      WHERE egc.estado IN ('emitido', 'cerrado')
+      GROUP BY egc.id, egc.periodo, c.razon_social
+      ORDER BY egc.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /emisiones/validar/existencia:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Verificar existencia de emisión para periodo y comunidad
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: comunidad_id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *       - in: query
+ *         name: periodo
+ *         schema:
+ *           type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Indica si existe o no
+ */
+// validaciones
+router.get('/validar/existencia', authenticate, async (req, res) => {
+  const { comunidad_id, periodo } = req.query;
+  if (!comunidad_id || !periodo) return res.status(400).json({ error: 'comunidad_id and periodo required' });
+  try {
+    const [[row]] = await db.query('SELECT COUNT(*) as existe_emision FROM emision_gastos_comunes WHERE comunidad_id = ? AND periodo = ?', [comunidad_id, periodo]);
+    res.json({ existe_emision: row.existe_emision });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /emisiones/validar/gastos/{id}:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Validar gastos de una emisión
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Resultado de validación
+ */
+router.get('/validar/gastos/:id', authenticate, async (req, res) => {
+  const emisionId = req.params.id;
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        deg.emision_id,
+        COUNT(*) as total_gastos_incluidos,
+        SUM(CASE WHEN g.id IS NULL THEN 1 ELSE 0 END) as gastos_inexistentes
+      FROM detalle_emision_gastos deg
+      LEFT JOIN gasto g ON deg.gasto_id = g.id
+      WHERE deg.emision_id = ?
+      GROUP BY deg.emision_id
+    `, [emisionId]);
+    res.json(rows.length ? rows[0] : { total_gastos_incluidos: 0, gastos_inexistentes: 0 });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /emisiones/validar/cuentas/{id}:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Validar integridad de cuentas de cobro
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Resultado de validación
+ */
+router.get('/validar/cuentas/:id', authenticate, async (req, res) => {
+  const emisionId = req.params.id;
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        'cuentas_cobro' as tipo_verificacion,
+        COUNT(*) as total_registros,
+        SUM(CASE WHEN ccu.monto_total <= 0 THEN 1 ELSE 0 END) as montos_invalidos,
+        SUM(CASE WHEN ccu.saldo > ccu.monto_total THEN 1 ELSE 0 END) as saldos_invalidos
+      FROM cuenta_cobro_unidad ccu
+      WHERE ccu.emision_id = ?
+    `, [emisionId]);
+    res.json(rows[0] || { total_registros: 0, montos_invalidos: 0, saldos_invalidos: 0 });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /emisiones/validar/cobertura/{comunidadId}/{emisionId}:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Validar cobertura de unidades con cuentas de cobro
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *       - in: path
+ *         name: emisionId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Resultado de validación
+ */
+router.get('/validar/cobertura/:comunidadId/:emisionId', authenticate, async (req, res) => {
+  const { comunidadId, emisionId } = req.params;
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        'cobertura_unidades' as tipo_verificacion,
+        COUNT(DISTINCT u.id) as unidades_activas,
+        COUNT(DISTINCT ccu.unidad_id) as unidades_con_cobro,
+        COUNT(DISTINCT u.id) - COUNT(DISTINCT ccu.unidad_id) as unidades_faltantes
+      FROM unidad u
+      LEFT JOIN cuenta_cobro_unidad ccu ON u.id = ccu.unidad_id AND ccu.emision_id = ?
+      WHERE u.activa = 1 AND u.comunidad_id = ?
+    `, [emisionId, comunidadId]);
+    res.json(rows[0] || { unidades_activas: 0, unidades_con_cobro: 0, unidades_faltantes: 0 });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
   }
 });
 
@@ -690,667 +949,48 @@ router.post('/:id/generar-cargos', authenticate, authorize('admin','superadmin')
     res.status(201).json({ ok: true, created });
   } catch (err) {
     console.error(err);
-    try { await conn.rollback(); } catch(e){}
+    try { await conn.rollback(); } catch (e) { console.error(e); }
     res.status(500).json({ error: 'server error' });
   } finally {
-    try { conn.release(); } catch(e){}
+    try { conn.release(); } catch (e) { console.error(e); }
   }
 });
-
-// ===========================================
-// ENDPOINTS ADICIONALES BASADOS EN CONSULTAS SQL
-// ===========================================
-
-/**
- * @swagger
- * /emisiones/{id}/conceptos:
- *   get:
- *     tags: [Emisiones]
- *     summary: Obtener conceptos/prorrateo de una emisión
- *     description: Obtiene todos los conceptos y reglas de prorrateo asociados a una emisión específica.
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID de la emisión
- *     responses:
- *       200:
- *         description: Lista de conceptos de la emisión
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   nombre:
- *                     type: string
- *                   descripcion:
- *                     type: string
- *                   monto:
- *                     type: number
- *                   tipoDistribucion:
- *                     type: string
- *                     enum: [proporcional, igual, personalizado]
- *                   categoria:
- *                     type: string
- */
-router.get('/:id/conceptos', authenticate, async (req, res) => {
-  const emisionId = req.params.id;
-  try {
-    const [rows] = await db.query(`
-      SELECT
-        deg.id,
-        cg.nombre as nombre,
-        cg.nombre as descripcion,
-        deg.monto as monto,
-        CASE
-          WHEN deg.regla_prorrateo = 'coeficiente' THEN 'proporcional'
-          WHEN deg.regla_prorrateo = 'partes_iguales' THEN 'igual'
-          WHEN deg.regla_prorrateo = 'consumo' THEN 'personalizado'
-          WHEN deg.regla_prorrateo = 'fijo_por_unidad' THEN 'personalizado'
-          ELSE 'proporcional'
-        END as tipoDistribucion,
-        cg.nombre as categoria,
-        deg.created_at
-      FROM detalle_emision_gastos deg
-      JOIN categoria_gasto cg ON deg.categoria_id = cg.id
-      WHERE deg.emision_id = ?
-      ORDER BY deg.created_at
-    `, [emisionId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-/**
- * @swagger
- * /emisiones/{id}/gastos:
- *   get:
- *     tags: [Emisiones]
- *     summary: Obtener gastos incluidos en una emisión
- *     description: Obtiene todos los gastos que conforman una emisión específica, incluyendo información del proveedor y documento.
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID de la emisión
- *     responses:
- *       200:
- *         description: Lista de gastos de la emisión
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   descripcion:
- *                     type: string
- *                   monto:
- *                     type: number
- *                   categoria:
- *                     type: string
- *                   proveedor:
- *                     type: string
- *                   fecha:
- *                     type: string
- *                     format: date
- *                   documento:
- *                     type: string
- */
-router.get('/:id/gastos', authenticate, async (req, res) => {
-  const emisionId = req.params.id;
-  try {
-    const [rows] = await db.query(`
-      SELECT
-        g.id,
-        g.glosa as descripcion,
-        deg.monto as monto,
-        cg.nombre as categoria,
-        p.razon_social as proveedor,
-        DATE_FORMAT(g.fecha, '%Y-%m-%d') as fecha,
-        COALESCE(dc.folio, CONCAT('Gasto #', g.id)) as documento,
-        g.created_at
-      FROM detalle_emision_gastos deg
-      JOIN gasto g ON deg.gasto_id = g.id
-      JOIN categoria_gasto cg ON deg.categoria_id = cg.id
-      LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
-      LEFT JOIN proveedor p ON dc.proveedor_id = p.id
-      WHERE deg.emision_id = ?
-      ORDER BY g.fecha DESC
-    `, [emisionId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-/**
- * @swagger
- * /emisiones/{id}/unidades:
- *   get:
- *     tags: [Emisiones]
- *     summary: Obtener unidades y prorrateo de una emisión
- *     description: Obtiene todas las unidades afectadas por una emisión con su prorrateo correspondiente.
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID de la emisión
- *     responses:
- *       200:
- *         description: Lista de unidades con prorrateo
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   numero:
- *                     type: string
- *                   tipo:
- *                     type: string
- *                   propietario:
- *                     type: string
- *                   contacto:
- *                     type: string
- *                   participacion:
- *                     type: number
- *                   montoTotal:
- *                     type: number
- *                   montoPagado:
- *                     type: number
- *                   estado:
- *                     type: string
- */
-router.get('/:id/unidades', authenticate, async (req, res) => {
-  const emisionId = req.params.id;
-  try {
-    const [rows] = await db.query(`
-      SELECT
-        u.id,
-        u.codigo as numero,
-        CASE
-          WHEN u.m2_utiles > 0 THEN 'Departamento'
-          WHEN u.nro_estacionamiento IS NOT NULL THEN 'Estacionamiento'
-          WHEN u.nro_bodega IS NOT NULL THEN 'Bodega'
-          ELSE 'Unidad'
-        END as tipo,
-        COALESCE(
-          CONCAT(p.nombres, ' ', p.apellidos),
-          'Sin asignar'
-        ) as propietario,
-        COALESCE(
-          p.email,
-          ''
-        ) as contacto,
-        u.alicuota as participacion,
-        ccu.monto_total as montoTotal,
-        (ccu.monto_total - ccu.saldo) as montoPagado,
-        CASE
-          WHEN ccu.estado = 'pagado' THEN 'paid'
-          WHEN ccu.estado = 'parcial' THEN 'partial'
-          WHEN ccu.estado = 'vencido' THEN 'pending'
-          ELSE 'pending'
-        END as estado,
-        ccu.created_at
-      FROM cuenta_cobro_unidad ccu
-      JOIN unidad u ON ccu.unidad_id = u.id
-      LEFT JOIN titulares_unidad tu ON u.id = tu.unidad_id AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
-      LEFT JOIN persona p ON tu.persona_id = p.id
-      WHERE ccu.emision_id = ?
-      ORDER BY u.codigo
-    `, [emisionId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-/**
- * @swagger
- * /emisiones/{id}/pagos:
- *   get:
- *     tags: [Emisiones]
- *     summary: Obtener pagos realizados para una emisión
- *     description: Obtiene todos los pagos realizados por las unidades de una emisión específica.
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID de la emisión
- *     responses:
- *       200:
- *         description: Lista de pagos de la emisión
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   fecha:
- *                     type: string
- *                     format: date
- *                   monto:
- *                     type: number
- *                   metodo:
- *                     type: string
- *                   referencia:
- *                     type: string
- *                   unidad:
- *                     type: string
- *                   estado:
- *                     type: string
- */
-router.get('/:id/pagos', authenticate, async (req, res) => {
-  const emisionId = req.params.id;
-  try {
-    const [rows] = await db.query(`
-      SELECT
-        p.id,
-        DATE_FORMAT(p.fecha, '%Y-%m-%d') as fecha,
-        pa.monto as monto,
-        CASE
-          WHEN p.medio = 'transferencia' THEN 'Transferencia'
-          WHEN p.medio = 'webpay' THEN 'WebPay'
-          WHEN p.medio = 'khipu' THEN 'Khipu'
-          WHEN p.medio = 'servipag' THEN 'Servipag'
-          WHEN p.medio = 'efectivo' THEN 'Efectivo'
-          ELSE p.medio
-        END as metodo,
-        p.referencia as referencia,
-        u.codigo as unidad,
-        CASE
-          WHEN p.estado = 'aplicado' THEN 'confirmed'
-          WHEN p.estado = 'pendiente' THEN 'pending'
-          WHEN p.estado = 'reversado' THEN 'rejected'
-          ELSE 'pending'
-        END as estado,
-        p.created_at
-      FROM pago_aplicacion pa
-      JOIN pago p ON pa.pago_id = p.id
-      JOIN cuenta_cobro_unidad ccu ON pa.cuenta_cobro_unidad_id = ccu.id
-      JOIN unidad u ON ccu.unidad_id = u.id
-      WHERE ccu.emision_id = ?
-      ORDER BY p.fecha DESC, p.created_at DESC
-    `, [emisionId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-/**
- * @swagger
- * /emisiones/{id}/historial:
- *   get:
- *     tags: [Emisiones]
- *     summary: Obtener historial de cambios de una emisión
- *     description: Obtiene el historial de auditoría de cambios realizados a una emisión específica.
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID de la emisión
- *     responses:
- *       200:
- *         description: Historial de cambios de la emisión
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   fecha:
- *                     type: string
- *                     format: date-time
- *                   accion:
- *                     type: string
- *                   usuario:
- *                     type: string
- *                   descripcion:
- *                     type: string
- */
-router.get('/:id/historial', authenticate, async (req, res) => {
-  const emisionId = req.params.id;
-  try {
-    const [rows] = await db.query(`
-      SELECT
-        a.id,
-        DATE_FORMAT(a.created_at, '%Y-%m-%d %H:%i:%s') as fecha,
-        CASE
-          WHEN a.accion = 'INSERT' THEN 'Emisión creada'
-          WHEN a.accion = 'UPDATE' THEN 'Emisión actualizada'
-          WHEN a.accion = 'DELETE' THEN 'Emisión eliminada'
-          ELSE CONCAT('Acción: ', a.accion)
-        END as accion,
-        COALESCE(u.username, 'Sistema') as usuario,
-        CASE
-          WHEN a.accion = 'INSERT' THEN 'Se creó la emisión'
-          WHEN a.accion = 'UPDATE' THEN 'Se modificaron datos de la emisión'
-          WHEN a.accion = 'DELETE' THEN 'Se eliminó la emisión'
-          ELSE 'Cambio en emisión'
-        END as descripcion,
-        a.created_at
-      FROM auditoria a
-      LEFT JOIN usuario u ON a.usuario_id = u.id
-      WHERE a.tabla = 'emision_gastos_comunes' AND a.registro_id = ?
-      ORDER BY a.created_at DESC
-    `, [emisionId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-/**
- * @swagger
- * /emisiones/{id}:
- *   delete:
- *     tags: [Emisiones]
- *     summary: Eliminar una emisión
- *     description: Elimina completamente una emisión y todos sus datos relacionados (solo si está en estado borrador).
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID de la emisión a eliminar
- *     responses:
- *       200:
- *         description: Emisión eliminada exitosamente
- *       400:
- *         description: No se puede eliminar la emisión (estado no válido)
- *       404:
- *         description: Emisión no encontrada
- */
-router.delete('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => {
-  const emisionId = req.params.id;
-  const conn = await db.getConnection();
-  
-  try {
-    await conn.beginTransaction();
-    
-    // Verificar que la emisión existe y está en estado borrador
-    const [emRows] = await conn.query('SELECT estado FROM emision_gastos_comunes WHERE id = ? LIMIT 1', [emisionId]);
-    if (!emRows.length) {
-      await conn.rollback();
-      return res.status(404).json({ error: 'emision not found' });
-    }
-    
-    if (emRows[0].estado !== 'borrador') {
-      await conn.rollback();
-      return res.status(400).json({ error: 'only draft emisiones can be deleted' });
-    }
-    
-    // Eliminar en orden inverso a la creación
-    await conn.query('DELETE pa FROM pago_aplicacion pa JOIN cuenta_cobro_unidad ccu ON pa.cuenta_cobro_unidad_id = ccu.id WHERE ccu.emision_id = ?', [emisionId]);
-    await conn.query('DELETE FROM cuenta_cobro_unidad WHERE emision_id = ?', [emisionId]);
-    await conn.query('DELETE FROM detalle_emision_gastos WHERE emision_id = ?', [emisionId]);
-    await conn.query('DELETE FROM emision_gastos_comunes WHERE id = ?', [emisionId]);
-    
-    await conn.commit();
-    res.json({ message: 'emision deleted successfully' });
-  } catch (err) {
-    console.error(err);
-    try { await conn.rollback(); } catch(e){}
-    res.status(500).json({ error: 'server error' });
-  } finally {
-    try { conn.release(); } catch(e){}
-  }
-});
-
-/**
- * @swagger
- * /emisiones/estadisticas:
- *   get:
- *     tags: [Emisiones]
- *     summary: Obtener estadísticas generales de emisiones
- *     description: Obtiene estadísticas generales y reportes de todas las emisiones del sistema.
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Estadísticas de emisiones
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 generales:
- *                   type: object
- *                   properties:
- *                     total_emisiones:
- *                       type: integer
- *                     emitidas:
- *                       type: integer
- *                     cerradas:
- *                       type: integer
- *                     anuladas:
- *                       type: integer
- *                     monto_promedio:
- *                       type: number
- *                     monto_maximo:
- *                       type: number
- *                     monto_minimo:
- *                       type: number
- *                 por_mes:
- *                   type: array
- *                   items:
- *                     type: object
- *                 cobranza:
- *                   type: array
- *                   items:
- *                     type: object
- */
-router.get('/estadisticas', authenticate, authorize('admin','superadmin'), async (req, res) => {
-  try {
-    // Estadísticas generales
-    const [generales] = await db.query(`
-      SELECT
-        COUNT(*) as total_emisiones,
-        SUM(CASE WHEN estado = 'emitido' THEN 1 ELSE 0 END) as emitidas,
-        SUM(CASE WHEN estado = 'cerrado' THEN 1 ELSE 0 END) as cerradas,
-        SUM(CASE WHEN estado = 'anulado' THEN 1 ELSE 0 END) as anuladas,
-        AVG(total_monto) as monto_promedio,
-        MAX(total_monto) as monto_maximo,
-        MIN(total_monto) as monto_minimo
-      FROM (
-        SELECT
-          egc.id,
-          egc.estado,
-          COALESCE(SUM(ccu.monto_total), 0) as total_monto
-        FROM emision_gastos_comunes egc
-        LEFT JOIN cuenta_cobro_unidad ccu ON egc.id = ccu.emision_id
-        GROUP BY egc.id, egc.estado
-      ) as emisiones_estadisticas
-    `);
-    
-    // Emisiones por mes
-    const [porMes] = await db.query(`
-      SELECT
-        DATE_FORMAT(created_at, '%Y-%m') as mes,
-        estado,
-        COUNT(*) as cantidad,
-        SUM(total_monto) as monto_total
-      FROM (
-        SELECT
-          egc.id,
-          egc.estado,
-          egc.created_at,
-          COALESCE(SUM(ccu.monto_total), 0) as total_monto
-        FROM emision_gastos_comunes egc
-        LEFT JOIN cuenta_cobro_unidad ccu ON egc.id = ccu.emision_id
-        GROUP BY egc.id, egc.estado, egc.created_at
-      ) as emisiones_mes
-      GROUP BY DATE_FORMAT(created_at, '%Y-%m'), estado
-      ORDER BY mes DESC, estado
-    `);
-    
-    // Cobranza por emisión
-    const [cobranza] = await db.query(`
-      SELECT
-        egc.id,
-        egc.periodo,
-        c.razon_social as comunidad,
-        SUM(ccu.monto_total) as total_emitido,
-        SUM(ccu.monto_total - ccu.saldo) as total_cobrado,
-        ROUND((SUM(ccu.monto_total - ccu.saldo) / SUM(ccu.monto_total)) * 100, 2) as porcentaje_cobranza,
-        COUNT(CASE WHEN ccu.estado = 'pagado' THEN 1 END) as unidades_pagadas,
-        COUNT(ccu.unidad_id) as total_unidades
-      FROM emision_gastos_comunes egc
-      JOIN comunidad c ON egc.comunidad_id = c.id
-      LEFT JOIN cuenta_cobro_unidad ccu ON egc.id = ccu.emision_id
-      WHERE egc.estado IN ('emitido', 'cerrado')
-      GROUP BY egc.id, egc.periodo, c.razon_social
-      ORDER BY egc.created_at DESC
-    `);
-    
-    res.json({
-      generales: generales[0],
-      por_mes: porMes,
-      cobranza: cobranza
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
-/**
- * @swagger
- * /emisiones/{id}/validaciones:
- *   get:
- *     tags: [Emisiones]
- *     summary: Obtener validaciones y verificaciones de una emisión
- *     description: Ejecuta varias validaciones para verificar la integridad de una emisión.
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID de la emisión
- *     responses:
- *       200:
- *         description: Resultados de validaciones
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 existe_emision:
- *                   type: boolean
- *                 gastos_validos:
- *                   type: object
- *                 cuentas_cobro:
- *                   type: object
- *                 cobertura_unidades:
- *                   type: object
- */
-router.get('/:id/validaciones', authenticate, async (req, res) => {
-  const emisionId = req.params.id;
-  try {
-    const validations = {};
-    
-    // Verificar si existe emisión para el período
-    const [emRows] = await db.query('SELECT comunidad_id, periodo FROM emision_gastos_comunes WHERE id = ? LIMIT 1', [emisionId]);
-    if (!emRows.length) {
-      return res.status(404).json({ error: 'emision not found' });
-    }
-    
-    const { comunidad_id, periodo } = emRows[0];
-    
-    // Verificar si ya existe emisión para el mismo período
-    const [existe] = await db.query('SELECT COUNT(*) as existe_emision FROM emision_gastos_comunes WHERE comunidad_id = ? AND periodo = ? AND id != ?', [comunidad_id, periodo, emisionId]);
-    validations.existe_emision = existe[0].existe_emision > 0;
-    
-    // Verificar gastos incluidos
-    const [gastos] = await db.query(`
-      SELECT
-        COUNT(*) as total_gastos_incluidos,
-        SUM(CASE WHEN g.id IS NULL THEN 1 ELSE 0 END) as gastos_inexistentes
-      FROM detalle_emision_gastos deg
-      LEFT JOIN gasto g ON deg.gasto_id = g.id
-      WHERE deg.emision_id = ?
-      GROUP BY deg.emision_id
-    `, [emisionId]);
-    validations.gastos_validos = gastos[0] || { total_gastos_incluidos: 0, gastos_inexistentes: 0 };
-    
-    // Verificar integridad de cuentas de cobro
-    const [cuentas] = await db.query(`
-      SELECT
-        COUNT(*) as total_registros,
-        SUM(CASE WHEN ccu.monto_total <= 0 THEN 1 ELSE 0 END) as montos_invalidos,
-        SUM(CASE WHEN ccu.saldo > ccu.monto_total THEN 1 ELSE 0 END) as saldos_invalidos
-      FROM cuenta_cobro_unidad ccu
-      WHERE ccu.emision_id = ?
-    `, [emisionId]);
-    validations.cuentas_cobro = cuentas[0] || { total_registros: 0, montos_invalidos: 0, saldos_invalidos: 0 };
-    
-    // Verificar cobertura de unidades
-    const [cobertura] = await db.query(`
-      SELECT
-        COUNT(DISTINCT u.id) as unidades_activas,
-        COUNT(DISTINCT ccu.unidad_id) as unidades_con_cobro,
-        COUNT(DISTINCT u.id) - COUNT(DISTINCT ccu.unidad_id) as unidades_faltantes
-      FROM unidad u
-      LEFT JOIN cuenta_cobro_unidad ccu ON u.id = ccu.unidad_id AND ccu.emision_id = ?
-      WHERE u.activa = 1 AND u.comunidad_id = ?
-    `, [emisionId, comunidad_id]);
-    validations.cobertura_unidades = cobertura[0] || { unidades_activas: 0, unidades_con_cobro: 0, unidades_faltantes: 0 };
-    
-    res.json(validations);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
-  }
-});
-
 
 module.exports = router;
+
+
+// =========================================
+// ENDPOINTS DE EMISIONES
+// =========================================
+
+// // LISTADOS Y CRUD DE EMISIONES
+// GET: /emisiones/comunidad/:comunidadId
+// GET: /emisiones/comunidad/:comunidadId/count
+// POST: /emisiones/comunidad/:comunidadId
+// GET: /emisiones/:id
+// GET: /emisiones/:id/detalle-completo
+// PATCH: /emisiones/:id
+// DELETE: /emisiones/:id
+
+// // GESTIÓN DE DETALLES Y GASTOS
+// POST: /emisiones/:id/detalles
+// GET: /emisiones/:id/detalles
+// GET: /emisiones/:id/gastos
+// GET: /emisiones/:id/unidades
+// GET: /emisiones/:id/pagos
+// GET: /emisiones/:id/auditoria
+
+// // CÁLCULO Y GENERACIÓN DE CARGOS (STUBS)
+// GET: /emisiones/:id/previsualizar-prorrateo
+// POST: /emisiones/:id/generar-cargos
+
+// // ESTADÍSTICAS
+// GET: /emisiones/estadisticas/general
+// GET: /emisiones/estadisticas/por-mes
+// GET: /emisiones/estadisticas/cobranza
+
+// // VALIDACIONES
+// GET: /emisiones/validar/existencia
+// GET: /emisiones/validar/gastos/:id
+// GET: /emisiones/validar/cuentas/:id
+// GET: /emisiones/validar/cobertura/:comunidadId/:emisionId
