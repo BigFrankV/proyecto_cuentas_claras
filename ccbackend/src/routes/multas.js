@@ -1,1151 +1,1212 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { body, validationResult } = require('express-validator');
+const { body, validationResult, param, query } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
+const MultasPermissions = require('../middleware/multasPermissions');
 
-/**
- * @openapi
- * tags:
- *   - name: Multas
- *     description: Gestión de multas y sanciones
- */
-
-// =========================================
-// 1. LISTADOS Y FILTROS
-// =========================================
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}:
- *   get:
- *     tags: [Multas]
- *     summary: Listar multas con filtros avanzados
- *     parameters:
- *       - name: comunidadId
- *         in: path
- *         required: true
- *         schema:
- *           type: integer
- *       - name: estado
- *         in: query
- *         schema:
- *           type: string
- *           enum: [pendiente, pagada, anulada]
- *       - name: prioridad
- *         in: query
- *         schema:
- *           type: string
- *           enum: [alta, media, baja]
- *       - name: tipo_infraccion
- *         in: query
- *         schema:
- *           type: string
- *       - name: fecha_desde
- *         in: query
- *         schema:
- *           type: string
- *           format: date
- *       - name: fecha_hasta
- *         in: query
- *         schema:
- *           type: string
- *           format: date
- *       - name: monto_min
- *         in: query
- *         schema:
- *           type: number
- *       - name: monto_max
- *         in: query
- *         schema:
- *           type: number
- *       - name: limit
- *         in: query
- *         schema:
- *           type: integer
- *           default: 50
- *       - name: offset
- *         in: query
- *         schema:
- *           type: integer
- *           default: 0
- */
-router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+// ============================================
+// HELPER: Obtener comunidades del usuario
+// ============================================
+async function obtenerComunidadesUsuario(userId, personaId, isSuperAdmin) {
   try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { 
-      estado, 
-      prioridad, 
-      tipo_infraccion, 
-      fecha_desde, 
-      fecha_hasta, 
-      monto_min, 
-      monto_max,
-      limit = 50,
-      offset = 0
-    } = req.query;
-
-    let query = `
-      SELECT
-        m.id,
-        m.id AS numero,
-        c.razon_social AS comunidad,
-        u.codigo AS unidad_codigo,
-        COALESCE(t.nombre, '') AS torre,
-        COALESCE(e.nombre, '') AS edificio,
-        COALESCE(CONCAT(p.nombres, ' ', p.apellidos), '') AS propietario,
-        m.motivo AS tipo_infraccion,
-        m.monto,
-        m.estado,
-        m.prioridad,
-        m.fecha AS fecha_infraccion,
-        m.fecha AS fecha_vencimiento,
-        m.fecha_pago,
-        m.created_at,
-        m.updated_at,
-        CASE
-          WHEN m.estado IN ('pagada', 'anulada') THEN NULL
-          WHEN CURDATE() > m.fecha THEN DATEDIFF(CURDATE(), m.fecha)
-          ELSE DATEDIFF(m.fecha, CURDATE())
-        END AS dias_vencimiento,
-        CASE
-          WHEN m.estado IN ('pagada', 'anulada') THEN 'finalizado'
-          WHEN CURDATE() > m.fecha THEN 'vencido'
-          WHEN DATEDIFF(m.fecha, CURDATE()) <= 7 THEN 'proximo_vencer'
-          ELSE 'vigente'
-        END AS estado_vencimiento
-      FROM multa m
-      JOIN comunidad c ON m.comunidad_id = c.id
-      LEFT JOIN unidad u ON m.unidad_id = u.id
-      LEFT JOIN torre t ON u.torre_id = t.id
-      LEFT JOIN edificio e ON u.edificio_id = e.id
-      LEFT JOIN persona p ON m.persona_id = p.id
-      WHERE m.comunidad_id = ?
-    `;
-
-    const params = [comunidadId];
-
-    if (estado) {
-      query += ` AND m.estado = ?`;
-      params.push(estado);
+    if (isSuperAdmin) {
+      // Superadmin ve todas las comunidades
+      const [comunidades] = await db.query('SELECT id FROM comunidad WHERE activo = 1');
+      return comunidades.map(c => c.id);
     }
 
-    if (prioridad) {
-      query += ` AND m.prioridad = ?`;
-      params.push(prioridad);
-    }
-
-    if (tipo_infraccion) {
-      query += ` AND m.motivo LIKE ?`;
-      params.push(`%${tipo_infraccion}%`);
-    }
-
-    if (fecha_desde) {
-      query += ` AND m.fecha >= ?`;
-      params.push(fecha_desde);
-    }
-
-    if (fecha_hasta) {
-      query += ` AND m.fecha <= ?`;
-      params.push(fecha_hasta);
-    }
-
-    if (monto_min) {
-      query += ` AND m.monto >= ?`;
-      params.push(Number(monto_min));
-    }
-
-    if (monto_max) {
-      query += ` AND m.monto <= ?`;
-      params.push(Number(monto_max));
-    }
-
-    query += ` ORDER BY m.fecha DESC, m.created_at DESC LIMIT ? OFFSET ?`;
-    params.push(Number(limit), Number(offset));
-
-    const [rows] = await db.query(query, params);
-
-    // Contar total
-    let countQuery = `SELECT COUNT(*) AS total FROM multa m WHERE m.comunidad_id = ?`;
-    const countParams = [comunidadId];
-
-    if (estado) {
-      countQuery += ` AND m.estado = ?`;
-      countParams.push(estado);
-    }
-    if (prioridad) {
-      countQuery += ` AND m.prioridad = ?`;
-      countParams.push(prioridad);
-    }
-    if (tipo_infraccion) {
-      countQuery += ` AND m.motivo LIKE ?`;
-      countParams.push(`%${tipo_infraccion}%`);
-    }
-    if (fecha_desde) {
-      countQuery += ` AND m.fecha >= ?`;
-      countParams.push(fecha_desde);
-    }
-    if (fecha_hasta) {
-      countQuery += ` AND m.fecha <= ?`;
-      countParams.push(fecha_hasta);
-    }
-    if (monto_min) {
-      countQuery += ` AND m.monto >= ?`;
-      countParams.push(Number(monto_min));
-    }
-    if (monto_max) {
-      countQuery += ` AND m.monto <= ?`;
-      countParams.push(Number(monto_max));
-    }
-
-    const [[{ total }]] = await db.query(countQuery, countParams);
-
-    res.json({
-      data: rows,
-      pagination: {
-        total,
-        limit: Number(limit),
-        offset: Number(offset),
-        hasMore: (Number(offset) + rows.length) < total
-      }
-    });
+    // Obtener comunidades donde tiene roles activos
+    const [memberships] = await db.query(`
+      SELECT DISTINCT comunidad_id 
+      FROM usuario_rol_comunidad 
+      WHERE usuario_id = ? AND activo = 1
+    `, [userId]);
+    console.log('🏘️ Comunidades obtenidas:', memberships.map(m => m.comunidad_id));
+    return memberships.map(m => m.comunidad_id);
   } catch (error) {
-    console.error('Error al listar multas:', error);
-    res.status(500).json({ error: 'Error al listar multas' });
+    console.error('❌ Error obteniendo comunidades del usuario:', error);
+    return [];
   }
-});
+}
 
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/estadisticas-comunidad:
- *   get:
- *     tags: [Multas]
- *     summary: Estadísticas de multas por comunidad
- */
-router.get('/comunidad/:comunidadId/estadisticas-comunidad', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+// ============================================
+// HELPER: Registrar en historial
+// ============================================
+async function registrarHistorial(multaId, usuarioId, accion, descripcion, extras = {}) {
   try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const query = `
-      SELECT
-        c.razon_social AS comunidad,
-        COUNT(m.id) AS total_multas,
-        COUNT(CASE WHEN m.estado = 'pendiente' THEN 1 END) AS pendientes,
-        COUNT(CASE WHEN m.estado = 'pagada' THEN 1 END) AS pagadas,
-        COUNT(CASE WHEN m.estado = 'pendiente' AND CURDATE() > m.fecha THEN 1 END) AS vencidas,
-        COUNT(ma.id) AS apeladas,
-        COUNT(CASE WHEN m.estado = 'anulada' THEN 1 END) AS anuladas,
-        COALESCE(SUM(m.monto), 0) AS monto_total,
-        COALESCE(AVG(m.monto), 0) AS monto_promedio,
-        MAX(m.fecha) AS ultima_multa
-      FROM comunidad c
-      LEFT JOIN multa m ON c.id = m.comunidad_id
-      LEFT JOIN multa_apelacion ma ON m.id = ma.multa_id
-      WHERE c.id = ?
-      GROUP BY c.id, c.razon_social
-    `;
-
-    const [[stats]] = await db.query(query, [comunidadId]);
-
-    res.json(stats || {
-      comunidad: '',
-      total_multas: 0,
-      pendientes: 0,
-      pagadas: 0,
-      vencidas: 0,
-      apeladas: 0,
-      anuladas: 0,
-      monto_total: 0,
-      monto_promedio: 0,
-      ultima_multa: null
-    });
-  } catch (error) {
-    console.error('Error al obtener estadísticas por comunidad:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas' });
-  }
-});
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/proximas-vencer:
- *   get:
- *     tags: [Multas]
- *     summary: Multas próximas a vencer (7 días)
- */
-router.get('/comunidad/:comunidadId/proximas-vencer', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const query = `
-      SELECT
-        m.id,
-        m.id AS numero,
-        c.razon_social AS comunidad,
-        u.codigo AS unidad,
-        m.motivo AS tipo_infraccion,
-        m.monto,
-        m.fecha AS fecha_vencimiento,
-        DATEDIFF(m.fecha, CURDATE()) AS dias_restantes,
-        CASE
-          WHEN DATEDIFF(m.fecha, CURDATE()) <= 0 THEN 'vencida'
-          WHEN DATEDIFF(m.fecha, CURDATE()) <= 3 THEN 'critica'
-          ELSE 'advertencia'
-        END AS urgencia
-      FROM multa m
-      JOIN comunidad c ON m.comunidad_id = c.id
-      LEFT JOIN unidad u ON m.unidad_id = u.id
-      WHERE m.comunidad_id = ?
-        AND m.estado = 'pendiente'
-        AND m.fecha >= CURDATE()
-        AND DATEDIFF(m.fecha, CURDATE()) <= 7
-      ORDER BY m.fecha ASC
-    `;
-
-    const [rows] = await db.query(query, [comunidadId]);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener multas próximas a vencer:', error);
-    res.status(500).json({ error: 'Error al obtener multas próximas a vencer' });
-  }
-});
-
-// =========================================
-// 2. VISTA DETALLADA
-// =========================================
-
-/**
- * @openapi
- * /api/multas/{id}:
- *   get:
- *     tags: [Multas]
- *     summary: Obtener multa por ID con detalles completos
- */
-router.get('/:id', authenticate, async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-
-    const query = `
-      SELECT
-        m.id,
-        m.id AS numero,
-        c.id AS comunidad_id,
-        c.razon_social AS comunidad_nombre,
-        u.id AS unidad_id,
-        u.codigo AS unidad_codigo,
-        t.nombre AS torre_nombre,
-        e.nombre AS edificio_nombre,
-        p.id AS persona_id,
-        CONCAT(p.nombres, ' ', p.apellidos) AS propietario_nombre,
-        p.email AS propietario_email,
-        p.telefono AS propietario_telefono,
-        m.motivo AS tipo_infraccion,
-        m.descripcion,
-        m.monto,
-        m.estado,
-        m.prioridad,
-        m.fecha AS fecha_infraccion,
-        m.fecha AS fecha_vencimiento,
-        m.fecha_pago,
-        NULL AS fecha_anulacion,
-        NULL AS motivo_anulacion,
-        m.anulado_por,
-        COALESCE(ua.username, '') AS anulado_por_username,
-        m.created_at,
-        m.updated_at,
-        CASE
-          WHEN m.estado = 'pagada' THEN 'Pagada'
-          WHEN m.estado = 'pendiente' AND CURDATE() > m.fecha THEN 'Vencida'
-          WHEN m.estado = 'pendiente' THEN 'Pendiente'
-          WHEN m.estado = 'anulada' THEN 'Anulada'
-        END AS estado_descripcion,
-        DATEDIFF(CURDATE(), m.fecha) AS dias_desde_infraccion,
-        CASE
-          WHEN m.fecha_pago IS NOT NULL THEN DATEDIFF(m.fecha_pago, m.fecha)
-          ELSE NULL
-        END AS dias_para_pagar
-      FROM multa m
-      JOIN comunidad c ON m.comunidad_id = c.id
-      LEFT JOIN unidad u ON m.unidad_id = u.id
-      LEFT JOIN torre t ON u.torre_id = t.id
-      LEFT JOIN edificio e ON u.edificio_id = e.id
-      LEFT JOIN persona p ON m.persona_id = p.id
-      LEFT JOIN usuario ua ON m.anulado_por = ua.id
-      WHERE m.id = ?
-    `;
-
-    const [rows] = await db.query(query, [id]);
-
-    if (!rows.length) {
-      return res.status(404).json({ error: 'Multa no encontrada' });
-    }
-
-    res.json(rows[0]);
-  } catch (error) {
-    console.error('Error al obtener multa:', error);
-    res.status(500).json({ error: 'Error al obtener multa' });
-  }
-});
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/completas:
- *   get:
- *     tags: [Multas]
- *     summary: Vista de multas con información completa en JSON
- */
-router.get('/comunidad/:comunidadId/completas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { limit = 50, offset = 0 } = req.query;
-
-    const query = `
-      SELECT
-        m.id,
-        m.id AS numero,
-        JSON_OBJECT(
-          'comunidad', JSON_OBJECT(
-            'id', c.id,
-            'razon_social', c.razon_social,
-            'direccion', c.direccion
-          ),
-          'unidad', CASE
-            WHEN u.id IS NOT NULL THEN JSON_OBJECT(
-              'id', u.id,
-              'numero', u.codigo,
-              'torre', t.nombre,
-              'edificio', e.nombre
-            )
-            ELSE NULL
-          END,
-          'propietario', CASE
-            WHEN p.id IS NOT NULL THEN JSON_OBJECT(
-              'id', p.id,
-              'nombre', CONCAT(p.nombres, ' ', p.apellidos),
-              'email', p.email,
-              'telefono', p.telefono
-            )
-            ELSE NULL
-          END,
-          'multa', JSON_OBJECT(
-            'tipo_infraccion', m.motivo,
-            'descripcion', m.descripcion,
-            'monto', m.monto,
-            'estado', m.estado,
-            'prioridad', m.prioridad,
-            'fecha_infraccion', m.fecha,
-            'fecha_vencimiento', m.fecha,
-            'fecha_pago', m.fecha_pago,
-            'fecha_anulacion', NULL,
-            'motivo_anulacion', NULL
-          ),
-          'fechas', JSON_OBJECT(
-            'creado', m.created_at,
-            'actualizado', m.updated_at
-          )
-        ) AS informacion_completa
-      FROM multa m
-      JOIN comunidad c ON m.comunidad_id = c.id
-      LEFT JOIN unidad u ON m.unidad_id = u.id
-      LEFT JOIN torre t ON u.torre_id = t.id
-      LEFT JOIN edificio e ON u.edificio_id = e.id
-      LEFT JOIN persona p ON m.persona_id = p.id
-      WHERE m.comunidad_id = ?
-      ORDER BY m.fecha DESC
-      LIMIT ? OFFSET ?
-    `;
-
-    const [rows] = await db.query(query, [comunidadId, Number(limit), Number(offset)]);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener multas completas:', error);
-    res.status(500).json({ error: 'Error al obtener multas completas' });
-  }
-});
-
-// =========================================
-// 3. ESTADÍSTICAS
-// =========================================
-
-/**
- * @openapi
- * /api/multas/estadisticas/generales:
- *   get:
- *     tags: [Multas]
- *     summary: Estadísticas generales de multas
- */
-router.get('/estadisticas/generales', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const query = `
-      SELECT
-        COUNT(*) AS total_multas,
-        COUNT(DISTINCT comunidad_id) AS comunidades_con_multas,
-        COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) AS multas_pendientes,
-        COUNT(CASE WHEN estado = 'pagada' THEN 1 END) AS multas_pagadas,
-        COUNT(CASE WHEN estado = 'pendiente' AND CURDATE() > fecha THEN 1 END) AS multas_vencidas,
-        (SELECT COUNT(*) FROM multa_apelacion) AS multas_apeladas,
-        COUNT(CASE WHEN estado = 'anulada' THEN 1 END) AS multas_anuladas,
-        COALESCE(SUM(monto), 0) AS monto_total,
-        COALESCE(AVG(monto), 0) AS monto_promedio,
-        COALESCE(MIN(monto), 0) AS monto_minimo,
-        COALESCE(MAX(monto), 0) AS monto_maximo,
-        MIN(fecha) AS primera_multa,
-        MAX(fecha) AS ultima_multa
-      FROM multa m
-    `;
-
-    const [[stats]] = await db.query(query);
-
-    res.json(stats);
-  } catch (error) {
-    console.error('Error al obtener estadísticas generales:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas' });
-  }
-});
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/estadisticas/tipo:
- *   get:
- *     tags: [Multas]
- *     summary: Estadísticas por tipo de infracción
- */
-router.get('/comunidad/:comunidadId/estadisticas/tipo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const query = `
-      SELECT
-        m.motivo AS tipo_infraccion,
-        COUNT(m.id) AS cantidad,
-        COALESCE(SUM(m.monto), 0) AS monto_total,
-        COALESCE(AVG(m.monto), 0) AS monto_promedio,
-        COUNT(CASE WHEN m.estado = 'pagada' THEN 1 END) AS pagadas,
-        COUNT(CASE WHEN m.estado = 'pendiente' THEN 1 END) AS pendientes,
-        COUNT(CASE WHEN m.estado = 'pendiente' AND CURDATE() > m.fecha THEN 1 END) AS vencidas,
-        ROUND(
-          (COUNT(CASE WHEN m.estado = 'pagada' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)), 2
-        ) AS porcentaje_cobranza
-      FROM multa m
-      WHERE m.comunidad_id = ?
-      GROUP BY m.motivo
-      ORDER BY cantidad DESC
-    `;
-
-    const [rows] = await db.query(query, [comunidadId]);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener estadísticas por tipo:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas por tipo' });
-  }
-});
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/estadisticas/prioridad:
- *   get:
- *     tags: [Multas]
- *     summary: Estadísticas por prioridad
- */
-router.get('/comunidad/:comunidadId/estadisticas/prioridad', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const query = `
-      SELECT
-        prioridad,
-        COUNT(*) AS cantidad,
-        COALESCE(SUM(monto), 0) AS monto_total,
-        COALESCE(AVG(monto), 0) AS monto_promedio,
-        COUNT(CASE WHEN estado = 'pagada' THEN 1 END) AS pagadas,
-        COUNT(CASE WHEN estado = 'pendiente' AND CURDATE() > fecha THEN 1 END) AS vencidas,
-        ROUND(
-          (COUNT(CASE WHEN estado = 'pagada' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)), 2
-        ) AS porcentaje_cobranza
-      FROM multa
-      WHERE comunidad_id = ?
-      GROUP BY prioridad
-      ORDER BY
-        CASE prioridad
-          WHEN 'alta' THEN 1
-          WHEN 'media' THEN 2
-          WHEN 'baja' THEN 3
-          ELSE 4
-        END
-    `;
-
-    const [rows] = await db.query(query, [comunidadId]);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener estadísticas por prioridad:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas por prioridad' });
-  }
-});
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/estadisticas/mensuales:
- *   get:
- *     tags: [Multas]
- *     summary: Estadísticas mensuales de multas (últimos 12 meses)
- */
-router.get('/comunidad/:comunidadId/estadisticas/mensuales', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const query = `
-      SELECT
-        YEAR(fecha) AS anio,
-        MONTH(fecha) AS mes,
-        COUNT(*) AS total_multas,
-        COALESCE(SUM(monto), 0) AS monto_total,
-        COUNT(CASE WHEN estado = 'pagada' THEN 1 END) AS pagadas,
-        COUNT(CASE WHEN estado = 'pendiente' AND CURDATE() > fecha THEN 1 END) AS vencidas,
-        ROUND(
-          (COUNT(CASE WHEN estado = 'pagada' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)), 2
-        ) AS porcentaje_cobranza
-      FROM multa
-      WHERE comunidad_id = ?
-        AND fecha >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-      GROUP BY YEAR(fecha), MONTH(fecha)
-      ORDER BY anio DESC, mes DESC
-    `;
-
-    const [rows] = await db.query(query, [comunidadId]);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener estadísticas mensuales:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas mensuales' });
-  }
-});
-
-// =========================================
-// 4. BÚSQUEDAS AVANZADAS
-// =========================================
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/buscar:
- *   get:
- *     tags: [Multas]
- *     summary: Búsqueda avanzada de multas
- */
-router.get('/comunidad/:comunidadId/buscar', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { busqueda, limit = 50, offset = 0 } = req.query;
-
-    const query = `
-      SELECT
-        m.id,
-        m.id AS numero,
-        c.razon_social AS comunidad,
-        u.codigo AS unidad,
-        COALESCE(CONCAT(p.nombres, ' ', p.apellidos), '') AS propietario,
-        m.motivo AS tipo_infraccion,
-        m.monto,
-        m.estado,
-        m.prioridad,
-        m.fecha AS fecha_infraccion,
-        m.fecha AS fecha_vencimiento,
-        CASE
-          WHEN m.estado = 'pagada' THEN 'Pagada'
-          WHEN m.estado = 'pendiente' AND CURDATE() > m.fecha THEN 'Vencida'
-          WHEN m.estado = 'pendiente' THEN 'Pendiente'
-          ELSE m.estado
-        END AS estado_actual,
-        DATEDIFF(CURDATE(), m.fecha) AS antiguedad_dias
-      FROM multa m
-      JOIN comunidad c ON m.comunidad_id = c.id
-      LEFT JOIN unidad u ON m.unidad_id = u.id
-      LEFT JOIN persona p ON m.persona_id = p.id
-      WHERE m.comunidad_id = ?
-        AND (? IS NULL OR
-             m.id LIKE ? OR
-             m.motivo LIKE ? OR
-             CONCAT(p.nombres, ' ', p.apellidos) LIKE ?)
-      ORDER BY m.fecha DESC, m.created_at DESC
-      LIMIT ? OFFSET ?
-    `;
-
-    const searchParam = busqueda || null;
-    const searchPattern = busqueda ? `%${busqueda}%` : null;
-
-    const [rows] = await db.query(query, [
-      comunidadId,
-      searchParam, searchPattern, searchPattern, searchPattern,
-      Number(limit), Number(offset)
+    await db.query(`
+      INSERT INTO multa_historial (
+        multa_id, usuario_id, accion, estado_anterior, estado_nuevo, 
+        campo_modificado, valor_anterior, valor_nuevo, descripcion, ip_address
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      multaId,
+      usuarioId,
+      accion,
+      extras.estado_anterior || null,
+      extras.estado_nuevo || null,
+      extras.campo_modificado || null,
+      extras.valor_anterior ? JSON.stringify(extras.valor_anterior) : null,
+      extras.valor_nuevo ? JSON.stringify(extras.valor_nuevo) : null,
+      descripcion,
+      extras.ip_address || null
     ]);
-
-    res.json(rows);
+    console.log(`📝 Historial registrado: ${accion} para multa ${multaId}`);
   } catch (error) {
-    console.error('Error en búsqueda de multas:', error);
-    res.status(500).json({ error: 'Error en búsqueda de multas' });
+    console.error('❌ Error registrando historial:', error);
   }
-});
+}
 
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/por-propietario:
- *   get:
- *     tags: [Multas]
- *     summary: Multas por propietario con estadísticas
- */
-router.get('/comunidad/:comunidadId/por-propietario', authenticate, requireCommunity('comunidadId'), async (req, res) => {
+// ============================================
+// HELPER: Generar número de multa
+// ============================================
+async function generarNumeroMulta(comunidadId) {
   try {
-    const comunidadId = Number(req.params.comunidadId);
+    const year = new Date().getFullYear();
 
-    const query = `
-      SELECT
-        p.id AS persona_id,
-        CONCAT(p.nombres, ' ', p.apellidos) AS propietario,
-        p.email,
-        COUNT(m.id) AS total_multas,
-        COUNT(CASE WHEN m.estado = 'pendiente' THEN 1 END) AS pendientes,
-        COUNT(CASE WHEN m.estado = 'pagada' THEN 1 END) AS pagadas,
-        COUNT(CASE WHEN m.estado = 'pendiente' AND CURDATE() > m.fecha THEN 1 END) AS vencidas,
-        COALESCE(SUM(m.monto), 0) AS monto_total,
-        COALESCE(AVG(m.monto), 0) AS monto_promedio,
-        MAX(m.fecha) AS ultima_multa,
-        MIN(m.fecha) AS primera_multa
-      FROM persona p
-      LEFT JOIN multa m ON p.id = m.persona_id
-      WHERE m.comunidad_id = ?
-      GROUP BY p.id, p.nombres, p.apellidos, p.email
-      HAVING COUNT(m.id) > 0
-      ORDER BY total_multas DESC, monto_total DESC
-    `;
-
-    const [rows] = await db.query(query, [comunidadId]);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener multas por propietario:', error);
-    res.status(500).json({ error: 'Error al obtener multas por propietario' });
-  }
-});
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/por-unidad:
- *   get:
- *     tags: [Multas]
- *     summary: Multas por unidad con estadísticas
- */
-router.get('/comunidad/:comunidadId/por-unidad', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const query = `
-      SELECT
-        u.id AS unidad_id,
-        u.codigo AS unidad_codigo,
-        t.nombre AS torre,
-        e.nombre AS edificio,
-        c.razon_social AS comunidad,
-        COUNT(m.id) AS total_multas,
-        COUNT(CASE WHEN m.estado = 'pendiente' THEN 1 END) AS pendientes,
-        COUNT(CASE WHEN m.estado = 'pagada' THEN 1 END) AS pagadas,
-        COUNT(CASE WHEN m.estado = 'pendiente' AND CURDATE() > m.fecha THEN 1 END) AS vencidas,
-        COALESCE(SUM(m.monto), 0) AS monto_total,
-        COALESCE(AVG(m.monto), 0) AS monto_promedio,
-        MAX(m.fecha) AS ultima_multa
-      FROM unidad u
-      LEFT JOIN torre t ON u.torre_id = t.id
-      LEFT JOIN edificio e ON u.edificio_id = e.id
-      JOIN comunidad c ON u.comunidad_id = c.id
-      LEFT JOIN multa m ON u.id = m.unidad_id
-      WHERE u.comunidad_id = ?
-      GROUP BY u.id, u.codigo, t.nombre, e.nombre, c.razon_social
-      HAVING COUNT(m.id) > 0
-      ORDER BY total_multas DESC
-    `;
-
-    const [rows] = await db.query(query, [comunidadId]);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener multas por unidad:', error);
-    res.status(500).json({ error: 'Error al obtener multas por unidad' });
-  }
-});
-
-// =========================================
-// 5. EXPORTACIÓN
-// =========================================
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/export:
- *   get:
- *     tags: [Multas]
- *     summary: Exportar multas a CSV/Excel
- */
-router.get('/comunidad/:comunidadId/export', authenticate, requireCommunity('comunidadId', ['admin', 'superadmin']), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const query = `
-      SELECT
-        m.id AS 'ID',
-        m.id AS 'Número',
-        c.razon_social AS 'Comunidad',
-        COALESCE(u.codigo, '') AS 'Unidad',
-        COALESCE(t.nombre, '') AS 'Torre',
-        COALESCE(e.nombre, '') AS 'Edificio',
-        COALESCE(CONCAT(p.nombres, ' ', p.apellidos), '') AS 'Propietario',
-        COALESCE(p.email, '') AS 'Email Propietario',
-        m.motivo AS 'Tipo Infracción',
-        m.descripcion AS 'Descripción',
-        m.monto AS 'Monto',
-        m.estado AS 'Estado',
-        m.prioridad AS 'Prioridad',
-        DATE_FORMAT(m.fecha, '%Y-%m-%d') AS 'Fecha Infracción',
-        m.fecha AS 'Fecha Vencimiento',
-        DATE_FORMAT(m.fecha_pago, '%Y-%m-%d') AS 'Fecha Pago',
-        DATE_FORMAT(m.created_at, '%Y-%m-%d %H:%i:%s') AS 'Fecha Creación',
-        DATE_FORMAT(m.updated_at, '%Y-%m-%d %H:%i:%s') AS 'Última Actualización'
-      FROM multa m
-      JOIN comunidad c ON m.comunidad_id = c.id
-      LEFT JOIN unidad u ON m.unidad_id = u.id
-      LEFT JOIN torre t ON u.torre_id = t.id
-      LEFT JOIN edificio e ON u.edificio_id = e.id
-      LEFT JOIN persona p ON m.persona_id = p.id
-      WHERE m.comunidad_id = ?
-      ORDER BY c.razon_social, m.fecha DESC
-    `;
-
-    const [rows] = await db.query(query, [comunidadId]);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al exportar multas:', error);
-    res.status(500).json({ error: 'Error al exportar multas' });
-  }
-});
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/export/pendientes:
- *   get:
- *     tags: [Multas]
- *     summary: Exportar multas pendientes
- */
-router.get('/comunidad/:comunidadId/export/pendientes', authenticate, requireCommunity('comunidadId', ['admin', 'superadmin']), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const query = `
-      SELECT
-        m.id AS 'Número Multa',
-        c.razon_social AS 'Comunidad',
-        u.codigo AS 'Unidad',
-        CONCAT(p.nombres, ' ', p.apellidos) AS 'Propietario',
-        m.motivo AS 'Infracción',
-        m.monto AS 'Monto',
-        m.fecha AS 'Vence',
-        DATEDIFF(m.fecha, CURDATE()) AS 'Días Restantes',
-        CASE
-          WHEN DATEDIFF(m.fecha, CURDATE()) <= 0 THEN 'VENCIDA'
-          WHEN DATEDIFF(m.fecha, CURDATE()) <= 7 THEN 'URGENTE'
-          ELSE 'PENDIENTE'
-        END AS 'Estado Urgencia'
-      FROM multa m
-      JOIN comunidad c ON m.comunidad_id = c.id
-      LEFT JOIN unidad u ON m.unidad_id = u.id
-      LEFT JOIN persona p ON m.persona_id = p.id
-      WHERE m.comunidad_id = ?
-        AND m.estado = 'pendiente'
-      ORDER BY m.fecha ASC
-    `;
-
-    const [rows] = await db.query(query, [comunidadId]);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al exportar multas pendientes:', error);
-    res.status(500).json({ error: 'Error al exportar multas pendientes' });
-  }
-});
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/export/estadisticas:
- *   get:
- *     tags: [Multas]
- *     summary: Exportar estadísticas de cobranza
- */
-router.get('/comunidad/:comunidadId/export/estadisticas', authenticate, requireCommunity('comunidadId', ['admin', 'superadmin']), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const query = `
-      SELECT
-        YEAR(m.fecha) AS 'Año',
-        MONTH(m.fecha) AS 'Mes',
-        COUNT(*) AS 'Total Multas',
-        COUNT(CASE WHEN m.estado = 'pagada' THEN 1 END) AS 'Pagadas',
-        COUNT(CASE WHEN m.estado = 'pendiente' THEN 1 END) AS 'Pendientes',
-        COUNT(CASE WHEN m.estado = 'pendiente' AND CURDATE() > m.fecha THEN 1 END) AS 'Vencidas',
-        COALESCE(SUM(m.monto), 0) AS 'Monto Total',
-        COALESCE(SUM(CASE WHEN m.estado = 'pagada' THEN m.monto ELSE 0 END), 0) AS 'Monto Cobrado',
-        ROUND(
-          (COUNT(CASE WHEN m.estado = 'pagada' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)), 2
-        ) AS 'Porcentaje Cobranza (%)'
-      FROM multa m
-      WHERE m.comunidad_id = ?
-        AND m.fecha >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-      GROUP BY YEAR(m.fecha), MONTH(m.fecha)
-      ORDER BY 'Año' DESC, 'Mes' DESC
-    `;
-
-    const [rows] = await db.query(query, [comunidadId]);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al exportar estadísticas:', error);
-    res.status(500).json({ error: 'Error al exportar estadísticas' });
-  }
-});
-
-// =========================================
-// 6. VALIDACIONES
-// =========================================
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/validar/integridad:
- *   get:
- *     tags: [Multas]
- *     summary: Validar integridad de multas
- */
-router.get('/comunidad/:comunidadId/validar/integridad', authenticate, requireCommunity('comunidadId', ['admin', 'superadmin']), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const query = `
-      SELECT 'Multas sin comunidad' AS validacion, COUNT(*) AS cantidad
-      FROM multa m
-      LEFT JOIN comunidad c ON m.comunidad_id = c.id
-      WHERE m.comunidad_id = ? AND c.id IS NULL
-      UNION ALL
-      SELECT 'Multas sin unidad' AS validacion, COUNT(*) AS cantidad
-      FROM multa m
-      LEFT JOIN unidad u ON m.unidad_id = u.id
-      WHERE m.comunidad_id = ? AND u.id IS NULL
-      UNION ALL
-      SELECT 'Multas con montos negativos o cero' AS validacion, COUNT(*) AS cantidad
-      FROM multa
-      WHERE comunidad_id = ? AND monto <= 0
-      UNION ALL
-      SELECT 'Multas pagadas sin fecha de pago' AS validacion, COUNT(*) AS cantidad
-      FROM multa
-      WHERE comunidad_id = ? AND estado = 'pagada' AND fecha_pago IS NULL
-    `;
-
-    const [rows] = await db.query(query, [comunidadId, comunidadId, comunidadId, comunidadId]);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al validar integridad:', error);
-    res.status(500).json({ error: 'Error al validar integridad' });
-  }
-});
-
-/**
- * @openapi
- * /api/multas/comunidad/{comunidadId}/validar/rangos-monto:
- *   get:
- *     tags: [Multas]
- *     summary: Validar rangos de montos por tipo de infracción
- */
-router.get('/comunidad/:comunidadId/validar/rangos-monto', authenticate, requireCommunity('comunidadId', ['admin', 'superadmin']), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-
-    const query = `
-      SELECT
-        m.motivo AS tipo_infraccion,
-        COUNT(*) AS total_multas,
-        AVG(m.monto) AS monto_promedio,
-        MIN(m.monto) AS monto_minimo,
-        MAX(m.monto) AS monto_maximo,
-        CASE
-          WHEN AVG(m.monto) < 1000 THEN 'Montos muy bajos'
-          WHEN AVG(m.monto) > 500000 THEN 'Montos muy altos'
-          ELSE 'Montos normales'
-        END AS evaluacion_rango
-      FROM multa m
-      WHERE m.comunidad_id = ?
-      GROUP BY m.motivo
-      HAVING COUNT(*) > 1
-      ORDER BY monto_promedio DESC
-    `;
-
-    const [rows] = await db.query(query, [comunidadId]);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al validar rangos de monto:', error);
-    res.status(500).json({ error: 'Error al validar rangos de monto' });
-  }
-});
-
-// =========================================
-// 7. CRUD BÁSICO
-// =========================================
-
-/**
- * @openapi
- * /api/multas/unidad/{unidadId}:
- *   get:
- *     tags: [Multas]
- *     summary: Listar multas de una unidad
- */
-router.get('/unidad/:unidadId', authenticate, async (req, res) => {
-  try {
-    const unidadId = Number(req.params.unidadId);
-
-    const [rows] = await db.query(
-      'SELECT id, motivo, monto, estado, fecha, prioridad, descripcion FROM multa WHERE unidad_id = ? ORDER BY fecha DESC LIMIT 200',
-      [unidadId]
+    const [lastMulta] = await db.query(
+      "SELECT numero FROM multa WHERE comunidad_id = ? AND numero LIKE ? ORDER BY id DESC LIMIT 1",
+      [comunidadId, `M-${year}-%`]
     );
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al listar multas de unidad:', error);
-    res.status(500).json({ error: 'Error al listar multas' });
-  }
-});
-
-/**
- * @openapi
- * /api/multas/unidad/{unidadId}:
- *   post:
- *     tags: [Multas]
- *     summary: Crear una multa para una unidad
- */
-router.post('/unidad/:unidadId', [
-  authenticate,
-  authorize('admin', 'superadmin'),
-  body('motivo').notEmpty(),
-  body('monto').isNumeric(),
-  body('fecha').notEmpty()
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  try {
-    const unidadId = Number(req.params.unidadId);
-    const { persona_id, motivo, descripcion, monto, fecha, prioridad = 'media' } = req.body;
-
-    const [result] = await db.query(
-      `INSERT INTO multa (comunidad_id, unidad_id, persona_id, motivo, descripcion, monto, fecha, prioridad)
-       SELECT unidad.comunidad_id, ?, ?, ?, ?, ?, ?, ?
-       FROM unidad WHERE id = ?`,
-      [unidadId, persona_id || null, motivo, descripcion || null, monto, fecha, prioridad, unidadId]
-    );
-
-    const [row] = await db.query('SELECT id, motivo, monto, estado, prioridad FROM multa WHERE id = ? LIMIT 1', [result.insertId]);
-
-    res.status(201).json(row[0]);
-  } catch (error) {
-    console.error('Error al crear multa:', error);
-    res.status(500).json({ error: 'Error al crear multa' });
-  }
-});
-
-/**
- * @openapi
- * /api/multas/{id}:
- *   patch:
- *     tags: [Multas]
- *     summary: Actualizar multa
- */
-router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const fields = ['estado', 'fecha_pago', 'monto', 'motivo', 'descripcion', 'prioridad'];
-    const updates = [];
-    const values = [];
-
-    fields.forEach(f => {
-      if (req.body[f] !== undefined) {
-        updates.push(`${f} = ?`);
-        values.push(req.body[f]);
-      }
-    });
-
-    if (!updates.length) {
-      return res.status(400).json({ error: 'No hay campos para actualizar' });
+    let nextNum = 1;
+    if (lastMulta.length > 0 && lastMulta[0].numero) {
+      const parts = lastMulta[0].numero.split('-');
+      nextNum = parseInt(parts[2]) + 1;
     }
 
-    values.push(id);
-    await db.query(`UPDATE multa SET ${updates.join(', ')} WHERE id = ?`, values);
+    const numero = `M-${year}-${String(nextNum).padStart(4, '0')}`;
+    console.log(`🔢 Número generado: ${numero}`);
+    return numero;
 
-    const [rows] = await db.query('SELECT id, motivo, monto, estado, prioridad FROM multa WHERE id = ? LIMIT 1', [id]);
-
-    res.json(rows[0]);
   } catch (error) {
-    console.error('Error al actualizar multa:', error);
-    res.status(500).json({ error: 'Error al actualizar multa' });
+    console.error('❌ Error generando número:', error);
+    return `M-${new Date().getFullYear()}-0001`;
   }
-});
+}
 
-/**
- * @openapi
- * /api/multas/{id}/anular:
- *   patch:
- *     tags: [Multas]
- *     summary: Anular una multa
- */
-router.patch('/:id/anular', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
+// ============================================
+// HELPER: Resolver id o numero (M-2025-0001)
+// ============================================
+async function resolveMultaId(idOrNumero) {
+  if (!idOrNumero) return null;
+  if (!isNaN(Number(idOrNumero))) return Number(idOrNumero);
   try {
-    const id = Number(req.params.id);
-    const usuarioId = req.user.id;
-
-    await db.query(
-      'UPDATE multa SET estado = ?, anulado_por = ? WHERE id = ?',
-      ['anulada', usuarioId, id]
-    );
-
-    const [rows] = await db.query('SELECT id, motivo, monto, estado FROM multa WHERE id = ? LIMIT 1', [id]);
-
-    res.json(rows[0]);
-  } catch (error) {
-    console.error('Error al anular multa:', error);
-    res.status(500).json({ error: 'Error al anular multa' });
+    const [rows] = await db.query('SELECT id FROM multa WHERE numero = ? LIMIT 1', [idOrNumero]);
+    if (!rows.length) return null;
+    return rows[0].id;
+  } catch (e) {
+    console.error('❌ Error resolviendo multa por numero:', e);
+    return null;
   }
-});
+}
 
-/**
- * @openapi
- * /api/multas/{id}:
- *   delete:
- *     tags: [Multas]
- *     summary: Eliminar multa
- */
-router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+// ============================================
+// GET /multas - LISTAR MULTAS
+// ============================================
+router.get('/',
+  authenticate,
+  MultasPermissions.canView,
+  [
+    query('estado').optional().isIn(['pendiente', 'pagado', 'vencido', 'apelada', 'anulada']),
+    query('prioridad').optional().isIn(['baja', 'media', 'alta', 'critica']),
+    query('page').optional().isInt({ min: 1 }),
+    query('limit').optional().isInt({ min: 1, max: 200 })
+  ],
+  async (req, res) => {
+    try {
+      const { estado, prioridad, unidad_id, search, page = 1, limit = 50 } = req.query;
+      const offset = (page - 1) * limit;
 
-    await db.query('DELETE FROM multa WHERE id = ?', [id]);
+      console.log('🔍 GET /multas - Usuario:', req.user?.username, 'ID:', req.user?.sub);
 
-    res.status(204).end();
-  } catch (error) {
-    console.error('Error al eliminar multa:', error);
-    res.status(500).json({ error: 'Error al eliminar multa' });
+      let sql = `
+         SELECT 
+           m.*,
+           m.motivo as tipo_infraccion,
+           m.fecha as fecha_infraccion,
+           u.codigo as unidad_numero,
+           t.nombre as torre_nombre,
+           e.nombre as edificio_nombre,
+           c.razon_social as comunidad_nombre,
+           CONCAT(p.nombres, ' ', p.apellidos) as propietario_nombre,
+           p.email as propietario_email,
+           anulador.username as anulado_por_username
+         FROM multa m
+         LEFT JOIN unidad u ON m.unidad_id = u.id
+         LEFT JOIN torre t ON u.torre_id = t.id
+         LEFT JOIN edificio e ON u.edificio_id = e.id
+         LEFT JOIN comunidad c ON m.comunidad_id = c.id
+         LEFT JOIN persona p ON m.persona_id = p.id
+         LEFT JOIN usuario anulador ON m.anulado_por = anulador.id
+         WHERE 1=1
+       `;
+
+      const params = [];
+
+      if (req.viewOnlyOwn && req.user.persona_id) {
+        // Usuario solo ve sus propias multas
+        sql += ' AND m.persona_id = ?';
+        params.push(req.user.persona_id);
+        console.log(`🔒 Filtro aplicado: solo multas de persona_id=${req.user.persona_id}`);
+      } else if (!req.user?.is_superadmin) {
+        // Cargar comunidades desde BD
+        const comunidadIds = await obtenerComunidadesUsuario(
+          req.user.sub,
+          req.user.persona_id,
+          req.user.is_superadmin
+        );
+
+        console.log(`🏘️ Comunidades del usuario:`, comunidadIds);
+
+        if (comunidadIds.length === 0) {
+          console.log('⚠️ Usuario sin comunidades asignadas');
+          return res.status(403).json({
+            success: false,
+            error: 'Sin permisos para ver multas (sin comunidades asignadas)'
+          });
+        }
+
+        const placeholders = comunidadIds.map(() => '?').join(',');
+        sql += ` AND m.comunidad_id IN (${placeholders})`;
+        params.push(...comunidadIds);
+      } else {
+        console.log('👑 Usuario superadmin - ve todas las multas');
+      }
+
+      // Filtros adicionales
+      if (estado && estado !== 'all') {
+        sql += ' AND m.estado = ?';
+        params.push(estado);
+      }
+
+      if (prioridad) {
+        sql += ' AND m.prioridad = ?';
+        params.push(prioridad);
+      }
+
+      if (unidad_id) {
+        sql += ' AND m.unidad_id = ?';
+        params.push(unidad_id);
+      }
+
+      if (search) {
+        const s = `%${search}%`;
+        sql += ' AND (u.codigo LIKE ? OR m.motivo LIKE ? OR CONCAT(p.nombres, " ", p.apellidos) LIKE ?)';
+        params.push(s, s, s);
+      }
+
+      // Total count
+      const countQuery = sql.replace(/SELECT[\s\S]*?FROM/i, 'SELECT COUNT(*) as total FROM');
+      const [countResult] = await db.query(countQuery, params);
+      const total = countResult[0].total;
+
+      console.log(`📊 Total de multas encontradas: ${total}`);
+
+      // Paginación
+      sql += ' ORDER BY m.created_at DESC LIMIT ? OFFSET ?';
+      params.push(parseInt(limit), parseInt(offset));
+
+      const [rows] = await db.query(sql, params);
+
+      console.log('🔍 SQL ejecutado:', sql);
+      console.log('📊 Parámetros:', params);
+      console.log('📊 Filas encontradas:', rows.length);
+
+      res.json({
+        success: true,
+        data: rows,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Error en GET /multas:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error del servidor',
+        message: error.message
+      });
+    }
   }
-});
+);
 
+// ============================================
+// GET /multas/estadisticas - ESTADÍSTICAS
+// ============================================
+router.get('/estadisticas',
+  authenticate,
+  MultasPermissions.canView,
+  async (req, res) => {
+    try {
+      console.log('📊 GET /multas/estadisticas - Usuario:', req.user?.username);
+
+      let whereClause = 'WHERE 1=1';
+      const params = [];
+
+      if (req.viewOnlyOwn && req.user.persona_id) {
+        whereClause += ' AND persona_id = ?';
+        params.push(req.user.persona_id);
+      } else if (!req.user?.is_superadmin) {
+        const comunidadIds = await obtenerComunidadesUsuario(
+          req.user.sub,
+          req.user.persona_id,
+          req.user.is_superadmin
+        );
+
+        if (comunidadIds.length === 0) {
+          return res.status(403).json({ success: false, error: 'Sin permisos' });
+        }
+
+        const placeholders = comunidadIds.map(() => '?').join(',');
+        whereClause += ` AND comunidad_id IN (${placeholders})`;
+        params.push(...comunidadIds);
+      }
+
+      if (req.query.comunidad_id) {
+        whereClause += ' AND comunidad_id = ?';
+        params.push(req.query.comunidad_id);
+      }
+
+      const [stats] = await db.query(`
+        SELECT 
+          COUNT(*) as total,
+          COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as pendientes,
+          COUNT(CASE WHEN estado = 'pagado' THEN 1 END) as pagadas,
+          COUNT(CASE WHEN estado = 'vencido' THEN 1 END) as vencidas,
+          COUNT(CASE WHEN estado = 'apelada' THEN 1 END) as apeladas,
+          COUNT(CASE WHEN estado = 'anulada' THEN 1 END) as anuladas,
+          COUNT(CASE WHEN prioridad = 'baja' THEN 1 END) as prioridad_baja,
+          COUNT(CASE WHEN prioridad = 'media' THEN 1 END) as prioridad_media,
+          COUNT(CASE WHEN prioridad = 'alta' THEN 1 END) as prioridad_alta,
+          COUNT(CASE WHEN prioridad = 'critica' THEN 1 END) as prioridad_critica,
+          COALESCE(SUM(CASE WHEN estado = 'pendiente' THEN monto ELSE 0 END), 0) as monto_pendiente,
+          COALESCE(SUM(CASE WHEN estado = 'vencido' THEN monto ELSE 0 END), 0) as monto_vencido,
+          COALESCE(SUM(CASE WHEN estado = 'pagado' THEN monto ELSE 0 END), 0) as monto_recaudado,
+          COALESCE(SUM(monto), 0) as monto_total
+        FROM multa 
+        ${whereClause}
+      `, params);
+
+      const estadisticas = {
+        total: stats[0].total,
+        pendientes: stats[0].pendientes,
+        pagadas: stats[0].pagadas,
+        vencidas: stats[0].vencidas,
+        apeladas: stats[0].apeladas,
+        anuladas: stats[0].anuladas,
+        prioridad: {
+          baja: stats[0].prioridad_baja,
+          media: stats[0].prioridad_media,
+          alta: stats[0].prioridad_alta,
+          critica: stats[0].prioridad_critica
+        },
+        montos: {
+          total: parseFloat(stats[0].monto_total || 0),
+          pendiente: parseFloat(stats[0].monto_pendiente || 0),
+          vencido: parseFloat(stats[0].monto_vencido || 0),
+          recaudado: parseFloat(stats[0].monto_recaudado || 0)
+        }
+      };
+
+      console.log('✅ Estadísticas calculadas:', estadisticas);
+      res.json({ success: true, data: estadisticas });
+
+    } catch (error) {
+      console.error('❌ Error en estadísticas:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error del servidor',
+        message: error.message
+      });
+    }
+  }
+);
+
+// ============================================
+// POST /multas - CREAR MULTA
+// ============================================
+router.post('/',
+  authenticate,
+  MultasPermissions.canCreate,
+  [
+    body('unidad_id').notEmpty().isInt().withMessage('unidad_id es requerido y debe ser un número'),
+    body('tipo_infraccion').notEmpty().isLength({ min: 5, max: 120 }).withMessage('tipo_infraccion es requerido (5-120 caracteres)'),
+    body('monto').isFloat({ min: 0.01 }).withMessage('monto debe ser mayor a 0'),
+    body('fecha_infraccion').optional().isISO8601().withMessage('fecha_infraccion debe ser una fecha válida')
+      .custom(fecha => {
+        if (fecha && new Date(fecha) > new Date()) {
+          throw new Error('fecha_infraccion no puede ser futura');
+        }
+        return true;
+      }),
+    body('fecha_vencimiento').optional().isISO8601().withMessage('fecha_vencimiento debe ser una fecha válida')
+      .custom((fecha_venc, { req }) => {
+        if (fecha_venc && req.body.fecha_infraccion && new Date(fecha_venc) <= new Date(req.body.fecha_infraccion)) {
+          throw new Error('fecha_vencimiento debe ser mayor a fecha_infraccion');
+        }
+        return true;
+      }),
+    body('prioridad').optional().isIn(['baja', 'media', 'alta', 'critica']).withMessage('prioridad inválida')
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validación fallida',
+        details: errors.array()
+      });
+    }
+
+    const {
+      unidad_id,
+      persona_id,
+      tipo_infraccion,
+      descripcion,
+      monto,
+      fecha_infraccion,
+      fecha_vencimiento,
+      prioridad = 'media'
+    } = req.body;
+
+    try {
+      console.log('📝 POST /multas - Usuario:', req.user?.username);
+      console.log('📝 Datos recibidos:', req.body);
+
+      // Verificar unidad y obtener comunidad_id
+      const [unidadRows] = await db.query(
+        'SELECT id, comunidad_id FROM unidad WHERE id = ? LIMIT 1',
+        [unidad_id]
+      );
+
+      if (!unidadRows.length) {
+        return res.status(404).json({
+          success: false,
+          error: 'Unidad no encontrada'
+        });
+      }
+
+      const comunidad_id = unidadRows[0].comunidad_id;
+
+      // Verificar permisos sobre la comunidad
+      if (!req.user.is_superadmin) {
+        const comunidadIds = await obtenerComunidadesUsuario(
+          req.user.sub,
+          req.user.persona_id,
+          req.user.is_superadmin
+        );
+
+        if (!comunidadIds.includes(comunidad_id)) {
+          return res.status(403).json({
+            success: false,
+            error: 'Sin permisos para crear multas en esta comunidad'
+          });
+        }
+      }
+
+      // Generar número de multa
+      const numero = await generarNumeroMulta(comunidad_id);
+
+      // Insertar multa
+      const [result] = await db.query(
+        `INSERT INTO multa (
+          numero, comunidad_id, unidad_id, persona_id, motivo, descripcion, 
+          monto, fecha, fecha_vencimiento, prioridad, estado
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')`,
+        [
+          numero,
+          comunidad_id,
+          unidad_id,
+          persona_id || null,
+          tipo_infraccion,
+          descripcion || null,
+          monto,
+          fecha_infraccion,
+          fecha_vencimiento,
+          prioridad
+        ]
+      );
+
+      // Registrar en historial
+      await registrarHistorial(
+        result.insertId,
+        req.user.sub,
+        'creada',
+        `Multa ${numero} creada`,
+        {
+          estado_nuevo: 'pendiente',
+          ip_address: req.ip
+        }
+      );
+
+      // Obtener multa completa con JOINs
+      const [rows] = await db.query(`
+        SELECT 
+          m.*,
+          m.motivo as tipo_infraccion,
+          m.fecha as fecha_infraccion,
+          u.codigo as unidad_numero,
+          c.razon_social as comunidad_nombre
+        FROM multa m
+        LEFT JOIN unidad u ON m.unidad_id = u.id
+        LEFT JOIN comunidad c ON m.comunidad_id = c.id
+        WHERE m.id = ?
+      `, [result.insertId]);
+
+      console.log('✅ Multa creada exitosamente:', rows[0].numero);
+
+      res.status(201).json({
+        success: true,
+        data: rows[0],
+        message: `Multa ${rows[0].numero} creada exitosamente`
+      });
+
+    } catch (err) {
+      console.error('❌ Error creando multa:', err);
+      res.status(500).json({
+        success: false,
+        error: 'Error del servidor',
+        message: err.message
+      });
+    }
+  }
+);
+
+// ============================================
+// GET /multas/:id - DETALLE DE MULTA
+// ============================================
+router.get('/:id',
+  authenticate,
+  MultasPermissions.canView,
+  param('id').notEmpty(),
+  async (req, res) => {
+    const idParam = req.params.id;
+    try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
+      console.log(`🔍 GET /multas/${id} - Usuario:`, req.user?.username);
+
+      let query = `
+        SELECT 
+          m.*,
+          m.motivo as tipo_infraccion,
+          m.fecha as fecha_infraccion,
+          u.codigo as unidad_numero,
+          t.nombre as torre_nombre,
+          e.nombre as edificio_nombre,
+          c.razon_social as comunidad_nombre,
+          CONCAT(p.nombres, ' ', p.apellidos) as propietario_nombre,
+          p.email as propietario_email,
+          p.telefono as propietario_telefono,
+          anulador.username as anulado_por_username
+        FROM multa m
+        LEFT JOIN unidad u ON m.unidad_id = u.id
+        LEFT JOIN torre t ON u.torre_id = t.id
+        LEFT JOIN edificio e ON u.edificio_id = e.id
+        LEFT JOIN comunidad c ON m.comunidad_id = c.id
+        LEFT JOIN persona p ON m.persona_id = p.id
+        LEFT JOIN usuario anulador ON m.anulado_por = anulador.id
+        WHERE m.id = ?
+      `;
+
+      const params = [id];
+
+      if (req.viewOnlyOwn && req.user.persona_id) {
+        query += ' AND m.persona_id = ?';
+        params.push(req.user.persona_id);
+      }
+
+      const [rows] = await db.query(query, params);
+
+      if (!rows.length) {
+        return res.status(404).json({
+          success: false,
+          error: 'Multa no encontrada o sin permisos'
+        });
+      }
+
+      console.log('✅ Multa encontrada:', rows[0].numero);
+      res.json({ success: true, data: rows[0] });
+
+    } catch (error) {
+      console.error(`❌ Error obteniendo multa ${idParam}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Error del servidor',
+        message: error.message
+      });
+    }
+  }
+);
+
+// ============================================
+// PATCH /multas/:id - EDITAR MULTA
+// ============================================
+router.patch('/:id',
+  authenticate,
+  MultasPermissions.canEdit,
+  [
+    param('id').notEmpty(),
+    body('tipo_infraccion').optional().isLength({ min: 5, max: 120 }),
+    body('monto').optional().isFloat({ min: 0.01 }),
+    body('prioridad').optional().isIn(['baja', 'media', 'alta', 'critica']),
+    body('fecha_infraccion').optional().isISO8601(),
+    body('fecha_vencimiento').optional().isISO8601()
+  ],
+  async (req, res) => {
+    const idParam = req.params.id;
+    try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
+      console.log(`📝 PATCH /multas/${id} - Usuario:`, req.user?.username);
+      console.log('📝 Datos recibidos:', req.body);
+
+      const [existingRows] = await db.query(
+        'SELECT * FROM multa WHERE id = ? LIMIT 1',
+        [id]
+      );
+
+      if (!existingRows.length) {
+        return res.status(404).json({
+          success: false,
+          error: 'Multa no encontrada'
+        });
+      }
+
+      const multaAnterior = existingRows[0];
+
+      if (['pagado', 'anulada'].includes(multaAnterior.estado)) {
+        return res.status(400).json({
+          success: false,
+          error: `No se puede editar una multa ${multaAnterior.estado}`
+        });
+      }
+
+      const fieldMapping = {
+        'tipo_infraccion': 'motivo',
+        'fecha_infraccion': 'fecha'
+      };
+
+      const allowedFields = [
+        'tipo_infraccion', 'descripcion', 'monto',
+        'prioridad', 'fecha_infraccion', 'fecha_vencimiento'
+      ];
+
+      const updates = [];
+      const values = [];
+      const cambios = [];
+
+      allowedFields.forEach(field => {
+        if (req.body[field] !== undefined) {
+          const dbField = fieldMapping[field] || field;
+          updates.push(`${dbField} = ?`);
+          values.push(req.body[field]);
+          cambios.push({
+            campo: field,
+            anterior: multaAnterior[dbField],
+            nuevo: req.body[field]
+          });
+        }
+      });
+
+      if (!updates.length) {
+        return res.status(400).json({
+          success: false,
+          error: 'No hay campos para actualizar'
+        });
+      }
+
+      values.push(id);
+
+      const updateQuery = `UPDATE multa SET ${updates.join(', ')} WHERE id = ?`;
+      console.log('🔍 Query UPDATE:', updateQuery);
+
+      await db.query(updateQuery, values);
+
+      await registrarHistorial(
+        id,
+        req.user.sub,
+        'editada',
+        `Multa ${multaAnterior.numero} editada`,
+        {
+          valor_anterior: cambios,
+          valor_nuevo: req.body,
+          ip_address: req.ip
+        }
+      );
+
+      const [rows] = await db.query(`
+        SELECT 
+          m.*,
+          m.motivo as tipo_infraccion,
+          m.fecha as fecha_infraccion
+        FROM multa m
+        WHERE m.id = ?
+      `, [id]);
+
+      console.log('✅ Multa actualizada exitosamente');
+      res.json({ success: true, data: rows[0] });
+
+    } catch (err) {
+      console.error(`❌ Error actualizando multa ${idParam}:`, err);
+      res.status(500).json({
+        success: false,
+        error: 'Error del servidor',
+        message: err.message
+      });
+    }
+  }
+);
+
+// ============================================
+// PATCH /multas/:id/anular - ANULAR MULTA
+// ============================================
+router.patch('/:id/anular',
+  authenticate,
+  MultasPermissions.canAnular,
+  [
+    param('id').notEmpty(),
+    body('motivo_anulacion').notEmpty().withMessage('motivo_anulacion es requerido')
+  ],
+  async (req, res) => {
+    const idParam = req.params.id;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validación fallida',
+        details: errors.array()
+      });
+    }
+
+    const { motivo_anulacion } = req.body;
+
+    try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
+      console.log(`🚫 PATCH /multas/${id}/anular - Usuario:`, req.user?.username);
+
+      const [existingRows] = await db.query(
+        'SELECT * FROM multa WHERE id = ?',
+        [id]
+      );
+
+      if (!existingRows.length) {
+        return res.status(404).json({
+          success: false,
+          error: 'Multa no encontrada'
+        });
+      }
+
+      const multa = existingRows[0];
+
+      if (multa.estado === 'anulada') {
+        return res.status(400).json({
+          success: false,
+          error: 'La multa ya está anulada'
+        });
+      }
+
+      if (multa.estado === 'pagado') {
+        return res.status(400).json({
+          success: false,
+          error: 'No se puede anular una multa pagada'
+        });
+      }
+
+      // Anular multa usando fecha_anulacion (columna en la BD)
+      await db.query(
+        `UPDATE multa 
+         SET estado = 'anulada', 
+             motivo_anulacion = ?, 
+             anulado_por = ?, 
+             fecha_anulacion = NOW(),
+             updated_at = NOW()
+         WHERE id = ?`,
+        [motivo_anulacion, req.user.sub, id]
+      );
+
+      await registrarHistorial(
+        id,
+        req.user.sub,
+        'anulada',
+        `Multa ${multa.numero} anulada: ${motivo_anulacion}`,
+        {
+          estado_anterior: multa.estado,
+          estado_nuevo: 'anulada',
+          ip_address: req.ip
+        }
+      );
+
+      const [rows] = await db.query(
+        'SELECT * FROM multa WHERE id = ?',
+        [id]
+      );
+
+      console.log('✅ Multa anulada exitosamente');
+
+      res.json({
+        success: true,
+        data: rows[0],
+        message: `Multa ${multa.numero} anulada exitosamente`
+      });
+
+    } catch (error) {
+      console.error(`❌ Error anulando multa ${idParam}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Error del servidor'
+      });
+    }
+  }
+);
+
+// ============================================
+// POST /multas/:id/registrar-pago - REGISTRAR PAGO
+// ============================================
+router.post('/:id/registrar-pago',
+  authenticate,
+  MultasPermissions.canRegistrarPago,
+  [
+    param('id').notEmpty(),
+    body('fecha_pago').isISO8601().withMessage('fecha_pago debe ser una fecha válida'),
+    body('metodo_pago').optional().isString(),
+    body('referencia').optional().isString()
+  ],
+  async (req, res) => {
+    const idParam = req.params.id;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validación fallida',
+        details: errors.array()
+      });
+    }
+
+    const { fecha_pago, metodo_pago, referencia } = req.body;
+
+    try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
+      console.log(`💰 POST /multas/${id}/registrar-pago - Usuario:`, req.user?.username);
+
+      const [existingRows] = await db.query(
+        'SELECT * FROM multa WHERE id = ?',
+        [id]
+      );
+
+      if (!existingRows.length) {
+        return res.status(404).json({
+          success: false,
+          error: 'Multa no encontrada'
+        });
+      }
+
+      const multa = existingRows[0];
+
+      if (multa.estado === 'pagado') {
+        return res.status(400).json({
+          success: false,
+          error: 'La multa ya está pagada'
+        });
+      }
+
+      if (multa.estado === 'anulada') {
+        return res.status(400).json({
+          success: false,
+          error: 'No se puede registrar pago de una multa anulada'
+        });
+      }
+
+      await db.query(
+        `UPDATE multa 
+         SET estado = 'pagado', 
+             fecha_pago = ? 
+         WHERE id = ?`,
+        [fecha_pago, id]
+      );
+
+      await registrarHistorial(
+        id,
+        req.user.sub,
+        'pago_registrado',
+        `Pago registrado para multa ${multa.numero}`,
+        {
+          estado_anterior: multa.estado,
+          estado_nuevo: 'pagado',
+          valor_nuevo: { fecha_pago, metodo_pago, referencia },
+          ip_address: req.ip
+        }
+      );
+
+      const [rows] = await db.query(
+        'SELECT * FROM multa WHERE id = ?',
+        [id]
+      );
+
+      console.log('✅ Pago registrado exitosamente');
+
+      res.json({
+        success: true,
+        data: rows[0],
+        message: `Pago de multa ${multa.numero} registrado exitosamente`
+      });
+
+    } catch (error) {
+      console.error(`❌ Error registrando pago ${idParam}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Error del servidor'
+      });
+    }
+  }
+);
+
+// ============================================
+// GET /multas/:id/historial - VER HISTORIAL
+// ============================================
+router.get('/:id/historial',
+  authenticate,
+  MultasPermissions.canView,
+  param('id').notEmpty(),
+  async (req, res) => {
+    const idParam = req.params.id;
+    try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
+      console.log(`📜 GET /multas/${id}/historial - Usuario:`, req.user?.username);
+
+      const [rows] = await db.query(`
+        SELECT 
+          h.*,
+          u.username,
+          CONCAT(p.nombres, ' ', p.apellidos) as usuario_nombre
+        FROM multa_historial h
+        INNER JOIN usuario u ON h.usuario_id = u.id
+        LEFT JOIN persona p ON u.persona_id = p.id
+        WHERE h.multa_id = ?
+        ORDER BY h.created_at DESC
+      `, [id]);
+
+      console.log(`✅ ${rows.length} registros de historial encontrados`);
+
+      res.json({
+        success: true,
+        data: rows,
+        count: rows.length
+      });
+
+    } catch (error) {
+      console.error(`❌ Error obteniendo historial ${idParam}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Error del servidor'
+      });
+    }
+  }
+);
+
+// ============================================
+// POST /multas/:id/apelacion - CREAR APELACIÓN
+// ============================================
+router.post('/:id/apelacion',
+  authenticate,
+  MultasPermissions.canApelar,
+  [
+    param('id').notEmpty(),
+    body('motivo').notEmpty().isLength({ min: 20 }).withMessage('motivo debe tener al menos 20 caracteres'),
+    body('documentos_json').optional().isArray()
+  ],
+  async (req, res) => {
+    const idParam = req.params.id;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validación fallida',
+        details: errors.array()
+      });
+    }
+
+    const { motivo, documentos_json } = req.body;
+
+    try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
+      console.log(`📝 POST /multas/${id}/apelacion - Usuario:`, req.user?.username);
+
+      const [multaRows] = await db.query(
+        'SELECT * FROM multa WHERE id = ?',
+        [id]
+      );
+
+      if (!multaRows.length) {
+        return res.status(404).json({
+          success: false,
+          error: 'Multa no encontrada'
+        });
+      }
+
+      const multa = multaRows[0];
+
+      if (multa.estado === 'pagado') {
+        return res.status(400).json({
+          success: false,
+          error: 'No se puede apelar una multa pagada'
+        });
+      }
+
+      if (multa.estado === 'anulada') {
+        return res.status(400).json({
+          success: false,
+          error: 'No se puede apelar una multa anulada'
+        });
+      }
+
+      const [existingApelacion] = await db.query(
+        "SELECT id FROM multa_apelacion WHERE multa_id = ? AND estado = 'pendiente'",
+        [id]
+      );
+
+      if (existingApelacion.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Ya existe una apelación pendiente para esta multa'
+        });
+      }
+
+      // Insertar apelación usando columnas reales: motivo_apelacion, y referenciando persona/comunidad si están
+      const [result] = await db.query(
+        `INSERT INTO multa_apelacion (
+          multa_id,
+          usuario_id,
+          persona_id,
+          comunidad_id,
+          motivo_apelacion,
+          estado
+        ) VALUES (?, ?, ?, ?, ?, 'pendiente')`,
+        [
+          id,
+          req.user.sub,
+          multa.persona_id || null,
+          multa.comunidad_id || null,
+          motivo
+        ]
+      );
+
+      await db.query(
+        "UPDATE multa SET estado = 'apelada' WHERE id = ?",
+        [id]
+      );
+
+      await registrarHistorial(
+        id,
+        req.user.sub,
+        'apelada',
+        `Apelación creada para multa ${multa.numero}`,
+        {
+          estado_anterior: multa.estado,
+          estado_nuevo: 'apelada',
+          ip_address: req.ip
+        }
+      );
+
+      const [rows] = await db.query(
+        'SELECT * FROM multa_apelacion WHERE id = ?',
+        [result.insertId]
+      );
+
+      console.log('✅ Apelación creada exitosamente');
+
+      res.status(201).json({
+        success: true,
+        data: rows[0],
+        message: `Apelación para multa ${multa.numero} creada exitosamente`
+      });
+
+    } catch (error) {
+      console.error(`❌ Error creando apelación ${idParam}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Error del servidor'
+      });
+    }
+  }
+);
+
+// ============================================
+// DELETE /multas/:id - ELIMINAR MULTA
+// ============================================
+router.delete('/:id',
+  authenticate,
+  MultasPermissions.canDelete,
+  param('id').notEmpty(),
+  async (req, res) => {
+    const idParam = req.params.id;
+    try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+
+      console.log(`🗑️ DELETE /multas/${id} - Usuario:`, req.user?.username);
+
+      const [existingRows] = await db.query(
+        'SELECT * FROM multa WHERE id = ?',
+        [id]
+      );
+
+      if (!existingRows.length) {
+        return res.status(404).json({
+          success: false,
+          error: 'Multa no encontrada'
+        });
+      }
+
+      const multa = existingRows[0];
+
+      if (multa.estado === 'pagado') {
+        return res.status(400).json({
+          success: false,
+          error: 'No se puede eliminar una multa pagada. Use anular en su lugar.'
+        });
+      }
+
+      await registrarHistorial(
+        id,
+        req.user.sub,
+        'eliminada',
+        `Multa ${multa.numero} eliminada`,
+        {
+          estado_anterior: multa.estado,
+          valor_anterior: multa,
+          ip_address: req.ip
+        }
+      );
+
+      await db.query('DELETE FROM multa WHERE id = ?', [id]);
+
+      console.log('✅ Multa eliminada exitosamente');
+
+      res.status(200).json({
+        success: true,
+        message: `Multa ${multa.numero} eliminada exitosamente`
+      });
+
+    } catch (err) {
+      console.error(`❌ Error eliminando multa ${idParam}:`, err);
+      res.status(500).json({
+        success: false,
+        error: 'Error del servidor'
+      });
+    }
+  }
+);
+
+// ============================================
+// GET /multas/unidad/:unidadId - MULTAS DE UNA UNIDAD
+// ============================================
+router.get('/unidad/:unidadId',
+  authenticate,
+  async (req, res) => {
+    const unidadId = req.params.unidadId;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validación fallida',
+        details: errors.array()
+      });
+    }
+
+    try {
+      console.log(`🔍 GET /multas/unidad/${unidadId}`);
+
+      const [rows] = await db.query(`
+        SELECT 
+          m.id, 
+          m.numero,
+          m.motivo as tipo_infraccion, 
+          m.monto, 
+          m.estado, 
+          m.prioridad,
+          m.fecha as fecha_infraccion,
+          m.fecha_vencimiento
+        FROM multa m 
+        WHERE m.unidad_id = ? 
+        ORDER BY m.fecha DESC 
+        LIMIT 200
+      `, [unidadId]);
+
+      console.log(`✅ ${rows.length} multas encontradas para unidad ${unidadId}`);
+      res.json({ success: true, data: rows });
+
+    } catch (error) {
+      console.error('❌ Error obteniendo multas de unidad:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error del servidor'
+      });
+    }
+  }
+);
+
+// ============================================
+// GET /multas/:id/apelaciones
+// ============================================
+router.get('/:id/apelaciones',
+  authenticate,
+  MultasPermissions.canView,
+  param('id').notEmpty(),
+  async (req, res) => {
+    const idParam = req.params.id;
+    try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+      const [rows] = await db.query('SELECT * FROM multa_apelacion WHERE multa_id = ? ORDER BY created_at DESC', [id]);
+      res.json({ success: true, data: rows });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, error: 'Error del servidor' });
+    }
+  }
+);
+
+// ============================================
+// GET /multas/:id/documentos
+// ============================================
+router.get('/:id/documentos',
+  authenticate,
+  MultasPermissions.canView,
+  param('id').notEmpty(),
+  async (req, res) => {
+    const idParam = req.params.id;
+    try {
+      const id = await resolveMultaId(idParam);
+      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+      const [rows] = await db.query('SELECT * FROM documento_multa WHERE multa_id = ? ORDER BY created_at DESC', [id]);
+      res.json({ success: true, data: rows });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, error: 'Error del servidor' });
+    }
+  }
+
+  
+); 
 module.exports = router;
 
 // =========================================

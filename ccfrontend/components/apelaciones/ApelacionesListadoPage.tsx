@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Layout from '@/components/layout/Layout';
+import useAuth from '@/lib/useAuth'; // ya existe en tu repo
+import usePermissions from '@/lib/usePermissions'; // si existe, o importa permissionsUtils
 
 const ApelacionesListadoPage: React.FC = () => {
+  const { user } = useAuth();
+  const { can } = usePermissions(); // ejemplo: can('apelaciones.create'), can('apelaciones.resolve')
   const [selectedAppeals, setSelectedAppeals] = useState<string[]>([]);
   const [filter, setFilter] = useState('all');
 
@@ -107,6 +111,22 @@ const ApelacionesListadoPage: React.FC = () => {
     return appeal.status === filter;
   });
 
+  const handleCrear = () => {
+    // lógica para crear nueva apelación
+  };
+
+  const load = () => {
+    // lógica para recargar datos
+  };
+
+  const handleVer = (appeal: any) => {
+    // lógica para ver detalles de la apelación
+  };
+
+  const handleResolver = (appeal: any, decision: 'aceptada' | 'rechazada') => {
+    // lógica para resolver apelación
+  };
+
   return (
     <Layout title='Lista de Apelaciones'>
       <div className='container-fluid p-4'>
@@ -143,12 +163,14 @@ const ApelacionesListadoPage: React.FC = () => {
         </header>
 
         {/* Header con título y botón nueva apelación */}
-        <div className='d-flex justify-content-between align-items-center mb-4'>
-          <h1 className='h3'>Lista de Apelaciones</h1>
-          <Link href='/apelaciones-nueva' className='btn btn-primary'>
-            <i className='material-icons me-2'>add</i>
-            Nueva Apelación
-          </Link>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h1 className="h3">Apelaciones</h1>
+          <div>
+            {can('apelaciones.create') && (
+              <button className="btn btn-primary me-2" onClick={handleCrear}>Nueva Apelación</button>
+            )}
+            <button className="btn btn-outline-secondary" onClick={load}>Refrescar</button>
+          </div>
         </div>
 
         {/* Filtros */}

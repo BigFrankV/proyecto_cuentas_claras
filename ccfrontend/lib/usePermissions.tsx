@@ -197,6 +197,11 @@ export function usePermissions() {
     return hasPermission(Permission.MANAGE_USERS, communityId);
   };
 
+  // Dentro de la función usePermissions()
+  const canCreateMulta = (user: any, communityId?: number): boolean => {
+    return hasPermission(Permission.MANAGE_FINANCES, communityId) || isAdmin();
+  };
+
   return {
     currentRole,
     hasPermission,
@@ -212,6 +217,7 @@ export function usePermissions() {
     canManageCommunity,
     canViewCommunityFinances,
     canManageCommunityUsers,
+    canCreateMulta,  // Asegúrate de que esté aquí
     
     // Helpers para UI (actualizados para soportar comunidad específica)
     canManageCommunities: hasPermission(Permission.MANAGE_COMMUNITIES),

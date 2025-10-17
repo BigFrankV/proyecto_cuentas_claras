@@ -5926,6 +5926,9 @@
 .budget-info .d-flex:last-child {
   margin-bottom: 0;
 }
+.detail-page {
+  padding-left: 0 !important; /* quita gutter sólo para páginas con esta clase */
+}
 
 /* Responsive adjustments for cost centers */
 @media (max-width: 768px) {

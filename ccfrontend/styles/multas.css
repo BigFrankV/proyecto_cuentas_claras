@@ -1217,3 +1217,33 @@
     width: 100%;
   }
 }
+
+/* Ajustes layout sidebar: evitar que las tarjetas estiren verticalmente */
+.info-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+/* Cada tarjeta no debe crecer para llenar el espacio */
+.info-card {
+  flex: 0 0 auto; /* no crecer, tamaño según contenido */
+  margin-bottom: 0;
+}
+
+/* Si alguna tarjeta tiene contenido variable (timeline, lista) permitir scroll y limitar altura */
+.info-card .timeline,
+.info-card .card-body,
+.info-card .list-group {
+  max-height: 280px;
+  overflow: auto;
+}
+
+/* Ajustes móviles */
+@media (max-width: 991px) {
+  .info-sidebar { gap: 0.75rem; }
+  .info-card .timeline,
+  .info-card .card-body,
+  .info-card .list-group { max-height: 220px; }
+}
