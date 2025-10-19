@@ -1,5 +1,5 @@
-import CategoryBadge from './CategoryBadge';
 import AccessBadge from './AccessBadge';
+import CategoryBadge from './CategoryBadge';
 import FileIcon from './FileIcon';
 import VersionBadge from './VersionBadge';
 
@@ -7,7 +7,13 @@ interface Document {
   id: string;
   name: string;
   description: string;
-  category: 'legal' | 'financial' | 'technical' | 'administrative' | 'maintenance' | 'meeting';
+  category:
+    | 'legal'
+    | 'financial'
+    | 'technical'
+    | 'administrative'
+    | 'maintenance'
+    | 'meeting';
   access: 'public' | 'residents' | 'owners' | 'admin';
   fileName: string;
   fileSize: string;
@@ -26,12 +32,18 @@ interface DocumentCardProps {
   onDelete: (id: string) => void;
 }
 
-export default function DocumentCard({ document, onView, onDownload, onEdit, onDelete }: DocumentCardProps) {
+export default function DocumentCard({
+  document,
+  onView,
+  onDownload,
+  onEdit,
+  onDelete,
+}: DocumentCardProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-CL', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -49,7 +61,7 @@ export default function DocumentCard({ document, onView, onDownload, onEdit, onD
               </div>
             </div>
           </div>
-          
+
           <div className='dropdown'>
             <button
               className='btn btn-sm btn-outline-secondary dropdown-toggle'
@@ -61,26 +73,40 @@ export default function DocumentCard({ document, onView, onDownload, onEdit, onD
             </button>
             <ul className='dropdown-menu dropdown-menu-end'>
               <li>
-                <button className='dropdown-item' onClick={() => onView(document.id)}>
+                <button
+                  className='dropdown-item'
+                  onClick={() => onView(document.id)}
+                >
                   <i className='material-icons me-2'>visibility</i>
                   Ver
                 </button>
               </li>
               <li>
-                <button className='dropdown-item' onClick={() => onDownload(document.id)}>
+                <button
+                  className='dropdown-item'
+                  onClick={() => onDownload(document.id)}
+                >
                   <i className='material-icons me-2'>download</i>
                   Descargar
                 </button>
               </li>
               <li>
-                <button className='dropdown-item' onClick={() => onEdit(document.id)}>
+                <button
+                  className='dropdown-item'
+                  onClick={() => onEdit(document.id)}
+                >
                   <i className='material-icons me-2'>edit</i>
                   Editar
                 </button>
               </li>
-              <li><hr className='dropdown-divider' /></li>
               <li>
-                <button className='dropdown-item text-danger' onClick={() => onDelete(document.id)}>
+                <hr className='dropdown-divider' />
+              </li>
+              <li>
+                <button
+                  className='dropdown-item text-danger'
+                  onClick={() => onDelete(document.id)}
+                >
                   <i className='material-icons me-2'>delete</i>
                   Eliminar
                 </button>
@@ -93,28 +119,45 @@ export default function DocumentCard({ document, onView, onDownload, onEdit, onD
         <div className='document-badges d-flex flex-wrap gap-2 mb-3'>
           <CategoryBadge category={document.category} size='sm' />
           <AccessBadge access={document.access} size='sm' />
-          <VersionBadge version={document.version} isLatest={document.isLatest} size='sm' />
+          <VersionBadge
+            version={document.version}
+            isLatest={document.isLatest}
+            size='sm'
+          />
         </div>
 
         {/* Meta information */}
         <div className='document-meta'>
           <div className='document-meta-item d-flex align-items-center mb-2'>
-            <i className='material-icons me-2 text-muted' style={{ fontSize: '16px' }}>
+            <i
+              className='material-icons me-2 text-muted'
+              style={{ fontSize: '16px' }}
+            >
               insert_drive_file
             </i>
-            <span className='small text-muted'>{document.fileName} ({document.fileSize})</span>
+            <span className='small text-muted'>
+              {document.fileName} ({document.fileSize})
+            </span>
           </div>
           <div className='document-meta-item d-flex align-items-center mb-2'>
-            <i className='material-icons me-2 text-muted' style={{ fontSize: '16px' }}>
+            <i
+              className='material-icons me-2 text-muted'
+              style={{ fontSize: '16px' }}
+            >
               person
             </i>
             <span className='small text-muted'>{document.uploadedBy}</span>
           </div>
           <div className='document-meta-item d-flex align-items-center'>
-            <i className='material-icons me-2 text-muted' style={{ fontSize: '16px' }}>
+            <i
+              className='material-icons me-2 text-muted'
+              style={{ fontSize: '16px' }}
+            >
               schedule
             </i>
-            <span className='small text-muted'>{formatDate(document.uploadedAt)}</span>
+            <span className='small text-muted'>
+              {formatDate(document.uploadedAt)}
+            </span>
           </div>
         </div>
 
@@ -140,18 +183,22 @@ export default function DocumentCard({ document, onView, onDownload, onEdit, onD
       {/* Actions */}
       <div className='document-actions-mobile card-footer bg-transparent border-0 pt-0'>
         <div className='d-flex gap-2'>
-          <button 
+          <button
             className='btn btn-sm btn-outline-primary flex-fill'
             onClick={() => onView(document.id)}
           >
-            <i className='material-icons me-1' style={{ fontSize: '16px' }}>visibility</i>
+            <i className='material-icons me-1' style={{ fontSize: '16px' }}>
+              visibility
+            </i>
             Ver
           </button>
-          <button 
+          <button
             className='btn btn-sm btn-outline-secondary'
             onClick={() => onDownload(document.id)}
           >
-            <i className='material-icons' style={{ fontSize: '16px' }}>download</i>
+            <i className='material-icons' style={{ fontSize: '16px' }}>
+              download
+            </i>
           </button>
         </div>
       </div>

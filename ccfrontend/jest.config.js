@@ -16,7 +16,8 @@ const customJestConfig = {
     '^@/styles/(.*)$': '<rootDir>/styles/$1',
     // Mock MUI icons to avoid importing MUI internal utils in Jest
     '^@mui/icons-material$': '<rootDir>/__mocks__/@mui/icons-material/index.js',
-    '^@mui/icons-material/(.*)$': '<rootDir>/__mocks__/@mui/icons-material/index.js',
+    '^@mui/icons-material/(.*)$':
+      '<rootDir>/__mocks__/@mui/icons-material/index.js',
   },
   testEnvironment: 'jest-environment-jsdom',
 

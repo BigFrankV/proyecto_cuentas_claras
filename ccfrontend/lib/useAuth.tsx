@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router';
 import {
   useState,
   useEffect,
@@ -6,7 +7,7 @@ import {
   ReactNode,
   useRef, // <-- agregado
 } from 'react';
-import { useRouter } from 'next/router';
+
 import authService, { User, AuthResponse } from './auth'; // ✅ CORREGIR IMPORT
 
 // Tipos para el contexto de autenticación
@@ -14,7 +15,11 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (identifier: string, password: string, totp_code?: string) => Promise<AuthResponse>; // ✅ AGREGAR totp_code
+  login: (
+    identifier: string,
+    password: string,
+    totp_code?: string
+  ) => Promise<AuthResponse>; // ✅ AGREGAR totp_code
   complete2FALogin: (tempToken: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -36,10 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuthStatus = async () => {
     console.log('🔍 Verificando estado de autenticación...');
-    
+
     // Debug del estado actual
     authService.debugAuthState();
-    
+
     try {
       // Primero verificar si tenemos un token válido
       if (!authService.isAuthenticated()) {
@@ -49,17 +54,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       console.log('✅ Token válido encontrado en localStorage');
-      
+
       // Intentar obtener datos del usuario desde localStorage
       const userData = authService.getUserData();
       if (userData) {
-        console.log('✅ Datos de usuario encontrados en localStorage:', userData);
+        console.log(
+          '✅ Datos de usuario encontrados en localStorage:',
+          userData,
+        );
         // ✅ NUEVO: Log de memberships para debug
         if (userData.memberships) {
           console.log('🏢 Membresías del usuario:', userData.memberships);
         }
         setUser(userData);
-        
+
         // Verificar con el servidor para sincronizar datos
         try {
           const currentUser = await authService.getCurrentUser();
@@ -67,7 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('✅ Usuario verificado con servidor:', currentUser);
             // ✅ NUEVO: Log de memberships actualizadas
             if (currentUser.memberships) {
-              console.log('🏢 Membresías actualizadas del servidor:', currentUser.memberships);
+              console.log(
+                '🏢 Membresías actualizadas del servidor:',
+                currentUser.memberships,
+              );
             }
             // Actualizar datos con información completa del servidor
             const updatedUserData = { ...userData, ...currentUser };
@@ -75,12 +86,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Actualizar localStorage con datos completos
             localStorage.setItem('user_data', JSON.stringify(updatedUserData));
           } else {
-            console.log('⚠️ Servidor no reconoce el token, manteniendo datos locales');
+            console.log(
+              '⚠️ Servidor no reconoce el token, manteniendo datos locales',
+            );
           }
         } catch (serverError: any) {
-          console.log('⚠️ Error verificando con servidor:', serverError.message);
+          console.log(
+            '⚠️ Error verificando con servidor:',
+            serverError.message,
+          );
           if (serverError.response?.status === 401) {
-            console.log('❌ Token inválido según servidor, limpiando sesión local sin redirigir');
+            console.log(
+              '❌ Token inválido según servidor, limpiando sesión local sin redirigir',
+            );
             // Limpiar datos locales sin forzar redirección desde aquí
             await authService.logout(); // solo limpia localStorage
             setUser(null);
@@ -107,18 +125,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // ✅ CORREGIR: Agregar soporte para totp_code opcional
-  const login = async (identifier: string, password: string, totp_code?: string) => {
+  const login = async (
+    identifier: string,
+    password: string,
+    totp_code?: string,
+  ) => {
     console.log('🔐 Iniciando login para:', identifier);
     try {
-      const response = await authService.login({ 
-        identifier, 
-        password 
+      const response = await authService.login({
+        identifier,
+        password,
       });
-      
+
       console.log('✅ Login exitoso, datos recibidos:', response.user);
       // ✅ NUEVO: Log específico para memberships
       if (response.user?.memberships) {
-        console.log('🏢 Membresías recibidas en login:', response.user.memberships);
+        console.log(
+          '🏢 Membresías recibidas en login:',
+          response.user.memberships,
+        );
       }
       if (response.user?.is_superadmin) {
         console.log('👑 Usuario identificado como SUPERADMIN');
@@ -141,7 +166,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('✅ Login 2FA exitoso, datos recibidos:', response.user);
       // ✅ NUEVO: Log específico para memberships en 2FA
       if (response.user?.memberships) {
-        console.log('🏢 Membresías recibidas en 2FA login:', response.user.memberships);
+        console.log(
+          '🏢 Membresías recibidas en 2FA login:',
+          response.user.memberships,
+        );
       }
       if (response.user) {
         setUser(response.user);
@@ -199,7 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     refreshUser,
   };
- 
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
@@ -223,7 +251,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
       '🔒 ProtectedRoute - autenticado:',
       isAuthenticated,
       'cargando:',
-      isLoading
+      isLoading,
     );
     if (!isLoading && !isAuthenticated && !redirectingRef.current) {
       console.log('❌ No autenticado, redirigiendo a login...');
@@ -252,7 +280,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (!isAuthenticated) {
     console.log(
-      '❌ ProtectedRoute - Usuario no autenticado, no mostrando contenido'
+      '❌ ProtectedRoute - Usuario no autenticado, no mostrando contenido',
     );
     return null;
   }

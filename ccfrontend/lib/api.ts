@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 import authService from './auth';
 
 // Configuración base de la API - usa la variable de entorno
@@ -17,7 +18,8 @@ const apiClient = axios.create({
 // Interceptor para agregar token automáticamente
 apiClient.interceptors.request.use(
   config => {
-    const token = authService.getToken?.() || localStorage.getItem('auth_token');
+    const token =
+      authService.getToken?.() || localStorage.getItem('auth_token');
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
@@ -26,7 +28,7 @@ apiClient.interceptors.request.use(
   },
   error => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Interceptor para manejar respuestas y errores
@@ -52,7 +54,7 @@ apiClient.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;

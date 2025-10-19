@@ -1,14 +1,17 @@
 'use client';
 
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import timeGridPlugin from '@fullcalendar/timegrid';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
+
 import Sidebar from '../layout/Sidebar';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
 
 // Dynamic import for FullCalendar to avoid SSR issues
-const FullCalendar = dynamic(() => import('@fullcalendar/react'), { ssr: false });
+const FullCalendar = dynamic(() => import('@fullcalendar/react'), {
+  ssr: false,
+});
 
 interface ReservationEvent {
   id: string;
@@ -29,46 +32,48 @@ const AmenidadesCalendarioPage: React.FC = () => {
       title: 'Piscina - Juan Pérez',
       start: '2025-09-30T10:00:00',
       end: '2025-09-30T12:00:00',
-      className: 'reservation-event'
+      className: 'reservation-event',
     },
     {
       id: '2',
       title: 'Gimnasio - María García',
       start: '2025-09-30T14:00:00',
       end: '2025-09-30T16:00:00',
-      className: 'reservation-event'
+      className: 'reservation-event',
     },
     {
       id: '3',
       title: 'Salón - Evento Familiar',
       start: '2025-10-01T18:00:00',
       end: '2025-10-01T22:00:00',
-      className: 'reservation-event'
+      className: 'reservation-event',
     },
     {
       id: '4',
       title: 'Mantenimiento - Piscina',
       start: '2025-10-02',
       end: '2025-10-03',
-      className: 'maintenance-event'
+      className: 'maintenance-event',
     },
     {
       id: '5',
       title: 'Cancha - Partido Amistoso',
       start: '2025-10-03T16:00:00',
       end: '2025-10-03T18:00:00',
-      className: 'reservation-event'
+      className: 'reservation-event',
     },
     {
       id: '6',
       title: 'Piscina - No Disponible',
       start: '2025-10-04',
-      className: 'unavailable-event'
-    }
+      className: 'unavailable-event',
+    },
   ];
 
   const handleEventClick = (info: any) => {
-    alert(`Reserva: ${info.event.title}\nFecha: ${info.event.start.toLocaleDateString()}`);
+    alert(
+      `Reserva: ${info.event.title}\nFecha: ${info.event.start.toLocaleDateString()}`,
+    );
   };
 
   const handleDateClick = (info: any) => {
@@ -93,106 +98,135 @@ const AmenidadesCalendarioPage: React.FC = () => {
   };
 
   return (
-    <div className="d-flex">
+    <div className='d-flex'>
       <Sidebar />
-      <div className="main-content flex-grow-1">
-        <div className="header bg-white p-3 rounded shadow-sm mb-3">
-          <div className="d-flex justify-content-between align-items-center">
+      <div className='main-content flex-grow-1'>
+        <div className='header bg-white p-3 rounded shadow-sm mb-3'>
+          <div className='d-flex justify-content-between align-items-center'>
             <div>
               <h4>
-                <i className="material-icons">calendar_today</i> Calendario de Reservas - Amenidades
+                <i className='material-icons'>calendar_today</i> Calendario de
+                Reservas - Amenidades
               </h4>
-              <p className="mb-0 text-muted">Vista general de todas las reservas por día</p>
+              <p className='mb-0 text-muted'>
+                Vista general de todas las reservas por día
+              </p>
             </div>
             <div>
-              <button className="btn btn-primary" onClick={handleNewReservation}>
-                <i className="material-icons">add</i> Nueva Reserva
+              <button
+                className='btn btn-primary'
+                onClick={handleNewReservation}
+              >
+                <i className='material-icons'>add</i> Nueva Reserva
               </button>
             </div>
           </div>
         </div>
 
-        <div className="calendar-container bg-white p-3 rounded shadow-sm">
+        <div className='calendar-container bg-white p-3 rounded shadow-sm'>
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
+            initialView='dayGridMonth'
             headerToolbar={{
               left: 'prev,next today',
               center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+              right: 'dayGridMonth,timeGridWeek,timeGridDay',
             }}
             events={events}
             eventClick={handleEventClick}
             dateClick={handleDateClick}
             dayMaxEvents={3}
-            moreLinkClick="popover"
-            height="auto"
+            moreLinkClick='popover'
+            height='auto'
           />
         </div>
 
         {/* Modal for New Reservation */}
         {showModal && (
-          <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">
-                    <i className="material-icons">add</i> Nueva Reserva
+          <div
+            className='modal fade show d-block'
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          >
+            <div className='modal-dialog modal-lg'>
+              <div className='modal-content'>
+                <div className='modal-header'>
+                  <h5 className='modal-title'>
+                    <i className='material-icons'>add</i> Nueva Reserva
                   </h5>
-                  <button type="button" className="btn-close" onClick={handleCloseModal}></button>
+                  <button
+                    type='button'
+                    className='btn-close'
+                    onClick={handleCloseModal}
+                  ></button>
                 </div>
-                <div className="modal-body">
+                <div className='modal-body'>
                   <form>
-                    <div className="row">
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label">Amenidad *</label>
-                          <select className="form-select" required>
-                            <option value="">Seleccionar amenidad</option>
-                            <option value="piscina">Piscina</option>
-                            <option value="gimnasio">Gimnasio</option>
-                            <option value="salon">Salón de Eventos</option>
-                            <option value="cancha">Cancha de Fútbol</option>
+                    <div className='row'>
+                      <div className='col-md-6'>
+                        <div className='mb-3'>
+                          <label className='form-label'>Amenidad *</label>
+                          <select className='form-select' required>
+                            <option value=''>Seleccionar amenidad</option>
+                            <option value='piscina'>Piscina</option>
+                            <option value='gimnasio'>Gimnasio</option>
+                            <option value='salon'>Salón de Eventos</option>
+                            <option value='cancha'>Cancha de Fútbol</option>
                           </select>
                         </div>
                       </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label">Fecha *</label>
+                      <div className='col-md-6'>
+                        <div className='mb-3'>
+                          <label className='form-label'>Fecha *</label>
                           <input
-                            type="date"
-                            className="form-control"
+                            type='date'
+                            className='form-control'
                             defaultValue={selectedDate}
                             required
                           />
                         </div>
                       </div>
                     </div>
-                    <div className="row">
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label">Hora Inicio *</label>
-                          <input type="time" className="form-control" required />
+                    <div className='row'>
+                      <div className='col-md-6'>
+                        <div className='mb-3'>
+                          <label className='form-label'>Hora Inicio *</label>
+                          <input
+                            type='time'
+                            className='form-control'
+                            required
+                          />
                         </div>
                       </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label">Hora Fin *</label>
-                          <input type="time" className="form-control" required />
+                      <div className='col-md-6'>
+                        <div className='mb-3'>
+                          <label className='form-label'>Hora Fin *</label>
+                          <input
+                            type='time'
+                            className='form-control'
+                            required
+                          />
                         </div>
                       </div>
                     </div>
-                    <div className="mb-3">
-                      <label className="form-label">Descripción</label>
-                      <textarea className="form-control" rows={3}></textarea>
+                    <div className='mb-3'>
+                      <label className='form-label'>Descripción</label>
+                      <textarea className='form-control' rows={3}></textarea>
                     </div>
                   </form>
                 </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>
+                <div className='modal-footer'>
+                  <button
+                    type='button'
+                    className='btn btn-secondary'
+                    onClick={handleCloseModal}
+                  >
                     Cancelar
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={handleCreateReservation}>
+                  <button
+                    type='button'
+                    className='btn btn-primary'
+                    onClick={handleCreateReservation}
+                  >
                     Crear Reserva
                   </button>
                 </div>

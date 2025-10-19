@@ -1,10 +1,12 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
+import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
+import { useState, useRef } from 'react';
+
+import Layout from '@/components/layout/Layout';
 import { usePersonas } from '@/hooks/usePersonas';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 interface FormData {
   tipo: 'Propietario' | 'Inquilino' | 'Administrador';
@@ -35,20 +37,20 @@ const tiposPersona = [
     key: 'Propietario',
     icon: 'home_work',
     title: 'Propietario',
-    description: 'Dueño de una o más unidades'
+    description: 'Dueño de una o más unidades',
   },
   {
     key: 'Inquilino',
     icon: 'night_shelter',
     title: 'Inquilino',
-    description: 'Habitante sin propiedad'
+    description: 'Habitante sin propiedad',
   },
   {
     key: 'Administrador',
     icon: 'admin_panel_settings',
     title: 'Administrador',
-    description: 'Gestiona edificios o comunidades'
-  }
+    description: 'Gestiona edificios o comunidades',
+  },
 ];
 
 const mockUnidades = [
@@ -56,20 +58,20 @@ const mockUnidades = [
     id: '1',
     nombre: 'Departamento 4B',
     edificio: 'Torre Norte',
-    comunidad: 'Parque Real'
+    comunidad: 'Parque Real',
   },
   {
     id: '2',
     nombre: 'Departamento 7A',
     edificio: 'Torre Sur',
-    comunidad: 'Parque Real'
+    comunidad: 'Parque Real',
   },
   {
     id: '3',
     nombre: 'Casa 12',
     edificio: 'Barrio Residencial',
-    comunidad: 'Valle Verde'
-  }
+    comunidad: 'Valle Verde',
+  },
 ];
 
 export default function PersonaNueva() {
@@ -87,23 +89,26 @@ export default function PersonaNueva() {
     crearCuenta: true,
     username: '',
     nivelAcceso: 'Usuario Estándar',
-    unidades: []
+    unidades: [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [avatarPreview, setAvatarPreview] = useState<string>('');
-  const [validationStates, setValidationStates] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleInputChange = async (field: keyof FormData, value: any) => {
+  const handleInputChange = async (field: keyof FormData, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Generar username automáticamente
     if (field === 'nombre' || field === 'apellido') {
-      const nombre = field === 'nombre' ? value : formData.nombre;
-      const apellido = field === 'apellido' ? value : formData.apellido;
+      const nombre = field === 'nombre' ? value as string : formData.nombre;
+      const apellido = field === 'apellido' ? value as string : formData.apellido;
       if (nombre && apellido) {
-        const username = `${nombre.toLowerCase()}${apellido.toLowerCase().charAt(0)}`.replace(/\s+/g, '');
+        const username =
+          `${nombre.toLowerCase()}${apellido.toLowerCase().charAt(0)}`.replace(
+            /\s+/g,
+            '',
+          );
         setFormData(prev => ({ ...prev, username }));
       }
     }
@@ -112,42 +117,48 @@ export default function PersonaNueva() {
     if (field === 'nroDoc' && value) {
       try {
         const result = await validarCampo('rut', value);
-        setValidationStates(prev => ({ ...prev, nroDoc: result.valido }));
         if (!result.valido) {
-          setErrors(prev => ({ ...prev, nroDoc: result.mensaje || 'RUT ya existe' }));
+          setErrors(prev => ({
+            ...prev,
+            nroDoc: result.mensaje || 'RUT ya existe',
+          }));
         } else {
           setErrors(prev => ({ ...prev, nroDoc: '' }));
         }
-      } catch (err) {
-        console.error('Error validando RUT:', err);
+      } catch {
+        // Error validando RUT
       }
     }
 
     if (field === 'email' && value) {
       try {
         const result = await validarCampo('email', value);
-        setValidationStates(prev => ({ ...prev, email: result.valido }));
         if (!result.valido) {
-          setErrors(prev => ({ ...prev, email: result.mensaje || 'Email ya existe' }));
+          setErrors(prev => ({
+            ...prev,
+            email: result.mensaje || 'Email ya existe',
+          }));
         } else {
           setErrors(prev => ({ ...prev, email: '' }));
         }
-      } catch (err) {
-        console.error('Error validando email:', err);
+      } catch {
+        // Error validando email
       }
     }
 
     if (field === 'username' && value && formData.crearCuenta) {
       try {
         const result = await validarCampo('username', value);
-        setValidationStates(prev => ({ ...prev, username: result.valido }));
         if (!result.valido) {
-          setErrors(prev => ({ ...prev, username: result.mensaje || 'Username ya existe' }));
+          setErrors(prev => ({
+            ...prev,
+            username: result.mensaje || 'Username ya existe',
+          }));
         } else {
           setErrors(prev => ({ ...prev, username: '' }));
         }
-      } catch (err) {
-        console.error('Error validando username:', err);
+      } catch {
+        // Error validando username
       }
     }
 
@@ -169,43 +180,59 @@ export default function PersonaNueva() {
     }
   };
 
-  const toggleUnidad = (unidad: typeof mockUnidades[0]) => {
+  const toggleUnidad = (unidad: (typeof mockUnidades)[0]) => {
     setFormData(prev => {
       const exists = prev.unidades.find(u => u.id === unidad.id);
       if (exists) {
         return {
           ...prev,
-          unidades: prev.unidades.filter(u => u.id !== unidad.id)
+          unidades: prev.unidades.filter(u => u.id !== unidad.id),
         };
       } else {
         return {
           ...prev,
-          unidades: [...prev.unidades, {
-            ...unidad,
-            relacion: prev.tipo === 'Administrador' ? 'Propietario' : prev.tipo
-          }]
+          unidades: [
+            ...prev.unidades,
+            {
+              ...unidad,
+              relacion:
+                prev.tipo === 'Administrador' ? 'Propietario' : prev.tipo,
+            },
+          ],
         };
       }
     });
   };
 
-  const updateUnidadRelacion = (unidadId: string, relacion: 'Propietario' | 'Inquilino') => {
+  const updateUnidadRelacion = (
+    unidadId: string,
+    relacion: 'Propietario' | 'Inquilino',
+  ) => {
     setFormData(prev => ({
       ...prev,
-      unidades: prev.unidades.map(u => 
-        u.id === unidadId ? { ...u, relacion } : u
-      )
+      unidades: prev.unidades.map(u =>
+        u.id === unidadId ? { ...u, relacion } : u,
+      ),
     }));
   };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio';
-    if (!formData.apellido.trim()) newErrors.apellido = 'El apellido es obligatorio';
-    if (!formData.nroDoc.trim()) newErrors.nroDoc = 'El número de documento es obligatorio';
-    if (!formData.email.trim()) newErrors.email = 'El email es obligatorio';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'El email no es válido';
+    if (!formData.nombre.trim()) {
+      newErrors.nombre = 'El nombre es obligatorio';
+    }
+    if (!formData.apellido.trim()) {
+      newErrors.apellido = 'El apellido es obligatorio';
+    }
+    if (!formData.nroDoc.trim()) {
+      newErrors.nroDoc = 'El número de documento es obligatorio';
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = 'El email es obligatorio';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'El email no es válido';
+    }
 
     if (formData.tipo !== 'Administrador' && formData.unidades.length === 0) {
       newErrors.unidades = 'Debe seleccionar al menos una unidad';
@@ -217,7 +244,9 @@ export default function PersonaNueva() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
 
     try {
       // Preparar datos para la API
@@ -226,32 +255,40 @@ export default function PersonaNueva() {
         setErrors({ nroDoc: 'Formato de documento inválido' });
         return;
       }
-      
-      const personaData: any = {
+
+      const personaData: Record<string, string | undefined> = {
         rut: rutParts[0],
         dv: rutParts[1] || '',
         nombres: formData.nombre,
-        apellidos: formData.apellido
+        apellidos: formData.apellido,
       };
 
       // Agregar campos opcionales solo si tienen valor
-      if (formData.email) personaData.email = formData.email;
-      if (formData.telefono) personaData.telefono = formData.telefono;
-      if (formData.direccion) personaData.direccion = formData.direccion;
-      if (avatarPreview) personaData.avatar = avatarPreview;
+      if (formData.email) {
+        personaData.email = formData.email;
+      }
+      if (formData.telefono) {
+        personaData.telefono = formData.telefono;
+      }
+      if (formData.direccion) {
+        personaData.direccion = formData.direccion;
+      }
+      if (avatarPreview) {
+        personaData.avatar = avatarPreview;
+      }
 
       const nuevaPersona = await crearPersona(personaData);
-      
+
       // Si se debe crear cuenta de usuario
       if (formData.crearCuenta && nuevaPersona.id) {
         // Aquí iría la lógica para crear usuario si la API lo soporta
-        console.log('Usuario creado:', nuevaPersona);
+        // Usuario creado
       }
 
       // Redirigir a la lista o al detalle
       router.push('/personas');
-    } catch (err) {
-      console.error('Error al crear persona:', err);
+    } catch {
+      // Error al crear persona
       setErrors({ submit: 'Error al crear la persona. Intente nuevamente.' });
     }
   };
@@ -270,19 +307,35 @@ export default function PersonaNueva() {
         <div className='container-fluid py-4'>
           {/* Mostrar error general */}
           {error && (
-            <div className='alert alert-danger alert-dismissible fade show' role='alert'>
+            <div
+              className='alert alert-danger alert-dismissible fade show'
+              role='alert'
+            >
               <i className='material-icons me-2'>error</i>
               {error}
-              <button type='button' className='btn-close' onClick={() => {/* clear error */}}></button>
+              <button
+                type='button'
+                className='btn-close'
+                onClick={() => {
+                  /* clear error */
+                }}
+              ></button>
             </div>
           )}
 
           {/* Mostrar error de submit */}
           {errors.submit && (
-            <div className='alert alert-danger alert-dismissible fade show' role='alert'>
+            <div
+              className='alert alert-danger alert-dismissible fade show'
+              role='alert'
+            >
               <i className='material-icons me-2'>error</i>
               {errors.submit}
-              <button type='button' className='btn-close' onClick={() => setErrors(prev => ({ ...prev, submit: '' }))}></button>
+              <button
+                type='button'
+                className='btn-close'
+                onClick={() => setErrors(prev => ({ ...prev, submit: '' }))}
+              ></button>
             </div>
           )}
           <div className='row'>
@@ -290,16 +343,26 @@ export default function PersonaNueva() {
               {/* Header */}
               <div className='d-flex justify-content-between align-items-center mb-4'>
                 <div className='d-flex align-items-center'>
-                  <Link href='/personas' className='btn btn-link text-secondary p-0 me-3'>
+                  <Link
+                    href='/personas'
+                    className='btn btn-link text-secondary p-0 me-3'
+                  >
                     <i className='material-icons'>arrow_back</i>
                   </Link>
                   <h1 className='h3 mb-0'>Nueva Persona</h1>
                 </div>
                 <div className='d-flex align-items-center'>
-                  <Link href='/personas' className='btn btn-outline-secondary me-2'>
+                  <Link
+                    href='/personas'
+                    className='btn btn-outline-secondary me-2'
+                  >
                     Cancelar
                   </Link>
-                  <button type='button' className='btn btn-primary' onClick={handleSubmit}>
+                  <button
+                    type='button'
+                    className='btn btn-primary'
+                    onClick={handleSubmit}
+                  >
                     Guardar
                   </button>
                 </div>
@@ -313,31 +376,52 @@ export default function PersonaNueva() {
                   </div>
                   <div className='card-body'>
                     <div className='row g-3'>
-                      {tiposPersona.map((tipo) => (
+                      {tiposPersona.map(tipo => (
                         <div key={tipo.key} className='col-12 col-md-4'>
-                          <div 
-                            className={`card h-100 cursor-pointer ${formData.tipo === tipo.key ? 'border-primary bg-primary bg-opacity-10' : ''}`}
+                          <div
+                            className={
+                              `card h-100 cursor-pointer ${
+                                formData.tipo === tipo.key
+                                  ? 'border-primary bg-primary bg-opacity-10'
+                                  : ''
+                              }`
+                            }
+                            role="button"
+                            tabIndex={0}
                             onClick={() => handleInputChange('tipo', tipo.key)}
-                            style={{ 
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                handleInputChange('tipo', tipo.key);
+                              }
+                            }}
+                            style={{
                               cursor: 'pointer',
                               transition: 'all 0.2s ease',
-                              border: formData.tipo === tipo.key ? '2px solid var(--color-primary)' : '1px solid var(--color-border)'
+                              border:
+                                formData.tipo === tipo.key
+                                  ? '2px solid var(--color-primary)'
+                                  : '1px solid var(--color-border)',
                             }}
                           >
                             <div className='card-body text-center'>
                               <div className='mb-3'>
-                                <i 
-                                  className='material-icons' 
-                                  style={{ 
+                                <i
+                                  className='material-icons'
+                                  style={{
                                     fontSize: '48px',
-                                    color: formData.tipo === tipo.key ? 'var(--color-primary)' : 'var(--color-muted)'
+                                    color:
+                                      formData.tipo === tipo.key
+                                        ? 'var(--color-primary)'
+                                        : 'var(--color-muted)',
                                   }}
                                 >
                                   {tipo.icon}
                                 </i>
                               </div>
                               <h6 className='mb-2'>{tipo.title}</h6>
-                              <p className='text-muted small mb-0'>{tipo.description}</p>
+                              <p className='text-muted small mb-0'>
+                                {tipo.description}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -355,38 +439,59 @@ export default function PersonaNueva() {
                     <div className='row g-3'>
                       <div className='col-12 col-md-3'>
                         <div className='d-flex justify-content-center mb-3'>
-                          <div 
+                          <div
                             className='position-relative'
                             style={{ cursor: 'pointer' }}
+                            role="button"
+                            tabIndex={0}
                             onClick={() => fileInputRef.current?.click()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                fileInputRef.current?.click();
+                              }
+                            }}
                           >
                             {avatarPreview ? (
-                              <img 
-                                src={avatarPreview} 
+                              <Image
+                                src={avatarPreview}
                                 alt='Avatar'
+                                width={120}
+                                height={120}
                                 style={{
-                                  width: '120px',
-                                  height: '120px',
                                   borderRadius: '50%',
-                                  objectFit: 'cover'
+                                  objectFit: 'cover',
                                 }}
                               />
                             ) : (
-                              <div 
-                                className='d-flex align-items-center justify-content-center bg-light border border-2 border-dashed'
+                              <div
+                                className='d-flex align-items-center justify-content-center
+                                  bg-light border border-2 border-dashed'
                                 style={{
                                   width: '120px',
                                   height: '120px',
                                   borderRadius: '50%',
-                                  color: 'var(--color-muted)'
+                                  color: 'var(--color-muted)',
                                 }}
                               >
                                 {formData.nombre && formData.apellido ? (
-                                  <span style={{ fontSize: '36px', fontWeight: 'bold' }}>
-                                    {getInitials(formData.nombre, formData.apellido)}
+                                  <span
+                                    style={{
+                                      fontSize: '36px',
+                                      fontWeight: 'bold',
+                                    }}
+                                  >
+                                    {getInitials(
+                                      formData.nombre,
+                                      formData.apellido,
+                                    )}
                                   </span>
                                 ) : (
-                                  <i className='material-icons' style={{ fontSize: '48px' }}>add_a_photo</i>
+                                  <i
+                                    className='material-icons'
+                                    style={{ fontSize: '48px' }}
+                                  >
+                                    add_a_photo
+                                  </i>
                                 )}
                               </div>
                             )}
@@ -409,39 +514,54 @@ export default function PersonaNueva() {
                             <label htmlFor='nombre' className='form-label'>
                               Nombre <span className='text-danger'>*</span>
                             </label>
-                            <input 
-                              type='text' 
+                            <input
+                              type='text'
                               className={`form-control ${errors.nombre ? 'is-invalid' : ''}`}
                               id='nombre'
                               placeholder='Ingrese nombre'
                               value={formData.nombre}
-                              onChange={(e) => handleInputChange('nombre', e.target.value)}
+                              onChange={e =>
+                                handleInputChange('nombre', e.target.value)
+                              }
                             />
-                            {errors.nombre && <div className='invalid-feedback'>{errors.nombre}</div>}
+                            {errors.nombre && (
+                              <div className='invalid-feedback'>
+                                {errors.nombre}
+                              </div>
+                            )}
                           </div>
                           <div className='col-12 col-md-6'>
                             <label htmlFor='apellido' className='form-label'>
                               Apellido <span className='text-danger'>*</span>
                             </label>
-                            <input 
-                              type='text' 
+                            <input
+                              type='text'
                               className={`form-control ${errors.apellido ? 'is-invalid' : ''}`}
                               id='apellido'
                               placeholder='Ingrese apellido'
                               value={formData.apellido}
-                              onChange={(e) => handleInputChange('apellido', e.target.value)}
+                              onChange={e =>
+                                handleInputChange('apellido', e.target.value)
+                              }
                             />
-                            {errors.apellido && <div className='invalid-feedback'>{errors.apellido}</div>}
+                            {errors.apellido && (
+                              <div className='invalid-feedback'>
+                                {errors.apellido}
+                              </div>
+                            )}
                           </div>
                           <div className='col-12 col-md-6'>
                             <label htmlFor='tipoDoc' className='form-label'>
-                              Tipo de Documento <span className='text-danger'>*</span>
+                              Tipo de Documento{' '}
+                              <span className='text-danger'>*</span>
                             </label>
-                            <select 
-                              className='form-select' 
+                            <select
+                              className='form-select'
                               id='tipoDoc'
                               value={formData.tipoDoc}
-                              onChange={(e) => handleInputChange('tipoDoc', e.target.value)}
+                              onChange={e =>
+                                handleInputChange('tipoDoc', e.target.value)
+                              }
                             >
                               <option value='DNI'>DNI</option>
                               <option value='Pasaporte'>Pasaporte</option>
@@ -451,17 +571,24 @@ export default function PersonaNueva() {
                           </div>
                           <div className='col-12 col-md-6'>
                             <label htmlFor='nroDoc' className='form-label'>
-                              Número de Documento <span className='text-danger'>*</span>
+                              Número de Documento{' '}
+                              <span className='text-danger'>*</span>
                             </label>
-                            <input 
-                              type='text' 
+                            <input
+                              type='text'
                               className={`form-control ${errors.nroDoc ? 'is-invalid' : ''}`}
                               id='nroDoc'
                               placeholder='Ingrese número de documento'
                               value={formData.nroDoc}
-                              onChange={(e) => handleInputChange('nroDoc', e.target.value)}
+                              onChange={e =>
+                                handleInputChange('nroDoc', e.target.value)
+                              }
                             />
-                            {errors.nroDoc && <div className='invalid-feedback'>{errors.nroDoc}</div>}
+                            {errors.nroDoc && (
+                              <div className='invalid-feedback'>
+                                {errors.nroDoc}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -480,36 +607,48 @@ export default function PersonaNueva() {
                         <label htmlFor='email' className='form-label'>
                           Email <span className='text-danger'>*</span>
                         </label>
-                        <input 
-                          type='email' 
+                        <input
+                          type='email'
                           className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                           id='email'
                           placeholder='Ingrese email'
                           value={formData.email}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          onChange={e =>
+                            handleInputChange('email', e.target.value)
+                          }
                         />
-                        {errors.email && <div className='invalid-feedback'>{errors.email}</div>}
+                        {errors.email && (
+                          <div className='invalid-feedback'>{errors.email}</div>
+                        )}
                       </div>
                       <div className='col-12 col-md-6'>
-                        <label htmlFor='telefono' className='form-label'>Teléfono</label>
-                        <input 
-                          type='tel' 
+                        <label htmlFor='telefono' className='form-label'>
+                          Teléfono
+                        </label>
+                        <input
+                          type='tel'
                           className='form-control'
                           id='telefono'
                           placeholder='Ingrese teléfono'
                           value={formData.telefono}
-                          onChange={(e) => handleInputChange('telefono', e.target.value)}
+                          onChange={e =>
+                            handleInputChange('telefono', e.target.value)
+                          }
                         />
                       </div>
                       <div className='col-12'>
-                        <label htmlFor='direccion' className='form-label'>Dirección</label>
-                        <input 
-                          type='text' 
+                        <label htmlFor='direccion' className='form-label'>
+                          Dirección
+                        </label>
+                        <input
+                          type='text'
                           className='form-control'
                           id='direccion'
                           placeholder='Ingrese dirección completa'
                           value={formData.direccion}
-                          onChange={(e) => handleInputChange('direccion', e.target.value)}
+                          onChange={e =>
+                            handleInputChange('direccion', e.target.value)
+                          }
                         />
                       </div>
                     </div>
@@ -519,10 +658,19 @@ export default function PersonaNueva() {
                 {/* Unidades Relacionadas */}
                 {formData.tipo !== 'Administrador' && (
                   <div className='card shadow-sm mb-4'>
-                    <div className='card-header bg-transparent d-flex justify-content-between align-items-center'>
+                    <div className='card-header bg-transparent
+                      d-flex justify-content-between align-items-center'>
                       <h6 className='mb-0'>Unidades Relacionadas</h6>
-                      <button type='button' className='btn btn-sm btn-outline-primary'>
-                        <i className='material-icons me-1' style={{ fontSize: '16px' }}>add</i>
+                      <button
+                        type='button'
+                        className='btn btn-sm btn-outline-primary'
+                      >
+                        <i
+                          className='material-icons me-1'
+                          style={{ fontSize: '16px' }}
+                        >
+                          add
+                        </i>
                         Añadir Unidad
                       </button>
                     </div>
@@ -533,45 +681,92 @@ export default function PersonaNueva() {
                           {errors.unidades}
                         </div>
                       )}
-                      
+
                       <div className='alert alert-info' role='alert'>
                         <div className='d-flex align-items-center'>
                           <i className='material-icons me-2'>info</i>
                           <div>
-                            <p className='mb-0'>Seleccione las unidades que esta persona posee o habita.</p>
+                            <p className='mb-0'>
+                              Seleccione las unidades que esta persona posee o
+                              habita.
+                            </p>
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className='row g-2'>
-                        {mockUnidades.map((unidad) => {
-                          const isSelected = formData.unidades.find(u => u.id === unidad.id);
-                          const selectedUnidad = formData.unidades.find(u => u.id === unidad.id);
-                          
+                        {mockUnidades.map(unidad => {
+                          const isSelected = formData.unidades.find(
+                            u => u.id === unidad.id,
+                          );
+                          const selectedUnidad = formData.unidades.find(
+                            u => u.id === unidad.id,
+                          );
+
                           return (
                             <div key={unidad.id} className='col-12'>
-                              <div 
-                                className={`p-3 border rounded cursor-pointer ${isSelected ? 'border-primary bg-primary bg-opacity-10' : 'border-secondary'}`}
-                                onClick={() => toggleUnidad(unidad)}
+                              <div
+                                className={
+                                  `p-3 border rounded cursor-pointer ${
+                                    isSelected
+                                      ? 'border-primary bg-primary bg-opacity-10'
+                                      : 'border-secondary'
+                                  }`
+                                }
+                                role="button"
+                                tabIndex={0}
+                                onClick={() =>
+                                  toggleUnidad(unidad)
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    toggleUnidad(unidad);
+                                  }
+                                }}
                                 style={{ cursor: 'pointer' }}
                               >
                                 <div className='d-flex justify-content-between align-items-center'>
                                   <div className='d-flex align-items-center'>
-                                    <i className='material-icons me-2 text-primary'>apartment</i>
+                                    <i className='material-icons me-2 text-primary'>
+                                      apartment
+                                    </i>
                                     <div>
-                                      <div className='fw-medium'>{unidad.nombre}</div>
-                                      <div className='small text-muted'>{unidad.edificio} - {unidad.comunidad}</div>
+                                      <div className='fw-medium'>
+                                        {unidad.nombre}
+                                      </div>
+                                      <div className='small text-muted'>
+                                        {unidad.edificio} - {unidad.comunidad}
+                                      </div>
                                     </div>
                                   </div>
                                   {isSelected && (
-                                    <div onClick={(e) => e.stopPropagation()}>
-                                      <select 
+                                    <div
+                                      onClick={e => e.stopPropagation()}
+                                      onKeyDown={(e) => e.stopPropagation()}
+                                      role="presentation"
+                                      tabIndex={-1}
+                                    >
+                                      <select
                                         className='form-select form-select-sm'
-                                        value={selectedUnidad?.relacion || 'Propietario'}
-                                        onChange={(e) => updateUnidadRelacion(unidad.id, e.target.value as 'Propietario' | 'Inquilino')}
+                                        value={
+                                          selectedUnidad?.relacion ||
+                                          'Propietario'
+                                        }
+                                        onChange={e =>
+                                          updateUnidadRelacion(
+                                            unidad.id,
+                                            e.target.value as
+                                              | 'Propietario'
+                                              | 'Inquilino',
+                                          )
+                                        }
                                       >
-                                        <option value='Propietario'>Propietario</option>
-                                        <option value='Inquilino'>Inquilino</option>
+                                        <option value='Propietario'>
+                                          Propietario
+                                        </option>
+                                        <option value='Inquilino'>
+                                          Inquilino
+                                        </option>
                                       </select>
                                     </div>
                                   )}
@@ -594,47 +789,70 @@ export default function PersonaNueva() {
                     <div className='row g-3'>
                       <div className='col-12'>
                         <div className='form-check form-switch'>
-                          <input 
-                            className='form-check-input' 
-                            type='checkbox' 
+                          <input
+                            className='form-check-input'
+                            type='checkbox'
                             id='crearCuenta'
                             checked={formData.crearCuenta}
-                            onChange={(e) => handleInputChange('crearCuenta', e.target.checked)}
+                            onChange={e =>
+                              handleInputChange('crearCuenta', e.target.checked)
+                            }
                           />
-                          <label className='form-check-label' htmlFor='crearCuenta'>
+                          <label
+                            className='form-check-label'
+                            htmlFor='crearCuenta'
+                          >
                             Crear cuenta de acceso
                           </label>
                         </div>
                         <div className='small text-muted mt-1'>
-                          La persona recibirá un email para establecer su contraseña
+                          La persona recibirá un email para establecer su
+                          contraseña
                         </div>
                       </div>
                       {formData.crearCuenta && (
                         <>
                           <div className='col-12 col-md-6'>
-                            <label htmlFor='username' className='form-label'>Nombre de usuario</label>
-                            <input 
-                              type='text' 
+                            <label htmlFor='username' className='form-label'>
+                              Nombre de usuario
+                            </label>
+                            <input
+                              type='text'
                               className='form-control'
                               id='username'
                               placeholder='usuario'
                               value={formData.username}
-                              onChange={(e) => handleInputChange('username', e.target.value)}
+                              onChange={e =>
+                                handleInputChange('username', e.target.value)
+                              }
                             />
-                            <div className='form-text'>Generado automáticamente a partir del nombre y apellido</div>
+                            <div className='form-text'>
+                              Generado automáticamente a partir del nombre y
+                              apellido
+                            </div>
                           </div>
                           <div className='col-12 col-md-6'>
-                            <label htmlFor='nivelAcceso' className='form-label'>Nivel de Acceso</label>
-                            <select 
-                              className='form-select' 
+                            <label htmlFor='nivelAcceso' className='form-label'>
+                              Nivel de Acceso
+                            </label>
+                            <select
+                              className='form-select'
                               id='nivelAcceso'
                               value={formData.nivelAcceso}
-                              onChange={(e) => handleInputChange('nivelAcceso', e.target.value)}
+                              onChange={e =>
+                                handleInputChange('nivelAcceso', e.target.value)
+                              }
                             >
                               <option value='Solo lectura'>Solo lectura</option>
-                              <option value='Usuario Estándar'>Usuario Estándar</option>
-                              <option value='Administrador'>Administrador</option>
-                              <option value='Superadministrador'>Superadministrador</option>
+                              <option value='Usuario Estándar'>
+                                Usuario Estándar
+                              </option>
+                              <option value='Administrador'>
+                                Administrador
+                              </option>
+                              <option value='Superadministrador'>
+                                Superadministrador
+                              </option>
                             </select>
                           </div>
                         </>
@@ -649,18 +867,34 @@ export default function PersonaNueva() {
                     Cancelar
                   </Link>
                   <div>
-                    <button type='button' className='btn btn-outline-primary me-2' disabled={loading}>
+                    <button
+                      type='button'
+                      className='btn btn-outline-primary me-2'
+                      disabled={loading}
+                    >
                       Guardar como Borrador
                     </button>
-                    <button type='submit' className='btn btn-primary' disabled={loading}>
+                    <button
+                      type='submit'
+                      className='btn btn-primary'
+                      disabled={loading}
+                    >
                       {loading ? (
                         <>
-                          <span className='spinner-border spinner-border-sm me-2' role='status'></span>
+                          <span
+                            className='spinner-border spinner-border-sm me-2'
+                            role='status'
+                          ></span>
                           Guardando...
                         </>
                       ) : (
                         <>
-                          <i className='material-icons me-1' style={{ fontSize: '16px' }}>save</i>
+                          <i
+                            className='material-icons me-1'
+                            style={{ fontSize: '16px' }}
+                          >
+                            save
+                          </i>
                           Guardar
                         </>
                       )}

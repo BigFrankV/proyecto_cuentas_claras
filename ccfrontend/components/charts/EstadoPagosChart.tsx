@@ -1,6 +1,7 @@
-import React from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import React from 'react';
 import { Doughnut } from 'react-chartjs-2';
+
 import { EstadoPago } from '@/lib/dashboardService';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -65,17 +66,18 @@ export default function EstadoPagosChart({
           font: {
             size: 12,
           },
-          generateLabels: function (chart: any) {
+          generateLabels(chart: any) {
             const data = chart.data;
             if (data.labels.length && data.datasets.length) {
               const ds = data.datasets[0];
               const totals = (ds.data || []).reduce(
                 (a: number, b: any) => a + (Number(b) || 0),
-                0
+                0,
               );
               return data.labels.map((label: string, i: number) => {
                 const cantidad = Number(ds.data[i]) || 0;
-                const porcentaje = totals > 0 ? Math.round((cantidad / totals) * 100) : 0;
+                const porcentaje =
+                  totals > 0 ? Math.round((cantidad / totals) * 100) : 0;
 
                 return {
                   text: `${label}: ${cantidad} (${porcentaje}%)`,
@@ -99,14 +101,15 @@ export default function EstadoPagosChart({
         borderColor: '#ddd',
         borderWidth: 1,
         callbacks: {
-          label: function (context: any) {
+          label(context: any) {
             const ds = context.chart.data.datasets[0];
             const cantidad = Number(context.parsed) || 0;
             const totals = (ds.data || []).reduce(
               (a: number, b: any) => a + (Number(b) || 0),
-              0
+              0,
             );
-            const porcentaje = totals > 0 ? Math.round((cantidad / totals) * 100) : 0;
+            const porcentaje =
+              totals > 0 ? Math.round((cantidad / totals) * 100) : 0;
             return `${context.label}: ${cantidad} (${porcentaje}%)`;
           },
         },
@@ -115,7 +118,10 @@ export default function EstadoPagosChart({
   };
 
   // Calcular totales para mostrar en el centro
-  const totalCantidad = data.reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0);
+  const totalCantidad = data.reduce(
+    (sum, item) => sum + (Number(item.cantidad) || 0),
+    0,
+  );
 
   return (
     <div className='position-relative'>
@@ -128,7 +134,9 @@ export default function EstadoPagosChart({
         className='position-absolute top-50 start-50 translate-middle text-center'
         style={{ pointerEvents: 'none' }}
       >
-        <div className='fw-bold fs-4 text-primary'>{Number.isFinite(totalCantidad) ? totalCantidad : 0}</div>
+        <div className='fw-bold fs-4 text-primary'>
+          {Number.isFinite(totalCantidad) ? totalCantidad : 0}
+        </div>
         <div className='small text-muted'>Total</div>
       </div>
     </div>

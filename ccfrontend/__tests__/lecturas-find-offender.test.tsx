@@ -1,6 +1,7 @@
-import React from 'react';
 import util from 'util';
+
 import { render } from '@testing-library/react';
+import React from 'react';
 
 // Mocks that must be in place before requiring the page module
 jest.mock('next/router', () => ({
@@ -8,11 +9,21 @@ jest.mock('next/router', () => ({
   useRouter: () => ({ push: () => {}, pathname: '/', query: {} }),
 }));
 
-jest.mock('next/head', () => ({ __esModule: true, default: ({ children }: any) => React.createElement('div', null, children) }));
+jest.mock('next/head', () => ({
+  __esModule: true,
+  default: ({ children }: any) => React.createElement('div', null, children),
+}));
 
-jest.mock('@/components/layout/Layout', () => ({ __esModule: true, default: ({ children }: any) => React.createElement('div', null, children) }));
+jest.mock('@/components/layout/Layout', () => ({
+  __esModule: true,
+  default: ({ children }: any) => React.createElement('div', null, children),
+}));
 
-jest.mock('@/lib/useAuth', () => ({ __esModule: true, ProtectedRoute: ({ children }: any) => React.createElement(React.Fragment, null, children) }));
+jest.mock('@/lib/useAuth', () => ({
+  __esModule: true,
+  ProtectedRoute: ({ children }: any) =>
+    React.createElement(React.Fragment, null, children),
+}));
 
 // Use our manual react-bootstrap mock file for tests
 jest.mock('react-bootstrap');
@@ -28,7 +39,9 @@ test('find offending object-type element without $$typeof', () => {
     if (ttypeof !== 'string' && ttypeof !== 'function' && !isFragment) {
       const dump = util.inspect(type, { depth: 4, colors: false });
       // throw immediately so Jest shows the offending value and stack
-      throw new Error('createElement called with non-function/non-string type: ' + dump);
+      throw new Error(
+        `createElement called with non-function/non-string type: ${dump}`,
+      );
     }
     return orig.apply(React, [type, ...rest]);
   };

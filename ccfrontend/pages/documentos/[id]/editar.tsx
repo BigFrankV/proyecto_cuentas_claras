@@ -1,16 +1,28 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-import { CategoryBadge, AccessBadge, FileIcon, VersionBadge } from '@/components/documentos';
+
+import {
+  CategoryBadge,
+  AccessBadge,
+  FileIcon,
+  VersionBadge,
+} from '@/components/documentos';
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 interface Document {
   id: string;
   name: string;
   description: string;
-  category: 'legal' | 'financial' | 'technical' | 'administrative' | 'maintenance' | 'meeting';
+  category:
+    | 'legal'
+    | 'financial'
+    | 'technical'
+    | 'administrative'
+    | 'maintenance'
+    | 'meeting';
   access: 'public' | 'residents' | 'owners' | 'admin';
   fileName: string;
   fileSize: string;
@@ -28,7 +40,7 @@ export default function EditarDocumento() {
   const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
   // Form fields
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -37,37 +49,49 @@ export default function EditarDocumento() {
   const [notes, setNotes] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
-  
+
   // File upload
   const [newFile, setNewFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
 
     // Mock data
     setTimeout(() => {
       const mockDocument: Document = {
         id: id as string,
-        name: id === '1' ? 'Reglamento de Copropiedad' : 'Acta Asamblea Extraordinaria',
-        description: id === '1' 
-          ? 'Documento oficial con las normas y reglamentos de la copropiedad'
-          : 'Acta de la asamblea extraordinaria del 25 de enero 2024',
+        name:
+          id === '1'
+            ? 'Reglamento de Copropiedad'
+            : 'Acta Asamblea Extraordinaria',
+        description:
+          id === '1'
+            ? 'Documento oficial con las normas y reglamentos de la copropiedad'
+            : 'Acta de la asamblea extraordinaria del 25 de enero 2024',
         category: id === '1' ? 'legal' : 'meeting',
         access: id === '1' ? 'public' : 'residents',
-        fileName: id === '1' ? 'reglamento-copropiedad.pdf' : 'acta-asamblea-25-ene-2024.doc',
+        fileName:
+          id === '1'
+            ? 'reglamento-copropiedad.pdf'
+            : 'acta-asamblea-25-ene-2024.doc',
         fileSize: id === '1' ? '2.5 MB' : '124 KB',
         version: id === '1' ? '2.1' : '1.0',
         isLatest: true,
         uploadedBy: id === '1' ? 'Admin' : 'Secretaria',
-        uploadedAt: id === '1' ? '2024-01-15T10:30:00Z' : '2024-01-26T16:20:00Z',
-        tags: id === '1' 
-          ? ['reglamento', 'normas', 'oficial']
-          : ['acta', 'asamblea', 'reunión'],
-        notes: id === '1' 
-          ? 'Documento actualizado con las últimas modificaciones aprobadas en asamblea extraordinaria'
-          : 'Acta oficial de la asamblea extraordinaria convocada para tratar temas urgentes'
+        uploadedAt:
+          id === '1' ? '2024-01-15T10:30:00Z' : '2024-01-26T16:20:00Z',
+        tags:
+          id === '1'
+            ? ['reglamento', 'normas', 'oficial']
+            : ['acta', 'asamblea', 'reunión'],
+        notes:
+          id === '1'
+            ? 'Documento actualizado con las últimas modificaciones aprobadas en asamblea extraordinaria'
+            : 'Acta oficial de la asamblea extraordinaria convocada para tratar temas urgentes',
       };
 
       setDocument(mockDocument);
@@ -84,9 +108,9 @@ export default function EditarDocumento() {
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
+    if (e.type === 'dragenter' || e.type === 'dragover') {
       setDragActive(true);
-    } else if (e.type === "dragleave") {
+    } else if (e.type === 'dragleave') {
       setDragActive(false);
     }
   };
@@ -95,7 +119,7 @@ export default function EditarDocumento() {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setNewFile(e.dataTransfer.files[0]);
     }
@@ -120,7 +144,9 @@ export default function EditarDocumento() {
 
   const handleSubmit = async (e: React.FormEvent, createNewVersion = false) => {
     e.preventDefault();
-    if (!document) return;
+    if (!document) {
+      return;
+    }
 
     setSaving(true);
 
@@ -139,30 +165,40 @@ export default function EditarDocumento() {
     }
 
     // Mock save
-    setTimeout(() => {
-      setSaving(false);
-      setUploadProgress(0);
-      
-      const action = createNewVersion ? 'nueva versión creada' : 'documento actualizado';
-      alert(`Documento ${action} exitosamente`);
-      
-      router.push(`/documentos/${id}`);
-    }, newFile ? 2500 : 800);
+    setTimeout(
+      () => {
+        setSaving(false);
+        setUploadProgress(0);
+
+        const action = createNewVersion
+          ? 'nueva versión creada'
+          : 'documento actualizado';
+        alert(`Documento ${action} exitosamente`);
+
+        router.push(`/documentos/${id}`);
+      },
+      newFile ? 2500 : 800,
+    );
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
   if (loading) {
     return (
       <ProtectedRoute>
         <Layout title='Editar Documento'>
-          <div className='d-flex justify-content-center align-items-center' style={{ minHeight: '400px' }}>
+          <div
+            className='d-flex justify-content-center align-items-center'
+            style={{ minHeight: '400px' }}
+          >
             <div className='text-center'>
               <div className='spinner-border text-primary' role='status'>
                 <span className='visually-hidden'>Cargando...</span>
@@ -182,7 +218,9 @@ export default function EditarDocumento() {
           <div className='container-fluid py-4'>
             <div className='text-center'>
               <h3>Documento no encontrado</h3>
-              <p className='text-muted'>El documento que intentas editar no existe.</p>
+              <p className='text-muted'>
+                El documento que intentas editar no existe.
+              </p>
               <Link href='/documentos' className='btn btn-primary'>
                 Volver a Documentos
               </Link>
@@ -210,7 +248,10 @@ export default function EditarDocumento() {
                 </Link>
               </li>
               <li className='breadcrumb-item'>
-                <Link href={`/documentos/${document.id}`} className='text-decoration-none'>
+                <Link
+                  href={`/documentos/${document.id}`}
+                  className='text-decoration-none'
+                >
                   {document.name}
                 </Link>
               </li>
@@ -224,10 +265,15 @@ export default function EditarDocumento() {
           <div className='d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3'>
             <div>
               <h1 className='h3 mb-1'>Editar Documento</h1>
-              <p className='text-muted mb-0'>Modifica la información del documento o sube una nueva versión</p>
+              <p className='text-muted mb-0'>
+                Modifica la información del documento o sube una nueva versión
+              </p>
             </div>
             <div className='d-flex gap-2'>
-              <Link href={`/documentos/${document.id}`} className='btn btn-outline-secondary'>
+              <Link
+                href={`/documentos/${document.id}`}
+                className='btn btn-outline-secondary'
+              >
                 <i className='material-icons me-2'>close</i>
                 Cancelar
               </Link>
@@ -237,10 +283,12 @@ export default function EditarDocumento() {
           <div className='row'>
             <div className='col-lg-8'>
               {/* Edit Form */}
-              <form onSubmit={(e) => handleSubmit(e, false)}>
+              <form onSubmit={e => handleSubmit(e, false)}>
                 <div className='card shadow-sm mb-4'>
                   <div className='card-body'>
-                    <h5 className='card-title mb-4'>Información del Documento</h5>
+                    <h5 className='card-title mb-4'>
+                      Información del Documento
+                    </h5>
 
                     <div className='row g-3'>
                       <div className='col-12'>
@@ -252,7 +300,7 @@ export default function EditarDocumento() {
                           className='form-control'
                           id='name'
                           value={name}
-                          onChange={(e) => setName(e.target.value)}
+                          onChange={e => setName(e.target.value)}
                           required
                         />
                       </div>
@@ -266,7 +314,7 @@ export default function EditarDocumento() {
                           id='description'
                           rows={3}
                           value={description}
-                          onChange={(e) => setDescription(e.target.value)}
+                          onChange={e => setDescription(e.target.value)}
                           placeholder='Descripción detallada del documento...'
                         />
                       </div>
@@ -279,7 +327,7 @@ export default function EditarDocumento() {
                           className='form-select'
                           id='category'
                           value={category}
-                          onChange={(e) => setCategory(e.target.value)}
+                          onChange={e => setCategory(e.target.value)}
                           required
                         >
                           <option value=''>Seleccionar categoría</option>
@@ -300,7 +348,7 @@ export default function EditarDocumento() {
                           className='form-select'
                           id='access'
                           value={access}
-                          onChange={(e) => setAccess(e.target.value)}
+                          onChange={e => setAccess(e.target.value)}
                           required
                         >
                           <option value=''>Seleccionar nivel</option>
@@ -320,7 +368,7 @@ export default function EditarDocumento() {
                           id='notes'
                           rows={3}
                           value={notes}
-                          onChange={(e) => setNotes(e.target.value)}
+                          onChange={e => setNotes(e.target.value)}
                           placeholder='Notas o comentarios adicionales...'
                         />
                       </div>
@@ -330,7 +378,10 @@ export default function EditarDocumento() {
                         <label className='form-label'>Etiquetas</label>
                         <div className='tags-container mb-2'>
                           {tags.map((tag, index) => (
-                            <span key={index} className='badge bg-light text-dark me-2 mb-2'>
+                            <span
+                              key={index}
+                              className='badge bg-light text-dark me-2 mb-2'
+                            >
                               #{tag}
                               <button
                                 type='button'
@@ -347,8 +398,11 @@ export default function EditarDocumento() {
                             className='form-control'
                             placeholder='Agregar etiqueta...'
                             value={newTag}
-                            onChange={(e) => setNewTag(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                            onChange={e => setNewTag(e.target.value)}
+                            onKeyPress={e =>
+                              e.key === 'Enter' &&
+                              (e.preventDefault(), addTag())
+                            }
                           />
                           <button
                             type='button'
@@ -367,11 +421,15 @@ export default function EditarDocumento() {
                 {/* File Upload */}
                 <div className='card shadow-sm mb-4'>
                   <div className='card-body'>
-                    <h5 className='card-title mb-4'>Reemplazar Archivo (Opcional)</h5>
-                    
+                    <h5 className='card-title mb-4'>
+                      Reemplazar Archivo (Opcional)
+                    </h5>
+
                     <div
                       className={`upload-zone border border-2 border-dashed rounded p-4 text-center ${
-                        dragActive ? 'border-primary bg-primary bg-opacity-10' : 'border-secondary'
+                        dragActive
+                          ? 'border-primary bg-primary bg-opacity-10'
+                          : 'border-secondary'
                       }`}
                       onDragEnter={handleDrag}
                       onDragLeave={handleDrag}
@@ -382,7 +440,9 @@ export default function EditarDocumento() {
                         <div className='selected-file'>
                           <FileIcon fileName={newFile.name} size='lg' />
                           <h6 className='mt-3 mb-2'>{newFile.name}</h6>
-                          <p className='text-muted mb-3'>{formatFileSize(newFile.size)}</p>
+                          <p className='text-muted mb-3'>
+                            {formatFileSize(newFile.size)}
+                          </p>
                           <button
                             type='button'
                             className='btn btn-outline-danger'
@@ -393,7 +453,10 @@ export default function EditarDocumento() {
                           </button>
 
                           {uploadProgress > 0 && (
-                            <div className='progress mt-3' style={{ height: '8px' }}>
+                            <div
+                              className='progress mt-3'
+                              style={{ height: '8px' }}
+                            >
                               <div
                                 className='progress-bar'
                                 role='progressbar'
@@ -404,12 +467,18 @@ export default function EditarDocumento() {
                         </div>
                       ) : (
                         <div className='upload-prompt'>
-                          <i className='material-icons mb-3 text-muted' style={{ fontSize: '3rem' }}>
+                          <i
+                            className='material-icons mb-3 text-muted'
+                            style={{ fontSize: '3rem' }}
+                          >
                             cloud_upload
                           </i>
-                          <h6 className='mb-2'>Arrastra un archivo aquí o haz clic para seleccionar</h6>
+                          <h6 className='mb-2'>
+                            Arrastra un archivo aquí o haz clic para seleccionar
+                          </h6>
                           <p className='text-muted mb-3'>
-                            Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG
+                            Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, JPG,
+                            PNG
                           </p>
                           <label className='btn btn-outline-primary'>
                             <i className='material-icons me-2'>folder_open</i>
@@ -428,7 +497,8 @@ export default function EditarDocumento() {
                     {newFile && (
                       <div className='alert alert-info mt-3'>
                         <i className='material-icons me-2'>info</i>
-                        Al subir un nuevo archivo, se creará automáticamente una nueva versión del documento.
+                        Al subir un nuevo archivo, se creará automáticamente una
+                        nueva versión del documento.
                       </div>
                     )}
                   </div>
@@ -436,7 +506,10 @@ export default function EditarDocumento() {
 
                 {/* Actions */}
                 <div className='d-flex justify-content-end gap-2'>
-                  <Link href={`/documentos/${document.id}`} className='btn btn-outline-secondary'>
+                  <Link
+                    href={`/documentos/${document.id}`}
+                    className='btn btn-outline-secondary'
+                  >
                     Cancelar
                   </Link>
                   {newFile ? (
@@ -444,11 +517,14 @@ export default function EditarDocumento() {
                       type='submit'
                       className='btn btn-primary'
                       disabled={saving}
-                      onClick={(e) => handleSubmit(e, true)}
+                      onClick={e => handleSubmit(e, true)}
                     >
                       {saving ? (
                         <>
-                          <span className='spinner-border spinner-border-sm me-2' role='status'></span>
+                          <span
+                            className='spinner-border spinner-border-sm me-2'
+                            role='status'
+                          ></span>
                           Creando nueva versión...
                         </>
                       ) : (
@@ -466,7 +542,10 @@ export default function EditarDocumento() {
                     >
                       {saving ? (
                         <>
-                          <span className='spinner-border spinner-border-sm me-2' role='status'></span>
+                          <span
+                            className='spinner-border spinner-border-sm me-2'
+                            role='status'
+                          ></span>
                           Guardando...
                         </>
                       ) : (
@@ -486,29 +565,50 @@ export default function EditarDocumento() {
               <div className='card shadow-sm mb-4'>
                 <div className='card-body'>
                   <h6 className='card-title mb-3'>Documento Actual</h6>
-                  
+
                   <div className='d-flex align-items-center mb-3'>
                     <FileIcon fileName={document.fileName} size='md' />
                     <div className='ms-3'>
                       <div className='fw-medium'>{document.fileName}</div>
-                      <div className='text-muted small'>{document.fileSize}</div>
+                      <div className='text-muted small'>
+                        {document.fileSize}
+                      </div>
                     </div>
                   </div>
 
                   <div className='d-flex gap-2 mb-3'>
-                    <CategoryBadge category={document.category as any} size='sm' />
+                    <CategoryBadge
+                      category={document.category as any}
+                      size='sm'
+                    />
                     <AccessBadge access={document.access as any} size='sm' />
-                    <VersionBadge version={document.version} isLatest={document.isLatest} size='sm' />
+                    <VersionBadge
+                      version={document.version}
+                      isLatest={document.isLatest}
+                      size='sm'
+                    />
                   </div>
 
                   <div className='document-meta text-muted small'>
                     <div className='mb-1'>
-                      <i className='material-icons me-1' style={{ fontSize: '14px' }}>person</i>
+                      <i
+                        className='material-icons me-1'
+                        style={{ fontSize: '14px' }}
+                      >
+                        person
+                      </i>
                       {document.uploadedBy}
                     </div>
                     <div>
-                      <i className='material-icons me-1' style={{ fontSize: '14px' }}>access_time</i>
-                      {new Date(document.uploadedAt).toLocaleDateString('es-CL')}
+                      <i
+                        className='material-icons me-1'
+                        style={{ fontSize: '14px' }}
+                      >
+                        access_time
+                      </i>
+                      {new Date(document.uploadedAt).toLocaleDateString(
+                        'es-CL',
+                      )}
                     </div>
                   </div>
                 </div>
@@ -525,7 +625,8 @@ export default function EditarDocumento() {
                         Editar información
                       </h6>
                       <p className='help-text text-muted small'>
-                        Puedes modificar el nombre, descripción, categoría y nivel de acceso sin subir un nuevo archivo.
+                        Puedes modificar el nombre, descripción, categoría y
+                        nivel de acceso sin subir un nuevo archivo.
                       </p>
                     </div>
                     <div className='help-item mb-3'>
@@ -534,7 +635,8 @@ export default function EditarDocumento() {
                         Nueva versión
                       </h6>
                       <p className='help-text text-muted small'>
-                        Al subir un nuevo archivo, se creará automáticamente una nueva versión manteniendo el historial.
+                        Al subir un nuevo archivo, se creará automáticamente una
+                        nueva versión manteniendo el historial.
                       </p>
                     </div>
                     <div className='help-item'>
@@ -543,7 +645,8 @@ export default function EditarDocumento() {
                         Etiquetas
                       </h6>
                       <p className='help-text text-muted small'>
-                        Usa etiquetas para facilitar la búsqueda y organización de documentos.
+                        Usa etiquetas para facilitar la búsqueda y organización
+                        de documentos.
                       </p>
                     </div>
                   </div>

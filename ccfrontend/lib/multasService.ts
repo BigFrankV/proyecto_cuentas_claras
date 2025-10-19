@@ -1,45 +1,106 @@
-import api from './api';
 import {
   Multa,
   MultaFiltros,
   CreateMultaData,
   UpdateMultaData,
   MultasEstadisticas,
-  TipoInfraccion
+  TipoInfraccion,
 } from '@/types/multas';
+
+import api from './api';
 
 class MultasService {
   // ===== OPCIONES PREDEFINIDAS (SIN BD) =====
 
   getTiposInfraccionPredefinidos(): TipoInfraccion[] {
     return [
-      { id: 'ruidos_molestos', nombre: 'Ruidos molestos', monto_base: 50000, categoria: 'Convivencia' },
-      { id: 'mascotas_sin_correa', nombre: 'Mascotas sin correa', monto_base: 30000, categoria: 'Mascotas' },
-      { id: 'estacionamiento_indebido', nombre: 'Estacionamiento indebido', monto_base: 40000, categoria: 'Estacionamiento' },
-      { id: 'basura_fuera_horario', nombre: 'Basura fuera de horario', monto_base: 25000, categoria: 'Aseo' },
-      { id: 'uso_inadecuado_areas', nombre: 'Uso inadecuado áreas comunes', monto_base: 60000, categoria: 'Áreas Comunes' },
-      { id: 'no_recoger_desechos', nombre: 'No recoger desechos mascota', monto_base: 35000, categoria: 'Mascotas' },
-      { id: 'fumar_prohibido', nombre: 'Fumar en áreas prohibidas', monto_base: 45000, categoria: 'Salud' },
-      { id: 'trabajos_horario', nombre: 'Trabajos en horario no permitido', monto_base: 55000, categoria: 'Convivencia' },
-      { id: 'danos_propiedad', nombre: 'Daños menores propiedad común', monto_base: 80000, categoria: 'Daños' },
-      { id: 'normas_piscina', nombre: 'Incumplimiento normas piscina', monto_base: 40000, categoria: 'Áreas Comunes' }
+      {
+        id: 'ruidos_molestos',
+        nombre: 'Ruidos molestos',
+        monto_base: 50000,
+        categoria: 'Convivencia',
+      },
+      {
+        id: 'mascotas_sin_correa',
+        nombre: 'Mascotas sin correa',
+        monto_base: 30000,
+        categoria: 'Mascotas',
+      },
+      {
+        id: 'estacionamiento_indebido',
+        nombre: 'Estacionamiento indebido',
+        monto_base: 40000,
+        categoria: 'Estacionamiento',
+      },
+      {
+        id: 'basura_fuera_horario',
+        nombre: 'Basura fuera de horario',
+        monto_base: 25000,
+        categoria: 'Aseo',
+      },
+      {
+        id: 'uso_inadecuado_areas',
+        nombre: 'Uso inadecuado áreas comunes',
+        monto_base: 60000,
+        categoria: 'Áreas Comunes',
+      },
+      {
+        id: 'no_recoger_desechos',
+        nombre: 'No recoger desechos mascota',
+        monto_base: 35000,
+        categoria: 'Mascotas',
+      },
+      {
+        id: 'fumar_prohibido',
+        nombre: 'Fumar en áreas prohibidas',
+        monto_base: 45000,
+        categoria: 'Salud',
+      },
+      {
+        id: 'trabajos_horario',
+        nombre: 'Trabajos en horario no permitido',
+        monto_base: 55000,
+        categoria: 'Convivencia',
+      },
+      {
+        id: 'danos_propiedad',
+        nombre: 'Daños menores propiedad común',
+        monto_base: 80000,
+        categoria: 'Daños',
+      },
+      {
+        id: 'normas_piscina',
+        nombre: 'Incumplimiento normas piscina',
+        monto_base: 40000,
+        categoria: 'Áreas Comunes',
+      },
     ];
   }
 
   // ===== CRUD ADAPTADO A TU BACKEND =====
-  async getMultas(filtros?: any): Promise<{ data: any[]; totalPaginas: number }> {
+  async getMultas(
+    filtros?: any,
+  ): Promise<{ data: any[]; totalPaginas: number }> {
     try {
       const params: any = {};
-      if (filtros?.comunidad_id) params.comunidad_id = filtros.comunidad_id;
-      if (filtros?.estado) params.estado = filtros.estado;
-      if (filtros?.search) params.search = filtros.search;
-      if (filtros?.pagina) params.page = filtros.pagina;  // ✅ Agrega página
+      if (filtros?.comunidad_id) {
+        params.comunidad_id = filtros.comunidad_id;
+      }
+      if (filtros?.estado) {
+        params.estado = filtros.estado;
+      }
+      if (filtros?.search) {
+        params.search = filtros.search;
+      }
+      if (filtros?.pagina) {
+        params.page = filtros.pagina;
+      } // ✅ Agrega página
       const response = await api.get('/multas', { params });
       const data = response.data?.data ?? response.data;
       const totalPaginas = response.data?.totalPaginas ?? 1;
       return {
         data: (data || []).map(r => this.adaptMultaFromBackend(r)),
-        totalPaginas
+        totalPaginas,
       };
     } catch (err) {
       console.error('❌ Error obteniendo multas:', err);
@@ -47,10 +108,11 @@ class MultasService {
     }
   }
 
-
   // Helper: adaptar objeto que viene del backend a la forma que espera la UI
   private adaptMultaFromBackend(raw: any): any {
-    if (!raw) return raw;
+    if (!raw) {
+      return raw;
+    }
     return {
       id: raw.id,
       numero: raw.numero,
@@ -63,14 +125,14 @@ class MultasService {
       persona_id: raw.persona_id,
       propietario_nombre: raw.propietario_nombre,
       propietario_email: raw.propietario_email,
-      tipo_infraccion: raw.motivo,         // backend usa 'motivo'
+      tipo_infraccion: raw.motivo, // backend usa 'motivo'
       motivo: raw.motivo,
       descripcion: raw.descripcion,
       monto: Number(raw.monto),
       estado: raw.estado,
       prioridad: raw.prioridad,
-      fecha: raw.fecha,                     // backend usa 'fecha'
-      fecha_infraccion: raw.fecha,          // alias para UI
+      fecha: raw.fecha, // backend usa 'fecha'
+      fecha_infraccion: raw.fecha, // alias para UI
       fecha_vencimiento: raw.fecha_vencimiento,
       fecha_pago: raw.fecha_pago,
       fecha_anulacion: raw.fecha_anulacion,
@@ -78,7 +140,7 @@ class MultasService {
       anulado_por: raw.anulado_por,
       anulado_por_username: raw.anulado_por_username,
       created_at: raw.created_at,
-      updated_at: raw.updated_at
+      updated_at: raw.updated_at,
     };
   }
 
@@ -97,8 +159,10 @@ class MultasService {
       descripcion: data.descripcion,
       monto: data.monto,
       prioridad: data.prioridad,
-      fecha_infraccion: this.formatearFechaParaBackend(data.fecha || data.fecha_infraccion),
-      fecha_vencimiento: data.fecha_vencimiento
+      fecha_infraccion: this.formatearFechaParaBackend(
+        data.fecha || data.fecha_infraccion,
+      ),
+      fecha_vencimiento: data.fecha_vencimiento,
     };
     const response = await api.post('/multas', payload);
     const raw = response.data?.data ?? response.data;
@@ -135,7 +199,9 @@ class MultasService {
 
       // Usar endpoint específico si existe en backend
       const payload: any = {};
-      if (motivo) payload.motivo_anulacion = motivo;
+      if (motivo) {
+        payload.motivo_anulacion = motivo;
+      }
       const response = await api.patch(`/multas/${id}/anular`, payload);
       const raw = response.data?.data ?? response.data;
       console.log('✅ Multa anulada exitosamente');
@@ -167,7 +233,9 @@ class MultasService {
   // ✅ Formatear fecha para tu backend (DATE field)
   private formatearFechaParaBackend(fechaISO: string): string {
     try {
-      if (!fechaISO) return new Date().toISOString().split('T')[0];
+      if (!fechaISO) {
+        return new Date().toISOString().split('T')[0];
+      }
 
       // Si viene como '2024-12-22T14:30:00' del datetime-local
       if (fechaISO.includes('T')) {
@@ -191,7 +259,9 @@ class MultasService {
   // ✅ Normalizar fecha DATE de MySQL
   private normalizarFechaFromDB(fecha: any): string {
     try {
-      if (!fecha) return new Date().toISOString().split('T')[0];
+      if (!fecha) {
+        return new Date().toISOString().split('T')[0];
+      }
 
       // Si viene como '2025-09-22' de MySQL DATE
       if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
@@ -213,7 +283,9 @@ class MultasService {
   // ✅ Normalizar timestamp DATETIME de MySQL
   private normalizarTimestampFromDB(timestamp: any): string {
     try {
-      if (!timestamp) return new Date().toISOString();
+      if (!timestamp) {
+        return new Date().toISOString();
+      }
 
       if (typeof timestamp === 'string') {
         const fechaObj = new Date(timestamp);
@@ -236,8 +308,11 @@ class MultasService {
 
       if (!fechaInfraccion) {
         fecha = new Date();
-      } else if (typeof fechaInfraccion === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fechaInfraccion)) {
-        fecha = new Date(fechaInfraccion + 'T00:00:00');
+      } else if (
+        typeof fechaInfraccion === 'string' &&
+        /^\d{4}-\d{2}-\d{2}$/.test(fechaInfraccion)
+      ) {
+        fecha = new Date(`${fechaInfraccion}T00:00:00`);
       } else {
         fecha = new Date(fechaInfraccion);
       }
@@ -266,27 +341,27 @@ class MultasService {
   formatearMonto(monto: number): string {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP'
+      currency: 'CLP',
     }).format(monto);
   }
 
   getEstadoColor(estado: Multa['estado']): string {
     const colores = {
-      'pendiente': 'warning',
-      'pagado': 'success',    // ✅ Tu BD usa 'pagado'
-      'vencido': 'danger',    // ✅ Tu BD usa 'vencido' 
-      'apelada': 'info',
-      'anulada': 'secondary'
+      pendiente: 'warning',
+      pagado: 'success', // ✅ Tu BD usa 'pagado'
+      vencido: 'danger', // ✅ Tu BD usa 'vencido'
+      apelada: 'info',
+      anulada: 'secondary',
     };
     return colores[estado] || 'primary';
   }
 
   getPrioridadColor(prioridad: Multa['prioridad']): string {
     const colores = {
-      'baja': 'success',
-      'media': 'warning',
-      'alta': 'danger',
-      'critica': 'dark'
+      baja: 'success',
+      media: 'warning',
+      alta: 'danger',
+      critica: 'dark',
     };
     return colores[prioridad] || 'primary';
   }
@@ -304,11 +379,11 @@ class MultasService {
 
   getEstadoLabel(estado: Multa['estado']): string {
     const labels = {
-      'pendiente': 'Pendiente de Pago',
-      'pagado': 'Pagado',
-      'vencido': 'Vencido',
-      'apelada': 'En Apelación',
-      'anulada': 'Anulada'
+      pendiente: 'Pendiente de Pago',
+      pagado: 'Pagado',
+      vencido: 'Vencido',
+      apelada: 'En Apelación',
+      anulada: 'Anulada',
     };
     return labels[estado] || estado;
   }
@@ -339,14 +414,25 @@ class MultasService {
   }
 
   // Registrar pago (wrapper). Backend esperado: POST /multas/:id/registrar-pago
-  async registrarPago(id: number, pagoData: { fecha_pago: string; metodo_pago?: string; referencia?: string; monto?: number; }): Promise<Multa> {
+  async registrarPago(
+    id: number,
+    pagoData: {
+      fecha_pago: string;
+      metodo_pago?: string;
+      referencia?: string;
+      monto?: number;
+    },
+  ): Promise<Multa> {
     const response = await api.post(`/multas/${id}/registrar-pago`, pagoData);
     const raw = response.data?.data ?? response.data;
     return this.adaptarMultaDelBackend(raw);
   }
 
   // Crear apelación (wrapper). Backend esperado: POST /multas/:id/apelacion
-  async crearApelacion(id: number, body: { motivo: string; documentos_json?: any[]; }): Promise<any> {
+  async crearApelacion(
+    id: number,
+    body: { motivo: string; documentos_json?: any[] },
+  ): Promise<any> {
     const response = await api.post(`/multas/${id}/apelacion`, body);
     return response.data?.data ?? response.data;
   }

@@ -1,16 +1,24 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
-import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
+
 import { EmissionStatusBadge, EmissionTypeBadge } from '@/components/emisiones';
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 interface EmissionDetail {
   id: string;
   period: string;
   type: 'gastos_comunes' | 'extraordinaria' | 'multa' | 'interes';
-  status: 'draft' | 'ready' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
+  status:
+    | 'draft'
+    | 'ready'
+    | 'sent'
+    | 'paid'
+    | 'partial'
+    | 'overdue'
+    | 'cancelled';
   issueDate: string;
   dueDate: string;
   totalAmount: number;
@@ -108,7 +116,7 @@ export default function EmisionDetalle() {
         communityName: 'Edificio Central',
         hasInterest: true,
         interestRate: 2.0,
-        gracePeriod: 5
+        gracePeriod: 5,
       };
 
       const mockConcepts: Concept[] = [
@@ -118,7 +126,7 @@ export default function EmisionDetalle() {
           description: 'Honorarios administrador y gastos administrativos',
           amount: 450000,
           distributionType: 'proportional',
-          category: 'Administración'
+          category: 'Administración',
         },
         {
           id: '2',
@@ -126,7 +134,7 @@ export default function EmisionDetalle() {
           description: 'Electricidad y agua áreas comunes',
           amount: 730000,
           distributionType: 'proportional',
-          category: 'Servicios'
+          category: 'Servicios',
         },
         {
           id: '3',
@@ -134,8 +142,8 @@ export default function EmisionDetalle() {
           description: 'Aporte mensual al fondo de reserva',
           amount: 200000,
           distributionType: 'equal',
-          category: 'Reservas'
-        }
+          category: 'Reservas',
+        },
       ];
 
       const mockExpenses: ExpenseDetail[] = [
@@ -146,7 +154,7 @@ export default function EmisionDetalle() {
           category: 'Servicios Básicos',
           supplier: 'CGE',
           date: '2025-09-15',
-          document: 'Factura #12345'
+          document: 'Factura #12345',
         },
         {
           id: '2',
@@ -155,8 +163,8 @@ export default function EmisionDetalle() {
           category: 'Servicios Básicos',
           supplier: 'ESVAL',
           date: '2025-09-10',
-          document: 'Factura #67890'
-        }
+          document: 'Factura #67890',
+        },
       ];
 
       const mockUnits: UnitDetail[] = [
@@ -169,7 +177,7 @@ export default function EmisionDetalle() {
           participation: 2.5,
           totalAmount: 62500,
           paidAmount: 62500,
-          status: 'paid'
+          status: 'paid',
         },
         {
           id: '2',
@@ -180,8 +188,8 @@ export default function EmisionDetalle() {
           participation: 2.2,
           totalAmount: 55000,
           paidAmount: 30000,
-          status: 'partial'
-        }
+          status: 'partial',
+        },
       ];
 
       const mockPayments: Payment[] = [
@@ -192,7 +200,7 @@ export default function EmisionDetalle() {
           method: 'Transferencia',
           reference: 'TRF001234',
           unit: '101',
-          status: 'confirmed'
+          status: 'confirmed',
         },
         {
           id: '2',
@@ -201,8 +209,8 @@ export default function EmisionDetalle() {
           method: 'Efectivo',
           reference: 'EF001',
           unit: '102',
-          status: 'confirmed'
-        }
+          status: 'confirmed',
+        },
       ];
 
       const mockHistory: HistoryEntry[] = [
@@ -211,15 +219,15 @@ export default function EmisionDetalle() {
           date: '2025-09-01',
           action: 'Emisión creada',
           user: 'Administrador',
-          description: 'Se creó la emisión de gastos comunes'
+          description: 'Se creó la emisión de gastos comunes',
         },
         {
           id: '2',
           date: '2025-09-02',
           action: 'Emisión enviada',
           user: 'Administrador',
-          description: 'Se envió la emisión a todas las unidades'
-        }
+          description: 'Se envió la emisión a todas las unidades',
+        },
       ];
 
       setEmission(mockEmission);
@@ -235,7 +243,7 @@ export default function EmisionDetalle() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP'
+      currency: 'CLP',
     }).format(amount);
   };
 
@@ -244,7 +252,9 @@ export default function EmisionDetalle() {
   };
 
   const getPaymentProgress = () => {
-    if (!emission || emission.totalAmount === 0) return 0;
+    if (!emission || emission.totalAmount === 0) {
+      return 0;
+    }
     return (emission.paidAmount / emission.totalAmount) * 100;
   };
 
@@ -252,7 +262,10 @@ export default function EmisionDetalle() {
     return (
       <ProtectedRoute>
         <Layout title='Detalle de Emisión'>
-          <div className='d-flex justify-content-center align-items-center' style={{ minHeight: '400px' }}>
+          <div
+            className='d-flex justify-content-center align-items-center'
+            style={{ minHeight: '400px' }}
+          >
             <div className='text-center'>
               <div className='spinner-border text-primary' role='status'>
                 <span className='visually-hidden'>Cargando...</span>
@@ -271,7 +284,9 @@ export default function EmisionDetalle() {
         <Layout title='Emisión no encontrada'>
           <div className='text-center py-5'>
             <h3>Emisión no encontrada</h3>
-            <p className='text-muted'>La emisión solicitada no existe o no tienes permisos para verla.</p>
+            <p className='text-muted'>
+              La emisión solicitada no existe o no tienes permisos para verla.
+            </p>
             <Link href='/emisiones' className='btn btn-primary'>
               Volver a Emisiones
             </Link>
@@ -308,7 +323,10 @@ export default function EmisionDetalle() {
                   <i className='material-icons me-2'>file_download</i>
                   Exportar
                 </button>
-                <Link href={`/emisiones/${id}/prorrateo`} className='btn btn-outline-primary'>
+                <Link
+                  href={`/emisiones/${id}/prorrateo`}
+                  className='btn btn-outline-primary'
+                >
                   <i className='material-icons me-2'>pie_chart</i>
                   Prorrateo
                 </Link>
@@ -370,19 +388,25 @@ export default function EmisionDetalle() {
                 <div className='card-body'>
                   <div className='amount-item total'>
                     <label>Total emisión:</label>
-                    <div className='amount'>{formatCurrency(emission.totalAmount)}</div>
+                    <div className='amount'>
+                      {formatCurrency(emission.totalAmount)}
+                    </div>
                   </div>
                   <div className='amount-item paid'>
                     <label>Monto pagado:</label>
-                    <div className='amount'>{formatCurrency(emission.paidAmount)}</div>
+                    <div className='amount'>
+                      {formatCurrency(emission.paidAmount)}
+                    </div>
                   </div>
                   <div className='amount-item pending'>
                     <label>Pendiente:</label>
                     <div className='amount'>
-                      {formatCurrency(emission.totalAmount - emission.paidAmount)}
+                      {formatCurrency(
+                        emission.totalAmount - emission.paidAmount,
+                      )}
                     </div>
                   </div>
-                  
+
                   <div className='progress-section'>
                     <div className='progress-header'>
                       <span>Progreso de pago</span>
@@ -479,7 +503,8 @@ export default function EmisionDetalle() {
                             <strong>Comunidad:</strong> {emission.communityName}
                           </div>
                           <div className='detail-item'>
-                            <strong>Cantidad de unidades:</strong> {emission.unitCount}
+                            <strong>Cantidad de unidades:</strong>{' '}
+                            {emission.unitCount}
                           </div>
                         </div>
                       </div>
@@ -487,15 +512,18 @@ export default function EmisionDetalle() {
                         <h5>Configuración de Intereses</h5>
                         <div className='detail-group'>
                           <div className='detail-item'>
-                            <strong>Aplica interés:</strong> {emission.hasInterest ? 'Sí' : 'No'}
+                            <strong>Aplica interés:</strong>{' '}
+                            {emission.hasInterest ? 'Sí' : 'No'}
                           </div>
                           {emission.hasInterest && (
                             <>
                               <div className='detail-item'>
-                                <strong>Tasa de interés:</strong> {emission.interestRate}% mensual
+                                <strong>Tasa de interés:</strong>{' '}
+                                {emission.interestRate}% mensual
                               </div>
                               <div className='detail-item'>
-                                <strong>Período de gracia:</strong> {emission.gracePeriod} días
+                                <strong>Período de gracia:</strong>{' '}
+                                {emission.gracePeriod} días
                               </div>
                             </>
                           )}
@@ -524,9 +552,11 @@ export default function EmisionDetalle() {
                           </tr>
                         </thead>
                         <tbody>
-                          {concepts.map((concept) => (
+                          {concepts.map(concept => (
                             <tr key={concept.id}>
-                              <td><strong>{concept.name}</strong></td>
+                              <td>
+                                <strong>{concept.name}</strong>
+                              </td>
                               <td>{concept.description}</td>
                               <td>
                                 <span className='badge bg-light text-dark'>
@@ -535,11 +565,18 @@ export default function EmisionDetalle() {
                               </td>
                               <td>
                                 <span className='badge bg-secondary'>
-                                  {concept.distributionType === 'proportional' ? 'Proporcional' :
-                                   concept.distributionType === 'equal' ? 'Igualitario' : 'Personalizado'}
+                                  {concept.distributionType === 'proportional'
+                                    ? 'Proporcional'
+                                    : concept.distributionType === 'equal'
+                                      ? 'Igualitario'
+                                      : 'Personalizado'}
                                 </span>
                               </td>
-                              <td><strong>{formatCurrency(concept.amount)}</strong></td>
+                              <td>
+                                <strong>
+                                  {formatCurrency(concept.amount)}
+                                </strong>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -547,7 +584,12 @@ export default function EmisionDetalle() {
                           <tr>
                             <th colSpan={4}>Total Conceptos:</th>
                             <th>
-                              {formatCurrency(concepts.reduce((sum, concept) => sum + concept.amount, 0))}
+                              {formatCurrency(
+                                concepts.reduce(
+                                  (sum, concept) => sum + concept.amount,
+                                  0,
+                                ),
+                              )}
                             </th>
                           </tr>
                         </tfoot>
@@ -576,9 +618,11 @@ export default function EmisionDetalle() {
                           </tr>
                         </thead>
                         <tbody>
-                          {expenses.map((expense) => (
+                          {expenses.map(expense => (
                             <tr key={expense.id}>
-                              <td><strong>{expense.description}</strong></td>
+                              <td>
+                                <strong>{expense.description}</strong>
+                              </td>
                               <td>
                                 <span className='badge bg-light text-dark'>
                                   {expense.category}
@@ -587,7 +631,11 @@ export default function EmisionDetalle() {
                               <td>{expense.supplier}</td>
                               <td>{formatDate(expense.date)}</td>
                               <td>{expense.document}</td>
-                              <td><strong>{formatCurrency(expense.amount)}</strong></td>
+                              <td>
+                                <strong>
+                                  {formatCurrency(expense.amount)}
+                                </strong>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -595,7 +643,12 @@ export default function EmisionDetalle() {
                           <tr>
                             <th colSpan={5}>Total Gastos:</th>
                             <th>
-                              {formatCurrency(expenses.reduce((sum, expense) => sum + expense.amount, 0))}
+                              {formatCurrency(
+                                expenses.reduce(
+                                  (sum, expense) => sum + expense.amount,
+                                  0,
+                                ),
+                              )}
                             </th>
                           </tr>
                         </tfoot>
@@ -626,22 +679,34 @@ export default function EmisionDetalle() {
                           </tr>
                         </thead>
                         <tbody>
-                          {units.map((unit) => (
+                          {units.map(unit => (
                             <tr key={unit.id}>
-                              <td><strong>{unit.number}</strong></td>
+                              <td>
+                                <strong>{unit.number}</strong>
+                              </td>
                               <td>{unit.type}</td>
                               <td>{unit.owner}</td>
                               <td>{unit.contact}</td>
                               <td>{unit.participation}%</td>
                               <td>{formatCurrency(unit.totalAmount)}</td>
-                              <td className='text-success'>{formatCurrency(unit.paidAmount)}</td>
+                              <td className='text-success'>
+                                {formatCurrency(unit.paidAmount)}
+                              </td>
                               <td>
-                                <span className={`badge ${
-                                  unit.status === 'paid' ? 'bg-success' :
-                                  unit.status === 'partial' ? 'bg-warning' : 'bg-secondary'
-                                }`}>
-                                  {unit.status === 'paid' ? 'Pagado' :
-                                   unit.status === 'partial' ? 'Parcial' : 'Pendiente'}
+                                <span
+                                  className={`badge ${
+                                    unit.status === 'paid'
+                                      ? 'bg-success'
+                                      : unit.status === 'partial'
+                                        ? 'bg-warning'
+                                        : 'bg-secondary'
+                                  }`}
+                                >
+                                  {unit.status === 'paid'
+                                    ? 'Pagado'
+                                    : unit.status === 'partial'
+                                      ? 'Parcial'
+                                      : 'Pendiente'}
                                 </span>
                               </td>
                             </tr>
@@ -672,20 +737,34 @@ export default function EmisionDetalle() {
                           </tr>
                         </thead>
                         <tbody>
-                          {payments.map((payment) => (
+                          {payments.map(payment => (
                             <tr key={payment.id}>
                               <td>{formatDate(payment.date)}</td>
-                              <td><strong>{payment.unit}</strong></td>
-                              <td><strong>{formatCurrency(payment.amount)}</strong></td>
+                              <td>
+                                <strong>{payment.unit}</strong>
+                              </td>
+                              <td>
+                                <strong>
+                                  {formatCurrency(payment.amount)}
+                                </strong>
+                              </td>
                               <td>{payment.method}</td>
                               <td>{payment.reference}</td>
                               <td>
-                                <span className={`badge ${
-                                  payment.status === 'confirmed' ? 'bg-success' :
-                                  payment.status === 'pending' ? 'bg-warning' : 'bg-danger'
-                                }`}>
-                                  {payment.status === 'confirmed' ? 'Confirmado' :
-                                   payment.status === 'pending' ? 'Pendiente' : 'Rechazado'}
+                                <span
+                                  className={`badge ${
+                                    payment.status === 'confirmed'
+                                      ? 'bg-success'
+                                      : payment.status === 'pending'
+                                        ? 'bg-warning'
+                                        : 'bg-danger'
+                                  }`}
+                                >
+                                  {payment.status === 'confirmed'
+                                    ? 'Confirmado'
+                                    : payment.status === 'pending'
+                                      ? 'Pendiente'
+                                      : 'Rechazado'}
                                 </span>
                               </td>
                             </tr>
@@ -695,7 +774,12 @@ export default function EmisionDetalle() {
                           <tr>
                             <th colSpan={2}>Total Pagos:</th>
                             <th>
-                              {formatCurrency(payments.reduce((sum, payment) => sum + payment.amount, 0))}
+                              {formatCurrency(
+                                payments.reduce(
+                                  (sum, payment) => sum + payment.amount,
+                                  0,
+                                ),
+                              )}
                             </th>
                             <th colSpan={3}></th>
                           </tr>
@@ -713,15 +797,19 @@ export default function EmisionDetalle() {
                 <div className='content-card'>
                   <div className='card-body'>
                     <div className='timeline'>
-                      {history.map((entry) => (
+                      {history.map(entry => (
                         <div key={entry.id} className='timeline-item'>
                           <div className='timeline-date'>
                             {formatDate(entry.date)}
                           </div>
                           <div className='timeline-content'>
                             <h6>{entry.action}</h6>
-                            <p className='text-muted mb-1'>{entry.description}</p>
-                            <small className='text-muted'>Por: {entry.user}</small>
+                            <p className='text-muted mb-1'>
+                              {entry.description}
+                            </p>
+                            <small className='text-muted'>
+                              Por: {entry.user}
+                            </small>
                           </div>
                         </div>
                       ))}
@@ -826,7 +914,11 @@ export default function EmisionDetalle() {
 
           .nav-tabs .nav-link.active {
             color: #0d6efd;
-            background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(13, 110, 253, 0.05) 100%);
+            background: linear-gradient(
+              135deg,
+              rgba(13, 110, 253, 0.1) 0%,
+              rgba(13, 110, 253, 0.05) 100%
+            );
             border-bottom: 2px solid #0d6efd;
           }
 

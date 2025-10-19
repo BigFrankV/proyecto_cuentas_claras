@@ -11,4 +11,4 @@ services:
       - NEXT_PUBLIC_APP_NAME=Cuentas Claras
       - NEXT_PUBLIC_ENVIRONMENT=production
     ports:
-      - "5173:5173"
+      - '5173:5173'

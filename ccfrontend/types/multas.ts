@@ -9,7 +9,7 @@ export interface Multa {
   // ✅ ARREGLAR: Estados según tu BD
   estado: 'pendiente' | 'pagado' | 'vencido' | 'apelada' | 'anulada'; // Cambiar 'pagada'/'vencida' por 'pagado'/'vencido'
   prioridad: 'baja' | 'media' | 'alta' | 'critica';
-  
+
   // Relaciones
   unidad_id: number;
   unidad_numero?: string;
@@ -19,30 +19,30 @@ export interface Multa {
   edificio_nombre?: string;
   comunidad_id: number;
   comunidad_nombre?: string;
-  
+
   // Propietario
   propietario_id?: number;
   propietario_nombre?: string;
   propietario_email?: string;
   propietario_telefono?: string;
-  
+
   // Gestión
   created_by_user_id: number;
   created_by_username?: string;
   assigned_to_user_id?: number;
   assigned_to_username?: string;
-  
+
   // Pagos
   monto_pagado?: number;
   fecha_pago?: string;
   metodo_pago?: string;
   referencia_pago?: string;
-  
+
   // Notificaciones
   notificado_email: boolean;
   notificado_sms: boolean;
   fecha_ultima_notificacion?: string;
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;
@@ -114,17 +114,17 @@ export interface MultaFormData {
   edificio_id?: number;
   torre_id?: number;
   unidad_id?: number;
-  
+
   // Step 2: Tipo de infracción
   tipo_infraccion?: string;
   monto?: number;
   prioridad?: Multa['prioridad'];
-  
+
   // Step 3: Detalles
   descripcion?: string;
   fecha_infraccion?: string;
   fecha_vencimiento?: string;
-  
+
   // Step 4: Configuración
   observaciones?: string;
   notificar_email?: boolean;

@@ -70,7 +70,9 @@ const nextConfig = {
     config.module.rules.forEach(rule => {
       if (rule.test && rule.test.toString().includes('tsx')) {
         if (rule.exclude) {
-          rule.exclude = Array.isArray(rule.exclude) ? rule.exclude : [rule.exclude];
+          rule.exclude = Array.isArray(rule.exclude)
+            ? rule.exclude
+            : [rule.exclude];
           rule.exclude.push(/stories/);
         } else {
           rule.exclude = /stories/;

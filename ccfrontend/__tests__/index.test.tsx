@@ -55,9 +55,10 @@ describe('Home Page', () => {
   it('contains navigation links', () => {
     render(<Home />);
 
-  // Check for main navigation items (if present)
-  const navText = screen.queryByText(/Dashboard/i) || screen.queryByText(/Comunidades/i);
-  expect(navText).toBeTruthy();
+    // Check for main navigation items (if present)
+    const navText =
+      screen.queryByText(/Dashboard/i) || screen.queryByText(/Comunidades/i);
+    expect(navText).toBeTruthy();
   });
 
   it('has accessible heading structure', () => {

@@ -1,9 +1,14 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { ActivityBadge, PriorityBadge, TimelineItem } from '@/components/bitacora';
+
+import {
+  ActivityBadge,
+  PriorityBadge,
+  TimelineItem,
+} from '@/components/bitacora';
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 interface Activity {
   id: string;
@@ -29,10 +34,15 @@ interface Stats {
 export default function BitacoraListado() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<Activity[]>([]);
-  const [stats, setStats] = useState<Stats>({ total: 0, today: 0, high: 0, critical: 0 });
+  const [stats, setStats] = useState<Stats>({
+    total: 0,
+    today: 0,
+    high: 0,
+    critical: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(false);
-  
+
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -47,38 +57,41 @@ export default function BitacoraListado() {
         type: 'security',
         priority: 'critical',
         title: 'Intento de acceso no autorizado',
-        description: 'Se detectó un intento de acceso no autorizado al sistema desde una IP desconocida',
+        description:
+          'Se detectó un intento de acceso no autorizado al sistema desde una IP desconocida',
         user: 'Sistema de Seguridad',
         date: new Date().toISOString(),
         tags: ['seguridad', 'acceso', 'alerta'],
         attachments: 2,
         ip: '192.168.1.100',
-        location: 'Admin Panel'
+        location: 'Admin Panel',
       },
       {
         id: '2',
         type: 'user',
         priority: 'normal',
         title: 'Usuario modificó configuración',
-        description: 'El usuario admin modificó la configuración de notificaciones del sistema',
+        description:
+          'El usuario admin modificó la configuración de notificaciones del sistema',
         user: 'Administrador',
         date: new Date(Date.now() - 3600000).toISOString(),
         tags: ['configuración', 'usuario'],
         attachments: 0,
         ip: '192.168.1.50',
-        location: 'Configuración'
+        location: 'Configuración',
       },
       {
         id: '3',
         type: 'maintenance',
         priority: 'high',
         title: 'Mantenimiento programado ejecutado',
-        description: 'Se ejecutó el mantenimiento programado de base de datos y limpieza de logs',
+        description:
+          'Se ejecutó el mantenimiento programado de base de datos y limpieza de logs',
         user: 'Sistema',
         date: new Date(Date.now() - 7200000).toISOString(),
         tags: ['mantenimiento', 'base de datos', 'logs'],
         attachments: 1,
-        location: 'Servidor Principal'
+        location: 'Servidor Principal',
       },
       {
         id: '4',
@@ -90,33 +103,35 @@ export default function BitacoraListado() {
         date: new Date(Date.now() - 10800000).toISOString(),
         tags: ['pago', 'gastos comunes', 'procesado'],
         attachments: 3,
-        location: 'Módulo Financiero'
+        location: 'Módulo Financiero',
       },
       {
         id: '5',
         type: 'admin',
         priority: 'low',
         title: 'Nuevo usuario registrado',
-        description: 'Se registró un nuevo usuario en el sistema: María González',
+        description:
+          'Se registró un nuevo usuario en el sistema: María González',
         user: 'Administrador',
         date: new Date(Date.now() - 14400000).toISOString(),
         tags: ['usuario', 'registro', 'nuevo'],
         attachments: 0,
         ip: '192.168.1.75',
-        location: 'Panel de Usuarios'
+        location: 'Panel de Usuarios',
       },
       {
         id: '6',
         type: 'system',
         priority: 'normal',
         title: 'Backup automático completado',
-        description: 'Se completó exitosamente el backup automático diario del sistema',
+        description:
+          'Se completó exitosamente el backup automático diario del sistema',
         user: 'Sistema',
         date: new Date(Date.now() - 18000000).toISOString(),
         tags: ['backup', 'automático', 'completado'],
         attachments: 1,
-        location: 'Servidor de Respaldo'
-      }
+        location: 'Servidor de Respaldo',
+      },
     ];
 
     return mockActivities;
@@ -124,24 +139,28 @@ export default function BitacoraListado() {
 
   useEffect(() => {
     const mockData = generateMockActivities();
-    
+
     setTimeout(() => {
       setActivities(mockData);
       setFilteredActivities(mockData);
-      
+
       // Calculate stats
       const today = new Date().toDateString();
-      const todayCount = mockData.filter(a => new Date(a.date).toDateString() === today).length;
+      const todayCount = mockData.filter(
+        a => new Date(a.date).toDateString() === today,
+      ).length;
       const highCount = mockData.filter(a => a.priority === 'high').length;
-      const criticalCount = mockData.filter(a => a.priority === 'critical').length;
-      
+      const criticalCount = mockData.filter(
+        a => a.priority === 'critical',
+      ).length;
+
       setStats({
         total: mockData.length,
         today: todayCount,
         high: highCount,
-        critical: criticalCount
+        critical: criticalCount,
       });
-      
+
       setLoading(false);
     }, 800);
   }, []);
@@ -152,11 +171,16 @@ export default function BitacoraListado() {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(activity =>
-        activity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        activity.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        activity.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        activity.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      filtered = filtered.filter(
+        activity =>
+          activity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          activity.description
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          activity.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          activity.tags.some(tag =>
+            tag.toLowerCase().includes(searchTerm.toLowerCase()),
+          ),
       );
     }
 
@@ -167,17 +191,19 @@ export default function BitacoraListado() {
 
     // Priority filter
     if (selectedPriority !== 'all') {
-      filtered = filtered.filter(activity => activity.priority === selectedPriority);
+      filtered = filtered.filter(
+        activity => activity.priority === selectedPriority,
+      );
     }
 
     // Date filter
     if (dateRange !== 'all') {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
+
       filtered = filtered.filter(activity => {
         const activityDate = new Date(activity.date);
-        
+
         switch (dateRange) {
           case 'today':
             return activityDate >= today;
@@ -185,7 +211,9 @@ export default function BitacoraListado() {
             const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
             return activityDate >= weekAgo;
           case 'month':
-            const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+            const monthAgo = new Date(
+              today.getTime() - 30 * 24 * 60 * 60 * 1000,
+            );
             return activityDate >= monthAgo;
           default:
             return true;
@@ -199,7 +227,7 @@ export default function BitacoraListado() {
   const handleRefresh = () => {
     setLoading(true);
     const newActivities = generateMockActivities();
-    
+
     // Simulate new activity
     const newActivity: Activity = {
       id: Date.now().toString(),
@@ -211,7 +239,7 @@ export default function BitacoraListado() {
       date: new Date().toISOString(),
       tags: ['actualización', 'automático'],
       attachments: 0,
-      location: 'Sistema'
+      location: 'Sistema',
     };
 
     setTimeout(() => {
@@ -240,7 +268,10 @@ export default function BitacoraListado() {
     return (
       <ProtectedRoute>
         <Layout title='Bitácora de Actividades'>
-          <div className='d-flex justify-content-center align-items-center' style={{ minHeight: '400px' }}>
+          <div
+            className='d-flex justify-content-center align-items-center'
+            style={{ minHeight: '400px' }}
+          >
             <div className='text-center'>
               <div className='spinner-border text-primary' role='status'>
                 <span className='visually-hidden'>Cargando...</span>
@@ -265,14 +296,22 @@ export default function BitacoraListado() {
           <div className='d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3'>
             <div>
               <h1 className='h3 mb-1'>Bitácora de Actividades</h1>
-              <p className='text-muted mb-0'>Registro completo de actividades del sistema</p>
+              <p className='text-muted mb-0'>
+                Registro completo de actividades del sistema
+              </p>
             </div>
             <div className='d-flex gap-2'>
-              <div className={`real-time-indicator ${autoRefresh ? 'active' : ''}`} onClick={toggleAutoRefresh}>
+              <div
+                className={`real-time-indicator ${autoRefresh ? 'active' : ''}`}
+                onClick={toggleAutoRefresh}
+              >
                 <i className='material-icons'>radio_button_checked</i>
                 <span>{autoRefresh ? 'En vivo' : 'Manual'}</span>
               </div>
-              <button className='btn btn-outline-secondary' onClick={handleRefresh}>
+              <button
+                className='btn btn-outline-secondary'
+                onClick={handleRefresh}
+              >
                 <i className='material-icons me-2'>refresh</i>
                 Actualizar
               </button>
@@ -337,7 +376,7 @@ export default function BitacoraListado() {
                     className='form-control ps-5'
                     placeholder='Buscar por título, descripción, usuario...'
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={e => setSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
@@ -347,7 +386,7 @@ export default function BitacoraListado() {
                 <select
                   className='form-select'
                   value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
+                  onChange={e => setSelectedType(e.target.value)}
                 >
                   <option value='all'>Todos los tipos</option>
                   <option value='system'>Sistema</option>
@@ -364,7 +403,7 @@ export default function BitacoraListado() {
                 <select
                   className='form-select'
                   value={selectedPriority}
-                  onChange={(e) => setSelectedPriority(e.target.value)}
+                  onChange={e => setSelectedPriority(e.target.value)}
                 >
                   <option value='all'>Todas las prioridades</option>
                   <option value='low'>Baja</option>
@@ -379,7 +418,7 @@ export default function BitacoraListado() {
                 <select
                   className='form-select'
                   value={dateRange}
-                  onChange={(e) => setDateRange(e.target.value)}
+                  onChange={e => setDateRange(e.target.value)}
                 >
                   <option value='today'>Hoy</option>
                   <option value='week'>Esta semana</option>
@@ -391,7 +430,10 @@ export default function BitacoraListado() {
               <div className='filter-group'>
                 <label className='form-label'>&nbsp;</label>
                 <div className='d-flex gap-2'>
-                  <button className='btn btn-outline-secondary' onClick={clearFilters}>
+                  <button
+                    className='btn btn-outline-secondary'
+                    onClick={clearFilters}
+                  >
                     <i className='material-icons me-2'>clear</i>
                     Limpiar
                   </button>
@@ -406,19 +448,28 @@ export default function BitacoraListado() {
                     </button>
                     <ul className='dropdown-menu'>
                       <li>
-                        <button className='dropdown-item' onClick={() => exportData('csv')}>
+                        <button
+                          className='dropdown-item'
+                          onClick={() => exportData('csv')}
+                        >
                           <i className='material-icons me-2'>table_chart</i>
                           CSV
                         </button>
                       </li>
                       <li>
-                        <button className='dropdown-item' onClick={() => exportData('excel')}>
+                        <button
+                          className='dropdown-item'
+                          onClick={() => exportData('excel')}
+                        >
                           <i className='material-icons me-2'>description</i>
                           Excel
                         </button>
                       </li>
                       <li>
-                        <button className='dropdown-item' onClick={() => exportData('pdf')}>
+                        <button
+                          className='dropdown-item'
+                          onClick={() => exportData('pdf')}
+                        >
                           <i className='material-icons me-2'>picture_as_pdf</i>
                           PDF
                         </button>
@@ -438,14 +489,15 @@ export default function BitacoraListado() {
               </div>
               <div className='activity-actions'>
                 <span className='text-muted small me-3'>
-                  Mostrando {filteredActivities.length} de {activities.length} actividades
+                  Mostrando {filteredActivities.length} de {activities.length}{' '}
+                  actividades
                 </span>
               </div>
             </div>
 
             {filteredActivities.length > 0 ? (
               <div className='timeline position-relative'>
-                {filteredActivities.map((activity) => (
+                {filteredActivities.map(activity => (
                   <TimelineItem
                     key={activity.id}
                     id={activity.id}
@@ -464,19 +516,26 @@ export default function BitacoraListado() {
               </div>
             ) : (
               <div className='text-center py-5'>
-                <i className='material-icons mb-3 text-muted' style={{ fontSize: '4rem' }}>
+                <i
+                  className='material-icons mb-3 text-muted'
+                  style={{ fontSize: '4rem' }}
+                >
                   event_note
                 </i>
                 <h5 className='text-muted'>No se encontraron actividades</h5>
                 <p className='text-muted'>
-                  {searchTerm || selectedType !== 'all' || selectedPriority !== 'all' 
+                  {searchTerm ||
+                  selectedType !== 'all' ||
+                  selectedPriority !== 'all'
                     ? 'Intenta cambiar los filtros de búsqueda'
                     : 'Aún no hay actividades registradas'}
                 </p>
-                {!searchTerm && selectedType === 'all' && selectedPriority === 'all' && (
+                {!searchTerm &&
+                  selectedType === 'all' &&
+                  selectedPriority === 'all' && (
                   <Link href='/bitacora/nueva' className='btn btn-primary'>
                     <i className='material-icons me-2'>add</i>
-                    Crear Primera Entrada
+                      Crear Primera Entrada
                   </Link>
                 )}
               </div>
@@ -492,7 +551,9 @@ export default function BitacoraListado() {
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             border-left: 4px solid #007bff;
             height: 100%;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition:
+              transform 0.2s ease,
+              box-shadow 0.2s ease;
           }
 
           .stats-card:hover {
@@ -512,10 +573,18 @@ export default function BitacoraListado() {
             margin-bottom: 1rem;
           }
 
-          .stats-icon.info { background-color: #17a2b8; }
-          .stats-icon.warning { background-color: #ffc107; }
-          .stats-icon.success { background-color: #28a745; }
-          .stats-icon.danger { background-color: #dc3545; }
+          .stats-icon.info {
+            background-color: #17a2b8;
+          }
+          .stats-icon.warning {
+            background-color: #ffc107;
+          }
+          .stats-icon.success {
+            background-color: #28a745;
+          }
+          .stats-icon.danger {
+            background-color: #dc3545;
+          }
 
           .stats-number {
             font-size: 2rem;
@@ -617,8 +686,13 @@ export default function BitacoraListado() {
           }
 
           @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%,
+            100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.5;
+            }
           }
 
           @media (max-width: 768px) {

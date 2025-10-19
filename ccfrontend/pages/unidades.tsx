@@ -1,8 +1,8 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect, useMemo } from 'react';
+
+import Layout from '@/components/layout/Layout';
 import {
   getUnidadesListado,
   getComunidadesDropdown,
@@ -10,6 +10,7 @@ import {
   getTorresDropdown,
   type Unidad as UnidadAPI,
 } from '@/lib/unidadesService';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 interface Unidad {
   id: string;
@@ -52,114 +53,18 @@ function transformUnidadFromAPI(u: UnidadAPI): Unidad {
   };
 }
 
-const mockUnidades: Unidad[] = [
-  {
-    id: '1',
-    numero: 'A-101',
-    piso: 1,
-    torre: 'Torre A',
-    edificio: 'Edificio Norte',
-    comunidad: 'Las Palmas',
-    tipo: 'Departamento',
-    superficie: 78.5,
-    dormitorios: 3,
-    banos: 2,
-    estado: 'Activa',
-    propietario: 'Juan Ramírez',
-    residente: 'Juan Ramírez',
-    saldoPendiente: 256800,
-    ultimoPago: '2023-08-15',
-    fechaCreacion: '2021-03-15'
-  },
-  {
-    id: '2',
-    numero: 'A-102',
-    piso: 1,
-    torre: 'Torre A',
-    edificio: 'Edificio Norte',
-    comunidad: 'Las Palmas',
-    tipo: 'Departamento',
-    superficie: 85.2,
-    dormitorios: 3,
-    banos: 2,
-    estado: 'Activa',
-    propietario: 'María González',
-    residente: 'Carlos Pérez',
-    saldoPendiente: 0,
-    ultimoPago: '2023-09-01',
-    fechaCreacion: '2021-04-20'
-  },
-  {
-    id: '3',
-    numero: 'A-201',
-    piso: 2,
-    torre: 'Torre A',
-    edificio: 'Edificio Norte',
-    comunidad: 'Las Palmas',
-    tipo: 'Departamento',
-    superficie: 78.5,
-    dormitorios: 3,
-    banos: 2,
-    estado: 'Inactiva',
-    propietario: 'Luis Martínez',
-    residente: undefined,
-    saldoPendiente: 450000,
-    ultimoPago: undefined,
-    fechaCreacion: '2021-05-10'
-  },
-  {
-    id: '4',
-    numero: 'B-101',
-    piso: 1,
-    torre: 'Torre B',
-    edificio: 'Torre Central',
-    comunidad: 'Edificio Central',
-    tipo: 'Departamento',
-    superficie: 92.0,
-    dormitorios: 4,
-    banos: 3,
-    estado: 'Activa',
-    propietario: 'Ana Silva',
-    residente: 'Ana Silva',
-    saldoPendiente: 125000,
-    ultimoPago: '2023-08-30',
-    fechaCreacion: '2020-11-15'
-  },
-  {
-    id: '5',
-    numero: 'C-301',
-    piso: 3,
-    torre: 'Torre C',
-    edificio: 'Jardines del Este',
-    comunidad: 'Jardines del Este',
-    tipo: 'Casa',
-    superficie: 120.0,
-    dormitorios: 4,
-    banos: 3,
-    estado: 'Mantenimiento',
-    propietario: 'Roberto Torres',
-    residente: undefined,
-    saldoPendiente: 320000,
-    ultimoPago: undefined,
-    fechaCreacion: '2022-01-08'
-  }
-];
-
-  
 
 export default function UnidadesListado() {
   const [unidades, setUnidades] = useState<Unidad[]>([]);
   const [filteredUnidades, setFilteredUnidades] = useState<Unidad[]>([]);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     comunidad: '',
     edificio: '',
     torre: '',
     estado: '',
-    tipo: ''
+    tipo: '',
   });
   const [selectedUnidades, setSelectedUnidades] = useState<string[]>([]);
 
@@ -241,29 +146,40 @@ export default function UnidadesListado() {
 
     // Filtrar por búsqueda
     if (searchTerm) {
-      filtered = filtered.filter(unidad =>
-        unidad.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        unidad.propietario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        unidad.residente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        unidad.torre.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        unidad =>
+          unidad.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          unidad.propietario
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          unidad.residente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          unidad.torre.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
     // Filtrar por comunidad
     if (filters.comunidad) {
-      const comunidadNombre = comunidadesState.find((c:any) => c.id === filters.comunidad)?.nombre;
-      filtered = filtered.filter(unidad => unidad.comunidad === comunidadNombre);
+      const comunidadNombre = comunidadesState.find(
+        (c: any) => c.id === filters.comunidad,
+      )?.nombre;
+      filtered = filtered.filter(
+        unidad => unidad.comunidad === comunidadNombre,
+      );
     }
 
     // Filtrar por edificio
     if (filters.edificio) {
-      const edificioNombre = availableEdificios.find((e:any) => e.id === filters.edificio)?.nombre;
+      const edificioNombre = availableEdificios.find(
+        (e: any) => e.id === filters.edificio,
+      )?.nombre;
       filtered = filtered.filter(unidad => unidad.edificio === edificioNombre);
     }
 
     // Filtrar por torre
     if (filters.torre) {
-      const torreNombre = availableTorres.find((t:any) => t.id === filters.torre)?.nombre;
+      const torreNombre = availableTorres.find(
+        (t: any) => t.id === filters.torre,
+      )?.nombre;
       filtered = filtered.filter(unidad => unidad.torre === torreNombre);
     }
 
@@ -282,7 +198,7 @@ export default function UnidadesListado() {
 
   const handleFilterChange = (filterName: string, value: string) => {
     const newFilters = { ...filters, [filterName]: value };
-    
+
     // Resetear filtros dependientes
     if (filterName === 'comunidad') {
       newFilters.edificio = '';
@@ -290,7 +206,7 @@ export default function UnidadesListado() {
     } else if (filterName === 'edificio') {
       newFilters.torre = '';
     }
-    
+
     setFilters(newFilters);
   };
 
@@ -298,7 +214,7 @@ export default function UnidadesListado() {
     setSelectedUnidades(prev =>
       prev.includes(unidadId)
         ? prev.filter(id => id !== unidadId)
-        : [...prev, unidadId]
+        : [...prev, unidadId],
     );
   };
 
@@ -306,14 +222,14 @@ export default function UnidadesListado() {
     setSelectedUnidades(
       selectedUnidades.length === filteredUnidades.length
         ? []
-        : filteredUnidades.map(u => u.id)
+        : filteredUnidades.map(u => u.id),
     );
   };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP'
+      currency: 'CLP',
     }).format(amount);
   };
 
@@ -321,7 +237,7 @@ export default function UnidadesListado() {
     return new Date(dateString).toLocaleDateString('es-CL', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -357,9 +273,16 @@ export default function UnidadesListado() {
   const stats = useMemo(() => {
     const total = filteredUnidades.length;
     const activas = filteredUnidades.filter(u => u.estado === 'Activa').length;
-    const inactivas = filteredUnidades.filter(u => u.estado === 'Inactiva').length;
-    const mantenimiento = filteredUnidades.filter(u => u.estado === 'Mantenimiento').length;
-    const saldoTotal = filteredUnidades.reduce((sum, u) => sum + u.saldoPendiente, 0);
+    const inactivas = filteredUnidades.filter(
+      u => u.estado === 'Inactiva',
+    ).length;
+    const mantenimiento = filteredUnidades.filter(
+      u => u.estado === 'Mantenimiento',
+    ).length;
+    const saldoTotal = filteredUnidades.reduce(
+      (sum, u) => sum + u.saldoPendiente,
+      0,
+    );
 
     return { total, activas, inactivas, mantenimiento, saldoTotal };
   }, [filteredUnidades]);
@@ -368,8 +291,6 @@ export default function UnidadesListado() {
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      setLoading(true);
-      setError(null);
       try {
         const params: any = {};
         // map filters from UI to API params
@@ -399,11 +320,6 @@ export default function UnidadesListado() {
         setUnidades(mapped);
       } catch (err: any) {
         console.error('Error fetching unidades', err);
-        const errorMsg =
-          err?.response?.data?.error || err.message || 'Error al cargar unidades';
-        setError(errorMsg);
-      } finally {
-        setLoading(false);
       }
     };
     load();
@@ -430,7 +346,9 @@ export default function UnidadesListado() {
           <div className='row mb-4 align-items-center'>
             <div className='col-md-8'>
               <h1 className='h3 mb-2'>Lista de Unidades</h1>
-              <p className='text-muted'>Gestione todas las unidades/departamentos en la comunidad</p>
+              <p className='text-muted'>
+                Gestione todas las unidades/departamentos en la comunidad
+              </p>
             </div>
             <div className='col-md-4 text-md-end'>
               <Link href='/unidades/nueva' className='btn btn-primary'>
@@ -443,65 +361,93 @@ export default function UnidadesListado() {
           {/* Filtros */}
           <div className='row mb-4'>
             <div className='col-12'>
-              <div 
+              <div
                 className='p-3 mb-4'
-                style={{ 
-                  backgroundColor: '#f8f9fa', 
-                  borderRadius: 'var(--radius)'
+                style={{
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: 'var(--radius)',
                 }}
               >
                 <div className='row g-3'>
                   <div className='col-md-3'>
-                    <label htmlFor='comunidadFilter' className='form-label small'>Comunidad</label>
-                    <select 
-                      className='form-select form-select-sm' 
+                    <label
+                      htmlFor='comunidadFilter'
+                      className='form-label small'
+                    >
+                      Comunidad
+                    </label>
+                    <select
+                      className='form-select form-select-sm'
                       id='comunidadFilter'
                       value={filters.comunidad}
-                      onChange={(e) => handleFilterChange('comunidad', e.target.value)}
+                      onChange={e =>
+                        handleFilterChange('comunidad', e.target.value)
+                      }
                     >
                       <option value=''>Todas las comunidades</option>
-                      {(comunidadesState || []).map((comunidad:any) => (
-                        <option key={comunidad.id} value={comunidad.id}>{comunidad.nombre}</option>
+                      {(comunidadesState || []).map((comunidad: any) => (
+                        <option key={comunidad.id} value={comunidad.id}>
+                          {comunidad.nombre}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div className='col-md-3'>
-                    <label htmlFor='edificioFilter' className='form-label small'>Edificio</label>
-                    <select 
-                      className='form-select form-select-sm' 
+                    <label
+                      htmlFor='edificioFilter'
+                      className='form-label small'
+                    >
+                      Edificio
+                    </label>
+                    <select
+                      className='form-select form-select-sm'
                       id='edificioFilter'
                       value={filters.edificio}
-                      onChange={(e) => handleFilterChange('edificio', e.target.value)}
+                      onChange={e =>
+                        handleFilterChange('edificio', e.target.value)
+                      }
                       disabled={!filters.comunidad}
                     >
                       <option value=''>Todos los edificios</option>
                       {availableEdificios.map(edificio => (
-                        <option key={edificio.id} value={edificio.id}>{edificio.nombre}</option>
+                        <option key={edificio.id} value={edificio.id}>
+                          {edificio.nombre}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div className='col-md-2'>
-                    <label htmlFor='torreFilter' className='form-label small'>Torre</label>
-                    <select 
-                      className='form-select form-select-sm' 
+                    <label htmlFor='torreFilter' className='form-label small'>
+                      Torre
+                    </label>
+                    <select
+                      className='form-select form-select-sm'
                       id='torreFilter'
                       value={filters.torre}
-                      onChange={(e) => handleFilterChange('torre', e.target.value)}
+                      onChange={e =>
+                        handleFilterChange('torre', e.target.value)
+                      }
                       disabled={!filters.edificio}
                     >
                       <option value=''>Todas las torres</option>
                       {availableTorres.map(torre => (
-                        <option key={torre.id} value={torre.id}>{torre.nombre}</option>
+                        <option key={torre.id} value={torre.id}>
+                          {torre.nombre}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div className='col-md-2'>
-                    <label htmlFor='estadoFilter' className='form-label small'>Estado</label>
-                    <select 
-                      className='form-select form-select-sm' 
+                    <label htmlFor='estadoFilter' className='form-label small'>
+                      Estado
+                    </label>
+                    <select
+                      className='form-select form-select-sm'
                       id='estadoFilter'
                       value={filters.estado}
-                      onChange={(e) => handleFilterChange('estado', e.target.value)}
+                      onChange={e =>
+                        handleFilterChange('estado', e.target.value)
+                      }
                     >
                       <option value=''>Todos los estados</option>
                       <option value='Activa'>Activa</option>
@@ -510,12 +456,14 @@ export default function UnidadesListado() {
                     </select>
                   </div>
                   <div className='col-md-2'>
-                    <label htmlFor='tipoFilter' className='form-label small'>Tipo</label>
-                    <select 
-                      className='form-select form-select-sm' 
+                    <label htmlFor='tipoFilter' className='form-label small'>
+                      Tipo
+                    </label>
+                    <select
+                      className='form-select form-select-sm'
                       id='tipoFilter'
                       value={filters.tipo}
-                      onChange={(e) => handleFilterChange('tipo', e.target.value)}
+                      onChange={e => handleFilterChange('tipo', e.target.value)}
                     >
                       <option value=''>Todos los tipos</option>
                       <option value='Departamento'>Departamento</option>
@@ -525,43 +473,43 @@ export default function UnidadesListado() {
                     </select>
                   </div>
                 </div>
-                
+
                 <div className='row g-3 mt-2'>
                   <div className='col-md-6'>
                     <div className='position-relative'>
-                      <i 
-                        className='material-icons position-absolute' 
-                        style={{ 
-                          top: '50%', 
-                          left: '10px', 
-                          transform: 'translateY(-50%)', 
+                      <i
+                        className='material-icons position-absolute'
+                        style={{
+                          top: '50%',
+                          left: '10px',
+                          transform: 'translateY(-50%)',
                           color: '#6c757d',
-                          fontSize: '20px'
+                          fontSize: '20px',
                         }}
                       >
                         search
                       </i>
-                      <input 
-                        type='text' 
-                        className='form-control form-control-sm' 
-                        placeholder='Buscar por número, propietario o residente...' 
+                      <input
+                        type='text'
+                        className='form-control form-control-sm'
+                        placeholder='Buscar por número, propietario o residente...'
                         style={{ paddingLeft: '35px' }}
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={e => setSearchTerm(e.target.value)}
                       />
                     </div>
                   </div>
                   <div className='col-md-6 d-flex justify-content-end align-items-end'>
                     <div className='btn-group' role='group'>
-                      <button 
-                        type='button' 
+                      <button
+                        type='button'
                         className={`btn btn-outline-secondary btn-sm ${viewMode === 'table' ? 'active' : ''}`}
                         onClick={() => setViewMode('table')}
                       >
                         <i className='material-icons'>view_list</i>
                       </button>
-                      <button 
-                        type='button' 
+                      <button
+                        type='button'
                         className={`btn btn-outline-secondary btn-sm ${viewMode === 'cards' ? 'active' : ''}`}
                         onClick={() => setViewMode('cards')}
                       >
@@ -603,7 +551,9 @@ export default function UnidadesListado() {
             <div className='col-md-3 mb-3'>
               <div className='card bg-danger text-white'>
                 <div className='card-body text-center'>
-                  <h2 className='card-title'>{formatCurrency(stats.saldoTotal)}</h2>
+                  <h2 className='card-title'>
+                    {formatCurrency(stats.saldoTotal)}
+                  </h2>
                   <p className='card-text'>Saldo Pendiente</p>
                 </div>
               </div>
@@ -639,10 +589,14 @@ export default function UnidadesListado() {
                     <thead className='table-light'>
                       <tr>
                         <th>
-                          <input 
-                            type='checkbox' 
+                          <input
+                            type='checkbox'
                             className='form-check-input'
-                            checked={selectedUnidades.length === filteredUnidades.length && filteredUnidades.length > 0}
+                            checked={
+                              selectedUnidades.length ===
+                                filteredUnidades.length &&
+                              filteredUnidades.length > 0
+                            }
                             onChange={handleSelectAll}
                           />
                         </th>
@@ -656,11 +610,11 @@ export default function UnidadesListado() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredUnidades.map((unidad) => (
+                      {filteredUnidades.map(unidad => (
                         <tr key={unidad.id}>
                           <td>
-                            <input 
-                              type='checkbox' 
+                            <input
+                              type='checkbox'
                               className='form-check-input'
                               checked={selectedUnidades.includes(unidad.id)}
                               onChange={() => handleSelectUnidad(unidad.id)}
@@ -668,57 +622,96 @@ export default function UnidadesListado() {
                           </td>
                           <td>
                             <div className='d-flex align-items-center'>
-                              <div 
+                              <div
                                 className='me-3 d-flex align-items-center justify-content-center text-white'
                                 style={{
                                   width: '48px',
                                   height: '48px',
                                   borderRadius: '8px',
-                                  backgroundColor: 'var(--color-primary)'
+                                  backgroundColor: 'var(--color-primary)',
                                 }}
                               >
-                                <i className='material-icons'>{getTipoIcon(unidad.tipo)}</i>
+                                <i className='material-icons'>
+                                  {getTipoIcon(unidad.tipo)}
+                                </i>
                               </div>
                               <div>
                                 <div className='fw-medium'>{unidad.numero}</div>
-                                <div className='small text-muted'>Piso {unidad.piso} • {unidad.superficie} m²</div>
+                                <div className='small text-muted'>
+                                  Piso {unidad.piso} • {unidad.superficie} m²
+                                </div>
                               </div>
                             </div>
                           </td>
                           <td>
                             <div>{unidad.torre}</div>
-                            <div className='small text-muted'>{unidad.edificio}</div>
+                            <div className='small text-muted'>
+                              {unidad.edificio}
+                            </div>
                           </td>
                           <td>
-                            <span className='badge bg-light text-dark'>{unidad.tipo}</span>
-                            <div className='small text-muted mt-1'>{unidad.dormitorios}D/{unidad.banos}B</div>
+                            <span className='badge bg-light text-dark'>
+                              {unidad.tipo}
+                            </span>
+                            <div className='small text-muted mt-1'>
+                              {unidad.dormitorios}D/{unidad.banos}B
+                            </div>
                           </td>
                           <td>
                             <div>{unidad.propietario || '-'}</div>
-                            {unidad.residente && unidad.residente !== unidad.propietario && (
-                              <div className='small text-muted'>Residente: {unidad.residente}</div>
+                            {unidad.residente &&
+                              unidad.residente !== unidad.propietario && (
+                              <div className='small text-muted'>
+                                  Residente: {unidad.residente}
+                              </div>
                             )}
                           </td>
                           <td>
-                            <span className={`badge ${getEstadoBadgeClass(unidad.estado)}`}>
+                            <span
+                              className={`badge ${getEstadoBadgeClass(unidad.estado)}`}
+                            >
                               {unidad.estado}
                             </span>
                           </td>
                           <td>
-                            <div className={unidad.saldoPendiente > 0 ? 'text-danger fw-medium' : 'text-success'}>
+                            <div
+                              className={
+                                unidad.saldoPendiente > 0
+                                  ? 'text-danger fw-medium'
+                                  : 'text-success'
+                              }
+                            >
                               {formatCurrency(unidad.saldoPendiente)}
                             </div>
                             {unidad.ultimoPago && (
-                              <div className='small text-muted'>Último: {formatDate(unidad.ultimoPago)}</div>
+                              <div className='small text-muted'>
+                                Último: {formatDate(unidad.ultimoPago)}
+                              </div>
                             )}
                           </td>
                           <td>
                             <div className='d-flex gap-1'>
-                              <Link href={`/unidades/${unidad.id}`} className='btn btn-sm btn-outline-primary'>
-                                <i className='material-icons' style={{ fontSize: '16px' }}>visibility</i>
+                              <Link
+                                href={`/unidades/${unidad.id}`}
+                                className='btn btn-sm btn-outline-primary'
+                              >
+                                <i
+                                  className='material-icons'
+                                  style={{ fontSize: '16px' }}
+                                >
+                                  visibility
+                                </i>
                               </Link>
-                              <Link href={`/unidades/${unidad.id}/cargos`} className='btn btn-sm btn-outline-secondary'>
-                                <i className='material-icons' style={{ fontSize: '16px' }}>receipt</i>
+                              <Link
+                                href={`/unidades/${unidad.id}/cargos`}
+                                className='btn btn-sm btn-outline-secondary'
+                              >
+                                <i
+                                  className='material-icons'
+                                  style={{ fontSize: '16px' }}
+                                >
+                                  receipt
+                                </i>
                               </Link>
                             </div>
                           </td>
@@ -731,40 +724,48 @@ export default function UnidadesListado() {
             </div>
           ) : (
             <div className='row'>
-              {filteredUnidades.map((unidad) => (
-                <div key={unidad.id} className='col-xl-3 col-lg-4 col-md-6 mb-4'>
-                  <div 
+              {filteredUnidades.map(unidad => (
+                <div
+                  key={unidad.id}
+                  className='col-xl-3 col-lg-4 col-md-6 mb-4'
+                >
+                  <div
                     className='card h-100 position-relative'
-                    style={{ 
-                      transition: 'transform 0.15s ease, box-shadow 0.15s ease' 
+                    style={{
+                      transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                     }}
-                    onMouseEnter={(e) => {
+                    onMouseEnter={e => {
                       e.currentTarget.style.transform = 'translateY(-3px)';
-                      e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.1)';
+                      e.currentTarget.style.boxShadow =
+                        '0 10px 15px rgba(0,0,0,0.1)';
                     }}
-                    onMouseLeave={(e) => {
+                    onMouseLeave={e => {
                       e.currentTarget.style.transform = 'translateY(0)';
                       e.currentTarget.style.boxShadow = '';
                     }}
                   >
                     <div className='position-absolute top-0 end-0 p-2'>
-                      <span className={`badge ${getEstadoBadgeClass(unidad.estado)}`}>
+                      <span
+                        className={`badge ${getEstadoBadgeClass(unidad.estado)}`}
+                      >
                         {unidad.estado}
                       </span>
                     </div>
-                    
+
                     <div className='card-body' style={{ padding: '1.25rem' }}>
                       <div className='d-flex align-items-center mb-3'>
-                        <div 
+                        <div
                           className='me-3 d-flex align-items-center justify-content-center text-white'
                           style={{
                             width: '48px',
                             height: '48px',
                             borderRadius: '8px',
-                            backgroundColor: 'var(--color-primary)'
+                            backgroundColor: 'var(--color-primary)',
                           }}
                         >
-                          <i className='material-icons'>{getTipoIcon(unidad.tipo)}</i>
+                          <i className='material-icons'>
+                            {getTipoIcon(unidad.tipo)}
+                          </i>
                         </div>
                         <div>
                           <h5 className='card-title mb-0'>{unidad.numero}</h5>
@@ -773,39 +774,63 @@ export default function UnidadesListado() {
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className='mb-3'>
                         <div className='small text-muted'>Ubicación:</div>
                         <div>{unidad.torre}</div>
-                        <div className='small text-muted'>{unidad.edificio}</div>
+                        <div className='small text-muted'>
+                          {unidad.edificio}
+                        </div>
                       </div>
-                      
+
                       <div className='mb-3'>
-                        <span className='badge bg-light text-dark me-2'>{unidad.tipo}</span>
-                        <span className='badge bg-light text-dark'>{unidad.dormitorios}D/{unidad.banos}B</span>
+                        <span className='badge bg-light text-dark me-2'>
+                          {unidad.tipo}
+                        </span>
+                        <span className='badge bg-light text-dark'>
+                          {unidad.dormitorios}D/{unidad.banos}B
+                        </span>
                       </div>
-                      
+
                       {unidad.propietario && (
                         <div className='mb-3'>
                           <div className='small text-muted'>Propietario:</div>
                           <div className='fw-medium'>{unidad.propietario}</div>
                         </div>
                       )}
-                      
+
                       <div className='mb-3'>
                         <div className='small text-muted'>Saldo Pendiente:</div>
-                        <div className={`fw-medium ${unidad.saldoPendiente > 0 ? 'text-danger' : 'text-success'}`}>
+                        <div
+                          className={`fw-medium ${unidad.saldoPendiente > 0 ? 'text-danger' : 'text-success'}`}
+                        >
                           {formatCurrency(unidad.saldoPendiente)}
                         </div>
                       </div>
-                      
+
                       <div className='d-flex justify-content-between mt-auto'>
-                        <Link href={`/unidades/${unidad.id}`} className='btn btn-outline-primary btn-sm'>
-                          <i className='material-icons me-1' style={{ fontSize: '16px' }}>visibility</i>
+                        <Link
+                          href={`/unidades/${unidad.id}`}
+                          className='btn btn-outline-primary btn-sm'
+                        >
+                          <i
+                            className='material-icons me-1'
+                            style={{ fontSize: '16px' }}
+                          >
+                            visibility
+                          </i>
                           Ver
                         </Link>
-                        <Link href={`/unidades/${unidad.id}/cargos`} className='btn btn-primary btn-sm'>
-                          <i className='material-icons me-1' style={{ fontSize: '16px' }}>receipt</i>
+                        <Link
+                          href={`/unidades/${unidad.id}/cargos`}
+                          className='btn btn-primary btn-sm'
+                        >
+                          <i
+                            className='material-icons me-1'
+                            style={{ fontSize: '16px' }}
+                          >
+                            receipt
+                          </i>
                           Cargos
                         </Link>
                       </div>
@@ -818,9 +843,16 @@ export default function UnidadesListado() {
 
           {filteredUnidades.length === 0 && (
             <div className='text-center py-5'>
-              <i className='material-icons' style={{ fontSize: '4rem', color: '#6c757d' }}>search_off</i>
+              <i
+                className='material-icons'
+                style={{ fontSize: '4rem', color: '#6c757d' }}
+              >
+                search_off
+              </i>
               <h4 className='mt-3'>No se encontraron unidades</h4>
-              <p className='text-muted'>Intenta ajustar los filtros de búsqueda</p>
+              <p className='text-muted'>
+                Intenta ajustar los filtros de búsqueda
+              </p>
             </div>
           )}
         </div>

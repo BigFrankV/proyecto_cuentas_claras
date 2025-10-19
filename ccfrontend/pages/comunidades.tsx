@@ -1,30 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute, useAuth } from '@/lib/useAuth'; // ✅ AGREGAR useAuth
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import React, { useState, useEffect } from 'react';
 
 // Componentes específicos
 import ComunidadCard from '@/components/comunidades/ComunidadCard';
 import ComunidadTable from '@/components/comunidades/ComunidadTable';
 import FilterContainer from '@/components/comunidades/FilterContainer';
 import ViewToggle from '@/components/comunidades/ViewToggle';
+import Layout from '@/components/layout/Layout';
 
 // Tipos y servicios
-import { Comunidad, ComunidadFiltros, VistaConfiguracion } from '@/types/comunidades';
 import comunidadesService from '@/lib/comunidadesService';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth'; // ✅ AGREGAR useAuth
+import {
+  Comunidad,
+  ComunidadFiltros,
+  VistaConfiguracion,
+} from '@/types/comunidades';
 
 export default function ComunidadesListado() {
   const router = useRouter();
   const { user } = useAuth(); // ✅ AGREGAR hook de autenticación
-  
+
   // Estados principales
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
-  const [comunidadesFiltradas, setComunidadesFiltradas] = useState<Comunidad[]>([]);
+  const [comunidadesFiltradas, setComunidadesFiltradas] = useState<Comunidad[]>(
+    [],
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Estados de filtros y configuración
   const [filtros, setFiltros] = useState<ComunidadFiltros>({
     busqueda: '',
@@ -32,15 +38,16 @@ export default function ComunidadesListado() {
     estado: '',
     administrador: '',
     ordenarPor: 'nombre',
-    orden: 'asc'
+    orden: 'asc',
   });
-  
-  const [configuracionVista, setConfiguracionVista] = useState<VistaConfiguracion>({
-    tipoVista: 'cards',
-    itemsPorPagina: 12,
-    ordenarPor: 'nombre',
-    direccionOrden: 'asc'
-  });
+
+  const [configuracionVista, setConfiguracionVista] =
+    useState<VistaConfiguracion>({
+      tipoVista: 'cards',
+      itemsPorPagina: 12,
+      ordenarPor: 'nombre',
+      direccionOrden: 'asc',
+    });
 
   // Cargar comunidades
   useEffect(() => {
@@ -64,18 +71,18 @@ export default function ComunidadesListado() {
       } else {
         // 🏢 ADMIN DE COMUNIDAD: Solo ve sus comunidades asignadas
         console.log('🏢 Cargando comunidades filtradas por membresías');
-        
+
         if (user?.memberships && user.memberships.length > 0) {
           // Obtener IDs de comunidades donde el usuario tiene membresía
           const comunidadIds = user.memberships.map(m => m.comunidadId);
           console.log('🔍 IDs de comunidades permitidas:', comunidadIds);
-          
+
           // Obtener todas las comunidades y filtrar localmente
           const todasComunidades = await comunidadesService.getComunidades();
-          data = todasComunidades.filter(comunidad => 
-            comunidadIds.includes(comunidad.id)
+          data = todasComunidades.filter(comunidad =>
+            comunidadIds.includes(comunidad.id),
           );
-          
+
           console.log('✅ Comunidades filtradas:', data);
         } else {
           // Usuario sin membresías = sin comunidades
@@ -88,7 +95,10 @@ export default function ComunidadesListado() {
       console.log(`📊 Total comunidades cargadas: ${data.length}`);
     } catch (error: any) {
       console.error('❌ Error loading comunidades:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Error al cargar las comunidades. Por favor, intente nuevamente.';
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Error al cargar las comunidades. Por favor, intente nuevamente.';
       setError(errorMessage);
       setComunidades([]);
     } finally {
@@ -110,24 +120,29 @@ export default function ComunidadesListado() {
     // Aplicar filtros
     if (filtros.busqueda) {
       const busqueda = filtros.busqueda.toLowerCase();
-      resultado = resultado.filter(comunidad =>
-        comunidad.nombre.toLowerCase().includes(busqueda) ||
-        comunidad.direccion.toLowerCase().includes(busqueda)
+      resultado = resultado.filter(
+        comunidad =>
+          comunidad.nombre.toLowerCase().includes(busqueda) ||
+          comunidad.direccion.toLowerCase().includes(busqueda),
       );
     }
 
     if (filtros.tipo) {
-      resultado = resultado.filter(comunidad => comunidad.tipo === filtros.tipo);
+      resultado = resultado.filter(
+        comunidad => comunidad.tipo === filtros.tipo,
+      );
     }
 
     if (filtros.estado) {
-      resultado = resultado.filter(comunidad => comunidad.estado === filtros.estado);
+      resultado = resultado.filter(
+        comunidad => comunidad.estado === filtros.estado,
+      );
     }
 
     if (filtros.administrador) {
       const admin = filtros.administrador.toLowerCase();
       resultado = resultado.filter(comunidad =>
-        comunidad.administrador.toLowerCase().includes(admin)
+        comunidad.administrador.toLowerCase().includes(admin),
       );
     }
 
@@ -143,7 +158,9 @@ export default function ComunidadesListado() {
       }
 
       const comparacion = valorA < valorB ? -1 : valorA > valorB ? 1 : 0;
-      return configuracionVista.direccionOrden === 'asc' ? comparacion : -comparacion;
+      return configuracionVista.direccionOrden === 'asc'
+        ? comparacion
+        : -comparacion;
     });
 
     setComunidadesFiltradas(resultado);
@@ -179,67 +196,69 @@ export default function ComunidadesListado() {
             <div>
               <h1 className='h3 mb-0'>Comunidades</h1>
               <p className='text-muted mb-0'>
-                {user?.is_superadmin 
-                  ? 'Gestión y administración de todas las comunidades' 
-                  : 'Gestión de mis comunidades asignadas'
-                }
+                {user?.is_superadmin
+                  ? 'Gestión y administración de todas las comunidades'
+                  : 'Gestión de mis comunidades asignadas'}
               </p>
             </div>
-            
+
             {/* ✅ CONDICIONAL: Solo superadmins pueden crear comunidades */}
             {user?.is_superadmin && (
-              <Link href="/comunidades/nueva" className='btn btn-primary'>
+              <Link href='/comunidades/nueva' className='btn btn-primary'>
                 <span className='material-icons me-2'>add</span>
                 Nueva Comunidad
               </Link>
             )}
           </div>
-          
+
           {/* Filtros */}
           <FilterContainer
             filtros={filtros}
             onFiltrosChange={setFiltros}
             totalResultados={comunidadesFiltradas.length}
           />
-          
+
           {/* Toggle de vista y ordenamiento */}
           <ViewToggle
             configuracion={configuracionVista}
             onConfiguracionChange={setConfiguracionVista}
             totalResultados={comunidadesFiltradas.length}
           />
-          
+
           {/* Alerta de error */}
           {error && (
-            <div className="alert alert-danger alert-dismissible fade show" role="alert">
-              <div className="d-flex align-items-center">
-                <span className="material-icons me-2">error</span>
+            <div
+              className='alert alert-danger alert-dismissible fade show'
+              role='alert'
+            >
+              <div className='d-flex align-items-center'>
+                <span className='material-icons me-2'>error</span>
                 <div>
                   <strong>Error:</strong> {error}
                 </div>
               </div>
-              <button 
-                type="button" 
-                className="btn-close" 
+              <button
+                type='button'
+                className='btn-close'
                 onClick={() => setError(null)}
-                aria-label="Cerrar"
+                aria-label='Cerrar'
               />
             </div>
           )}
 
           {/* Contenido principal */}
           {isLoading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Cargando...</span>
+            <div className='text-center py-5'>
+              <div className='spinner-border text-primary' role='status'>
+                <span className='visually-hidden'>Cargando...</span>
               </div>
-              <p className="text-muted mt-3">Cargando comunidades...</p>
+              <p className='text-muted mt-3'>Cargando comunidades...</p>
             </div>
           ) : (
             <>
               {/* Vista de tarjetas */}
               {configuracionVista.tipoVista === 'cards' && (
-                <div className="row g-4 mb-4">
+                <div className='row g-4 mb-4'>
                   {comunidadesFiltradas.length > 0 ? (
                     comunidadesFiltradas.map(comunidad => (
                       <ComunidadCard
@@ -250,13 +269,26 @@ export default function ComunidadesListado() {
                       />
                     ))
                   ) : (
-                    <div className="col-12">
-                      <div className="text-center py-5">
-                        <span className="material-icons text-muted mb-3" style={{ fontSize: '64px' }}>domain</span>
-                        <h5 className="text-muted">No se encontraron comunidades</h5>
-                        <p className="text-muted">No hay comunidades que coincidan con los filtros aplicados.</p>
-                        <Link href="/comunidades/nueva" className="btn btn-primary">
-                          <span className="material-icons me-2">add</span>
+                    <div className='col-12'>
+                      <div className='text-center py-5'>
+                        <span
+                          className='material-icons text-muted mb-3'
+                          style={{ fontSize: '64px' }}
+                        >
+                          domain
+                        </span>
+                        <h5 className='text-muted'>
+                          No se encontraron comunidades
+                        </h5>
+                        <p className='text-muted'>
+                          No hay comunidades que coincidan con los filtros
+                          aplicados.
+                        </p>
+                        <Link
+                          href='/comunidades/nueva'
+                          className='btn btn-primary'
+                        >
+                          <span className='material-icons me-2'>add</span>
                           Crear primera comunidad
                         </Link>
                       </div>
@@ -264,7 +296,7 @@ export default function ComunidadesListado() {
                   )}
                 </div>
               )}
-              
+
               {/* Vista de tabla */}
               {configuracionVista.tipoVista === 'table' && (
                 <ComunidadTable
@@ -273,25 +305,32 @@ export default function ComunidadesListado() {
                   onDelete={handleDelete}
                 />
               )}
-              
+
               {/* Paginación (implementar si es necesario) */}
-              {comunidadesFiltradas.length > configuracionVista.itemsPorPagina && (
-                <nav aria-label="Navegación de páginas" className="mt-4">
-                  <ul className="pagination justify-content-center">
-                    <li className="page-item disabled">
-                      <span className="page-link">Anterior</span>
+              {comunidadesFiltradas.length >
+                configuracionVista.itemsPorPagina && (
+                <nav aria-label='Navegación de páginas' className='mt-4'>
+                  <ul className='pagination justify-content-center'>
+                    <li className='page-item disabled'>
+                      <span className='page-link'>Anterior</span>
                     </li>
-                    <li className="page-item active">
-                      <span className="page-link">1</span>
+                    <li className='page-item active'>
+                      <span className='page-link'>1</span>
                     </li>
-                    <li className="page-item">
-                      <a className="page-link" href="#">2</a>
+                    <li className='page-item'>
+                      <a className='page-link' href='#'>
+                        2
+                      </a>
                     </li>
-                    <li className="page-item">
-                      <a className="page-link" href="#">3</a>
+                    <li className='page-item'>
+                      <a className='page-link' href='#'>
+                        3
+                      </a>
                     </li>
-                    <li className="page-item">
-                      <a className="page-link" href="#">Siguiente</a>
+                    <li className='page-item'>
+                      <a className='page-link' href='#'>
+                        Siguiente
+                      </a>
                     </li>
                   </ul>
                 </nav>

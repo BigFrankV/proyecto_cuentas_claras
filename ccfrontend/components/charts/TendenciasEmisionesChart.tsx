@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,7 +9,9 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
+import React from 'react';
 import { Line } from 'react-chartjs-2';
+
 import { TendenciaEmision } from '@/lib/dashboardService';
 
 ChartJS.register(
@@ -21,7 +22,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 interface TendenciasEmisionesChartProps {
@@ -130,7 +131,7 @@ export default function TendenciasEmisionesChart({
         borderColor: '#ddd',
         borderWidth: 1,
         callbacks: {
-          label: function (context: any) {
+          label(context: any) {
             if (context.datasetIndex === 0) {
               const value = new Intl.NumberFormat('es-CL', {
                 style: 'currency',
@@ -165,7 +166,7 @@ export default function TendenciasEmisionesChart({
           color: 'rgba(0, 0, 0, 0.1)',
         },
         ticks: {
-          callback: function (value: any) {
+          callback(value: any) {
             return new Intl.NumberFormat('es-CL', {
               style: 'currency',
               currency: 'CLP',
@@ -186,7 +187,7 @@ export default function TendenciasEmisionesChart({
           drawOnChartArea: false,
         },
         ticks: {
-          callback: function (value: any) {
+          callback(value: any) {
             return Math.round(value / 10000);
           },
           font: {

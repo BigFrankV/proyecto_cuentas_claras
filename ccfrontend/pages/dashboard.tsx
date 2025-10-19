@@ -1,13 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
-import { useAuth } from '@/lib/useAuth';
-import {
-  usePermissions,
-  PermissionGuard,
-  Permission,
-} from '@/lib/usePermissions';
 import Head from 'next/head';
+import React, { useState, useEffect, useMemo } from 'react';
+
+import Layout from '@/components/layout/Layout';
 import DashboardCharts from '@/components/ui/DashboardCharts';
 import {
   getDashboardKPIs,
@@ -21,8 +15,15 @@ import {
   type UnidadMorosa,
   type ActividadProxima,
   type ReservaAmenidad,
-  type Notificacion
+  type Notificacion,
 } from '@/lib/dashboardService';
+import { ProtectedRoute } from '@/lib/useAuth';
+import { useAuth } from '@/lib/useAuth';
+import {
+  usePermissions,
+  PermissionGuard,
+  Permission,
+} from '@/lib/usePermissions';
 
 export default function Dashboard() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
@@ -30,11 +31,19 @@ export default function Dashboard() {
 
   // Obtener comunidadId dinámicamente
   const comunidadId = useMemo(() => {
-    const id = currentRole?.comunidadId ??
-               user?.memberships?.[0]?.comunidad_id ??
-               user?.memberships?.[0]?.comunidadId ??
-               1;
-    console.log('Dashboard comunidadId:', id, 'user:', user, 'currentRole:', currentRole); // <-- añadir
+    const id =
+      currentRole?.comunidadId ??
+      user?.memberships?.[0]?.comunidad_id ??
+      user?.memberships?.[0]?.comunidadId ??
+      1;
+    console.log(
+      'Dashboard comunidadId:',
+      id,
+      'user:',
+      user,
+      'currentRole:',
+      currentRole,
+    ); // <-- añadir
     return id;
   }, [currentRole?.comunidadId, user?.memberships]);
 
@@ -42,8 +51,12 @@ export default function Dashboard() {
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null);
   const [pagosRecientes, setPagosRecientes] = useState<PagoReciente[]>([]);
   const [unidadesMorosas, setUnidadesMorosas] = useState<UnidadMorosa[]>([]);
-  const [proximasActividades, setProximasActividades] = useState<ActividadProxima[]>([]);
-  const [reservasAmenidades, setReservasAmenidades] = useState<ReservaAmenidad[]>([]);
+  const [proximasActividades, setProximasActividades] = useState<
+    ActividadProxima[]
+  >([]);
+  const [reservasAmenidades, setReservasAmenidades] = useState<
+    ReservaAmenidad[]
+  >([]);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,8 +64,12 @@ export default function Dashboard() {
   // Cargar datos del dashboard
   useEffect(() => {
     // Evitar solicitudes hasta que auth esté resuelto y usuario esté autenticado
-    if (authLoading) return;
-    if (!isAuthenticated) return;
+    if (authLoading) {
+      return;
+    }
+    if (!isAuthenticated) {
+      return;
+    }
 
     const loadDashboardData = async () => {
       try {
@@ -66,14 +83,14 @@ export default function Dashboard() {
           morosasData,
           actividadesData,
           reservasData,
-          notificacionesData
+          notificacionesData,
         ] = await Promise.all([
           getDashboardKPIs(comunidadId),
           getPagosRecientes(comunidadId),
           getUnidadesMorosas(comunidadId),
           getProximasActividades(comunidadId),
           getReservasAmenidades(comunidadId),
-          getNotificacionesRecientes(comunidadId)
+          getNotificacionesRecientes(comunidadId),
         ]);
 
         setKpis(kpisData);
@@ -338,16 +355,30 @@ export default function Dashboard() {
                       Saldo Total
                     </span>
                     <h4 className='mb-0'>
-                      {loading ? '...' : kpis?.saldo_total?.valor ? `$${kpis.saldo_total.valor.toLocaleString('es-CL')}` : '$0'}
+                      {loading
+                        ? '...'
+                        : kpis?.saldo_total?.valor
+                          ? `$${kpis.saldo_total.valor.toLocaleString('es-CL')}`
+                          : '$0'}
                     </h4>
-                    <div className={`small ${kpis?.saldo_total?.variacion_porcentual && kpis.saldo_total.variacion_porcentual > 0 ? 'text-success' : 'text-danger'}`}>
+                    <div
+                      className={`small ${kpis?.saldo_total?.variacion_porcentual && kpis.saldo_total.variacion_porcentual > 0 ? 'text-success' : 'text-danger'}`}
+                    >
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {kpis?.saldo_total?.variacion_porcentual && kpis.saldo_total.variacion_porcentual > 0 ? 'arrow_upward' : 'arrow_downward'}
+                        {kpis?.saldo_total?.variacion_porcentual &&
+                        kpis.saldo_total.variacion_porcentual > 0
+                          ? 'arrow_upward'
+                          : 'arrow_downward'}
                       </span>
-                      <span>{kpis?.saldo_total?.variacion_porcentual ? `${Math.abs(kpis.saldo_total.variacion_porcentual)}%` : '0%'} vs mes anterior</span>
+                      <span>
+                        {kpis?.saldo_total?.variacion_porcentual
+                          ? `${Math.abs(kpis.saldo_total.variacion_porcentual)}%`
+                          : '0%'}{' '}
+                        vs mes anterior
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -374,16 +405,30 @@ export default function Dashboard() {
                       Ingresos del Mes
                     </span>
                     <h4 className='mb-0'>
-                      {loading ? '...' : kpis?.ingresos_mes?.valor ? `$${kpis.ingresos_mes.valor.toLocaleString('es-CL')}` : '$0'}
+                      {loading
+                        ? '...'
+                        : kpis?.ingresos_mes?.valor
+                          ? `$${kpis.ingresos_mes.valor.toLocaleString('es-CL')}`
+                          : '$0'}
                     </h4>
-                    <div className={`small ${kpis?.ingresos_mes?.variacion_porcentual && kpis.ingresos_mes.variacion_porcentual > 0 ? 'text-success' : 'text-danger'}`}>
+                    <div
+                      className={`small ${kpis?.ingresos_mes?.variacion_porcentual && kpis.ingresos_mes.variacion_porcentual > 0 ? 'text-success' : 'text-danger'}`}
+                    >
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {kpis?.ingresos_mes?.variacion_porcentual && kpis.ingresos_mes.variacion_porcentual > 0 ? 'arrow_upward' : 'arrow_downward'}
+                        {kpis?.ingresos_mes?.variacion_porcentual &&
+                        kpis.ingresos_mes.variacion_porcentual > 0
+                          ? 'arrow_upward'
+                          : 'arrow_downward'}
                       </span>
-                      <span>{kpis?.ingresos_mes?.variacion_porcentual ? `${Math.abs(kpis.ingresos_mes.variacion_porcentual)}%` : '0%'} vs mes anterior</span>
+                      <span>
+                        {kpis?.ingresos_mes?.variacion_porcentual
+                          ? `${Math.abs(kpis.ingresos_mes.variacion_porcentual)}%`
+                          : '0%'}{' '}
+                        vs mes anterior
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -407,16 +452,30 @@ export default function Dashboard() {
                       Gastos del Mes
                     </span>
                     <h4 className='mb-0'>
-                      {loading ? '...' : kpis?.gastos_mes?.valor ? `$${kpis.gastos_mes.valor.toLocaleString('es-CL')}` : '$0'}
+                      {loading
+                        ? '...'
+                        : kpis?.gastos_mes?.valor
+                          ? `$${kpis.gastos_mes.valor.toLocaleString('es-CL')}`
+                          : '$0'}
                     </h4>
-                    <div className={`small ${kpis?.gastos_mes?.variacion_porcentual && kpis.gastos_mes.variacion_porcentual > 0 ? 'text-danger' : 'text-success'}`}>
+                    <div
+                      className={`small ${kpis?.gastos_mes?.variacion_porcentual && kpis.gastos_mes.variacion_porcentual > 0 ? 'text-danger' : 'text-success'}`}
+                    >
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {kpis?.gastos_mes?.variacion_porcentual && kpis.gastos_mes.variacion_porcentual > 0 ? 'arrow_upward' : 'arrow_downward'}
+                        {kpis?.gastos_mes?.variacion_porcentual &&
+                        kpis.gastos_mes.variacion_porcentual > 0
+                          ? 'arrow_upward'
+                          : 'arrow_downward'}
                       </span>
-                      <span>{kpis?.gastos_mes?.variacion_porcentual ? `${Math.abs(kpis.gastos_mes.variacion_porcentual)}%` : '0%'} vs mes anterior</span>
+                      <span>
+                        {kpis?.gastos_mes?.variacion_porcentual
+                          ? `${Math.abs(kpis.gastos_mes.variacion_porcentual)}%`
+                          : '0%'}{' '}
+                        vs mes anterior
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -443,16 +502,30 @@ export default function Dashboard() {
                       Tasa de Morosidad
                     </span>
                     <h4 className='mb-0'>
-                      {loading ? '...' : kpis?.morosidad?.valor !== undefined ? `${kpis.morosidad.valor}%` : '0%'}
+                      {loading
+                        ? '...'
+                        : kpis?.morosidad?.valor !== undefined
+                          ? `${kpis.morosidad.valor}%`
+                          : '0%'}
                     </h4>
-                    <div className={`small ${kpis?.morosidad?.variacion_porcentual && kpis.morosidad.variacion_porcentual < 0 ? 'text-success' : 'text-danger'}`}>
+                    <div
+                      className={`small ${kpis?.morosidad?.variacion_porcentual && kpis.morosidad.variacion_porcentual < 0 ? 'text-success' : 'text-danger'}`}
+                    >
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {kpis?.morosidad?.variacion_porcentual && kpis.morosidad.variacion_porcentual < 0 ? 'arrow_downward' : 'arrow_upward'}
+                        {kpis?.morosidad?.variacion_porcentual &&
+                        kpis.morosidad.variacion_porcentual < 0
+                          ? 'arrow_downward'
+                          : 'arrow_upward'}
                       </span>
-                      <span>{kpis?.morosidad?.variacion_porcentual ? `${Math.abs(kpis.morosidad.variacion_porcentual)}%` : '0%'} vs mes anterior</span>
+                      <span>
+                        {kpis?.morosidad?.variacion_porcentual
+                          ? `${Math.abs(kpis.morosidad.variacion_porcentual)}%`
+                          : '0%'}{' '}
+                        vs mes anterior
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -487,16 +560,26 @@ export default function Dashboard() {
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan={4} className="text-center py-4">
-                            <div className="spinner-border spinner-border-sm" role="status">
-                              <span className="visually-hidden">Cargando...</span>
+                          <td colSpan={4} className='text-center py-4'>
+                            <div
+                              className='spinner-border spinner-border-sm'
+                              role='status'
+                            >
+                              <span className='visually-hidden'>
+                                Cargando...
+                              </span>
                             </div>
-                            <div className="mt-2">Cargando pagos recientes...</div>
+                            <div className='mt-2'>
+                              Cargando pagos recientes...
+                            </div>
                           </td>
                         </tr>
                       ) : pagosRecientes.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="text-center py-4 text-muted">
+                          <td
+                            colSpan={4}
+                            className='text-center py-4 text-muted'
+                          >
                             No hay pagos recientes
                           </td>
                         </tr>
@@ -504,11 +587,22 @@ export default function Dashboard() {
                         pagosRecientes.map((pago: PagoReciente) => (
                           <tr key={pago.id}>
                             <td>{pago.unidad_codigo}</td>
-                            <td>${pago.monto ? pago.monto.toLocaleString('es-CL') : '0'}</td>
-                            <td>{new Date(pago.fecha).toLocaleDateString('es-CL')}</td>
                             <td>
-                              <span className={`badge ${pago.estado === 'aplicado' ? 'bg-success' : 'bg-warning text-dark'}`}>
-                                {pago.estado === 'aplicado' ? 'Conciliado' : 'Pendiente'}
+                              $
+                              {pago.monto
+                                ? pago.monto.toLocaleString('es-CL')
+                                : '0'}
+                            </td>
+                            <td>
+                              {new Date(pago.fecha).toLocaleDateString('es-CL')}
+                            </td>
+                            <td>
+                              <span
+                                className={`badge ${pago.estado === 'aplicado' ? 'bg-success' : 'bg-warning text-dark'}`}
+                              >
+                                {pago.estado === 'aplicado'
+                                  ? 'Conciliado'
+                                  : 'Pendiente'}
                               </span>
                             </td>
                           </tr>
@@ -543,16 +637,26 @@ export default function Dashboard() {
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan={5} className="text-center py-4">
-                            <div className="spinner-border spinner-border-sm" role="status">
-                              <span className="visually-hidden">Cargando...</span>
+                          <td colSpan={5} className='text-center py-4'>
+                            <div
+                              className='spinner-border spinner-border-sm'
+                              role='status'
+                            >
+                              <span className='visually-hidden'>
+                                Cargando...
+                              </span>
                             </div>
-                            <div className="mt-2">Cargando unidades morosas...</div>
+                            <div className='mt-2'>
+                              Cargando unidades morosas...
+                            </div>
                           </td>
                         </tr>
                       ) : unidadesMorosas.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="text-center py-4 text-muted">
+                          <td
+                            colSpan={5}
+                            className='text-center py-4 text-muted'
+                          >
                             No hay unidades morosas
                           </td>
                         </tr>
@@ -562,11 +666,18 @@ export default function Dashboard() {
                             <td>{unidad.codigo_unidad}</td>
                             <td>{unidad.propietario || 'Sin propietario'}</td>
                             <td>
-                              <span className={`badge ${unidad.meses_morosos > 2 ? 'bg-danger' : 'bg-warning text-dark'}`}>
+                              <span
+                                className={`badge ${unidad.meses_morosos > 2 ? 'bg-danger' : 'bg-warning text-dark'}`}
+                              >
                                 {unidad.meses_morosos}
                               </span>
                             </td>
-                            <td>${unidad.deuda_total ? unidad.deuda_total.toLocaleString('es-CL') : '0'}</td>
+                            <td>
+                              $
+                              {unidad.deuda_total
+                                ? unidad.deuda_total.toLocaleString('es-CL')
+                                : '0'}
+                            </td>
                             <td>
                               <button className='btn btn-sm btn-outline-primary'>
                                 Notificar
@@ -596,33 +707,40 @@ export default function Dashboard() {
                 <div className='list-group list-group-flush'>
                   {loading ? (
                     <div className='list-group-item text-center py-4'>
-                      <div className="spinner-border spinner-border-sm" role="status">
-                        <span className="visually-hidden">Cargando...</span>
+                      <div
+                        className='spinner-border spinner-border-sm'
+                        role='status'
+                      >
+                        <span className='visually-hidden'>Cargando...</span>
                       </div>
-                      <div className="mt-2">Cargando actividades...</div>
+                      <div className='mt-2'>Cargando actividades...</div>
                     </div>
                   ) : proximasActividades.length === 0 ? (
                     <div className='list-group-item text-center py-4 text-muted'>
                       No hay actividades próximas
                     </div>
                   ) : (
-                    proximasActividades.map((actividad: ActividadProxima, index: number) => (
-                      <div key={index} className='list-group-item'>
-                        <div className='d-flex w-100 justify-content-between align-items-center'>
-                          <div>
-                            <h6 className='mb-1'>{actividad.titulo}</h6>
-                            <p className='mb-0 text-muted'>
-                              {actividad.descripcion}
-                            </p>
-                          </div>
-                          <div className='text-end'>
-                            <span className={`badge ${actividad.estado_relativo === 'hoy' ? 'bg-warning text-dark' : actividad.estado_relativo === 'vencida' ? 'bg-danger' : 'bg-primary'}`}>
-                              {actividad.fecha_formateada}
-                            </span>
+                    proximasActividades.map(
+                      (actividad: ActividadProxima, index: number) => (
+                        <div key={index} className='list-group-item'>
+                          <div className='d-flex w-100 justify-content-between align-items-center'>
+                            <div>
+                              <h6 className='mb-1'>{actividad.titulo}</h6>
+                              <p className='mb-0 text-muted'>
+                                {actividad.descripcion}
+                              </p>
+                            </div>
+                            <div className='text-end'>
+                              <span
+                                className={`badge ${actividad.estado_relativo === 'hoy' ? 'bg-warning text-dark' : actividad.estado_relativo === 'vencida' ? 'bg-danger' : 'bg-primary'}`}
+                              >
+                                {actividad.fecha_formateada}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      ),
+                    )
                   )}
                 </div>
               </div>
@@ -643,47 +761,59 @@ export default function Dashboard() {
                 <div className='card-body p-0'>
                   {loading ? (
                     <div className='p-3 text-center py-4'>
-                      <div className="spinner-border spinner-border-sm" role="status">
-                        <span className="visually-hidden">Cargando...</span>
+                      <div
+                        className='spinner-border spinner-border-sm'
+                        role='status'
+                      >
+                        <span className='visually-hidden'>Cargando...</span>
                       </div>
-                      <div className="mt-2">Cargando reservas...</div>
+                      <div className='mt-2'>Cargando reservas...</div>
                     </div>
                   ) : reservasAmenidades.length === 0 ? (
                     <div className='p-3 text-center py-4 text-muted'>
                       No hay reservas próximas
                     </div>
                   ) : (
-                    reservasAmenidades.map((reserva: ReservaAmenidad, index: number) => (
-                      <div key={reserva.id} className={`p-3 ${index < reservasAmenidades.length - 1 ? 'border-bottom' : ''}`}>
-                        <div className='d-flex justify-content-between align-items-center mb-3'>
-                          <div>
-                            <h6 className='mb-0'>{reserva.amenidad}</h6>
-                            <small className='text-muted'>
-                              {reserva.fecha_inicio} - {reserva.fecha_fin}
-                            </small>
+                    reservasAmenidades.map(
+                      (reserva: ReservaAmenidad, index: number) => (
+                        <div
+                          key={reserva.id}
+                          className={`p-3 ${index < reservasAmenidades.length - 1 ? 'border-bottom' : ''}`}
+                        >
+                          <div className='d-flex justify-content-between align-items-center mb-3'>
+                            <div>
+                              <h6 className='mb-0'>{reserva.amenidad}</h6>
+                              <small className='text-muted'>
+                                {reserva.fecha_inicio} - {reserva.fecha_fin}
+                              </small>
+                            </div>
+                            <span
+                              className={`badge ${reserva.estado_descripcion === 'Confirmada' ? 'bg-success' : 'bg-warning text-dark'}`}
+                            >
+                              {reserva.estado_descripcion}
+                            </span>
                           </div>
-                          <span className={`badge ${reserva.estado_descripcion === 'Confirmada' ? 'bg-success' : 'bg-warning text-dark'}`}>
-                            {reserva.estado_descripcion}
-                          </span>
+                          <div className='d-flex align-items-center text-muted'>
+                            <span
+                              className='material-icons me-1'
+                              style={{ fontSize: '16px' }}
+                            >
+                              apartment
+                            </span>
+                            <span className='me-3'>
+                              {reserva.unidad_reserva}
+                            </span>
+                            <span
+                              className='material-icons me-1'
+                              style={{ fontSize: '16px' }}
+                            >
+                              person
+                            </span>
+                            <span>{reserva.reservado_por}</span>
+                          </div>
                         </div>
-                        <div className='d-flex align-items-center text-muted'>
-                          <span
-                            className='material-icons me-1'
-                            style={{ fontSize: '16px' }}
-                          >
-                            apartment
-                          </span>
-                          <span className='me-3'>{reserva.unidad_reserva}</span>
-                          <span
-                            className='material-icons me-1'
-                            style={{ fontSize: '16px' }}
-                          >
-                            person
-                          </span>
-                          <span>{reserva.reservado_por}</span>
-                        </div>
-                      </div>
-                    ))
+                      ),
+                    )
                   )}
                 </div>
               </div>

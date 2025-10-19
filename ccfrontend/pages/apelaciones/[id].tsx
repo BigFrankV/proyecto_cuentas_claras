@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { getApelacion } from '@/lib/apelacionesService';
-import Layout from '@/components/layout/Layout';
-import ApelacionDetail from '@/components/apelaciones/ApelacionDetail';
 import { GetServerSideProps } from 'next';
-import api from '@/lib/api'; // axios client que incluye cookies o token
+import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
 
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
+import ApelacionDetail from '@/components/apelaciones/ApelacionDetail';
+import Layout from '@/components/layout/Layout';
+import { getApelacion } from '@/lib/apelacionesService';
+import api from '@/lib/api'; // axios client que incluye cookies o token
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+
+export const getServerSideProps: GetServerSideProps = async ctx => {
   const { id } = ctx.params;
   const cookie = ctx.req.headers.cookie || '';
   try {
@@ -30,7 +31,9 @@ export default function ApelacionDetallePage({ inicialApelacion }: any) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
     (async () => {
       setLoading(true);
       try {
@@ -47,8 +50,8 @@ export default function ApelacionDetallePage({ inicialApelacion }: any) {
   if (loading || !apelacion) {
     return (
       <ProtectedRoute>
-        <Layout title="Apelación">
-          <div className="p-4">Cargando...</div>
+        <Layout title='Apelación'>
+          <div className='p-4'>Cargando...</div>
         </Layout>
       </ProtectedRoute>
     );
@@ -57,16 +60,24 @@ export default function ApelacionDetallePage({ inicialApelacion }: any) {
   return (
     <ProtectedRoute>
       <Layout title={`Apelación #${apelacion.id}`}>
-        <div className="container p-4">
-          <div className="mb-3">
-            <button className="btn btn-link" onClick={() => router.push('/apelaciones')}>← Volver a lista</button>
+        <div className='container p-4'>
+          <div className='mb-3'>
+            <button
+              className='btn btn-link'
+              onClick={() => router.push('/apelaciones')}
+            >
+              ← Volver a lista
+            </button>
           </div>
 
-          <ApelacionDetail apelacion={apelacion} onResolved={async () => {
-            // refrescar después de resolver
-            const r = await getApelacion(Number(id), token);
-            setApelacion(r);
-          }} />
+          <ApelacionDetail
+            apelacion={apelacion}
+            onResolved={async () => {
+              // refrescar después de resolver
+              const r = await getApelacion(Number(id), token);
+              setApelacion(r);
+            }}
+          />
         </div>
       </Layout>
     </ProtectedRoute>

@@ -1,13 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
+
+import {
+  CentroFilters,
+  CentroStats,
+  CentroTable,
+  CentroCard,
+} from '@/components/centros-costo';
 import Layout from '@/components/layout/Layout';
+import { listCentros, deleteCentro } from '@/lib/centrosCostoService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { usePermissions } from '@/lib/usePermissions';
-import { listCentros, deleteCentro } from '@/lib/centrosCostoService';
 import type { CentroCosto } from '@/types/centrosCosto';
-import { CentroFilters, CentroStats, CentroTable, CentroCard } from '@/components/centros-costo';
 
 export default function CentrosCostoListado() {
   const router = useRouter();
@@ -16,11 +22,18 @@ export default function CentrosCostoListado() {
 
   const [centros, setCentros] = useState<CentroCosto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, pages: 0 });
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    pages: 0,
+  });
 
   // modal / selección
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedCentro, setSelectedCentro] = useState<CentroCosto | null>(null);
+  const [selectedCentro, setSelectedCentro] = useState<CentroCosto | null>(
+    null,
+  );
 
   // filtros locales
   const [search, setSearch] = useState('');
@@ -64,7 +77,9 @@ export default function CentrosCostoListado() {
   };
 
   const confirmDeleteCentro = async () => {
-    if (!selectedCentro) return;
+    if (!selectedCentro) {
+      return;
+    }
     try {
       await deleteCentro(selectedCentro.id);
       setShowDeleteModal(false);
@@ -75,15 +90,26 @@ export default function CentrosCostoListado() {
     }
   };
 
-  const handleFilterChange = (payload: { search?: string; comunidadId?: number | null }) => {
-    if (typeof payload.search !== 'undefined') setSearch(payload.search);
-    if (typeof payload.comunidadId !== 'undefined') setComunidadId(payload.comunidadId ?? null);
+  const handleFilterChange = (payload: {
+    search?: string;
+    comunidadId?: number | null;
+  }) => {
+    if (typeof payload.search !== 'undefined') {
+      setSearch(payload.search);
+    }
+    if (typeof payload.comunidadId !== 'undefined') {
+      setComunidadId(payload.comunidadId ?? null);
+    }
     // Para filtrar en backend, pasar params a listCentros; ahora filtro en frontend.
   };
 
-  const filteredCentros = centros.filter((c) => {
-    const matchSearch = !search || c.nombre.toLowerCase().includes(search.toLowerCase());
-    const matchCom = !comunidadId || (c as any).comunidad_id === comunidadId || c.comunidad === (comunidades.find(x => x.id === comunidadId)?.razon_social);
+  const filteredCentros = centros.filter(c => {
+    const matchSearch =
+      !search || c.nombre.toLowerCase().includes(search.toLowerCase());
+    const matchCom =
+      !comunidadId ||
+      (c as any).comunidad_id === comunidadId ||
+      c.comunidad === comunidades.find(x => x.id === comunidadId)?.razon_social;
     return matchSearch && matchCom;
   });
 
@@ -94,24 +120,24 @@ export default function CentrosCostoListado() {
       </Head>
 
       <Layout>
-        <div className="cost-centers-container">
+        <div className='cost-centers-container'>
           {/* Header (duplicado de Categorías, incluye icono, título, descripción y botón) */}
-          <div className="categories-header">
-            <div className="d-flex justify-content-between align-items-start mb-4">
+          <div className='categories-header'>
+            <div className='d-flex justify-content-between align-items-start mb-4'>
               <div>
-                <h1 className="categories-title">
-                  <span className="material-icons me-2">account_balance</span>
+                <h1 className='categories-title'>
+                  <span className='material-icons me-2'>account_balance</span>
                   Centros de Costo
                 </h1>
-                <p className="categories-subtitle">
+                <p className='categories-subtitle'>
                   Gestiona los centros de costo para el control presupuestario
                 </p>
               </div>
-              <Button 
-                variant="light" 
+              <Button
+                variant='light'
                 onClick={() => router.push('/centros-costo/nuevo')}
               >
-                <span className="material-icons me-2">add</span>
+                <span className='material-icons me-2'>add</span>
                 Nuevo Centro de Costo
               </Button>
             </div>
@@ -122,48 +148,86 @@ export default function CentrosCostoListado() {
             comunidadId={comunidadId}
             comunidades={comunidades}
             onChange={handleFilterChange}
-            onClear={() => { setSearch(''); setComunidadId(null); }}
+            onClear={() => {
+              setSearch('');
+              setComunidadId(null);
+            }}
           />
 
-          <CentroStats total={pagination.total} active={filteredCentros.length} presupuestoTotal={0} ejecutado={0} />
+          <CentroStats
+            total={pagination.total}
+            active={filteredCentros.length}
+            presupuestoTotal={0}
+            ejecutado={0}
+          />
 
           {viewMode === 'list' ? (
-            <CentroTable centros={filteredCentros} loading={loading} onEdit={handleEditCenter} onDelete={handleDeleteCentro} />
+            <CentroTable
+              centros={filteredCentros}
+              loading={loading}
+              onEdit={handleEditCenter}
+              onDelete={handleDeleteCentro}
+            />
           ) : (
-            <CentroCard centros={filteredCentros} onEdit={handleEditCenter} onDelete={handleDeleteCentro} />
+            <CentroCard
+              centros={filteredCentros}
+              onEdit={handleEditCenter}
+              onDelete={handleDeleteCentro}
+            />
           )}
 
           {pagination.pages > 1 && (
-            <div className="d-flex justify-content-between align-items-center mt-4">
-              <span className="text-muted">Mostrando {pagination.page} de {pagination.pages} páginas</span>
+            <div className='d-flex justify-content-between align-items-center mt-4'>
+              <span className='text-muted'>
+                Mostrando {pagination.page} de {pagination.pages} páginas
+              </span>
               <nav>
-                <ul className="pagination">
-                  <li className={`page-item ${pagination.page === 1 ? 'disabled' : ''}`}>
+                <ul className='pagination'>
+                  <li
+                    className={`page-item ${pagination.page === 1 ? 'disabled' : ''}`}
+                  >
                     <button
-                      className="page-link"
-                      onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                      className='page-link'
+                      onClick={() =>
+                        setPagination(prev => ({
+                          ...prev,
+                          page: Math.max(1, prev.page - 1),
+                        }))
+                      }
                       disabled={pagination.page === 1}
                     >
-                      <span className="material-icons">chevron_left</span>
+                      <span className='material-icons'>chevron_left</span>
                     </button>
                   </li>
                   {Array.from({ length: pagination.pages }, (_, index) => (
-                    <li key={index + 1} className={`page-item ${pagination.page === index + 1 ? 'active' : ''}`}>
+                    <li
+                      key={index + 1}
+                      className={`page-item ${pagination.page === index + 1 ? 'active' : ''}`}
+                    >
                       <button
-                        className="page-link"
-                        onClick={() => setPagination(prev => ({ ...prev, page: index + 1 }))}
+                        className='page-link'
+                        onClick={() =>
+                          setPagination(prev => ({ ...prev, page: index + 1 }))
+                        }
                       >
                         {index + 1}
                       </button>
                     </li>
                   ))}
-                  <li className={`page-item ${pagination.page === pagination.pages ? 'disabled' : ''}`}>
+                  <li
+                    className={`page-item ${pagination.page === pagination.pages ? 'disabled' : ''}`}
+                  >
                     <button
-                      className="page-link"
-                      onClick={() => setPagination(prev => ({ ...prev, page: Math.min(pagination.pages, prev.page + 1) }))}
+                      className='page-link'
+                      onClick={() =>
+                        setPagination(prev => ({
+                          ...prev,
+                          page: Math.min(pagination.pages, prev.page + 1),
+                        }))
+                      }
                       disabled={pagination.page === pagination.pages}
                     >
-                      <span className="material-icons">chevron_right</span>
+                      <span className='material-icons'>chevron_right</span>
                     </button>
                   </li>
                 </ul>
@@ -171,19 +235,34 @@ export default function CentrosCostoListado() {
             </div>
           )}
 
-          <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+          <Modal
+            show={showDeleteModal}
+            onHide={() => setShowDeleteModal(false)}
+            centered
+          >
             <Modal.Header closeButton>
-              <Modal.Title className="text-danger">
-                <span className="material-icons me-2">delete</span> Eliminar Centro de Costo
+              <Modal.Title className='text-danger'>
+                <span className='material-icons me-2'>delete</span> Eliminar
+                Centro de Costo
               </Modal.Title>
             </Modal.Header>
             <Modal.Body>
-              <p>¿Estás seguro de que deseas eliminar el centro de costo <strong>{selectedCentro?.nombre}</strong>?</p>
-              <p className="text-muted">Esta acción no se puede deshacer.</p>
+              <p>
+                ¿Estás seguro de que deseas eliminar el centro de costo{' '}
+                <strong>{selectedCentro?.nombre}</strong>?
+              </p>
+              <p className='text-muted'>Esta acción no se puede deshacer.</p>
             </Modal.Body>
             <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancelar</Button>
-              <Button variant="danger" onClick={confirmDeleteCentro}>Eliminar</Button>
+              <Button
+                variant='secondary'
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancelar
+              </Button>
+              <Button variant='danger' onClick={confirmDeleteCentro}>
+                Eliminar
+              </Button>
             </Modal.Footer>
           </Modal>
         </div>

@@ -1,6 +1,11 @@
 // Tipos para módulo Gastos (backend <-> frontend)
 
-export type GastoStatus = 'pending' | 'approved' | 'rejected' | 'paid' | 'completed';
+export type GastoStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'paid'
+  | 'completed';
 export type GastoPriority = 'low' | 'medium' | 'high';
 
 export interface AttachmentFile {

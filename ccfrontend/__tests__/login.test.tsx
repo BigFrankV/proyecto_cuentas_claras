@@ -18,7 +18,7 @@ describe('Login Page', () => {
     expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
     expect(screen.getByLabelText('Recordar sesión')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /iniciar sesión/i })
+      screen.getByRole('button', { name: /iniciar sesión/i }),
     ).toBeInTheDocument();
   });
 
@@ -61,7 +61,7 @@ describe('Login Page', () => {
     expect(forgotPasswordLink).toBeInTheDocument();
     expect(forgotPasswordLink.closest('a')).toHaveAttribute(
       'href',
-      '/forgot-password'
+      '/forgot-password',
     );
   });
 });
