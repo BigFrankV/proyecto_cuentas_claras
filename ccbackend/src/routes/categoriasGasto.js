@@ -1251,7 +1251,7 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
     params.push(Number(limit), Number(offset));
 
     const [rows] = await db.query(query, params);
-
+    console.log('Categorias rows:', rows); // <-- añadir
     res.json({
       data: rows,
       pagination: {

@@ -7,6 +7,7 @@ import Head from 'next/head';
 import { useAuth } from '@/lib/useAuth';
 import { usePermissions } from '@/lib/usePermissions';
 import { listCategorias } from '@/lib/categoriasGastoService';
+import { CategoriaGasto } from '@/types/categoriasGasto';
 
 interface ExpenseCategory {
   id: number;
@@ -58,8 +59,11 @@ export default function CategoriasGastoListado() {
     try {
       setLoading(true);
       const response = await listCategorias(resolvedComunidadId);
+      console.log('API Response:', response); // <-- añadir
+      console.log('Response data:', response.data); // <-- añadir
       setCategories(response.data);
       setPagination(response.pagination);
+      console.log('Categories set:', response.data); // <-- añadir
     } catch (error) {
       console.error('Error loading categories:', error);
     } finally {
@@ -309,28 +313,11 @@ export default function CategoriasGastoListado() {
                       <tr key={category.id} className="data-row">
                         <td>
                           <div className="d-flex align-items-center">
-                            <div 
-                              className="category-icon me-3"
-                              style={{ 
-                                backgroundColor: category.color,
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'white'
-                              }}
-                            >
-                              <span className="material-icons" style={{ fontSize: '18px' }}>
-                                {category.icon}
-                              </span>
-                            </div>
-                            <span className="fw-medium">{category.name}</span>
+                            <span className="fw-medium">{category.nombre}</span>
                           </div>
                         </td>
-                        <td>{category.description}</td>
-                        <td>{category.community}</td>
+                        <td>{category.nombre}</td> {/* Descripción como nombre por ahora */}
+                        <td>{category.comunidad}</td>
                         <td>{getStatusBadge(category.status)}</td>
                         <td className="text-end">
                           <div className="d-flex gap-1 justify-content-end">

@@ -1174,6 +1174,80 @@ router.get('/comunidad/:comunidadId/dashboard/distribucion', authenticate, requi
   }
 });
 
+/**
+ * GET /centros-costo
+ * Lista global de centros de costo (superadmin) o filtrada por comunidades asignadas (otros roles).
+ */
+router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conserje', 'contador', 'proveedor_servicio', 'residente', 'propietario', 'inquilino', 'tesorero', 'presidente_comite'), async (req, res) => {
+  try {
+    const { 
+      page = 1,
+      limit = 100,
+      nombre_busqueda = ''
+    } = req.query; // <-- quitar tipo_filtro, activa_filtro
+
+    const offset = (page - 1) * limit;
+
+    let whereClauses = [];
+    const params = [];
+
+    if (nombre_busqueda) {
+      whereClauses.push('cc.nombre LIKE ?');
+      params.push(`%${nombre_busqueda}%`);
+    }
+
+    // Quitar filtros tipo_filtro y activa_filtro
+
+    let query = `
+      SELECT
+        cc.id,
+        cc.nombre,
+        c.razon_social AS comunidad,
+        cc.created_at,
+        cc.updated_at
+      FROM centro_costo cc
+      INNER JOIN comunidad c ON cc.comunidad_id = c.id
+    `;
+
+    // Filtro por comunidades asignadas si no es superadmin
+    if (!req.user.is_superadmin) {
+      whereClauses.push(`cc.comunidad_id IN (
+        SELECT umc.comunidad_id
+        FROM usuario_miembro_comunidad umc
+        WHERE umc.persona_id = ? AND umc.activo = 1 AND (umc.hasta IS NULL OR umc.hasta > CURDATE())
+      )`);
+      params.push(req.user.persona_id);
+    }
+
+    if (whereClauses.length > 0) {
+      query += ' WHERE ' + whereClauses.join(' AND ');
+    }
+
+    // Obtener total
+    const countQuery = query.replace(/SELECT.*FROM/, 'SELECT COUNT(*) as total FROM');
+    const [countResult] = await db.query(countQuery, params);
+    const total = countResult[0].total;
+
+    query += ' ORDER BY cc.nombre LIMIT ? OFFSET ?';
+    params.push(Number(limit), Number(offset));
+
+    const [rows] = await db.query(query, params);
+    console.log('Centros rows:', rows); // <-- añadir para debug
+    res.json({
+      data: rows,
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener centros de costo' });
+  }
+});
+
 module.exports = router;
 
 

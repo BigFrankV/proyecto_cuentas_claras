@@ -326,6 +326,43 @@ h1, h2, h3, h4, h5, h6 {
   animation: pulse 2s ease-in-out infinite;
 }
 
+/* Encabezado en cuadro coloreado similar a Categorías / Gastos */
+.page-header-card {
+  background: linear-gradient(90deg, #1565c0 0%, #1e88e5 100%);
+  color: #fff;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(23, 54, 93, 0.08);
+}
+
+.page-header-card .header-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 24px;
+}
+
+.page-header-card .text-white-50 {
+  color: rgba(255,255,255,0.85);
+}
+
+/* ajustes responsivos */
+@media (max-width: 767px) {
+  .page-header-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .page-header-card .d-flex.gap-2 {
+    justify-content: flex-start;
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .kpi-value {
