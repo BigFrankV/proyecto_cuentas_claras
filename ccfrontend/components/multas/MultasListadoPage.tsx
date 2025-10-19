@@ -1,32 +1,36 @@
-import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import React, { useState, useEffect } from 'react';
+
 import Layout from '@/components/layout/Layout';
 import multasService from '@/lib/multasService';
 import { useAuth } from '@/lib/useAuth';
+import { ProtectedRoute } from '@/lib/useAuth'; // Agrega si no está
 import { usePermissions } from '@/lib/usePermissions';
-import { ProtectedRoute } from '@/lib/useAuth';  // Agrega si no está
 
 const MultasListadoPage: React.FC = () => {
-  console.log('🚀 MultasListadoPage - Componente montado');  // ✅ Agrega esto
+  console.log('🚀 MultasListadoPage - Componente montado'); // ✅ Agrega esto
 
   const router = useRouter();
   const { user } = useAuth();
   const { canCreateMulta } = usePermissions();
-  
 
-  console.log('👤 Usuario en MultasListadoPage:', user);  // ✅ Agrega esto
+  console.log('👤 Usuario en MultasListadoPage:', user); // ✅ Agrega esto
 
   const [multas, setMultas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filtros, setFiltros] = useState({ estado: 'all', prioridad: 'all', busqueda: '' });
+  const [filtros, setFiltros] = useState({
+    estado: 'all',
+    prioridad: 'all',
+    busqueda: '',
+  });
   const [selectedFines, setSelectedFines] = useState<string[]>([]);
   const [pagina, setPagina] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(1);
 
   useEffect(() => {
-    console.log('🔄 useEffect ejecutado en MultasListadoPage');  // ✅ Agrega esto
+    console.log('🔄 useEffect ejecutado en MultasListadoPage'); // ✅ Agrega esto
     cargarMultas();
   }, [filtros, pagina]);
 
@@ -69,18 +73,28 @@ const MultasListadoPage: React.FC = () => {
   };
 
   const handleBulkAction = async (action: string) => {
-    if (selectedFines.length === 0) return;
+    if (selectedFines.length === 0) {
+      return;
+    }
     try {
       if (action === 'delete') {
-        await Promise.all(selectedFines.map(id => multasService.deleteMulta(id)));
+        await Promise.all(
+          selectedFines.map(id => multasService.deleteMulta(id)),
+        );
         cargarMultas();
       } else if (action === 'pay') {
         // ✅ Agrega acción para marcar pagadas
-        await Promise.all(selectedFines.map(id => multasService.marcarPagada(id)));
+        await Promise.all(
+          selectedFines.map(id => multasService.marcarPagada(id)),
+        );
         cargarMultas();
       } else if (action === 'cancel') {
         // ✅ Agrega acción para anular
-        await Promise.all(selectedFines.map(id => multasService.anularMulta(id, 'Anulada masivamente')));
+        await Promise.all(
+          selectedFines.map(id =>
+            multasService.anularMulta(id, 'Anulada masivamente'),
+          ),
+        );
         cargarMultas();
       }
       // ✅ Agrega más si es necesario
@@ -96,7 +110,7 @@ const MultasListadoPage: React.FC = () => {
       pagado: 'status-paid',
       vencido: 'status-overdue',
       apelada: 'status-appealed',
-      anulada: 'status-cancelled'
+      anulada: 'status-cancelled',
     };
     return classes[status as keyof typeof classes] || 'status-pending';
   };
@@ -107,7 +121,7 @@ const MultasListadoPage: React.FC = () => {
       pagado: 'Pagada',
       vencido: 'Vencida',
       apelada: 'Apelada',
-      anulada: 'Cancelada'
+      anulada: 'Cancelada',
     };
     return texts[status as keyof typeof texts] || 'Pendiente';
   };
@@ -117,7 +131,7 @@ const MultasListadoPage: React.FC = () => {
       baja: 'priority-low',
       media: 'priority-medium',
       alta: 'priority-high',
-      critica: 'priority-high'
+      critica: 'priority-high',
     };
     return classes[priority as keyof typeof classes] || 'priority-low';
   };
@@ -127,31 +141,37 @@ const MultasListadoPage: React.FC = () => {
       baja: 'Baja',
       media: 'Media',
       alta: 'Alta',
-      critica: 'Crítica'
+      critica: 'Crítica',
     };
     return texts[priority as keyof typeof texts] || 'Baja';
   };
 
   const isOverdue = (dueDate: string) => new Date(dueDate) < new Date();
   const isDueSoon = (dueDate: string) => {
-    const diff = (new Date(dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24);
+    const diff =
+      (new Date(dueDate).getTime() - new Date().getTime()) /
+      (1000 * 60 * 60 * 24);
     return diff <= 3 && diff > 0;
   };
 
-  if (loading) return (
-    <ProtectedRoute>
-      <Layout title='Lista de Multas'>
-        <div className='text-center p-4'>Cargando...</div>
-      </Layout>
-    </ProtectedRoute>
-  );
-  if (error) return (
-    <ProtectedRoute>
-      <Layout title='Lista de Multas'>
-        <div className='alert alert-danger'>{error}</div>
-      </Layout>
-    </ProtectedRoute>
-  );
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <Layout title='Lista de Multas'>
+          <div className='text-center p-4'>Cargando...</div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
+  if (error) {
+    return (
+      <ProtectedRoute>
+        <Layout title='Lista de Multas'>
+          <div className='alert alert-danger'>{error}</div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -161,20 +181,29 @@ const MultasListadoPage: React.FC = () => {
           <header className='bg-white border-bottom shadow-sm p-3 mb-4'>
             <div className='d-flex justify-content-between align-items-center'>
               <div className='d-flex align-items-center'>
-                <button className='btn btn-link d-lg-none me-3' onClick={() => {/* toggle sidebar */ }}>
+                <button
+                  className='btn btn-link d-lg-none me-3'
+                  onClick={() => {
+                    /* toggle sidebar */
+                  }}
+                >
                   <i className='material-icons'>menu</i>
                 </button>
                 <h1 className='h4 mb-0'>Multas</h1>
               </div>
               <div className='d-flex align-items-center'>
                 <div className='input-group me-3' style={{ maxWidth: '300px' }}>
-                  <span className='input-group-text'><i className='material-icons'>search</i></span>
+                  <span className='input-group-text'>
+                    <i className='material-icons'>search</i>
+                  </span>
                   <input
                     type='text'
                     className='form-control'
                     placeholder='Buscar multas...'
                     value={filtros.busqueda}
-                    onChange={(e) => handleFiltroChange('busqueda', e.target.value)}
+                    onChange={e =>
+                      handleFiltroChange('busqueda', e.target.value)
+                    }
                   />
                 </div>
                 <button className='btn btn-outline-secondary me-2'>
@@ -193,14 +222,22 @@ const MultasListadoPage: React.FC = () => {
           <div className='filters-panel mb-4'>
             <div className='d-flex flex-wrap align-items-center'>
               <span className='me-3 fw-bold'>Filtros:</span>
-              <select value={filtros.estado} onChange={(e) => handleFiltroChange('estado', e.target.value)} className='form-select me-2'>
+              <select
+                value={filtros.estado}
+                onChange={e => handleFiltroChange('estado', e.target.value)}
+                className='form-select me-2'
+              >
                 <option value='all'>Todas</option>
                 <option value='pendiente'>Pendientes</option>
                 <option value='pagado'>Pagadas</option>
                 <option value='vencido'>Vencidas</option>
                 <option value='apelada'>Apeladas</option>
               </select>
-              <select value={filtros.prioridad} onChange={(e) => handleFiltroChange('prioridad', e.target.value)} className='form-select'>
+              <select
+                value={filtros.prioridad}
+                onChange={e => handleFiltroChange('prioridad', e.target.value)}
+                className='form-select'
+              >
                 <option value='all'>Todas Prioridades</option>
                 <option value='baja'>Baja</option>
                 <option value='media'>Media</option>
@@ -216,13 +253,24 @@ const MultasListadoPage: React.FC = () => {
               <div className='d-flex justify-content-between align-items-center'>
                 <span>{selectedFines.length} multas seleccionadas</span>
                 <div>
-                  <button className='btn btn-light me-2' onClick={() => handleBulkAction('reminder')}>
-                    <i className='material-icons me-1'>send</i>Enviar recordatorios
+                  <button
+                    className='btn btn-light me-2'
+                    onClick={() => handleBulkAction('reminder')}
+                  >
+                    <i className='material-icons me-1'>send</i>Enviar
+                    recordatorios
                   </button>
-                  <button className='btn btn-light me-2' onClick={() => handleBulkAction('pay')}>
-                    <i className='material-icons me-1'>check_circle</i>Marcar como pagadas
+                  <button
+                    className='btn btn-light me-2'
+                    onClick={() => handleBulkAction('pay')}
+                  >
+                    <i className='material-icons me-1'>check_circle</i>Marcar
+                    como pagadas
                   </button>
-                  <button className='btn btn-light' onClick={() => handleBulkAction('cancel')}>
+                  <button
+                    className='btn btn-light'
+                    onClick={() => handleBulkAction('cancel')}
+                  >
                     <i className='material-icons me-1'>cancel</i>Cancelar multas
                   </button>
                 </div>
@@ -235,7 +283,12 @@ const MultasListadoPage: React.FC = () => {
             <table className='table table-hover'>
               <thead>
                 <tr>
-                  <th><input type='checkbox' onChange={(e) => handleSelectAll(e.target.checked)} /></th>
+                  <th>
+                    <input
+                      type='checkbox'
+                      onChange={e => handleSelectAll(e.target.checked)}
+                    />
+                  </th>
                   <th>Número</th>
                   <th>Infracción</th>
                   <th>Unidad</th>
@@ -249,27 +302,70 @@ const MultasListadoPage: React.FC = () => {
               <tbody>
                 {multas.map((multa: any) => (
                   <tr key={multa.id}>
-                    <td><input type='checkbox' checked={selectedFines.includes(multa.id)} onChange={(e) => handleSelectFine(multa.id, e.target.checked)} /></td>
-                    <td><Link href={`/multas/${multa.id}`} className='text-decoration-none fw-bold'>{multa.numero}</Link></td>
+                    <td>
+                      <input
+                        type='checkbox'
+                        checked={selectedFines.includes(multa.id)}
+                        onChange={e =>
+                          handleSelectFine(multa.id, e.target.checked)
+                        }
+                      />
+                    </td>
+                    <td>
+                      <Link
+                        href={`/multas/${multa.id}`}
+                        className='text-decoration-none fw-bold'
+                      >
+                        {multa.numero}
+                      </Link>
+                    </td>
                     <td>{multa.tipo_infraccion}</td>
                     <td>{multa.unidad_numero}</td>
                     <td>${multa.monto.toLocaleString()}</td>
-                    <td><span className={`status-badge ${getStatusBadge(multa.estado)}`}>{getStatusText(multa.estado)}</span></td>
-                    <td><span className={`priority-badge ${getPriorityBadge(multa.prioridad)}`}>{getPriorityText(multa.prioridad)}</span></td>
+                    <td>
+                      <span
+                        className={`status-badge ${getStatusBadge(multa.estado)}`}
+                      >
+                        {getStatusText(multa.estado)}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        className={`priority-badge ${getPriorityBadge(multa.prioridad)}`}
+                      >
+                        {getPriorityText(multa.prioridad)}
+                      </span>
+                    </td>
                     <td>
                       <div className='fine-meta'>
-                        <div className='fine-date'>{multa.fecha_vencimiento}</div>
-                        <div className={`fine-due-date ${isOverdue(multa.fecha_vencimiento) ? 'overdue' : isDueSoon(multa.fecha_vencimiento) ? 'soon' : 'normal'}`}>
-                          {isOverdue(multa.fecha_vencimiento) ? 'Vencida' : isDueSoon(multa.fecha_vencimiento) ? 'Próxima a vencer' : 'En plazo'}
+                        <div className='fine-date'>
+                          {multa.fecha_vencimiento}
+                        </div>
+                        <div
+                          className={`fine-due-date ${isOverdue(multa.fecha_vencimiento) ? 'overdue' : isDueSoon(multa.fecha_vencimiento) ? 'soon' : 'normal'}`}
+                        >
+                          {isOverdue(multa.fecha_vencimiento)
+                            ? 'Vencida'
+                            : isDueSoon(multa.fecha_vencimiento)
+                              ? 'Próxima a vencer'
+                              : 'En plazo'}
                         </div>
                       </div>
                     </td>
                     <td>
                       <div className='btn-group'>
-                        <button className='btn btn-sm btn-outline-primary' onClick={() => router.push(`/multas/${multa.id}`)}>
+                        <button
+                          className='btn btn-sm btn-outline-primary'
+                          onClick={() => router.push(`/multas/${multa.id}`)}
+                        >
                           <i className='material-icons'>visibility</i>
                         </button>
-                        <button className='btn btn-sm btn-outline-secondary' onClick={() => router.push(`/multas/${multa.id}/editar`)}>
+                        <button
+                          className='btn btn-sm btn-outline-secondary'
+                          onClick={() =>
+                            router.push(`/multas/${multa.id}/editar`)
+                          }
+                        >
                           <i className='material-icons'>edit</i>
                         </button>
                       </div>
@@ -286,22 +382,42 @@ const MultasListadoPage: React.FC = () => {
               <div key={multa.id} className={`fine-card ${multa.estado}`}>
                 <div className='fine-header'>
                   <div>
-                    <div className='fine-number'><Link href={`/multas/${multa.id}`}>{multa.numero}</Link></div>
-                    <div className='fine-violation'>{multa.tipo_infraccion}</div>
+                    <div className='fine-number'>
+                      <Link href={`/multas/${multa.id}`}>{multa.numero}</Link>
+                    </div>
+                    <div className='fine-violation'>
+                      {multa.tipo_infraccion}
+                    </div>
                     <div className='fine-unit'>{multa.unidad_numero}</div>
                   </div>
                   <div className='text-end'>
-                    <div className='fine-amount'>${multa.monto.toLocaleString()}</div>
-                    <span className={`status-badge ${getStatusBadge(multa.estado)}`}>{getStatusText(multa.estado)}</span>
+                    <div className='fine-amount'>
+                      ${multa.monto.toLocaleString()}
+                    </div>
+                    <span
+                      className={`status-badge ${getStatusBadge(multa.estado)}`}
+                    >
+                      {getStatusText(multa.estado)}
+                    </span>
                   </div>
                 </div>
                 <div className='d-flex justify-content-between align-items-center mt-3'>
-                  <span className={`priority-badge ${getPriorityBadge(multa.prioridad)}`}>{getPriorityText(multa.prioridad)}</span>
+                  <span
+                    className={`priority-badge ${getPriorityBadge(multa.prioridad)}`}
+                  >
+                    {getPriorityText(multa.prioridad)}
+                  </span>
                   <div className='btn-group'>
-                    <button className='btn btn-sm btn-outline-primary' onClick={() => router.push(`/multas/${multa.id}`)}>
+                    <button
+                      className='btn btn-sm btn-outline-primary'
+                      onClick={() => router.push(`/multas/${multa.id}`)}
+                    >
                       <i className='material-icons'>visibility</i>
                     </button>
-                    <button className='btn btn-sm btn-outline-secondary' onClick={() => router.push(`/multas/${multa.id}/editar`)}>
+                    <button
+                      className='btn btn-sm btn-outline-secondary'
+                      onClick={() => router.push(`/multas/${multa.id}/editar`)}
+                    >
                       <i className='material-icons'>edit</i>
                     </button>
                   </div>
@@ -314,15 +430,35 @@ const MultasListadoPage: React.FC = () => {
           <nav aria-label='Paginación' className='mt-4'>
             <ul className='pagination justify-content-center'>
               <li className={`page-item ${pagina === 1 ? 'disabled' : ''}`}>
-                <button className='page-link' onClick={() => setPagina(pagina - 1)}>Anterior</button>
+                <button
+                  className='page-link'
+                  onClick={() => setPagina(pagina - 1)}
+                >
+                  Anterior
+                </button>
               </li>
               {Array.from({ length: totalPaginas }, (_, i) => (
-                <li key={i} className={`page-item ${pagina === i + 1 ? 'active' : ''}`}>
-                  <button className='page-link' onClick={() => setPagina(i + 1)}>{i + 1}</button>
+                <li
+                  key={i}
+                  className={`page-item ${pagina === i + 1 ? 'active' : ''}`}
+                >
+                  <button
+                    className='page-link'
+                    onClick={() => setPagina(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
                 </li>
               ))}
-              <li className={`page-item ${pagina === totalPaginas ? 'disabled' : ''}`}>
-                <button className='page-link' onClick={() => setPagina(pagina + 1)}>Siguiente</button>
+              <li
+                className={`page-item ${pagina === totalPaginas ? 'disabled' : ''}`}
+              >
+                <button
+                  className='page-link'
+                  onClick={() => setPagina(pagina + 1)}
+                >
+                  Siguiente
+                </button>
               </li>
             </ul>
           </nav>
@@ -333,13 +469,21 @@ const MultasListadoPage: React.FC = () => {
               <div className='modal-content'>
                 <div className='modal-header'>
                   <h5 className='modal-title'>Registrar Pago</h5>
-                  <button type='button' className='btn-close' data-bs-dismiss='modal'></button>
+                  <button
+                    type='button'
+                    className='btn-close'
+                    data-bs-dismiss='modal'
+                  ></button>
                 </div>
                 <div className='modal-body'>
                   <form>
                     <div className='mb-3'>
                       <label className='form-label'>Monto</label>
-                      <input type='number' className='form-control' placeholder='Ingrese el monto' />
+                      <input
+                        type='number'
+                        className='form-control'
+                        placeholder='Ingrese el monto'
+                      />
                     </div>
                     <div className='mb-3'>
                       <label className='form-label'>Fecha de pago</label>
@@ -355,13 +499,25 @@ const MultasListadoPage: React.FC = () => {
                     </div>
                     <div className='mb-3'>
                       <label className='form-label'>Referencia</label>
-                      <input type='text' className='form-control' placeholder='Número de referencia' />
+                      <input
+                        type='text'
+                        className='form-control'
+                        placeholder='Número de referencia'
+                      />
                     </div>
                   </form>
                 </div>
                 <div className='modal-footer'>
-                  <button type='button' className='btn btn-secondary' data-bs-dismiss='modal'>Cancelar</button>
-                  <button type='button' className='btn btn-primary'>Registrar Pago</button>
+                  <button
+                    type='button'
+                    className='btn btn-secondary'
+                    data-bs-dismiss='modal'
+                  >
+                    Cancelar
+                  </button>
+                  <button type='button' className='btn btn-primary'>
+                    Registrar Pago
+                  </button>
                 </div>
               </div>
             </div>
@@ -373,7 +529,11 @@ const MultasListadoPage: React.FC = () => {
               <div className='modal-content'>
                 <div className='modal-header'>
                   <h5 className='modal-title'>Revisar Apelación</h5>
-                  <button type='button' className='btn-close' data-bs-dismiss='modal'></button>
+                  <button
+                    type='button'
+                    className='btn-close'
+                    data-bs-dismiss='modal'
+                  ></button>
                 </div>
                 <div className='modal-body'>
                   <div className='mb-3'>
@@ -382,14 +542,18 @@ const MultasListadoPage: React.FC = () => {
                       className='form-control'
                       rows={3}
                       readOnly
-                      value="El residente solicita reconsideración debido a circunstancias atenuantes..."
+                      value='El residente solicita reconsideración debido a circunstancias atenuantes...'
                     />
                   </div>
                   <div className='mb-3'>
                     <label className='form-label'>Evidencia adjunta</label>
                     <div className='d-flex gap-2'>
-                      <button className='btn btn-outline-secondary btn-sm'>Ver evidencia 1</button>
-                      <button className='btn btn-outline-secondary btn-sm'>Ver evidencia 2</button>
+                      <button className='btn btn-outline-secondary btn-sm'>
+                        Ver evidencia 1
+                      </button>
+                      <button className='btn btn-outline-secondary btn-sm'>
+                        Ver evidencia 2
+                      </button>
                     </div>
                   </div>
                   <div className='mb-3'>
@@ -402,13 +566,27 @@ const MultasListadoPage: React.FC = () => {
                   </div>
                   <div className='mb-3'>
                     <label className='form-label'>Comentarios</label>
-                    <textarea className='form-control' rows={3} placeholder='Ingrese sus comentarios...'></textarea>
+                    <textarea
+                      className='form-control'
+                      rows={3}
+                      placeholder='Ingrese sus comentarios...'
+                    ></textarea>
                   </div>
                 </div>
                 <div className='modal-footer'>
-                  <button type='button' className='btn btn-secondary' data-bs-dismiss='modal'>Cancelar</button>
-                  <button type='button' className='btn btn-success'>Aprobar</button>
-                  <button type='button' className='btn btn-danger'>Rechazar</button>
+                  <button
+                    type='button'
+                    className='btn btn-secondary'
+                    data-bs-dismiss='modal'
+                  >
+                    Cancelar
+                  </button>
+                  <button type='button' className='btn btn-success'>
+                    Aprobar
+                  </button>
+                  <button type='button' className='btn btn-danger'>
+                    Rechazar
+                  </button>
                 </div>
               </div>
             </div>
@@ -420,18 +598,37 @@ const MultasListadoPage: React.FC = () => {
               <div className='modal-content'>
                 <div className='modal-header'>
                   <h5 className='modal-title'>Acciones Masivas</h5>
-                  <button type='button' className='btn-close' data-bs-dismiss='modal'></button>
+                  <button
+                    type='button'
+                    className='btn-close'
+                    data-bs-dismiss='modal'
+                  ></button>
                 </div>
                 <div className='modal-body'>
-                  <p>¿Qué acción desea realizar con las {selectedFines.length} multas seleccionadas?</p>
+                  <p>
+                    ¿Qué acción desea realizar con las {selectedFines.length}{' '}
+                    multas seleccionadas?
+                  </p>
                   <div className='d-grid gap-2'>
-                    <button className='btn btn-outline-primary'>Enviar recordatorios</button>
-                    <button className='btn btn-outline-success'>Marcar como pagadas</button>
-                    <button className='btn btn-outline-danger'>Cancelar multas</button>
+                    <button className='btn btn-outline-primary'>
+                      Enviar recordatorios
+                    </button>
+                    <button className='btn btn-outline-success'>
+                      Marcar como pagadas
+                    </button>
+                    <button className='btn btn-outline-danger'>
+                      Cancelar multas
+                    </button>
                   </div>
                 </div>
                 <div className='modal-footer'>
-                  <button type='button' className='btn btn-secondary' data-bs-dismiss='modal'>Cancelar</button>
+                  <button
+                    type='button'
+                    className='btn btn-secondary'
+                    data-bs-dismiss='modal'
+                  >
+                    Cancelar
+                  </button>
                 </div>
               </div>
             </div>

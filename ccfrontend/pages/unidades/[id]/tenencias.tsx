@@ -1,9 +1,10 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+
+import Layout from '@/components/layout/Layout';
 import { getTenenciasUnidad, type Tenencia } from '@/lib/unidadesService';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 export default function TenenciasUnidad() {
   const router = useRouter();
@@ -53,13 +54,17 @@ export default function TenenciasUnidad() {
                   <p className='text-muted'>
                     Lista de propietarios / tenencias de la unidad
                   </p>
-                  {loading && <div className='alert alert-info'>Cargando...</div>}
+                  {loading && (
+                    <div className='alert alert-info'>Cargando...</div>
+                  )}
                   {!loading && tenencias.length === 0 && (
-                    <div className='alert alert-warning'>No se encontraron tenencias</div>
+                    <div className='alert alert-warning'>
+                      No se encontraron tenencias
+                    </div>
                   )}
                   {!loading && tenencias.length > 0 && (
                     <ul className='list-group'>
-                      {tenencias.map((t) => (
+                      {tenencias.map(t => (
                         <li key={t.id} className='list-group-item'>
                           <div className='fw-medium'>
                             {t.nombres} {t.apellidos}
@@ -70,7 +75,9 @@ export default function TenenciasUnidad() {
                             {t.porcentaje && ` • ${t.porcentaje}%`}
                           </div>
                           {t.email && (
-                            <div className='small text-muted'>Email: {t.email}</div>
+                            <div className='small text-muted'>
+                              Email: {t.email}
+                            </div>
                           )}
                         </li>
                       ))}

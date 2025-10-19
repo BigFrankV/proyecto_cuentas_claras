@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react';
-import { listGastos } from './gastosService';
+
 import { GastoBackend } from '@/types/gastos';
+
+import { listGastos } from './gastosService';
 
 let sharedData: { timestamp: number; items: GastoBackend[] } | null = null;
 let subscribers: ((items: GastoBackend[] | null) => void)[] = [];
 
-export function useGastosShared(comunidadId?: number | null, opts: { ttlMs?: number } = {}) {
-  const [data, setData] = useState<GastoBackend[] | null>(() => sharedData?.items ?? null);
+export function useGastosShared(
+  comunidadId?: number | null,
+  opts: { ttlMs?: number } = {},
+) {
+  const [data, setData] = useState<GastoBackend[] | null>(
+    () => sharedData?.items ?? null,
+  );
   const ttl = opts.ttlMs ?? 30_000;
 
   useEffect(() => {
@@ -16,7 +23,9 @@ export function useGastosShared(comunidadId?: number | null, opts: { ttlMs?: num
     };
 
     const sub = (items: GastoBackend[] | null) => {
-      if (mounted) setData(items);
+      if (mounted) {
+        setData(items);
+      }
     };
     subscribers.push(sub);
 
@@ -28,7 +37,10 @@ export function useGastosShared(comunidadId?: number | null, opts: { ttlMs?: num
           return;
         }
         // ahora soportamos comunidadId undefined/null -> endpoint global (superadmin)
-        const resp = await listGastos(typeof comunidadId === 'number' ? comunidadId : undefined, { limit: 100, offset: 0 });
+        const resp = await listGastos(
+          typeof comunidadId === 'number' ? comunidadId : undefined,
+          { limit: 100, offset: 0 },
+        );
         const items = resp.data || [];
         sharedData = { timestamp: Date.now(), items };
         notify(items);

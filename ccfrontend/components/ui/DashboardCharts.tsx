@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useAuth } from '@/lib/useAuth';
-import { usePermissions } from '@/lib/usePermissions';
-import GastosPorCategoriaChart from '@/components/charts/GastosPorCategoriaChart';
-import EstadoPagosChart from '@/components/charts/EstadoPagosChart';
-import TendenciasEmisionesChart from '@/components/charts/TendenciasEmisionesChart';
+
 import ConsumosMedidores from '@/components/charts/ConsumosMedidores';
+import EstadoPagosChart from '@/components/charts/EstadoPagosChart';
+import GastosPorCategoriaChart from '@/components/charts/GastosPorCategoriaChart';
+import TendenciasEmisionesChart from '@/components/charts/TendenciasEmisionesChart';
 import {
   getGraficoEmisiones,
   getGraficoEstadoPagos,
@@ -12,8 +11,10 @@ import {
   ChartDataPoint,
   EstadoPago,
   GastoPorCategoria,
-  TendenciaEmision
+  TendenciaEmision,
 } from '@/lib/dashboardService';
+import { useAuth } from '@/lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions';
 
 export default function DashboardCharts() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
@@ -21,10 +22,16 @@ export default function DashboardCharts() {
 
   // Obtener comunidadId dinámicamente
   const comunidadId = useMemo(() => {
-    const id = user?.memberships?.[0]?.comunidadId ??
-               currentRole?.comunidadId ??
-               1; // fallback solo si nada
-    console.log('DashboardCharts comunidadId:', id, 'user.memberships:', user?.memberships, 'currentRole:', currentRole); // debug
+    const id =
+      user?.memberships?.[0]?.comunidadId ?? currentRole?.comunidadId ?? 1; // fallback solo si nada
+    console.log(
+      'DashboardCharts comunidadId:',
+      id,
+      'user.memberships:',
+      user?.memberships,
+      'currentRole:',
+      currentRole,
+    ); // debug
     return id;
   }, [user?.memberships, currentRole?.comunidadId]);
 
@@ -36,7 +43,9 @@ export default function DashboardCharts() {
 
   useEffect(() => {
     // No cargar hasta que el auth esté resuelto y el usuario sea realmente autenticado
-    if (authLoading) return;
+    if (authLoading) {
+      return;
+    }
     if (!isAuthenticated) {
       setLoading(false);
       setError('No autenticado');
@@ -52,7 +61,7 @@ export default function DashboardCharts() {
         const [emisiones, pagos, gastos] = await Promise.all([
           getGraficoEmisiones(comunidadId),
           getGraficoEstadoPagos(comunidadId),
-          getGraficoGastosPorCategoria(comunidadId)
+          getGraficoGastosPorCategoria(comunidadId),
         ]);
 
         setEmisionesData(emisiones);
@@ -89,8 +98,18 @@ export default function DashboardCharts() {
       periodo: 'Sep 2025',
       unidad: 'kWh',
     },
-    { medidor: 'Gas - Caldera', consumo: 180, periodo: 'Sep 2025', unidad: 'm³' },
-    { medidor: 'Agua - Piscina', consumo: 950, periodo: 'Sep 2025', unidad: 'L' },
+    {
+      medidor: 'Gas - Caldera',
+      consumo: 180,
+      periodo: 'Sep 2025',
+      unidad: 'm³',
+    },
+    {
+      medidor: 'Agua - Piscina',
+      consumo: 950,
+      periodo: 'Sep 2025',
+      unidad: 'L',
+    },
   ];
 
   return (
@@ -109,10 +128,7 @@ export default function DashboardCharts() {
             </div>
           </div>
           <div className='chart-container'>
-            <TendenciasEmisionesChart
-              data={emisionesData}
-              loading={loading}
-            />
+            <TendenciasEmisionesChart data={emisionesData} loading={loading} />
           </div>
         </div>
       </div>

@@ -113,83 +113,131 @@ export interface TendenciaEmision {
 /**
  * Obtiene todos los KPIs principales del dashboard
  */
-export async function getDashboardKPIs(comunidadId: number): Promise<DashboardKPIs> {
-  const response = await apiClient.get(`/dashboard/comunidad/${comunidadId}/kpis`);
+export async function getDashboardKPIs(
+  comunidadId: number,
+): Promise<DashboardKPIs> {
+  const response = await apiClient.get(
+    `/dashboard/comunidad/${comunidadId}/kpis`,
+  );
   return response.data;
 }
 
 /**
  * Obtiene datos para el gráfico de tendencia de emisiones
  */
-export async function getGraficoEmisiones(comunidadId: number, meses: number = 6): Promise<TendenciaEmision[]> {
-  const response = await apiClient.get(`/dashboard/comunidad/${comunidadId}/grafico-emisiones`, {
-    params: { meses }
-  });
+export async function getGraficoEmisiones(
+  comunidadId: number,
+  meses: number = 6,
+): Promise<TendenciaEmision[]> {
+  const response = await apiClient.get(
+    `/dashboard/comunidad/${comunidadId}/grafico-emisiones`,
+    {
+      params: { meses },
+    },
+  );
   return response.data;
 }
 
 /**
  * Obtiene datos para el gráfico de estado de pagos
  */
-export async function getGraficoEstadoPagos(comunidadId: number): Promise<EstadoPago[]> {
-  const response = await apiClient.get(`/dashboard/comunidad/${comunidadId}/grafico-estado-pagos`);
+export async function getGraficoEstadoPagos(
+  comunidadId: number,
+): Promise<EstadoPago[]> {
+  const response = await apiClient.get(
+    `/dashboard/comunidad/${comunidadId}/grafico-estado-pagos`,
+  );
   return response.data;
 }
 
 /**
  * Obtiene datos para el gráfico de gastos por categoría
  */
-export async function getGraficoGastosPorCategoria(comunidadId: number): Promise<GastoPorCategoria[]> {
-  const response = await apiClient.get(`/dashboard/comunidad/${comunidadId}/grafico-gastos-categoria`);
+export async function getGraficoGastosPorCategoria(
+  comunidadId: number,
+): Promise<GastoPorCategoria[]> {
+  const response = await apiClient.get(
+    `/dashboard/comunidad/${comunidadId}/grafico-gastos-categoria`,
+  );
   return response.data;
 }
 
 /**
  * Obtiene pagos recientes
  */
-export async function getPagosRecientes(comunidadId: number, limit: number = 5): Promise<PagoReciente[]> {
-  const response = await apiClient.get(`/dashboard/comunidad/${comunidadId}/pagos-recientes`, {
-    params: { limit }
-  });
+export async function getPagosRecientes(
+  comunidadId: number,
+  limit: number = 5,
+): Promise<PagoReciente[]> {
+  const response = await apiClient.get(
+    `/dashboard/comunidad/${comunidadId}/pagos-recientes`,
+    {
+      params: { limit },
+    },
+  );
   return response.data;
 }
 
 /**
  * Obtiene unidades con morosidad
  */
-export async function getUnidadesMorosas(comunidadId: number, limit: number = 5): Promise<UnidadMorosa[]> {
-  const response = await apiClient.get(`/dashboard/comunidad/${comunidadId}/unidades-morosas`, {
-    params: { limit }
-  });
+export async function getUnidadesMorosas(
+  comunidadId: number,
+  limit: number = 5,
+): Promise<UnidadMorosa[]> {
+  const response = await apiClient.get(
+    `/dashboard/comunidad/${comunidadId}/unidades-morosas`,
+    {
+      params: { limit },
+    },
+  );
   return response.data;
 }
 
 /**
  * Obtiene próximas actividades
  */
-export async function getProximasActividades(comunidadId: number, limit: number = 4): Promise<ActividadProxima[]> {
-  const response = await apiClient.get(`/dashboard/comunidad/${comunidadId}/proximas-actividades`, {
-    params: { limit }
-  });
+export async function getProximasActividades(
+  comunidadId: number,
+  limit: number = 4,
+): Promise<ActividadProxima[]> {
+  const response = await apiClient.get(
+    `/dashboard/comunidad/${comunidadId}/proximas-actividades`,
+    {
+      params: { limit },
+    },
+  );
   return response.data;
 }
 
 /**
  * Obtiene reservas de amenidades próximas
  */
-export async function getReservasAmenidades(comunidadId: number, limit: number = 3): Promise<ReservaAmenidad[]> {
-  const response = await apiClient.get(`/dashboard/comunidad/${comunidadId}/reservas-amenidades`, {
-    params: { limit }
-  });
+export async function getReservasAmenidades(
+  comunidadId: number,
+  limit: number = 3,
+): Promise<ReservaAmenidad[]> {
+  const response = await apiClient.get(
+    `/dashboard/comunidad/${comunidadId}/reservas-amenidades`,
+    {
+      params: { limit },
+    },
+  );
   return response.data;
 }
 
 /**
  * Obtiene notificaciones recientes
  */
-export async function getNotificacionesRecientes(comunidadId: number, limit: number = 3): Promise<Notificacion[]> {
-  const response = await apiClient.get(`/dashboard/comunidad/${comunidadId}/notificaciones`, {
-    params: { limit }
-  });
+export async function getNotificacionesRecientes(
+  comunidadId: number,
+  limit: number = 3,
+): Promise<Notificacion[]> {
+  const response = await apiClient.get(
+    `/dashboard/comunidad/${comunidadId}/notificaciones`,
+    {
+      params: { limit },
+    },
+  );
   return response.data;
 }

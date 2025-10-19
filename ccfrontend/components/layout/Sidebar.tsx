@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAuth } from '@/lib/useAuth';
+import { useState, useEffect } from 'react';
+
 import { getUserRole } from '@/lib/roles';
+import { useAuth } from '@/lib/useAuth';
 import {
   usePermissions,
   PermissionGuard,
@@ -74,8 +75,16 @@ const menuSections = [
     title: 'Amenidades',
     items: [
       { href: '/amenidades', label: 'Lista de Amenidades', icon: 'pool' },
-      { href: '/amenidades-reservas', label: 'Reservas', icon: 'event_available' },
-      { href: '/amenidades-calendario', label: 'Calendario', icon: 'calendar_month' },
+      {
+        href: '/amenidades-reservas',
+        label: 'Reservas',
+        icon: 'event_available',
+      },
+      {
+        href: '/amenidades-calendario',
+        label: 'Calendario',
+        icon: 'calendar_month',
+      },
     ],
   },
   {
@@ -84,7 +93,11 @@ const menuSections = [
       { href: '/multas', label: 'Multas', icon: 'gavel' },
       { href: '/multas-nueva', label: 'Nueva Multa', icon: 'add_circle' },
       { href: '/apelaciones', label: 'Apelaciones', icon: 'gavel' },
-      { href: '/apelaciones-nueva', label: 'Nueva Apelación', icon: 'add_circle_outline' },
+      {
+        href: '/apelaciones-nueva',
+        label: 'Nueva Apelación',
+        icon: 'add_circle_outline',
+      },
     ],
   },
   {
@@ -118,7 +131,9 @@ export default function Sidebar() {
 
   // Función para determinar si una sección debe mostrarse según permisos
   const shouldShowSection = (sectionTitle: string) => {
-    if (isSuperUser()) return true; // Superuser ve todo
+    if (isSuperUser()) {
+      return true;
+    } // Superuser ve todo
 
     switch (sectionTitle) {
       case 'Dashboard':
@@ -148,7 +163,9 @@ export default function Sidebar() {
 
   // Función para determinar si un item específico debe mostrarse
   const shouldShowItem = (href: string) => {
-    if (isSuperUser()) return true;
+    if (isSuperUser()) {
+      return true;
+    }
 
     // Mapeo específico de rutas a permisos
     const routePermissions: { [key: string]: Permission } = {
@@ -239,13 +256,15 @@ export default function Sidebar() {
               borderRadius: '50%',
             }}
           >
-            {user?.persona?.nombres && user?.persona?.apellidos 
+            {user?.persona?.nombres && user?.persona?.apellidos
               ? `${user.persona.nombres.charAt(0)}${user.persona.apellidos.charAt(0)}`.toUpperCase()
-              : user?.username ? user.username.substring(0, 2).toUpperCase() : 'U'}
+              : user?.username
+                ? user.username.substring(0, 2).toUpperCase()
+                : 'U'}
           </div>
           <div>
             <span className='d-block text-white'>
-              {user?.persona?.nombres && user?.persona?.apellidos 
+              {user?.persona?.nombres && user?.persona?.apellidos
                 ? `${user.persona.nombres} ${user.persona.apellidos}`
                 : user?.username || 'Usuario'}
               {isSuperUser() ? (
@@ -287,11 +306,13 @@ export default function Sidebar() {
             .map((section, sectionIndex) => {
               // Filtrar items de la sección según permisos
               const visibleItems = section.items.filter(item =>
-                shouldShowItem(item.href)
+                shouldShowItem(item.href),
               );
 
               // Si no hay items visibles, no mostrar la sección
-              if (visibleItems.length === 0) return null;
+              if (visibleItems.length === 0) {
+                return null;
+              }
 
               return (
                 <div key={section.title}>

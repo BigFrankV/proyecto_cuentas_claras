@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
 import Sidebar from '../layout/Sidebar';
 
 interface Reservation {
@@ -38,43 +39,43 @@ const AmenidadesReservasPage: React.FC = () => {
       amenity: {
         name: 'Piscina Principal',
         icon: 'pool',
-        community: 'Torres del Sol'
+        community: 'Torres del Sol',
       },
       date: '2025-09-29',
       startTime: '10:00',
       endTime: '12:00',
       user: 'María González',
       unit: 'Unidad 5A',
-      status: 'confirmed'
+      status: 'confirmed',
     },
     {
       id: 2,
       amenity: {
         name: 'Gimnasio Torre A',
         icon: 'fitness_center',
-        community: 'Torres del Sol'
+        community: 'Torres del Sol',
       },
       date: '2025-09-30',
       startTime: '18:00',
       endTime: '19:30',
       user: 'Carlos Rodríguez',
       unit: 'Unidad 12B',
-      status: 'pending'
+      status: 'pending',
     },
     {
       id: 3,
       amenity: {
         name: 'Salón de Eventos',
         icon: 'celebration',
-        community: 'Vista Hermosa'
+        community: 'Vista Hermosa',
       },
       date: '2025-10-01',
       startTime: '19:00',
       endTime: '23:00',
       user: 'Ana López',
       unit: 'Unidad 8C',
-      status: 'confirmed'
-    }
+      status: 'confirmed',
+    },
   ]);
 
   // Mock data for summary cards
@@ -83,7 +84,7 @@ const AmenidadesReservasPage: React.FC = () => {
     pendingConfirmations: 3,
     nextHours: 8,
     cancellations: 3,
-    attendanceRate: 95
+    attendanceRate: 95,
   };
 
   useEffect(() => {
@@ -94,14 +95,28 @@ const AmenidadesReservasPage: React.FC = () => {
 
   const generateTimeSlots = () => {
     const timeSlots = [
-      '08:00', '09:00', '10:00', '11:00', '12:00',
-      '13:00', '14:00', '15:00', '16:00', '17:00',
-      '18:00', '19:00', '20:00', '21:00', '22:00'
+      '08:00',
+      '09:00',
+      '10:00',
+      '11:00',
+      '12:00',
+      '13:00',
+      '14:00',
+      '15:00',
+      '16:00',
+      '17:00',
+      '18:00',
+      '19:00',
+      '20:00',
+      '21:00',
+      '22:00',
     ];
 
     // Mock occupied slots
     const occupiedSlots = ['10:00', '14:00', '18:00'];
-    setAvailableTimeSlots(timeSlots.filter(slot => !occupiedSlots.includes(slot)));
+    setAvailableTimeSlots(
+      timeSlots.filter(slot => !occupiedSlots.includes(slot)),
+    );
   };
 
   const selectTimeSlot = (time: string) => {
@@ -129,7 +144,7 @@ const AmenidadesReservasPage: React.FC = () => {
       startTime,
       endTime,
       purpose,
-      numberOfPeople: numberOfPeople ? parseInt(numberOfPeople) : undefined
+      numberOfPeople: numberOfPeople ? parseInt(numberOfPeople) : undefined,
     };
 
     console.log('Creating reservation:', reservationData);
@@ -144,7 +159,9 @@ const AmenidadesReservasPage: React.FC = () => {
     setSelectedTimeSlot('');
     setShowModal(false);
 
-    alert('Reserva creada exitosamente. Pendiente de confirmación por el administrador.');
+    alert(
+      'Reserva creada exitosamente. Pendiente de confirmación por el administrador.',
+    );
   };
 
   const viewReservation = (id: number) => {
@@ -169,80 +186,139 @@ const AmenidadesReservasPage: React.FC = () => {
 
   const clearFilters = () => {
     // Reset all filters
-    const amenityFilter = document.getElementById('amenityFilter') as HTMLSelectElement;
-    const statusFilter = document.getElementById('statusFilter') as HTMLSelectElement;
-    const dateFromFilter = document.getElementById('dateFromFilter') as HTMLInputElement;
-    const dateToFilter = document.getElementById('dateToFilter') as HTMLInputElement;
+    const amenityFilter = document.getElementById(
+      'amenityFilter',
+    ) as HTMLSelectElement;
+    const statusFilter = document.getElementById(
+      'statusFilter',
+    ) as HTMLSelectElement;
+    const dateFromFilter = document.getElementById(
+      'dateFromFilter',
+    ) as HTMLInputElement;
+    const dateToFilter = document.getElementById(
+      'dateToFilter',
+    ) as HTMLInputElement;
 
-    if (amenityFilter) amenityFilter.value = '';
-    if (statusFilter) statusFilter.value = '';
-    if (dateFromFilter) dateFromFilter.value = '';
-    if (dateToFilter) dateToFilter.value = '';
+    if (amenityFilter) {
+      amenityFilter.value = '';
+    }
+    if (statusFilter) {
+      statusFilter.value = '';
+    }
+    if (dateFromFilter) {
+      dateFromFilter.value = '';
+    }
+    if (dateToFilter) {
+      dateToFilter.value = '';
+    }
   };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'confirmed': return 'bg-success';
-      case 'pending': return 'bg-warning';
-      case 'cancelled': return 'bg-danger';
-      case 'completed': return 'bg-info';
-      default: return 'bg-secondary';
+      case 'confirmed':
+        return 'bg-success';
+      case 'pending':
+        return 'bg-warning';
+      case 'cancelled':
+        return 'bg-danger';
+      case 'completed':
+        return 'bg-info';
+      default:
+        return 'bg-secondary';
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'confirmed': return 'Confirmada';
-      case 'pending': return 'Pendiente';
-      case 'cancelled': return 'Cancelada';
-      case 'completed': return 'Completada';
-      default: return status;
+      case 'confirmed':
+        return 'Confirmada';
+      case 'pending':
+        return 'Pendiente';
+      case 'cancelled':
+        return 'Cancelada';
+      case 'completed':
+        return 'Completada';
+      default:
+        return status;
     }
   };
 
   return (
-    <div className="d-flex">
+    <div className='d-flex'>
       <Sidebar />
-      <div className="main-content flex-grow-1 bg-light">
+      <div className='main-content flex-grow-1 bg-light'>
         {/* Mobile Navigation Bar */}
-        <nav className="navbar navbar-dark bg-primary d-flex d-lg-none">
-          <div className="container-fluid">
-            <button className="navbar-toggler border-0" type="button" id="toggle-sidebar">
-              <span className="navbar-toggler-icon"></span>
+        <nav className='navbar navbar-dark bg-primary d-flex d-lg-none'>
+          <div className='container-fluid'>
+            <button
+              className='navbar-toggler border-0'
+              type='button'
+              id='toggle-sidebar'
+            >
+              <span className='navbar-toggler-icon'></span>
             </button>
-            <a className="navbar-brand me-auto" href="/dashboard">
-              <span className="material-icons align-middle me-1">apartment</span>
+            <a className='navbar-brand me-auto' href='/dashboard'>
+              <span className='material-icons align-middle me-1'>
+                apartment
+              </span>
               Cuentas Claras
             </a>
-            <div className="dropdown">
-              <button className="btn btn-link text-white p-0" type="button" id="userDropdownMobile" data-bs-toggle="dropdown" aria-expanded="false">
-                <div className="avatar">PC</div>
+            <div className='dropdown'>
+              <button
+                className='btn btn-link text-white p-0'
+                type='button'
+                id='userDropdownMobile'
+                data-bs-toggle='dropdown'
+                aria-expanded='false'
+              >
+                <div className='avatar'>PC</div>
               </button>
-              <ul className="dropdown-menu dropdown-menu-end">
-                <li><a className="dropdown-item" href="/profile">Perfil</a></li>
-                <li><a className="dropdown-item" href="#">Configuración</a></li>
-                <li><hr className="dropdown-divider" /></li>
-                <li><a className="dropdown-item" href="/login">Cerrar sesión</a></li>
+              <ul className='dropdown-menu dropdown-menu-end'>
+                <li>
+                  <a className='dropdown-item' href='/profile'>
+                    Perfil
+                  </a>
+                </li>
+                <li>
+                  <a className='dropdown-item' href='#'>
+                    Configuración
+                  </a>
+                </li>
+                <li>
+                  <hr className='dropdown-divider' />
+                </li>
+                <li>
+                  <a className='dropdown-item' href='/login'>
+                    Cerrar sesión
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
         </nav>
 
         {/* Main Content */}
-        <main className="container-fluid p-4 p-sm-3 p-md-4">
+        <main className='container-fluid p-4 p-sm-3 p-md-4'>
           {/* Header */}
-          <div className="amenities-header">
-            <div className="row align-items-center">
-              <div className="col-lg-8">
-                <h1 className="h2 mb-2">
-                  <span className="material-icons align-middle me-2">event_available</span>
+          <div className='amenities-header'>
+            <div className='row align-items-center'>
+              <div className='col-lg-8'>
+                <h1 className='h2 mb-2'>
+                  <span className='material-icons align-middle me-2'>
+                    event_available
+                  </span>
                   Reservas de Amenidades
                 </h1>
-                <p className="text-muted mb-0">Gestiona las reservas de amenidades de la comunidad</p>
+                <p className='text-muted mb-0'>
+                  Gestiona las reservas de amenidades de la comunidad
+                </p>
               </div>
-              <div className="col-lg-4 text-lg-end">
-                <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                  <span className="material-icons me-2">add</span>
+              <div className='col-lg-4 text-lg-end'>
+                <button
+                  className='btn btn-primary'
+                  onClick={() => setShowModal(true)}
+                >
+                  <span className='material-icons me-2'>add</span>
                   Nueva Reserva
                 </button>
               </div>
@@ -250,92 +326,113 @@ const AmenidadesReservasPage: React.FC = () => {
           </div>
 
           {/* Summary Cards */}
-          <div className="summary-cards">
-            <div className="summary-card">
-              <div className="summary-icon">
-                <span className="material-icons">event_available</span>
+          <div className='summary-cards'>
+            <div className='summary-card'>
+              <div className='summary-icon'>
+                <span className='material-icons'>event_available</span>
               </div>
-              <div className="summary-number">{summaryData.todayReservations}</div>
-              <div className="summary-label">Reservas Hoy</div>
-              <div className="summary-detail">{summaryData.pendingConfirmations} pendientes de confirmación</div>
+              <div className='summary-number'>
+                {summaryData.todayReservations}
+              </div>
+              <div className='summary-label'>Reservas Hoy</div>
+              <div className='summary-detail'>
+                {summaryData.pendingConfirmations} pendientes de confirmación
+              </div>
             </div>
 
-            <div className="summary-card">
-              <div className="summary-icon">
-                <span className="material-icons">schedule</span>
+            <div className='summary-card'>
+              <div className='summary-icon'>
+                <span className='material-icons'>schedule</span>
               </div>
-              <div className="summary-number">{summaryData.nextHours}</div>
-              <div className="summary-label">Próximas Horas</div>
-              <div className="summary-detail">Reservas en las próximas 2 horas</div>
+              <div className='summary-number'>{summaryData.nextHours}</div>
+              <div className='summary-label'>Próximas Horas</div>
+              <div className='summary-detail'>
+                Reservas en las próximas 2 horas
+              </div>
             </div>
 
-            <div className="summary-card">
-              <div className="summary-icon">
-                <span className="material-icons">cancel</span>
+            <div className='summary-card'>
+              <div className='summary-icon'>
+                <span className='material-icons'>cancel</span>
               </div>
-              <div className="summary-number">{summaryData.cancellations}</div>
-              <div className="summary-label">Cancelaciones</div>
-              <div className="summary-detail">Esta semana</div>
+              <div className='summary-number'>{summaryData.cancellations}</div>
+              <div className='summary-label'>Cancelaciones</div>
+              <div className='summary-detail'>Esta semana</div>
             </div>
 
-            <div className="summary-card">
-              <div className="summary-icon">
-                <span className="material-icons">check_circle</span>
+            <div className='summary-card'>
+              <div className='summary-icon'>
+                <span className='material-icons'>check_circle</span>
               </div>
-              <div className="summary-number">{summaryData.attendanceRate}%</div>
-              <div className="summary-label">Tasa de Asistencia</div>
-              <div className="summary-detail">Promedio mensual</div>
+              <div className='summary-number'>
+                {summaryData.attendanceRate}%
+              </div>
+              <div className='summary-label'>Tasa de Asistencia</div>
+              <div className='summary-detail'>Promedio mensual</div>
             </div>
           </div>
 
           {/* Filters Section */}
-          <div className="filters-section">
-            <div className="filters-header">
-              <h3 className="filters-title">
-                <span className="material-icons align-middle me-2">filter_list</span>
+          <div className='filters-section'>
+            <div className='filters-header'>
+              <h3 className='filters-title'>
+                <span className='material-icons align-middle me-2'>
+                  filter_list
+                </span>
                 Filtros
               </h3>
-              <button className="action-btn outline small" onClick={clearFilters}>
-                <span className="material-icons me-1">clear</span>
+              <button
+                className='action-btn outline small'
+                onClick={clearFilters}
+              >
+                <span className='material-icons me-1'>clear</span>
                 Limpiar
               </button>
             </div>
-            <div className="filters-body">
-              <div className="row">
-                <div className="col-md-3">
-                  <div className="form-group">
-                    <label className="form-label">Amenidad</label>
-                    <select className="form-select" id="amenityFilter">
-                      <option value="">Todas las amenidades</option>
-                      <option value="pool">Piscina</option>
-                      <option value="gym">Gimnasio</option>
-                      <option value="hall">Salón de Eventos</option>
-                      <option value="court">Cancha de Tenis</option>
+            <div className='filters-body'>
+              <div className='row'>
+                <div className='col-md-3'>
+                  <div className='form-group'>
+                    <label className='form-label'>Amenidad</label>
+                    <select className='form-select' id='amenityFilter'>
+                      <option value=''>Todas las amenidades</option>
+                      <option value='pool'>Piscina</option>
+                      <option value='gym'>Gimnasio</option>
+                      <option value='hall'>Salón de Eventos</option>
+                      <option value='court'>Cancha de Tenis</option>
                     </select>
                   </div>
                 </div>
-                <div className="col-md-3">
-                  <div className="form-group">
-                    <label className="form-label">Estado</label>
-                    <select className="form-select" id="statusFilter">
-                      <option value="">Todos los estados</option>
-                      <option value="pending">Pendiente</option>
-                      <option value="confirmed">Confirmada</option>
-                      <option value="cancelled">Cancelada</option>
-                      <option value="completed">Completada</option>
+                <div className='col-md-3'>
+                  <div className='form-group'>
+                    <label className='form-label'>Estado</label>
+                    <select className='form-select' id='statusFilter'>
+                      <option value=''>Todos los estados</option>
+                      <option value='pending'>Pendiente</option>
+                      <option value='confirmed'>Confirmada</option>
+                      <option value='cancelled'>Cancelada</option>
+                      <option value='completed'>Completada</option>
                     </select>
                   </div>
                 </div>
-                <div className="col-md-3">
-                  <div className="form-group">
-                    <label className="form-label">Fecha Desde</label>
-                    <input type="date" className="form-control" id="dateFromFilter" />
+                <div className='col-md-3'>
+                  <div className='form-group'>
+                    <label className='form-label'>Fecha Desde</label>
+                    <input
+                      type='date'
+                      className='form-control'
+                      id='dateFromFilter'
+                    />
                   </div>
                 </div>
-                <div className="col-md-3">
-                  <div className="form-group">
-                    <label className="form-label">Fecha Hasta</label>
-                    <input type="date" className="form-control" id="dateToFilter" />
+                <div className='col-md-3'>
+                  <div className='form-group'>
+                    <label className='form-label'>Fecha Hasta</label>
+                    <input
+                      type='date'
+                      className='form-control'
+                      id='dateToFilter'
+                    />
                   </div>
                 </div>
               </div>
@@ -343,84 +440,95 @@ const AmenidadesReservasPage: React.FC = () => {
           </div>
 
           {/* Reservations List */}
-          <div className="reservations-list">
-            <div className="list-header">
-              <h3 className="list-title">
-                <span className="material-icons align-middle me-2">list</span>
+          <div className='reservations-list'>
+            <div className='list-header'>
+              <h3 className='list-title'>
+                <span className='material-icons align-middle me-2'>list</span>
                 Reservas Recientes
               </h3>
             </div>
 
-            {reservations.map((reservation) => (
-              <div key={reservation.id} className={`reservation-card ${reservation.status}`}>
-                <div className="row align-items-center">
-                  <div className="col-md-3">
-                    <div className="d-flex align-items-center">
-                      <div className="reservation-icon me-3">
-                        <span className="material-icons">{reservation.amenity.icon}</span>
+            {reservations.map(reservation => (
+              <div
+                key={reservation.id}
+                className={`reservation-card ${reservation.status}`}
+              >
+                <div className='row align-items-center'>
+                  <div className='col-md-3'>
+                    <div className='d-flex align-items-center'>
+                      <div className='reservation-icon me-3'>
+                        <span className='material-icons'>
+                          {reservation.amenity.icon}
+                        </span>
                       </div>
                       <div>
-                        <h6 className="mb-0">{reservation.amenity.name}</h6>
-                        <small className="text-muted">Comunidad: {reservation.amenity.community}</small>
+                        <h6 className='mb-0'>{reservation.amenity.name}</h6>
+                        <small className='text-muted'>
+                          Comunidad: {reservation.amenity.community}
+                        </small>
                       </div>
                     </div>
                   </div>
-                  <div className="col-md-2">
-                    <div className="reservation-date">
-                      <span className="material-icons me-1">calendar_today</span>
+                  <div className='col-md-2'>
+                    <div className='reservation-date'>
+                      <span className='material-icons me-1'>
+                        calendar_today
+                      </span>
                       {new Date(reservation.date).toLocaleDateString('es-ES', {
                         day: '2-digit',
                         month: 'short',
-                        year: 'numeric'
+                        year: 'numeric',
                       })}
                     </div>
-                    <div className="reservation-time">
-                      <span className="material-icons me-1">schedule</span>
+                    <div className='reservation-time'>
+                      <span className='material-icons me-1'>schedule</span>
                       {reservation.startTime} - {reservation.endTime}
                     </div>
                   </div>
-                  <div className="col-md-2">
-                    <div className="reservation-user">
-                      <span className="material-icons me-1">person</span>
+                  <div className='col-md-2'>
+                    <div className='reservation-user'>
+                      <span className='material-icons me-1'>person</span>
                       {reservation.user}
                     </div>
-                    <div className="reservation-unit">
-                      <span className="material-icons me-1">apartment</span>
+                    <div className='reservation-unit'>
+                      <span className='material-icons me-1'>apartment</span>
                       {reservation.unit}
                     </div>
                   </div>
-                  <div className="col-md-2">
-                    <span className={`status-badge ${getStatusBadgeClass(reservation.status)}`}>
+                  <div className='col-md-2'>
+                    <span
+                      className={`status-badge ${getStatusBadgeClass(reservation.status)}`}
+                    >
                       {getStatusText(reservation.status)}
                     </span>
                   </div>
-                  <div className="col-md-3">
-                    <div className="btn-group" role="group">
+                  <div className='col-md-3'>
+                    <div className='btn-group' role='group'>
                       <button
-                        className="btn btn-sm btn-outline-primary"
+                        className='btn btn-sm btn-outline-primary'
                         onClick={() => viewReservation(reservation.id)}
                       >
-                        <span className="material-icons">visibility</span>
+                        <span className='material-icons'>visibility</span>
                       </button>
                       <button
-                        className="btn btn-sm btn-outline-secondary"
+                        className='btn btn-sm btn-outline-secondary'
                         onClick={() => editReservation(reservation.id)}
                       >
-                        <span className="material-icons">edit</span>
+                        <span className='material-icons'>edit</span>
                       </button>
                       {reservation.status === 'pending' && (
                         <button
-                          className="btn btn-sm btn-outline-success"
+                          className='btn btn-sm btn-outline-success'
                           onClick={() => confirmReservation(reservation.id)}
                         >
-                          <span className="material-icons">check</span>
+                          <span className='material-icons'>check</span>
                         </button>
                       )}
                       <button
-                        className="btn btn-sm btn-outline-danger"
+                        className='btn btn-sm btn-outline-danger'
                         onClick={() => cancelReservation(reservation.id)}
                       >
-                        <span className="material-icons">cancel</span>
+                        <span className='material-icons'>cancel</span>
                       </button>
                     </div>
                   </div>
@@ -430,19 +538,31 @@ const AmenidadesReservasPage: React.FC = () => {
           </div>
 
           {/* Pagination */}
-          <nav aria-label="Paginación de reservas" className="mt-4">
-            <ul className="pagination justify-content-center">
-              <li className="page-item disabled">
-                <a className="page-link" href="#" tabIndex={-1}>
-                  <span className="material-icons">chevron_left</span>
+          <nav aria-label='Paginación de reservas' className='mt-4'>
+            <ul className='pagination justify-content-center'>
+              <li className='page-item disabled'>
+                <a className='page-link' href='#' tabIndex={-1}>
+                  <span className='material-icons'>chevron_left</span>
                 </a>
               </li>
-              <li className="page-item active"><a className="page-link" href="#">1</a></li>
-              <li className="page-item"><a className="page-link" href="#">2</a></li>
-              <li className="page-item"><a className="page-link" href="#">3</a></li>
-              <li className="page-item">
-                <a className="page-link" href="#">
-                  <span className="material-icons">chevron_right</span>
+              <li className='page-item active'>
+                <a className='page-link' href='#'>
+                  1
+                </a>
+              </li>
+              <li className='page-item'>
+                <a className='page-link' href='#'>
+                  2
+                </a>
+              </li>
+              <li className='page-item'>
+                <a className='page-link' href='#'>
+                  3
+                </a>
+              </li>
+              <li className='page-item'>
+                <a className='page-link' href='#'>
+                  <span className='material-icons'>chevron_right</span>
                 </a>
               </li>
             </ul>
@@ -452,44 +572,51 @@ const AmenidadesReservasPage: React.FC = () => {
 
       {/* New Reservation Modal */}
       {showModal && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  <span className="material-icons me-2">add</span>
+        <div
+          className='modal fade show d-block'
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+        >
+          <div className='modal-dialog modal-lg'>
+            <div className='modal-content'>
+              <div className='modal-header'>
+                <h5 className='modal-title'>
+                  <span className='material-icons me-2'>add</span>
                   Nueva Reserva
                 </h5>
-                <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
+                <button
+                  type='button'
+                  className='btn-close'
+                  onClick={() => setShowModal(false)}
+                ></button>
               </div>
-              <div className="modal-body">
+              <div className='modal-body'>
                 <form>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label">Amenidad</label>
+                  <div className='row'>
+                    <div className='col-md-6'>
+                      <div className='mb-3'>
+                        <label className='form-label'>Amenidad</label>
                         <select
-                          className="form-select"
+                          className='form-select'
                           value={selectedAmenity}
-                          onChange={(e) => setSelectedAmenity(e.target.value)}
+                          onChange={e => setSelectedAmenity(e.target.value)}
                           required
                         >
-                          <option value="">Seleccionar amenidad</option>
-                          <option value="pool">Piscina Principal</option>
-                          <option value="gym">Gimnasio Torre A</option>
-                          <option value="hall">Salón de Eventos</option>
-                          <option value="court">Cancha de Tenis</option>
+                          <option value=''>Seleccionar amenidad</option>
+                          <option value='pool'>Piscina Principal</option>
+                          <option value='gym'>Gimnasio Torre A</option>
+                          <option value='hall'>Salón de Eventos</option>
+                          <option value='court'>Cancha de Tenis</option>
                         </select>
                       </div>
                     </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label">Fecha</label>
+                    <div className='col-md-6'>
+                      <div className='mb-3'>
+                        <label className='form-label'>Fecha</label>
                         <input
-                          type="date"
-                          className="form-control"
+                          type='date'
+                          className='form-control'
                           value={selectedDate}
-                          onChange={(e) => setSelectedDate(e.target.value)}
+                          onChange={e => setSelectedDate(e.target.value)}
                           min={new Date().toISOString().split('T')[0]}
                           required
                         />
@@ -498,10 +625,10 @@ const AmenidadesReservasPage: React.FC = () => {
                   </div>
 
                   {selectedAmenity && selectedDate && (
-                    <div className="mb-3">
-                      <label className="form-label">Horario Disponible</label>
-                      <div className="time-slots">
-                        {availableTimeSlots.map((slot) => (
+                    <div className='mb-3'>
+                      <label className='form-label'>Horario Disponible</label>
+                      <div className='time-slots'>
+                        {availableTimeSlots.map(slot => (
                           <div
                             key={slot}
                             className={`time-slot ${selectedTimeSlot === slot ? 'selected' : ''}`}
@@ -514,62 +641,70 @@ const AmenidadesReservasPage: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label">Hora Inicio</label>
+                  <div className='row'>
+                    <div className='col-md-6'>
+                      <div className='mb-3'>
+                        <label className='form-label'>Hora Inicio</label>
                         <input
-                          type="time"
-                          className="form-control"
+                          type='time'
+                          className='form-control'
                           value={startTime}
-                          onChange={(e) => setStartTime(e.target.value)}
+                          onChange={e => setStartTime(e.target.value)}
                           required
                         />
                       </div>
                     </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label">Hora Fin</label>
+                    <div className='col-md-6'>
+                      <div className='mb-3'>
+                        <label className='form-label'>Hora Fin</label>
                         <input
-                          type="time"
-                          className="form-control"
+                          type='time'
+                          className='form-control'
                           value={endTime}
-                          onChange={(e) => setEndTime(e.target.value)}
+                          onChange={e => setEndTime(e.target.value)}
                           required
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="mb-3">
-                    <label className="form-label">Propósito</label>
+                  <div className='mb-3'>
+                    <label className='form-label'>Propósito</label>
                     <textarea
-                      className="form-control"
+                      className='form-control'
                       rows={3}
-                      placeholder="Describa el propósito de la reserva..."
+                      placeholder='Describa el propósito de la reserva...'
                       value={purpose}
-                      onChange={(e) => setPurpose(e.target.value)}
+                      onChange={e => setPurpose(e.target.value)}
                     />
                   </div>
 
-                  <div className="mb-3">
-                    <label className="form-label">Número de Personas</label>
+                  <div className='mb-3'>
+                    <label className='form-label'>Número de Personas</label>
                     <input
-                      type="number"
-                      className="form-control"
-                      min="1"
-                      max="100"
+                      type='number'
+                      className='form-control'
+                      min='1'
+                      max='100'
                       value={numberOfPeople}
-                      onChange={(e) => setNumberOfPeople(e.target.value)}
+                      onChange={e => setNumberOfPeople(e.target.value)}
                     />
                   </div>
                 </form>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+              <div className='modal-footer'>
+                <button
+                  type='button'
+                  className='btn btn-secondary'
+                  onClick={() => setShowModal(false)}
+                >
                   Cancelar
                 </button>
-                <button type="button" className="btn btn-primary" onClick={createReservation}>
+                <button
+                  type='button'
+                  className='btn btn-primary'
+                  onClick={createReservation}
+                >
                   Crear Reserva
                 </button>
               </div>

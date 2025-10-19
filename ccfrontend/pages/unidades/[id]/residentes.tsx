@@ -1,9 +1,10 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+
+import Layout from '@/components/layout/Layout';
 import { getResidentesUnidad, type Residente } from '@/lib/unidadesService';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 export default function ResidentesUnidad() {
   const router = useRouter();
@@ -48,12 +49,18 @@ export default function ResidentesUnidad() {
               <div className='card'>
                 <div className='card-body'>
                   <h1 className='card-title'>Gestión de Residentes</h1>
-                  <p className='text-muted'>Lista de residentes asociados a la unidad</p>
-                  {loading && <div className='alert alert-info'>Cargando...</div>}
-                  {!loading && residentes.length === 0 && <div className='alert alert-warning'>No hay residentes</div>}
+                  <p className='text-muted'>
+                    Lista de residentes asociados a la unidad
+                  </p>
+                  {loading && (
+                    <div className='alert alert-info'>Cargando...</div>
+                  )}
+                  {!loading && residentes.length === 0 && (
+                    <div className='alert alert-warning'>No hay residentes</div>
+                  )}
                   {!loading && residentes.length > 0 && (
                     <ul className='list-group'>
-                      {residentes.map((r) => (
+                      {residentes.map(r => (
                         <li key={r.id} className='list-group-item'>
                           <div className='fw-medium'>
                             {r.nombres} {r.apellidos}

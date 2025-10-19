@@ -214,7 +214,10 @@ export async function crearUnidad(
     activa?: boolean;
   },
 ): Promise<Unidad> {
-  const response = await apiClient.post(`/unidades/comunidad/${comunidadId}`, data);
+  const response = await apiClient.post(
+    `/unidades/comunidad/${comunidadId}`,
+    data,
+  );
   return response.data;
 }
 
@@ -251,7 +254,9 @@ export async function getUnidadesPorComunidad(
 /**
  * Obtener cuentas de cobro de una unidad
  */
-export async function getCuentasCobroUnidad(unidadId: number): Promise<CuentaCobro[]> {
+export async function getCuentasCobroUnidad(
+  unidadId: number,
+): Promise<CuentaCobro[]> {
   const response = await apiClient.get(`/unidades/${unidadId}/cuentas`);
   return response.data;
 }
@@ -278,7 +283,9 @@ export async function getDetalleCuentaCobro(
  * Obtener aplicaciones de pagos a una cuenta
  */
 export async function getAplicacionesCuenta(cuentaId: number): Promise<any[]> {
-  const response = await apiClient.get(`/unidades/cuentas/${cuentaId}/aplicaciones`);
+  const response = await apiClient.get(
+    `/unidades/cuentas/${cuentaId}/aplicaciones`,
+  );
   return response.data;
 }
 
@@ -302,7 +309,9 @@ export async function getTenenciasUnidad(
   activo?: boolean,
 ): Promise<Tenencia[]> {
   const params = activo ? { activo: '1' } : {};
-  const response = await apiClient.get(`/unidades/${unidadId}/tenencias`, { params });
+  const response = await apiClient.get(`/unidades/${unidadId}/tenencias`, {
+    params,
+  });
   return response.data;
 }
 
@@ -319,14 +328,19 @@ export async function crearTenencia(
     porcentaje?: number;
   },
 ): Promise<Tenencia> {
-  const response = await apiClient.post(`/unidades/${unidadId}/tenencias`, data);
+  const response = await apiClient.post(
+    `/unidades/${unidadId}/tenencias`,
+    data,
+  );
   return response.data;
 }
 
 /**
  * Obtener residentes activos de una unidad
  */
-export async function getResidentesUnidad(unidadId: number): Promise<Residente[]> {
+export async function getResidentesUnidad(
+  unidadId: number,
+): Promise<Residente[]> {
   const response = await apiClient.get(`/unidades/${unidadId}/residentes`);
   return response.data;
 }
@@ -347,7 +361,9 @@ export async function getMedidoresUnidad(unidadId: number): Promise<Medidor[]> {
 export async function getLecturasMedidor(
   medidorId: number,
 ): Promise<LecturaMedidor[]> {
-  const response = await apiClient.get(`/unidades/medidores/${medidorId}/lecturas`);
+  const response = await apiClient.get(
+    `/unidades/medidores/${medidorId}/lecturas`,
+  );
   return response.data;
 }
 
@@ -408,16 +424,22 @@ export async function getEdificiosDropdown(
   comunidadId?: number,
 ): Promise<DropdownOption[]> {
   const params = comunidadId ? { comunidad_id: comunidadId } : {};
-  const response = await apiClient.get('/unidades/dropdowns/edificios', { params });
+  const response = await apiClient.get('/unidades/dropdowns/edificios', {
+    params,
+  });
   return response.data;
 }
 
 /**
  * Obtener lista de torres para dropdown
  */
-export async function getTorresDropdown(edificioId?: number): Promise<DropdownOption[]> {
+export async function getTorresDropdown(
+  edificioId?: number,
+): Promise<DropdownOption[]> {
   const params = edificioId ? { edificio_id: edificioId } : {};
-  const response = await apiClient.get('/unidades/dropdowns/torres', { params });
+  const response = await apiClient.get('/unidades/dropdowns/torres', {
+    params,
+  });
   return response.data;
 }
 
@@ -428,6 +450,8 @@ export async function getPersonasDropdown(
   comunidadId?: number,
 ): Promise<DropdownOption[]> {
   const params = comunidadId ? { comunidad_id: comunidadId } : {};
-  const response = await apiClient.get('/unidades/dropdowns/personas', { params });
+  const response = await apiClient.get('/unidades/dropdowns/personas', {
+    params,
+  });
   return response.data;
 }

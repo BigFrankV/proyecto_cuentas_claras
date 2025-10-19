@@ -1,5 +1,6 @@
-import apiClient from './api';
 import { GastoBackend, GastosListResponse } from '@/types/gastos';
+
+import apiClient from './api';
 
 const ENDPOINT_BASE = '/gastos'; // ajustar si el backend usa otra ruta
 
@@ -7,10 +8,8 @@ const ENDPOINT_BASE = '/gastos'; // ajustar si el backend usa otra ruta
 const inFlightRequests: Map<string, Promise<GastosListResponse>> = new Map();
 
 // Cache simple con TTL
-const cacheStore: Map<
-  string,
-  { data: GastosListResponse; expiresAt: number }
-> = new Map();
+const cacheStore: Map<string, { data: GastosListResponse; expiresAt: number }> =
+  new Map();
 const CACHE_TTL_MS = 10 * 1000; // 10 segundos
 
 function makeCacheKey(url: string, params: Record<string, any>) {
@@ -20,13 +19,23 @@ function makeCacheKey(url: string, params: Record<string, any>) {
   return `${url}?${qp}`;
 }
 
-export async function listGastos(comunidadId?: number | null, params: Record<string, any> = {}) {
-  const url = typeof comunidadId === 'number' ? `${ENDPOINT_BASE}/comunidad/${comunidadId}` : `${ENDPOINT_BASE}`;
+export async function listGastos(
+  comunidadId?: number | null,
+  params: Record<string, any> = {},
+) {
+  const url =
+    typeof comunidadId === 'number'
+      ? `${ENDPOINT_BASE}/comunidad/${comunidadId}`
+      : `${ENDPOINT_BASE}`;
   const cacheKey = makeCacheKey(url, params);
 
   // DEBUG: traza el llamador para localizar el iniciador
   if (process.env.NODE_ENV === 'development') {
-    console.debug('[gastosService] listGastos called', { url, params, cacheKey });
+    console.debug('[gastosService] listGastos called', {
+      url,
+      params,
+      cacheKey,
+    });
     console.trace();
   }
 
@@ -46,9 +55,14 @@ export async function listGastos(comunidadId?: number | null, params: Record<str
     try {
       const res = await apiClient.get(url, { params });
       const body = res.data;
-      const result: GastosListResponse = Array.isArray(body) ? { data: body } : (body.data || body);
+      const result: GastosListResponse = Array.isArray(body)
+        ? { data: body }
+        : body.data || body;
       // guardar en cache
-      cacheStore.set(cacheKey, { data: result, expiresAt: Date.now() + CACHE_TTL_MS });
+      cacheStore.set(cacheKey, {
+        data: result,
+        expiresAt: Date.now() + CACHE_TTL_MS,
+      });
       return result;
     } catch (err) {
       // en caso de error limpiar cache y re-lanzar
@@ -74,8 +88,11 @@ export async function getGasto(id: number) {
   }
   const res = await apiClient.get(url);
   const body = res.data;
-  const result = Array.isArray(body) ? { data: body } : (body.data || body);
-  cacheStore.set(cacheKey, { data: result, expiresAt: Date.now() + CACHE_TTL_MS });
+  const result = Array.isArray(body) ? { data: body } : body.data || body;
+  cacheStore.set(cacheKey, {
+    data: result,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
   return result as unknown as GastoBackend;
 }
 

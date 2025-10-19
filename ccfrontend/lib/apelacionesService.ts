@@ -3,7 +3,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3000';
 function authHeaders(token?: string) {
   return {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {})
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
@@ -12,7 +12,11 @@ async function fetchJson(path: string, opts: RequestInit = {}) {
   const res = await fetch(url, opts);
   const text = await res.text();
   let data: any = text;
-  try { data = JSON.parse(text); } catch (_) { /* plain text */ }
+  try {
+    data = JSON.parse(text);
+  } catch (_) {
+    /* plain text */
+  }
 
   if (!res.ok) {
     const err: any = new Error(data?.error || `HTTP ${res.status}`);
@@ -23,9 +27,14 @@ async function fetchJson(path: string, opts: RequestInit = {}) {
   return data;
 }
 
-export async function listApelaciones(params: Record<string, any> = {}, token?: string) {
+export async function listApelaciones(
+  params: Record<string, any> = {},
+  token?: string,
+) {
   const qs = new URLSearchParams(params).toString();
-  return await fetchJson(`/apelaciones${qs ? '?'+qs : ''}`, { headers: authHeaders(token) });
+  return await fetchJson(`/apelaciones${qs ? `?${qs}` : ''}`, {
+    headers: authHeaders(token),
+  });
 }
 
 export async function getApelacion(id: number, token?: string) {
@@ -42,30 +51,41 @@ export async function createApelacion(payload: any, token?: string) {
     return await fetchJson(`/multas/${payload.multa_id}/apelacion`, {
       method: 'POST',
       headers,
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
   } else {
-    return await fetchJson(`/apelaciones`, {
+    return await fetchJson('/apelaciones', {
       method: 'POST',
       headers,
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
   }
 }
 
-export async function updateApelacion(id: number, payload: any, token?: string) {
+export async function updateApelacion(
+  id: number,
+  payload: any,
+  token?: string,
+) {
   return await fetchJson(`/apelaciones/${id}`, {
     method: 'PUT',
     headers: authHeaders(token),
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 }
 
-export async function resolveApelacion(id: number, actionPayload: { accion: 'aceptar'|'rechazar'|'aceptada'|'rechazada', resolucion?: string }, token?: string) {
+export async function resolveApelacion(
+  id: number,
+  actionPayload: {
+    accion: 'aceptar' | 'rechazar' | 'aceptada' | 'rechazada';
+    resolucion?: string;
+  },
+  token?: string,
+) {
   return await fetchJson(`/apelaciones/${id}/resolver`, {
     method: 'POST',
     headers: authHeaders(token),
-    body: JSON.stringify(actionPayload)
+    body: JSON.stringify(actionPayload),
   });
 }
 
@@ -74,5 +94,5 @@ export default {
   getApelacion,
   createApelacion,
   updateApelacion,
-  resolveApelacion
+  resolveApelacion,
 };

@@ -28,7 +28,7 @@ const UnidadTable: React.FC<UnidadTableProps> = ({
   unidades,
   selectedUnidades,
   onSelectUnidad,
-  onSelectAll
+  onSelectAll,
 }) => {
   const getTipoIcon = (tipo: string) => {
     switch (tipo) {
@@ -61,7 +61,7 @@ const UnidadTable: React.FC<UnidadTableProps> = ({
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP'
+      currency: 'CLP',
     }).format(amount);
   };
 
@@ -69,7 +69,7 @@ const UnidadTable: React.FC<UnidadTableProps> = ({
     return new Date(dateString).toLocaleDateString('es-CL', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -81,10 +81,13 @@ const UnidadTable: React.FC<UnidadTableProps> = ({
             <thead className='table-light'>
               <tr>
                 <th>
-                  <input 
-                    type='checkbox' 
+                  <input
+                    type='checkbox'
                     className='form-check-input'
-                    checked={selectedUnidades.length === unidades.length && unidades.length > 0}
+                    checked={
+                      selectedUnidades.length === unidades.length &&
+                      unidades.length > 0
+                    }
                     onChange={onSelectAll}
                   />
                 </th>
@@ -98,11 +101,11 @@ const UnidadTable: React.FC<UnidadTableProps> = ({
               </tr>
             </thead>
             <tbody>
-              {unidades.map((unidad) => (
+              {unidades.map(unidad => (
                 <tr key={unidad.id} style={{ verticalAlign: 'middle' }}>
                   <td>
-                    <input 
-                      type='checkbox' 
+                    <input
+                      type='checkbox'
                       className='form-check-input'
                       checked={selectedUnidades.includes(unidad.id)}
                       onChange={() => onSelectUnidad(unidad.id)}
@@ -110,20 +113,24 @@ const UnidadTable: React.FC<UnidadTableProps> = ({
                   </td>
                   <td>
                     <div className='d-flex align-items-center'>
-                      <div 
+                      <div
                         className='me-3 d-flex align-items-center justify-content-center text-white'
                         style={{
                           width: '48px',
                           height: '48px',
                           borderRadius: '8px',
-                          backgroundColor: 'var(--color-primary)'
+                          backgroundColor: 'var(--color-primary)',
                         }}
                       >
-                        <i className='material-icons'>{getTipoIcon(unidad.tipo)}</i>
+                        <i className='material-icons'>
+                          {getTipoIcon(unidad.tipo)}
+                        </i>
                       </div>
                       <div>
                         <div className='fw-medium'>{unidad.numero}</div>
-                        <div className='small text-muted'>Piso {unidad.piso} • {unidad.superficie} m²</div>
+                        <div className='small text-muted'>
+                          Piso {unidad.piso} • {unidad.superficie} m²
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -132,35 +139,68 @@ const UnidadTable: React.FC<UnidadTableProps> = ({
                     <div className='small text-muted'>{unidad.edificio}</div>
                   </td>
                   <td>
-                    <span className='badge bg-light text-dark'>{unidad.tipo}</span>
-                    <div className='small text-muted mt-1'>{unidad.dormitorios}D/{unidad.banos}B</div>
+                    <span className='badge bg-light text-dark'>
+                      {unidad.tipo}
+                    </span>
+                    <div className='small text-muted mt-1'>
+                      {unidad.dormitorios}D/{unidad.banos}B
+                    </div>
                   </td>
                   <td>
                     <div>{unidad.propietario || '-'}</div>
-                    {unidad.residente && unidad.residente !== unidad.propietario && (
-                      <div className='small text-muted'>Residente: {unidad.residente}</div>
+                    {unidad.residente &&
+                      unidad.residente !== unidad.propietario && (
+                      <div className='small text-muted'>
+                          Residente: {unidad.residente}
+                      </div>
                     )}
                   </td>
                   <td>
-                    <span className={`badge ${getEstadoBadgeClass(unidad.estado)}`}>
+                    <span
+                      className={`badge ${getEstadoBadgeClass(unidad.estado)}`}
+                    >
                       {unidad.estado}
                     </span>
                   </td>
                   <td>
-                    <div className={unidad.saldoPendiente > 0 ? 'text-danger fw-medium' : 'text-success'}>
+                    <div
+                      className={
+                        unidad.saldoPendiente > 0
+                          ? 'text-danger fw-medium'
+                          : 'text-success'
+                      }
+                    >
                       {formatCurrency(unidad.saldoPendiente)}
                     </div>
                     {unidad.ultimoPago && (
-                      <div className='small text-muted'>Último: {formatDate(unidad.ultimoPago)}</div>
+                      <div className='small text-muted'>
+                        Último: {formatDate(unidad.ultimoPago)}
+                      </div>
                     )}
                   </td>
                   <td>
                     <div className='d-flex gap-1'>
-                      <Link href={`/unidades/${unidad.id}`} className='btn btn-sm btn-outline-primary'>
-                        <i className='material-icons' style={{ fontSize: '16px' }}>visibility</i>
+                      <Link
+                        href={`/unidades/${unidad.id}`}
+                        className='btn btn-sm btn-outline-primary'
+                      >
+                        <i
+                          className='material-icons'
+                          style={{ fontSize: '16px' }}
+                        >
+                          visibility
+                        </i>
                       </Link>
-                      <Link href={`/unidades/${unidad.id}/cargos`} className='btn btn-sm btn-outline-secondary'>
-                        <i className='material-icons' style={{ fontSize: '16px' }}>receipt</i>
+                      <Link
+                        href={`/unidades/${unidad.id}/cargos`}
+                        className='btn btn-sm btn-outline-secondary'
+                      >
+                        <i
+                          className='material-icons'
+                          style={{ fontSize: '16px' }}
+                        >
+                          receipt
+                        </i>
                       </Link>
                     </div>
                   </td>

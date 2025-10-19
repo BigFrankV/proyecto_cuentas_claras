@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+
 import apiClient from '@/lib/api';
 
 export interface Membresia {
@@ -55,83 +56,104 @@ export const useMembresias = () => {
 
   const clearError = useCallback(() => setError(null), []);
 
-  const listarMembresias = useCallback(async (filters: MembresiaFilters = {}): Promise<MembresiaListResponse> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          params.append(key, value.toString());
-        }
-      });
+  const listarMembresias = useCallback(
+    async (filters: MembresiaFilters = {}): Promise<MembresiaListResponse> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            params.append(key, value.toString());
+          }
+        });
 
-      const response = await apiClient.get(`/membresias?${params.toString()}`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al listar membresías';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        const response = await apiClient.get(
+          `/membresias?${params.toString()}`,
+        );
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al listar membresías';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
-  const obtenerMembresia = useCallback(async (id: number): Promise<Membresia> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.get(`/membresias/${id}`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener membresía';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const obtenerMembresia = useCallback(
+    async (id: number): Promise<Membresia> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiClient.get(`/membresias/${id}`);
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al obtener membresía';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
-  const crearMembresia = useCallback(async (data: {
-    usuario_id: number;
-    comunidad_id: number;
-    rol_id: number;
-    desde?: string;
-    hasta?: string;
-    activo?: boolean;
-  }): Promise<Membresia> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.post('/membresias', data);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al crear membresía';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const crearMembresia = useCallback(
+    async (data: {
+      usuario_id: number;
+      comunidad_id: number;
+      rol_id: number;
+      desde?: string;
+      hasta?: string;
+      activo?: boolean;
+    }): Promise<Membresia> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiClient.post('/membresias', data);
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al crear membresía';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
-  const actualizarMembresia = useCallback(async (id: number, data: Partial<{
-    rol_id: number;
-    activo: boolean;
-    hasta: string;
-  }>): Promise<Membresia> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.patch(`/membresias/${id}`, data);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al actualizar membresía';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const actualizarMembresia = useCallback(
+    async (
+      id: number,
+      data: Partial<{
+        rol_id: number;
+        activo: boolean;
+        hasta: string;
+      }>,
+    ): Promise<Membresia> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiClient.patch(`/membresias/${id}`, data);
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al actualizar membresía';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   const eliminarMembresia = useCallback(async (id: number): Promise<void> => {
     setLoading(true);
@@ -139,7 +161,8 @@ export const useMembresias = () => {
     try {
       await apiClient.delete(`/membresias/${id}`);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al eliminar membresía';
+      const errorMessage =
+        err.response?.data?.error || 'Error al eliminar membresía';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -154,7 +177,8 @@ export const useMembresias = () => {
       const response = await apiClient.get('/membresias/catalogos/planes');
       return response.data;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener planes';
+      const errorMessage =
+        err.response?.data?.error || 'Error al obtener planes';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -169,7 +193,8 @@ export const useMembresias = () => {
       const response = await apiClient.get('/membresias/catalogos/estados');
       return response.data;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener estados';
+      const errorMessage =
+        err.response?.data?.error || 'Error al obtener estados';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -184,7 +209,8 @@ export const useMembresias = () => {
       const response = await apiClient.get('/membresias/catalogos/roles');
       return response.data;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener roles';
+      const errorMessage =
+        err.response?.data?.error || 'Error al obtener roles';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -199,7 +225,8 @@ export const useMembresias = () => {
       const response = await apiClient.get('/membresias/catalogos/comunidades');
       return response.data;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener comunidades';
+      const errorMessage =
+        err.response?.data?.error || 'Error al obtener comunidades';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -219,6 +246,6 @@ export const useMembresias = () => {
     listarComunidades,
     loading,
     error,
-    clearError
+    clearError,
   };
 };

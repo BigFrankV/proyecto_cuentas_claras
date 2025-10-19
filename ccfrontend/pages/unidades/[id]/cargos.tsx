@@ -1,9 +1,10 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
-import { useRouter } from 'next/router';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+
+import Layout from '@/components/layout/Layout';
 import { getCuentasCobroUnidad, type CuentaCobro } from '@/lib/unidadesService';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 export default function CargosUnidad() {
   const router = useRouter();
@@ -64,12 +65,18 @@ export default function CargosUnidad() {
 
               <div className='card'>
                 <div className='card-body'>
-                  <p className='text-muted'>Cuentas / cargos emitidos a la unidad</p>
-                  {loading && <div className='alert alert-info'>Cargando...</div>}
-                  {!loading && cargos.length === 0 && <div className='alert alert-warning'>No hay cargos</div>}
+                  <p className='text-muted'>
+                    Cuentas / cargos emitidos a la unidad
+                  </p>
+                  {loading && (
+                    <div className='alert alert-info'>Cargando...</div>
+                  )}
+                  {!loading && cargos.length === 0 && (
+                    <div className='alert alert-warning'>No hay cargos</div>
+                  )}
                   {!loading && cargos.length > 0 && (
                     <ul className='list-group'>
-                      {cargos.map((c) => (
+                      {cargos.map(c => (
                         <li
                           key={c.id}
                           className='list-group-item d-flex justify-content-between align-items-center'

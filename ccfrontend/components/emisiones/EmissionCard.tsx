@@ -1,5 +1,10 @@
-import { EmissionStatusBadge, EmissionTypeBadge, EmissionStatus } from './Badges';
 import Link from 'next/link';
+
+import {
+  EmissionStatusBadge,
+  EmissionTypeBadge,
+  EmissionStatus,
+} from './Badges';
 
 // Interfaz para datos de emisión
 export interface Emission {
@@ -25,7 +30,7 @@ export function EmissionCard({ emission }: EmissionCardProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP'
+      currency: 'CLP',
     }).format(amount);
   };
 
@@ -34,19 +39,26 @@ export function EmissionCard({ emission }: EmissionCardProps) {
   };
 
   const getPaymentProgress = () => {
-    if (emission.totalAmount === 0) return 0;
+    if (emission.totalAmount === 0) {
+      return 0;
+    }
     return (emission.paidAmount / emission.totalAmount) * 100;
   };
 
   const isOverdue = () => {
-    return new Date(emission.dueDate) < new Date() && emission.status !== 'paid';
+    return (
+      new Date(emission.dueDate) < new Date() && emission.status !== 'paid'
+    );
   };
 
   return (
     <div className='emission-card'>
       <div className='card-header'>
         <div className='card-title'>
-          <Link href={`/emisiones/${emission.id}`} className='text-decoration-none'>
+          <Link
+            href={`/emisiones/${emission.id}`}
+            className='text-decoration-none'
+          >
             <h6 className='mb-1'>{emission.period}</h6>
           </Link>
           <div className='card-badges'>
@@ -65,18 +77,26 @@ export function EmissionCard({ emission }: EmissionCardProps) {
             </button>
             <ul className='dropdown-menu dropdown-menu-end'>
               <li>
-                <Link href={`/emisiones/${emission.id}`} className='dropdown-item'>
+                <Link
+                  href={`/emisiones/${emission.id}`}
+                  className='dropdown-item'
+                >
                   <i className='material-icons me-2'>visibility</i>
                   Ver detalles
                 </Link>
               </li>
               <li>
-                <Link href={`/emisiones/${emission.id}/prorrateo`} className='dropdown-item'>
+                <Link
+                  href={`/emisiones/${emission.id}/prorrateo`}
+                  className='dropdown-item'
+                >
                   <i className='material-icons me-2'>pie_chart</i>
                   Prorrateo
                 </Link>
               </li>
-              <li><hr className='dropdown-divider' /></li>
+              <li>
+                <hr className='dropdown-divider' />
+              </li>
               <li>
                 <button className='dropdown-item text-primary'>
                   <i className='material-icons me-2'>edit</i>
@@ -98,7 +118,7 @@ export function EmissionCard({ emission }: EmissionCardProps) {
         {emission.description && (
           <p className='card-description'>{emission.description}</p>
         )}
-        
+
         <div className='card-info'>
           <div className='info-row'>
             <span className='info-label'>
@@ -107,7 +127,7 @@ export function EmissionCard({ emission }: EmissionCardProps) {
             </span>
             <span className='info-value'>{formatDate(emission.issueDate)}</span>
           </div>
-          
+
           <div className='info-row'>
             <span className='info-label'>
               <i className='material-icons'>schedule</i>
@@ -131,13 +151,17 @@ export function EmissionCard({ emission }: EmissionCardProps) {
         <div className='card-amounts'>
           <div className='amount-row total'>
             <span className='amount-label'>Total:</span>
-            <span className='amount-value'>{formatCurrency(emission.totalAmount)}</span>
+            <span className='amount-value'>
+              {formatCurrency(emission.totalAmount)}
+            </span>
           </div>
-          
+
           {emission.paidAmount > 0 && (
             <div className='amount-row paid'>
               <span className='amount-label'>Pagado:</span>
-              <span className='amount-value'>{formatCurrency(emission.paidAmount)}</span>
+              <span className='amount-value'>
+                {formatCurrency(emission.paidAmount)}
+              </span>
             </div>
           )}
 
@@ -178,14 +202,14 @@ export function EmissionCard({ emission }: EmissionCardProps) {
             <i className='material-icons me-1'>visibility</i>
             Ver detalles
           </Link>
-          
+
           {emission.status === 'draft' && (
             <button className='btn btn-sm btn-primary'>
               <i className='material-icons me-1'>send</i>
               Enviar
             </button>
           )}
-          
+
           {emission.status === 'ready' && (
             <Link
               href={`/emisiones/${emission.id}/prorrateo`}
@@ -407,11 +431,15 @@ interface EmissionRowProps {
   onSelect?: (id: string, selected: boolean) => void;
 }
 
-export function EmissionRow({ emission, selected = false, onSelect }: EmissionRowProps) {
+export function EmissionRow({
+  emission,
+  selected = false,
+  onSelect,
+}: EmissionRowProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP'
+      currency: 'CLP',
     }).format(amount);
   };
 
@@ -420,23 +448,30 @@ export function EmissionRow({ emission, selected = false, onSelect }: EmissionRo
   };
 
   const isOverdue = () => {
-    return new Date(emission.dueDate) < new Date() && emission.status !== 'paid';
+    return (
+      new Date(emission.dueDate) < new Date() && emission.status !== 'paid'
+    );
   };
 
   return (
-    <tr className={`emission-row ${selected ? 'selected' : ''} ${isOverdue() ? 'overdue' : ''}`}>
+    <tr
+      className={`emission-row ${selected ? 'selected' : ''} ${isOverdue() ? 'overdue' : ''}`}
+    >
       <td>
         <div className='form-check'>
           <input
             className='form-check-input'
             type='checkbox'
             checked={selected}
-            onChange={(e) => onSelect?.(emission.id, e.target.checked)}
+            onChange={e => onSelect?.(emission.id, e.target.checked)}
           />
         </div>
       </td>
       <td>
-        <Link href={`/emisiones/${emission.id}`} className='text-decoration-none'>
+        <Link
+          href={`/emisiones/${emission.id}`}
+          className='text-decoration-none'
+        >
           <strong className='emission-link'>{emission.period}</strong>
         </Link>
       </td>
@@ -449,11 +484,17 @@ export function EmissionRow({ emission, selected = false, onSelect }: EmissionRo
       <td>{formatDate(emission.issueDate)}</td>
       <td className={isOverdue() ? 'text-danger' : ''}>
         {formatDate(emission.dueDate)}
-        {isOverdue() && <i className='material-icons ms-1' style={{ fontSize: '16px' }}>warning</i>}
+        {isOverdue() && (
+          <i className='material-icons ms-1' style={{ fontSize: '16px' }}>
+            warning
+          </i>
+        )}
       </td>
       <td>{emission.unitCount}</td>
       <td className='text-end'>{formatCurrency(emission.totalAmount)}</td>
-      <td className='text-end text-success'>{formatCurrency(emission.paidAmount)}</td>
+      <td className='text-end text-success'>
+        {formatCurrency(emission.paidAmount)}
+      </td>
       <td className='text-end'>
         <div className='dropdown'>
           <button
@@ -465,18 +506,26 @@ export function EmissionRow({ emission, selected = false, onSelect }: EmissionRo
           </button>
           <ul className='dropdown-menu dropdown-menu-end'>
             <li>
-              <Link href={`/emisiones/${emission.id}`} className='dropdown-item'>
+              <Link
+                href={`/emisiones/${emission.id}`}
+                className='dropdown-item'
+              >
                 <i className='material-icons me-2'>visibility</i>
                 Ver detalles
               </Link>
             </li>
             <li>
-              <Link href={`/emisiones/${emission.id}/prorrateo`} className='dropdown-item'>
+              <Link
+                href={`/emisiones/${emission.id}/prorrateo`}
+                className='dropdown-item'
+              >
                 <i className='material-icons me-2'>pie_chart</i>
                 Prorrateo
               </Link>
             </li>
-            <li><hr className='dropdown-divider' /></li>
+            <li>
+              <hr className='dropdown-divider' />
+            </li>
             <li>
               <button className='dropdown-item text-primary'>
                 <i className='material-icons me-2'>edit</i>

@@ -1,11 +1,15 @@
-import Layout from '@/components/layout/Layout';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useRef, useEffect } from 'react';
 
+import Layout from '@/components/layout/Layout';
 import apiClient from '@/lib/api';
-import { crearTorre, getSiguienteCodigo, validarCodigoTorre } from '@/lib/torresService';
+import {
+  crearTorre,
+  getSiguienteCodigo,
+  validarCodigoTorre,
+} from '@/lib/torresService';
 import { ProtectedRoute } from '@/lib/useAuth';
 
 interface TorreFormData {
@@ -97,8 +101,10 @@ export default function TorreNueva() {
     if (formData.edificioId && !formData.codigo) {
       const loadSiguienteCodigo = async () => {
         try {
-          const { siguienteCodigo } = await getSiguienteCodigo(Number(formData.edificioId));
-          setFormData((prev) => ({ ...prev, codigo: siguienteCodigo }));
+          const { siguienteCodigo } = await getSiguienteCodigo(
+            Number(formData.edificioId),
+          );
+          setFormData(prev => ({ ...prev, codigo: siguienteCodigo }));
         } catch (err) {
           // eslint-disable-next-line no-console
           console.error('Error obteniendo siguiente código:', err);
@@ -109,7 +115,7 @@ export default function TorreNueva() {
   }, [formData.edificioId, formData.codigo]);
 
   const handleInputChange = (field: keyof TorreFormData, value: unknown) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
@@ -118,7 +124,7 @@ export default function TorreNueva() {
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
-        [field]: ''
+        [field]: '',
       }));
     }
   };
@@ -130,7 +136,7 @@ export default function TorreNueva() {
       if (file.size > 5 * 1024 * 1024) {
         setErrors(prev => ({
           ...prev,
-          imagen: 'La imagen debe ser menor a 5MB'
+          imagen: 'La imagen debe ser menor a 5MB',
         }));
         return;
       }
@@ -139,16 +145,16 @@ export default function TorreNueva() {
       if (!file.type.startsWith('image/')) {
         setErrors(prev => ({
           ...prev,
-          imagen: 'Solo se permiten archivos de imagen'
+          imagen: 'Solo se permiten archivos de imagen',
         }));
         return;
       }
 
       setFormData(prev => ({ ...prev, imagen: file }));
-      
+
       // Crear preview
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         setImagePreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
@@ -156,7 +162,7 @@ export default function TorreNueva() {
       // Limpiar error
       setErrors(prev => ({
         ...prev,
-        imagen: ''
+        imagen: '',
       }));
     }
   };
@@ -209,7 +215,7 @@ export default function TorreNueva() {
           formData.codigo,
         );
         if (existe) {
-          setErrors((prev) => ({
+          setErrors(prev => ({
             ...prev,
             codigo: 'Este código ya está en uso',
           }));
@@ -234,7 +240,7 @@ export default function TorreNueva() {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error al crear torre:', error);
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         general: 'Error al crear la torre. Por favor, intente nuevamente.',
       }));
@@ -246,13 +252,13 @@ export default function TorreNueva() {
   if (loadingData) {
     return (
       <ProtectedRoute>
-        <Layout title="Nueva Torre">
-          <div className="container-fluid py-4">
-            <div className="text-center">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Cargando...</span>
+        <Layout title='Nueva Torre'>
+          <div className='container-fluid py-4'>
+            <div className='text-center'>
+              <div className='spinner-border text-primary' role='status'>
+                <span className='visually-hidden'>Cargando...</span>
               </div>
-              <p className="mt-2">Cargando datos del formulario...</p>
+              <p className='mt-2'>Cargando datos del formulario...</p>
             </div>
           </div>
         </Layout>
@@ -269,153 +275,222 @@ export default function TorreNueva() {
       <Layout title='Nueva Torre'>
         <div className='container-fluid py-4'>
           {/* Breadcrumb */}
-          <nav aria-label="breadcrumb" className="mb-4">
-            <ol className="breadcrumb">
-              <li className="breadcrumb-item">
-                <Link href="/dashboard">Dashboard</Link>
+          <nav aria-label='breadcrumb' className='mb-4'>
+            <ol className='breadcrumb'>
+              <li className='breadcrumb-item'>
+                <Link href='/dashboard'>Dashboard</Link>
               </li>
-              <li className="breadcrumb-item">
-                <Link href="/edificios">Edificios</Link>
+              <li className='breadcrumb-item'>
+                <Link href='/edificios'>Edificios</Link>
               </li>
-              <li className="breadcrumb-item">
-                <Link href="/torres">Torres</Link>
+              <li className='breadcrumb-item'>
+                <Link href='/torres'>Torres</Link>
               </li>
-              <li className="breadcrumb-item active" aria-current="page">Nueva Torre</li>
+              <li className='breadcrumb-item active' aria-current='page'>
+                Nueva Torre
+              </li>
             </ol>
           </nav>
 
           <form onSubmit={handleSubmit}>
-            <div className="row">
-              <div className="col-lg-8">
+            <div className='row'>
+              <div className='col-lg-8'>
                 {/* Información básica de la torre */}
-                <div className="card mb-4">
-                  <div className="card-header" style={{ backgroundColor: '#f9f9f9' }}>
-                    <h5 className="mb-0">Información Básica</h5>
+                <div className='card mb-4'>
+                  <div
+                    className='card-header'
+                    style={{ backgroundColor: '#f9f9f9' }}
+                  >
+                    <h5 className='mb-0'>Información Básica</h5>
                   </div>
-                  <div className="card-body">
-                    <div className="mb-3">
-                      <label htmlFor="edificioSelect" className="form-label">
-                        Edificio <span className="text-danger">*</span>
+                  <div className='card-body'>
+                    <div className='mb-3'>
+                      <label htmlFor='edificioSelect' className='form-label'>
+                        Edificio <span className='text-danger'>*</span>
                       </label>
-                      <select 
+                      <select
                         className={`form-select ${errors.edificioId ? 'is-invalid' : ''}`}
-                        id="edificioSelect" 
+                        id='edificioSelect'
                         value={formData.edificioId}
-                        onChange={(e) => handleInputChange('edificioId', e.target.value)}
+                        onChange={e =>
+                          handleInputChange('edificioId', e.target.value)
+                        }
                         required
                       >
-                        <option value="" disabled>Seleccionar edificio</option>
-                        {edificios.map((edificio) => (
+                        <option value='' disabled>
+                          Seleccionar edificio
+                        </option>
+                        {edificios.map(edificio => (
                           <option key={edificio.id} value={edificio.id}>
                             {edificio.nombre}
                           </option>
                         ))}
                       </select>
-                      {errors.edificioId && <div className="invalid-feedback">{errors.edificioId}</div>}
-                      <div className="form-text">Edificio al que pertenece esta torre</div>
+                      {errors.edificioId && (
+                        <div className='invalid-feedback'>
+                          {errors.edificioId}
+                        </div>
+                      )}
+                      <div className='form-text'>
+                        Edificio al que pertenece esta torre
+                      </div>
                     </div>
-                    
-                    <div className="row">
-                      <div className="col-md-8">
-                        <div className="mb-3">
-                          <label htmlFor="nombreTorre" className="form-label">
-                            Nombre de la Torre <span className="text-danger">*</span>
+
+                    <div className='row'>
+                      <div className='col-md-8'>
+                        <div className='mb-3'>
+                          <label htmlFor='nombreTorre' className='form-label'>
+                            Nombre de la Torre{' '}
+                            <span className='text-danger'>*</span>
                           </label>
-                          <input 
-                            type="text" 
+                          <input
+                            type='text'
                             className={`form-control ${errors.nombre ? 'is-invalid' : ''}`}
-                            id="nombreTorre" 
-                            placeholder="Ej: Torre A" 
+                            id='nombreTorre'
+                            placeholder='Ej: Torre A'
                             value={formData.nombre}
-                            onChange={(e) => handleInputChange('nombre', e.target.value)}
+                            onChange={e =>
+                              handleInputChange('nombre', e.target.value)
+                            }
                             required
                           />
-                          {errors.nombre && <div className="invalid-feedback">{errors.nombre}</div>}
+                          {errors.nombre && (
+                            <div className='invalid-feedback'>
+                              {errors.nombre}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label htmlFor="codigoTorre" className="form-label">
-                            Código <span className="text-danger">*</span>
+                      <div className='col-md-4'>
+                        <div className='mb-3'>
+                          <label htmlFor='codigoTorre' className='form-label'>
+                            Código <span className='text-danger'>*</span>
                           </label>
-                          <input 
-                            type="text" 
+                          <input
+                            type='text'
                             className={`form-control ${errors.codigo ? 'is-invalid' : ''}`}
-                            id="codigoTorre" 
-                            placeholder="Ej: TA" 
+                            id='codigoTorre'
+                            placeholder='Ej: TA'
                             value={formData.codigo}
-                            onChange={(e) => handleInputChange('codigo', e.target.value)}
+                            onChange={e =>
+                              handleInputChange('codigo', e.target.value)
+                            }
                             required
                           />
-                          {errors.codigo && <div className="invalid-feedback">{errors.codigo}</div>}
-                          <div className="form-text">Código único para identificar la torre</div>
+                          {errors.codigo && (
+                            <div className='invalid-feedback'>
+                              {errors.codigo}
+                            </div>
+                          )}
+                          <div className='form-text'>
+                            Código único para identificar la torre
+                          </div>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="mb-3">
-                      <label htmlFor="descripcionTorre" className="form-label">Descripción</label>
-                      <textarea 
-                        className="form-control" 
-                        id="descripcionTorre" 
-                        rows={3} 
-                        placeholder="Descripción de la torre"
+
+                    <div className='mb-3'>
+                      <label htmlFor='descripcionTorre' className='form-label'>
+                        Descripción
+                      </label>
+                      <textarea
+                        className='form-control'
+                        id='descripcionTorre'
+                        rows={3}
+                        placeholder='Descripción de la torre'
                         value={formData.descripcion}
-                        onChange={(e) => handleInputChange('descripcion', e.target.value)}
+                        onChange={e =>
+                          handleInputChange('descripcion', e.target.value)
+                        }
                       />
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Detalles de la torre */}
-                <div className="card mb-4">
-                  <div className="card-header" style={{ backgroundColor: '#f9f9f9' }}>
-                    <h5 className="mb-0">Detalles de la Torre</h5>
+                <div className='card mb-4'>
+                  <div
+                    className='card-header'
+                    style={{ backgroundColor: '#f9f9f9' }}
+                  >
+                    <h5 className='mb-0'>Detalles de la Torre</h5>
                   </div>
-                  <div className="card-body">
-                    <div className="row">
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label htmlFor="numPisos" className="form-label">Número de Pisos</label>
-                          <input 
-                            type="number" 
+                  <div className='card-body'>
+                    <div className='row'>
+                      <div className='col-md-6'>
+                        <div className='mb-3'>
+                          <label htmlFor='numPisos' className='form-label'>
+                            Número de Pisos
+                          </label>
+                          <input
+                            type='number'
                             className={`form-control ${errors.numPisos ? 'is-invalid' : ''}`}
-                            id="numPisos" 
-                            min="1"
+                            id='numPisos'
+                            min='1'
                             value={formData.numPisos}
-                            onChange={(e) => handleInputChange('numPisos', parseInt(e.target.value) || 1)}
+                            onChange={e =>
+                              handleInputChange(
+                                'numPisos',
+                                parseInt(e.target.value) || 1,
+                              )
+                            }
                           />
-                          {errors.numPisos && <div className="invalid-feedback">{errors.numPisos}</div>}
+                          {errors.numPisos && (
+                            <div className='invalid-feedback'>
+                              {errors.numPisos}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label htmlFor="numUnidades" className="form-label">Número de Unidades</label>
-                          <input 
-                            type="number" 
+                      <div className='col-md-6'>
+                        <div className='mb-3'>
+                          <label htmlFor='numUnidades' className='form-label'>
+                            Número de Unidades
+                          </label>
+                          <input
+                            type='number'
                             className={`form-control ${errors.numUnidades ? 'is-invalid' : ''}`}
-                            id="numUnidades" 
-                            min="1"
+                            id='numUnidades'
+                            min='1'
                             value={formData.numUnidades}
-                            onChange={(e) => handleInputChange('numUnidades', parseInt(e.target.value) || 1)}
+                            onChange={e =>
+                              handleInputChange(
+                                'numUnidades',
+                                parseInt(e.target.value) || 1,
+                              )
+                            }
                           />
-                          {errors.numUnidades && <div className="invalid-feedback">{errors.numUnidades}</div>}
+                          {errors.numUnidades && (
+                            <div className='invalid-feedback'>
+                              {errors.numUnidades}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="row">
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label htmlFor="administradorTorre" className="form-label">Administrador</label>
-                          <select 
-                            className="form-select" 
-                            id="administradorTorre"
-                            value={formData.administradorId}
-                            onChange={(e) => handleInputChange('administradorId', e.target.value)}
+
+                    <div className='row'>
+                      <div className='col-md-6'>
+                        <div className='mb-3'>
+                          <label
+                            htmlFor='administradorTorre'
+                            className='form-label'
                           >
-                            <option value="">Seleccionar administrador</option>
-                            {administradores.map((admin) => (
+                            Administrador
+                          </label>
+                          <select
+                            className='form-select'
+                            id='administradorTorre'
+                            value={formData.administradorId}
+                            onChange={e =>
+                              handleInputChange(
+                                'administradorId',
+                                e.target.value,
+                              )
+                            }
+                          >
+                            <option value=''>Seleccionar administrador</option>
+                            {administradores.map(admin => (
                               <option key={admin.id} value={admin.id}>
                                 {admin.nombre} {admin.apellidos}
                               </option>
@@ -423,42 +498,68 @@ export default function TorreNueva() {
                           </select>
                         </div>
                       </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label">Servicios Específicos</label>
-                          <div className="form-check">
-                            <input 
-                              className="form-check-input" 
-                              type="checkbox" 
-                              id="tieneAscensor"
+                      <div className='col-md-6'>
+                        <div className='mb-3'>
+                          <label className='form-label'>
+                            Servicios Específicos
+                          </label>
+                          <div className='form-check'>
+                            <input
+                              className='form-check-input'
+                              type='checkbox'
+                              id='tieneAscensor'
                               checked={formData.tieneAscensor}
-                              onChange={(e) => handleInputChange('tieneAscensor', e.target.checked)}
+                              onChange={e =>
+                                handleInputChange(
+                                  'tieneAscensor',
+                                  e.target.checked,
+                                )
+                              }
                             />
-                            <label className="form-check-label" htmlFor="tieneAscensor">
+                            <label
+                              className='form-check-label'
+                              htmlFor='tieneAscensor'
+                            >
                               Ascensor
                             </label>
                           </div>
-                          <div className="form-check">
-                            <input 
-                              className="form-check-input" 
-                              type="checkbox" 
-                              id="tienePorteria"
+                          <div className='form-check'>
+                            <input
+                              className='form-check-input'
+                              type='checkbox'
+                              id='tienePorteria'
                               checked={formData.tienePorteria}
-                              onChange={(e) => handleInputChange('tienePorteria', e.target.checked)}
+                              onChange={e =>
+                                handleInputChange(
+                                  'tienePorteria',
+                                  e.target.checked,
+                                )
+                              }
                             />
-                            <label className="form-check-label" htmlFor="tienePorteria">
+                            <label
+                              className='form-check-label'
+                              htmlFor='tienePorteria'
+                            >
                               Portería
                             </label>
                           </div>
-                          <div className="form-check">
-                            <input 
-                              className="form-check-input" 
-                              type="checkbox" 
-                              id="tieneEstacionamiento"
+                          <div className='form-check'>
+                            <input
+                              className='form-check-input'
+                              type='checkbox'
+                              id='tieneEstacionamiento'
                               checked={formData.tieneEstacionamiento}
-                              onChange={(e) => handleInputChange('tieneEstacionamiento', e.target.checked)}
+                              onChange={e =>
+                                handleInputChange(
+                                  'tieneEstacionamiento',
+                                  e.target.checked,
+                                )
+                              }
                             />
-                            <label className="form-check-label" htmlFor="tieneEstacionamiento">
+                            <label
+                              className='form-check-label'
+                              htmlFor='tieneEstacionamiento'
+                            >
                               Estacionamientos Propios
                             </label>
                           </div>
@@ -467,198 +568,287 @@ export default function TorreNueva() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Configuración de cobros */}
-                <div className="card mb-4">
-                  <div className="card-header" style={{ backgroundColor: '#f9f9f9' }}>
-                    <h5 className="mb-0">Configuración de Cobros</h5>
+                <div className='card mb-4'>
+                  <div
+                    className='card-header'
+                    style={{ backgroundColor: '#f9f9f9' }}
+                  >
+                    <h5 className='mb-0'>Configuración de Cobros</h5>
                   </div>
-                  <div className="card-body">
-                    <div className="mb-3">
-                      <label className="form-label d-block">¿Tiene gastos específicos por torre?</label>
-                      <div className="form-check form-check-inline">
-                        <input 
-                          className="form-check-input" 
-                          type="radio" 
-                          name="gastosEspecificos" 
-                          id="gastosNo" 
-                          value="no"
+                  <div className='card-body'>
+                    <div className='mb-3'>
+                      <label className='form-label d-block'>
+                        ¿Tiene gastos específicos por torre?
+                      </label>
+                      <div className='form-check form-check-inline'>
+                        <input
+                          className='form-check-input'
+                          type='radio'
+                          name='gastosEspecificos'
+                          id='gastosNo'
+                          value='no'
                           checked={formData.gastosEspecificos === 'no'}
-                          onChange={(e) => handleInputChange('gastosEspecificos', e.target.value as 'si' | 'no')}
+                          onChange={e =>
+                            handleInputChange(
+                              'gastosEspecificos',
+                              e.target.value as 'si' | 'no',
+                            )
+                          }
                         />
-                        <label className="form-check-label" htmlFor="gastosNo">No</label>
+                        <label className='form-check-label' htmlFor='gastosNo'>
+                          No
+                        </label>
                       </div>
-                      <div className="form-check form-check-inline">
-                        <input 
-                          className="form-check-input" 
-                          type="radio" 
-                          name="gastosEspecificos" 
-                          id="gastosSi" 
-                          value="si"
+                      <div className='form-check form-check-inline'>
+                        <input
+                          className='form-check-input'
+                          type='radio'
+                          name='gastosEspecificos'
+                          id='gastosSi'
+                          value='si'
                           checked={formData.gastosEspecificos === 'si'}
-                          onChange={(e) => handleInputChange('gastosEspecificos', e.target.value as 'si' | 'no')}
+                          onChange={e =>
+                            handleInputChange(
+                              'gastosEspecificos',
+                              e.target.value as 'si' | 'no',
+                            )
+                          }
                         />
-                        <label className="form-check-label" htmlFor="gastosSi">Sí</label>
+                        <label className='form-check-label' htmlFor='gastosSi'>
+                          Sí
+                        </label>
                       </div>
-                      <div className="form-text">Si la torre tiene gastos separados del resto del edificio</div>
+                      <div className='form-text'>
+                        Si la torre tiene gastos separados del resto del
+                        edificio
+                      </div>
                     </div>
-                    
-                    <div className="mb-3">
-                      <label htmlFor="coeficienteTorre" className="form-label">Coeficiente de Torre</label>
-                      <div className="input-group">
-                        <input 
-                          type="number" 
+
+                    <div className='mb-3'>
+                      <label htmlFor='coeficienteTorre' className='form-label'>
+                        Coeficiente de Torre
+                      </label>
+                      <div className='input-group'>
+                        <input
+                          type='number'
                           className={`form-control ${errors.coeficienteTorre ? 'is-invalid' : ''}`}
-                          id="coeficienteTorre" 
-                          step="0.000001" 
-                          min="0" 
-                          max="1"
+                          id='coeficienteTorre'
+                          step='0.000001'
+                          min='0'
+                          max='1'
                           value={formData.coeficienteTorre}
-                          onChange={(e) => handleInputChange('coeficienteTorre', parseFloat(e.target.value) || 0)}
+                          onChange={e =>
+                            handleInputChange(
+                              'coeficienteTorre',
+                              parseFloat(e.target.value) || 0,
+                            )
+                          }
                           required={formData.gastosEspecificos === 'si'}
                         />
-                        <span className="input-group-text">%</span>
-                        {errors.coeficienteTorre && <div className="invalid-feedback">{errors.coeficienteTorre}</div>}
+                        <span className='input-group-text'>%</span>
+                        {errors.coeficienteTorre && (
+                          <div className='invalid-feedback'>
+                            {errors.coeficienteTorre}
+                          </div>
+                        )}
                       </div>
-                      <div className="form-text">Coeficiente de participación de la torre en el edificio</div>
+                      <div className='form-text'>
+                        Coeficiente de participación de la torre en el edificio
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
-              <div className="col-lg-4">
+
+              <div className='col-lg-4'>
                 {/* Imagen de la torre */}
-                <div className="card mb-4">
-                  <div className="card-header" style={{ backgroundColor: '#f9f9f9' }}>
-                    <h5 className="mb-0">Imagen de la Torre</h5>
+                <div className='card mb-4'>
+                  <div
+                    className='card-header'
+                    style={{ backgroundColor: '#f9f9f9' }}
+                  >
+                    <h5 className='mb-0'>Imagen de la Torre</h5>
                   </div>
-                  <div className="card-body">
-                    <div className="mb-4">
-                      <label className="form-label">Imagen Representativa</label>
-                      <div 
-                        className="border-2 border-dashed rounded p-4 text-center"
-                        style={{ 
+                  <div className='card-body'>
+                    <div className='mb-4'>
+                      <label className='form-label'>
+                        Imagen Representativa
+                      </label>
+                      <div
+                        className='border-2 border-dashed rounded p-4 text-center'
+                        style={{
                           borderColor: '#ddd',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
-                          backgroundColor: imagePreview ? 'transparent' : '#f8f9fa'
+                          backgroundColor: imagePreview
+                            ? 'transparent'
+                            : '#f8f9fa',
                         }}
                         onClick={() => fileInputRef.current?.click()}
-                        onMouseEnter={(e) => {
-                          if (!imagePreview) e.currentTarget.style.borderColor = 'var(--color-primary)';
+                        onMouseEnter={e => {
+                          if (!imagePreview) {
+                            e.currentTarget.style.borderColor =
+                              'var(--color-primary)';
+                          }
                         }}
-                        onMouseLeave={(e) => {
-                          if (!imagePreview) e.currentTarget.style.borderColor = '#ddd';
+                        onMouseLeave={e => {
+                          if (!imagePreview) {
+                            e.currentTarget.style.borderColor = '#ddd';
+                          }
                         }}
                       >
                         {imagePreview ? (
-                          <img 
-                            src={imagePreview} 
-                            alt="Preview" 
-                            className="img-fluid rounded"
+                          <img
+                            src={imagePreview}
+                            alt='Preview'
+                            className='img-fluid rounded'
                             style={{ maxHeight: '200px' }}
                           />
                         ) : (
                           <>
-                            <i className="material-icons mb-2" style={{ fontSize: '48px', color: '#aaa' }}>
+                            <i
+                              className='material-icons mb-2'
+                              style={{ fontSize: '48px', color: '#aaa' }}
+                            >
                               add_photo_alternate
                             </i>
-                            <p className="mb-1">Arrastrar imagen o hacer clic para subir</p>
-                            <p className="small text-muted mb-0">PNG, JPG hasta 5MB</p>
+                            <p className='mb-1'>
+                              Arrastrar imagen o hacer clic para subir
+                            </p>
+                            <p className='small text-muted mb-0'>
+                              PNG, JPG hasta 5MB
+                            </p>
                           </>
                         )}
                       </div>
-                      <input 
-                        type="file" 
-                        className="d-none" 
+                      <input
+                        type='file'
+                        className='d-none'
                         ref={fileInputRef}
-                        accept="image/*"
+                        accept='image/*'
                         onChange={handleImageUpload}
                       />
-                      {errors.imagen && <div className="text-danger small mt-1">{errors.imagen}</div>}
+                      {errors.imagen && (
+                        <div className='text-danger small mt-1'>
+                          {errors.imagen}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Estado y configuración */}
-                <div className="card mb-4">
-                  <div className="card-header" style={{ backgroundColor: '#f9f9f9' }}>
-                    <h5 className="mb-0">Estado y Configuración</h5>
+                <div className='card mb-4'>
+                  <div
+                    className='card-header'
+                    style={{ backgroundColor: '#f9f9f9' }}
+                  >
+                    <h5 className='mb-0'>Estado y Configuración</h5>
                   </div>
-                  <div className="card-body">
-                    <div className="form-check form-switch mb-3">
-                      <input 
-                        className="form-check-input" 
-                        type="checkbox" 
-                        id="torreActiva"
+                  <div className='card-body'>
+                    <div className='form-check form-switch mb-3'>
+                      <input
+                        className='form-check-input'
+                        type='checkbox'
+                        id='torreActiva'
                         checked={formData.activa}
-                        onChange={(e) => handleInputChange('activa', e.target.checked)}
+                        onChange={e =>
+                          handleInputChange('activa', e.target.checked)
+                        }
                       />
-                      <label className="form-check-label" htmlFor="torreActiva">Torre Activa</label>
+                      <label className='form-check-label' htmlFor='torreActiva'>
+                        Torre Activa
+                      </label>
                     </div>
-                    <div className="form-check form-switch mb-3">
-                      <input 
-                        className="form-check-input" 
-                        type="checkbox" 
-                        id="visibleEnPortal"
+                    <div className='form-check form-switch mb-3'>
+                      <input
+                        className='form-check-input'
+                        type='checkbox'
+                        id='visibleEnPortal'
                         checked={formData.visibleEnPortal}
-                        onChange={(e) => handleInputChange('visibleEnPortal', e.target.checked)}
+                        onChange={e =>
+                          handleInputChange('visibleEnPortal', e.target.checked)
+                        }
                       />
-                      <label className="form-check-label" htmlFor="visibleEnPortal">Visible en portal público</label>
+                      <label
+                        className='form-check-label'
+                        htmlFor='visibleEnPortal'
+                      >
+                        Visible en portal público
+                      </label>
                     </div>
-                    <div className="form-check form-switch mb-3">
-                      <input 
-                        className="form-check-input" 
-                        type="checkbox" 
-                        id="facturacionIndependiente"
+                    <div className='form-check form-switch mb-3'>
+                      <input
+                        className='form-check-input'
+                        type='checkbox'
+                        id='facturacionIndependiente'
                         checked={formData.facturacionIndependiente}
-                        onChange={(e) => handleInputChange('facturacionIndependiente', e.target.checked)}
+                        onChange={e =>
+                          handleInputChange(
+                            'facturacionIndependiente',
+                            e.target.checked,
+                          )
+                        }
                       />
-                      <label className="form-check-label" htmlFor="facturacionIndependiente">
+                      <label
+                        className='form-check-label'
+                        htmlFor='facturacionIndependiente'
+                      >
                         Facturación independiente
                       </label>
-                      <div className="form-text">La torre gestiona sus gastos de forma independiente</div>
+                      <div className='form-text'>
+                        La torre gestiona sus gastos de forma independiente
+                      </div>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Observaciones */}
-                <div className="card mb-4">
-                  <div className="card-header" style={{ backgroundColor: '#f9f9f9' }}>
-                    <h5 className="mb-0">Observaciones</h5>
+                <div className='card mb-4'>
+                  <div
+                    className='card-header'
+                    style={{ backgroundColor: '#f9f9f9' }}
+                  >
+                    <h5 className='mb-0'>Observaciones</h5>
                   </div>
-                  <div className="card-body">
-                    <div className="mb-3">
-                      <label htmlFor="observaciones" className="form-label">Notas adicionales</label>
-                      <textarea 
-                        className="form-control" 
-                        id="observaciones" 
+                  <div className='card-body'>
+                    <div className='mb-3'>
+                      <label htmlFor='observaciones' className='form-label'>
+                        Notas adicionales
+                      </label>
+                      <textarea
+                        className='form-control'
+                        id='observaciones'
                         rows={4}
                         value={formData.observaciones}
-                        onChange={(e) => handleInputChange('observaciones', e.target.value)}
+                        onChange={e =>
+                          handleInputChange('observaciones', e.target.value)
+                        }
                       />
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Acciones finales */}
-                <div className="d-flex justify-content-between mb-4">
-                  <Link href="/torres" className="btn btn-outline-secondary">
+                <div className='d-flex justify-content-between mb-4'>
+                  <Link href='/torres' className='btn btn-outline-secondary'>
                     Cancelar
                   </Link>
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary"
+                  <button
+                    type='submit'
+                    className='btn btn-primary'
                     disabled={loading}
                   >
                     {loading ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2"></span>
+                        <span className='spinner-border spinner-border-sm me-2'></span>
                         Guardando...
                       </>
                     ) : (
                       <>
-                        <i className="material-icons me-1">save</i>
+                        <i className='material-icons me-1'>save</i>
                         Guardar Torre
                       </>
                     )}

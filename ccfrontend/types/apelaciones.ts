@@ -6,7 +6,7 @@ export interface Apelacion {
   comunidad_id?: number;
   motivo: string;
   documentos_json?: any;
-  estado: 'pendiente'|'aprobada'|'rechazada'|string;
+  estado: 'pendiente' | 'aprobada' | 'rechazada' | string;
   resolucion?: string;
   resuelto_por?: number;
   fecha_apelacion?: string;

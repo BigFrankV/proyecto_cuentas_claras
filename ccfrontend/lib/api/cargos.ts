@@ -2,7 +2,7 @@ import {
   Cargo,
   CargoFormData,
   CargoFilters,
-  CargoDetalle
+  CargoDetalle,
 } from '@/types/cargos';
 
 // Base URL para las APIs
@@ -20,9 +20,13 @@ const handleApiError = (error: any) => {
 // Helper para hacer peticiones autenticadas
 const apiRequest = async (url: string, options: RequestInit = {}) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
-  console.log('🔐 Token obtenido para API:', token ? 'Token presente' : 'No hay token');
+  console.log(
+    '🔐 Token obtenido para API:',
+    token ? 'Token presente' : 'No hay token',
+  );
   console.log('🔐 URL de la petición:', `${API_BASE_URL}${url}`);
 
   if (!token) {
@@ -34,7 +38,7 @@ const apiRequest = async (url: string, options: RequestInit = {}) => {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       ...options.headers,
     },
   };
@@ -45,7 +49,9 @@ const apiRequest = async (url: string, options: RequestInit = {}) => {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    throw new Error(
+      errorData.error || `HTTP error! status: ${response.status}`,
+    );
   }
 
   return response.json();
@@ -89,16 +95,29 @@ export const cargosApi = {
   },
 
   // Obtener todos los cargos de una comunidad con filtros
-  getByComunidad: async (comunidadId: number, filters?: CargoFilters): Promise<Cargo[]> => {
+  getByComunidad: async (
+    comunidadId: number,
+    filters?: CargoFilters,
+  ): Promise<Cargo[]> => {
     try {
       const queryParams = new URLSearchParams();
       queryParams.append('comunidadId', comunidadId.toString());
 
-      if (filters?.estado) queryParams.append('estado', filters.estado);
-      if (filters?.unidad) queryParams.append('unidad', filters.unidad.toString());
-      if (filters?.periodo) queryParams.append('periodo', filters.periodo);
-      if (filters?.page) queryParams.append('page', filters.page.toString());
-      if (filters?.limit) queryParams.append('limit', filters.limit.toString());
+      if (filters?.estado) {
+        queryParams.append('estado', filters.estado);
+      }
+      if (filters?.unidad) {
+        queryParams.append('unidad', filters.unidad.toString());
+      }
+      if (filters?.periodo) {
+        queryParams.append('periodo', filters.periodo);
+      }
+      if (filters?.page) {
+        queryParams.append('page', filters.page.toString());
+      }
+      if (filters?.limit) {
+        queryParams.append('limit', filters.limit.toString());
+      }
 
       const url = `/cargos/comunidad/${comunidadId}?${queryParams.toString()}`;
       const data = await apiRequest(url);

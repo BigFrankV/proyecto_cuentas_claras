@@ -1,11 +1,15 @@
-import apiClient from './api';
 import { CentroCosto, CentrosResponse } from '@/types/centrosCosto';
 
-export async function listCentros(comunidadId?: number): Promise<CentrosResponse> {
-  const endpoint = typeof comunidadId === 'number' 
-    ? `/centros-costo/comunidad/${comunidadId}` 
-    : '/centros-costo';
-  
+import apiClient from './api';
+
+export async function listCentros(
+  comunidadId?: number,
+): Promise<CentrosResponse> {
+  const endpoint =
+    typeof comunidadId === 'number'
+      ? `/centros-costo/comunidad/${comunidadId}`
+      : '/centros-costo';
+
   const response = await apiClient.get(endpoint);
   return response.data;
 }
@@ -15,12 +19,21 @@ export async function getCentroById(id: number): Promise<CentroCosto> {
   return response.data;
 }
 
-export async function createCentro(comunidadId: number, data: Partial<CentroCosto>): Promise<CentroCosto> {
-  const response = await apiClient.post(`/centros-costo/comunidad/${comunidadId}`, data);
+export async function createCentro(
+  comunidadId: number,
+  data: Partial<CentroCosto>,
+): Promise<CentroCosto> {
+  const response = await apiClient.post(
+    `/centros-costo/comunidad/${comunidadId}`,
+    data,
+  );
   return response.data;
 }
 
-export async function updateCentro(id: number, data: Partial<CentroCosto>): Promise<CentroCosto> {
+export async function updateCentro(
+  id: number,
+  data: Partial<CentroCosto>,
+): Promise<CentroCosto> {
   const response = await apiClient.patch(`/centros-costo/${id}`, data);
   return response.data;
 }

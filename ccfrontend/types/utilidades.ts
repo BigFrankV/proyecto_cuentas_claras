@@ -143,26 +143,76 @@ export interface UtilityStats {
 
 // === CONSTANTES ===
 export const MESES_NOMBRES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
 ];
 
 export const MESES_ABREV = [
-  'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-  'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+  'Ene',
+  'Feb',
+  'Mar',
+  'Abr',
+  'May',
+  'Jun',
+  'Jul',
+  'Ago',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dic',
 ];
 
 export const PERIODOS_RAPIDOS_UF: PeriodoRapido[] = [
   { label: 'Hoy', key: 'today', description: 'Valor UF actual', icon: 'today' },
-  { label: 'Ayer', key: 'yesterday', description: 'Valor UF del día anterior', icon: 'history' },
-  { label: 'Hace una semana', key: 'week', description: 'Valor UF hace 7 días', icon: 'date_range' },
-  { label: 'Hace un mes', key: 'month', description: 'Valor UF hace 30 días', icon: 'calendar_month' }
+  {
+    label: 'Ayer',
+    key: 'yesterday',
+    description: 'Valor UF del día anterior',
+    icon: 'history',
+  },
+  {
+    label: 'Hace una semana',
+    key: 'week',
+    description: 'Valor UF hace 7 días',
+    icon: 'date_range',
+  },
+  {
+    label: 'Hace un mes',
+    key: 'month',
+    description: 'Valor UF hace 30 días',
+    icon: 'calendar_month',
+  },
 ];
 
 export const PERIODOS_RAPIDOS_UTM: PeriodoRapido[] = [
-  { label: 'Este mes', key: 'current', description: 'UTM del mes actual', icon: 'today' },
-  { label: 'Mes anterior', key: 'previous', description: 'UTM del mes pasado', icon: 'history' },
-  { label: 'Mismo mes año anterior', key: 'year_ago', description: 'UTM del mismo mes del año pasado', icon: 'compare_arrows' }
+  {
+    label: 'Este mes',
+    key: 'current',
+    description: 'UTM del mes actual',
+    icon: 'today',
+  },
+  {
+    label: 'Mes anterior',
+    key: 'previous',
+    description: 'UTM del mes pasado',
+    icon: 'history',
+  },
+  {
+    label: 'Mismo mes año anterior',
+    key: 'year_ago',
+    description: 'UTM del mismo mes del año pasado',
+    icon: 'compare_arrows',
+  },
 ];
 
 export const RUT_FORMAT_EXAMPLES: RutFormatExample[] = [
@@ -170,35 +220,47 @@ export const RUT_FORMAT_EXAMPLES: RutFormatExample[] = [
     format: 'Con puntos y guión',
     example: '12.345.678-9',
     description: 'Formato estándar chileno',
-    isValid: true
+    isValid: true,
   },
   {
     format: 'Solo con guión',
     example: '12345678-9',
     description: 'Sin separadores de miles',
-    isValid: true
+    isValid: true,
   },
   {
     format: 'Sin formato',
     example: '123456789',
     description: 'Solo números y dígito verificador',
-    isValid: true
+    isValid: true,
   },
   {
     format: 'Con K mayúscula',
     example: '12.345.678-K',
     description: 'Dígito verificador K',
-    isValid: true
-  }
+    isValid: true,
+  },
 ];
 
 // === TIPOS DE FUNCIONES UTILITARIAS ===
-export type RutFormatter = (rut: string, format?: 'dots' | 'clean' | 'dash') => string;
+export type RutFormatter = (
+  rut: string,
+  format?: 'dots' | 'clean' | 'dash'
+) => string;
 export type RutValidator = (rut: string) => RutValidation;
 export type RutGenerator = (options: RutGenerationOptions) => GeneratedRut[];
 
 export type UfConsultor = (fecha: string) => Promise<UfConsultaResult>;
-export type UfCalculator = (inputs: UfCalculatorInputs, type: 'toPesos' | 'toUf') => UfCalculatorResult;
+export type UfCalculator = (
+  inputs: UfCalculatorInputs,
+  type: 'toPesos' | 'toUf'
+) => UfCalculatorResult;
 
-export type UtmConsultor = (mes: number, ano: number) => Promise<UtmConsultaResult>;
-export type UtmCalculator = (inputs: UtmCalculatorInputs, type: 'toPesos' | 'toUtm') => UtmCalculatorResult;
+export type UtmConsultor = (
+  mes: number,
+  ano: number
+) => Promise<UtmConsultaResult>;
+export type UtmCalculator = (
+  inputs: UtmCalculatorInputs,
+  type: 'toPesos' | 'toUtm'
+) => UtmCalculatorResult;

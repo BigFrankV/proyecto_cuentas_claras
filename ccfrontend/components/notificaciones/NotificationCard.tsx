@@ -1,6 +1,6 @@
+import ChannelBadge from './ChannelBadge';
 import StatusBadge from './StatusBadge';
 import TypeBadge from './TypeBadge';
-import ChannelBadge from './ChannelBadge';
 
 interface NotificationData {
   id: string;
@@ -43,7 +43,7 @@ export default function NotificationCard({
   onSelect,
   onAction,
   selected = false,
-  className = ''
+  className = '',
 }: NotificationCardProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-CL', {
@@ -51,7 +51,7 @@ export default function NotificationCard({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -61,31 +61,35 @@ export default function NotificationCard({
     if (target.closest('.form-check-input, .dropdown, .btn')) {
       return;
     }
-    
+
     if (onAction) {
       onAction('view', notification.id);
     }
   };
 
   return (
-    <div 
+    <div
       className={`notification-card ${!notification.isRead ? 'unread' : ''} ${className}`}
       style={{
         backgroundColor: '#fff',
         borderRadius: 'var(--radius)',
         padding: '1rem',
         boxShadow: 'var(--shadow-sm)',
-        border: !notification.isRead ? '1px solid var(--color-primary)' : '1px solid #e9ecef',
-        borderLeft: !notification.isRead ? '4px solid var(--color-primary)' : '1px solid #e9ecef',
+        border: !notification.isRead
+          ? '1px solid var(--color-primary)'
+          : '1px solid #e9ecef',
+        borderLeft: !notification.isRead
+          ? '4px solid var(--color-primary)'
+          : '1px solid #e9ecef',
         cursor: 'pointer',
         position: 'relative',
-        transition: 'all 0.2s ease'
+        transition: 'all 0.2s ease',
       }}
       onClick={handleCardClick}
     >
       {/* Unread Indicator */}
       {!notification.isRead && (
-        <div 
+        <div
           className='read-indicator'
           style={{
             position: 'absolute',
@@ -94,7 +98,7 @@ export default function NotificationCard({
             width: '8px',
             height: '8px',
             borderRadius: '50%',
-            backgroundColor: 'var(--color-primary)'
+            backgroundColor: 'var(--color-primary)',
           }}
         />
       )}
@@ -104,7 +108,7 @@ export default function NotificationCard({
         <div className='d-flex gap-2'>
           <StatusBadge status={notification.status} size='sm' />
         </div>
-        <div className='form-check' onClick={(e) => e.stopPropagation()}>
+        <div className='form-check' onClick={e => e.stopPropagation()}>
           <input
             className='form-check-input notification-checkbox'
             type='checkbox'
@@ -115,57 +119,72 @@ export default function NotificationCard({
       </div>
 
       {/* Subject */}
-      <h6 className='notification-subject mb-2' style={{
-        fontSize: '1rem',
-        fontWeight: '600',
-        lineHeight: '1.3',
-        margin: '0 0 0.5rem 0'
-      }}>
+      <h6
+        className='notification-subject mb-2'
+        style={{
+          fontSize: '1rem',
+          fontWeight: '600',
+          lineHeight: '1.3',
+          margin: '0 0 0.5rem 0',
+        }}
+      >
         {notification.subject}
       </h6>
 
       {/* Message Preview */}
-      <p className='notification-excerpt text-muted mb-3' style={{
-        fontSize: '0.875rem',
-        lineHeight: '1.4',
-        display: '-webkit-box',
-        WebkitLineClamp: 3,
-        WebkitBoxOrient: 'vertical',
-        overflow: 'hidden',
-        margin: '0 0 1rem 0'
-      }}>
+      <p
+        className='notification-excerpt text-muted mb-3'
+        style={{
+          fontSize: '0.875rem',
+          lineHeight: '1.4',
+          display: '-webkit-box',
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          margin: '0 0 1rem 0',
+        }}
+      >
         {notification.message}
       </p>
 
       {/* Meta Information */}
       <div className='notification-meta mb-3'>
         <div className='notification-meta-item d-flex align-items-center mb-1'>
-          <i className='material-icons me-1' style={{ fontSize: '16px', color: '#6c757d' }}>
+          <i
+            className='material-icons me-1'
+            style={{ fontSize: '16px', color: '#6c757d' }}
+          >
             people
           </i>
           <span className='small text-muted'>
-            {notification.audience.count} personas • {notification.audience.description}
+            {notification.audience.count} personas •{' '}
+            {notification.audience.description}
           </span>
         </div>
-        
+
         <div className='notification-meta-item d-flex align-items-center mb-1'>
-          <i className='material-icons me-1' style={{ fontSize: '16px', color: '#6c757d' }}>
+          <i
+            className='material-icons me-1'
+            style={{ fontSize: '16px', color: '#6c757d' }}
+          >
             person
           </i>
           <span className='small text-muted'>{notification.author.name}</span>
         </div>
-        
+
         <div className='notification-meta-item d-flex align-items-center'>
-          <i className='material-icons me-1' style={{ fontSize: '16px', color: '#6c757d' }}>
+          <i
+            className='material-icons me-1'
+            style={{ fontSize: '16px', color: '#6c757d' }}
+          >
             schedule
           </i>
           <span className='small text-muted'>
-            {notification.sentAt 
+            {notification.sentAt
               ? formatDate(notification.sentAt)
               : notification.scheduledFor
-              ? `Prog: ${formatDate(notification.scheduledFor)}`
-              : formatDate(notification.createdAt)
-            }
+                ? `Prog: ${formatDate(notification.scheduledFor)}`
+                : formatDate(notification.createdAt)}
           </span>
         </div>
       </div>
@@ -177,35 +196,49 @@ export default function NotificationCard({
 
       {/* Channels */}
       <div className='notification-channels d-flex flex-wrap gap-1 mb-3'>
-        {notification.channels.map((channel) => (
+        {notification.channels.map(channel => (
           <ChannelBadge key={channel} channel={channel} size='sm' />
         ))}
       </div>
 
       {/* Delivery Stats (for sent notifications) */}
       {notification.status === 'sent' && notification.deliveryStats && (
-        <div className='delivery-stats mb-3' style={{
-          backgroundColor: '#f8f9fa',
-          borderRadius: '0.375rem',
-          padding: '0.75rem',
-          fontSize: '0.75rem'
-        }}>
+        <div
+          className='delivery-stats mb-3'
+          style={{
+            backgroundColor: '#f8f9fa',
+            borderRadius: '0.375rem',
+            padding: '0.75rem',
+            fontSize: '0.75rem',
+          }}
+        >
           <div className='row text-center'>
             <div className='col-3'>
-              <div className='fw-semibold text-primary'>{notification.deliveryStats.delivered}</div>
+              <div className='fw-semibold text-primary'>
+                {notification.deliveryStats.delivered}
+              </div>
               <div className='text-muted'>Entregados</div>
             </div>
             <div className='col-3'>
-              <div className='fw-semibold text-success'>{notification.deliveryStats.opened}</div>
+              <div className='fw-semibold text-success'>
+                {notification.deliveryStats.opened}
+              </div>
               <div className='text-muted'>Abiertos</div>
             </div>
             <div className='col-3'>
-              <div className='fw-semibold text-info'>{notification.deliveryStats.clicked}</div>
+              <div className='fw-semibold text-info'>
+                {notification.deliveryStats.clicked}
+              </div>
               <div className='text-muted'>Clicks</div>
             </div>
             <div className='col-3'>
               <div className='fw-semibold text-warning'>
-                {Math.round((notification.deliveryStats.opened / notification.deliveryStats.delivered) * 100)}%
+                {Math.round(
+                  (notification.deliveryStats.opened /
+                    notification.deliveryStats.delivered) *
+                    100,
+                )}
+                %
               </div>
               <div className='text-muted'>Tasa</div>
             </div>
@@ -215,17 +248,17 @@ export default function NotificationCard({
 
       {/* Actions */}
       <div className='d-flex gap-2'>
-        <button 
+        <button
           className='btn btn-outline-primary btn-sm flex-fill'
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onAction?.('view', notification.id);
           }}
         >
           Ver detalle
         </button>
-        
-        <div className='dropdown' onClick={(e) => e.stopPropagation()}>
+
+        <div className='dropdown' onClick={e => e.stopPropagation()}>
           <button
             className='btn btn-outline-secondary btn-sm dropdown-toggle'
             type='button'
@@ -236,7 +269,7 @@ export default function NotificationCard({
           </button>
           <ul className='dropdown-menu'>
             <li>
-              <button 
+              <button
                 className='dropdown-item'
                 onClick={() => onAction?.('duplicate', notification.id)}
               >
@@ -245,7 +278,7 @@ export default function NotificationCard({
               </button>
             </li>
             <li>
-              <button 
+              <button
                 className='dropdown-item'
                 onClick={() => onAction?.('edit', notification.id)}
               >
@@ -255,7 +288,7 @@ export default function NotificationCard({
             </li>
             {notification.status === 'sent' && (
               <li>
-                <button 
+                <button
                   className='dropdown-item'
                   onClick={() => onAction?.('resend', notification.id)}
                 >
@@ -266,7 +299,7 @@ export default function NotificationCard({
             )}
             {notification.status === 'draft' && (
               <li>
-                <button 
+                <button
                   className='dropdown-item'
                   onClick={() => onAction?.('send', notification.id)}
                 >
@@ -275,9 +308,11 @@ export default function NotificationCard({
                 </button>
               </li>
             )}
-            <li><hr className='dropdown-divider' /></li>
             <li>
-              <button 
+              <hr className='dropdown-divider' />
+            </li>
+            <li>
+              <button
                 className='dropdown-item text-danger'
                 onClick={() => onAction?.('delete', notification.id)}
               >

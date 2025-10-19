@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import Head from 'next/head';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { Button, Card, Form, Badge, Table, Modal, Dropdown } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import {
+  Button,
+  Card,
+  Form,
+  Table,
+  Modal,
+} from 'react-bootstrap';
+
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
-import Head from 'next/head';
 
 interface Provider {
   id: number;
@@ -27,16 +35,17 @@ interface Provider {
 export default function ProveedoresListado() {
   const router = useRouter();
   const [providers, setProviders] = useState<Provider[]>([]);
-  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(
+    null,
+  );
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  
+
   // Filtros
   const [filters, setFilters] = useState({
     search: '',
     category: '',
-    status: ''
+    status: '',
   });
 
   // Paginación
@@ -49,9 +58,8 @@ export default function ProveedoresListado() {
 
   const loadProviders = async () => {
     try {
-      setLoading(true);
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const mockProviders: Provider[] = [
         {
           id: 1,
@@ -69,7 +77,7 @@ export default function ProveedoresListado() {
           totalAmount: 2500000,
           lastContract: '2024-03-15T10:30:00Z',
           createdAt: '2023-06-15T10:30:00Z',
-          updatedAt: '2024-03-20T14:25:00Z'
+          updatedAt: '2024-03-20T14:25:00Z',
         },
         {
           id: 2,
@@ -87,7 +95,7 @@ export default function ProveedoresListado() {
           totalAmount: 850000,
           lastContract: '2024-03-22T16:45:00Z',
           createdAt: '2023-04-20T09:15:00Z',
-          updatedAt: '2024-03-22T16:45:00Z'
+          updatedAt: '2024-03-22T16:45:00Z',
         },
         {
           id: 3,
@@ -105,7 +113,7 @@ export default function ProveedoresListado() {
           totalAmount: 1200000,
           lastContract: '2024-03-18T11:20:00Z',
           createdAt: '2023-08-10T14:30:00Z',
-          updatedAt: '2024-03-18T11:20:00Z'
+          updatedAt: '2024-03-18T11:20:00Z',
         },
         {
           id: 4,
@@ -123,7 +131,7 @@ export default function ProveedoresListado() {
           totalAmount: 1800000,
           lastContract: '2024-03-20T09:30:00Z',
           createdAt: '2023-02-28T16:45:00Z',
-          updatedAt: '2024-03-20T09:30:00Z'
+          updatedAt: '2024-03-20T09:30:00Z',
         },
         {
           id: 5,
@@ -141,7 +149,7 @@ export default function ProveedoresListado() {
           totalAmount: 3200000,
           lastContract: '2024-03-10T15:15:00Z',
           createdAt: '2023-11-15T10:00:00Z',
-          updatedAt: '2024-03-10T15:15:00Z'
+          updatedAt: '2024-03-10T15:15:00Z',
         },
         {
           id: 6,
@@ -159,7 +167,7 @@ export default function ProveedoresListado() {
           totalAmount: 650000,
           lastContract: '2024-03-14T12:45:00Z',
           createdAt: '2023-07-05T08:30:00Z',
-          updatedAt: '2024-03-14T12:45:00Z'
+          updatedAt: '2024-03-14T12:45:00Z',
         },
         {
           id: 7,
@@ -177,7 +185,7 @@ export default function ProveedoresListado() {
           totalAmount: 0,
           lastContract: '',
           createdAt: '2024-03-01T14:20:00Z',
-          updatedAt: '2024-03-01T14:20:00Z'
+          updatedAt: '2024-03-01T14:20:00Z',
         },
         {
           id: 8,
@@ -195,7 +203,7 @@ export default function ProveedoresListado() {
           totalAmount: 950000,
           lastContract: '2024-03-12T10:15:00Z',
           createdAt: '2023-09-20T11:45:00Z',
-          updatedAt: '2024-03-12T10:15:00Z'
+          updatedAt: '2024-03-12T10:15:00Z',
         },
         {
           id: 9,
@@ -213,7 +221,7 @@ export default function ProveedoresListado() {
           totalAmount: 1400000,
           lastContract: '2024-03-25T13:30:00Z',
           createdAt: '2023-05-12T09:00:00Z',
-          updatedAt: '2024-03-25T13:30:00Z'
+          updatedAt: '2024-03-25T13:30:00Z',
         },
         {
           id: 10,
@@ -231,37 +239,49 @@ export default function ProveedoresListado() {
           totalAmount: 320000,
           lastContract: '2024-01-15T16:20:00Z',
           createdAt: '2023-03-08T15:30:00Z',
-          updatedAt: '2024-01-15T16:20:00Z'
-        }
+          updatedAt: '2024-01-15T16:20:00Z',
+        },
       ];
-      
+
       setProviders(mockProviders);
-    } catch (error) {
-      console.error('Error loading providers:', error);
-    } finally {
-      setLoading(false);
+    } catch {
+      // Error loading providers
     }
   };
 
   const getCategoryBadge = (category: string) => {
     const badges = {
-      supplies: { bg: 'success', text: 'Suministros', class: 'category-supplies' },
-      services: { bg: 'primary', text: 'Servicios', class: 'category-services' },
-      construction: { bg: 'warning', text: 'Construcción', class: 'category-construction' },
-      others: { bg: 'secondary', text: 'Otros', class: 'category-others' }
+      supplies: {
+        bg: 'success',
+        text: 'Suministros',
+        class: 'category-supplies',
+      },
+      services: {
+        bg: 'primary',
+        text: 'Servicios',
+        class: 'category-services',
+      },
+      construction: {
+        bg: 'warning',
+        text: 'Construcción',
+        class: 'category-construction',
+      },
+      others: { bg: 'secondary', text: 'Otros', class: 'category-others' },
     };
-    
+
     const badge = badges[category as keyof typeof badges];
-    return <span className={`provider-badge ${badge.class}`}>{badge.text}</span>;
+    return (
+      <span className={`provider-badge ${badge.class}`}>{badge.text}</span>
+    );
   };
 
   const getStatusBadge = (status: string) => {
     const badges = {
       active: { text: 'Activo', class: 'status-active' },
       inactive: { text: 'Inactivo', class: 'status-inactive' },
-      pending: { text: 'Pendiente', class: 'status-pending' }
+      pending: { text: 'Pendiente', class: 'status-pending' },
     };
-    
+
     const badge = badges[status as keyof typeof badges];
     return <span className={`status-badge ${badge.class}`}>{badge.text}</span>;
   };
@@ -270,15 +290,19 @@ export default function ProveedoresListado() {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       stars.push(
-        <span key={i} className="material-icons" style={{ 
-          color: i <= rating ? '#FFB300' : '#e0e0e0', 
-          fontSize: '16px' 
-        }}>
+        <span
+          key={i}
+          className='material-icons'
+          style={{
+            color: i <= rating ? '#FFB300' : '#e0e0e0',
+            fontSize: '16px',
+          }}
+        >
           star
-        </span>
+        </span>,
       );
     }
-    return <div className="rating">{stars}</div>;
+    return <div className='rating'>{stars}</div>;
   };
 
   const handleEditProvider = (providerId: number) => {
@@ -295,16 +319,18 @@ export default function ProveedoresListado() {
   };
 
   const confirmDelete = async () => {
-    if (!selectedProvider) return;
-    
+    if (!selectedProvider) {
+      return;
+    }
+
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
       setProviders(prev => prev.filter(p => p.id !== selectedProvider.id));
       setShowDeleteModal(false);
       setSelectedProvider(null);
       alert('Proveedor eliminado exitosamente');
-    } catch (error) {
-      console.error('Error deleting provider:', error);
+    } catch {
+      // Error deleting provider
       alert('Error al eliminar el proveedor');
     }
   };
@@ -320,13 +346,20 @@ export default function ProveedoresListado() {
   // Paginación
   const totalPages = Math.ceil(filteredProviders.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedProviders = filteredProviders.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedProviders = filteredProviders.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   const stats = {
     total: providers.length,
     active: providers.filter(p => p.status === 'active').length,
     totalContracts: providers.reduce((sum, p) => sum + p.totalContracts, 0),
-    avgRating: providers.filter(p => p.rating > 0).reduce((sum, p) => sum + p.rating, 0) / providers.filter(p => p.rating > 0).length || 0
+    avgRating:
+      providers
+        .filter(p => p.rating > 0)
+        .reduce((sum, p) => sum + p.rating, 0) /
+        providers.filter(p => p.rating > 0).length || 0,
   };
 
   return (
@@ -336,86 +369,100 @@ export default function ProveedoresListado() {
       </Head>
 
       <Layout>
-        <div className="providers-container">
+        <div className='providers-container'>
           {/* Header */}
-          <div className="providers-header">
-            <div className="d-flex justify-content-between align-items-start mb-4">
+          <div className='providers-header'>
+            <div className='d-flex justify-content-between align-items-start mb-4'>
               <div>
-                <h1 className="providers-title">
-                  <span className="material-icons me-2">business</span>
+                <h1 className='providers-title'>
+                  <span className='material-icons me-2'>business</span>
                   Lista de Proveedores
                 </h1>
-                <p className="providers-subtitle">
+                <p className='providers-subtitle'>
                   Gestiona y administra todos los proveedores de la comunidad
                 </p>
               </div>
-              <Button 
-                variant="light" 
+              <Button
+                variant='light'
                 onClick={() => router.push('/proveedores/nuevo')}
               >
-                <span className="material-icons me-2">add</span>
+                <span className='material-icons me-2'>add</span>
                 Nuevo Proveedor
               </Button>
             </div>
           </div>
 
           {/* Stats Cards */}
-          <div className="row g-3 mb-4">
-            <div className="col-md-3">
-              <Card className="card-stat">
+          <div className='row g-3 mb-4'>
+            <div className='col-md-3'>
+              <Card className='card-stat'>
                 <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center">
+                  <div className='d-flex justify-content-between align-items-center'>
                     <div>
-                      <h6 className="text-muted mb-0">Total Proveedores</h6>
-                      <h3 className="mt-2 mb-0">{stats.total}</h3>
+                      <h6 className='text-muted mb-0'>Total Proveedores</h6>
+                      <h3 className='mt-2 mb-0'>{stats.total}</h3>
                     </div>
-                    <div className="stat-icon" style={{ backgroundColor: '#e3f2fd', color: '#1976d2' }}>
-                      <span className="material-icons">business</span>
+                    <div
+                      className='stat-icon'
+                      style={{ backgroundColor: '#e3f2fd', color: '#1976d2' }}
+                    >
+                      <span className='material-icons'>business</span>
                     </div>
                   </div>
                 </Card.Body>
               </Card>
             </div>
-            <div className="col-md-3">
-              <Card className="card-stat">
+            <div className='col-md-3'>
+              <Card className='card-stat'>
                 <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center">
+                  <div className='d-flex justify-content-between align-items-center'>
                     <div>
-                      <h6 className="text-muted mb-0">Proveedores Activos</h6>
-                      <h3 className="mt-2 mb-0">{stats.active}</h3>
+                      <h6 className='text-muted mb-0'>Proveedores Activos</h6>
+                      <h3 className='mt-2 mb-0'>{stats.active}</h3>
                     </div>
-                    <div className="stat-icon" style={{ backgroundColor: '#e8f5e8', color: '#388e3c' }}>
-                      <span className="material-icons">check_circle</span>
+                    <div
+                      className='stat-icon'
+                      style={{ backgroundColor: '#e8f5e8', color: '#388e3c' }}
+                    >
+                      <span className='material-icons'>check_circle</span>
                     </div>
                   </div>
                 </Card.Body>
               </Card>
             </div>
-            <div className="col-md-3">
-              <Card className="card-stat">
+            <div className='col-md-3'>
+              <Card className='card-stat'>
                 <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center">
+                  <div className='d-flex justify-content-between align-items-center'>
                     <div>
-                      <h6 className="text-muted mb-0">Total Contratos</h6>
-                      <h3 className="mt-2 mb-0">{stats.totalContracts}</h3>
+                      <h6 className='text-muted mb-0'>Total Contratos</h6>
+                      <h3 className='mt-2 mb-0'>{stats.totalContracts}</h3>
                     </div>
-                    <div className="stat-icon" style={{ backgroundColor: '#fff3e0', color: '#f57c00' }}>
-                      <span className="material-icons">description</span>
+                    <div
+                      className='stat-icon'
+                      style={{ backgroundColor: '#fff3e0', color: '#f57c00' }}
+                    >
+                      <span className='material-icons'>description</span>
                     </div>
                   </div>
                 </Card.Body>
               </Card>
             </div>
-            <div className="col-md-3">
-              <Card className="card-stat">
+            <div className='col-md-3'>
+              <Card className='card-stat'>
                 <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center">
+                  <div className='d-flex justify-content-between align-items-center'>
                     <div>
-                      <h6 className="text-muted mb-0">Rating Promedio</h6>
-                      <h3 className="mt-2 mb-0">{stats.avgRating.toFixed(1)}</h3>
+                      <h6 className='text-muted mb-0'>Rating Promedio</h6>
+                      <h3 className='mt-2 mb-0'>
+                        {stats.avgRating.toFixed(1)}
+                      </h3>
                     </div>
-                    <div className="stat-icon" style={{ backgroundColor: '#f3e5f5', color: '#7b1fa2' }}>
-                      <span className="material-icons">star</span>
+                    <div
+                      className='stat-icon'
+                      style={{ backgroundColor: '#f3e5f5', color: '#7b1fa2' }}
+                    >
+                      <span className='material-icons'>star</span>
                     </div>
                   </div>
                 </Card.Body>
@@ -424,52 +471,58 @@ export default function ProveedoresListado() {
           </div>
 
           {/* Filtros */}
-          <div className="filter-section">
-            <div className="filter-header">
-              <h6 className="mb-0">
-                <span className="material-icons me-2">filter_list</span>
+          <div className='filter-section'>
+            <div className='filter-header'>
+              <h6 className='mb-0'>
+                <span className='material-icons me-2'>filter_list</span>
                 Filtros de Búsqueda
               </h6>
             </div>
-            <div className="filter-body">
-              <div className="row g-3">
-                <div className="col-md-4">
+            <div className='filter-body'>
+              <div className='row g-3'>
+                <div className='col-md-4'>
                   <Form.Group>
                     <Form.Label>Buscar proveedor</Form.Label>
                     <Form.Control
-                      type="text"
-                      placeholder="Nombre del proveedor..."
+                      type='text'
+                      placeholder='Nombre del proveedor...'
                       value={filters.search}
-                      onChange={(e) => setFilters({...filters, search: e.target.value})}
+                      onChange={e =>
+                        setFilters({ ...filters, search: e.target.value })
+                      }
                     />
                   </Form.Group>
                 </div>
-                <div className="col-md-4">
+                <div className='col-md-4'>
                   <Form.Group>
                     <Form.Label>Categoría</Form.Label>
                     <Form.Select
                       value={filters.category}
-                      onChange={(e) => setFilters({...filters, category: e.target.value})}
+                      onChange={e =>
+                        setFilters({ ...filters, category: e.target.value })
+                      }
                     >
-                      <option value="">Todas las categorías</option>
-                      <option value="supplies">Suministros</option>
-                      <option value="services">Servicios</option>
-                      <option value="construction">Construcción</option>
-                      <option value="others">Otros</option>
+                      <option value=''>Todas las categorías</option>
+                      <option value='supplies'>Suministros</option>
+                      <option value='services'>Servicios</option>
+                      <option value='construction'>Construcción</option>
+                      <option value='others'>Otros</option>
                     </Form.Select>
                   </Form.Group>
                 </div>
-                <div className="col-md-4">
+                <div className='col-md-4'>
                   <Form.Group>
                     <Form.Label>Estado</Form.Label>
                     <Form.Select
                       value={filters.status}
-                      onChange={(e) => setFilters({...filters, status: e.target.value})}
+                      onChange={e =>
+                        setFilters({ ...filters, status: e.target.value })
+                      }
                     >
-                      <option value="">Todos los estados</option>
-                      <option value="active">Activo</option>
-                      <option value="inactive">Inactivo</option>
-                      <option value="pending">Pendiente</option>
+                      <option value=''>Todos los estados</option>
+                      <option value='active'>Activo</option>
+                      <option value='inactive'>Inactivo</option>
+                      <option value='pending'>Pendiente</option>
                     </Form.Select>
                   </Form.Group>
                 </div>
@@ -478,28 +531,28 @@ export default function ProveedoresListado() {
           </div>
 
           {/* View Controls */}
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <span className="text-muted">
+          <div className='d-flex justify-content-between align-items-center mb-3'>
+            <span className='text-muted'>
               {filteredProviders.length} proveedores encontrados
             </span>
-            <div className="d-flex align-items-center gap-2">
-              <span className="text-muted small">Vista:</span>
-              <div className="btn-group" role="group">
-                <Button 
+            <div className='d-flex align-items-center gap-2'>
+              <span className='text-muted small'>Vista:</span>
+              <div className='btn-group' role='group'>
+                <Button
                   variant={viewMode === 'grid' ? 'primary' : 'outline-primary'}
-                  size="sm"
+                  size='sm'
                   onClick={() => setViewMode('grid')}
-                  className="view-toggle-btn"
+                  className='view-toggle-btn'
                 >
-                  <span className="material-icons">grid_view</span>
+                  <span className='material-icons'>grid_view</span>
                 </Button>
-                <Button 
+                <Button
                   variant={viewMode === 'list' ? 'primary' : 'outline-primary'}
-                  size="sm"
+                  size='sm'
                   onClick={() => setViewMode('list')}
-                  className="view-toggle-btn"
+                  className='view-toggle-btn'
                 >
-                  <span className="material-icons">view_list</span>
+                  <span className='material-icons'>view_list</span>
                 </Button>
               </div>
             </div>
@@ -507,97 +560,114 @@ export default function ProveedoresListado() {
 
           {/* Vista Grid */}
           {viewMode === 'grid' && (
-            <div className="row g-3 mb-4">
-              {paginatedProviders.map((provider) => (
-                <div key={provider.id} className="col-lg-6 col-xl-4">
-                  <div className="provider-card">
-                    <div className="card-body">
-                      <div className="d-flex align-items-start mb-3">
-                        <div className="provider-logo me-3">
+            <div className='row g-3 mb-4'>
+              {paginatedProviders.map(provider => (
+                <div key={provider.id} className='col-lg-6 col-xl-4'>
+                  <div className='provider-card'>
+                    <div className='card-body'>
+                      <div className='d-flex align-items-start mb-3'>
+                        <div className='provider-logo me-3'>
                           {provider.logo ? (
-                            <img src={provider.logo} alt={provider.name} />
+                            <Image src={provider.logo} alt={provider.name} width={50} height={50} />
                           ) : (
                             provider.name.substring(0, 2).toUpperCase()
                           )}
                         </div>
-                        <div className="flex-grow-1">
-                          <h6 className="card-title mb-1">{provider.name}</h6>
-                          <small className="text-muted">{provider.businessName}</small>
-                          <div className="mt-1">
+                        <div className='flex-grow-1'>
+                          <h6 className='card-title mb-1'>{provider.name}</h6>
+                          <small className='text-muted'>
+                            {provider.businessName}
+                          </small>
+                          <div className='mt-1'>
                             {getCategoryBadge(provider.category)}
                           </div>
                         </div>
-                        <div className="text-end">
+                        <div className='text-end'>
                           {getStatusBadge(provider.status)}
                         </div>
                       </div>
 
-                      <div className="provider-info mb-3">
-                        <div className="d-flex align-items-center mb-1">
-                          <span className="material-icons me-2 text-muted" style={{ fontSize: '16px' }}>
+                      <div className='provider-info mb-3'>
+                        <div className='d-flex align-items-center mb-1'>
+                          <span
+                            className='material-icons me-2 text-muted'
+                            style={{ fontSize: '16px' }}
+                          >
                             phone
                           </span>
                           <small>{provider.phone}</small>
                         </div>
-                        <div className="d-flex align-items-center mb-1">
-                          <span className="material-icons me-2 text-muted" style={{ fontSize: '16px' }}>
+                        <div className='d-flex align-items-center mb-1'>
+                          <span
+                            className='material-icons me-2 text-muted'
+                            style={{ fontSize: '16px' }}
+                          >
                             email
                           </span>
                           <small>{provider.email}</small>
                         </div>
-                        <div className="d-flex align-items-center">
-                          <span className="material-icons me-2 text-muted" style={{ fontSize: '16px' }}>
+                        <div className='d-flex align-items-center'>
+                          <span
+                            className='material-icons me-2 text-muted'
+                            style={{ fontSize: '16px' }}
+                          >
                             badge
                           </span>
                           <small>{provider.rif}</small>
                         </div>
                       </div>
 
-                      <div className="provider-stats mb-3">
-                        <div className="row text-center">
-                          <div className="col-4">
-                            <div className="fw-bold">{provider.totalContracts}</div>
-                            <small className="text-muted">Contratos</small>
+                      <div className='provider-stats mb-3'>
+                        <div className='row text-center'>
+                          <div className='col-4'>
+                            <div className='fw-bold'>
+                              {provider.totalContracts}
+                            </div>
+                            <small className='text-muted'>Contratos</small>
                           </div>
-                          <div className="col-4">
-                            <div className="fw-bold">${(provider.totalAmount / 1000).toFixed(0)}K</div>
-                            <small className="text-muted">Total</small>
+                          <div className='col-4'>
+                            <div className='fw-bold'>
+                              ${(provider.totalAmount / 1000).toFixed(0)}K
+                            </div>
+                            <small className='text-muted'>Total</small>
                           </div>
-                          <div className="col-4">
-                            <div className="fw-bold">{provider.rating || 'N/A'}</div>
-                            <small className="text-muted">Rating</small>
+                          <div className='col-4'>
+                            <div className='fw-bold'>
+                              {provider.rating || 'N/A'}
+                            </div>
+                            <small className='text-muted'>Rating</small>
                           </div>
                         </div>
                       </div>
 
                       {provider.rating > 0 && (
-                        <div className="d-flex justify-content-center mb-3">
+                        <div className='d-flex justify-content-center mb-3'>
                           {renderRating(provider.rating)}
                         </div>
                       )}
 
-                      <div className="d-flex justify-content-between align-items-center">
-                        <Button 
-                          variant="outline-info" 
-                          size="sm"
+                      <div className='d-flex justify-content-between align-items-center'>
+                        <Button
+                          variant='outline-info'
+                          size='sm'
                           onClick={() => handleViewProvider(provider.id)}
                         >
-                          <span className="material-icons">visibility</span>
+                          <span className='material-icons'>visibility</span>
                         </Button>
-                        <div className="d-flex gap-1">
-                          <Button 
-                            variant="outline-primary" 
-                            size="sm"
+                        <div className='d-flex gap-1'>
+                          <Button
+                            variant='outline-primary'
+                            size='sm'
                             onClick={() => handleEditProvider(provider.id)}
                           >
-                            <span className="material-icons">edit</span>
+                            <span className='material-icons'>edit</span>
                           </Button>
-                          <Button 
-                            variant="outline-danger" 
-                            size="sm"
+                          <Button
+                            variant='outline-danger'
+                            size='sm'
                             onClick={() => handleDeleteProvider(provider)}
                           >
-                            <span className="material-icons">delete</span>
+                            <span className='material-icons'>delete</span>
                           </Button>
                         </div>
                       </div>
@@ -610,19 +680,19 @@ export default function ProveedoresListado() {
 
           {/* Vista Lista */}
           {viewMode === 'list' && (
-            <div className="providers-table">
-              <div className="table-header">
-                <h5 className="table-title">
-                  <span className="material-icons">business</span>
+            <div className='providers-table'>
+              <div className='table-header'>
+                <h5 className='table-title'>
+                  <span className='material-icons'>business</span>
                   Proveedores
                 </h5>
-                <Button variant="outline-secondary" size="sm">
-                  <span className="material-icons me-1">file_download</span>
+                <Button variant='outline-secondary' size='sm'>
+                  <span className='material-icons me-1'>file_download</span>
                   Exportar
                 </Button>
               </div>
-              <div className="table-responsive">
-                <Table hover className="custom-table mb-0">
+              <div className='table-responsive'>
+                <Table hover className='custom-table mb-0'>
                   <thead>
                     <tr>
                       <th>Proveedor</th>
@@ -631,65 +701,85 @@ export default function ProveedoresListado() {
                       <th>Contratos</th>
                       <th>Rating</th>
                       <th>Estado</th>
-                      <th className="text-end">Acciones</th>
+                      <th className='text-end'>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedProviders.map((provider) => (
-                      <tr key={provider.id} className="data-row">
+                    {paginatedProviders.map(provider => (
+                      <tr key={provider.id} className='data-row'>
                         <td>
-                          <div className="d-flex align-items-center">
-                            <div className="provider-logo me-3" style={{ width: '40px', height: '40px', fontSize: '14px' }}>
+                          <div className='d-flex align-items-center'>
+                            <div
+                              className='provider-logo me-3'
+                              style={{
+                                width: '40px',
+                                height: '40px',
+                                fontSize: '14px',
+                              }}
+                            >
                               {provider.logo ? (
-                                <img src={provider.logo} alt={provider.name} />
+                                <Image
+                                  src={provider.logo}
+                                  alt={provider.name}
+                                  width={40}
+                                  height={40}
+                                />
                               ) : (
                                 provider.name.substring(0, 2).toUpperCase()
                               )}
                             </div>
                             <div>
-                              <div className="fw-medium">{provider.name}</div>
-                              <small className="text-muted">{provider.businessName}</small>
+                              <div className='fw-medium'>{provider.name}</div>
+                              <small className='text-muted'>
+                                {provider.businessName}
+                              </small>
                             </div>
                           </div>
                         </td>
                         <td>{getCategoryBadge(provider.category)}</td>
                         <td>
                           <div>{provider.phone}</div>
-                          <small className="text-muted">{provider.email}</small>
+                          <small className='text-muted'>{provider.email}</small>
                         </td>
                         <td>
-                          <div className="fw-medium">{provider.totalContracts}</div>
-                          <small className="text-muted">${provider.totalAmount.toLocaleString()}</small>
+                          <div className='fw-medium'>
+                            {provider.totalContracts}
+                          </div>
+                          <small className='text-muted'>
+                            ${provider.totalAmount.toLocaleString()}
+                          </small>
                         </td>
                         <td>
-                          {provider.rating > 0 ? renderRating(provider.rating) : 'N/A'}
+                          {provider.rating > 0
+                            ? renderRating(provider.rating)
+                            : 'N/A'}
                         </td>
                         <td>{getStatusBadge(provider.status)}</td>
-                        <td className="text-end">
-                          <div className="d-flex gap-1 justify-content-end">
-                            <Button 
-                              variant="outline-info" 
-                              size="sm" 
-                              className="action-button"
+                        <td className='text-end'>
+                          <div className='d-flex gap-1 justify-content-end'>
+                            <Button
+                              variant='outline-info'
+                              size='sm'
+                              className='action-button'
                               onClick={() => handleViewProvider(provider.id)}
                             >
-                              <span className="material-icons">visibility</span>
+                              <span className='material-icons'>visibility</span>
                             </Button>
-                            <Button 
-                              variant="outline-primary" 
-                              size="sm" 
-                              className="action-button"
+                            <Button
+                              variant='outline-primary'
+                              size='sm'
+                              className='action-button'
                               onClick={() => handleEditProvider(provider.id)}
                             >
-                              <span className="material-icons">edit</span>
+                              <span className='material-icons'>edit</span>
                             </Button>
-                            <Button 
-                              variant="outline-danger" 
-                              size="sm" 
-                              className="action-button"
+                            <Button
+                              variant='outline-danger'
+                              size='sm'
+                              className='action-button'
                               onClick={() => handleDeleteProvider(provider)}
                             >
-                              <span className="material-icons">delete</span>
+                              <span className='material-icons'>delete</span>
                             </Button>
                           </div>
                         </td>
@@ -703,38 +793,51 @@ export default function ProveedoresListado() {
 
           {/* Paginación */}
           {totalPages > 1 && (
-            <div className="d-flex justify-content-between align-items-center mt-4">
-              <span className="text-muted">
-                Mostrando {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredProviders.length)} de {filteredProviders.length} proveedores
+            <div className='d-flex justify-content-between align-items-center mt-4'>
+              <span className='text-muted'>
+                Mostrando {startIndex + 1}-
+                {Math.min(startIndex + itemsPerPage, filteredProviders.length)}{' '}
+                de {filteredProviders.length} proveedores
               </span>
               <nav>
-                <ul className="pagination">
-                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                <ul className='pagination'>
+                  <li
+                    className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}
+                  >
+                    <button
+                      className='page-link'
+                      onClick={() =>
+                        setCurrentPage(Math.max(1, currentPage - 1))
+                      }
                       disabled={currentPage === 1}
                     >
-                      <span className="material-icons">chevron_left</span>
+                      <span className='material-icons'>chevron_left</span>
                     </button>
                   </li>
                   {Array.from({ length: totalPages }, (_, index) => (
-                    <li key={index + 1} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
-                      <button 
-                        className="page-link"
+                    <li
+                      key={index + 1}
+                      className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}
+                    >
+                      <button
+                        className='page-link'
                         onClick={() => setCurrentPage(index + 1)}
                       >
                         {index + 1}
                       </button>
                     </li>
                   ))}
-                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  <li
+                    className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}
+                  >
+                    <button
+                      className='page-link'
+                      onClick={() =>
+                        setCurrentPage(Math.min(totalPages, currentPage + 1))
+                      }
                       disabled={currentPage === totalPages}
                     >
-                      <span className="material-icons">chevron_right</span>
+                      <span className='material-icons'>chevron_right</span>
                     </button>
                   </li>
                 </ul>
@@ -744,39 +847,45 @@ export default function ProveedoresListado() {
         </div>
 
         {/* Modal de eliminación */}
-        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+        <Modal
+          show={showDeleteModal}
+          onHide={() => setShowDeleteModal(false)}
+          centered
+        >
           <Modal.Header closeButton>
-            <Modal.Title className="text-danger">
-              <span className="material-icons me-2">delete</span>
+            <Modal.Title className='text-danger'>
+              <span className='material-icons me-2'>delete</span>
               Eliminar Proveedor
             </Modal.Title>
           </Modal.Header>
           <Modal.Body>
             {selectedProvider && (
               <>
-                <div className="alert alert-danger">
-                  <span className="material-icons me-2">warning</span>
-                  Esta acción no se puede deshacer. El proveedor será eliminado permanentemente.
+                <div className='alert alert-danger'>
+                  <span className='material-icons me-2'>warning</span>
+                  Esta acción no se puede deshacer. El proveedor será eliminado
+                  permanentemente.
                 </div>
-                <p>¿Estás seguro de que deseas eliminar el proveedor <strong>"{selectedProvider.name}"</strong>?</p>
-                <p className="text-muted">
-                  Esto también eliminará toda la información relacionada, incluyendo contratos y evaluaciones.
+                <p>
+                  ¿Estás seguro de que deseas eliminar el proveedor{' '}
+                  <strong>&ldquo;{selectedProvider.name}&rdquo;</strong>?
+                </p>
+                <p className='text-muted'>
+                  Esto también eliminará toda la información relacionada,
+                  incluyendo contratos y evaluaciones.
                 </p>
               </>
             )}
           </Modal.Body>
           <Modal.Footer>
-            <Button 
-              variant="outline-secondary"
+            <Button
+              variant='outline-secondary'
               onClick={() => setShowDeleteModal(false)}
             >
               Cancelar
             </Button>
-            <Button 
-              variant="danger"
-              onClick={confirmDelete}
-            >
-              <span className="material-icons me-2">delete</span>
+            <Button variant='danger' onClick={confirmDelete}>
+              <span className='material-icons me-2'>delete</span>
               Eliminar
             </Button>
           </Modal.Footer>

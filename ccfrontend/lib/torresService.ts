@@ -57,8 +57,12 @@ export interface EstadisticasPorPiso {
 }
 
 // Listado completo de torres de un edificio
-export const getTorresListado = async (edificioId: number): Promise<Torre[]> => {
-  const response = await apiClient.get(`/torres/edificio/${edificioId}/listado`);
+export const getTorresListado = async (
+  edificioId: number,
+): Promise<Torre[]> => {
+  const response = await apiClient.get(
+    `/torres/edificio/${edificioId}/listado`,
+  );
   return response.data;
 };
 
@@ -71,7 +75,10 @@ export const buscarTorres = async (
     sortOrder?: 'ASC' | 'DESC';
   },
 ): Promise<Torre[]> => {
-  const response = await apiClient.get(`/torres/edificio/${edificioId}/buscar`, { params });
+  const response = await apiClient.get(
+    `/torres/edificio/${edificioId}/buscar`,
+    { params },
+  );
   return response.data;
 };
 
@@ -79,12 +86,16 @@ export const buscarTorres = async (
 export const getEstadisticasEdificio = async (
   edificioId: number,
 ): Promise<EstadisticasEdificio> => {
-  const response = await apiClient.get(`/torres/edificio/${edificioId}/estadisticas`);
+  const response = await apiClient.get(
+    `/torres/edificio/${edificioId}/estadisticas`,
+  );
   return response.data;
 };
 
 // Detalle completo de una torre
-export const getTorreDetalle = async (torreId: number): Promise<TorreDetalle> => {
+export const getTorreDetalle = async (
+  torreId: number,
+): Promise<TorreDetalle> => {
   const response = await apiClient.get(`/torres/${torreId}/detalle`);
   return response.data;
 };
@@ -100,9 +111,12 @@ export const getUnidadesFiltradas = async (
   torreId: number,
   estado: 'todas' | 'ocupada' | 'vacante' = 'todas',
 ): Promise<Unidad[]> => {
-  const response = await apiClient.get(`/torres/${torreId}/unidades/filtradas`, {
-    params: { estado },
-  });
+  const response = await apiClient.get(
+    `/torres/${torreId}/unidades/filtradas`,
+    {
+      params: { estado },
+    },
+  );
   return response.data;
 };
 
@@ -110,7 +124,9 @@ export const getUnidadesFiltradas = async (
 export const getEstadisticasPorPiso = async (
   torreId: number,
 ): Promise<EstadisticasPorPiso[]> => {
-  const response = await apiClient.get(`/torres/${torreId}/estadisticas-por-piso`);
+  const response = await apiClient.get(
+    `/torres/${torreId}/estadisticas-por-piso`,
+  );
   return response.data;
 };
 
@@ -119,9 +135,12 @@ export const validarCodigoTorre = async (
   edificioId: number,
   codigo: string,
 ): Promise<{ existe: boolean }> => {
-  const response = await apiClient.get(`/torres/edificio/${edificioId}/validar-codigo`, {
-    params: { codigo },
-  });
+  const response = await apiClient.get(
+    `/torres/edificio/${edificioId}/validar-codigo`,
+    {
+      params: { codigo },
+    },
+  );
   return response.data;
 };
 
@@ -129,12 +148,16 @@ export const validarCodigoTorre = async (
 export const getSiguienteCodigo = async (
   edificioId: number,
 ): Promise<{ siguienteCodigo: string }> => {
-  const response = await apiClient.get(`/torres/edificio/${edificioId}/siguiente-codigo`);
+  const response = await apiClient.get(
+    `/torres/edificio/${edificioId}/siguiente-codigo`,
+  );
   return response.data;
 };
 
 // Verificar si se puede eliminar
-export const puedeEliminarTorre = async (torreId: number): Promise<{
+export const puedeEliminarTorre = async (
+  torreId: number,
+): Promise<{
   puedeEliminar: boolean;
   razon?: string;
   totalUnidades: number;
@@ -160,7 +183,10 @@ export const crearTorre = async (data: Partial<Torre>): Promise<Torre> => {
 };
 
 // Actualizar torre
-export const actualizarTorre = async (torreId: number, data: Partial<Torre>): Promise<Torre> => {
+export const actualizarTorre = async (
+  torreId: number,
+  data: Partial<Torre>,
+): Promise<Torre> => {
   const response = await apiClient.put(`/torres/${torreId}`, data);
   return response.data;
 };
