@@ -555,6 +555,17 @@ class AuthService {
     }
   }
 
+  // Limpieza local sin llamadas al servidor ni redirección
+  clearLocalAuth(): void {
+    try {
+      console.log('🧹 clearLocalAuth: limpiando token y datos de usuario localmente');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+    } catch (e) {
+      console.warn('⚠️ Error en clearLocalAuth:', e);
+    }
+  }
+
   // Solicitar reset de contraseña
   async forgotPassword(email: string): Promise<void> {
     try {

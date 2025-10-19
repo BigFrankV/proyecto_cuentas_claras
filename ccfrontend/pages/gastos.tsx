@@ -1,34 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { Button, Card, Form, Alert, Table, Modal, Dropdown, Badge } from 'react-bootstrap';
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions';
+import { listGastos } from '@/lib/gastosService';
 import Head from 'next/head';
-
-interface Expense {
-  id: number;
-  description: string;
-  category: string;
-  provider: string;
-  amount: number;
-  date: string;
-  status: 'pending' | 'approved' | 'rejected' | 'paid' | 'completed';
-  dueDate: string;
-  documentType: string;
-  documentNumber: string;
-  hasAttachments: boolean;
-  createdBy: string;
-  tags: string[];
-}
+import { Expense, mapBackendToExpense } from '@/types/gastos';
 
 export default function GastosListado() {
   const router = useRouter();
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { isSuperUser, currentRole } = usePermissions();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [selectedExpenses, setSelectedExpenses] = useState<number[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  
+  const isFetchingRef = useRef(false); // evita reentradas
+  const hasLoadedRef = useRef(false); // <-- añadir para controlar carga inicial
+
   // Filtros
   const [filters, setFilters] = useState({
     search: '',
@@ -45,102 +36,49 @@ export default function GastosListado() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  useEffect(() => {
-    loadExpenses();
-  }, []);
+  // Memoizar comunidadId para evitar re-ejecuciones del useEffect
+  const resolvedComunidadId = useMemo(() => {
+    // Siempre usar endpoint global /gastos - el backend filtra por comunidades asignadas
+    return undefined;
+  }, []); // <-- simplificar, siempre undefined
 
-  const loadExpenses = async () => {
+  const loadExpenses = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     try {
       setLoading(true);
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockExpenses: Expense[] = [
-        {
-          id: 1,
-          description: 'Mantenimiento de ascensores',
-          category: 'mantenimiento',
-          provider: 'Elevadores Modernos S.A.',
-          amount: 850000,
-          date: '2024-03-15',
-          status: 'approved',
-          dueDate: '2024-03-30',
-          documentType: 'Factura',
-          documentNumber: 'F-2024-001',
-          hasAttachments: true,
-          createdBy: 'Patricia Contreras',
-          tags: ['urgente', 'mensual']
-        },
-        {
-          id: 2,
-          description: 'Suministros de limpieza',
-          category: 'suministros',
-          provider: 'Distribuidora Clean Pro',
-          amount: 245000,
-          date: '2024-03-14',
-          status: 'pending',
-          dueDate: '2024-03-25',
-          documentType: 'Boleta',
-          documentNumber: 'B-789',
-          hasAttachments: false,
-          createdBy: 'María González',
-          tags: ['mensual']
-        },
-        {
-          id: 3,
-          description: 'Servicio de jardinería',
-          category: 'servicios',
-          provider: 'Jardines del Sur',
-          amount: 180000,
-          date: '2024-03-13',
-          status: 'paid',
-          dueDate: '2024-03-20',
-          documentType: 'Factura',
-          documentNumber: 'F-456',
-          hasAttachments: true,
-          createdBy: 'Carlos Muñoz',
-          tags: ['externo']
-        },
-        {
-          id: 4,
-          description: 'Seguro de incendio anual',
-          category: 'seguros',
-          provider: 'Seguros La Protección',
-          amount: 1250000,
-          date: '2024-03-12',
-          status: 'rejected',
-          dueDate: '2024-04-15',
-          documentType: 'Póliza',
-          documentNumber: 'P-2024-15',
-          hasAttachments: true,
-          createdBy: 'Patricia Contreras',
-          tags: ['anual', 'importante']
-        },
-        {
-          id: 5,
-          description: 'Consumo eléctrico marzo',
-          category: 'servicios',
-          provider: 'Enel Distribución',
-          amount: 890000,
-          date: '2024-03-11',
-          status: 'completed',
-          dueDate: '2024-03-28',
-          documentType: 'Factura',
-          documentNumber: 'FE-2024-0234',
-          hasAttachments: true,
-          createdBy: 'María González',
-          tags: ['mensual', 'servicios básicos']
-        }
-      ];
-      
-      setExpenses(mockExpenses);
+      const resp = await listGastos(resolvedComunidadId, { limit: 100, offset: 0 });
+      const items = resp.data || [];
+      const mapped: Expense[] = (Array.isArray(items) ? items : []).map(mapBackendToExpense);
+      setExpenses(mapped);
     } catch (error) {
-      console.error('Error loading expenses:', error);
+      console.error('Error loading expenses from API:', error);
+      setExpenses([]);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  };
+  }, [resolvedComunidadId]); // <-- dependencias de la función
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) return;
+
+    // Si no es superuser y no tenemos comunidad -> no llamar
+    if (!isSuperUser && (typeof resolvedComunidadId === 'undefined' || resolvedComunidadId === null)) {
+      console.warn('GastosListado: comunidadId no resuelta, no se realizará la petición.');
+      setLoading(false);
+      setExpenses([]);
+      return;
+    }
+
+    // Evitar carga inicial duplicada
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
+
+    loadExpenses();
+  }, [authLoading, isAuthenticated, isSuperUser, resolvedComunidadId]); // <-- quitar loadExpenses
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('es-CL', {
@@ -210,9 +148,7 @@ export default function GastosListado() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedExpenses = filteredExpenses.slice(startIndex, startIndex + itemsPerPage);
 
-  const getActiveFiltersCount = () => {
-    return Object.values(filters).filter(value => value !== '').length;
-  };
+  const getActiveFiltersCount = () => Object.values(filters).filter(value => value !== '').length;
 
   return (
     <ProtectedRoute>

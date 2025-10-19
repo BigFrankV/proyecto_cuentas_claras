@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions';
 import GastosPorCategoriaChart from '@/components/charts/GastosPorCategoriaChart';
 import EstadoPagosChart from '@/components/charts/EstadoPagosChart';
 import TendenciasEmisionesChart from '@/components/charts/TendenciasEmisionesChart';
@@ -15,17 +16,33 @@ import {
 } from '@/lib/dashboardService';
 
 export default function DashboardCharts() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { isSuperUser, currentRole } = usePermissions();
+
+  // Obtener comunidadId dinámicamente
+  const comunidadId = useMemo(() => {
+    const id = user?.memberships?.[0]?.comunidadId ??
+               currentRole?.comunidadId ??
+               1; // fallback solo si nada
+    console.log('DashboardCharts comunidadId:', id, 'user.memberships:', user?.memberships, 'currentRole:', currentRole); // debug
+    return id;
+  }, [user?.memberships, currentRole?.comunidadId]);
+
   const [loading, setLoading] = useState(true);
   const [emisionesData, setEmisionesData] = useState<TendenciaEmision[]>([]);
   const [pagosData, setPagosData] = useState<EstadoPago[]>([]);
   const [gastosData, setGastosData] = useState<GastoPorCategoria[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Asumimos que la comunidad por defecto es 1, pero esto debería venir del contexto del usuario
-  const comunidadId = 1;
-
   useEffect(() => {
+    // No cargar hasta que el auth esté resuelto y el usuario sea realmente autenticado
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      setLoading(false);
+      setError('No autenticado');
+      return;
+    }
+
     const loadChartData = async () => {
       try {
         setLoading(true);
@@ -50,7 +67,7 @@ export default function DashboardCharts() {
     };
 
     loadChartData();
-  }, [comunidadId]);
+  }, [comunidadId, authLoading, isAuthenticated]);
 
   // Datos mockeados para medidores (por ahora, hasta que tengamos el endpoint)
   const medidoresData = [

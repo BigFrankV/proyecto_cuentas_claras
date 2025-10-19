@@ -1,17 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Layout from '@/components/layout/Layout';
-import useAuth from '@/lib/useAuth'; // ya existe en tu repo
-import usePermissions from '@/lib/usePermissions'; // si existe, o importa permissionsUtils
-
-const ApelacionesListadoPage: React.FC = () => {
-  const { user } = useAuth();
-  const { can } = usePermissions(); // ejemplo: can('apelaciones.create'), can('apelaciones.resolve')
-  const [selectedAppeals, setSelectedAppeals] = useState<string[]>([]);
-  const [filter, setFilter] = useState('all');
-
-  // Sample data
-  const appeals = [
+import { useAuth } from '../../lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions'; // si existe, o importa permissionsUtils
+import { useRouter } from 'next/router';
+const sampleAppeals = [
     {
       id: 'A-2024-001',
       fineId: 'M-2024-089',
@@ -70,6 +63,60 @@ const ApelacionesListadoPage: React.FC = () => {
     }
   ];
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+
+const ApelacionesListadoPage: React.FC = () => {
+  const { user, token, accessToken } = useAuth(); // adapta según lo que exporte tu hook
+  const authToken = token || accessToken || user?.token || user?.access_token || null;
+  const router = useRouter();
+  const { canCreateMulta, hasPermission } = usePermissions(); // usar las funciones que exporta el hook
+  const [appeals, setAppeals] = useState<any[]>([]);
+  const [selectedAppeals, setSelectedAppeals] = useState<string[]>([]);
+  const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(false);
+  const limit = 10; // o el valor que corresponda
+
+  const load = async (p = 1) => {
+    setLoading(true);
+    try {
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+      const options: any = { method: 'GET', headers };
+      // si no hay token, intentar enviar cookies (si tu backend usa sesión por cookie)
+      if (!authToken) options.credentials = 'include';
+
+      const res = await fetch(`${API_BASE}/apelaciones?page=${p}&limit=${limit}`, options);
+
+      if (res.status === 401) {
+        // token inválido / expirado -> forzar login
+        router.push('/login');
+        return;
+      }
+
+      if (!res.ok) throw new Error('Error fetching appeals');
+      const payload = await res.json();
+      // aceptar varias formas de respuesta del backend:
+      // { success: true, data: [...] }  OR  { appeals: [...], total }  OR  [...]
+      const rows = Array.isArray(payload?.data) ? payload.data
+        : Array.isArray(payload?.appeals) ? payload.appeals
+        : Array.isArray(payload) ? payload
+        : [];
+
+      setAppeals(rows);
+      // aquí podrías manejar la paginación si es necesario, usando el total
+    } catch (err) {
+      console.error('load apelaciones error', err);
+      setAppeals(sampleAppeals);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
   const getStatusBadge = (status: string) => {
     const classes = {
       pending: 'appeal-status pending',
@@ -115,10 +162,6 @@ const ApelacionesListadoPage: React.FC = () => {
     // lógica para crear nueva apelación
   };
 
-  const load = () => {
-    // lógica para recargar datos
-  };
-
   const handleVer = (appeal: any) => {
     // lógica para ver detalles de la apelación
   };
@@ -127,49 +170,21 @@ const ApelacionesListadoPage: React.FC = () => {
     // lógica para resolver apelación
   };
 
+  // cuando muestres el botón de crear, usa la función de permisos correcta:
+  const canCreate = typeof canCreateMulta === 'function' ? canCreateMulta(user) : false;
+
   return (
     <Layout title='Lista de Apelaciones'>
       <div className='container-fluid p-4'>
-        {/* Header con búsqueda y notificaciones */}
-        <header className='bg-white border-bottom shadow-sm p-3 mb-4'>
-          <div className='d-flex justify-content-between align-items-center'>
-            <div className='d-flex align-items-center'>
-              <button className='btn btn-link d-lg-none me-3' onClick={() => {/* toggle sidebar */}}>
-                <i className='material-icons'>menu</i>
-              </button>
-              <h1 className='h4 mb-0'>Apelaciones</h1>
-            </div>
-            <div className='d-flex align-items-center'>
-              <div className='input-group me-3' style={{ maxWidth: '300px' }}>
-                <span className='input-group-text'><i className='material-icons'>search</i></span>
-                <input type='text' className='form-control' placeholder='Buscar apelaciones...' />
-              </div>
-              <button className='btn btn-outline-secondary me-2'>
-                <i className='material-icons'>notifications</i>
-              </button>
-              <div className='dropdown'>
-                <button className='btn btn-outline-secondary dropdown-toggle' type='button' data-bs-toggle='dropdown'>
-                  <div className='avatar'>AL</div>
-                </button>
-                <ul className='dropdown-menu'>
-                  <li><a className='dropdown-item' href='#'>Perfil</a></li>
-                  <li><a className='dropdown-item' href='#'>Configuración</a></li>
-                  <li><hr className='dropdown-divider' /></li>
-                  <li><a className='dropdown-item' href='#'>Cerrar sesión</a></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </header>
-
+       
         {/* Header con título y botón nueva apelación */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1 className="h3">Apelaciones</h1>
           <div>
-            {can('apelaciones.create') && (
-              <button className="btn btn-primary me-2" onClick={handleCrear}>Nueva Apelación</button>
+            { canCreate && (
+              <button className="btn btn-primary me-2" onClick={() => {/* handleCrear */}}>Nueva Apelación</button>
             )}
-            <button className="btn btn-outline-secondary" onClick={load}>Refrescar</button>
+            <button className="btn btn-outline-secondary" onClick={load}>{loading ? 'Cargando...' : 'Refrescar'}</button>
           </div>
         </div>
 

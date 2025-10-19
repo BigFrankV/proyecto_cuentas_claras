@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { Button, Card, Form, Badge, Table, Modal, Dropdown } from 'react-bootstrap';
+import { Button, Card, Form, Badge, Table, Modal } from 'react-bootstrap';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
+import { useAuth } from '@/lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions';
+import { listCategorias } from '@/lib/categoriasGastoService';
 
 interface ExpenseCategory {
   id: number;
@@ -18,8 +21,10 @@ interface ExpenseCategory {
 }
 
 export default function CategoriasGastoListado() {
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { isSuperUser, currentRole } = usePermissions();
   const router = useRouter();
-  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [categories, setCategories] = useState<CategoriaGasto[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategory | null>(null);
@@ -35,132 +40,26 @@ export default function CategoriasGastoListado() {
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, pages: 0 });
 
-  useEffect(() => {
-    loadCategories();
+  // Obtener comunidadId dinámicamente (igual que en gastos)
+  const resolvedComunidadId = useMemo(() => {
+    // Siempre usar endpoint global /categorias-gasto - el backend filtra
+    return undefined;
   }, []);
 
-  const loadCategories = async () => {
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      loadCategories();
+    }
+  }, [authLoading, isAuthenticated]);
+
+  const loadCategories = async (page = 1) => {
     try {
       setLoading(true);
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockCategories: ExpenseCategory[] = [
-        {
-          id: 1,
-          name: 'Electricidad',
-          description: 'Gastos relacionados con servicios eléctricos',
-          community: 'Todas',
-          status: 'active',
-          icon: 'electrical_services',
-          color: '#4CAF50',
-          createdAt: '2024-01-15T10:30:00Z',
-          updatedAt: '2024-03-10T14:20:00Z'
-        },
-        {
-          id: 2,
-          name: 'Agua',
-          description: 'Gastos relacionados con servicios de agua',
-          community: 'Todas',
-          status: 'active',
-          icon: 'water_drop',
-          color: '#2196F3',
-          createdAt: '2024-01-15T10:30:00Z',
-          updatedAt: '2024-03-05T16:45:00Z'
-        },
-        {
-          id: 3,
-          name: 'Gas',
-          description: 'Gastos relacionados con servicios de gas',
-          community: 'Todas',
-          status: 'active',
-          icon: 'local_fire_department',
-          color: '#F44336',
-          createdAt: '2024-01-15T10:30:00Z',
-          updatedAt: '2024-02-28T09:15:00Z'
-        },
-        {
-          id: 4,
-          name: 'Limpieza',
-          description: 'Servicios de limpieza y mantenimiento',
-          community: 'Comunidad Parque Real',
-          status: 'active',
-          icon: 'cleaning_services',
-          color: '#9C27B0',
-          createdAt: '2024-01-20T11:00:00Z',
-          updatedAt: '2024-03-12T13:30:00Z'
-        },
-        {
-          id: 5,
-          name: 'Seguridad',
-          description: 'Servicios de vigilancia y sistemas de seguridad',
-          community: 'Todas',
-          status: 'active',
-          icon: 'security',
-          color: '#FF9800',
-          createdAt: '2024-01-22T14:15:00Z',
-          updatedAt: '2024-03-08T11:20:00Z'
-        },
-        {
-          id: 6,
-          name: 'Reparaciones',
-          description: 'Mantenimiento y reparaciones generales',
-          community: 'Edificio Central',
-          status: 'active',
-          icon: 'build',
-          color: '#795548',
-          createdAt: '2024-01-25T16:30:00Z',
-          updatedAt: '2024-03-14T10:45:00Z'
-        },
-        {
-          id: 7,
-          name: 'Impuestos',
-          description: 'Pagos de impuestos y contribuciones',
-          community: 'Todas',
-          status: 'active',
-          icon: 'receipt_long',
-          color: '#607D8B',
-          createdAt: '2024-02-01T09:00:00Z',
-          updatedAt: '2024-03-15T15:10:00Z'
-        },
-        {
-          id: 8,
-          name: 'Jardinería',
-          description: 'Mantenimiento de jardines y áreas verdes',
-          community: 'Comunidad Parque Real',
-          status: 'active',
-          icon: 'park',
-          color: '#009688',
-          createdAt: '2024-02-05T12:20:00Z',
-          updatedAt: '2024-03-13T14:25:00Z'
-        },
-        {
-          id: 9,
-          name: 'Piscina',
-          description: 'Mantenimiento y limpieza de piscinas',
-          community: 'Comunidad Parque Real',
-          status: 'inactive',
-          icon: 'pool',
-          color: '#673AB7',
-          createdAt: '2024-02-10T10:45:00Z',
-          updatedAt: '2024-03-01T16:30:00Z'
-        },
-        {
-          id: 10,
-          name: 'Conserjería',
-          description: 'Gastos relacionados con personal de conserjería',
-          community: 'Edificio Central',
-          status: 'active',
-          icon: 'person',
-          color: '#E91E63',
-          createdAt: '2024-02-15T11:30:00Z',
-          updatedAt: '2024-03-11T12:45:00Z'
-        }
-      ];
-      
-      setCategories(mockCategories);
+      const response = await listCategorias(resolvedComunidadId);
+      setCategories(response.data);
+      setPagination(response.pagination);
     } catch (error) {
       console.error('Error loading categories:', error);
     } finally {
@@ -202,12 +101,10 @@ export default function CategoriasGastoListado() {
     }
   };
 
+  // Cambiar filteredCategories para usar categories del estado
   const filteredCategories = categories.filter(category => {
-    return (
-      category.name.toLowerCase().includes(filters.search.toLowerCase()) &&
-      (filters.community === '' || category.community === filters.community) &&
-      (filters.status === '' || category.status === filters.status)
-    );
+    // Aplicar filtros locales si es necesario
+    return true; // Por ahora, filtros en backend
   });
 
   // Paginación

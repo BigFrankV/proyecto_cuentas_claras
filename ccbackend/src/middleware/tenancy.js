@@ -29,6 +29,8 @@ function requireCommunity(paramName = 'comunidadId', allowedRoles = []) {
         LIMIT 1
       `, [comunidadId, usuarioId]);
 
+      console.log('requireCommunity debug:', { comunidadId, usuarioId, rows, userRoles: req.user.roles }); // <-- añadir
+
       if (rows && rows.length) {
         const rolMembresia = String(rows[0].rol || '').toLowerCase();
         const nivelAcceso = rows[0].nivel_acceso;

@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   ReactNode,
+  useRef, // <-- agregado
 } from 'react';
 import { useRouter } from 'next/router';
 import authService, { User, AuthResponse } from './auth'; // ✅ CORREGIR IMPORT
@@ -79,8 +80,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (serverError: any) {
           console.log('⚠️ Error verificando con servidor:', serverError.message);
           if (serverError.response?.status === 401) {
-            console.log('❌ Token inválido según servidor, limpiando sesión');
-            await logout();
+            console.log('❌ Token inválido según servidor, limpiando sesión local sin redirigir');
+            // Limpiar datos locales sin forzar redirección desde aquí
+            await authService.logout(); // solo limpia localStorage
+            setUser(null);
             return;
           }
           // Si es otro tipo de error, mantener datos locales
@@ -89,12 +92,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         console.log('❌ No se encontraron datos de usuario en localStorage');
         // Si hay token pero no datos de usuario, limpiar todo
-        await logout();
+        await authService.logout(); // solo limpia localStorage
+        setUser(null);
       }
     } catch (error) {
       console.error('❌ Error verificando autenticación:', error);
       // Si hay error, limpiar datos
-      await logout();
+      await authService.logout(); // solo limpia localStorage
+      setUser(null);
     } finally {
       setIsLoading(false);
       console.log('🔍 Verificación de autenticación completada');
@@ -152,14 +157,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('🚪 Iniciando proceso de logout...');
     try {
       await authService.logout();
-      console.log('✅ Logout exitoso en servidor');
+      console.log('✅ Logout exitoso en servidor (o local cleanup hecho)');
     } catch (error) {
       console.error('❌ Error en logout del servidor:', error);
     } finally {
       console.log('🧹 Limpiando estado local...');
       setUser(null);
-      console.log('🏠 Redirigiendo a página de inicio...');
-      router.push('/');
+      console.log('🏠 Redirigiendo a página de inicio si es necesario...');
+      if (router.pathname !== '/') {
+        router.replace('/'); // usar replace para evitar historial y repetir pushes
+      }
     }
   };
 
@@ -185,13 +192,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextType = {
     user,
     isLoading,
-    isAuthenticated: !!user,
+    // Considerar token válido además de existencia de user para evitar falsos positivos
+    isAuthenticated: !!user && authService.isAuthenticated(),
     login,
     complete2FALogin,
     logout,
     refreshUser,
   };
-
+ 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
@@ -208,6 +216,7 @@ export function useAuth() {
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const redirectingRef = useRef(false); // <-- agregado
 
   useEffect(() => {
     console.log(
@@ -216,11 +225,19 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
       'cargando:',
       isLoading
     );
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !redirectingRef.current) {
       console.log('❌ No autenticado, redirigiendo a login...');
-      router.push('/');
+      redirectingRef.current = true;
+      if (router.pathname !== '/') {
+        router.replace('/').finally(() => {
+          // permitir futuras redirecciones cuando cambie la ruta
+          redirectingRef.current = false;
+        });
+      } else {
+        redirectingRef.current = false;
+      }
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, router.pathname]);
 
   if (isLoading) {
     console.log('⏳ ProtectedRoute - Mostrando spinner de carga...');

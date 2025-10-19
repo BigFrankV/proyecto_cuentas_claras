@@ -85,40 +85,40 @@ const { requireCommunity } = require('../middleware/tenancy');
  */
 router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
-  const { 
-    page = 1, 
-    limit = 100, 
-    categoria = '', 
-    proveedor = '', 
-    fecha_desde = '', 
-    fecha_hasta = '', 
-    monto_min = 0, 
+  const {
+    page = 1,
+    limit = 100,
+    categoria = '',
+    proveedor = '',
+    fecha_desde = '',
+    fecha_hasta = '',
+    monto_min = 0,
     monto_max = 0,
     categoria_id = 0,
     centro_costo_id = 0,
     extraordinario = -1
   } = req.query;
-  
+
   const offset = (page - 1) * limit;
-  
+
   try {
     // Construir cláusulas WHERE dinámicas
     let whereFecha = '';
     let whereMonto = '';
     const params = [comunidadId];
-    
+
     // Solo agregar filtro de fecha si ambos valores están presentes
     if (fecha_desde && fecha_hasta) {
       whereFecha = 'AND g.fecha BETWEEN ? AND ?';
       params.push(fecha_desde, fecha_hasta);
     }
-    
+
     // Solo agregar filtro de monto si ambos valores son mayores a 0
     if (monto_min > 0 && monto_max > 0) {
       whereMonto = 'AND g.monto BETWEEN ? AND ?';
       params.push(Number(monto_min), Number(monto_max));
     }
-    
+
     // Agregar resto de parámetros
     params.push(
       categoria, categoria,
@@ -128,7 +128,7 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
       extraordinario, extraordinario,
       Number(limit), Number(offset)
     );
-    
+
     const [rows] = await db.query(`
       SELECT
         g.id,
@@ -160,7 +160,7 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
       ORDER BY g.fecha DESC, g.created_at DESC
       LIMIT ? OFFSET ?
     `, params);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -188,34 +188,34 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
  */
 router.get('/comunidad/:comunidadId/count', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
-  const { 
-    categoria = '', 
-    proveedor = '', 
-    fecha_desde = '', 
-    fecha_hasta = '', 
-    monto_min = 0, 
+  const {
+    categoria = '',
+    proveedor = '',
+    fecha_desde = '',
+    fecha_hasta = '',
+    monto_min = 0,
     monto_max = 0,
     categoria_id = 0,
     centro_costo_id = 0,
     extraordinario = -1
   } = req.query;
-  
+
   try {
     // Construir cláusulas WHERE dinámicas
     let whereFecha = '';
     let whereMonto = '';
     const params = [comunidadId];
-    
+
     if (fecha_desde && fecha_hasta) {
       whereFecha = 'AND g.fecha BETWEEN ? AND ?';
       params.push(fecha_desde, fecha_hasta);
     }
-    
+
     if (monto_min > 0 && monto_max > 0) {
       whereMonto = 'AND g.monto BETWEEN ? AND ?';
       params.push(Number(monto_min), Number(monto_max));
     }
-    
+
     params.push(
       categoria, categoria,
       proveedor, proveedor,
@@ -223,7 +223,7 @@ router.get('/comunidad/:comunidadId/count', authenticate, requireCommunity('comu
       centro_costo_id, centro_costo_id,
       extraordinario, extraordinario
     );
-    
+
     const [[row]] = await db.query(`
       SELECT COUNT(DISTINCT g.id) AS total
       FROM gasto g
@@ -240,7 +240,7 @@ router.get('/comunidad/:comunidadId/count', authenticate, requireCommunity('comu
         AND (g.centro_costo_id = ? OR ? = 0)
         AND (g.extraordinario = ? OR ? = -1)
     `, params);
-    
+
     res.json({ total: row.total });
   } catch (err) {
     console.error(err);
@@ -301,16 +301,16 @@ router.post('/comunidad/:comunidadId', [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  
+
   const comunidadId = Number(req.params.comunidadId);
   const { categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario } = req.body;
-  
+
   try {
     const [result] = await db.query(
       'INSERT INTO gasto (comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario) VALUES (?,?,?,?,?,?,?,?)',
       [comunidadId, categoria_id, centro_costo_id || null, documento_compra_id || null, fecha, monto, glosa || null, extraordinario ? 1 : 0]
     );
-    
+
     const [row] = await db.query('SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1', [result.insertId]);
     res.status(201).json(row[0]);
   } catch (err) {
@@ -341,7 +341,7 @@ router.post('/comunidad/:comunidadId', [
  */
 router.get('/:id', authenticate, async (req, res) => {
   const id = req.params.id;
-  
+
   try {
     const [rows] = await db.query(`
       SELECT
@@ -386,7 +386,7 @@ router.get('/:id', authenticate, async (req, res) => {
       WHERE g.id = ?
       LIMIT 1
     `, [id]);
-    
+
     if (!rows.length) return res.status(404).json({ error: 'not found' });
     res.json(rows[0]);
   } catch (err) {
@@ -415,7 +415,7 @@ router.get('/:id', authenticate, async (req, res) => {
  */
 router.get('/:id/archivos', authenticate, async (req, res) => {
   const id = req.params.id;
-  
+
   try {
     const [rows] = await db.query(`
       SELECT
@@ -438,7 +438,7 @@ router.get('/:id/archivos', authenticate, async (req, res) => {
         AND a.is_active = 1
       ORDER BY a.uploaded_at DESC
     `, [id]);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -469,18 +469,18 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req,
   const fields = ['categoria_id', 'centro_costo_id', 'documento_compra_id', 'fecha', 'monto', 'glosa', 'extraordinario'];
   const updates = [];
   const values = [];
-  
+
   fields.forEach(f => {
     if (req.body[f] !== undefined) {
       updates.push(`${f} = ?`);
       values.push(req.body[f]);
     }
   });
-  
+
   if (!updates.length) return res.status(400).json({ error: 'no fields' });
-  
+
   values.push(id);
-  
+
   try {
     await db.query(`UPDATE gasto SET ${updates.join(', ')} WHERE id = ?`, values);
     const [rows] = await db.query('SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1', [id]);
@@ -511,7 +511,7 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req,
  */
 router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
   const id = req.params.id;
-  
+
   try {
     await db.query('DELETE FROM gasto WHERE id = ?', [id]);
     res.status(204).end();
@@ -552,16 +552,16 @@ router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req
 router.get('/estadisticas/general/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
   const { fecha_desde = '', fecha_hasta = '' } = req.query;
-  
+
   try {
     let whereFecha = '';
     const params = [comunidadId];
-    
+
     if (fecha_desde && fecha_hasta) {
       whereFecha = 'AND g.fecha BETWEEN ? AND ?';
       params.push(fecha_desde, fecha_hasta);
     }
-    
+
     const [[row]] = await db.query(`
       SELECT
         COUNT(*) AS total_gastos,
@@ -575,7 +575,7 @@ router.get('/estadisticas/general/:comunidadId', authenticate, requireCommunity(
       WHERE comunidad_id = ?
         ${whereFecha}
     `, params);
-    
+
     res.json(row);
   } catch (err) {
     console.error(err);
@@ -604,16 +604,16 @@ router.get('/estadisticas/general/:comunidadId', authenticate, requireCommunity(
 router.get('/estadisticas/por-categoria/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
   const { fecha_desde = '', fecha_hasta = '' } = req.query;
-  
+
   try {
     let whereFecha = '';
     const params = [comunidadId];
-    
+
     if (fecha_desde && fecha_hasta) {
       whereFecha = 'AND g.fecha BETWEEN ? AND ?';
       params.push(fecha_desde, fecha_hasta);
     }
-    
+
     const [rows] = await db.query(`
       SELECT
         cat.nombre AS categoria,
@@ -630,7 +630,7 @@ router.get('/estadisticas/por-categoria/:comunidadId', authenticate, requireComm
       GROUP BY cat.id, cat.nombre, cat.tipo
       ORDER BY total_monto DESC
     `, params);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -659,16 +659,16 @@ router.get('/estadisticas/por-categoria/:comunidadId', authenticate, requireComm
 router.get('/estadisticas/por-centro-costo/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
   const { fecha_desde = '', fecha_hasta = '' } = req.query;
-  
+
   try {
     let whereFecha = '';
     const params = [comunidadId];
-    
+
     if (fecha_desde && fecha_hasta) {
       whereFecha = 'AND g.fecha BETWEEN ? AND ?';
       params.push(fecha_desde, fecha_hasta);
     }
-    
+
     const [rows] = await db.query(`
       SELECT
         cc.nombre AS centro_costo,
@@ -683,7 +683,7 @@ router.get('/estadisticas/por-centro-costo/:comunidadId', authenticate, requireC
       GROUP BY cc.id, cc.nombre, cc.codigo
       ORDER BY total_monto DESC
     `, params);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -712,16 +712,16 @@ router.get('/estadisticas/por-centro-costo/:comunidadId', authenticate, requireC
 router.get('/estadisticas/por-proveedor/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
   const { fecha_desde = '', fecha_hasta = '' } = req.query;
-  
+
   try {
     let whereFecha = '';
     const params = [comunidadId];
-    
+
     if (fecha_desde && fecha_hasta) {
       whereFecha = 'AND g.fecha BETWEEN ? AND ?';
       params.push(fecha_desde, fecha_hasta);
     }
-    
+
     const [rows] = await db.query(`
       SELECT
         p.razon_social AS proveedor,
@@ -738,7 +738,7 @@ router.get('/estadisticas/por-proveedor/:comunidadId', authenticate, requireComm
       GROUP BY p.id, p.razon_social, p.rut
       ORDER BY total_monto DESC
     `, params);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -766,7 +766,7 @@ router.get('/estadisticas/por-proveedor/:comunidadId', authenticate, requireComm
  */
 router.get('/estadisticas/mensuales/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
-  
+
   try {
     const [rows] = await db.query(`
       SELECT
@@ -780,7 +780,7 @@ router.get('/estadisticas/mensuales/:comunidadId', authenticate, requireCommunit
       GROUP BY DATE_FORMAT(fecha, '%Y-%m')
       ORDER BY mes DESC
     `, [comunidadId]);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -809,16 +809,16 @@ router.get('/estadisticas/mensuales/:comunidadId', authenticate, requireCommunit
 router.get('/estadisticas/extraordinarios-vs-operativos/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
   const { fecha_desde = '', fecha_hasta = '' } = req.query;
-  
+
   try {
     let whereFecha = '';
     const params = [comunidadId, comunidadId];
-    
+
     if (fecha_desde && fecha_hasta) {
       whereFecha = 'AND fecha BETWEEN ? AND ?';
       params.push(fecha_desde, fecha_hasta);
     }
-    
+
     const [rows] = await db.query(`
       SELECT
         CASE
@@ -834,7 +834,7 @@ router.get('/estadisticas/extraordinarios-vs-operativos/:comunidadId', authentic
         ${whereFecha}
       GROUP BY extraordinario
     `, params);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -870,7 +870,7 @@ router.get('/estadisticas/extraordinarios-vs-operativos/:comunidadId', authentic
 router.get('/validar/existe/:id', authenticate, async (req, res) => {
   const { id } = req.params;
   const { comunidad_id } = req.query;
-  
+
   try {
     const [[row]] = await db.query('SELECT COUNT(*) > 0 AS existe FROM gasto WHERE id = ? AND comunidad_id = ?', [id, comunidad_id]);
     res.json(row);
@@ -901,7 +901,7 @@ router.get('/validar/existe/:id', authenticate, async (req, res) => {
 router.get('/validar/categoria/:id', authenticate, async (req, res) => {
   const { id } = req.params;
   const { comunidad_id } = req.query;
-  
+
   try {
     const [[row]] = await db.query('SELECT COUNT(*) > 0 AS existe FROM categoria_gasto WHERE id = ? AND comunidad_id = ? AND activa = 1', [id, comunidad_id]);
     res.json(row);
@@ -945,7 +945,7 @@ router.get('/validar/categoria/:id', authenticate, async (req, res) => {
  */
 router.get('/validar/duplicado', authenticate, async (req, res) => {
   const { comunidad_id, folio, fecha, gasto_id = 0 } = req.query;
-  
+
   try {
     const [[row]] = await db.query(`
       SELECT COUNT(*) > 0 AS existe_duplicado
@@ -956,7 +956,7 @@ router.get('/validar/duplicado', authenticate, async (req, res) => {
         AND g.fecha = ?
         AND g.id != ?
     `, [comunidad_id, folio, fecha, gasto_id]);
-    
+
     res.json(row);
   } catch (err) {
     console.error(err);
@@ -986,7 +986,7 @@ router.get('/validar/duplicado', authenticate, async (req, res) => {
  */
 router.get('/listas/categorias/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
-  
+
   try {
     const [rows] = await db.query(`
       SELECT
@@ -998,7 +998,7 @@ router.get('/listas/categorias/:comunidadId', authenticate, requireCommunity('co
       WHERE comunidad_id = ? AND activa = 1
       ORDER BY nombre
     `, [comunidadId]);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -1026,7 +1026,7 @@ router.get('/listas/categorias/:comunidadId', authenticate, requireCommunity('co
  */
 router.get('/listas/centros-costo/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
-  
+
   try {
     const [rows] = await db.query(`
       SELECT
@@ -1037,7 +1037,7 @@ router.get('/listas/centros-costo/:comunidadId', authenticate, requireCommunity(
       WHERE comunidad_id = ?
       ORDER BY nombre
     `, [comunidadId]);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -1065,7 +1065,7 @@ router.get('/listas/centros-costo/:comunidadId', authenticate, requireCommunity(
  */
 router.get('/listas/proveedores/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
-  
+
   try {
     const [rows] = await db.query(`
       SELECT
@@ -1077,7 +1077,7 @@ router.get('/listas/proveedores/:comunidadId', authenticate, requireCommunity('c
       WHERE comunidad_id = ? AND activo = 1
       ORDER BY razon_social
     `, [comunidadId]);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -1105,7 +1105,7 @@ router.get('/listas/proveedores/:comunidadId', authenticate, requireCommunity('c
  */
 router.get('/listas/documentos-disponibles/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
-  
+
   try {
     const [rows] = await db.query(`
       SELECT
@@ -1126,7 +1126,7 @@ router.get('/listas/documentos-disponibles/:comunidadId', authenticate, requireC
         )
       ORDER BY dc.fecha_emision DESC
     `, [comunidadId, comunidadId]);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -1157,11 +1157,11 @@ router.get('/listas/documentos-disponibles/:comunidadId', authenticate, requireC
 router.get('/reportes/periodo-comparativo/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
   const { fecha_desde = '', fecha_hasta = '' } = req.query;
-  
+
   if (!fecha_desde || !fecha_hasta) {
     return res.status(400).json({ error: 'fecha_desde y fecha_hasta son requeridos' });
   }
-  
+
   try {
     const [rows] = await db.query(`
       SELECT
@@ -1183,7 +1183,7 @@ router.get('/reportes/periodo-comparativo/:comunidadId', authenticate, requireCo
       GROUP BY YEAR(fecha), MONTH(fecha)
       ORDER BY anio DESC, mes DESC
     `, [comunidadId, fecha_desde, fecha_hasta]);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -1222,18 +1222,18 @@ router.get('/reportes/periodo-comparativo/:comunidadId', authenticate, requireCo
 router.get('/reportes/top-proveedores/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
   const { fecha_desde = '', fecha_hasta = '', min_compras = 1, limit = 10 } = req.query;
-  
+
   try {
     let whereFecha = '';
     const params = [comunidadId];
-    
+
     if (fecha_desde && fecha_hasta) {
       whereFecha = 'AND g.fecha BETWEEN ? AND ?';
       params.push(fecha_desde, fecha_hasta);
     }
-    
+
     params.push(min_compras, Number(limit));
-    
+
     const [rows] = await db.query(`
       SELECT
         p.razon_social AS proveedor,
@@ -1254,7 +1254,7 @@ router.get('/reportes/top-proveedores/:comunidadId', authenticate, requireCommun
       ORDER BY total_comprado DESC
       LIMIT ?
     `, params);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -1283,16 +1283,16 @@ router.get('/reportes/top-proveedores/:comunidadId', authenticate, requireCommun
 router.get('/reportes/por-dia-semana/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
   const { fecha_desde = '', fecha_hasta = '' } = req.query;
-  
+
   try {
     let whereFecha = '';
     const params = [comunidadId];
-    
+
     if (fecha_desde && fecha_hasta) {
       whereFecha = 'AND fecha BETWEEN ? AND ?';
       params.push(fecha_desde, fecha_hasta);
     }
-    
+
     const [rows] = await db.query(`
       SELECT
         DAYOFWEEK(fecha) AS dia_semana_num,
@@ -1323,7 +1323,7 @@ router.get('/reportes/por-dia-semana/:comunidadId', authenticate, requireCommuni
         END
       ORDER BY dia_semana_num
     `, params);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -1354,16 +1354,16 @@ router.get('/reportes/por-dia-semana/:comunidadId', authenticate, requireCommuni
 router.get('/exportar/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
   const { fecha_desde = '', fecha_hasta = '' } = req.query;
-  
+
   try {
     let whereFecha = '';
     const params = [comunidadId];
-    
+
     if (fecha_desde && fecha_hasta) {
       whereFecha = 'AND g.fecha BETWEEN ? AND ?';
       params.push(fecha_desde, fecha_hasta);
     }
-    
+
     const [rows] = await db.query(`
       SELECT
         g.id AS 'ID Gasto',
@@ -1395,7 +1395,7 @@ router.get('/exportar/:comunidadId', authenticate, requireCommunity('comunidadId
       GROUP BY g.id
       ORDER BY g.fecha DESC, g.id DESC
     `, params);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -1431,7 +1431,7 @@ router.get('/exportar/:comunidadId', authenticate, requireCommunity('comunidadId
 router.get('/dashboard/resumen-mensual/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
   const { meses = 6 } = req.query;
-  
+
   try {
     const [rows] = await db.query(`
       SELECT
@@ -1447,7 +1447,7 @@ router.get('/dashboard/resumen-mensual/:comunidadId', authenticate, requireCommu
       GROUP BY DATE_FORMAT(fecha, '%Y-%m')
       ORDER BY periodo DESC
     `, [comunidadId, Number(meses)]);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -1475,7 +1475,7 @@ router.get('/dashboard/resumen-mensual/:comunidadId', authenticate, requireCommu
  */
 router.get('/dashboard/top-categorias-mes/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
-  
+
   try {
     const [rows] = await db.query(`
       SELECT
@@ -1491,7 +1491,7 @@ router.get('/dashboard/top-categorias-mes/:comunidadId', authenticate, requireCo
       ORDER BY total DESC
       LIMIT 5
     `, [comunidadId]);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -1525,11 +1525,11 @@ router.get('/dashboard/top-categorias-mes/:comunidadId', authenticate, requireCo
 router.get('/dashboard/alertas-gastos-altos/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   const comunidadId = Number(req.params.comunidadId);
   const { monto_minimo } = req.query;
-  
+
   if (!monto_minimo) {
     return res.status(400).json({ error: 'monto_minimo required' });
   }
-  
+
   try {
     const [rows] = await db.query(`
       SELECT
@@ -1548,7 +1548,7 @@ router.get('/dashboard/alertas-gastos-altos/:comunidadId', authenticate, require
         AND g.monto > ?
       ORDER BY g.monto DESC
     `, [comunidadId, monto_minimo]);
-    
+
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -1556,8 +1556,112 @@ router.get('/dashboard/alertas-gastos-altos/:comunidadId', authenticate, require
   }
 });
 
-module.exports = router;
+/**
+ * GET /gastos
+ * Lista gastos en modo global (superadmin) o filtrado por comunidades asignadas (otros roles).
+ * Acepta mismos filtros que /comunidad/:comunidadId
+ */
+router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conserje', 'contador', 'proveedor_servicio', 'residente', 'propietario', 'inquilino', 'tesorero', 'presidente_comite'), async (req, res) => {
+  const {
+    page = 1,
+    limit = 100,
+    categoria = '',
+    proveedor = '',
+    fecha_desde = '',
+    fecha_hasta = '',
+    monto_min = 0,
+    monto_max = 0,
+    categoria_id = 0,
+    centro_costo_id = 0,
+    extraordinario = -1,
+    comunidad_id = 0 // opcional: filtrar por comunidad si se pasa
+  } = req.query;
 
+  const offset = (page - 1) * limit;
+
+  try {
+    // Construir cláusulas WHERE dinámicas
+    let whereFecha = '';
+    let whereMonto = '';
+    let whereComunidad = '';
+    const params = [];
+
+    if (fecha_desde && fecha_hasta) {
+      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+      params.push(fecha_desde, fecha_hasta);
+    }
+
+    if (monto_min > 0 && monto_max > 0) {
+      whereMonto = 'AND g.monto BETWEEN ? AND ?';
+      params.push(Number(monto_min), Number(monto_max));
+    }
+
+    // Si es superadmin, ve todo; si no, filtra por comunidades asignadas
+    if (req.user.is_superadmin) {
+      if (comunidad_id && Number(comunidad_id) > 0) {
+        whereComunidad = 'AND g.comunidad_id = ?';
+        params.push(Number(comunidad_id));
+      }
+    } else {
+      // Filtrar por comunidades asignadas
+      whereComunidad = `AND g.comunidad_id IN (
+        SELECT umc.comunidad_id
+        FROM usuario_miembro_comunidad umc
+        WHERE umc.persona_id = ? AND umc.activo = 1 AND (umc.hasta IS NULL OR umc.hasta > CURDATE())
+      )`;
+      params.push(req.user.persona_id);
+    }
+
+    params.push(
+      categoria, categoria,
+      proveedor, proveedor,
+      categoria_id, categoria_id,
+      centro_costo_id, centro_costo_id,
+      extraordinario, extraordinario,
+      Number(limit), Number(offset)
+    );
+
+    const [rows] = await db.query(`
+      SELECT
+        g.id,
+        g.fecha,
+        g.monto,
+        g.glosa AS descripcion,
+        cat.nombre AS categoria,
+        cc.nombre AS centro_costo,
+        p.razon_social AS proveedor,
+        dc.folio AS documento_numero,
+        CASE WHEN COUNT(a.id) > 0 THEN 1 ELSE 0 END AS tiene_adjuntos,
+        g.extraordinario,
+        g.comunidad_id,
+        g.created_at
+      FROM gasto g
+      INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
+      LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
+      LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
+      LEFT JOIN proveedor p ON dc.proveedor_id = p.id
+      LEFT JOIN archivos a ON a.entity_type = 'gasto' AND a.entity_id = g.id AND a.is_active = 1
+      WHERE 1=1
+        ${whereComunidad}
+        ${whereFecha}
+        ${whereMonto}
+        AND (cat.nombre LIKE CONCAT('%', ?, '%') OR ? = '')
+        AND (p.razon_social LIKE CONCAT('%', ?, '%') OR ? = '')
+        AND (g.categoria_id = ? OR ? = 0)
+        AND (g.centro_costo_id = ? OR ? = 0)
+        AND (g.extraordinario = ? OR ? = -1)
+      GROUP BY g.id
+      ORDER BY g.fecha DESC, g.created_at DESC
+      LIMIT ? OFFSET ?
+    `, params);
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+module.exports = router;
 // =========================================
 // ENDPOINTS DE GASTOS
 // =========================================

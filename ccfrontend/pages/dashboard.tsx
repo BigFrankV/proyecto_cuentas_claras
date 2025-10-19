@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
@@ -25,8 +25,18 @@ import {
 } from '@/lib/dashboardService';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { isSuperUser, currentRole } = usePermissions();
+
+  // Obtener comunidadId dinámicamente
+  const comunidadId = useMemo(() => {
+    const id = currentRole?.comunidadId ??
+               user?.memberships?.[0]?.comunidad_id ??
+               user?.memberships?.[0]?.comunidadId ??
+               1;
+    console.log('Dashboard comunidadId:', id, 'user:', user, 'currentRole:', currentRole); // <-- añadir
+    return id;
+  }, [currentRole?.comunidadId, user?.memberships]);
 
   // Estado para datos del dashboard
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null);
@@ -38,11 +48,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ID de comunidad por defecto (debería venir del contexto del usuario)
-  const comunidadId = 1;
-
   // Cargar datos del dashboard
   useEffect(() => {
+    // Evitar solicitudes hasta que auth esté resuelto y usuario esté autenticado
+    if (authLoading) return;
+    if (!isAuthenticated) return;
+
     const loadDashboardData = async () => {
       try {
         setLoading(true);
@@ -80,7 +91,7 @@ export default function Dashboard() {
     };
 
     loadDashboardData();
-  }, [comunidadId]);
+  }, [comunidadId, authLoading, isAuthenticated]);
 
   return (
     <ProtectedRoute>

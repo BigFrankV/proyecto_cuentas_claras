@@ -44,10 +44,10 @@ const { authorize } = require('../middleware/authorize');
  *       200:
  *         description: Lista de comunidades con estadísticas
  */
-router.get('/', authenticate, async (req, res) => {
+router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conserje', 'contador', 'proveedor_servicio', 'residente', 'propietario', 'inquilino', 'tesorero', 'presidente_comite'), async (req, res) => {
   try {
+    const userId = req.user.persona_id; // <-- cambiar a req.user.persona_id
     const { nombre, direccion, rut } = req.query;
-    const userId = req.user.id;
     
     // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 1.1
     let query = `
@@ -100,13 +100,7 @@ router.get('/', authenticate, async (req, res) => {
     
     // Filtro por usuario (sección 1.2 del SQL) - Si no es superadmin
     if (!req.user.is_superadmin) {
-      query += ` AND c.id IN (
-        SELECT urc.comunidad_id 
-        FROM usuario_rol_comunidad urc
-        WHERE urc.usuario_id = ?
-        AND urc.activo = 1
-        AND (urc.hasta IS NULL OR urc.hasta > CURDATE())
-      )`;
+      query += ` AND c.id IN (SELECT urc.comunidad_id FROM usuario_miembro_comunidad urc WHERE urc.persona_id = ? AND urc.activo = 1 AND (urc.hasta IS NULL OR urc.hasta > CURDATE()))`; // <-- cambiar usuario_rol_comunidad a usuario_miembro_comunidad
       params.push(userId);
     }
     

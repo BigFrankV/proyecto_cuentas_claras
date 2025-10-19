@@ -484,3 +484,18 @@ class ComunidadesService {
 }
 
 export default new ComunidadesService();
+
+export async function getComunidades(): Promise<Comunidad[]> {
+  const response = await apiClient.get('/comunidades');
+  let comunidades = response.data || [];
+  console.log('Comunidades obtenidas del API:', comunidades); // <-- temporal
+
+  // Filtrar por comunidades permitidas
+  const allowedIds = getAllowedComunidadIds();
+  console.log('IDs permitidas:', allowedIds); // <-- añadir
+
+  comunidades = comunidades.filter(c => allowedIds.includes(c.id));
+  console.log('Comunidades filtradas:', comunidades); // <-- añadir
+
+  return comunidades;
+}

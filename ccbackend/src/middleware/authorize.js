@@ -5,6 +5,7 @@
  */
 function authorize(...allowed) {
   return (req, res, next) => {
+    console.log('authorize debug:', { user: req.user, allowed, userRoles: req.user?.roles }); // <-- añadir
     if (!req.user) return res.status(401).json({ error: 'unauthorized' });
     // DEPRECADO pero mantener compatibilidad: Global superadmin bypass
     if (req.user.is_superadmin) return next();

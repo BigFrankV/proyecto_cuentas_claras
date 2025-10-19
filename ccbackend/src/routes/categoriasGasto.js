@@ -8,7 +8,7 @@ const { requireCommunity } = require('../middleware/tenancy');
 
 // Tipos de categoría permitidos
 const TIPOS_CATEGORIA = ['operacional', 'extraordinario', 'fondo_reserva', 'multas', 'consumo'];
-
+ 
 // =========================================
 // 1. LISTADO DE CATEGORÍAS CON FILTROS Y PAGINACIÓN
 // =========================================
@@ -1177,6 +1177,93 @@ router.get('/comunidad/:comunidadId/dashboard/distribucion-tipo', authenticate, 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error al obtener distribución por tipo' });
+  }
+});
+
+/**
+ * GET /categorias-gasto
+ * Lista global de categorías (superadmin) o filtrada por comunidades asignadas (otros roles).
+ */
+router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conserje', 'contador', 'proveedor_servicio', 'residente', 'propietario', 'inquilino', 'tesorero', 'presidente_comite'), async (req, res) => {
+  try {
+    const { 
+      page = 1,
+      limit = 100,
+      nombre_busqueda = '',
+      tipo_filtro = '',
+      activa_filtro = -1
+    } = req.query;
+
+    const offset = (page - 1) * limit;
+
+    let whereClauses = [];
+    const params = [];
+
+    if (nombre_busqueda) {
+      whereClauses.push('cg.nombre LIKE ?');
+      params.push(`%${nombre_busqueda}%`);
+    }
+
+    if (tipo_filtro) {
+      whereClauses.push('cg.tipo = ?');
+      params.push(tipo_filtro);
+    }
+
+    if (activa_filtro !== -1) {
+      whereClauses.push('cg.activa = ?');
+      params.push(Number(activa_filtro));
+    }
+
+    let query = `
+      SELECT
+        cg.id,
+        cg.nombre,
+        cg.tipo,
+        cg.cta_contable,
+        CASE WHEN cg.activa = 1 THEN 'active' ELSE 'inactive' END AS status,
+        c.razon_social AS comunidad,
+        cg.created_at,
+        cg.updated_at
+      FROM categoria_gasto cg
+      INNER JOIN comunidad c ON cg.comunidad_id = c.id
+    `;
+
+    // Filtro por comunidades asignadas si no es superadmin
+    if (!req.user.is_superadmin) {
+      whereClauses.push(`cg.comunidad_id IN (
+        SELECT umc.comunidad_id
+        FROM usuario_miembro_comunidad umc
+        WHERE umc.persona_id = ? AND umc.activo = 1 AND (umc.hasta IS NULL OR umc.hasta > CURDATE())
+      )`);
+      params.push(req.user.persona_id);
+    }
+
+    if (whereClauses.length > 0) {
+      query += ' WHERE ' + whereClauses.join(' AND ');
+    }
+
+    // Obtener total
+    const countQuery = query.replace(/SELECT.*FROM/, 'SELECT COUNT(*) as total FROM');
+    const [countResult] = await db.query(countQuery, params);
+    const total = countResult[0].total;
+
+    query += ' ORDER BY cg.nombre LIMIT ? OFFSET ?';
+    params.push(Number(limit), Number(offset));
+
+    const [rows] = await db.query(query, params);
+
+    res.json({
+      data: rows,
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener categorías' });
   }
 });
 
