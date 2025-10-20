@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next';
+import { GetStaticProps, GetStaticPaths } from 'next';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
@@ -8,17 +8,27 @@ import { getApelacion } from '@/lib/apelacionesService';
 import api from '@/lib/api'; // axios client que incluye cookies o token
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 
-export const getServerSideProps: GetServerSideProps = async ctx => {
-  const { id } = ctx.params;
-  const cookie = ctx.req.headers.cookie || '';
+export const getStaticPaths: GetStaticPaths = async () => {
+  // Para static export, retornamos un array vacío
+  // Las páginas dinámicas se generarán bajo demanda (ISR no disponible con export)
+  return {
+    paths: [],
+    fallback: true, // En client-side, se renderizará la página después de generar
+  };
+};
+
+export const getStaticProps: GetStaticProps = async ctx => {
+  const id = ctx.params?.id;
   try {
-    const res = await api.get(`/apelaciones/${id}`, { headers: { cookie } });
+    // Sin contexto de request, usamos la API directamente
+    // Nota: En static generation no tenemos acceso a cookies del usuario
+    const res = await api.get(`/apelaciones/${id}`);
     const data = res.data?.data ?? res.data;
-    // puedes verificar rol del usuario desde la sesión (si tu backend devuelve user en sesión)
-    // si no autorizado:
-    // return { redirect: { destination: '/login', permanent: false } };
-    return { props: { inicialApelacion: data } };
-  } catch (err) {
+    return {
+      props: { inicialApelacion: data },
+      revalidate: 60, // Revalidar cada 60 segundos (aunque con export es ignorado)
+    };
+  } catch {
     return { notFound: true };
   }
 };
@@ -40,8 +50,8 @@ export default function ApelacionDetallePage({ inicialApelacion }: any) {
         const token = localStorage.getItem('auth_token') || '';
         const r = await getApelacion(Number(id), token);
         setApelacion(r?.data ?? r);
-      } catch (err) {
-        console.error('getApelacion.error', err);
+      } catch {
+        // Error fetching apelacion
       } finally {
         setLoading(false);
       }
