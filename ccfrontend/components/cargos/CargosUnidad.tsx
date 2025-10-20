@@ -10,8 +10,10 @@ import {
 import React, { useState, useEffect } from 'react';
 import { Pie, Bar } from 'react-chartjs-2';
 
+import { Cargo } from '@/types/cargos';
+import { cargosApi } from '@/lib/api/cargos';
+
 import AmountCell from './AmountCell';
-import { Cargo } from './CargoCard';
 import FilterCard, { FilterOptions } from './FilterCard';
 import StatusBadge from './StatusBadge';
 import TypeBadge from './TypeBadge';
@@ -38,87 +40,19 @@ export interface UnitInfo {
 
 export interface CargosUnidadProps {
   unidad: UnitInfo;
-  cargos?: Cargo[];
+  unidadId?: number;
+  comunidadId?: number;
   className?: string;
 }
 
-// Mock data for demonstration
-const mockUnit: UnitInfo = {
-  numero: '101-A',
-  torre: 'Torre A',
-  propietario: 'Juan Carlos Pérez',
-  residente: 'María Elena Rodríguez',
-  telefono: '+57 300 123 4567',
-  email: 'maria.rodriguez@email.com',
-  metrosCuadrados: 85.5,
-  coeficiente: 0.0342,
-};
-
-const mockCargosUnidad: Cargo[] = [
-  {
-    id: 'CHG-2024-001',
-    concepto: 'Administración Enero 2024',
-    descripcion: 'Cuota de administración mensual',
-    tipo: 'administration',
-    estado: 'paid',
-    monto: 250000,
-    montoAplicado: 250000,
-    unidad: '101-A',
-    periodo: '2024-01',
-    fechaVencimiento: new Date('2024-01-15'),
-    fechaCreacion: new Date('2024-01-01'),
-    cuentaCosto: 'ADM-001',
-  },
-  {
-    id: 'CHG-2024-002',
-    concepto: 'Administración Febrero 2024',
-    descripcion: 'Cuota de administración mensual',
-    tipo: 'administration',
-    estado: 'pending',
-    monto: 250000,
-    montoAplicado: 0,
-    unidad: '101-A',
-    periodo: '2024-02',
-    fechaVencimiento: new Date('2024-02-15'),
-    fechaCreacion: new Date('2024-02-01'),
-    cuentaCosto: 'ADM-001',
-  },
-  {
-    id: 'CHG-2024-003',
-    concepto: 'Mantenimiento Ascensor',
-    descripcion: 'Mantenimiento preventivo del ascensor principal',
-    tipo: 'maintenance',
-    estado: 'approved',
-    monto: 180000,
-    montoAplicado: 180000,
-    unidad: '101-A',
-    periodo: '2024-02',
-    fechaVencimiento: new Date('2024-02-28'),
-    fechaCreacion: new Date('2024-02-01'),
-    cuentaCosto: 'MNT-002',
-  },
-  {
-    id: 'CHG-2024-004',
-    concepto: 'Seguro Todo Riesgo',
-    descripcion: 'Prima de seguro anual edificio',
-    tipo: 'insurance',
-    estado: 'partial',
-    monto: 450000,
-    montoAplicado: 225000,
-    unidad: '101-A',
-    periodo: '2024-03',
-    fechaVencimiento: new Date('2024-03-30'),
-    fechaCreacion: new Date('2024-03-01'),
-    cuentaCosto: 'SEG-001',
-  },
-];
-
 export default function CargosUnidad({
-  unidad = mockUnit,
-  cargos = mockCargosUnidad,
+  unidad,
+  unidadId,
+  comunidadId,
   className = '',
 }: CargosUnidadProps) {
-  const [filteredCargos, setFilteredCargos] = useState<Cargo[]>(cargos);
+  const [cargos, setCargos] = useState<Cargo[]>([]);
+  const [filteredCargos, setFilteredCargos] = useState<Cargo[]>([]);
   const [selectedCargos, setSelectedCargos] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -137,6 +71,36 @@ export default function CargosUnidad({
     amountMin: '',
     amountMax: '',
   });
+
+  // Cargar cargos de la unidad desde la API
+  useEffect(() => {
+    const fetchCargos = async () => {
+      try {
+        setLoading(true);
+        
+        let data: Cargo[] = [];
+        
+        // Intentar cargar por unidadId primero, luego por comunidadId
+        if (unidadId) {
+          data = await cargosApi.getByUnidad(unidadId);
+        } else if (comunidadId) {
+          const allCargos = await cargosApi.getByComunidad(comunidadId);
+          // Filtrar por número de unidad
+          data = allCargos.filter(c => c.unidad === unidad.numero);
+        }
+        
+        setCargos(data);
+        setFilteredCargos(data);
+      } catch {
+        setCargos([]);
+        setFilteredCargos([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCargos();
+  }, [unidadId, comunidadId, unidad.numero]);
 
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat('es-CO', {

@@ -116,7 +116,7 @@ export default function PersonaNueva() {
     // Validación en tiempo real para campos únicos
     if (field === 'nroDoc' && value) {
       try {
-        const result = await validarCampo('rut', value);
+        const result = await validarCampo('rut', value as string);
         if (!result.valido) {
           setErrors(prev => ({
             ...prev,
@@ -132,7 +132,7 @@ export default function PersonaNueva() {
 
     if (field === 'email' && value) {
       try {
-        const result = await validarCampo('email', value);
+        const result = await validarCampo('email', value as string);
         if (!result.valido) {
           setErrors(prev => ({
             ...prev,

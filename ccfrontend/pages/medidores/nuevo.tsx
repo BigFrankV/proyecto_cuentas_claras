@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
-import { Button, Card, Form, Row, Col, Alert, Modal } from 'react-bootstrap';
+import { Button, Form, Row, Col, Modal } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
@@ -157,11 +157,11 @@ export default function NuevoMedidor() {
 
       setBuildings(mockBuildings);
     } catch (error) {
-      console.error('Error loading buildings:', error);
+      console.log(error);
     }
   };
 
-  const loadUnits = async (buildingId: number) => {
+  const loadUnits = async (_buildingId: number) => {
     try {
       // Simular carga de unidades según el edificio
       const mockUnits: Unit[] = [

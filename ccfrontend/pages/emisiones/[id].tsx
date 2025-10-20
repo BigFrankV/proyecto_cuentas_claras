@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 
 import { EmissionStatusBadge, EmissionTypeBadge } from '@/components/emisiones';
 import Layout from '@/components/layout/Layout';
+import emisionesService from '@/lib/emisionesService';
 import { ProtectedRoute } from '@/lib/useAuth';
 
 interface EmissionDetail {
@@ -93,152 +94,135 @@ export default function EmisionDetalle() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('detalles');
 
-  useEffect(() => {
-    if (id) {
-      loadEmissionData();
-    }
-  }, [id]);
 
-  const loadEmissionData = () => {
-    // Mock data
-    setTimeout(() => {
-      const mockEmission: EmissionDetail = {
-        id: id as string,
-        period: 'Septiembre 2025',
-        type: 'gastos_comunes',
-        status: 'sent',
-        issueDate: '2025-09-01',
-        dueDate: '2025-09-15',
-        totalAmount: 2500000,
-        paidAmount: 1800000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de septiembre',
-        communityName: 'Edificio Central',
-        hasInterest: true,
-        interestRate: 2.0,
-        gracePeriod: 5,
-      };
-
-      const mockConcepts: Concept[] = [
-        {
-          id: '1',
-          name: 'Administración',
-          description: 'Honorarios administrador y gastos administrativos',
-          amount: 450000,
-          distributionType: 'proportional',
-          category: 'Administración',
-        },
-        {
-          id: '2',
-          name: 'Servicios Básicos',
-          description: 'Electricidad y agua áreas comunes',
-          amount: 730000,
-          distributionType: 'proportional',
-          category: 'Servicios',
-        },
-        {
-          id: '3',
-          name: 'Fondo de Reserva',
-          description: 'Aporte mensual al fondo de reserva',
-          amount: 200000,
-          distributionType: 'equal',
-          category: 'Reservas',
-        },
-      ];
-
-      const mockExpenses: ExpenseDetail[] = [
-        {
-          id: '1',
-          description: 'Consumo eléctrico - Septiembre',
-          amount: 450000,
-          category: 'Servicios Básicos',
-          supplier: 'CGE',
-          date: '2025-09-15',
-          document: 'Factura #12345',
-        },
-        {
-          id: '2',
-          description: 'Consumo de agua - Septiembre',
-          amount: 280000,
-          category: 'Servicios Básicos',
-          supplier: 'ESVAL',
-          date: '2025-09-10',
-          document: 'Factura #67890',
-        },
-      ];
-
-      const mockUnits: UnitDetail[] = [
-        {
-          id: '1',
-          number: '101',
-          type: 'Departamento',
-          owner: 'Juan Pérez',
-          contact: 'juan.perez@email.com',
-          participation: 2.5,
-          totalAmount: 62500,
-          paidAmount: 62500,
-          status: 'paid',
-        },
-        {
-          id: '2',
-          number: '102',
-          type: 'Departamento',
-          owner: 'María González',
-          contact: 'maria.gonzalez@email.com',
-          participation: 2.2,
-          totalAmount: 55000,
-          paidAmount: 30000,
-          status: 'partial',
-        },
-      ];
-
-      const mockPayments: Payment[] = [
-        {
-          id: '1',
-          date: '2025-09-10',
-          amount: 62500,
-          method: 'Transferencia',
-          reference: 'TRF001234',
-          unit: '101',
-          status: 'confirmed',
-        },
-        {
-          id: '2',
-          date: '2025-09-12',
-          amount: 30000,
-          method: 'Efectivo',
-          reference: 'EF001',
-          unit: '102',
-          status: 'confirmed',
-        },
-      ];
-
-      const mockHistory: HistoryEntry[] = [
-        {
-          id: '1',
-          date: '2025-09-01',
-          action: 'Emisión creada',
-          user: 'Administrador',
-          description: 'Se creó la emisión de gastos comunes',
-        },
-        {
-          id: '2',
-          date: '2025-09-02',
-          action: 'Emisión enviada',
-          user: 'Administrador',
-          description: 'Se envió la emisión a todas las unidades',
-        },
-      ];
-
-      setEmission(mockEmission);
-      setConcepts(mockConcepts);
-      setExpenses(mockExpenses);
-      setUnits(mockUnits);
-      setPayments(mockPayments);
-      setHistory(mockHistory);
-      setLoading(false);
-    }, 1000);
+  // Mapear estado del backend al frontend
+  const mapEstado = (estado: string): EmissionDetail['status'] => {
+    const estadoMap: Record<string, EmissionDetail['status']> = {
+      'borrador': 'draft',
+      'emitida': 'sent',
+      'cerrada': 'paid',
+    };
+    return estadoMap[estado] || 'draft';
   };
+
+  useEffect(() => {
+    const loadEmissionData = async () => {
+      if (!id || typeof id !== 'string') return;
+
+      try {
+        setLoading(true);
+
+
+        const emisionId = parseInt(id);
+
+        // Cargar datos en paralelo
+        const [
+          emisionData,
+          detallesData,
+          gastosData,
+          unidadesData,
+          pagosData,
+          auditoriaData,
+        ] = await Promise.all([
+          emisionesService.getEmisionDetalleCompleto(emisionId),
+          emisionesService.getDetallesEmision(emisionId),
+          emisionesService.getGastosEmision(emisionId),
+          emisionesService.getUnidadesProrrateo(emisionId),
+          emisionesService.getPagosEmision(emisionId),
+          emisionesService.getAuditoriaEmision(emisionId),
+        ]);
+
+
+        // Transformar emisión
+        const transformedEmission: EmissionDetail = {
+          id: emisionData.id.toString(),
+          period: emisionData.periodo,
+          type: emisionData.tipo || 'gastos_comunes',
+          status: mapEstado(emisionData.estado),
+          issueDate: emisionData.fecha_emision || emisionData.created_at || '',
+          dueDate: emisionData.fecha_vencimiento,
+          totalAmount: emisionData.monto_total || 0,
+          paidAmount: emisionData.monto_pagado || 0,
+          unitCount: emisionData.cantidad_unidades || 0,
+          description: emisionData.observaciones || '',
+          communityName: emisionData.nombre_comunidad || 'Mi Comunidad',
+          hasInterest: !!emisionData.tiene_interes,
+          interestRate: emisionData.tasa_interes || 0,
+          gracePeriod: emisionData.dias_gracia || 0,
+        };
+
+        // Transformar conceptos/detalles
+        const transformedConcepts: Concept[] = detallesData.map(detalle => ({
+          id: detalle.id?.toString() || '',
+          name: detalle.nombre || 'Sin categoría',
+          description: detalle.descripcion || '',
+          amount: detalle.monto || 0,
+          distributionType:
+            detalle.tipo_prorrateo === 'proporcional' ? 'proportional'
+            : detalle.tipo_prorrateo === 'igual' ? 'equal'
+            : 'custom',
+          category: detalle.categoria || '',
+        }));
+
+        // Transformar gastos
+        const transformedExpenses: ExpenseDetail[] = gastosData.map(gasto => ({
+          id: gasto.id.toString(),
+          description: gasto.descripcion,
+          amount: gasto.monto,
+          category: gasto.categoria,
+          supplier: gasto.proveedor || '',
+          date: gasto.fecha,
+          document: gasto.documento || '',
+        }));
+
+        // Transformar unidades
+        const transformedUnits: UnitDetail[] = unidadesData.map(unidad => ({
+          id: (unidad.id || unidad.unidad_id)?.toString() || '',
+          number: unidad.numero || '',
+          type: unidad.tipo || 'Departamento',
+          owner: unidad.propietario || '',
+          contact: unidad.contacto || '',
+          participation: unidad.alicuota || 0,
+          totalAmount: unidad.monto_total || 0,
+          paidAmount: unidad.monto_pagado || 0,
+          status: unidad.estado === 'pagado' ? 'paid' : unidad.monto_pagado > 0 ? 'partial' : 'pending',
+        }));
+
+        // Transformar pagos
+        const transformedPayments: Payment[] = pagosData.map(pago => ({
+          id: pago.id.toString(),
+          date: pago.fecha,
+          amount: pago.monto,
+          method: pago.medio,
+          reference: pago.referencia || '',
+          unit: pago.unidad || '',
+          status: pago.estado === 'aplicado' ? 'confirmed' : pago.estado === 'pendiente' ? 'pending' : 'rejected',
+        }));
+
+        // Transformar historial
+        const transformedHistory: HistoryEntry[] = auditoriaData.map((item: any) => ({
+          id: item.id?.toString() || '',
+          date: item.fecha || item.created_at || '',
+          action: item.accion || item.action || '',
+          user: item.usuario || item.user || '',
+          description: item.descripcion || item.description || '',
+        }));
+
+        setEmission(transformedEmission);
+        setConcepts(transformedConcepts);
+        setExpenses(transformedExpenses);
+        setUnits(transformedUnits);
+        setPayments(transformedPayments);
+        setHistory(transformedHistory);
+        setLoading(false);
+      } catch (err) {
+
+        setLoading(false);
+      }
+    };
+
+    loadEmissionData();
+  }, [id]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {

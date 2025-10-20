@@ -3,7 +3,6 @@
  * Total endpoints: ~18
  */
 
-const request = require('supertest');
 const { app, getAuthToken } = require('./setup');
 const { categorizeResponse, getWithAuth } = require('./helpers');
 

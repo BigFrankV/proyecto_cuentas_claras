@@ -20,13 +20,13 @@ const MembresiasListado = () => {
     'todos',
   );
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage] = useState(1);
   const [membresias, setMembresias] = useState<Membresia[]>([]);
   const [total, setTotal] = useState(0);
   const [roles, setRoles] = useState<any[]>([]);
   const [comunidades, setComunidades] = useState<any[]>([]);
 
-  const { listarMembresias, listarRoles, listarComunidades, loading, error } =
+  const { listarMembresias, listarRoles, listarComunidades } =
     useMembresias();
 
   const itemsPerPage = 20;
@@ -81,8 +81,6 @@ const MembresiasListado = () => {
   // Estadísticas
   const stats = useMemo(() => {
     const activas = membresias.filter(m => m.activo).length;
-    const inactivas = membresias.filter(m => !m.activo).length;
-    // Para vencenEsteMes y vencidas, calcular basado en hasta
     const now = new Date();
     const vencenEsteMes = membresias.filter(
       m =>

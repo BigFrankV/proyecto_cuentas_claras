@@ -2,12 +2,13 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
+
 import Layout from '@/components/layout/Layout';
+import { ProviderFilters, ProviderStats, ProviderTable, ProviderCard } from '@/components/proveedores';
+import { listProveedores, deleteProveedor } from '@/lib/proveedoresService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { usePermissions } from '@/lib/usePermissions';
-import { listProveedores, deleteProveedor } from '@/lib/proveedoresService';
 import type { Proveedor } from '@/types/proveedores';
-import { ProviderFilters, ProviderStats, ProviderTable, ProviderCard } from '@/components/proveedores';
 
 export default function ProveedoresListado() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function ProveedoresListado() {
   const resolvedComunidadId = useMemo(() => (isSuperUser ? undefined : undefined), [isSuperUser]);
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated) loadProviders(pagination.page);
+    if (!authLoading && isAuthenticated) {loadProviders(pagination.page);}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated, pagination.page]);
 
@@ -41,13 +42,13 @@ export default function ProveedoresListado() {
       const params: any = { limit: pagination.limit };
       const offset = (page - 1) * pagination.limit;
       params.offset = offset;
-      if (search) params.search = search;
-      if (status) params.activo = status === 'active' ? 1 : status === 'inactive' ? 0 : undefined;
+      if (search) {params.search = search;}
+      if (status) {params.activo = status === 'active' ? 1 : status === 'inactive' ? 0 : undefined;}
 
       const resp = await listProveedores(comunidadId ?? resolvedComunidadId, params);
       setProviders(resp.data);
-      if (resp.pagination) setPagination(resp.pagination);
-      else setPagination(prev => ({ ...prev, total: resp.data.length, pages: Math.ceil(resp.data.length / prev.limit) }));
+      if (resp.pagination) {setPagination(resp.pagination);}
+      else {setPagination(prev => ({ ...prev, total: resp.data.length, pages: Math.ceil(resp.data.length / prev.limit) }));}
     } catch (err) {
       console.error('Error loading providers:', err);
     } finally {
@@ -60,7 +61,7 @@ export default function ProveedoresListado() {
   const handleDelete = (p: Proveedor) => { setSelectedProvider(p); setShowDeleteModal(true); };
 
   const confirmDelete = async () => {
-    if (!selectedProvider) return;
+    if (!selectedProvider) {return;}
     try {
       await deleteProveedor(selectedProvider.id);
       setShowDeleteModal(false);
@@ -73,9 +74,9 @@ export default function ProveedoresListado() {
   };
 
   const handleFiltersChange = (payload: any) => {
-    if (payload.search !== undefined) setSearch(payload.search);
-    if (payload.status !== undefined) setStatus(payload.status);
-    if (payload.comunidadId !== undefined) setComunidadId(payload.comunidadId);
+    if (payload.search !== undefined) {setSearch(payload.search);}
+    if (payload.status !== undefined) {setStatus(payload.status);}
+    if (payload.comunidadId !== undefined) {setComunidadId(payload.comunidadId);}
     setPagination(prev => ({ ...prev, page: 1 }));
     loadProviders(1);
   };

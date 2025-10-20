@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+
+import { cargosApi } from '@/lib/api/cargos';
 
 // Interfaces
 interface Charge {
@@ -15,70 +17,76 @@ interface Charge {
   paymentAmount?: number;
 }
 
-// Mock data
-const mockCharges: Charge[] = [
-  {
-    id: 'CHG-2024-001',
-    concept: 'Administración Enero 2024',
-    type: 'administration',
-    amount: 45000,
-    dueDate: '2024-01-31',
-    status: 'paid',
-    unit: 'APT-101',
-    description: 'Cuota de administración mensual',
-    createdAt: '2024-01-01',
-    paymentDate: '2024-01-25',
-    paymentAmount: 45000,
-  },
-  {
-    id: 'CHG-2024-002',
-    concept: 'Mantenimiento Ascensores',
-    type: 'maintenance',
-    amount: 25000,
-    dueDate: '2024-02-15',
-    status: 'pending',
-    unit: 'APT-102',
-    description: 'Mantenimiento preventivo ascensores',
-    createdAt: '2024-02-01',
-  },
-  {
-    id: 'CHG-2024-003',
-    concept: 'Servicio de Seguridad',
-    type: 'service',
-    amount: 35000,
-    dueDate: '2024-02-28',
-    status: 'approved',
-    unit: 'APT-103',
-    description: 'Servicio de vigilancia 24/7',
-    createdAt: '2024-02-01',
-  },
-  {
-    id: 'CHG-2024-004',
-    concept: 'Seguro Edificio',
-    type: 'insurance',
-    amount: 50000,
-    dueDate: '2024-03-15',
-    status: 'partial',
-    unit: 'APT-104',
-    description: 'Prima anual seguro integral',
-    createdAt: '2024-02-15',
-    paymentAmount: 25000,
-  },
-  {
-    id: 'CHG-2024-005',
-    concept: 'Multa Parqueo',
-    type: 'other',
-    amount: 15000,
-    dueDate: '2024-02-20',
-    status: 'rejected',
-    unit: 'APT-105',
-    description: 'Parqueo en zona no autorizada',
-    createdAt: '2024-02-10',
-  },
-];
+interface CargosListadoSimpleProps {
+  comunidadId?: number;
+}
 
-const CargosListado: React.FC = () => {
-  const [charges] = useState<Charge[]>(mockCharges);
+const CargosListado: React.FC<CargosListadoSimpleProps> = ({ comunidadId }) => {
+  const [charges, setCharges] = useState<Charge[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Cargar cargos desde la API
+  useEffect(() => {
+    const fetchCargos = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Si no hay comunidadId, no cargar datos
+        if (!comunidadId) {
+          setIsLoading(false);
+          return;
+        }
+
+        const data = await cargosApi.getByComunidad(comunidadId);
+        
+        // Transformar datos de la API al formato del componente
+        const transformedCharges: Charge[] = data.map((cargo) => ({
+          id: String(cargo.id),
+          concept: cargo.concepto || '',
+          type: mapTipoToEnglish(cargo.tipo),
+          amount: cargo.monto || 0,
+          dueDate: cargo.fechaVencimiento ? new Date(cargo.fechaVencimiento).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          status: mapEstadoToEnglish(cargo.estado),
+          unit: cargo.unidad || '',
+          description: cargo.descripcion || undefined,
+          createdAt: cargo.fechaCreacion ? new Date(cargo.fechaCreacion).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          paymentDate: undefined,
+          paymentAmount: cargo.montoAplicado || undefined,
+        }));
+
+        setCharges(transformedCharges);
+      } catch {
+        // Error al cargar datos
+        setCharges([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCargos();
+  }, [comunidadId]);
+
+  // Función para mapear tipo español a inglés
+  const mapTipoToEnglish = (tipo: string): Charge['type'] => {
+    const tipoMap: Record<string, Charge['type']> = {
+      'Administración': 'administration',
+      'Mantenimiento': 'maintenance',
+      'Servicio': 'service',
+      'Seguro': 'insurance',
+    };
+    return tipoMap[tipo] || 'other';
+  };
+
+  // Función para mapear estado español a inglés
+  const mapEstadoToEnglish = (estado: string): Charge['status'] => {
+    const estadoMap: Record<string, Charge['status']> = {
+      'pendiente': 'pending',
+      'pagado': 'paid',
+      'vencido': 'rejected',
+      'parcial': 'partial',
+    };
+    return estadoMap[estado] || 'pending';
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 

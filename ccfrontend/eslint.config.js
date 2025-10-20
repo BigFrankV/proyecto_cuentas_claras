@@ -9,6 +9,7 @@ import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 import importPlugin from 'eslint-plugin-import';
+import stylistic from '@stylistic/eslint-plugin';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -61,6 +62,7 @@ export default [
       'react-hooks': reactHooksPlugin,
       'jsx-a11y': jsxA11yPlugin,
       import: importPlugin,
+      '@stylistic': stylistic,
     },
     rules: {
       // TypeScript specific rules
@@ -132,7 +134,19 @@ export default [
       quotes: ['error', 'single', { avoidEscape: true }],
       semi: ['error', 'always'],
       indent: ['error', 2, { SwitchCase: 1 }],
-      'max-len': ['warn', { code: 100, ignoreUrls: true }],
+      '@stylistic/max-len': [
+        'warn',
+        {
+          code: 100,
+          tabWidth: 2,
+          ignoreUrls: true,
+          ignoreStrings: true,
+          ignoreTemplateLiterals: true,
+          ignoreRegExpLiterals: true,
+          ignoreComments: false,
+          ignoreTrailingComments: true,
+        },
+      ],
       eqeqeq: ['error', 'always'],
       curly: ['error', 'all'],
     },

@@ -1,10 +1,11 @@
-import apiClient from './api';
 import type { Proveedor, ProveedoresResponse } from '@/types/proveedores';
+
+import apiClient from './api';
 
 export async function listProveedores(comunidadId?: number | null, params: Record<string, any> = {}): Promise<ProveedoresResponse> {
   const endpoint = typeof comunidadId === 'number'
     ? `/proveedores/comunidad/${comunidadId}`
-    : `/proveedores`; // global (superadmin / filtrado por middleware en backend)
+    : '/proveedores'; // global (superadmin / filtrado por middleware en backend)
 
   const resp = await apiClient.get(endpoint, { params });
 
@@ -26,7 +27,7 @@ export async function listProveedores(comunidadId?: number | null, params: Recor
   } else {
     // fallback: try resp.data.rows or resp.data.items
     data = raw.rows ?? raw.items ?? [];
-    if (raw.pagination) pagination = raw.pagination;
+    if (raw.pagination) {pagination = raw.pagination;}
   }
 
   return { data, pagination };

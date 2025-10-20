@@ -191,7 +191,7 @@ export default function ConsumosPage(): JSX.Element {
           mainChart.data.datasets[0].data = newData;
           mainChart.update();
         }
-        // eslint-disable-next-line no-alert
+         
         alert('Filtros aplicados correctamente');
       }, 1200);
     } else {
@@ -209,7 +209,7 @@ export default function ConsumosPage(): JSX.Element {
 
   function exportData(format: 'excel' | 'pdf' | 'csv') {
     const formatNames: any = { excel: 'Excel', pdf: 'PDF', csv: 'CSV' };
-    // eslint-disable-next-line no-alert
+     
     alert(`Exportando datos en formato ${formatNames[format]}...`);
     setTimeout(() => {
       const link = document.createElement('a');

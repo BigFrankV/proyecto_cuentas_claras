@@ -105,7 +105,7 @@ function walkElement(element: any, path: string[] = [], findings: any[] = []) {
 }
 
 test('walk lecturas element tree to find object-typed element types', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const Lecturas = require('../pages/medidores/[id]/lecturas').default;
   // Call the component function to obtain the React element tree without rendering to DOM
   const el = Lecturas();

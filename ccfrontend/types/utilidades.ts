@@ -128,10 +128,20 @@ export interface PeriodoRapido {
   icon?: string;
 }
 
+// Tipos de resultados posibles para calculadoras
+export type CalculatorResult = 
+  | UtmCalculatorResult 
+  | RutValidation 
+  | UfCalculatorResult 
+  | GeneratedRut
+  | string 
+  | number 
+  | Record<string, unknown>;
+
 export interface CalculatorState {
   loading: boolean;
   error: string | null;
-  result: any | null;
+  result: CalculatorResult | null;
 }
 
 export interface UtilityStats {

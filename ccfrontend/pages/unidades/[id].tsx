@@ -344,17 +344,17 @@ export default function UnidadDetalle() {
                     </Link>
                   </li>
                   <li>
-                    <a className='dropdown-item' href='#'>
+                    <button type="button" className='dropdown-item'>
                       <i className='material-icons align-middle me-1 small'>
                         receipt_long
                       </i>
                       Ver estado de cuenta
-                    </a>
+                    </button>
                   </li>
                   <li>
-                    <a
+                    <button
+                      type="button"
                       className='dropdown-item'
-                      href='#'
                       data-bs-toggle='modal'
                       data-bs-target='#nuevoCargoPorUnidadModal'
                     >
@@ -362,18 +362,18 @@ export default function UnidadDetalle() {
                         receipt
                       </i>
                       Generar cargo
-                    </a>
+                    </button>
                   </li>
                   <li>
                     <hr className='dropdown-divider' />
                   </li>
                   <li>
-                    <a className='dropdown-item text-danger' href='#'>
+                    <button type="button" className='dropdown-item text-danger'>
                       <i className='material-icons align-middle me-1 small'>
                         delete
                       </i>
                       Eliminar unidad
-                    </a>
+                    </button>
                   </li>
                 </ul>
               </div>

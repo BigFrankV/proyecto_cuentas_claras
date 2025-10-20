@@ -8,7 +8,7 @@ import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 export default function EditApelacionPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { token } = useAuth();
+  useAuth(); // Hook para verificar autenticación
   const [form, setForm] = useState({ motivo: '', documentos_json: null });
   const [loading, setLoading] = useState(false);
 
@@ -19,6 +19,7 @@ export default function EditApelacionPage() {
     (async () => {
       setLoading(true);
       try {
+        const token = localStorage.getItem('auth_token') || '';
         const r = await getApelacion(Number(id), token);
         setForm({
           motivo: r.motivo || '',
@@ -30,12 +31,13 @@ export default function EditApelacionPage() {
         setLoading(false);
       }
     })();
-  }, [id, token]);
+  }, [id]);
 
   async function handleSubmit(e: any) {
     e.preventDefault();
     setLoading(true);
     try {
+      const token = localStorage.getItem('auth_token') || '';
       await updateApelacion(Number(id), form, token);
       router.push(`/apelaciones/${id}`);
     } catch (err) {

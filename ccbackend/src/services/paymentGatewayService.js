@@ -1,5 +1,5 @@
 const { WebpayPlus } = require('transbank-sdk');
-const { Options, IntegrationType, Environment } = require('transbank-sdk');
+const { Options, Environment } = require('transbank-sdk');
 const axios = require('axios');
 const db = require('../db');
 const logger = require('../logger');

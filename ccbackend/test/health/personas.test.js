@@ -10,12 +10,10 @@ const { categorizeResponse, getWithAuth } = require('./helpers');
 describe('Personas Health Check', () => {
   let authToken;
   let personaId; 
-  let unidadId; 
 
   beforeAll(() => {
     authToken = getAuthToken();
     personaId = testIds.personaId;
-    unidadId = testIds.unidadId; 
   });
 
   // =========================================
