@@ -38,6 +38,7 @@ const sequelize = require('./sequelize');
 const logger = require('./logger');
 const { setupSwagger } = require('./swagger');
 const apelacionesRouter = require('./routes/apelaciones');
+const comprasRouter = require('./routes/compras');
 
 const app = express();
 
@@ -114,6 +115,8 @@ console.log('paymentGatewayRoutes type:', typeof paymentGatewayRoutes, 'is funct
 app.use('/gateway', paymentGatewayRoutes);
 console.log('apelacionesRouter type:', typeof apelacionesRouter, 'is function?', typeof apelacionesRouter === 'function');
 app.use('/apelaciones', apelacionesRouter);
+console.log('comprasRouter type:', typeof comprasRouter, 'is function?', typeof comprasRouter === 'function');
+app.use('/compras', comprasRouter);
 
 app.get('/healthz', (_, res) => res.json({ status: 'ok' }));
 

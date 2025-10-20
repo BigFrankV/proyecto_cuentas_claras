@@ -15,6 +15,8 @@ import {
 
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { listCompras } from '@/lib/comprasService';
+import type { Compra as CompraBackend } from '@/types/compras';
 
 interface Purchase {
   id: number;
@@ -104,332 +106,59 @@ export default function ComprasListado() {
   const [itemsPerPage] = useState(15);
 
   useEffect(() => {
-    loadPurchases();
-  }, []);
+    loadPurchases(currentPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, filters]);
 
-  const loadPurchases = async () => {
+  const loadPurchases = async (page = 1) => {
     try {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const limit = itemsPerPage;
+      const offset = (page - 1) * limit;
+      const params: any = { limit, offset };
+      if (filters.search) params.search = filters.search;
+      if (filters.type) params.tipo_doc = filters.type;
+      if (filters.status) params.estado = filters.status;
+      if (filters.dateFrom) params.fecha_desde = filters.dateFrom;
+      if (filters.dateTo) params.fecha_hasta = filters.dateTo;
 
-      const mockPurchases: Purchase[] = [
-        {
-          id: 1,
-          number: 'ORD-2024-001',
-          type: 'supplies',
-          status: 'pending',
-          priority: 'medium',
-          provider: {
-            id: 1,
-            name: 'Materiales San Fernando Ltda.',
-            category: 'supplies',
-            rating: 4.2,
-          },
-          costCenter: {
-            id: 1,
-            name: 'Mantenimiento General',
-            department: 'maintenance',
-          },
-          category: {
-            id: 1,
-            name: 'Materiales de Construcción',
-            color: '#ff9800',
-          },
-          description:
-            'Materiales para reparación de fachada principal del edificio',
-          totalAmount: 850000,
-          currency: 'clp',
-          requestedBy: 'María González',
-          requestDate: '2024-03-25T10:30:00Z',
-          requiredDate: '2024-04-05T00:00:00Z',
-          items: [
-            {
-              id: 1,
-              description: 'Cemento Portland 42.5 kg Melón',
-              quantity: 15,
-              unit: 'sacos',
-              unitPrice: 12500,
-              totalPrice: 187500,
-              category: 'Cemento',
-            },
-            {
-              id: 2,
-              description: 'Arena lavada m³',
-              quantity: 4,
-              unit: 'm³',
-              unitPrice: 28000,
-              totalPrice: 112000,
-              category: 'Agregados',
-            },
-            {
-              id: 3,
-              description: 'Pintura acrílica exterior Sherwin Williams 20L',
-              quantity: 8,
-              unit: 'tarros',
-              unitPrice: 68750,
-              totalPrice: 550000,
-              category: 'Pintura',
-            },
-          ],
-          documents: 3,
-          notes: 'Urgente para inicio de trabajos la próxima semana',
-          createdAt: '2024-03-25T10:30:00Z',
-          updatedAt: '2024-03-25T10:30:00Z',
-        },
-        {
-          id: 2,
-          number: 'SRV-2024-002',
-          type: 'service',
-          status: 'approved',
-          priority: 'high',
-          provider: {
-            id: 2,
-            name: 'Limpiezas Profesionales Vitacura Ltda.',
-            category: 'services',
-            rating: 4.8,
-          },
-          costCenter: {
-            id: 2,
-            name: 'Servicios Generales',
-            department: 'operations',
-          },
-          category: {
-            id: 2,
-            name: 'Servicios de Limpieza',
-            color: '#2196f3',
-          },
-          description:
-            'Servicio de limpieza profunda áreas comunes del condominio',
-          totalAmount: 320000,
-          currency: 'clp',
-          requestedBy: 'Carlos Rodríguez',
-          requestDate: '2024-03-20T14:15:00Z',
-          requiredDate: '2024-03-30T00:00:00Z',
-          approvedBy: 'Patricia Contreras',
-          approvedDate: '2024-03-22T09:00:00Z',
-          items: [
-            {
-              id: 1,
-              description: 'Limpieza profunda lobby y pasillos',
-              quantity: 1,
-              unit: 'servicio',
-              unitPrice: 150000,
-              totalPrice: 150000,
-              category: 'Limpieza Interior',
-            },
-            {
-              id: 2,
-              description: 'Limpieza cristales fachada completa',
-              quantity: 1,
-              unit: 'servicio',
-              unitPrice: 120000,
-              totalPrice: 120000,
-              category: 'Limpieza Exterior',
-            },
-            {
-              id: 3,
-              description: 'Encerado y cristalizado pisos mármol',
-              quantity: 1,
-              unit: 'servicio',
-              unitPrice: 50000,
-              totalPrice: 50000,
-              category: 'Tratamiento Pisos',
-            },
-          ],
-          documents: 2,
-          createdAt: '2024-03-20T14:15:00Z',
-          updatedAt: '2024-03-22T09:00:00Z',
-        },
-        {
-          id: 3,
-          number: 'MNT-2024-003',
-          type: 'maintenance',
-          status: 'in-progress',
-          priority: 'urgent',
-          provider: {
-            id: 3,
-            name: 'Servicios Eléctricos Las Condes SpA',
-            category: 'services',
-            rating: 4.6,
-          },
-          costCenter: {
-            id: 3,
-            name: 'Mantenimiento Preventivo',
-            department: 'maintenance',
-          },
-          category: {
-            id: 3,
-            name: 'Mantenimiento Eléctrico',
-            color: '#f44336',
-          },
-          description:
-            'Reparación urgente sistema eléctrico Torre A - Falla generalizada',
-          totalAmount: 780000,
-          currency: 'clp',
-          requestedBy: 'José Martínez',
-          requestDate: '2024-03-18T08:00:00Z',
-          requiredDate: '2024-03-25T00:00:00Z',
-          approvedBy: 'Patricia Contreras',
-          approvedDate: '2024-03-18T10:30:00Z',
-          items: [
-            {
-              id: 1,
-              description: 'Diagnóstico completo tablero principal SEC',
-              quantity: 1,
-              unit: 'servicio',
-              unitPrice: 180000,
-              totalPrice: 180000,
-              category: 'Diagnóstico',
-            },
-            {
-              id: 2,
-              description: 'Interruptores automáticos 32A Schneider',
-              quantity: 6,
-              unit: 'unidades',
-              unitPrice: 45000,
-              totalPrice: 270000,
-              category: 'Materiales',
-            },
-            {
-              id: 3,
-              description: 'Cable THHN 12 AWG Procobre',
-              quantity: 150,
-              unit: 'metros',
-              unitPrice: 2200,
-              totalPrice: 330000,
-              category: 'Materiales',
-            },
-          ],
-          documents: 5,
-          notes: 'Trabajo en progreso, estimado finalización mañana con SEC',
-          createdAt: '2024-03-18T08:00:00Z',
-          updatedAt: '2024-03-26T16:20:00Z',
-        },
-        {
-          id: 4,
-          number: 'ORD-2024-004',
-          type: 'order',
-          status: 'completed',
-          priority: 'low',
-          provider: {
-            id: 4,
-            name: 'Vivero y Paisajismo Lo Barnechea Ltda.',
-            category: 'services',
-            rating: 4.3,
-          },
-          costCenter: {
-            id: 4,
-            name: 'Jardinería y Paisajismo',
-            department: 'operations',
-          },
-          category: {
-            id: 4,
-            name: 'Jardinería',
-            color: '#4caf50',
-          },
-          description:
-            'Renovación completa de jardines y áreas verdes del condominio',
-          totalAmount: 450000,
-          currency: 'clp',
-          requestedBy: 'Ana López',
-          requestDate: '2024-03-10T11:00:00Z',
-          requiredDate: '2024-03-20T00:00:00Z',
-          approvedBy: 'Carlos Rodríguez',
-          approvedDate: '2024-03-12T09:15:00Z',
-          deliveryDate: '2024-03-18T14:30:00Z',
-          completedDate: '2024-03-20T16:45:00Z',
-          items: [
-            {
-              id: 1,
-              description:
-                'Plantas ornamentales chilenas (lavanda, romero, copihue)',
-              quantity: 25,
-              unit: 'unidades',
-              unitPrice: 8500,
-              totalPrice: 212500,
-              category: 'Plantas',
-            },
-            {
-              id: 2,
-              description: 'Compost orgánico premium',
-              quantity: 15,
-              unit: 'sacos 50kg',
-              unitPrice: 7500,
-              totalPrice: 112500,
-              category: 'Sustratos',
-            },
-            {
-              id: 3,
-              description:
-                'Servicio diseño paisajístico y mantención trimestral',
-              quantity: 1,
-              unit: 'servicio',
-              unitPrice: 125000,
-              totalPrice: 125000,
-              category: 'Servicios',
-            },
-          ],
-          documents: 4,
-          createdAt: '2024-03-10T11:00:00Z',
-          updatedAt: '2024-03-20T16:45:00Z',
-        },
-        {
-          id: 5,
-          number: 'SRV-2024-005',
-          type: 'service',
-          status: 'cancelled',
-          priority: 'medium',
-          provider: {
-            id: 5,
-            name: 'Soluciones TI Chile SpA',
-            category: 'others',
-            rating: 4.7,
-          },
-          costCenter: {
-            id: 5,
-            name: 'Administración',
-            department: 'administration',
-          },
-          category: {
-            id: 5,
-            name: 'Tecnología',
-            color: '#9c27b0',
-          },
-          description:
-            'Actualización sistema administración condominial y portería digital',
-          totalAmount: 1250000,
-          currency: 'clp',
-          requestedBy: 'Patricia Contreras',
-          requestDate: '2024-03-05T13:20:00Z',
-          requiredDate: '2024-03-25T00:00:00Z',
-          items: [
-            {
-              id: 1,
-              description: 'Licencia software gestión condominios Nexo Pro',
-              quantity: 1,
-              unit: 'licencia anual',
-              unitPrice: 850000,
-              totalPrice: 850000,
-              category: 'Software',
-            },
-            {
-              id: 2,
-              description: 'Implementación y capacitación personal',
-              quantity: 20,
-              unit: 'horas',
-              unitPrice: 20000,
-              totalPrice: 400000,
-              category: 'Consultoría',
-            },
-          ],
-          documents: 2,
-          notes: 'Cancelado - Se optó por proveedor nacional con mejor soporte',
-          createdAt: '2024-03-05T13:20:00Z',
-          updatedAt: '2024-03-15T10:00:00Z',
-        },
-      ];
+      const resp = await listCompras(undefined, params);
+      const rows: CompraBackend[] = resp.data || [];
 
-      setPurchases(mockPurchases);
+      // mapear rows a la forma local Purchase (lo mínimo necesario para la UI)
+      const mapped: Purchase[] = rows.map(r => ({
+        id: Number(r.id),
+        number: r.folio ?? `#${r.id}`,
+        type: 'service',
+        status: 'pending',
+        priority: 'medium',
+        provider: { id: Number(r.proveedor_id ?? 0), name: r.proveedor_nombre ?? '-', category: '', rating: 0 },
+        costCenter: { id: 0, name: r.centro_costo_nombre ?? '', department: '' },
+        category: { id: 0, name: r.categoria_gasto ?? '', color: '#ccc' },
+        description: r.glosa ?? '',
+        totalAmount: Number(r.total ?? 0),
+        currency: 'clp',
+        requestedBy: '',
+        requestDate: r.fecha_emision ?? (r.created_at ?? ''),
+        requiredDate: r.fecha_emision ?? (r.created_at ?? ''),
+        items: [],
+        documents: 0,
+        notes: '',
+        createdAt: r.created_at ?? '',
+        updatedAt: r.updated_at ?? '',
+        approvedBy: undefined,
+        approvedDate: undefined,
+        deliveryDate: undefined,
+        completedDate: undefined,
+      }));
+
+      setPurchases(mapped);
+      if (resp.pagination) {
+        const total = resp.pagination.total ?? 0;
+        const pages = Math.max(1, resp.pagination.pages ?? Math.ceil(total / limit));
+        setCurrentPage(resp.pagination.page ?? page);
+        // opcional: actualizar itemsPerPage si resp.pagination.limit distinto
+      }
     } catch (error) {
       console.error('Error loading purchases:', error);
     } finally {
