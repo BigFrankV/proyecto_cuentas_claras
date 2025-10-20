@@ -695,6 +695,96 @@ router.get('/comunidad/:comunidadId/distribucion', authenticate, requireCommunit
   }
 });
 
+/**
+ * GET /proveedores
+ * - superadmin: ve todos los proveedores (global)
+ * - otros roles: ven proveedores solo de las comunidades donde son miembros activos
+ * Query params soportados: page, limit, search, activo
+ */
+router.get('/', authenticate, async (req, res) => {
+  try {
+    const { page = 1, limit = 100, search = '', activo } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    // base where
+    let where = ' WHERE 1=1 ';
+    const params = [];
+
+    if (search) {
+      where += ' AND p.razon_social LIKE ?';
+      params.push(`%${search}%`);
+    }
+
+    if (typeof activo !== 'undefined' && activo !== '') {
+      where += ' AND p.activo = ?';
+      params.push(Number(activo));
+    }
+
+    // Si NO es superadmin, limitar por comunidades donde el usuario tiene membresía activa
+    if (!req.user?.is_superadmin) {
+      // obtener comunidades del usuario
+      const [comRows] = await db.query(
+        `SELECT comunidad_id FROM usuario_miembro_comunidad
+         WHERE persona_id = ? AND activo = 1 AND (hasta IS NULL OR hasta > CURDATE())`,
+        [req.user.persona_id]
+      );
+
+      const comunidadIds = comRows.map(r => r.comunidad_id);
+      if (comunidadIds.length === 0) {
+        // usuario sin comunidades -> no puede ver proveedores
+        return res.json({
+          data: [],
+          pagination: { total: 0, page: Number(page), limit: Number(limit), pages: 0 }
+        });
+      }
+
+      // anexar cláusula IN con placeholders
+      where += ` AND p.comunidad_id IN (${comunidadIds.map(() => '?').join(',')})`;
+      params.push(...comunidadIds);
+    }
+
+    // consulta principal (incluye nombre de comunidad)
+    const query = `
+      SELECT
+        p.id,
+        p.comunidad_id,
+        c.razon_social AS comunidad_nombre,
+        p.rut,
+        p.dv,
+        p.razon_social AS nombre,
+        p.giro,
+        p.email,
+        p.telefono,
+        p.direccion,
+        p.activo,
+        p.created_at,
+        p.updated_at
+      FROM proveedor p
+      INNER JOIN comunidad c ON p.comunidad_id = c.id
+      ${where}
+      ORDER BY p.razon_social
+      LIMIT ? OFFSET ?
+    `;
+    params.push(Number(limit), Number(offset));
+
+    const [rows] = await db.query(query, params);
+
+    // contar total (misma cláusula WHERE, sin limit/offset)
+    const countParams = params.slice(0, params.length - 2);
+    const countQuery = `SELECT COUNT(*) AS total FROM proveedor p INNER JOIN comunidad c ON p.comunidad_id = c.id ${where}`;
+    const [countRes] = await db.query(countQuery, countParams);
+    const total = countRes[0]?.total ?? rows.length;
+
+    res.json({
+      data: rows,
+      pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / limit) }
+    });
+  } catch (err) {
+    console.error('Error GET /proveedores:', err);
+    res.status(500).json({ error: 'Error al listar proveedores' });
+  }
+});
+
 // =========================================
 // 5. VALIDACIONES
 // =========================================
