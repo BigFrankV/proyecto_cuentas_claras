@@ -5,7 +5,7 @@ export interface Apelacion {
   persona_id?: number;
   comunidad_id?: number;
   motivo: string;
-  documentos_json?: any;
+  documentos_json?: string;
   estado: 'pendiente' | 'aprobada' | 'rechazada' | string;
   resolucion?: string;
   resuelto_por?: number;
@@ -13,5 +13,5 @@ export interface Apelacion {
   fecha_resolucion?: string;
   created_at?: string;
   updated_at?: string;
-  [key: string]: any;
+  [key: string]: string | number | undefined;
 }

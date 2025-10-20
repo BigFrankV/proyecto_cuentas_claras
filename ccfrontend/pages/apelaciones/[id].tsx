@@ -26,7 +26,7 @@ export const getServerSideProps: GetServerSideProps = async ctx => {
 export default function ApelacionDetallePage({ inicialApelacion }: any) {
   const router = useRouter();
   const { id } = router.query;
-  const { token } = useAuth();
+  useAuth(); // Hook para verificar autenticación
   const [apelacion, setApelacion] = useState<any>(inicialApelacion ?? null);
   const [loading, setLoading] = useState(false);
 
@@ -37,6 +37,7 @@ export default function ApelacionDetallePage({ inicialApelacion }: any) {
     (async () => {
       setLoading(true);
       try {
+        const token = localStorage.getItem('auth_token') || '';
         const r = await getApelacion(Number(id), token);
         setApelacion(r?.data ?? r);
       } catch (err) {
@@ -45,7 +46,7 @@ export default function ApelacionDetallePage({ inicialApelacion }: any) {
         setLoading(false);
       }
     })();
-  }, [id, token]);
+  }, [id]);
 
   if (loading || !apelacion) {
     return (
@@ -74,6 +75,7 @@ export default function ApelacionDetallePage({ inicialApelacion }: any) {
             apelacion={apelacion}
             onResolved={async () => {
               // refrescar después de resolver
+              const token = localStorage.getItem('auth_token') || '';
               const r = await getApelacion(Number(id), token);
               setApelacion(r);
             }}

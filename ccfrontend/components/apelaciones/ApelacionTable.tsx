@@ -61,7 +61,7 @@ export default function ApelacionTable({
   initialParams?: Record<string, any>;
   perPage?: number;
 }) {
-  const { token, user } = useAuth();
+  const { user } = useAuth();
   const [data, setData] = useState<Apelacion[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -108,6 +108,7 @@ export default function ApelacionTable({
       setLoading(true);
       setError(null);
       try {
+        const token = localStorage.getItem('auth_token') || '';
         const params = { ...initialParams, page, perPage };
         const res = await listApelaciones(params, token);
         setData(res.data || []);
@@ -125,7 +126,7 @@ export default function ApelacionTable({
         setLoading(false);
       }
     })();
-  }, [initialParams, page, perPage, token]);
+  }, [initialParams, page, perPage]);
 
   function renderBadge(estado?: string) {
     if (estado === 'pendiente') {

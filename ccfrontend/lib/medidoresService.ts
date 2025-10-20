@@ -1,15 +1,16 @@
-import apiClient from './api';
 import type { Medidor, MedidoresListResponse, Reading } from '@/types/medidores';
 
+import apiClient from './api';
+
 export async function listMedidores(comunidadId: number | null, params: Record<string, any> = {}): Promise<MedidoresListResponse> {
-  if (!comunidadId) return { data: [], pagination: { total: 0, limit: params.limit ?? 20, offset: 0, pages: 0 } };
+  if (!comunidadId) {return { data: [], pagination: { total: 0, limit: params.limit ?? 20, offset: 0, pages: 0 } };}
   const resp = await apiClient.get(`/medidores/comunidad/${comunidadId}`, { params });
   return resp.data as MedidoresListResponse;
 }
 
 // Nuevo: endpoint global para superadmin (soporta comunidad_id para filtrar)
 export async function listAllMedidores(params: Record<string, any> = {}): Promise<MedidoresListResponse> {
-  const resp = await apiClient.get(`/medidores`, { params });
+  const resp = await apiClient.get('/medidores', { params });
   return resp.data as MedidoresListResponse;
 }
 

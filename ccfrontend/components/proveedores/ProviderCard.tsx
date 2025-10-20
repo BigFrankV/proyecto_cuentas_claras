@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, Button, Row, Col } from 'react-bootstrap';
+
 import type { Proveedor } from '@/types/proveedores';
 
 export interface ProviderCardProps {
@@ -10,7 +11,7 @@ export interface ProviderCardProps {
 }
 
 export default function ProviderCard({ providers, onView, onEdit, onDelete }: ProviderCardProps) {
-  if (!providers.length) return <div className="py-4 text-center text-muted">No hay proveedores</div>;
+  if (!providers.length) {return <div className="py-4 text-center text-muted">No hay proveedores</div>;}
 
   return (
     <Row xs={1} md={2} lg={3} className="g-3">

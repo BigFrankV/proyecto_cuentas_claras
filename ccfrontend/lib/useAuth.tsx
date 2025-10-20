@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // normalizar estructura de usuario: memberships -> comunidades
   function normalizeUserData(u: any) {
-    if (!u) return u;
+    if (!u) {return u;}
     const copy = { ...u };
     try {
       if (!copy.comunidades && Array.isArray(copy.memberships)) {

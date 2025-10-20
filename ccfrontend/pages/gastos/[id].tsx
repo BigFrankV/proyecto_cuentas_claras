@@ -6,7 +6,6 @@ import {
   Card,
   Badge,
   Alert,
-  Table,
   Modal,
   Dropdown,
   OverlayTrigger,

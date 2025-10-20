@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
-import { EmissionStatusBadge, EmissionTypeBadge } from '@/components/emisiones';
 import Layout from '@/components/layout/Layout';
+import emisionesService from '@/lib/emisionesService';
 import { ProtectedRoute } from '@/lib/useAuth';
 
 interface EmissionDetail {
@@ -64,150 +64,105 @@ export default function EmisionProrrateo() {
   const [loading, setLoading] = useState(true);
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'summary' | 'detailed'>('summary');
+  const [error, setError] = useState<string | null>(null);
+
+  // Mapear estado del backend al frontend
+  const mapEstado = (estado: string): EmissionDetail['status'] => {
+    const estadoMap: Record<string, EmissionDetail['status']> = {
+      'borrador': 'draft',
+      'emitida': 'sent',
+      'cerrada': 'paid',
+    };
+    return estadoMap[estado] || 'draft';
+  };
 
   useEffect(() => {
-    if (id) {
-      loadProrrateoData();
-    }
+    const loadProrrateoData = async () => {
+      if (!id || typeof id !== 'string') {
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const emisionId = parseInt(id);
+
+        // Cargar datos en paralelo
+        const [emisionData, unidadesData, detallesData] = await Promise.all([
+          emisionesService.getEmisionDetalleCompleto(emisionId),
+          emisionesService.getUnidadesProrrateo(emisionId),
+          emisionesService.getDetallesEmision(emisionId),
+        ]);
+
+        // Transformar emisión
+        const transformedEmission: EmissionDetail = {
+          id: emisionData.id.toString(),
+          period: emisionData.periodo,
+          type: emisionData.tipo || 'gastos_comunes',
+          status: mapEstado(emisionData.estado),
+          issueDate: emisionData.fecha_emision || emisionData.created_at || '',
+          dueDate: emisionData.fecha_vencimiento,
+          totalAmount: emisionData.monto_total || 0,
+          paidAmount: emisionData.monto_pagado || 0,
+          unitCount: emisionData.cantidad_unidades || unidadesData.length,
+          description: emisionData.observaciones || '',
+          communityName: emisionData.nombre_comunidad || 'Mi Comunidad',
+        };
+
+        // Transformar unidades con detalles
+        const transformedUnits: UnitDistribution[] = unidadesData.map(unidad => ({
+          id: (unidad.id || unidad.unidad_id)?.toString() || '',
+          unitNumber: unidad.numero || '',
+          unitType: unidad.tipo || 'Departamento',
+          owner: unidad.propietario || '',
+          participation: unidad.alicuota || 0,
+          totalAmount: unidad.monto_total || 0,
+          paidAmount: unidad.monto_pagado || 0,
+          status: unidad.estado === 'pagado' ? 'paid' : unidad.monto_pagado > 0 ? 'partial' : 'pending',
+          details: detallesData.map(detalle => {
+            const conceptName = detalle.nombre || 'Sin categoría';
+            const totalAmt = detalle.monto || 0;
+            const unitParticipation = unidad.alicuota || 0;
+            const distType =
+              detalle.tipo_prorrateo === 'proporcional' ? 'proportional'
+              : detalle.tipo_prorrateo === 'igual' ? 'equal'
+              : 'custom';
+            return {
+              conceptId: detalle.id?.toString() || '',
+              conceptName,
+              totalAmount: totalAmt,
+              unitAmount: totalAmt * unitParticipation / 100,
+              distributionType: distType,
+            };
+          }),
+        }));
+
+        // Crear datos del gráfico
+        const chartLabels = detallesData.map(d => d.categoria || 'Sin categoría');
+        const chartAmounts = detallesData.map(d => d.monto);
+        const chartColors = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1'];
+
+        const mockChartData: DistributionChart = {
+          labels: chartLabels,
+          amounts: chartAmounts,
+          colors: chartColors,
+        };
+
+        setEmission(transformedEmission);
+        setUnits(transformedUnits);
+        setChartData(mockChartData);
+        setLoading(false);
+      } catch (err) {
+        setError('Error al cargar el prorrateo');
+        setLoading(false);
+      }
+    };
+
+    loadProrrateoData();
   }, [id]);
 
-  const loadProrrateoData = () => {
-    // Mock data
-    setTimeout(() => {
-      const mockEmission: EmissionDetail = {
-        id: id as string,
-        period: 'Septiembre 2025',
-        type: 'gastos_comunes',
-        status: 'sent',
-        issueDate: '2025-09-01',
-        dueDate: '2025-09-15',
-        totalAmount: 2500000,
-        paidAmount: 1800000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de septiembre',
-        communityName: 'Edificio Central',
-      };
 
-      const mockUnits: UnitDistribution[] = [
-        {
-          id: '1',
-          unitNumber: '101',
-          unitType: 'Departamento',
-          owner: 'Juan Pérez',
-          participation: 2.5,
-          totalAmount: 62500,
-          paidAmount: 62500,
-          status: 'paid',
-          details: [
-            {
-              conceptId: '1',
-              conceptName: 'Administración',
-              totalAmount: 450000,
-              unitAmount: 11250,
-              distributionType: 'proportional',
-            },
-            {
-              conceptId: '2',
-              conceptName: 'Servicios Básicos',
-              totalAmount: 730000,
-              unitAmount: 18250,
-              distributionType: 'proportional',
-            },
-            {
-              conceptId: '3',
-              conceptName: 'Fondo de Reserva',
-              totalAmount: 900000,
-              unitAmount: 20000,
-              distributionType: 'equal',
-            },
-          ],
-        },
-        {
-          id: '2',
-          unitNumber: '102',
-          unitType: 'Departamento',
-          owner: 'María González',
-          participation: 2.2,
-          totalAmount: 55000,
-          paidAmount: 30000,
-          status: 'partial',
-          details: [
-            {
-              conceptId: '1',
-              conceptName: 'Administración',
-              totalAmount: 450000,
-              unitAmount: 9900,
-              distributionType: 'proportional',
-            },
-            {
-              conceptId: '2',
-              conceptName: 'Servicios Básicos',
-              totalAmount: 730000,
-              unitAmount: 16060,
-              distributionType: 'proportional',
-            },
-            {
-              conceptId: '3',
-              conceptName: 'Fondo de Reserva',
-              totalAmount: 900000,
-              unitAmount: 20000,
-              distributionType: 'equal',
-            },
-          ],
-        },
-        {
-          id: '3',
-          unitNumber: '201',
-          unitType: 'Departamento',
-          owner: 'Carlos Rodríguez',
-          participation: 2.8,
-          totalAmount: 70000,
-          paidAmount: 0,
-          status: 'pending',
-          details: [
-            {
-              conceptId: '1',
-              conceptName: 'Administración',
-              totalAmount: 450000,
-              unitAmount: 12600,
-              distributionType: 'proportional',
-            },
-            {
-              conceptId: '2',
-              conceptName: 'Servicios Básicos',
-              totalAmount: 730000,
-              unitAmount: 20440,
-              distributionType: 'proportional',
-            },
-            {
-              conceptId: '3',
-              conceptName: 'Fondo de Reserva',
-              totalAmount: 900000,
-              unitAmount: 20000,
-              distributionType: 'equal',
-            },
-          ],
-        },
-      ];
-
-      const mockChartData: DistributionChart = {
-        labels: [
-          'Administración',
-          'Servicios Básicos',
-          'Fondo de Reserva',
-          'Mantención',
-          'Seguros',
-        ],
-        amounts: [450000, 730000, 900000, 320000, 100000],
-        colors: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1'],
-      };
-
-      setEmission(mockEmission);
-      setUnits(mockUnits);
-      setChartData(mockChartData);
-      setLoading(false);
-    }, 1000);
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {

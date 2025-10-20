@@ -1,7 +1,7 @@
 import {
   PhotoCamera,
-  Edit,
   Photo,
+  Edit,
   Save,
   Clear,
   Assessment,

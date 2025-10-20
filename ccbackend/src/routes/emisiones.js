@@ -217,22 +217,22 @@ router.get('/:id/detalle-completo', authenticate, async (req, res) => {
           ELSE 'gastos_comunes'
         END as tipo,
         CASE
-          WHEN egc.estado = 'borrador' THEN 'draft'
-          WHEN egc.estado = 'emitido' THEN 'sent'
-          WHEN egc.estado = 'cerrado' THEN 'paid'
-          WHEN egc.estado = 'anulado' THEN 'cancelled'
-          ELSE 'ready'
-        END as status,
-        DATE_FORMAT(egc.created_at, '%Y-%m-%d') as issueDate,
-        DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as dueDate,
-        COALESCE(SUM(ccu.monto_total), 0) as totalAmount,
-        COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) as paidAmount,
-        COUNT(DISTINCT ccu.unidad_id) as unitCount,
-        egc.observaciones as description,
-        c.razon_social as communityName,
-        CASE WHEN egc.periodo LIKE '%Interes%' THEN 1 ELSE 0 END as hasInterest,
-        COALESCE(pc.tasa_mora_mensual, 2.0) as interestRate,
-        COALESCE(pc.dias_gracia, 5) as gracePeriod,
+          WHEN egc.estado = 'borrador' THEN 'borrador'
+          WHEN egc.estado = 'emitido' THEN 'emitida'
+          WHEN egc.estado = 'cerrado' THEN 'cerrada'
+          WHEN egc.estado = 'anulado' THEN 'anulada'
+          ELSE 'lista'
+        END as estado,
+        DATE_FORMAT(egc.created_at, '%Y-%m-%d') as fecha_emision,
+        DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fecha_vencimiento,
+        COALESCE(SUM(ccu.monto_total), 0) as monto_total,
+        COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) as monto_pagado,
+        COUNT(DISTINCT ccu.unidad_id) as cantidad_unidades,
+        egc.observaciones as observaciones,
+        c.razon_social as nombre_comunidad,
+        CASE WHEN egc.periodo LIKE '%Interes%' THEN 1 ELSE 0 END as tiene_interes,
+        COALESCE(pc.tasa_mora_mensual, 2.0) as tasa_interes,
+        COALESCE(pc.dias_gracia, 5) as dias_gracia,
         egc.created_at,
         egc.updated_at
       FROM emision_gastos_comunes egc
@@ -287,17 +287,17 @@ router.get('/:id/detalles', authenticate, async (req, res) => {
     const [rows] = await db.query(`
       SELECT
         deg.id,
-        cg.nombre as name,
-        cg.nombre as description,
-        deg.monto as amount,
+        cg.nombre as nombre,
+        cg.nombre as descripcion,
+        deg.monto as monto,
         CASE
-          WHEN deg.regla_prorrateo = 'coeficiente' THEN 'proportional'
-          WHEN deg.regla_prorrateo = 'partes_iguales' THEN 'equal'
-          WHEN deg.regla_prorrateo = 'consumo' THEN 'custom'
-          WHEN deg.regla_prorrateo = 'fijo_por_unidad' THEN 'custom'
-          ELSE 'proportional'
-        END as distributionType,
-        cg.nombre as category,
+          WHEN deg.regla_prorrateo = 'coeficiente' THEN 'proporcional'
+          WHEN deg.regla_prorrateo = 'partes_iguales' THEN 'igual'
+          WHEN deg.regla_prorrateo = 'consumo' THEN 'personalizado'
+          WHEN deg.regla_prorrateo = 'fijo_por_unidad' THEN 'personalizado'
+          ELSE 'proporcional'
+        END as tipo_prorrateo,
+        cg.nombre as categoria,
         deg.created_at
       FROM detalle_emision_gastos deg
       JOIN categoria_gasto cg ON deg.categoria_id = cg.id
@@ -337,12 +337,12 @@ router.get('/:id/gastos', authenticate, async (req, res) => {
     const [rows] = await db.query(`
       SELECT
         g.id,
-        g.glosa as description,
-        deg.monto as amount,
-        cg.nombre as category,
-        p.razon_social as supplier,
-        DATE_FORMAT(g.fecha, '%Y-%m-%d') as date,
-        COALESCE(dc.folio, CONCAT('Gasto #', g.id)) as document,
+        g.glosa as descripcion,
+        deg.monto as monto,
+        cg.nombre as categoria,
+        p.razon_social as proveedor,
+        DATE_FORMAT(g.fecha, '%Y-%m-%d') as fecha,
+        COALESCE(dc.folio, CONCAT('Gasto #', g.id)) as documento,
         g.created_at
       FROM detalle_emision_gastos deg
       LEFT JOIN gasto g ON deg.gasto_id = g.id
@@ -385,30 +385,30 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
     const [rows] = await db.query(`
       SELECT
         u.id,
-        u.codigo as number,
+        u.codigo as numero,
         CASE
           WHEN u.m2_utiles > 0 THEN 'Departamento'
           WHEN u.nro_estacionamiento IS NOT NULL THEN 'Estacionamiento'
           WHEN u.nro_bodega IS NOT NULL THEN 'Bodega'
           ELSE 'Unidad'
-        END as type,
+        END as tipo,
         COALESCE(
           CONCAT(p.nombres, ' ', p.apellidos),
           'Sin asignar'
-        ) as owner,
+        ) as propietario,
         COALESCE(
           p.email,
           ''
-        ) as contact,
-        u.alicuota as participation,
-        ccu.monto_total as totalAmount,
-        (ccu.monto_total - ccu.saldo) as paidAmount,
+        ) as contacto,
+        u.alicuota as alicuota,
+        ccu.monto_total as monto_total,
+        (ccu.monto_total - ccu.saldo) as monto_pagado,
         CASE
-          WHEN ccu.estado = 'pagado' THEN 'paid'
-          WHEN ccu.estado = 'parcial' THEN 'partial'
-          WHEN ccu.estado = 'vencido' THEN 'pending'
-          ELSE 'pending'
-        END as status,
+          WHEN ccu.estado = 'pagado' THEN 'pagado'
+          WHEN ccu.estado = 'parcial' THEN 'parcial'
+          WHEN ccu.estado = 'vencido' THEN 'vencido'
+          ELSE 'pendiente'
+        END as estado,
         ccu.created_at
       FROM cuenta_cobro_unidad ccu
       JOIN unidad u ON ccu.unidad_id = u.id
@@ -450,8 +450,8 @@ router.get('/:id/pagos', authenticate, async (req, res) => {
     const [rows] = await db.query(`
       SELECT
         p.id,
-        DATE_FORMAT(p.fecha, '%Y-%m-%d') as date,
-        pa.monto as amount,
+        DATE_FORMAT(p.fecha, '%Y-%m-%d') as fecha,
+        pa.monto as monto,
         CASE
           WHEN p.medio = 'transferencia' THEN 'Transferencia'
           WHEN p.medio = 'webpay' THEN 'WebPay'
@@ -459,15 +459,15 @@ router.get('/:id/pagos', authenticate, async (req, res) => {
           WHEN p.medio = 'servipag' THEN 'Servipag'
           WHEN p.medio = 'efectivo' THEN 'Efectivo'
           ELSE p.medio
-        END as method,
-        p.referencia as reference,
-        u.codigo as unit,
+        END as medio,
+        p.referencia as referencia,
+        u.codigo as unidad,
         CASE
-          WHEN p.estado = 'aplicado' THEN 'confirmed'
-          WHEN p.estado = 'pendiente' THEN 'pending'
-          WHEN p.estado = 'reversado' THEN 'rejected'
-          ELSE 'pending'
-        END as status,
+          WHEN p.estado = 'aplicado' THEN 'aplicado'
+          WHEN p.estado = 'pendiente' THEN 'pendiente'
+          WHEN p.estado = 'reversado' THEN 'reversado'
+          ELSE 'pendiente'
+        END as estado,
         p.created_at
       FROM pago_aplicacion pa
       JOIN pago p ON pa.pago_id = p.id

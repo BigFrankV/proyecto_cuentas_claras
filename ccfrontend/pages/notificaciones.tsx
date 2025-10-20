@@ -152,7 +152,8 @@ export default function NotificacionesListado() {
           id: '1',
           subject: 'Mantenimiento de ascensores programado',
           message:
-            'Se realizará mantenimiento preventivo de los ascensores el próximo sábado de 8:00 AM a 12:00 PM. Durante este período, los ascensores no estarán disponibles.',
+            `Se realizará mantenimiento preventivo de los ascensores el próximo 
+            sábado de 8:00 AM a 12:00 PM. Durante este período, los ascensores no estarán disponibles.`,
           type: 'maintenance',
           status: 'sent',
           channels: ['email', 'sms', 'app'],
@@ -327,7 +328,7 @@ export default function NotificacionesListado() {
       case 'view':
         router.push(`/notificaciones/${notificationId}`);
         break;
-      case 'duplicate':
+      case 'duplicate': {
         // Crear una copia de la notificación
         const notificationToDuplicate = notifications.find(
           n => n.id === notificationId,
@@ -348,6 +349,7 @@ export default function NotificacionesListado() {
           alert('Notificación duplicada como borrador');
         }
         break;
+      }
       case 'resend':
         if (
           confirm('¿Estás seguro de que quieres reenviar esta notificación?')
@@ -364,7 +366,7 @@ export default function NotificacionesListado() {
                   : n,
               ),
             );
-          } catch (error) {
+          } catch {
             alert('Error al reenviar la notificación');
           }
         }
@@ -419,7 +421,7 @@ export default function NotificacionesListado() {
               ),
             );
             setSelectedNotifications([]);
-          } catch (error) {
+          } catch {
             alert('Error al reenviar las notificaciones');
           }
         }
@@ -449,7 +451,7 @@ export default function NotificacionesListado() {
           );
         }
         break;
-      case 'export':
+      case 'export': {
         const selectedNotificationData = notifications.filter(n =>
           selectedNotifications.includes(n.id),
         );
@@ -476,6 +478,7 @@ export default function NotificacionesListado() {
         setSelectedNotifications([]);
         alert('Notificaciones exportadas exitosamente');
         break;
+      }
       default:
         console.log('Acción masiva no implementada:', action);
     }
@@ -1228,7 +1231,7 @@ export default function NotificacionesListado() {
             ) : null}
 
             {/* Cards View for Mobile and Desktop Cards Mode */}
-            {viewMode === 'cards' || true ? (
+            {viewMode === 'cards' ? (
               <div className={`p-3 ${viewMode === 'table' ? 'd-md-none' : ''}`}>
                 <div className='row'>
                   {filteredNotifications.map(notification => (

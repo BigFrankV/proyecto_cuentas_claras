@@ -90,7 +90,7 @@ const tiers: TierInfo[] = [
 ];
 
 export default function MembresiaNueva() {
-  const [currentStep, setCurrentStep] = useState(2);
+  const [currentStep] = useState(2);
   const [selectedTier, setSelectedTier] = useState('estandar');
   const [selectedCommunity] = useState({
     id: '1',

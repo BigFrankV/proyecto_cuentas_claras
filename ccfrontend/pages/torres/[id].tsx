@@ -376,23 +376,23 @@ export default function TorreDetalle() {
               </button>
               <ul className='dropdown-menu'>
                 <li>
-                  <a className='dropdown-item' href='#'>
+                  <button type="button" className='dropdown-item'>
                     <i className='material-icons me-2'>file_download</i>Generar
                     Reporte
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <a className='dropdown-item' href='#'>
+                  <button type="button" className='dropdown-item'>
                     <i className='material-icons me-2'>print</i>Imprimir
-                  </a>
+                  </button>
                 </li>
                 <li>
                   <hr className='dropdown-divider' />
                 </li>
                 <li>
-                  <a className='dropdown-item text-danger' href='#'>
+                  <button type="button" className='dropdown-item text-danger'>
                     <i className='material-icons me-2'>delete</i>Eliminar Torre
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>
@@ -816,7 +816,9 @@ export default function TorreDetalle() {
                       <div className='card-body'>
                         <div className='d-flex align-items-center mb-2'>
                           <i
-                            className={`material-icons me-2 ${torre.servicios.ascensor ? 'text-success' : 'text-muted'}`}
+                            className={`material-icons me-2 ${
+                              torre.servicios.ascensor ? 'text-success' : 'text-muted'
+                            }`}
                           >
                             {torre.servicios.ascensor
                               ? 'check_circle'
@@ -826,7 +828,9 @@ export default function TorreDetalle() {
                         </div>
                         <div className='d-flex align-items-center mb-2'>
                           <i
-                            className={`material-icons me-2 ${torre.servicios.porteria ? 'text-success' : 'text-muted'}`}
+                            className={`material-icons me-2 ${
+                              torre.servicios.porteria ? 'text-success' : 'text-muted'
+                            }`}
                           >
                             {torre.servicios.porteria
                               ? 'check_circle'
@@ -836,7 +840,9 @@ export default function TorreDetalle() {
                         </div>
                         <div className='d-flex align-items-center mb-2'>
                           <i
-                            className={`material-icons me-2 ${torre.servicios.estacionamiento ? 'text-success' : 'text-muted'}`}
+                            className={`material-icons me-2 ${
+                              torre.servicios.estacionamiento ? 'text-success' : 'text-muted'
+                            }`}
                           >
                             {torre.servicios.estacionamiento
                               ? 'check_circle'
@@ -846,7 +852,9 @@ export default function TorreDetalle() {
                         </div>
                         <div className='d-flex align-items-center mb-2'>
                           <i
-                            className={`material-icons me-2 ${torre.servicios.gimnasio ? 'text-success' : 'text-muted'}`}
+                            className={`material-icons me-2 ${
+                              torre.servicios.gimnasio ? 'text-success' : 'text-muted'
+                            }`}
                           >
                             {torre.servicios.gimnasio
                               ? 'check_circle'
@@ -856,7 +864,9 @@ export default function TorreDetalle() {
                         </div>
                         <div className='d-flex align-items-center mb-2'>
                           <i
-                            className={`material-icons me-2 ${torre.servicios.salaEventos ? 'text-success' : 'text-muted'}`}
+                            className={`material-icons me-2 ${
+                              torre.servicios.salaEventos ? 'text-success' : 'text-muted'
+                            }`}
                           >
                             {torre.servicios.salaEventos
                               ? 'check_circle'

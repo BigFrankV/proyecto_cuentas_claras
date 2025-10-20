@@ -14,8 +14,8 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import { listCompras } from '@/lib/comprasService';
+import { ProtectedRoute } from '@/lib/useAuth';
 import type { Compra as CompraBackend } from '@/types/compras';
 
 interface Purchase {
@@ -116,11 +116,11 @@ export default function ComprasListado() {
       const limit = itemsPerPage;
       const offset = (page - 1) * limit;
       const params: any = { limit, offset };
-      if (filters.search) params.search = filters.search;
-      if (filters.type) params.tipo_doc = filters.type;
-      if (filters.status) params.estado = filters.status;
-      if (filters.dateFrom) params.fecha_desde = filters.dateFrom;
-      if (filters.dateTo) params.fecha_hasta = filters.dateTo;
+      if (filters.search) {params.search = filters.search;}
+      if (filters.type) {params.tipo_doc = filters.type;}
+      if (filters.status) {params.estado = filters.status;}
+      if (filters.dateFrom) {params.fecha_desde = filters.dateFrom;}
+      if (filters.dateTo) {params.fecha_hasta = filters.dateTo;}
 
       const resp = await listCompras(undefined, params);
       const rows: CompraBackend[] = resp.data || [];

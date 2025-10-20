@@ -63,7 +63,7 @@ test('smoke: render button with icon', () => {
   const icons = require('@mui/icons-material');
   const rb = require('react-bootstrap');
   // sanity checks
-  // eslint-disable-next-line no-console
+   
   console.log(
     'SMOKE: icon type=',
     typeof icons.PlaylistAddCheck,

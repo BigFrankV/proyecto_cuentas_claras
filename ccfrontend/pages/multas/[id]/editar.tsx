@@ -7,7 +7,7 @@ import Layout from '@/components/layout/Layout';
 import api from '@/lib/api';
 import multasService from '@/lib/multasService';
 import { ProtectedRoute } from '@/lib/useAuth';
-import useAuth from '@/lib/useAuth'; // <-- import faltante
+// import useAuth from '@/lib/useAuth'; // Removed unused
 
 // ============================================
 // TIPOS E INTERFACES
@@ -159,7 +159,7 @@ const PRIORIDADES = [
 export default function EditarMulta() {
   const router = useRouter();
   const { id } = router.query;
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Removed unused
 
   // Estados principales
   const [multa, setMulta] = useState<Multa | null>(null);
@@ -292,12 +292,14 @@ export default function EditarMulta() {
       loadMulta();
       // loadUnidades ya se llamará automáticamente cuando loadMulta setee comunidadId
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
     if (formData.unidad_id && formData.unidad_id !== multa?.unidad_id) {
       loadPersonasUnidad(formData.unidad_id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.unidad_id]);
 
   // Evitar acceso directo a `user` en SSR:
@@ -310,11 +312,11 @@ export default function EditarMulta() {
   const loadMulta = async () => {
     try {
       setLoading(true);
-      console.log(`🔍 Cargando multa ${id}...`);
+      // console.log(`🔍 Cargando multa ${id}...`);
 
       const response = await multasService.getMulta(Number(id));
 
-      console.log('✅ Multa cargada:', response);
+      // console.log('✅ Multa cargada:', response);
       setMulta(response);
 
       // Determinar comunidadId desde la propia multa (evita depender de `user` en SSR)
@@ -363,9 +365,9 @@ export default function EditarMulta() {
 
       // Cargar personas de la unidad
       await loadPersonasUnidad(response.unidad_id);
-    } catch (error: any) {
-      console.error('❌ Error cargando multa:', error);
-      toast.error(error.message || 'Error al cargar la multa');
+    } catch (error: unknown) {
+      // console.error('❌ Error cargando multa:', error);
+      toast.error((error as Error)?.message || 'Error al cargar la multa');
       setTimeout(() => router.push('/multas'), 2000);
     } finally {
       setLoading(false);
@@ -382,7 +384,7 @@ export default function EditarMulta() {
     setUnidades(res.data?.data ?? res.data ?? []);
   };
 
-  const loadPersonasUnidad = async unidadId => {
+  const loadPersonasUnidad = async (unidadId: number) => {
     if (!unidadId) {
       return setPersonas([]);
     }
@@ -397,47 +399,8 @@ export default function EditarMulta() {
     } else {
       setUnidades([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comunidadId]);
-
-  // ============================================
-  // VALIDACIONES
-  // ============================================
-
-  const validateForm = (): boolean => {
-    const newErrors: ValidationErrors = {};
-
-    if (!formData.tipo_infraccion) {
-      newErrors.tipo_infraccion = 'El tipo de infracción es requerido';
-    }
-
-    if (!formData.monto || parseFloat(formData.monto) <= 0) {
-      newErrors.monto = 'El monto debe ser mayor a 0';
-    }
-
-    // Fechas opcionales: validar sólo si se ingresan
-    if (formData.fecha_infraccion) {
-      const fechaInfraccion = new Date(formData.fecha_infraccion);
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      if (fechaInfraccion > hoy) {
-        newErrors.fecha_infraccion = 'La fecha no puede ser futura';
-      }
-    }
-
-    if (formData.fecha_vencimiento) {
-      if (formData.fecha_infraccion) {
-        const fechaInfraccion = new Date(formData.fecha_infraccion);
-        const fechaVencimiento = new Date(formData.fecha_vencimiento);
-        if (fechaVencimiento <= fechaInfraccion) {
-          newErrors.fecha_vencimiento =
-            'Debe ser posterior a la fecha de infracción';
-        }
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   // ============================================
   // MANEJO DEL FORMULARIO
@@ -516,22 +479,22 @@ export default function EditarMulta() {
 
     setSaving(true);
     try {
-      const payload: any = { ...changes };
+      const payload: Record<string, unknown> = { ...changes };
       if ('monto' in payload) {
         payload.monto = parseFloat(String(payload.monto));
       }
 
-      console.log('📝 Actualizando multa (solo campos modificados):', payload);
+      // console.log('📝 Actualizando multa (solo campos modificados):', payload);
 
-      const response = await multasService.updateMulta(Number(id), payload);
+      await multasService.updateMulta(Number(id), payload);
 
-      console.log('✅ Multa actualizada:', response);
+      // console.log('✅ Multa actualizada:', response);
       toast.success('Multa actualizada exitosamente');
 
       router.push(`/multas/${id}`);
-    } catch (error: any) {
-      console.error('❌ Error actualizando multa:', error);
-      toast.error(error.message || 'Error al actualizar la multa');
+    } catch (error: unknown) {
+      // console.error('❌ Error actualizando multa:', error);
+      toast.error((error as Error)?.message || 'Error al actualizar la multa');
     } finally {
       setSaving(false);
     }
@@ -541,7 +504,7 @@ export default function EditarMulta() {
   // FILTROS DE BÚSQUEDA
   // ============================================
 
-  const unidadesFiltradas = (unidades || []).filter((u: any) => {
+  const unidadesFiltradas = (unidades || []).filter((u: unknown) => {
     const search = String(searchUnidad || '')
       .toLowerCase()
       .trim();
@@ -556,7 +519,7 @@ export default function EditarMulta() {
     );
   });
 
-  const personasFiltradas = (personas || []).filter((p: any) => {
+  const personasFiltradas = (personas || []).filter((p: unknown) => {
     const search = String(searchPersona || '')
       .toLowerCase()
       .trim();
@@ -785,6 +748,14 @@ export default function EditarMulta() {
                               : ''
                           }`}
                           onClick={() => handleSelectTipoInfraccion(tipo.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleSelectTipoInfraccion(tipo.value);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
                         >
                           <div
                             className='infraction-icon'
@@ -878,6 +849,14 @@ export default function EditarMulta() {
                             onClick={() =>
                               handleSelectPrioridad(prioridad.value)
                             }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleSelectPrioridad(prioridad.value);
+                              }
+                            }}
+                            role="button"
+                            tabIndex={0}
                             style={{ borderColor: prioridad.color }}
                           >
                             <div
@@ -1078,6 +1057,14 @@ export default function EditarMulta() {
                         key={unidad.id}
                         className='selectable-card'
                         onClick={() => handleSelectUnidad(unidad)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleSelectUnidad(unidad);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
                       >
                         <div className='card-icon'>
                           <i className='material-icons'>apartment</i>
@@ -1147,6 +1134,14 @@ export default function EditarMulta() {
                           key={persona.id}
                           className='list-item'
                           onClick={() => handleSelectPersona(persona)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleSelectPersona(persona);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
                         >
                           <i className='material-icons'>person</i>
                           <div className='list-item-content'>

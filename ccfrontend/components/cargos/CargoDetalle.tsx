@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+import { Cargo } from '@/types/cargos';
+import { cargosApi } from '@/lib/api/cargos';
 
 import AmountCell from './AmountCell';
-import { Cargo } from './CargoCard';
 import PaymentProgress from './PaymentProgress';
 import StatusBadge from './StatusBadge';
 import Timeline, { TimelineItem } from './Timeline';
@@ -28,96 +30,69 @@ export interface Document {
 
 export interface CargoDetalleProps {
   cargo: Cargo;
-  pagos?: PaymentRecord[];
-  documentos?: Document[];
-  historial?: TimelineItem[];
+  cargoId?: number;
   className?: string;
 }
 
-// Mock data for demonstration
-const mockPayments: PaymentRecord[] = [
-  {
-    id: 'PAY-001',
-    fecha: new Date('2024-01-10'),
-    monto: 125000,
-    metodo: 'Transferencia Bancaria',
-    referencia: 'TRF-001-2024',
-    estado: 'completed',
-    observaciones: 'Pago parcial inicial',
-  },
-  {
-    id: 'PAY-002',
-    fecha: new Date('2024-01-25'),
-    monto: 125000,
-    metodo: 'PSE',
-    referencia: 'PSE-002-2024',
-    estado: 'completed',
-    observaciones: 'Completar pago restante',
-  },
-];
-
-const mockDocuments: Document[] = [
-  {
-    id: 'DOC-001',
-    nombre: 'Factura_Administracion_Enero_2024.pdf',
-    tipo: 'PDF',
-    tamaño: 256789,
-    fechaSubida: new Date('2024-01-01'),
-    url: '/documents/factura-adm-ene-2024.pdf',
-  },
-  {
-    id: 'DOC-002',
-    nombre: 'Soporte_Pago_Transferencia.jpg',
-    tipo: 'Image',
-    tamaño: 98432,
-    fechaSubida: new Date('2024-01-10'),
-    url: '/documents/soporte-pago-001.jpg',
-  },
-];
-
-const mockTimeline: TimelineItem[] = [
-  {
-    id: 'TL-001',
-    type: 'info',
-    title: 'Cargo Creado',
-    content: 'Se creó el cargo de administración para enero 2024',
-    date: new Date('2024-01-01 09:00:00'),
-    user: 'Sistema Admin',
-  },
-  {
-    id: 'TL-002',
-    type: 'success',
-    title: 'Cargo Aprobado',
-    content: 'El cargo fue aprobado por el administrador',
-    date: new Date('2024-01-02 14:30:00'),
-    user: 'María González',
-  },
-  {
-    id: 'TL-003',
-    type: 'success',
-    title: 'Pago Parcial Recibido',
-    content: 'Se recibió pago parcial por $125.000 vía transferencia bancaria',
-    date: new Date('2024-01-10 16:45:00'),
-    user: 'Sistema Pagos',
-  },
-  {
-    id: 'TL-004',
-    type: 'success',
-    title: 'Pago Completado',
-    content: 'Se completó el pago total del cargo vía PSE',
-    date: new Date('2024-01-25 11:20:00'),
-    user: 'Sistema Pagos',
-  },
-];
-
 export default function CargoDetalle({
   cargo,
-  pagos = mockPayments,
-  documentos = mockDocuments,
-  historial = mockTimeline,
+  cargoId,
   className = '',
 }: CargoDetalleProps) {
   const [activeTab, setActiveTab] = useState('detalles');
+  const [pagos, setPagos] = useState<PaymentRecord[]>([]);
+  const [documentos] = useState<Document[]>([]);
+  const [historial, setHistorial] = useState<TimelineItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Cargar detalles del cargo desde la API
+  useEffect(() => {
+    const fetchCargoDetails = async () => {
+      try {
+        setLoading(true);
+        
+        if (!cargoId) {
+          setLoading(false);
+          return;
+        }
+
+        // Cargar pagos, documentos e historial
+        const [pagosData, historialData] = await Promise.all([
+          cargosApi.getPagos(cargoId),
+          cargosApi.getHistorialPagos(cargoId),
+        ]);
+
+        // Transformar pagos
+        setPagos(pagosData.map((p) => ({
+          id: String(p.id),
+          fecha: new Date(p.fecha),
+          monto: p.monto,
+          metodo: p.metodo,
+          referencia: p.referencia,
+          estado: p.estado,
+          observaciones: p.observaciones,
+        })));
+
+        // Transformar historial
+        setHistorial(historialData.map((h) => ({
+          id: String(h.id),
+          type: h.tipo || 'info',
+          title: h.titulo,
+          content: h.contenido,
+          date: new Date(h.fecha),
+          user: h.usuario,
+        })));
+
+      } catch {
+        setPagos([]);
+        setHistorial([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCargoDetails();
+  }, [cargoId, setLoading]);
 
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat('es-CO', {
@@ -157,32 +132,28 @@ export default function CargoDetalle({
   };
 
   const isOverdue = (): boolean => {
-    return new Date() > cargo.fechaVencimiento && cargo.estado !== 'paid';
+    return new Date() > cargo.fechaVencimiento && cargo.estado !== 'pagado';
   };
 
   const handleRegisterPayment = () => {
-    console.log('Register payment for cargo:', cargo.id);
+    // TODO: Implement payment registration
     // TODO: Implement payment registration
   };
 
   const handleSendReminder = () => {
-    console.log('Send reminder for cargo:', cargo.id);
     // TODO: Implement send reminder
   };
 
   const handleEditCargo = () => {
-    console.log('Edit cargo:', cargo.id);
     // TODO: Implement edit functionality
   };
 
   const handleDuplicateCargo = () => {
-    console.log('Duplicate cargo:', cargo.id);
     // TODO: Implement duplicate functionality
   };
 
   const handleCancelCargo = () => {
     if (confirm('¿Está seguro de que desea cancelar este cargo?')) {
-      console.log('Cancel cargo:', cargo.id);
       // TODO: Implement cancel functionality
     }
   };
@@ -192,12 +163,10 @@ export default function CargoDetalle({
   };
 
   const handleExportCargo = () => {
-    console.log('Export cargo:', cargo.id);
     // TODO: Implement export functionality
   };
 
   const handleUploadDocument = () => {
-    console.log('Upload document for cargo:', cargo.id);
     // TODO: Implement document upload
   };
 
@@ -242,7 +211,7 @@ export default function CargoDetalle({
             <div className='stat-label'>Unidad</div>
           </div>
           <div className='stat-item'>
-            <div className='stat-number'>{formatPeriod(cargo.periodo)}</div>
+            <div className='stat-number'>{formatPeriod(cargo.periodo || '')}</div>
             <div className='stat-label'>Período</div>
           </div>
           <div className='stat-item'>
@@ -401,7 +370,7 @@ export default function CargoDetalle({
                 <div className='info-row'>
                   <span className='info-label'>Período:</span>
                   <span className='info-value'>
-                    {formatPeriod(cargo.periodo)}
+                    {formatPeriod(cargo.periodo || '')}
                   </span>
                 </div>
 
@@ -457,7 +426,7 @@ export default function CargoDetalle({
                 <div className='info-row'>
                   <span className='info-label'>Monto Aplicado:</span>
                   <span className='info-value money'>
-                    <AmountCell amount={cargo.montoAplicado} />
+                    <AmountCell amount={cargo.montoAplicado || 0} />
                   </span>
                 </div>
 
