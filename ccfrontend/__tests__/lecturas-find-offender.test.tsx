@@ -31,7 +31,7 @@ jest.mock('react-bootstrap');
 test('find offending object-type element without $$typeof', () => {
   const orig = React.createElement;
   // Patch createElement to log any non-string, non-function element types
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   (React as any).createElement = function patched(type: any, ...rest: any[]) {
     const ttypeof = typeof type;
     // React.Fragment is a symbol (Symbol(react.fragment)) and is a valid element type
@@ -47,7 +47,7 @@ test('find offending object-type element without $$typeof', () => {
   };
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const Lecturas = require('../pages/medidores/[id]/lecturas').default;
     render(React.createElement(Lecturas));
   } finally {

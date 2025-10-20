@@ -3,8 +3,6 @@ const router = express.Router();
 const db = require('../db');
 const { body, validationResult, param, query } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
-const { authorize } = require('../middleware/authorize');
-const { requireCommunity } = require('../middleware/tenancy');
 const MultasPermissions = require('../middleware/multasPermissions');
 
 // ============================================
@@ -942,7 +940,7 @@ router.post('/:id/apelacion',
       });
     }
 
-    const { motivo, documentos_json } = req.body;
+    const { motivo } = req.body;
 
     try {
       const id = await resolveMultaId(idParam);

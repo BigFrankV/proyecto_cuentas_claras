@@ -80,9 +80,6 @@ const { requireCommunity } = require('../middleware/tenancy');
 router.get('/edificio/:edificioId/listado', authenticate, async (req, res) => {
   try {
     const edificioId = Number(req.params.edificioId);
-    const searchTerm = req.query.search || null;
-    const sortBy = req.query.sortBy || 'nombre';
-    const sortOrder = req.query.sortOrder || 'ASC';
 
     const [rows] = await db.query(`
       SELECT 

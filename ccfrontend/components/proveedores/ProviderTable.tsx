@@ -1,5 +1,6 @@
 import React from 'react';
 import { Table, Button } from 'react-bootstrap';
+
 import type { Proveedor } from '@/types/proveedores';
 
 export interface ProviderTableProps {
@@ -11,8 +12,8 @@ export interface ProviderTableProps {
 }
 
 export default function ProviderTable({ providers, loading, onView, onEdit, onDelete }: ProviderTableProps) {
-  if (loading) return <div className="py-4 text-center">Cargando proveedores...</div>;
-  if (!providers.length) return <div className="py-4 text-center text-muted">No se encontraron proveedores</div>;
+  if (loading) {return <div className="py-4 text-center">Cargando proveedores...</div>;}
+  if (!providers.length) {return <div className="py-4 text-center text-muted">No se encontraron proveedores</div>;}
 
   return (
     <div className="table-responsive">

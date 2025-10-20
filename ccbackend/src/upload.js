@@ -91,7 +91,7 @@ const upload = multer({
 
 // Middleware para validar contexto de subida
 const validateUploadContext = (req, res, next) => {
-  const { comunidadId, entityType, entityId } = req.body;
+  const { comunidadId, entityType } = req.body;
   
   if (!comunidadId) {
     return res.status(400).json({

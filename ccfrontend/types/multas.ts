@@ -7,7 +7,7 @@ export interface Multa {
   fecha_infraccion: string;
   fecha_vencimiento: string;
   // ✅ ARREGLAR: Estados según tu BD
-  estado: 'pendiente' | 'pagado' | 'vencido' | 'apelada' | 'anulada'; // Cambiar 'pagada'/'vencida' por 'pagado'/'vencido'
+  estado: 'pendiente' | 'pagado' | 'vencido' | 'apelada' | 'anulada';
   prioridad: 'baja' | 'media' | 'alta' | 'critica';
 
   // Relaciones

@@ -3,7 +3,7 @@
  * Endpoints: 27 (GET)
  */
 
-const { app, testIds, getAuthToken } = require('./setup');
+const { app, getAuthToken } = require('./setup');
 const { categorizeResponse, getWithAuth } = require('./helpers');
 
 describe('Utilidades Health Check', () => {

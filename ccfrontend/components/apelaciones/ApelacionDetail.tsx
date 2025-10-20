@@ -2,8 +2,8 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 
 import { resolveApelacion } from '@/lib/apelacionesService';
-import useAuth from '@/lib/useAuth';
-import usePermissions from '@/lib/usePermissions';
+import { useAuth } from '@/lib/useAuth';
+import { usePermissions, UserRole } from '@/lib/usePermissions';
 
 const ApelacionDetail = ({
   apelacion,
@@ -14,14 +14,15 @@ const ApelacionDetail = ({
   onResolved?: Function;
   onUpdated?: Function;
 }) => {
-  const { user, token } = useAuth();
-  const { can } = usePermissions();
-  const [resolucion, setResolucion] = useState('');
+  const { user } = useAuth();
+  const { isAdmin } = usePermissions();
+  const [resolucion] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleResolve(accion: 'aceptar' | 'rechazar') {
     setLoading(true);
     try {
+      const token = localStorage.getItem('auth_token') || '';
       await resolveApelacion(apelacion.id, { accion, resolucion }, token);
       if (onResolved) {
         onResolved(apelacion.id);
@@ -33,6 +34,9 @@ const ApelacionDetail = ({
       setLoading(false);
     }
   }
+
+  const canResolve = isAdmin() || user?.is_superadmin;
+  const isOwner = user && (user.id === apelacion.usuario_id || user.persona_id === apelacion.persona_id);
 
   return (
     <div className='apelacion-detail card p-3'>
@@ -70,7 +74,7 @@ const ApelacionDetail = ({
         </p>
       )}
       <div className='mt-3'>
-        {apelacion.estado === 'pendiente' && can('apelaciones.resolve') && (
+        {apelacion.estado === 'pendiente' && canResolve && (
           <>
             <button
               className='btn btn-success me-2'
@@ -89,16 +93,12 @@ const ApelacionDetail = ({
           </>
         )}
 
-        {!isManager() &&
-          user &&
-          (user.id === apelacion.usuario_id ||
-            user.persona_id === apelacion.persona_id) &&
-          apelacion.estado === 'pendiente' && (
+        {!canResolve && isOwner && apelacion.estado === 'pendiente' && (
           <Link
             href={`/apelaciones/${apelacion.id}/editar`}
             className='btn btn-primary'
           >
-              Editar mi apelación
+            Editar mi apelación
           </Link>
         )}
       </div>

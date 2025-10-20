@@ -1,5 +1,6 @@
 import React from 'react';
 import { Form, Row, Col, Button, InputGroup } from 'react-bootstrap';
+
 import type { Comunidad } from '@/types/comunidades';
 
 export interface ProviderFiltersProps {

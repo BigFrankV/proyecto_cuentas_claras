@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
-const { authorize, requireCommunity } = require('../middleware/authorize');
+const { authorize } = require('../middleware/authorize');
 const paymentGatewayService = require('../services/paymentGatewayService');
 const logger = require('../logger');
 

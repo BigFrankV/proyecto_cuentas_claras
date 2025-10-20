@@ -4,7 +4,6 @@ const db = require('../db');
 const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
-const { requireCommunity } = require('../middleware/tenancy');
 
 /**
  * @openapi

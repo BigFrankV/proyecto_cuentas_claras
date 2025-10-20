@@ -2,7 +2,7 @@
    This test should be run with jest --runInBand and will print typeof/keys for each symbol
    so we can locate any mock or import that resolves to an object instead of a component.
 */
-/* eslint-disable no-console */
+ 
 import * as React from 'react';
 
 // Repeat minimal mocks used by previous tests so module loading is consistent.
@@ -108,7 +108,7 @@ test('inspect imports used by lecturas page', async () => {
 
   for (const imp of importsToCheck) {
     // require the module and log keys/types
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const mod = require(imp.module);
     console.log(
       'IMPORT-INSPECT:',
@@ -128,7 +128,7 @@ test('inspect imports used by lecturas page', async () => {
   }
 
   // After inspection, also try to require the page to ensure it still loads (it may throw later on render)
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const page = require('../pages/medidores/[id]/lecturas');
   console.log('LECTURAS PAGE keys', Object.keys(page));
   expect(page).toBeDefined();

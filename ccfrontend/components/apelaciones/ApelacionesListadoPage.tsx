@@ -72,9 +72,8 @@ const sampleAppeals = [
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 const ApelacionesListadoPage: React.FC = () => {
-  const { user, token, accessToken } = useAuth(); // adapta según lo que exporte tu hook
-  const authToken =
-    token || accessToken || user?.token || user?.access_token || null;
+  const { user } = useAuth();
+  const authToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
   const router = useRouter();
   const { canCreateMulta, hasPermission } = usePermissions(); // usar las funciones que exporta el hook
   const [appeals, setAppeals] = useState<any[]>([]);
@@ -212,7 +211,7 @@ const ApelacionesListadoPage: React.FC = () => {
                 Nueva Apelación
               </button>
             )}
-            <button className='btn btn-outline-secondary' onClick={load}>
+            <button className='btn btn-outline-secondary' onClick={() => load()}>
               {loading ? 'Cargando...' : 'Refrescar'}
             </button>
           </div>

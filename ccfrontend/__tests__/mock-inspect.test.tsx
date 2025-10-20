@@ -101,11 +101,11 @@ jest.mock('react-bootstrap', () => {
 });
 
 test('inspect mocks shapes', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const icons = require('@mui/icons-material');
-  // eslint-disable-next-line no-console
+   
   console.log('DEBUG-MOCK: icons keys=', Object.keys(icons));
-  // eslint-disable-next-line no-console
+   
   console.log(
     'DEBUG-MOCK: PlaylistAddCheck type=',
     typeof icons.PlaylistAddCheck,
@@ -113,11 +113,11 @@ test('inspect mocks shapes', () => {
     !!icons.default,
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const rb = require('react-bootstrap');
-  // eslint-disable-next-line no-console
+   
   console.log('DEBUG-MOCK: react-bootstrap keys=', Object.keys(rb));
-  // eslint-disable-next-line no-console
+   
   console.log(
     'DEBUG-MOCK: Button type=',
     typeof rb.Button,
@@ -125,14 +125,14 @@ test('inspect mocks shapes', () => {
     typeof (rb.Form && rb.Form.Control),
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const LayoutMod = require('@/components/layout/Layout');
-  // eslint-disable-next-line no-console
+   
   console.log('DEBUG-MOCK: Layout default type=', typeof LayoutMod.default);
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const useAuthMod = require('@/lib/useAuth');
-  // eslint-disable-next-line no-console
+   
   console.log(
     'DEBUG-MOCK: ProtectedRoute type=',
     typeof useAuthMod.ProtectedRoute,

@@ -44,7 +44,7 @@ export interface Medidor {
   marca?: string | null;
   modelo?: string | null;
   estado?: string | null;
-  ubicacion?: any | null;
+  ubicacion?: MedidorLocation | string | null;
   activo?: 0 | 1;
   created_by?: number | null;
   created_at?: string | null;
