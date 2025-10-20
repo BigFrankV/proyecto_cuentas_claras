@@ -39,6 +39,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuthStatus();
   }, []);
 
+  // normalizar estructura de usuario: memberships -> comunidades
+  function normalizeUserData(u: any) {
+    if (!u) return u;
+    const copy = { ...u };
+    try {
+      if (!copy.comunidades && Array.isArray(copy.memberships)) {
+        copy.comunidades = copy.memberships.map((m: any) => ({
+          id: m.comunidadId ?? m.comunidad_id ?? m.comunidad,
+          role: m.rol ?? m.role ?? m.role_name ?? m.rol_nombre ?? null,
+        }));
+      }
+    } catch (e) {
+      console.debug('useAuth: normalizeUserData error', e);
+    }
+    console.debug('useAuth - usuario normalizado:', copy);
+    return copy;
+  }
+
   const checkAuthStatus = async () => {
     console.log('🔍 Verificando estado de autenticación...');
 
@@ -58,65 +76,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Intentar obtener datos del usuario desde localStorage
       const userData = authService.getUserData();
       if (userData) {
-        console.log(
-          '✅ Datos de usuario encontrados en localStorage:',
-          userData,
-        );
-        // ✅ NUEVO: Log de memberships para debug
-        if (userData.memberships) {
-          console.log('🏢 Membresías del usuario:', userData.memberships);
-        }
-        setUser(userData);
+        const normalized = normalizeUserData(userData);
+        console.log('✅ Datos de usuario encontrados en localStorage:', normalized);
+        setUser(normalized);
 
         // Verificar con el servidor para sincronizar datos
         try {
           const currentUser = await authService.getCurrentUser();
           if (currentUser) {
-            console.log('✅ Usuario verificado con servidor:', currentUser);
-            // ✅ NUEVO: Log de memberships actualizadas
-            if (currentUser.memberships) {
-              console.log(
-                '🏢 Membresías actualizadas del servidor:',
-                currentUser.memberships,
-              );
-            }
-            // Actualizar datos con información completa del servidor
-            const updatedUserData = { ...userData, ...currentUser };
-            setUser(updatedUserData);
-            // Actualizar localStorage con datos completos
-            localStorage.setItem('user_data', JSON.stringify(updatedUserData));
+            const merged = { ...normalized, ...currentUser };
+            const normalizedMerged = normalizeUserData(merged);
+            console.log('✅ Usuario verificado con servidor:', normalizedMerged);
+            setUser(normalizedMerged);
+            localStorage.setItem('user_data', JSON.stringify(normalizedMerged));
           } else {
-            console.log(
-              '⚠️ Servidor no reconoce el token, manteniendo datos locales',
-            );
+            console.log('⚠️ Servidor no reconoce el token, manteniendo datos locales');
           }
         } catch (serverError: any) {
-          console.log(
-            '⚠️ Error verificando con servidor:',
-            serverError.message,
-          );
+          console.log('⚠️ Error verificando con servidor:', serverError.message);
           if (serverError.response?.status === 401) {
-            console.log(
-              '❌ Token inválido según servidor, limpiando sesión local sin redirigir',
-            );
-            // Limpiar datos locales sin forzar redirección desde aquí
-            await authService.logout(); // solo limpia localStorage
+            console.log('❌ Token inválido según servidor, limpiando sesión local sin redirigir');
+            await authService.logout();
             setUser(null);
             return;
           }
-          // Si es otro tipo de error, mantener datos locales
           console.log('⚠️ Manteniendo sesión local por error de conectividad');
         }
       } else {
         console.log('❌ No se encontraron datos de usuario en localStorage');
-        // Si hay token pero no datos de usuario, limpiar todo
-        await authService.logout(); // solo limpia localStorage
+        await authService.logout();
         setUser(null);
       }
     } catch (error) {
       console.error('❌ Error verificando autenticación:', error);
-      // Si hay error, limpiar datos
-      await authService.logout(); // solo limpia localStorage
+      await authService.logout();
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -137,20 +130,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
 
-      console.log('✅ Login exitoso, datos recibidos:', response.user);
-      // ✅ NUEVO: Log específico para memberships
-      if (response.user?.memberships) {
-        console.log(
-          '🏢 Membresías recibidas en login:',
-          response.user.memberships,
-        );
-      }
-      if (response.user?.is_superadmin) {
-        console.log('👑 Usuario identificado como SUPERADMIN');
-      }
-      if (response.user) {
-        setUser(response.user);
-        console.log('✅ Usuario establecido en contexto:', response.user);
+      const normalized = normalizeUserData(response.user);
+      console.log('✅ Login exitoso, usuario normalizado:', normalized);
+      if (normalized) {
+        setUser(normalized);
+        localStorage.setItem('user_data', JSON.stringify(normalized));
       }
       return response; // Devolver la respuesta para manejar 2FA
     } catch (error) {
@@ -163,17 +147,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('🔐 Completando login 2FA');
     try {
       const response = await authService.complete2FALogin(tempToken, code);
-      console.log('✅ Login 2FA exitoso, datos recibidos:', response.user);
-      // ✅ NUEVO: Log específico para memberships en 2FA
-      if (response.user?.memberships) {
-        console.log(
-          '🏢 Membresías recibidas en 2FA login:',
-          response.user.memberships,
-        );
-      }
-      if (response.user) {
-        setUser(response.user);
-        console.log('✅ Usuario establecido en contexto:', response.user);
+      const normalized = normalizeUserData(response.user);
+      console.log('✅ Login 2FA exitoso, usuario normalizado:', normalized);
+      if (normalized) {
+        setUser(normalized);
+        localStorage.setItem('user_data', JSON.stringify(normalized));
       }
     } catch (error) {
       console.error('❌ Error en login 2FA:', error);
@@ -203,14 +181,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const currentUser = await authService.getCurrentUser();
       if (currentUser) {
-        console.log('✅ Datos de usuario actualizados:', currentUser);
-        // ✅ NUEVO: Log de memberships actualizadas
-        if (currentUser.memberships) {
-          console.log('🏢 Membresías actualizadas:', currentUser.memberships);
-        }
-        setUser(currentUser);
-        // Actualizar localStorage
-        localStorage.setItem('user_data', JSON.stringify(currentUser));
+        const normalized = normalizeUserData(currentUser);
+        console.log('✅ Datos de usuario actualizados:', normalized);
+        setUser(normalized);
+        localStorage.setItem('user_data', JSON.stringify(normalized));
       }
     } catch (error) {
       console.error('❌ Error refrescando usuario:', error);

@@ -1,6 +1,7 @@
 import Head from 'next/head';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/useAuth';
 import {
   Button,
   Card,
@@ -15,389 +16,120 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
+import {
+  createLectura,
+  deleteMedidor,
+  getConsumos,
+  getMedidor,
+  listLecturas,
+} from '@/lib/medidoresService';
 import { ProtectedRoute } from '@/lib/useAuth';
+import type { Medidor, Reading } from '@/types/medidores';
 
-interface Meter {
-  id: number;
-  code: string;
-  serialNumber: string;
-  type: 'electric' | 'water' | 'gas';
-  status: 'active' | 'inactive' | 'maintenance';
-  brand: string;
-  model: string;
-  location: {
-    building: string;
-    floor: string;
-    unit: string;
-    position: string;
-    coordinates?: string;
-  };
-  community: {
-    id: number;
-    name: string;
-    address: string;
-  };
-  installation: {
-    date: string;
-    technician: string;
-    company: string;
-    warranty: string;
-    certificate: string;
-  };
-  lastReading: {
-    value: number;
-    date: string;
-    consumption: number;
-    period: string;
-  };
-  specifications: {
-    capacity: string;
-    precision: string;
-    certification: string;
-    operatingTemp: string;
-    maxPressure?: string;
-    communicationType: string;
-  };
-  maintenance: {
-    lastService: string;
-    nextService: string;
-    frequency: string;
-    serviceCompany: string;
-    notes?: string;
-  };
-  alerts: {
-    hasAlerts: boolean;
-    count: number;
-    severity: 'low' | 'medium' | 'high';
-    lastAlert?: string;
-  };
-  configuration: {
-    readingFrequency: string;
-    alertThresholds: {
-      consumption: number;
-      pressure?: number;
-      temperature?: number;
-    };
-    autoReading: boolean;
-    notifications: boolean;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Reading {
-  id: number;
-  date: string;
-  value: number;
-  consumption: number;
-  reader: string;
-  method: 'manual' | 'automatic';
-  status: 'valid' | 'estimated' | 'error';
-  notes?: string;
-}
-
-interface MaintenanceRecord {
-  id: number;
-  date: string;
-  type: 'preventive' | 'corrective' | 'calibration';
-  technician: string;
-  company: string;
-  description: string;
-  cost: number;
-  parts?: string[];
-  nextService?: string;
-  status: 'completed' | 'pending' | 'cancelled';
-}
-
-export default function MeterDetail() {
+export default function MedidorDetallePage() {
   const router = useRouter();
   const { id } = router.query;
-  const [meter, setMeter] = useState<Meter | null>(null);
-  const [readings, setReadings] = useState<Reading[]>([]);
-  const [maintenanceHistory, setMaintenanceHistory] = useState<
-    MaintenanceRecord[]
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [showConfigModal, setShowConfigModal] = useState(false);
-  const [config, setConfig] = useState({
-    readingFrequency: 'monthly',
-    autoReading: true,
-    notifications: true,
-    consumptionThreshold: 0,
-    pressureThreshold: 0,
-    temperatureThreshold: 0,
-  });
+  const { user } = useAuth();
+
+  const [medidor, setMedidor] = useState<Medidor | null>(null);
+  const [lecturas, setLecturas] = useState<Reading[]>([]);
+  const [consumos, setConsumos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ fecha: '', lectura: '', periodo: '' });
 
   useEffect(() => {
-    if (id) {
-      loadMeterData();
-    }
+    if (!id) return;
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const data = await getMedidor(Number(id));
+        if (!mounted) return;
+        setMedidor(data);
+        const lecResp = await listLecturas(Number(id), { limit: 24 });
+        setLecturas(lecResp.data ?? lecResp);
+        const consResp = await getConsumos(Number(id));
+        setConsumos(consResp.data ?? []);
+      } catch (err) {
+        console.error('load medidor err', err);
+        alert('Error cargando medidor');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
-  const loadMeterData = async () => {
+  const canManage = () => {
+    if (!user) return false;
+    if (user.is_superadmin) return true;
+    return !!user.comunidades?.find(
+      (c: any) =>
+        c.id === medidor?.comunidad_id &&
+        (c.role === 'admin' || c.role === 'gestor'),
+    );
+  };
+
+  const submitLectura = async (e: any) => {
+    e.preventDefault();
+    if (!id) return;
+    if (!form.fecha || form.lectura === '' || !form.periodo) {
+      alert('Completa fecha, lectura y periodo');
+      return;
+    }
+    setLoading(true);
     try {
-      setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const mockMeter: Meter = {
-        id: parseInt(id as string),
-        code: `MED-ELC-${String(id).padStart(3, '0')}`,
-        serialNumber: `SE2024${String(id).padStart(3, '0')}`,
-        type: 'electric',
-        status: 'active',
-        brand: 'Schneider Electric',
-        model: 'iEM3155',
-        location: {
-          building: 'Torre A',
-          floor: '5',
-          unit: 'Apto 502',
-          position: 'Tablero Principal',
-          coordinates: '-33.4489, -70.6693',
-        },
-        community: {
-          id: 1,
-          name: 'Condominio Las Condes',
-          address: 'Av. Las Condes 12345, Las Condes, Santiago',
-        },
-        installation: {
-          date: '2024-01-15',
-          technician: 'Carlos Morales Electricista',
-          company: 'Instalaciones Eléctricas Las Condes SpA',
-          warranty: '2027-01-15',
-          certificate: 'SEC-2024-001234',
-        },
-        lastReading: {
-          value: 15847,
-          date: '2024-09-20',
-          consumption: 245,
-          period: 'Septiembre 2024',
-        },
-        specifications: {
-          capacity: '100 A',
-          precision: 'Clase 1 (±1%)',
-          certification: 'SEC Aprobado - IEC 62053-21',
-          operatingTemp: '-25°C a +55°C',
-          maxPressure: 'N/A',
-          communicationType: 'RS485 / Modbus RTU',
-        },
-        maintenance: {
-          lastService: '2024-06-15',
-          nextService: '2024-12-15',
-          frequency: 'Semestral',
-          serviceCompany: 'Servicios Técnicos Schneider Chile',
-          notes:
-            'Medidor en excelente estado. Calibración dentro de parámetros.',
-        },
-        alerts: {
-          hasAlerts: false,
-          count: 0,
-          severity: 'low',
-        },
-        configuration: {
-          readingFrequency: 'monthly',
-          alertThresholds: {
-            consumption: 500,
-            temperature: 60,
-          },
-          autoReading: true,
-          notifications: true,
-        },
-        createdAt: '2024-01-15T10:00:00Z',
-        updatedAt: '2024-09-20T14:30:00Z',
-      };
-
-      const mockReadings: Reading[] = [
-        {
-          id: 1,
-          date: '2024-09-20',
-          value: 15847,
-          consumption: 245,
-          reader: 'Sistema Automático',
-          method: 'automatic',
-          status: 'valid',
-          notes: 'Lectura automática mensual',
-        },
-        {
-          id: 2,
-          date: '2024-08-20',
-          value: 15602,
-          consumption: 238,
-          reader: 'María González',
-          method: 'manual',
-          status: 'valid',
-          notes: 'Lectura manual verificada',
-        },
-        {
-          id: 3,
-          date: '2024-07-20',
-          value: 15364,
-          consumption: 252,
-          reader: 'Sistema Automático',
-          method: 'automatic',
-          status: 'valid',
-        },
-        {
-          id: 4,
-          date: '2024-06-20',
-          value: 15112,
-          consumption: 189,
-          reader: 'José Martínez',
-          method: 'manual',
-          status: 'estimated',
-          notes: 'Lectura estimada por acceso restringido',
-        },
-      ];
-
-      const mockMaintenance: MaintenanceRecord[] = [
-        {
-          id: 1,
-          date: '2024-06-15',
-          type: 'preventive',
-          technician: 'Roberto Silva',
-          company: 'Servicios Técnicos Schneider Chile',
-          description:
-            'Mantenimiento preventivo semestral. Limpieza, calibración y verificación de conexiones.',
-          cost: 85000,
-          parts: ['Kit limpieza contactos', 'Grasa dieléctrica'],
-          nextService: '2024-12-15',
-          status: 'completed',
-        },
-        {
-          id: 2,
-          date: '2024-01-20',
-          type: 'corrective',
-          technician: 'Andrea López',
-          company: 'Enel Distribución Chile',
-          description:
-            'Reemplazo de display digital defectuoso. Actualización de firmware.',
-          cost: 125000,
-          parts: ['Display LCD', 'Módulo comunicación'],
-          status: 'completed',
-        },
-      ];
-
-      setMeter(mockMeter);
-      setReadings(mockReadings);
-      setMaintenanceHistory(mockMaintenance);
-
-      // Configurar valores iniciales del formulario
-      setConfig({
-        readingFrequency: mockMeter.configuration.readingFrequency,
-        autoReading: mockMeter.configuration.autoReading,
-        notifications: mockMeter.configuration.notifications,
-        consumptionThreshold:
-          mockMeter.configuration.alertThresholds.consumption,
-        pressureThreshold:
-          mockMeter.configuration.alertThresholds.pressure || 0,
-        temperatureThreshold:
-          mockMeter.configuration.alertThresholds.temperature || 0,
+      await createLectura(Number(id), {
+        fecha: form.fecha,
+        lectura: Number(form.lectura),
+        periodo: form.periodo,
       });
-    } catch (error) {
-      console.error('Error loading meter data:', error);
+      alert('Lectura creada');
+      // refrescar lecturas y medidor
+      const lecResp = await listLecturas(Number(id), { limit: 24 });
+      setLecturas(lecResp.data ?? lecResp);
+      const data = await getMedidor(Number(id));
+      setMedidor(data);
+      setForm({ fecha: '', lectura: '', periodo: '' });
+    } catch (err: any) {
+      console.error('create lectura err', err);
+      if (err?.response?.status === 409)
+        alert('Ya existe una lectura para ese periodo');
+      else if (err?.response?.status === 403) alert('No autorizado');
+      else alert('Error al crear lectura');
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      active: { text: 'Activo', variant: 'success' },
-      inactive: { text: 'Inactivo', variant: 'danger' },
-      maintenance: { text: 'Mantenimiento', variant: 'warning' },
-    };
-
-    const badge = badges[status as keyof typeof badges] || badges.active;
-    return <Badge bg={badge.variant}>{badge.text}</Badge>;
-  };
-
-  const getTypeBadge = (type: string) => {
-    const badges = {
-      electric: {
-        text: 'Eléctrico',
-        icon: 'electrical_services',
-        color: '#ffc107',
-      },
-      water: { text: 'Agua', icon: 'water_drop', color: '#007bff' },
-      gas: { text: 'Gas', icon: 'local_fire_department', color: '#dc3545' },
-    };
-
-    const badge = badges[type as keyof typeof badges];
-    return (
-      <div className='d-flex align-items-center'>
-        <span className='material-icons me-2' style={{ color: badge.color }}>
-          {badge.icon}
-        </span>
-        <strong>{badge.text}</strong>
-      </div>
-    );
-  };
-
-  const getReadingStatusBadge = (status: string) => {
-    const badges = {
-      valid: { text: 'Válida', variant: 'success' },
-      estimated: { text: 'Estimada', variant: 'warning' },
-      error: { text: 'Error', variant: 'danger' },
-    };
-
-    const badge = badges[status as keyof typeof badges];
-    return (
-      <Badge bg={badge.variant} className='text-white'>
-        {badge.text}
-      </Badge>
-    );
-  };
-
-  const handleSaveConfiguration = async () => {
+  const handleDelete = async () => {
+    if (!medidor) return;
+    if (!confirm('Eliminar medidor? (si tiene lecturas, será desactivado)'))
+      return;
+    setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setShowConfigModal(false);
-      alert('Configuración guardada exitosamente');
-    } catch (error) {
-      console.error('Error saving configuration:', error);
-      alert('Error al guardar la configuración');
+      const resp = await deleteMedidor(medidor.id);
+      if (resp?.softDeleted) alert('Medidor desactivado (soft-delete)');
+      else alert('Medidor eliminado');
+      router.push('/medidores');
+    } catch (err: any) {
+      console.error('delete medidor err', err);
+      alert('Error al eliminar medidor');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <ProtectedRoute>
-        <Layout>
-          <div
-            className='d-flex justify-content-center align-items-center'
-            style={{ minHeight: '60vh' }}
-          >
-            <div className='text-center'>
-              <div className='spinner-border text-primary mb-3' role='status'>
-                <span className='visually-hidden'>Cargando...</span>
-              </div>
-              <p className='text-muted'>Cargando información del medidor...</p>
-            </div>
-          </div>
-        </Layout>
-      </ProtectedRoute>
-    );
-  }
-
-  if (!meter) {
-    return (
-      <ProtectedRoute>
-        <Layout>
-          <div className='container-fluid p-4'>
-            <div className='alert alert-danger'>
-              <span className='material-icons me-2'>error</span>
-              No se pudo cargar la información del medidor.
-            </div>
-          </div>
-        </Layout>
-      </ProtectedRoute>
-    );
-  }
+  if (!id) return <div>Cargando id...</div>;
+  if (loading && !medidor) return <div>Cargando...</div>;
 
   return (
     <ProtectedRoute>
       <Head>
-        <title>Medidor {meter.code} — Cuentas Claras</title>
+        <title>Medidor {medidor?.medidor_codigo} — Cuentas Claras</title>
       </Head>
 
       <Layout>
@@ -419,11 +151,11 @@ export default function MeterDetail() {
                       </Button>
                       <div>
                         <h1 className='meter-title'>
-                          {getTypeBadge(meter.type)} {meter.code}
+                          {medidor?.tipo} {medidor?.medidor_codigo}
                         </h1>
                         <p className='meter-subtitle'>
-                          S/N: {meter.serialNumber} • {meter.brand}{' '}
-                          {meter.model}
+                          S/N: {medidor?.numero_serie} • {medidor?.marca}{' '}
+                          {medidor?.modelo}
                         </p>
                       </div>
                     </div>
@@ -433,10 +165,18 @@ export default function MeterDetail() {
                         <div>
                           <h6 className='text-muted mb-2'>Estado actual</h6>
                           <div className='d-flex align-items-center gap-2'>
-                            {getStatusBadge(meter.status)}
-                            {meter.alerts.hasAlerts && (
+                            {medidor?.estado === 'activo' && (
+                              <Badge bg='success'>Activo</Badge>
+                            )}
+                            {medidor?.estado === 'inactivo' && (
+                              <Badge bg='danger'>Inactivo</Badge>
+                            )}
+                            {medidor?.estado === 'mantenimiento' && (
+                              <Badge bg='warning'>Mantenimiento</Badge>
+                            )}
+                            {medidor?.alertas && medidor.alertas.length > 0 && (
                               <Badge bg='warning'>
-                                {meter.alerts.count} alertas
+                                {medidor.alertas.length} alertas
                               </Badge>
                             )}
                           </div>
@@ -447,10 +187,10 @@ export default function MeterDetail() {
                           <h6 className='text-muted mb-2'>Ubicación</h6>
                           <div>
                             <div className='fw-medium'>
-                              {meter.location.building} - {meter.location.unit}
+                              {medidor?.edificio} - {medidor?.unidad}
                             </div>
                             <small className='text-muted'>
-                              {meter.location.position}
+                              {medidor?.posicion}
                             </small>
                           </div>
                         </div>
@@ -460,13 +200,14 @@ export default function MeterDetail() {
                           <h6 className='text-muted mb-2'>Última lectura</h6>
                           <div>
                             <div className='fw-medium fs-5'>
-                              {meter.lastReading.value.toLocaleString()}
+                              {medidor?.ultima_lectura
+                                ? medidor.ultima_lectura
+                                : '-'}
                             </div>
                             <small className='text-muted'>
-                              {new Date(
-                                meter.lastReading.date,
-                              ).toLocaleDateString()}{' '}
-                              •{meter.lastReading.consumption} kWh consumidos
+                              {medidor?.ultimo_consumo
+                                ? `• ${medidor.ultimo_consumo} kWh consumidos`
+                                : ''}
                             </small>
                           </div>
                         </div>
@@ -478,12 +219,12 @@ export default function MeterDetail() {
                           </h6>
                           <div>
                             <div className='fw-medium'>
-                              {new Date(
-                                meter.maintenance.nextService,
-                              ).toLocaleDateString()}
+                              {medidor?.proximo_mantenimiento
+                                ? medidor.proximo_mantenimiento
+                                : '-'}
                             </div>
                             <small className='text-muted'>
-                              {meter.maintenance.frequency}
+                              {medidor?.frecuencia_mantenimiento}
                             </small>
                           </div>
                         </div>
@@ -495,7 +236,7 @@ export default function MeterDetail() {
                       <Button
                         variant='primary'
                         onClick={() =>
-                          router.push(`/medidores/${meter.id}/consumos`)
+                          router.push(`/medidores/${medidor.id}/consumos`)
                         }
                       >
                         <span className='material-icons me-2'>analytics</span>
@@ -504,7 +245,7 @@ export default function MeterDetail() {
                       <Button
                         variant='outline-primary'
                         onClick={() =>
-                          router.push(`/medidores/${meter.id}/lecturas`)
+                          router.push(`/medidores/${medidor.id}/lecturas`)
                         }
                       >
                         <span className='material-icons me-2'>visibility</span>
@@ -549,32 +290,32 @@ export default function MeterDetail() {
                       </h5>
                       <div className='info-item'>
                         <span className='info-label'>Código</span>
-                        <span className='info-value'>{meter.code}</span>
+                        <span className='info-value'>{medidor?.medidor_codigo}</span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Número de Serie</span>
-                        <span className='info-value'>{meter.serialNumber}</span>
+                        <span className='info-value'>{medidor?.numero_serie}</span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Marca y Modelo</span>
                         <span className='info-value'>
-                          {meter.brand} {meter.model}
+                          {medidor?.marca} {medidor?.modelo}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Tipo de Medidor</span>
                         <span className='info-value'>
-                          {meter.type === 'electric'
+                          {medidor?.tipo === 'electrico'
                             ? 'Eléctrico'
-                            : meter.type === 'water'
-                              ? 'Agua'
-                              : 'Gas'}
+                            : medidor?.tipo === 'agua'
+                            ? 'Agua'
+                            : 'Gas'}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Estado</span>
                         <span className='info-value'>
-                          {getStatusBadge(meter.status)}
+                          {getStatusBadge(medidor?.estado)}
                         </span>
                       </div>
                     </div>
@@ -588,45 +329,45 @@ export default function MeterDetail() {
                       <div className='info-item'>
                         <span className='info-label'>Comunidad</span>
                         <span className='info-value'>
-                          {meter.community.name}
+                          {medidor?.comunidad_nombre}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Edificio</span>
                         <span className='info-value'>
-                          {meter.location.building}
+                          {medidor?.edificio}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Unidad</span>
                         <span className='info-value'>
-                          {meter.location.unit} - Piso {meter.location.floor}
+                          {medidor?.unidad} - Piso {medidor?.piso}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Posición</span>
                         <span className='info-value'>
-                          {meter.location.position}
+                          {medidor?.posicion}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Fecha de Instalación</span>
                         <span className='info-value'>
                           {new Date(
-                            meter.installation.date,
+                            medidor?.fecha_instalacion,
                           ).toLocaleDateString()}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Técnico Instalador</span>
                         <span className='info-value'>
-                          {meter.installation.technician}
+                          {medidor?.tecnico_instalador}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Empresa Instaladora</span>
                         <span className='info-value'>
-                          {meter.installation.company}
+                          {medidor?.empresa_instaladora}
                         </span>
                       </div>
                     </div>
@@ -645,7 +386,7 @@ export default function MeterDetail() {
                       variant='primary'
                       size='sm'
                       onClick={() =>
-                        router.push(`/medidores/${meter.id}/lecturas`)
+                        router.push(`/medidores/${medidor.id}/lecturas`)
                       }
                     >
                       <span className='material-icons me-1'>add</span>
@@ -656,45 +397,43 @@ export default function MeterDetail() {
                     <thead>
                       <tr>
                         <th>Fecha</th>
+                        <th>Periodo</th>
                         <th>Lectura</th>
-                        <th>Consumo</th>
-                        <th>Método</th>
                         <th>Estado</th>
-                        <th>Responsable</th>
-                        <th>Notas</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {readings.map(reading => (
+                      {lecturas.map(reading => (
                         <tr key={reading.id}>
-                          <td>{new Date(reading.date).toLocaleDateString()}</td>
+                          <td>{new Date(reading.fecha).toLocaleDateString()}</td>
+                          <td>{reading.periodo}</td>
                           <td className='fw-medium'>
-                            {reading.value.toLocaleString()}
-                          </td>
-                          <td>
-                            <span className='fw-medium'>
-                              {reading.consumption}
-                            </span>
-                            <small className='text-muted ms-1'>kWh</small>
+                            {reading.lectura.toLocaleString()}
                           </td>
                           <td>
                             <span
-                              className={`badge ${reading.method === 'automatic' ? 'bg-info' : 'bg-secondary'}`}
+                              className={`badge ${
+                                reading.status === 'valida'
+                                  ? 'bg-success'
+                                  : reading.status === 'estimada'
+                                  ? 'bg-warning'
+                                  : 'bg-danger'
+                              }`}
                             >
-                              {reading.method === 'automatic'
-                                ? 'Automático'
-                                : 'Manual'}
+                              {reading.status === 'valida'
+                                ? 'Válida'
+                                : reading.status === 'estimada'
+                                ? 'Estimada'
+                                : 'Error'}
                             </span>
-                          </td>
-                          <td>{getReadingStatusBadge(reading.status)}</td>
-                          <td>{reading.reader}</td>
-                          <td>
-                            <small className='text-muted'>
-                              {reading.notes || '-'}
-                            </small>
                           </td>
                         </tr>
                       ))}
+                      {lecturas.length === 0 && (
+                        <tr>
+                          <td colSpan={4}>Sin lecturas</td>
+                        </tr>
+                      )}
                     </tbody>
                   </Table>
                 </div>
@@ -712,7 +451,7 @@ export default function MeterDetail() {
                         <span className='info-label'>Último Servicio</span>
                         <span className='info-value'>
                           {new Date(
-                            meter.maintenance.lastService,
+                            medidor?.ultimo_servicio,
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -720,28 +459,28 @@ export default function MeterDetail() {
                         <span className='info-label'>Próximo Servicio</span>
                         <span className='info-value'>
                           {new Date(
-                            meter.maintenance.nextService,
+                            medidor?.proximo_servicio,
                           ).toLocaleDateString()}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Frecuencia</span>
                         <span className='info-value'>
-                          {meter.maintenance.frequency}
+                          {medidor?.frecuencia_mantenimiento}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Empresa de Servicio</span>
                         <span className='info-value'>
-                          {meter.maintenance.serviceCompany}
+                          {medidor?.empresa_servicio}
                         </span>
                       </div>
-                      {meter.maintenance.notes && (
+                      {medidor?.notas_servicio && (
                         <div className='info-item'>
                           <span className='info-label'>Notas</span>
                           <span className='info-value'>
                             <small className='text-muted'>
-                              {meter.maintenance.notes}
+                              {medidor.notas_servicio}
                             </small>
                           </span>
                         </div>
@@ -770,47 +509,52 @@ export default function MeterDetail() {
                             {maintenanceHistory.map(record => (
                               <tr key={record.id}>
                                 <td>
-                                  {new Date(record.date).toLocaleDateString()}
+                                  {new Date(record.fecha).toLocaleDateString()}
                                 </td>
                                 <td>
                                   <span
                                     className={`badge ${
-                                      record.type === 'preventive'
+                                      record.tipo === 'preventivo'
                                         ? 'bg-success'
-                                        : record.type === 'corrective'
-                                          ? 'bg-warning'
-                                          : 'bg-info'
+                                        : record.tipo === 'correctivo'
+                                        ? 'bg-warning'
+                                        : 'bg-info'
                                     }`}
                                   >
-                                    {record.type === 'preventive'
+                                    {record.tipo === 'preventivo'
                                       ? 'Preventivo'
-                                      : record.type === 'corrective'
-                                        ? 'Correctivo'
-                                        : 'Calibración'}
+                                      : record.tipo === 'correctivo'
+                                      ? 'Correctivo'
+                                      : 'Calibración'}
                                   </span>
                                 </td>
                                 <td>
-                                  <div>{record.technician}</div>
+                                  <div>{record.tecnico}</div>
                                   <small className='text-muted'>
-                                    {record.company}
+                                    {record.empresa}
                                   </small>
                                 </td>
                                 <td>
-                                  <div>{record.description}</div>
-                                  {record.parts && record.parts.length > 0 && (
-                                    <small className='text-muted'>
-                                      Repuestos: {record.parts.join(', ')}
-                                    </small>
-                                  )}
+                                  <div>{record.descripcion}</div>
+                                  {record.repuestos &&
+                                    record.repuestos.length > 0 && (
+                                      <small className='text-muted'>
+                                        Repuestos: {record.repuestos.join(', ')}
+                                      </small>
+                                    )}
                                 </td>
                                 <td className='fw-medium'>
-                                  ${record.cost.toLocaleString()}
+                                  ${record.costo.toLocaleString()}
                                 </td>
                                 <td>
                                   <span
-                                    className={`badge ${record.status === 'completed' ? 'bg-success' : 'bg-warning'}`}
+                                    className={`badge ${
+                                      record.estado === 'completado'
+                                        ? 'bg-success'
+                                        : 'bg-warning'
+                                    }`}
                                   >
-                                    {record.status === 'completed'
+                                    {record.estado === 'completado'
                                       ? 'Completado'
                                       : 'Pendiente'}
                                   </span>
@@ -836,19 +580,19 @@ export default function MeterDetail() {
                       <div className='info-item'>
                         <span className='info-label'>Capacidad</span>
                         <span className='info-value'>
-                          {meter.specifications.capacity}
+                          {medidor?.capacidad}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Precisión</span>
                         <span className='info-value'>
-                          {meter.specifications.precision}
+                          {medidor?.precision}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Certificación</span>
                         <span className='info-value'>
-                          {meter.specifications.certification}
+                          {medidor?.certificacion}
                         </span>
                       </div>
                       <div className='info-item'>
@@ -856,13 +600,13 @@ export default function MeterDetail() {
                           Temperatura Operación
                         </span>
                         <span className='info-value'>
-                          {meter.specifications.operatingTemp}
+                          {medidor?.temperatura_operacion}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Comunicación</span>
                         <span className='info-value'>
-                          {meter.specifications.communicationType}
+                          {medidor?.tipo_comunicacion}
                         </span>
                       </div>
                     </div>
@@ -878,27 +622,27 @@ export default function MeterDetail() {
                           Certificado de Instalación
                         </span>
                         <span className='info-value'>
-                          {meter.installation.certificate}
+                          {medidor?.certificado_instalacion}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Garantía hasta</span>
                         <span className='info-value'>
                           {new Date(
-                            meter.installation.warranty,
+                            medidor?.garantia_hasta,
                           ).toLocaleDateString()}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Fecha de Creación</span>
                         <span className='info-value'>
-                          {new Date(meter.createdAt).toLocaleDateString()}
+                          {new Date(medidor?.fecha_creacion).toLocaleDateString()}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Última Actualización</span>
                         <span className='info-value'>
-                          {new Date(meter.updatedAt).toLocaleDateString()}
+                          {new Date(medidor?.ultima_actualizacion).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
@@ -983,7 +727,7 @@ export default function MeterDetail() {
                       }
                     />
                   </Col>
-                  {meter.type === 'water' && (
+                  {medidor?.tipo === 'agua' && (
                     <Col md={6}>
                       <Form.Group>
                         <Form.Label>Umbral de Presión (bar)</Form.Label>
