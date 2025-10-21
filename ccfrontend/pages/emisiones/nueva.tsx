@@ -3,6 +3,8 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
+import emisionesService from '@/lib/emisionesService';
+import comunidadesService from '@/lib/comunidadesService';
 
 interface Concept {
   id: string;
@@ -42,6 +44,8 @@ export default function EmisionNueva() {
   const [concepts, setConcepts] = useState<Concept[]>([]);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [comunidades, setComunidades] = useState<any[]>([]);
+  const [loadingComunidades, setLoadingComunidades] = useState(true);
   const [showConceptModal, setShowConceptModal] = useState(false);
   const [newConcept, setNewConcept] = useState({
     name: '',
@@ -101,6 +105,29 @@ export default function EmisionNueva() {
       }
     ];
     setExpenses(mockExpenses);
+  }, []);
+
+  // Load comunidades
+  useEffect(() => {
+    const loadComunidades = async () => {
+      try {
+        setLoadingComunidades(true);
+        const comunidadesData = await comunidadesService.getComunidades();
+        setComunidades(comunidadesData);
+      } catch (error) {
+        console.error('Error loading comunidades:', error);
+        // Fallback to mock data if API fails
+        setComunidades([
+          { id: 1, razon_social: 'Edificio Central' },
+          { id: 2, razon_social: 'Torres del Sol' },
+          { id: 3, razon_social: 'Condominio Verde' }
+        ]);
+      } finally {
+        setLoadingComunidades(false);
+      }
+    };
+
+    loadComunidades();
   }, []);
 
   const handleInputChange = (field: string, value: any) => {
@@ -178,19 +205,43 @@ export default function EmisionNueva() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.period || !formData.issueDate || !formData.dueDate) {
+    if (!formData.period || !formData.issueDate || !formData.dueDate || !formData.community) {
       alert('Por favor completa todos los campos obligatorios');
       return;
     }
 
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // Convert community string to number
+      const comunidadId = parseInt(formData.community);
+      
+      // Prepare data for API
+      const emisionData: {
+        periodo: string;
+        fecha_vencimiento: string;
+        observaciones?: string;
+      } = {
+        periodo: formData.period,
+        fecha_vencimiento: formData.dueDate
+      };
+
+      // Add observations only if provided
+      if (formData.description.trim()) {
+        emisionData.observaciones = formData.description;
+      }
+
+      // Call API to create emission
+      const nuevaEmision = await emisionesService.createEmision(comunidadId, emisionData);
+      
       alert('Emisión creada exitosamente');
       router.push('/emisiones');
-    }, 2000);
+    } catch (error) {
+      console.error('Error creating emision:', error);
+      alert('Error al crear la emisión. Por favor intenta nuevamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -279,11 +330,16 @@ export default function EmisionNueva() {
                           value={formData.community}
                           onChange={(e) => handleInputChange('community', e.target.value)}
                           required
+                          disabled={loadingComunidades}
                         >
-                          <option value=''>Seleccionar comunidad</option>
-                          <option value='1'>Edificio Central</option>
-                          <option value='2'>Torres del Sol</option>
-                          <option value='3'>Condominio Verde</option>
+                          <option value=''>
+                            {loadingComunidades ? 'Cargando comunidades...' : 'Seleccionar comunidad'}
+                          </option>
+                          {comunidades.map((comunidad) => (
+                            <option key={comunidad.id} value={comunidad.id.toString()}>
+                              {comunidad.razon_social}
+                            </option>
+                          ))}
                         </select>
                       </div>
                       <div className='col-md-6'>

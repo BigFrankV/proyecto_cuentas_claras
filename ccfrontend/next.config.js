@@ -3,13 +3,57 @@ const nextConfig = {
   // Configuración esencial para Cuentas Claras
   reactStrictMode: true,
   swcMinify: true,
-  output: 'export',
+  // Temporarily disable static export to avoid EMFILE during build
+  // output: 'export',
 
   // Experimental options to fix EMFILE error
   experimental: {
     // Reduce concurrent processing to avoid EMFILE errors
     workerThreads: false,
     cpus: 1,
+    // Disable static analysis of dependencies to prevent EMFILE
+    esmExternals: false,
+  },
+
+  // Disable static optimization to prevent dependency analysis
+  optimizeFonts: false,
+  swcMinify: false,
+
+  // Webpack configuration to exclude Material-UI icons from dependency analysis
+  webpack: (config, { isServer }) => {
+    // Use webpack IgnorePlugin to completely exclude @mui/icons-material
+    config.plugins.push(
+      new config.webpack.IgnorePlugin({
+        resourceRegExp: /^@mui\/icons-material\/.*$/,
+      })
+    );
+
+    // Exclude @mui/icons-material from bundle analysis to prevent EMFILE errors
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@mui/icons-material': false,
+    };
+
+    // Also exclude from dependency tracing
+    if (!isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          ...config.optimization.splitChunks,
+          cacheGroups: {
+            ...config.optimization.splitChunks?.cacheGroups,
+            muiIcons: {
+              test: /[\\/]node_modules[\\/]@mui[\\/]icons-material[\\/]/,
+              name: 'mui-icons',
+              chunks: 'all',
+              priority: 10,
+            },
+          },
+        },
+      };
+    }
+
+    return config;
   },
 
   // Configuración de imágenes

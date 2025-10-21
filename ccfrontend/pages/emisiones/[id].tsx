@@ -5,6 +5,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { EmissionStatusBadge, EmissionTypeBadge } from '@/components/emisiones';
+import emisionesService from '@/lib/emisionesService';
 
 interface EmissionDetail {
   id: string;
@@ -91,8 +92,178 @@ export default function EmisionDetalle() {
     }
   }, [id]);
 
-  const loadEmissionData = () => {
-    // Mock data
+  const loadEmissionData = async () => {
+    try {
+      setLoading(true);
+      const emisionId = Number(id);
+
+      // Cargar datos en paralelo
+      const [emisionResponse, detallesResponse, gastosResponse, unidadesResponse, pagosResponse, auditoriaResponse] = await Promise.allSettled([
+        emisionesService.getEmisionDetalleCompleto(emisionId),
+        emisionesService.getDetallesEmision(emisionId),
+        emisionesService.getGastosEmision(emisionId),
+        emisionesService.getUnidadesEmision(emisionId),
+        emisionesService.getPagosEmision(emisionId),
+        emisionesService.getAuditoriaEmision(emisionId),
+      ]);
+
+      // Procesar emisión principal
+      let emissionData: EmissionDetail | null = null;
+      if (emisionResponse.status === 'fulfilled') {
+        const emision = emisionResponse.value;
+        emissionData = {
+          id: emision.id.toString(),
+          period: emision.periodo,
+          type: 'gastos_comunes', // Se puede inferir del backend
+          status: mapEstadoToStatus(emision.estado),
+          issueDate: emision.fecha_emision,
+          dueDate: emision.fecha_vencimiento,
+          totalAmount: emision.monto_total,
+          paidAmount: 0, // Se calculará de los pagos
+          unitCount: 0, // Se obtendrá de unidades
+          description: emision.observaciones || '',
+          communityName: emision.comunidad_razon_social || 'Comunidad',
+          hasInterest: false, // Por ahora
+          interestRate: 0,
+          gracePeriod: 0,
+        };
+      }
+
+      // Procesar conceptos/detalles
+      let conceptsData: Concept[] = [];
+      if (detallesResponse.status === 'fulfilled') {
+        conceptsData = detallesResponse.value.map((detalle: any) => ({
+          id: detalle.id.toString(),
+          name: detalle.categoria_nombre || 'Sin categoría',
+          description: detalle.regla_prorrateo || '',
+          amount: detalle.monto,
+          distributionType: mapReglaToDistributionType(detalle.regla_prorrateo),
+          category: detalle.categoria_nombre || 'General',
+        }));
+      }
+
+      // Procesar gastos
+      let expensesData: ExpenseDetail[] = [];
+      if (gastosResponse.status === 'fulfilled') {
+        expensesData = gastosResponse.value.map((gasto: any) => ({
+          id: gasto.id.toString(),
+          description: gasto.glosa,
+          amount: gasto.monto,
+          category: gasto.categoria_nombre || 'General',
+          supplier: gasto.centro_costo_nombre || 'Sin proveedor',
+          date: gasto.fecha,
+          document: `Gasto #${gasto.id}`,
+        }));
+      }
+
+      // Procesar unidades
+      let unitsData: UnitDetail[] = [];
+      if (unidadesResponse.status === 'fulfilled') {
+        unitsData = unidadesResponse.value.map((unidad: any) => ({
+          id: unidad.id.toString(),
+          number: unidad.unidad_codigo || unidad.id.toString(),
+          type: 'Departamento', // Por ahora hardcodeado
+          owner: unidad.titular_nombres ? `${unidad.titular_nombres} ${unidad.titular_apellidos || ''}`.trim() : 'Sin asignar',
+          contact: '', // No disponible en la API
+          participation: 0, // Se puede calcular después
+          totalAmount: unidad.monto_total,
+          paidAmount: unidad.monto_total - unidad.saldo,
+          status: mapEstadoCobroToStatus(unidad.estado),
+        }));
+
+        // Actualizar unitCount en emission
+        if (emissionData) {
+          emissionData.unitCount = unitsData.length;
+        }
+      }
+
+      // Procesar pagos
+      let paymentsData: Payment[] = [];
+      if (pagosResponse.status === 'fulfilled') {
+        paymentsData = pagosResponse.value.map((pago: any) => ({
+          id: pago.id.toString(),
+          date: pago.fecha_pago || pago.fecha,
+          amount: pago.monto_pago || pago.monto,
+          method: pago.medio || 'No especificado',
+          reference: `Pago #${pago.id}`,
+          unit: pago.unidad_codigo || 'N/A',
+          status: mapEstadoPagoToStatus(pago.estado_pago || pago.estado),
+        }));
+
+        // Calcular paidAmount total
+        if (emissionData) {
+          emissionData.paidAmount = paymentsData.reduce((sum, pago) => sum + pago.amount, 0);
+        }
+      }
+
+      // Procesar auditoría
+      let historyData: HistoryEntry[] = [];
+      if (auditoriaResponse.status === 'fulfilled') {
+        historyData = auditoriaResponse.value.map((entry: any) => ({
+          id: entry.id.toString(),
+          date: entry.fecha,
+          action: entry.accion,
+          user: entry.usuario_username || entry.usuario_nombres || 'Sistema',
+          description: entry.cambios_json || entry.accion,
+        }));
+      }
+
+      // Setear datos en el estado
+      setEmission(emissionData);
+      setConcepts(conceptsData);
+      setExpenses(expensesData);
+      setUnits(unitsData);
+      setPayments(paymentsData);
+      setHistory(historyData);
+
+    } catch (error) {
+      console.error('Error loading emission data:', error);
+      // Fallback a datos mock si falla la API
+      loadMockData();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Funciones auxiliares para mapear estados
+  const mapEstadoToStatus = (estado: string): EmissionDetail['status'] => {
+    switch (estado) {
+      case 'borrador': return 'draft';
+      case 'emitida': return 'sent';
+      case 'cerrada': return 'paid';
+      default: return 'draft';
+    }
+  };
+
+  const mapReglaToDistributionType = (regla: string): Concept['distributionType'] => {
+    switch (regla) {
+      case 'coeficiente': return 'proportional';
+      case 'partes_iguales': return 'equal';
+      default: return 'custom';
+    }
+  };
+
+  const mapEstadoCobroToStatus = (estado: string): UnitDetail['status'] => {
+    switch (estado) {
+      case 'pagado': return 'paid';
+      case 'parcial': return 'partial';
+      case 'pendiente': return 'pending';
+      case 'vencido': return 'pending'; // Mapeamos vencido como pending por ahora
+      default: return 'pending';
+    }
+  };
+
+  const mapEstadoPagoToStatus = (estado: string): Payment['status'] => {
+    switch (estado) {
+      case 'confirmado': return 'confirmed';
+      case 'pendiente': return 'pending';
+      case 'rechazado': return 'rejected';
+      default: return 'pending';
+    }
+  };
+
+  // Fallback a datos mock si falla la API
+  const loadMockData = () => {
     setTimeout(() => {
       const mockEmission: EmissionDetail = {
         id: id as string,

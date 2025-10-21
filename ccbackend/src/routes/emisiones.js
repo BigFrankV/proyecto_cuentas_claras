@@ -122,6 +122,110 @@ router.get('/comunidad/:comunidadId/count', authenticate, async (req, res) => {
 });
 
 /**
+ * @swagger
+ * /emisiones/comunidad/{comunidadId}/resumen:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Obtener resumen de emisiones con métricas consolidadas
+ *     description: |
+ *       Obtiene un resumen detallado de todas las emisiones de una comunidad,
+ *       incluyendo métricas consolidadas como total de unidades impactadas,
+ *       montos totales y pagos aplicados.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID de la comunidad
+ *     responses:
+ *       200:
+ *         description: Resumen de emisiones con métricas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   emision_id:
+ *                     type: integer
+ *                   periodo:
+ *                     type: string
+ *                     description: Período en formato YYYY-MM
+ *                     example: "2024-03"
+ *                   tipo_emision:
+ *                     type: string
+ *                     example: "Gastos Comunes"
+ *                   estado:
+ *                     type: string
+ *                     enum: [borrador, emitida, cerrada, anulada]
+ *                   fecha_emision:
+ *                     type: string
+ *                     format: date
+ *                   fecha_vencimiento:
+ *                     type: string
+ *                     format: date
+ *                   nombre_comunidad:
+ *                     type: string
+ *                   total_unidades_impactadas:
+ *                     type: integer
+ *                     description: Número total de unidades con cuentas de cobro
+ *                   monto_total_liquidado:
+ *                     type: number
+ *                     description: Suma total de todos los montos de las cuentas de cobro
+ *                   monto_pagado_aplicado:
+ *                     type: number
+ *                     description: Suma de los pagos aplicados a las cuentas de cobro
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ */
+
+// resumen de emisiones con métricas consolidadas
+router.get('/comunidad/:comunidadId/resumen', authenticate, async (req, res) => {
+  const comunidadId = req.params.comunidadId;
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        e.id AS emision_id,
+        e.periodo,
+        'Gastos Comunes' AS tipo_emision,
+        CASE
+          WHEN e.estado = 'borrador' THEN 'borrador'
+          WHEN e.estado = 'emitido' THEN 'emitida'
+          WHEN e.estado = 'cerrado' THEN 'cerrada'
+          WHEN e.estado = 'anulado' THEN 'anulada'
+          ELSE 'lista'
+        END as estado,
+        DATE(e.created_at) AS fecha_emision,
+        DATE(e.fecha_vencimiento) AS fecha_vencimiento,
+        c.razon_social AS nombre_comunidad,
+        COUNT(ccu.unidad_id) AS total_unidades_impactadas,
+        COALESCE(SUM(ccu.monto_total), 0.00) AS monto_total_liquidado,
+        COALESCE(SUM(ccu.monto_total - ccu.saldo), 0.00) AS monto_pagado_aplicado
+      FROM
+        emision_gastos_comunes e
+      INNER JOIN
+        comunidad c ON e.comunidad_id = c.id
+      LEFT JOIN
+        cuenta_cobro_unidad ccu ON e.id = ccu.emision_id
+      WHERE
+        e.comunidad_id = ?
+      GROUP BY
+        e.id, e.periodo, e.estado, e.created_at, e.fecha_vencimiento, c.razon_social
+      ORDER BY
+        e.periodo DESC
+    `, [comunidadId]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
  * @openapi
  * /comunidades/{comunidadId}/emisiones:
  *   post:
@@ -966,6 +1070,7 @@ module.exports = router;
 // // LISTADOS Y CRUD DE EMISIONES
 // GET: /emisiones/comunidad/:comunidadId
 // GET: /emisiones/comunidad/:comunidadId/count
+// GET: /emisiones/comunidad/:comunidadId/resumen
 // POST: /emisiones/comunidad/:comunidadId
 // GET: /emisiones/:id
 // GET: /emisiones/:id/detalle-completo

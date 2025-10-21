@@ -324,7 +324,8 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
     const torreId = Number(req.params.id);
 
     const [rows] = await db.query(`
-      SELECT 
+      SELECT
+        -- 1. Información de la Torre y Entidades Superiores
         t.id,
         t.nombre,
         t.codigo,
@@ -337,25 +338,48 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
         c.id AS comunidadId,
         c.razon_social AS nombreComunidad,
         c.direccion AS direccionComunidad,
+        c.tz AS zonaHorariaComunidad,
+
+        -- 2. Métricas de Unidades (Calculadas)
         COUNT(DISTINCT u.id) AS totalUnidades,
-        COUNT(DISTINCT CASE 
+        COUNT(DISTINCT CASE WHEN u.activa = 1 THEN u.id END) AS unidadesActivas,
+        COUNT(DISTINCT CASE
           WHEN EXISTS (
-            SELECT 1 FROM titulares_unidad tu 
-            WHERE tu.unidad_id = u.id 
+            SELECT 1 FROM titulares_unidad tu
+            WHERE tu.unidad_id = u.id
               AND (tu.hasta IS NULL OR tu.hasta >= CURRENT_DATE)
-          ) THEN u.id 
+          ) THEN u.id
         END) AS unidadesOcupadas,
-        COALESCE(MAX(CAST(SUBSTRING_INDEX(u.codigo, '-', 1) AS UNSIGNED)), 0) AS numPisos,
+        COUNT(DISTINCT u.id) - COUNT(DISTINCT CASE
+          WHEN EXISTS (
+            SELECT 1 FROM titulares_unidad tu
+            WHERE tu.unidad_id = u.id
+              AND (tu.hasta IS NULL OR tu.hasta >= CURRENT_DATE)
+          ) THEN u.id
+        END) AS unidadesVacantes,
+
+        -- 3. Métricas Físicas (Basadas en la sumatoria de unidades)
         COALESCE(SUM(u.m2_utiles), 0) AS superficieTotalUtil,
         COALESCE(SUM(u.m2_terrazas), 0) AS superficieTotalTerrazas,
-        COALESCE(SUM(u.m2_utiles + COALESCE(u.m2_terrazas,0)), 0) AS superficieTotal
+        COALESCE(SUM(u.m2_utiles + COALESCE(u.m2_terrazas,0)), 0) AS superficieTotal,
+
+        -- 4. Información de Gestión (Administrador)
+        COALESCE(MAX(CAST(SUBSTRING_INDEX(u.codigo, '-', 1) AS UNSIGNED)), 0) AS numPisos,
+        adm.username AS administradorUsername,
+        adm_per.nombres AS administradorNombres
+
       FROM torre t
       JOIN edificio e ON e.id = t.edificio_id
       JOIN comunidad c ON c.id = e.comunidad_id
       LEFT JOIN unidad u ON u.torre_id = t.id AND u.activa = 1
+      LEFT JOIN usuario_rol_comunidad urc_adm ON c.id = urc_adm.comunidad_id
+        AND urc_adm.rol_id = 2 AND urc_adm.activo = 1
+      LEFT JOIN usuario adm ON urc_adm.usuario_id = adm.id
+      LEFT JOIN persona adm_per ON adm.persona_id = adm_per.id
       WHERE t.id = ?
       GROUP BY t.id, t.nombre, t.codigo, t.edificio_id, t.created_at, t.updated_at,
-               e.nombre, e.direccion, e.codigo, c.id, c.razon_social, c.direccion
+               e.nombre, e.direccion, e.codigo, c.id, c.razon_social, c.direccion, c.tz,
+               adm.username, adm_per.nombres
     `, [torreId]);
 
     if (!rows.length) {
@@ -1647,6 +1671,126 @@ module.exports = router;
 
 // // CRUD
 // POST: /torres/edificio/:edificioId
+// ============================================================================
+// ENDPOINTS DE CREACIÓN
+// ============================================================================
+
+/**
+ * @openapi
+ * /torres:
+ *   post:
+ *     tags: [Torres]
+ *     summary: Crear nueva torre
+ *     description: Crea una nueva torre en un edificio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - edificio_id
+ *               - nombre
+ *               - codigo
+ *             properties:
+ *               edificio_id:
+ *                 type: integer
+ *               nombre:
+ *                 type: string
+ *               codigo:
+ *                 type: string
+ *               descripcion:
+ *                 type: string
+ *               num_pisos:
+ *                 type: integer
+ *               tiene_ascensor:
+ *                 type: boolean
+ *               tiene_porteria:
+ *                 type: boolean
+ *               tiene_estacionamiento:
+ *                 type: boolean
+ *               administrador_id:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Torre creada exitosamente
+ *       400:
+ *         description: Datos inválidos
+ *       409:
+ *         description: Código ya existe
+ */
+router.post('/', authenticate, async (req, res) => {
+  try {
+    const {
+      edificio_id,
+      nombre,
+      codigo,
+      descripcion,
+      num_pisos,
+      tiene_ascensor = false,
+      tiene_porteria = false,
+      tiene_estacionamiento = false,
+      administrador_id
+    } = req.body;
+
+    // Validaciones básicas
+    if (!edificio_id || !nombre || !codigo) {
+      return res.status(400).json({ error: 'edificio_id, nombre y codigo son requeridos' });
+    }
+
+    // Verificar que el edificio existe
+    const [edificioRows] = await db.query('SELECT id FROM edificio WHERE id = ?', [edificio_id]);
+    if (edificioRows.length === 0) {
+      return res.status(400).json({ error: 'Edificio no encontrado' });
+    }
+
+    // Verificar que el código no existe
+    const [codigoRows] = await db.query(
+      'SELECT id FROM torre WHERE edificio_id = ? AND codigo = ?',
+      [edificio_id, codigo]
+    );
+    if (codigoRows.length > 0) {
+      return res.status(409).json({ error: 'El código ya existe en este edificio' });
+    }
+
+    // Insertar la torre
+    const [result] = await db.query(`
+      INSERT INTO torre (
+        edificio_id,
+        nombre,
+        codigo,
+        descripcion,
+        num_pisos,
+        tiene_ascensor,
+        tiene_porteria,
+        tiene_estacionamiento,
+        administrador_id,
+        created_at,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+    `, [
+      edificio_id,
+      nombre,
+      codigo,
+      descripcion || null,
+      num_pisos || null,
+      tiene_ascensor,
+      tiene_porteria,
+      tiene_estacionamiento,
+      administrador_id || null
+    ]);
+
+    res.status(201).json({
+      id: result.insertId,
+      message: 'Torre creada exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error creando torre:', error);
+    res.status(500).json({ error: 'Error al crear la torre' });
+  }
+});
+
 // PATCH: /torres/:id
 // DELETE: /torres/:id
 
