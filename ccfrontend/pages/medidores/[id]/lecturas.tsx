@@ -5,7 +5,17 @@ import { ProtectedRoute } from '@/lib/useAuth';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { Card, Button, Form, InputGroup, Badge, Row, Col, Modal, Alert } from "react-bootstrap";
-import { PhotoCamera, Edit, Photo, Save, Clear, Assessment, FileDownload, PlaylistAddCheck, ArrowBack } from "@mui/icons-material";
+import {
+  PhotoCamera,
+  Edit,
+  Photo,
+  Save,
+  Clear,
+  Assessment,
+  FileDownload,
+  PlaylistAddCheck,
+  ArrowBack,
+} from '../../../lib/mui-icons';
 
 // Tipos de datos
 interface Meter {

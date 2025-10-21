@@ -1,9 +1,11 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { useState, useRef, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
+
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
+import apiClient from '@/lib/api';
 
 interface TorreFormData {
   edificioId: string;
@@ -51,7 +53,54 @@ export default function TorreNueva() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [codigoValidating, setCodigoValidating] = useState(false);
+  const [codigoExists, setCodigoExists] = useState<boolean | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Validate codigo uniqueness
+  useEffect(() => {
+    const validateCodigo = async () => {
+      if (!formData.edificioId || !formData.codigo.trim()) {
+        setCodigoExists(null);
+        return;
+      }
+
+      setCodigoValidating(true);
+      try {
+        const response = await apiClient.get(`/torres/edificio/${formData.edificioId}/validar-codigo`, {
+          params: { codigo: formData.codigo }
+        });
+        setCodigoExists(response.data.existe);
+      } catch (error) {
+        console.error('Error validating codigo:', error);
+        setCodigoExists(null);
+      } finally {
+        setCodigoValidating(false);
+      }
+    };
+
+    const timeoutId = setTimeout(validateCodigo, 500); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [formData.edificioId, formData.codigo]);
+
+  // Get suggested next codigo
+  useEffect(() => {
+    const getSiguienteCodigo = async () => {
+      if (!formData.edificioId) return;
+
+      try {
+        const response = await apiClient.get(`/torres/edificio/${formData.edificioId}/siguiente-codigo`);
+        const suggestedCode = response.data.siguienteCodigo;
+        if (suggestedCode && !formData.codigo) {
+          setFormData(prev => ({ ...prev, codigo: suggestedCode }));
+        }
+      } catch (error) {
+        console.error('Error getting siguiente codigo:', error);
+      }
+    };
+
+    getSiguienteCodigo();
+  }, [formData.edificioId]);
 
   // Datos mock para selects
   const edificios = [
@@ -133,6 +182,8 @@ export default function TorreNueva() {
 
     if (!formData.codigo.trim()) {
       newErrors.codigo = 'El código es requerido';
+    } else if (codigoExists === true) {
+      newErrors.codigo = 'Este código ya existe en el edificio';
     }
 
     if (formData.numPisos < 1) {
@@ -161,16 +212,31 @@ export default function TorreNueva() {
     setLoading(true);
 
     try {
-      // Simular llamada API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Datos de la torre:', formData);
+      // Preparar datos para la API
+      const torreData = {
+        edificio_id: parseInt(formData.edificioId),
+        nombre: formData.nombre,
+        codigo: formData.codigo,
+        descripcion: formData.descripcion,
+        num_pisos: formData.numPisos,
+        tiene_ascensor: formData.tieneAscensor,
+        tiene_porteria: formData.tienePorteria,
+        tiene_estacionamiento: formData.tieneEstacionamiento,
+        administrador_id: formData.administradorId ? parseInt(formData.administradorId) : null
+      };
+
+      // Llamar a la API
+      await apiClient.post('/torres', torreData);
       
       // Redirigir al listado de torres
       router.push('/torres');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al crear torre:', error);
-      // Aquí manejarías el error de la API
+      if (error.response?.status === 409) {
+        setErrors({ codigo: 'Este código ya existe en el edificio' });
+      } else {
+        setErrors({ general: 'Error al crear la torre. Intente nuevamente.' });
+      }
     } finally {
       setLoading(false);
     }
@@ -254,16 +320,40 @@ export default function TorreNueva() {
                           <label htmlFor="codigoTorre" className="form-label">
                             Código <span className="text-danger">*</span>
                           </label>
-                          <input 
-                            type="text" 
-                            className={`form-control ${errors.codigo ? 'is-invalid' : ''}`}
-                            id="codigoTorre" 
-                            placeholder="Ej: TA" 
-                            value={formData.codigo}
-                            onChange={(e) => handleInputChange('codigo', e.target.value)}
-                            required
-                          />
+                          <div className="input-group">
+                            <input 
+                              type="text" 
+                              className={`form-control ${
+                                errors.codigo ? 'is-invalid' : 
+                                (codigoExists === false && formData.codigo.trim()) ? 'is-valid' : ''
+                              }`}
+                              id="codigoTorre" 
+                              placeholder="Ej: TA" 
+                              value={formData.codigo}
+                              onChange={(e) => handleInputChange('codigo', e.target.value)}
+                              required
+                            />
+                            {codigoValidating && (
+                              <span className="input-group-text">
+                                <div className="spinner-border spinner-border-sm" role="status">
+                                  <span className="visually-hidden">Validando...</span>
+                                </div>
+                              </span>
+                            )}
+                            {!codigoValidating && formData.codigo.trim() && (
+                              <span className="input-group-text">
+                                {codigoExists === false ? (
+                                  <i className="material-icons text-success">check_circle</i>
+                                ) : codigoExists === true ? (
+                                  <i className="material-icons text-danger">error</i>
+                                ) : null}
+                              </span>
+                            )}
+                          </div>
                           {errors.codigo && <div className="invalid-feedback">{errors.codigo}</div>}
+                          {!errors.codigo && codigoExists === false && formData.codigo.trim() && (
+                            <div className="valid-feedback">Código disponible</div>
+                          )}
                           <div className="form-text">Código único para identificar la torre</div>
                         </div>
                       </div>

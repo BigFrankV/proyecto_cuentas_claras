@@ -11,6 +11,7 @@ import {
   Emission,
   EmissionFiltersType
 } from '@/components/emisiones';
+import emisionesService from '@/lib/emisionesService';
 
 export default function EmisionesListado() {
   const [emissions, setEmissions] = useState<Emission[]>([]);
@@ -18,106 +19,62 @@ export default function EmisionesListado() {
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'table' | 'cards'>('table');
   const [selectedEmissions, setSelectedEmissions] = useState<string[]>([]);
-  
+
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Generar datos mock
-  const generateMockEmissions = (): Emission[] => {
-    const mockEmissions: Emission[] = [
-      {
-        id: '1',
-        period: 'Septiembre 2025',
-        type: 'gastos_comunes',
-        status: 'sent',
-        issueDate: '2025-09-01',
-        dueDate: '2025-09-15',
-        totalAmount: 2500000,
-        paidAmount: 1800000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de septiembre',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '2',
-        period: 'Agosto 2025',
-        type: 'gastos_comunes',
-        status: 'paid',
-        issueDate: '2025-08-01',
-        dueDate: '2025-08-15',
-        totalAmount: 2400000,
-        paidAmount: 2400000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de agosto',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '3',
-        period: 'Extraordinaria - Ascensor',
-        type: 'extraordinaria',
-        status: 'ready',
-        issueDate: '2025-09-10',
-        dueDate: '2025-09-30',
-        totalAmount: 800000,
-        paidAmount: 0,
-        unitCount: 45,
-        description: 'Reparación ascensor principal',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '4',
-        period: 'Julio 2025',
-        type: 'gastos_comunes',
-        status: 'overdue',
-        issueDate: '2025-07-01',
-        dueDate: '2025-07-15',
-        totalAmount: 2300000,
-        paidAmount: 1200000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de julio',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '5',
-        period: 'Multa - Ruidos molestos',
-        type: 'multa',
-        status: 'draft',
-        issueDate: '2025-09-15',
-        dueDate: '2025-10-01',
-        totalAmount: 50000,
-        paidAmount: 0,
-        unitCount: 1,
-        description: 'Multa por ruidos molestos - Unidad 302',
-        communityName: 'Edificio Central'
-      },
-      {
-        id: '6',
-        period: 'Junio 2025',
-        type: 'gastos_comunes',
-        status: 'partial',
-        issueDate: '2025-06-01',
-        dueDate: '2025-06-15',
-        totalAmount: 2200000,
-        paidAmount: 1500000,
-        unitCount: 45,
-        description: 'Gastos comunes del mes de junio',
-        communityName: 'Edificio Central'
-      }
-    ];
+  // Estado para comunidad (por ahora hardcodeado, después se obtendrá del contexto)
+  const [comunidadId, setComunidadId] = useState<number>(1);
 
-    return mockEmissions;
+  // Cargar datos reales de la API
+  const loadEmissions = async () => {
+    try {
+      setLoading(true);
+      const result = await emisionesService.getEmisionesComunidad(comunidadId, currentPage, itemsPerPage);
+
+      // Mapear los datos de la API al formato del frontend
+      const mappedEmissions: Emission[] = result.emisiones.map((emision: any) => ({
+        id: emision.id.toString(),
+        period: emision.periodo,
+        type: 'gastos_comunes', // Por ahora hardcodeado, se puede inferir del backend
+        status: mapEstadoToStatus(emision.estado),
+        issueDate: emision.fecha_emision,
+        dueDate: emision.fecha_vencimiento,
+        totalAmount: emision.monto_total,
+        paidAmount: 0, // Se calculará después con datos de pagos
+        unitCount: 0, // Se obtendrá después
+        description: emision.observaciones || '',
+        communityName: 'Comunidad Actual' // Se obtendrá del contexto
+      }));
+
+      setEmissions(mappedEmissions);
+      setFilteredEmissions(mappedEmissions);
+    } catch (error) {
+      console.error('Error loading emissions:', error);
+      // Mostrar estado vacío si falla la API
+      setEmissions([]);
+      setFilteredEmissions([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // Función auxiliar para mapear estados del backend al frontend
+  const mapEstadoToStatus = (estado: string): Emission['status'] => {
+    switch (estado) {
+      case 'borrador': return 'draft';
+      case 'emitida': return 'sent';
+      case 'cerrada': return 'paid';
+      default: return 'draft';
+    }
+  };
+
+
+
   useEffect(() => {
-    // Simular carga de datos
-    setTimeout(() => {
-      const mockData = generateMockEmissions();
-      setEmissions(mockData);
-      setFilteredEmissions(mockData);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    loadEmissions();
+  }, [comunidadId, currentPage]);
 
   // Manejar filtros
   const handleFilterChange = (filters: EmissionFiltersType) => {

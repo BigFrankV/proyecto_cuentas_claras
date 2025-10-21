@@ -19,6 +19,7 @@ const gastosRoutes = require('./routes/gastos');
 const emisionesRoutes = require('./routes/emisiones');
 const cargosRoutes = require('./routes/cargos');
 const pagosRoutes = require('./routes/pagos');
+const prorrateoRoutes = require('./routes/prorrateo');
 const medidoresRoutes = require('./routes/medidores');
 const tarifasConsumoRoutes = require('./routes/tarifasConsumo');
 const multasRoutes = require('./routes/multas');
@@ -84,6 +85,8 @@ console.log('cargosRoutes type:', typeof cargosRoutes, 'is function?', typeof ca
 app.use('/cargos', cargosRoutes);
 console.log('pagosRoutes type:', typeof pagosRoutes, 'is function?', typeof pagosRoutes === 'function');
 app.use('/pagos', pagosRoutes);
+console.log('prorrateoRoutes type:', typeof prorrateoRoutes, 'is function?', typeof prorrateoRoutes === 'function');
+app.use('/prorrateo', prorrateoRoutes);
 console.log('medidoresRoutes type:', typeof medidoresRoutes, 'is function?', typeof medidoresRoutes === 'function');
 app.use('/medidores', medidoresRoutes);
 console.log('tarifasConsumoRoutes type:', typeof tarifasConsumoRoutes, 'is function?', typeof tarifasConsumoRoutes === 'function');

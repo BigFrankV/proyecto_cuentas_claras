@@ -1,9 +1,10 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
 import apiClient from '@/lib/api';
 
 interface Torre {
@@ -64,15 +65,15 @@ const mockTorre: Torre = {
     'Terminaciones premium', 
     'Balcón en todas las unidades',
     'Calefacción central',
-    'Agua caliente central'
+    'Agua caliente central',
   ],
   servicios: {
     ascensor: true,
     porteria: true,
     estacionamiento: true,
     gimnasio: true,
-    salaEventos: false
-  }
+    salaEventos: false,
+  },
 };
 
 // Unidades will be loaded from API per tower
@@ -110,26 +111,74 @@ export default function TorreDetalle() {
     setFilteredUnidades(filtered);
   }, [unidades, unidadFilter, unidadSearch]);
 
-  // Load unidades for this tower
+  // Load torre data
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
     let mounted = true;
     (async () => {
       try {
-        const res = await apiClient.get('/unidades', { params: { torre_id: id } });
-        if (!mounted) return;
+        const res = await apiClient.get(`/torres/${id}/detalle`);
+        if (!mounted) {
+          return;
+        }
+        const torreData = res.data;
+        setTorre({
+          id: String(torreData.id),
+          nombre: torreData.nombre,
+          codigo: torreData.codigo,
+          estado: 'Activa', // Default since backend doesn't provide estado
+          anoConstruction: torreData.ano_construccion || 2020,
+          numPisos: torreData.numPisos || 0,
+          totalUnidades: torreData.totalUnidades || 0,
+          unidadesOcupadas: torreData.unidadesOcupadas || 0,
+          unidadesPorPiso: torreData.unidadesPorPiso || 0,
+          superficieTotal: torreData.superficieTotal || 0,
+          administrador: torreData.administrador || 'No asignado',
+          fechaCreacion: torreData.fechaCreacion,
+          ultimaActualizacion: torreData.ultimaActualizacion,
+          descripcion: torreData.descripcion || '',
+          caracteristicas: torreData.caracteristicas || [],
+          servicios: {
+            ascensor: torreData.tiene_ascensor || false,
+            porteria: torreData.tiene_porteria || false,
+            estacionamiento: torreData.tiene_estacionamiento || false,
+            gimnasio: torreData.tiene_gimnasio || false,
+            salaEventos: torreData.tiene_sala_eventos || false,
+          },
+        });
+      } catch (err) {
+        console.error('Error loading torre details:', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [id]);
+
+  // Load unidades for this tower
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await apiClient.get(`/torres/${id}/unidades`);
+        if (!mounted) {
+          return;
+        }
         const data = res.data || [];
-        const mapped = data.map((u:any) => ({
+        const mapped = data.map((u: any) => ({
           id: String(u.id),
-          numero: u.codigo || u.numero || '',
+          numero: u.numero || u.codigo || '',
           piso: u.piso || 0,
           tipo: u.tipo || '',
-          superficie: u.m2_utiles || u.superficie || 0,
-          dormitorios: u.dormitorios || 0,
-          banos: u.nro_banos || 0,
+          superficie: u.superficie || u.m2_utiles || 0,
+          dormitorios: u.dormitorios || u.nro_dormitorios || 0,
+          banos: u.banos || u.nro_banos || 0,
           estado: u.estado || 'Ocupada',
           propietario: u.propietario_nombre || undefined,
-          arrendatario: u.arrendatario_nombre || undefined
+          arrendatario: u.arrendatario_nombre || undefined,
         }));
         setUnidades(mapped);
       } catch (err) {
@@ -221,7 +270,7 @@ export default function TorreDetalle() {
               background: 'linear-gradient(135deg, var(--color-primary) 0%, #2c5282 100%)',
               color: 'white',
               position: 'relative',
-              overflow: 'hidden'
+              overflow: 'hidden',
             }}
           >
             <div 
@@ -233,7 +282,7 @@ export default function TorreDetalle() {
                 height: '300px',
                 background: 'rgba(255,255,255,0.1)',
                 borderRadius: '50%',
-                transform: 'translate(100px, -100px)'
+                transform: 'translate(100px, -100px)',
               }}
             />
             <div className="card-body" style={{ padding: '2rem', position: 'relative', zIndex: 1 }}>

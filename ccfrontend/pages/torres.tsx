@@ -1,8 +1,10 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { useState, useMemo, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
+import apiClient from '@/lib/api';
 
 interface Torre {
   id: string;
@@ -15,29 +17,6 @@ interface Torre {
   imagen?: string;
 }
 
-const mockTorres: Torre[] = [
-  {
-    id: '1',
-    nombre: 'Torre Norte',
-    codigo: 'TN-001',
-    pisos: 12,
-    unidades: 24,
-    estado: 'Activa',
-    fechaCreacion: '2025-09-05',
-    imagen: 'https://via.placeholder.com/300x200?text=Torre+Norte'
-  },
-  {
-    id: '2',
-    nombre: 'Torre Sur',
-    codigo: 'TS-002',
-    pisos: 12,
-    unidades: 24,
-    estado: 'Activa',
-    fechaCreacion: '2025-09-05',
-    imagen: 'https://via.placeholder.com/300x200?text=Torre+Sur'
-  }
-];
-
 export default function TorresListado() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('nombre-asc');
@@ -45,13 +24,72 @@ export default function TorresListado() {
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
   const [selectedTorres, setSelectedTorres] = useState<string[]>([]);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [torres, setTorres] = useState<Torre[]>([]);
+  const [stats, setStats] = useState({
+    totalTorres: 0,
+    totalUnidades: 0,
+    promedioUnidades: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Funciones de filtrado y ordenamiento
+  // Hardcoded edificio ID for now - should come from route params or context
+  const edificioId = 1;
+
+  // Load data from API
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Load torres list
+        const torresResponse = await apiClient.get(`/torres/edificio/${edificioId}/listado`);
+        const torresData = torresResponse.data.map((torre: any) => ({
+          id: String(torre.id),
+          nombre: torre.nombre,
+          codigo: torre.codigo,
+          pisos: torre.numPisos || 0,
+          unidades: torre.totalUnidades || 0,
+          estado: 'Activa' as const, // Default to Activa since backend doesn't provide estado
+          fechaCreacion: torre.fechaCreacion,
+          imagen: undefined // No imagen from backend
+        }));
+        setTorres(torresData);
+
+        // Load statistics
+        const statsResponse = await apiClient.get(`/torres/edificio/${edificioId}/estadisticas`);
+        const statsData = statsResponse.data;
+        setStats({
+          totalTorres: statsData.totalTorres || 0,
+          totalUnidades: statsData.totalUnidades || 0,
+          promedioUnidades: statsData.promedioUnidadesPorTorre || 0
+        });
+
+      } catch (err) {
+        console.error('Error loading torres data:', err);
+        setError('Error al cargar los datos de las torres');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [edificioId]);
+
+  // Funciones de filtrado y ordenamiento usando API
   const filteredAndSortedTorres = useMemo(() => {
-    let filtered = mockTorres.filter(torre => {
-      const matchesSearch = torre.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    if (!torres.length) {
+      return [];
+    }
+
+    // For now, do client-side filtering since the search API might not be fully implemented
+    const filtered = torres.filter(torre => {
+      const matchesSearch = searchTerm === '' ||
+                           torre.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            torre.codigo.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterBy === 'todas' || torre.nombre.toLowerCase().includes(filterBy.toLowerCase());
+      const matchesFilter = filterBy === 'todas' ||
+                           torre.nombre.toLowerCase().includes(filterBy.toLowerCase());
       return matchesSearch && matchesFilter;
     });
 
@@ -72,7 +110,7 @@ export default function TorresListado() {
     });
 
     return filtered;
-  }, [searchTerm, sortBy, filterBy]);
+  }, [torres, searchTerm, sortBy, filterBy]);
 
   // Manejo de selección
   const handleSelectAll = (checked: boolean) => {
@@ -89,13 +127,6 @@ export default function TorresListado() {
     } else {
       setSelectedTorres(selectedTorres.filter(id => id !== torreId));
     }
-  };
-
-  // Estadísticas
-  const stats = {
-    totalTorres: mockTorres.length,
-    totalUnidades: mockTorres.reduce((sum, torre) => sum + torre.unidades, 0),
-    promedioUnidades: Math.round(mockTorres.reduce((sum, torre) => sum + torre.unidades, 0) / mockTorres.length)
   };
 
   const formatDate = (dateString: string) => {
@@ -142,9 +173,28 @@ export default function TorresListado() {
               <li className="breadcrumb-item active" aria-current="page">Torres</li>
             </ol>
           </nav>
-          
-          {/* Información del Edificio */}
-          <div className="card mb-4" style={{ backgroundColor: '#f8f9fa' }}>
+
+          {/* Loading and Error States */}
+          {loading && (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Cargando...</span>
+              </div>
+              <p className="mt-2 text-muted">Cargando torres...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="alert alert-danger" role="alert">
+              <i className="material-icons align-middle me-2">error</i>
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && (
+            <>
+              {/* Información del Edificio */}
+              <div className="card mb-4" style={{ backgroundColor: '#f8f9fa' }}>
             <div className="card-body">
               <div className="row align-items-center">
                 <div className="col-md-9">
@@ -580,6 +630,8 @@ export default function TorresListado() {
           >
             <i className="material-icons">add</i>
           </Link>
+            </>
+          )}
         </div>
       </Layout>
     </ProtectedRoute>
