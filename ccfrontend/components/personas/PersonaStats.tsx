@@ -5,31 +5,23 @@ interface PersonaStatsProps {
   administradores: number;
 }
 
-export default function PersonaStats({
-  total,
-  propietarios,
-  inquilinos,
-  administradores,
-}: PersonaStatsProps) {
+export default function PersonaStats({ total, propietarios, inquilinos, administradores }: PersonaStatsProps) {
   return (
     <div className='card shadow-sm mb-4'>
       <div className='card-body'>
         <div className='row g-3'>
           <div className='col-sm-6 col-md-3'>
             <div className='d-flex align-items-center'>
-              <div
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--color-primary)',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-                className='me-3'
-              >
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--color-primary)',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }} className='me-3'>
                 <i className='material-icons'>people</i>
               </div>
               <div>
@@ -40,19 +32,16 @@ export default function PersonaStats({
           </div>
           <div className='col-sm-6 col-md-3'>
             <div className='d-flex align-items-center'>
-              <div
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--color-success)',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-                className='me-3'
-              >
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--color-success)',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }} className='me-3'>
                 <i className='material-icons'>home_work</i>
               </div>
               <div>
@@ -63,19 +52,16 @@ export default function PersonaStats({
           </div>
           <div className='col-sm-6 col-md-3'>
             <div className='d-flex align-items-center'>
-              <div
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--color-info)',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-                className='me-3'
-              >
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--color-info)',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }} className='me-3'>
                 <i className='material-icons'>night_shelter</i>
               </div>
               <div>
@@ -86,19 +72,16 @@ export default function PersonaStats({
           </div>
           <div className='col-sm-6 col-md-3'>
             <div className='d-flex align-items-center'>
-              <div
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--color-warning)',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-                className='me-3'
-              >
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--color-warning)',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }} className='me-3'>
                 <i className='material-icons'>admin_panel_settings</i>
               </div>
               <div>

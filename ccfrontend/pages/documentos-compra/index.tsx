@@ -1,11 +1,10 @@
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-
 import { StatusBadge, TypeBadge, FileIcon } from '@/components/documentos';
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 
 interface PurchaseDocument {
   id: string;
@@ -52,7 +51,7 @@ export default function DocumentosCompraListado() {
         provider: {
           id: '1',
           name: 'Empresa de Servicios ABC',
-          rut: '12.345.678-9',
+          rut: '12.345.678-9'
         },
         description: 'Mantenimiento ascensores enero 2024',
         amount: 850000,
@@ -60,7 +59,7 @@ export default function DocumentosCompraListado() {
         dueDate: '2024-02-15',
         attachments: 2,
         createdBy: 'Admin',
-        createdAt: '2024-01-15T10:30:00Z',
+        createdAt: '2024-01-15T10:30:00Z'
       },
       {
         id: '2',
@@ -70,7 +69,7 @@ export default function DocumentosCompraListado() {
         provider: {
           id: '2',
           name: 'Ferretería El Constructor',
-          rut: '98.765.432-1',
+          rut: '98.765.432-1'
         },
         description: 'Materiales de construcción para reparaciones',
         amount: 125000,
@@ -79,7 +78,7 @@ export default function DocumentosCompraListado() {
         createdBy: 'Conserje',
         createdAt: '2024-01-20T14:45:00Z',
         approvedBy: 'Admin',
-        approvedAt: '2024-01-21T09:15:00Z',
+        approvedAt: '2024-01-21T09:15:00Z'
       },
       {
         id: '3',
@@ -89,14 +88,14 @@ export default function DocumentosCompraListado() {
         provider: {
           id: '3',
           name: 'Pinturas y Acabados Ltda.',
-          rut: '55.444.333-2',
+          rut: '55.444.333-2'
         },
         description: 'Cotización pintura fachada edificio',
         amount: 2500000,
         date: '2024-01-25',
         attachments: 3,
         createdBy: 'Admin',
-        createdAt: '2024-01-25T16:20:00Z',
+        createdAt: '2024-01-25T16:20:00Z'
       },
       {
         id: '4',
@@ -106,7 +105,7 @@ export default function DocumentosCompraListado() {
         provider: {
           id: '4',
           name: 'Suministros Industriales SA',
-          rut: '11.222.333-4',
+          rut: '11.222.333-4'
         },
         description: 'Repuestos bomba de agua',
         amount: 75000,
@@ -116,7 +115,7 @@ export default function DocumentosCompraListado() {
         createdBy: 'Técnico',
         createdAt: '2024-01-10T08:00:00Z',
         approvedBy: 'Admin',
-        approvedAt: '2024-01-11T10:30:00Z',
+        approvedAt: '2024-01-11T10:30:00Z'
       },
       {
         id: '5',
@@ -126,7 +125,7 @@ export default function DocumentosCompraListado() {
         provider: {
           id: '5',
           name: 'Servicios Generales XYZ',
-          rut: '77.888.999-0',
+          rut: '77.888.999-0'
         },
         description: 'Factura con errores en montos',
         amount: 450000,
@@ -134,8 +133,8 @@ export default function DocumentosCompraListado() {
         dueDate: '2024-02-28',
         attachments: 2,
         createdBy: 'Admin',
-        createdAt: '2024-01-30T11:00:00Z',
-      },
+        createdAt: '2024-01-30T11:00:00Z'
+      }
     ];
 
     setTimeout(() => {
@@ -145,33 +144,25 @@ export default function DocumentosCompraListado() {
   }, []);
 
   const filteredDocuments = documents.filter(doc => {
-    const matchesSearch =
-      doc.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = doc.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         doc.provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         doc.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'all' || doc.type === selectedType;
-    const matchesStatus =
-      selectedStatus === 'all' || doc.status === selectedStatus;
-
+    const matchesStatus = selectedStatus === 'all' || doc.status === selectedStatus;
+    
     let matchesDate = true;
     if (dateFrom || dateTo) {
       const docDate = new Date(doc.date);
-      if (dateFrom) {
-        matchesDate = matchesDate && docDate >= new Date(dateFrom);
-      }
-      if (dateTo) {
-        matchesDate = matchesDate && docDate <= new Date(dateTo);
-      }
+      if (dateFrom) matchesDate = matchesDate && docDate >= new Date(dateFrom);
+      if (dateTo) matchesDate = matchesDate && docDate <= new Date(dateTo);
     }
-
+    
     return matchesSearch && matchesType && matchesStatus && matchesDate;
   });
 
   const handleDocumentAction = (action: string, id: string) => {
     const document = documents.find(d => d.id === id);
-    if (!document) {
-      return;
-    }
+    if (!document) return;
 
     switch (action) {
       case 'view':
@@ -182,36 +173,27 @@ export default function DocumentosCompraListado() {
         break;
       case 'approve':
         if (confirm('¿Estás seguro de que deseas aprobar este documento?')) {
-          setDocuments(prev =>
-            prev.map(doc =>
-              doc.id === id
-                ? {
-                  ...doc,
-                  status: 'approved',
-                  approvedBy: 'Usuario Actual',
-                  approvedAt: new Date().toISOString(),
-                }
-                : doc,
-            ),
-          );
+          setDocuments(prev => prev.map(doc =>
+            doc.id === id 
+              ? { ...doc, status: 'approved', approvedBy: 'Usuario Actual', approvedAt: new Date().toISOString() }
+              : doc
+          ));
           alert('Documento aprobado exitosamente');
         }
         break;
       case 'reject':
         if (confirm('¿Estás seguro de que deseas rechazar este documento?')) {
-          setDocuments(prev =>
-            prev.map(doc =>
-              doc.id === id ? { ...doc, status: 'rejected' } : doc,
-            ),
-          );
+          setDocuments(prev => prev.map(doc =>
+            doc.id === id ? { ...doc, status: 'rejected' } : doc
+          ));
           alert('Documento rechazado');
         }
         break;
       case 'pay':
         if (confirm('¿Marcar este documento como pagado?')) {
-          setDocuments(prev =>
-            prev.map(doc => (doc.id === id ? { ...doc, status: 'paid' } : doc)),
-          );
+          setDocuments(prev => prev.map(doc =>
+            doc.id === id ? { ...doc, status: 'paid' } : doc
+          ));
           alert('Documento marcado como pagado');
         }
         break;
@@ -240,23 +222,12 @@ export default function DocumentosCompraListado() {
 
     switch (action) {
       case 'approve':
-        if (
-          confirm(
-            `¿Aprobar ${selectedDocuments.length} documentos seleccionados?`,
-          )
-        ) {
-          setDocuments(prev =>
-            prev.map(doc =>
-              selectedDocuments.includes(doc.id) && doc.status === 'pending'
-                ? {
-                  ...doc,
-                  status: 'approved',
-                  approvedBy: 'Usuario Actual',
-                  approvedAt: new Date().toISOString(),
-                }
-                : doc,
-            ),
-          );
+        if (confirm(`¿Aprobar ${selectedDocuments.length} documentos seleccionados?`)) {
+          setDocuments(prev => prev.map(doc =>
+            selectedDocuments.includes(doc.id) && doc.status === 'pending'
+              ? { ...doc, status: 'approved', approvedBy: 'Usuario Actual', approvedAt: new Date().toISOString() }
+              : doc
+          ));
           setSelectedDocuments([]);
           alert('Documentos aprobados exitosamente');
         }
@@ -265,14 +236,8 @@ export default function DocumentosCompraListado() {
         alert(`Exportando ${selectedDocuments.length} documentos`);
         break;
       case 'delete':
-        if (
-          confirm(
-            `¿Eliminar ${selectedDocuments.length} documentos seleccionados?`,
-          )
-        ) {
-          setDocuments(prev =>
-            prev.filter(doc => !selectedDocuments.includes(doc.id)),
-          );
+        if (confirm(`¿Eliminar ${selectedDocuments.length} documentos seleccionados?`)) {
+          setDocuments(prev => prev.filter(doc => !selectedDocuments.includes(doc.id)));
           setSelectedDocuments([]);
           alert('Documentos eliminados exitosamente');
         }
@@ -284,14 +249,14 @@ export default function DocumentosCompraListado() {
     return new Date(dateString).toLocaleDateString('es-CL', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
+      day: 'numeric'
     });
   };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP',
+      currency: 'CLP'
     }).format(amount);
   };
 
@@ -300,7 +265,7 @@ export default function DocumentosCompraListado() {
       invoice: documents.filter(d => d.type === 'invoice').length,
       receipt: documents.filter(d => d.type === 'receipt').length,
       quote: documents.filter(d => d.type === 'quote').length,
-      order: documents.filter(d => d.type === 'order').length,
+      order: documents.filter(d => d.type === 'order').length
     };
   };
 
@@ -310,7 +275,7 @@ export default function DocumentosCompraListado() {
       pending: documents.filter(d => d.status === 'pending').length,
       approved: documents.filter(d => d.status === 'approved').length,
       rejected: documents.filter(d => d.status === 'rejected').length,
-      paid: documents.filter(d => d.status === 'paid').length,
+      paid: documents.filter(d => d.status === 'paid').length
     };
   };
 
@@ -321,17 +286,12 @@ export default function DocumentosCompraListado() {
     return (
       <ProtectedRoute>
         <Layout title='Documentos de Compra'>
-          <div
-            className='d-flex justify-content-center align-items-center'
-            style={{ minHeight: '400px' }}
-          >
+          <div className='d-flex justify-content-center align-items-center' style={{ minHeight: '400px' }}>
             <div className='text-center'>
               <div className='spinner-border text-primary' role='status'>
                 <span className='visually-hidden'>Cargando...</span>
               </div>
-              <p className='mt-2 text-muted'>
-                Cargando documentos de compra...
-              </p>
+              <p className='mt-2 text-muted'>Cargando documentos de compra...</p>
             </div>
           </div>
         </Layout>
@@ -351,9 +311,7 @@ export default function DocumentosCompraListado() {
           <div className='d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3'>
             <div>
               <h1 className='h3 mb-1'>Documentos de Compra</h1>
-              <p className='text-muted mb-0'>
-                Gestiona facturas, boletas, cotizaciones y órdenes de compra
-              </p>
+              <p className='text-muted mb-0'>Gestiona facturas, boletas, cotizaciones y órdenes de compra</p>
             </div>
             <div className='d-flex gap-2'>
               <Link href='/documentos' className='btn btn-outline-secondary'>
@@ -376,12 +334,8 @@ export default function DocumentosCompraListado() {
                     <i className='material-icons'>receipt_long</i>
                   </div>
                   <div>
-                    <div className='stats-number h4 mb-0'>
-                      {documents.length}
-                    </div>
-                    <div className='stats-label text-muted small'>
-                      Total Documentos
-                    </div>
+                    <div className='stats-number h4 mb-0'>{documents.length}</div>
+                    <div className='stats-label text-muted small'>Total Documentos</div>
                   </div>
                 </div>
               </div>
@@ -393,12 +347,8 @@ export default function DocumentosCompraListado() {
                     <i className='material-icons'>pending</i>
                   </div>
                   <div>
-                    <div className='stats-number h4 mb-0'>
-                      {statusStats.pending}
-                    </div>
-                    <div className='stats-label text-muted small'>
-                      Pendientes
-                    </div>
+                    <div className='stats-number h4 mb-0'>{statusStats.pending}</div>
+                    <div className='stats-label text-muted small'>Pendientes</div>
                   </div>
                 </div>
               </div>
@@ -410,12 +360,8 @@ export default function DocumentosCompraListado() {
                     <i className='material-icons'>check_circle</i>
                   </div>
                   <div>
-                    <div className='stats-number h4 mb-0'>
-                      {statusStats.approved}
-                    </div>
-                    <div className='stats-label text-muted small'>
-                      Aprobados
-                    </div>
+                    <div className='stats-number h4 mb-0'>{statusStats.approved}</div>
+                    <div className='stats-label text-muted small'>Aprobados</div>
                   </div>
                 </div>
               </div>
@@ -427,9 +373,7 @@ export default function DocumentosCompraListado() {
                     <i className='material-icons'>payments</i>
                   </div>
                   <div>
-                    <div className='stats-number h4 mb-0'>
-                      {statusStats.paid}
-                    </div>
+                    <div className='stats-number h4 mb-0'>{statusStats.paid}</div>
                     <div className='stats-label text-muted small'>Pagados</div>
                   </div>
                 </div>
@@ -438,9 +382,7 @@ export default function DocumentosCompraListado() {
           </div>
 
           {/* Filters */}
-          <div
-            className={`filter-container card border-0 shadow-sm mb-4 ${showFilters ? 'open' : ''}`}
-          >
+          <div className={`filter-container card border-0 shadow-sm mb-4 ${showFilters ? 'open' : ''}`}>
             <div className='card-body'>
               <div className='filter-header d-flex justify-content-between align-items-center mb-3'>
                 <h6 className='mb-0'>
@@ -469,7 +411,7 @@ export default function DocumentosCompraListado() {
                           className='form-control ps-5'
                           placeholder='Número, proveedor, descripción...'
                           value={searchTerm}
-                          onChange={e => setSearchTerm(e.target.value)}
+                          onChange={(e) => setSearchTerm(e.target.value)}
                         />
                       </div>
                     </div>
@@ -479,21 +421,13 @@ export default function DocumentosCompraListado() {
                       <select
                         className='form-select'
                         value={selectedType}
-                        onChange={e => setSelectedType(e.target.value)}
+                        onChange={(e) => setSelectedType(e.target.value)}
                       >
                         <option value='all'>Todos los tipos</option>
-                        <option value='invoice'>
-                          Facturas ({typeStats.invoice})
-                        </option>
-                        <option value='receipt'>
-                          Boletas ({typeStats.receipt})
-                        </option>
-                        <option value='quote'>
-                          Cotizaciones ({typeStats.quote})
-                        </option>
-                        <option value='order'>
-                          Órdenes ({typeStats.order})
-                        </option>
+                        <option value='invoice'>Facturas ({typeStats.invoice})</option>
+                        <option value='receipt'>Boletas ({typeStats.receipt})</option>
+                        <option value='quote'>Cotizaciones ({typeStats.quote})</option>
+                        <option value='order'>Órdenes ({typeStats.order})</option>
                       </select>
                     </div>
 
@@ -502,24 +436,14 @@ export default function DocumentosCompraListado() {
                       <select
                         className='form-select'
                         value={selectedStatus}
-                        onChange={e => setSelectedStatus(e.target.value)}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
                       >
                         <option value='all'>Todos los estados</option>
-                        <option value='draft'>
-                          Borrador ({statusStats.draft})
-                        </option>
-                        <option value='pending'>
-                          Pendiente ({statusStats.pending})
-                        </option>
-                        <option value='approved'>
-                          Aprobado ({statusStats.approved})
-                        </option>
-                        <option value='rejected'>
-                          Rechazado ({statusStats.rejected})
-                        </option>
-                        <option value='paid'>
-                          Pagado ({statusStats.paid})
-                        </option>
+                        <option value='draft'>Borrador ({statusStats.draft})</option>
+                        <option value='pending'>Pendiente ({statusStats.pending})</option>
+                        <option value='approved'>Aprobado ({statusStats.approved})</option>
+                        <option value='rejected'>Rechazado ({statusStats.rejected})</option>
+                        <option value='paid'>Pagado ({statusStats.paid})</option>
                       </select>
                     </div>
 
@@ -529,7 +453,7 @@ export default function DocumentosCompraListado() {
                         type='date'
                         className='form-control'
                         value={dateFrom}
-                        onChange={e => setDateFrom(e.target.value)}
+                        onChange={(e) => setDateFrom(e.target.value)}
                       />
                     </div>
 
@@ -539,7 +463,7 @@ export default function DocumentosCompraListado() {
                         type='date'
                         className='form-control'
                         value={dateTo}
-                        onChange={e => setDateTo(e.target.value)}
+                        onChange={(e) => setDateTo(e.target.value)}
                       />
                     </div>
 
@@ -628,7 +552,7 @@ export default function DocumentosCompraListado() {
           {/* Documents Grid View */}
           {view === 'grid' && (
             <div className='row g-3'>
-              {filteredDocuments.map(document => (
+              {filteredDocuments.map((document) => (
                 <div key={document.id} className='col-sm-6 col-lg-4 col-xl-3'>
                   <div className='doc-card card shadow-sm h-100'>
                     <div className='card-body'>
@@ -651,58 +575,28 @@ export default function DocumentosCompraListado() {
                           </button>
                           <ul className='dropdown-menu dropdown-menu-end'>
                             <li>
-                              <button
-                                className='dropdown-item'
-                                onClick={() =>
-                                  handleDocumentAction('view', document.id)
-                                }
-                              >
-                                <i className='material-icons me-2'>
-                                  visibility
-                                </i>
+                              <button className='dropdown-item' onClick={() => handleDocumentAction('view', document.id)}>
+                                <i className='material-icons me-2'>visibility</i>
                                 Ver detalle
                               </button>
                             </li>
                             <li>
-                              <button
-                                className='dropdown-item'
-                                onClick={() =>
-                                  handleDocumentAction('edit', document.id)
-                                }
-                              >
+                              <button className='dropdown-item' onClick={() => handleDocumentAction('edit', document.id)}>
                                 <i className='material-icons me-2'>edit</i>
                                 Editar
                               </button>
                             </li>
                             {document.status === 'pending' && (
                               <>
+                                <li><hr className='dropdown-divider' /></li>
                                 <li>
-                                  <hr className='dropdown-divider' />
-                                </li>
-                                <li>
-                                  <button
-                                    className='dropdown-item text-success'
-                                    onClick={() =>
-                                      handleDocumentAction(
-                                        'approve',
-                                        document.id,
-                                      )
-                                    }
-                                  >
+                                  <button className='dropdown-item text-success' onClick={() => handleDocumentAction('approve', document.id)}>
                                     <i className='material-icons me-2'>check</i>
                                     Aprobar
                                   </button>
                                 </li>
                                 <li>
-                                  <button
-                                    className='dropdown-item text-warning'
-                                    onClick={() =>
-                                      handleDocumentAction(
-                                        'reject',
-                                        document.id,
-                                      )
-                                    }
-                                  >
+                                  <button className='dropdown-item text-warning' onClick={() => handleDocumentAction('reject', document.id)}>
                                     <i className='material-icons me-2'>close</i>
                                     Rechazar
                                   </button>
@@ -711,34 +605,18 @@ export default function DocumentosCompraListado() {
                             )}
                             {document.status === 'approved' && (
                               <>
+                                <li><hr className='dropdown-divider' /></li>
                                 <li>
-                                  <hr className='dropdown-divider' />
-                                </li>
-                                <li>
-                                  <button
-                                    className='dropdown-item text-info'
-                                    onClick={() =>
-                                      handleDocumentAction('pay', document.id)
-                                    }
-                                  >
-                                    <i className='material-icons me-2'>
-                                      payments
-                                    </i>
+                                  <button className='dropdown-item text-info' onClick={() => handleDocumentAction('pay', document.id)}>
+                                    <i className='material-icons me-2'>payments</i>
                                     Marcar como pagado
                                   </button>
                                 </li>
                               </>
                             )}
+                            <li><hr className='dropdown-divider' /></li>
                             <li>
-                              <hr className='dropdown-divider' />
-                            </li>
-                            <li>
-                              <button
-                                className='dropdown-item text-danger'
-                                onClick={() =>
-                                  handleDocumentAction('delete', document.id)
-                                }
-                              >
+                              <button className='dropdown-item text-danger' onClick={() => handleDocumentAction('delete', document.id)}>
                                 <i className='material-icons me-2'>delete</i>
                                 Eliminar
                               </button>
@@ -749,15 +627,9 @@ export default function DocumentosCompraListado() {
 
                       {/* Content */}
                       <div className='mb-3'>
-                        <div className='fw-medium text-truncate mb-1'>
-                          {document.provider.name}
-                        </div>
-                        <div className='text-muted small mb-2'>
-                          {document.provider.rut}
-                        </div>
-                        <div className='text-muted small'>
-                          {document.description}
-                        </div>
+                        <div className='fw-medium text-truncate mb-1'>{document.provider.name}</div>
+                        <div className='text-muted small mb-2'>{document.provider.rut}</div>
+                        <div className='text-muted small'>{document.description}</div>
                       </div>
 
                       {/* Amount */}
@@ -768,39 +640,24 @@ export default function DocumentosCompraListado() {
                       {/* Meta */}
                       <div className='doc-meta'>
                         <div className='d-flex align-items-center mb-1'>
-                          <i
-                            className='material-icons me-2 text-muted'
-                            style={{ fontSize: '16px' }}
-                          >
+                          <i className='material-icons me-2 text-muted' style={{ fontSize: '16px' }}>
                             calendar_today
                           </i>
-                          <span className='small text-muted'>
-                            {formatDate(document.date)}
-                          </span>
+                          <span className='small text-muted'>{formatDate(document.date)}</span>
                         </div>
                         {document.dueDate && (
                           <div className='d-flex align-items-center mb-1'>
-                            <i
-                              className='material-icons me-2 text-muted'
-                              style={{ fontSize: '16px' }}
-                            >
+                            <i className='material-icons me-2 text-muted' style={{ fontSize: '16px' }}>
                               schedule
                             </i>
-                            <span className='small text-muted'>
-                              Vence: {formatDate(document.dueDate)}
-                            </span>
+                            <span className='small text-muted'>Vence: {formatDate(document.dueDate)}</span>
                           </div>
                         )}
                         <div className='d-flex align-items-center'>
-                          <i
-                            className='material-icons me-2 text-muted'
-                            style={{ fontSize: '16px' }}
-                          >
+                          <i className='material-icons me-2 text-muted' style={{ fontSize: '16px' }}>
                             attach_file
                           </i>
-                          <span className='small text-muted'>
-                            {document.attachments} archivo(s)
-                          </span>
+                          <span className='small text-muted'>{document.attachments} archivo(s)</span>
                         </div>
                       </div>
                     </div>
@@ -808,33 +665,19 @@ export default function DocumentosCompraListado() {
                     {/* Footer */}
                     <div className='card-footer bg-transparent border-0 pt-0'>
                       <div className='d-flex gap-2'>
-                        <button
+                        <button 
                           className='btn btn-sm btn-outline-primary flex-fill'
-                          onClick={() =>
-                            handleDocumentAction('view', document.id)
-                          }
+                          onClick={() => handleDocumentAction('view', document.id)}
                         >
-                          <i
-                            className='material-icons me-1'
-                            style={{ fontSize: '16px' }}
-                          >
-                            visibility
-                          </i>
+                          <i className='material-icons me-1' style={{ fontSize: '16px' }}>visibility</i>
                           Ver
                         </button>
                         {document.status === 'pending' && (
-                          <button
+                          <button 
                             className='btn btn-sm btn-success'
-                            onClick={() =>
-                              handleDocumentAction('approve', document.id)
-                            }
+                            onClick={() => handleDocumentAction('approve', document.id)}
                           >
-                            <i
-                              className='material-icons'
-                              style={{ fontSize: '16px' }}
-                            >
-                              check
-                            </i>
+                            <i className='material-icons' style={{ fontSize: '16px' }}>check</i>
                           </button>
                         )}
                       </div>
@@ -856,11 +699,7 @@ export default function DocumentosCompraListado() {
                         <input
                           type='checkbox'
                           className='form-check-input'
-                          checked={
-                            selectedDocuments.length ===
-                              filteredDocuments.length &&
-                            filteredDocuments.length > 0
-                          }
+                          checked={selectedDocuments.length === filteredDocuments.length && filteredDocuments.length > 0}
                           onChange={toggleSelectAll}
                         />
                       </th>
@@ -875,23 +714,18 @@ export default function DocumentosCompraListado() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredDocuments.map(document => (
+                    {filteredDocuments.map((document) => (
                       <tr key={document.id}>
                         <td>
                           <input
                             type='checkbox'
                             className='form-check-input'
                             checked={selectedDocuments.includes(document.id)}
-                            onChange={e => {
+                            onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedDocuments(prev => [
-                                  ...prev,
-                                  document.id,
-                                ]);
+                                setSelectedDocuments(prev => [...prev, document.id]);
                               } else {
-                                setSelectedDocuments(prev =>
-                                  prev.filter(id => id !== document.id),
-                                );
+                                setSelectedDocuments(prev => prev.filter(id => id !== document.id));
                               }
                             }}
                           />
@@ -902,19 +736,12 @@ export default function DocumentosCompraListado() {
                         </td>
                         <td>
                           <div>
-                            <div className='fw-medium'>
-                              {document.provider.name}
-                            </div>
-                            <div className='text-muted small'>
-                              {document.provider.rut}
-                            </div>
+                            <div className='fw-medium'>{document.provider.name}</div>
+                            <div className='text-muted small'>{document.provider.rut}</div>
                           </div>
                         </td>
                         <td>
-                          <div
-                            className='text-truncate'
-                            style={{ maxWidth: '200px' }}
-                          >
+                          <div className='text-truncate' style={{ maxWidth: '200px' }}>
                             {document.description}
                           </div>
                         </td>
@@ -924,9 +751,7 @@ export default function DocumentosCompraListado() {
                         <td>
                           <StatusBadge status={document.status} size='sm' />
                         </td>
-                        <td className='text-muted'>
-                          {formatDate(document.date)}
-                        </td>
+                        <td className='text-muted'>{formatDate(document.date)}</td>
                         <td>
                           <div className='dropdown'>
                             <button
@@ -938,63 +763,29 @@ export default function DocumentosCompraListado() {
                             </button>
                             <ul className='dropdown-menu dropdown-menu-end'>
                               <li>
-                                <button
-                                  className='dropdown-item'
-                                  onClick={() =>
-                                    handleDocumentAction('view', document.id)
-                                  }
-                                >
-                                  <i className='material-icons me-2'>
-                                    visibility
-                                  </i>
+                                <button className='dropdown-item' onClick={() => handleDocumentAction('view', document.id)}>
+                                  <i className='material-icons me-2'>visibility</i>
                                   Ver detalle
                                 </button>
                               </li>
                               <li>
-                                <button
-                                  className='dropdown-item'
-                                  onClick={() =>
-                                    handleDocumentAction('edit', document.id)
-                                  }
-                                >
+                                <button className='dropdown-item' onClick={() => handleDocumentAction('edit', document.id)}>
                                   <i className='material-icons me-2'>edit</i>
                                   Editar
                                 </button>
                               </li>
                               {document.status === 'pending' && (
                                 <>
+                                  <li><hr className='dropdown-divider' /></li>
                                   <li>
-                                    <hr className='dropdown-divider' />
-                                  </li>
-                                  <li>
-                                    <button
-                                      className='dropdown-item text-success'
-                                      onClick={() =>
-                                        handleDocumentAction(
-                                          'approve',
-                                          document.id,
-                                        )
-                                      }
-                                    >
-                                      <i className='material-icons me-2'>
-                                        check
-                                      </i>
+                                    <button className='dropdown-item text-success' onClick={() => handleDocumentAction('approve', document.id)}>
+                                      <i className='material-icons me-2'>check</i>
                                       Aprobar
                                     </button>
                                   </li>
                                   <li>
-                                    <button
-                                      className='dropdown-item text-warning'
-                                      onClick={() =>
-                                        handleDocumentAction(
-                                          'reject',
-                                          document.id,
-                                        )
-                                      }
-                                    >
-                                      <i className='material-icons me-2'>
-                                        close
-                                      </i>
+                                    <button className='dropdown-item text-warning' onClick={() => handleDocumentAction('reject', document.id)}>
+                                      <i className='material-icons me-2'>close</i>
                                       Rechazar
                                     </button>
                                   </li>
@@ -1002,34 +793,18 @@ export default function DocumentosCompraListado() {
                               )}
                               {document.status === 'approved' && (
                                 <>
+                                  <li><hr className='dropdown-divider' /></li>
                                   <li>
-                                    <hr className='dropdown-divider' />
-                                  </li>
-                                  <li>
-                                    <button
-                                      className='dropdown-item text-info'
-                                      onClick={() =>
-                                        handleDocumentAction('pay', document.id)
-                                      }
-                                    >
-                                      <i className='material-icons me-2'>
-                                        payments
-                                      </i>
+                                    <button className='dropdown-item text-info' onClick={() => handleDocumentAction('pay', document.id)}>
+                                      <i className='material-icons me-2'>payments</i>
                                       Marcar como pagado
                                     </button>
                                   </li>
                                 </>
                               )}
+                              <li><hr className='dropdown-divider' /></li>
                               <li>
-                                <hr className='dropdown-divider' />
-                              </li>
-                              <li>
-                                <button
-                                  className='dropdown-item text-danger'
-                                  onClick={() =>
-                                    handleDocumentAction('delete', document.id)
-                                  }
-                                >
+                                <button className='dropdown-item text-danger' onClick={() => handleDocumentAction('delete', document.id)}>
                                   <i className='material-icons me-2'>delete</i>
                                   Eliminar
                                 </button>
@@ -1048,23 +823,15 @@ export default function DocumentosCompraListado() {
           {/* Empty state */}
           {filteredDocuments.length === 0 && (
             <div className='text-center py-5'>
-              <i
-                className='material-icons mb-3 text-muted'
-                style={{ fontSize: '4rem' }}
-              >
+              <i className='material-icons mb-3 text-muted' style={{ fontSize: '4rem' }}>
                 receipt_long
               </i>
               <h5 className='text-muted'>No se encontraron documentos</h5>
               <p className='text-muted'>
-                {searchTerm
-                  ? 'Intenta cambiar los filtros de búsqueda'
-                  : 'Comienza creando tu primer documento de compra'}
+                {searchTerm ? 'Intenta cambiar los filtros de búsqueda' : 'Comienza creando tu primer documento de compra'}
               </p>
               {!searchTerm && (
-                <Link
-                  href='/documentos-compra/nuevo'
-                  className='btn btn-primary'
-                >
+                <Link href='/documentos-compra/nuevo' className='btn btn-primary'>
                   <i className='material-icons me-2'>add</i>
                   Nuevo Documento
                 </Link>

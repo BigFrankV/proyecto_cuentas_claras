@@ -1,7 +1,6 @@
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import React from 'react';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
-
 import { EstadoPago } from '@/lib/dashboardService';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -39,14 +38,13 @@ export default function EstadoPagosChart({
   }
 
   const chartData = {
-    // Normalizar datos: forzar números y valores por defecto
-    labels: data.map(item => item.tipo ?? '—'),
+    labels: data.map(item => item.tipo),
     datasets: [
       {
         label: 'Cantidad',
-        data: data.map(item => Number(item.cantidad) || 0),
-        backgroundColor: data.map(item => item.color || '#cfcfcf'),
-        borderColor: data.map(item => item.color || '#cfcfcf'),
+        data: data.map(item => item.cantidad),
+        backgroundColor: data.map(item => item.color),
+        borderColor: data.map(item => item.color),
         borderWidth: 2,
         hoverOffset: 4,
       },
@@ -66,24 +64,23 @@ export default function EstadoPagosChart({
           font: {
             size: 12,
           },
-          generateLabels(chart: any) {
+          generateLabels: function (chart: any) {
             const data = chart.data;
             if (data.labels.length && data.datasets.length) {
-              const ds = data.datasets[0];
-              const totals = (ds.data || []).reduce(
-                (a: number, b: any) => a + (Number(b) || 0),
-                0,
-              );
               return data.labels.map((label: string, i: number) => {
-                const cantidad = Number(ds.data[i]) || 0;
-                const porcentaje =
-                  totals > 0 ? Math.round((cantidad / totals) * 100) : 0;
+                const item = chart.data.datasets[0];
+                const cantidad = item.data[i];
+                const porcentaje = Math.round(
+                  (cantidad /
+                    item.data.reduce((a: number, b: number) => a + b, 0)) *
+                    100
+                );
 
                 return {
                   text: `${label}: ${cantidad} (${porcentaje}%)`,
-                  fillStyle: ds.backgroundColor?.[i],
-                  strokeStyle: ds.borderColor?.[i],
-                  lineWidth: ds.borderWidth,
+                  fillStyle: item.backgroundColor[i],
+                  strokeStyle: item.borderColor[i],
+                  lineWidth: item.borderWidth,
                   pointStyle: 'circle',
                   hidden: false,
                   index: i,
@@ -101,16 +98,9 @@ export default function EstadoPagosChart({
         borderColor: '#ddd',
         borderWidth: 1,
         callbacks: {
-          label(context: any) {
-            const ds = context.chart.data.datasets[0];
-            const cantidad = Number(context.parsed) || 0;
-            const totals = (ds.data || []).reduce(
-              (a: number, b: any) => a + (Number(b) || 0),
-              0,
-            );
-            const porcentaje =
-              totals > 0 ? Math.round((cantidad / totals) * 100) : 0;
-            return `${context.label}: ${cantidad} (${porcentaje}%)`;
+          label: function (context: any) {
+            const item = data.find(d => d.tipo === context.label);
+            return `${context.label}: ${context.parsed} (${item?.porcentaje}%)`;
           },
         },
       },
@@ -118,10 +108,7 @@ export default function EstadoPagosChart({
   };
 
   // Calcular totales para mostrar en el centro
-  const totalCantidad = data.reduce(
-    (sum, item) => sum + (Number(item.cantidad) || 0),
-    0,
-  );
+  const totalCantidad = data.reduce((sum, item) => sum + item.cantidad, 0);
 
   return (
     <div className='position-relative'>
@@ -134,9 +121,7 @@ export default function EstadoPagosChart({
         className='position-absolute top-50 start-50 translate-middle text-center'
         style={{ pointerEvents: 'none' }}
       >
-        <div className='fw-bold fs-4 text-primary'>
-          {Number.isFinite(totalCantidad) ? totalCantidad : 0}
-        </div>
+        <div className='fw-bold fs-4 text-primary'>{totalCantidad}</div>
         <div className='small text-muted'>Total</div>
       </div>
     </div>

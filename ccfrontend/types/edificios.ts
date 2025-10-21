@@ -11,33 +11,33 @@ export interface Edificio {
   tipo: 'residencial' | 'comercial' | 'mixto' | 'oficinas';
   fechaCreacion: string;
   fechaActualizacion?: string;
-
+  
   // Información de construcción
   anoConstructccion?: number;
   numeroTorres: number;
   totalUnidades: number;
   totalUnidadesOcupadas: number;
   pisos: number;
-
+  
   // Información de contacto
   administrador?: string;
   telefonoAdministrador?: string;
   emailAdministrador?: string;
-
+  
   // Servicios y amenidades
   servicios?: string[];
   amenidades?: string[];
-
+  
   // Ubicación
   latitud?: number;
   longitud?: number;
-
+  
   // Imagen
   imagen?: string;
-
+  
   // Observaciones
   observaciones?: string;
-
+  
   // Información adicional
   areaComun?: number;
   areaPrivada?: number;
@@ -65,13 +65,7 @@ export interface Unidad {
   torreId?: string;
   numero: string;
   piso: number;
-  tipo:
-    | 'apartamento'
-    | 'casa'
-    | 'local'
-    | 'oficina'
-    | 'deposito'
-    | 'parqueadero';
+  tipo: 'apartamento' | 'casa' | 'local' | 'oficina' | 'deposito' | 'parqueadero';
   estado: 'ocupada' | 'vacia' | 'mantenimiento' | 'vendida' | 'alquilada';
   area: number;
   habitaciones?: number;
@@ -126,13 +120,7 @@ export interface UnidadFormData {
   numero: string;
   piso: number;
   torreId?: string;
-  tipo:
-    | 'apartamento'
-    | 'casa'
-    | 'local'
-    | 'oficina'
-    | 'deposito'
-    | 'parqueadero';
+  tipo: 'apartamento' | 'casa' | 'local' | 'oficina' | 'deposito' | 'parqueadero';
   area: number;
   habitaciones?: number;
   banos?: number;
@@ -184,14 +172,14 @@ export const ESTADOS_EDIFICIO: OpcionSelect[] = [
   { value: 'activo', label: 'Activo' },
   { value: 'inactivo', label: 'Inactivo' },
   { value: 'construccion', label: 'En Construcción' },
-  { value: 'mantenimiento', label: 'En Mantenimiento' },
+  { value: 'mantenimiento', label: 'En Mantenimiento' }
 ];
 
 export const TIPOS_EDIFICIO: OpcionSelect[] = [
   { value: 'residencial', label: 'Residencial' },
   { value: 'comercial', label: 'Comercial' },
   { value: 'mixto', label: 'Mixto' },
-  { value: 'oficinas', label: 'Oficinas' },
+  { value: 'oficinas', label: 'Oficinas' }
 ];
 
 export const SERVICIOS_DISPONIBLES: OpcionSelect[] = [
@@ -202,7 +190,7 @@ export const SERVICIOS_DISPONIBLES: OpcionSelect[] = [
   { value: 'cable', label: 'TV Cable' },
   { value: 'telefono', label: 'Teléfono' },
   { value: 'vigilancia', label: 'Vigilancia' },
-  { value: 'aseo', label: 'Aseo' },
+  { value: 'aseo', label: 'Aseo' }
 ];
 
 export const AMENIDADES_DISPONIBLES: OpcionSelect[] = [
@@ -215,5 +203,5 @@ export const AMENIDADES_DISPONIBLES: OpcionSelect[] = [
   { value: 'porteria', label: 'Portería' },
   { value: 'ascensor', label: 'Ascensor' },
   { value: 'citofono', label: 'Citófono' },
-  { value: 'lavanderia', label: 'Lavandería' },
+  { value: 'lavanderia', label: 'Lavandería' }
 ];

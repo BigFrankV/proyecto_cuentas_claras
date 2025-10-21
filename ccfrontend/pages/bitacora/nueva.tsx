@@ -1,16 +1,9 @@
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
-
-import {
-  ActivityTypeCard,
-  PriorityOption,
-  ActivityBadge,
-  PriorityBadge,
-  FileIcon,
-} from '@/components/bitacora';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
+import { useState, useEffect } from 'react';
+import { ActivityTypeCard, PriorityOption, ActivityBadge, PriorityBadge, FileIcon } from '@/components/bitacora';
 
 interface UploadedFile {
   id: string;
@@ -21,7 +14,7 @@ interface UploadedFile {
 
 export default function BitacoraNueva() {
   const router = useRouter();
-
+  
   // Form state
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<string>('');
@@ -51,7 +44,7 @@ export default function BitacoraNueva() {
       title,
       description,
       tags,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
     localStorage.setItem('bitacora_draft', JSON.stringify(draft));
   };
@@ -91,9 +84,9 @@ export default function BitacoraNueva() {
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
+    if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setDragActive(false);
     }
   };
@@ -102,7 +95,7 @@ export default function BitacoraNueva() {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-
+    
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFiles(Array.from(e.dataTransfer.files));
     }
@@ -119,9 +112,9 @@ export default function BitacoraNueva() {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       name: file.name,
       size: file.size,
-      type: file.type,
+      type: file.type
     }));
-
+    
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
 
@@ -130,18 +123,16 @@ export default function BitacoraNueva() {
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) {
-      return '0 Bytes';
-    }
+    if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!selectedType || !selectedPriority || !title.trim()) {
       alert('Por favor completa todos los campos obligatorios');
       return;
@@ -153,7 +144,7 @@ export default function BitacoraNueva() {
     setTimeout(() => {
       // Clear draft
       localStorage.removeItem('bitacora_draft');
-
+      
       setSaving(false);
       alert('Entrada de bitácora creada exitosamente');
       router.push('/bitacora');
@@ -166,14 +157,14 @@ export default function BitacoraNueva() {
     { type: 'security' as const },
     { type: 'maintenance' as const },
     { type: 'admin' as const },
-    { type: 'financial' as const },
+    { type: 'financial' as const }
   ];
 
   const priorities = [
     { priority: 'low' as const },
     { priority: 'normal' as const },
     { priority: 'high' as const },
-    { priority: 'critical' as const },
+    { priority: 'critical' as const }
   ];
 
   return (
@@ -188,9 +179,7 @@ export default function BitacoraNueva() {
           <div className='d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3'>
             <div>
               <h1 className='h3 mb-1'>Nueva Entrada de Bitácora</h1>
-              <p className='text-muted mb-0'>
-                Registra una nueva actividad en el sistema
-              </p>
+              <p className='text-muted mb-0'>Registra una nueva actividad en el sistema</p>
             </div>
             <div className='d-flex gap-2'>
               <button
@@ -263,7 +252,7 @@ export default function BitacoraNueva() {
                       <i className='material-icons'>edit</i>
                       <span>Detalles de la Actividad</span>
                     </div>
-
+                    
                     <div className='mb-3'>
                       <label htmlFor='activityTitle' className='form-label'>
                         Título de la actividad *
@@ -273,58 +262,31 @@ export default function BitacoraNueva() {
                         className='form-control'
                         id='activityTitle'
                         value={title}
-                        onChange={e => setTitle(e.target.value)}
+                        onChange={(e) => setTitle(e.target.value)}
                         placeholder='Ej: Mantenimiento de ascensores completado'
                         required
                       />
                     </div>
 
                     <div className='mb-3'>
-                      <label
-                        htmlFor='activityDescription'
-                        className='form-label'
-                      >
+                      <label htmlFor='activityDescription' className='form-label'>
                         Descripción detallada
                       </label>
                       <div className='editor-toolbar'>
-                        <button
-                          type='button'
-                          className='editor-btn'
-                          onClick={() => document.execCommand('bold')}
-                        >
+                        <button type='button' className='editor-btn' onClick={() => document.execCommand('bold')}>
                           <i className='material-icons'>format_bold</i>
                         </button>
-                        <button
-                          type='button'
-                          className='editor-btn'
-                          onClick={() => document.execCommand('italic')}
-                        >
+                        <button type='button' className='editor-btn' onClick={() => document.execCommand('italic')}>
                           <i className='material-icons'>format_italic</i>
                         </button>
-                        <button
-                          type='button'
-                          className='editor-btn'
-                          onClick={() => document.execCommand('underline')}
-                        >
+                        <button type='button' className='editor-btn' onClick={() => document.execCommand('underline')}>
                           <i className='material-icons'>format_underlined</i>
                         </button>
                         <div className='editor-divider'></div>
-                        <button
-                          type='button'
-                          className='editor-btn'
-                          onClick={() =>
-                            document.execCommand('insertUnorderedList')
-                          }
-                        >
+                        <button type='button' className='editor-btn' onClick={() => document.execCommand('insertUnorderedList')}>
                           <i className='material-icons'>format_list_bulleted</i>
                         </button>
-                        <button
-                          type='button'
-                          className='editor-btn'
-                          onClick={() =>
-                            document.execCommand('insertOrderedList')
-                          }
-                        >
+                        <button type='button' className='editor-btn' onClick={() => document.execCommand('insertOrderedList')}>
                           <i className='material-icons'>format_list_numbered</i>
                         </button>
                       </div>
@@ -332,9 +294,7 @@ export default function BitacoraNueva() {
                         className='editor-content'
                         contentEditable
                         suppressContentEditableWarning
-                        onInput={e =>
-                          setDescription(e.currentTarget.textContent || '')
-                        }
+                        onInput={(e) => setDescription(e.currentTarget.textContent || '')}
                         style={{ minHeight: '120px' }}
                       >
                         {description}
@@ -350,13 +310,8 @@ export default function BitacoraNueva() {
                       <i className='material-icons'>label</i>
                       <span>Etiquetas</span>
                     </div>
-
-                    <div
-                      className='tags-container'
-                      onClick={() =>
-                        document.getElementById('tagInput')?.focus()
-                      }
-                    >
+                    
+                    <div className='tags-container' onClick={() => document.getElementById('tagInput')?.focus()}>
                       {tags.map((tag, index) => (
                         <span key={index} className='tag'>
                           #{tag}
@@ -373,12 +328,10 @@ export default function BitacoraNueva() {
                         type='text'
                         id='tagInput'
                         className='tag-input'
-                        placeholder={
-                          tags.length === 0 ? 'Agregar etiquetas...' : ''
-                        }
+                        placeholder={tags.length === 0 ? 'Agregar etiquetas...' : ''}
                         value={newTag}
-                        onChange={e => setNewTag(e.target.value)}
-                        onKeyPress={e => {
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onKeyPress={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
                             handleAddTag();
@@ -396,7 +349,7 @@ export default function BitacoraNueva() {
                       <i className='material-icons'>attach_file</i>
                       <span>Archivos Adjuntos</span>
                     </div>
-
+                    
                     <div
                       className={`file-upload-area ${dragActive ? 'dragover' : ''}`}
                       onDragEnter={handleDrag}
@@ -411,8 +364,7 @@ export default function BitacoraNueva() {
                         Arrastra archivos aquí o haz clic para seleccionar
                       </div>
                       <div className='upload-hint'>
-                        Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG
-                        (Máx. 10MB)
+                        Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Máx. 10MB)
                       </div>
                       <input
                         type='file'
@@ -422,10 +374,7 @@ export default function BitacoraNueva() {
                         onChange={handleFileSelect}
                         accept='.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png'
                       />
-                      <label
-                        htmlFor='fileInput'
-                        className='btn btn-outline-primary mt-3'
-                      >
+                      <label htmlFor='fileInput' className='btn btn-outline-primary mt-3'>
                         <i className='material-icons me-2'>folder_open</i>
                         Seleccionar Archivos
                       </label>
@@ -433,15 +382,13 @@ export default function BitacoraNueva() {
 
                     {uploadedFiles.length > 0 && (
                       <div className='file-list mt-3'>
-                        {uploadedFiles.map(file => (
+                        {uploadedFiles.map((file) => (
                           <div key={file.id} className='file-item'>
                             <div className='file-info'>
                               <FileIcon fileName={file.name} size='md' />
                               <div className='file-details'>
                                 <div className='file-name'>{file.name}</div>
-                                <div className='file-size'>
-                                  {formatFileSize(file.size)}
-                                </div>
+                                <div className='file-size'>{formatFileSize(file.size)}</div>
                               </div>
                             </div>
                             <div className='file-actions'>
@@ -484,19 +431,11 @@ export default function BitacoraNueva() {
                       <button
                         type='submit'
                         className='btn btn-success'
-                        disabled={
-                          saving ||
-                          !selectedType ||
-                          !selectedPriority ||
-                          !title.trim()
-                        }
+                        disabled={saving || !selectedType || !selectedPriority || !title.trim()}
                       >
                         {saving ? (
                           <>
-                            <span
-                              className='spinner-border spinner-border-sm me-2'
-                              role='status'
-                            ></span>
+                            <span className='spinner-border spinner-border-sm me-2' role='status'></span>
                             Guardando...
                           </>
                         ) : (
@@ -519,18 +458,11 @@ export default function BitacoraNueva() {
                   <div className='preview-header'>
                     <h6 className='card-title'>Vista Previa</h6>
                     <div className='preview-badges'>
-                      {selectedType && (
-                        <ActivityBadge type={selectedType as any} size='sm' />
-                      )}
-                      {selectedPriority && (
-                        <PriorityBadge
-                          priority={selectedPriority as any}
-                          size='sm'
-                        />
-                      )}
+                      {selectedType && <ActivityBadge type={selectedType as any} size='sm' />}
+                      {selectedPriority && <PriorityBadge priority={selectedPriority as any} size='sm' />}
                     </div>
                   </div>
-
+                  
                   <div className='preview-content'>
                     <div className='preview-title'>
                       {title || 'Título de la actividad'}
@@ -552,8 +484,7 @@ export default function BitacoraNueva() {
                     {uploadedFiles.length > 0 && (
                       <div className='preview-meta-item'>
                         <i className='material-icons me-1'>attach_file</i>
-                        {uploadedFiles.length} archivo
-                        {uploadedFiles.length > 1 ? 's' : ''}
+                        {uploadedFiles.length} archivo{uploadedFiles.length > 1 ? 's' : ''}
                       </div>
                     )}
                   </div>
@@ -561,10 +492,7 @@ export default function BitacoraNueva() {
                   {tags.length > 0 && (
                     <div className='preview-tags mt-2'>
                       {tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className='badge bg-light text-dark me-1'
-                        >
+                        <span key={index} className='badge bg-light text-dark me-1'>
                           #{tag}
                         </span>
                       ))}
@@ -584,8 +512,7 @@ export default function BitacoraNueva() {
                         Tipos de Actividad
                       </h6>
                       <p className='help-text text-muted small'>
-                        Selecciona el tipo que mejor describa la actividad
-                        registrada.
+                        Selecciona el tipo que mejor describa la actividad registrada.
                       </p>
                     </div>
                     <div className='help-item mb-3'>
@@ -594,8 +521,7 @@ export default function BitacoraNueva() {
                         Prioridades
                       </h6>
                       <p className='help-text text-muted small'>
-                        Define la importancia y urgencia de la actividad
-                        registrada.
+                        Define la importancia y urgencia de la actividad registrada.
                       </p>
                     </div>
                     <div className='help-item'>

@@ -1,8 +1,4 @@
-import {
-  EdificioFilters,
-  ESTADOS_EDIFICIO,
-  TIPOS_EDIFICIO,
-} from '@/types/edificios';
+import { EdificioFilters, ESTADOS_EDIFICIO, TIPOS_EDIFICIO } from '@/types/edificios';
 
 interface EdificioFiltersProps {
   filters: EdificioFilters;
@@ -11,11 +7,11 @@ interface EdificioFiltersProps {
   loading?: boolean;
 }
 
-export default function EdificiosFilters({
-  filters,
-  onFilterChange,
-  onClear,
-  loading = false,
+export default function EdificiosFilters({ 
+  filters, 
+  onFilterChange, 
+  onClear, 
+  loading = false 
 }: EdificioFiltersProps) {
   return (
     <div className='filter-container'>
@@ -28,7 +24,7 @@ export default function EdificiosFilters({
               className='form-control search-input'
               placeholder='Buscar edificios...'
               value={filters.busqueda || ''}
-              onChange={e => onFilterChange('busqueda', e.target.value)}
+              onChange={(e) => onFilterChange('busqueda', e.target.value)}
               disabled={loading}
             />
           </div>
@@ -37,7 +33,7 @@ export default function EdificiosFilters({
           <select
             className='form-select'
             value={filters.estado || ''}
-            onChange={e => onFilterChange('estado', e.target.value)}
+            onChange={(e) => onFilterChange('estado', e.target.value)}
             disabled={loading}
           >
             <option value=''>Todos los estados</option>
@@ -52,7 +48,7 @@ export default function EdificiosFilters({
           <select
             className='form-select'
             value={filters.tipo || ''}
-            onChange={e => onFilterChange('tipo', e.target.value)}
+            onChange={(e) => onFilterChange('tipo', e.target.value)}
             disabled={loading}
           >
             <option value=''>Todos los tipos</option>
@@ -69,12 +65,12 @@ export default function EdificiosFilters({
             className='form-control'
             placeholder='Fecha desde'
             value={filters.fechaDesde || ''}
-            onChange={e => onFilterChange('fechaDesde', e.target.value)}
+            onChange={(e) => onFilterChange('fechaDesde', e.target.value)}
             disabled={loading}
           />
         </div>
         <div className='col-md-2'>
-          <button
+          <button 
             className='btn btn-outline-secondary w-100'
             onClick={onClear}
             disabled={loading}
@@ -99,11 +95,11 @@ export default function EdificiosFilters({
           border-radius: 8px;
           padding: 1rem;
         }
-
+        
         .search-icon-container {
           position: relative;
         }
-
+        
         .search-icon {
           position: absolute;
           top: 50%;
@@ -113,7 +109,7 @@ export default function EdificiosFilters({
           font-size: 20px;
           z-index: 10;
         }
-
+        
         .search-input {
           padding-left: 40px;
         }

@@ -4,37 +4,33 @@ interface PriorityOptionProps {
   onSelect: (priority: string) => void;
 }
 
-export default function PriorityOption({
-  priority,
-  selected,
-  onSelect,
-}: PriorityOptionProps) {
+export default function PriorityOption({ priority, selected, onSelect }: PriorityOptionProps) {
   const getConfig = (priorityLevel: string) => {
     const configs = {
       low: {
         title: 'Baja',
         description: 'Información general',
         icon: 'keyboard_arrow_down',
-        bgColor: '#28a745',
+        bgColor: '#28a745'
       },
       normal: {
         title: 'Normal',
         description: 'Actividad estándar',
         icon: 'remove',
-        bgColor: '#17a2b8',
+        bgColor: '#17a2b8'
       },
       high: {
         title: 'Alta',
         description: 'Requiere atención',
         icon: 'keyboard_arrow_up',
-        bgColor: '#ffc107',
+        bgColor: '#ffc107'
       },
       critical: {
         title: 'Crítica',
         description: 'Atención inmediata',
         icon: 'priority_high',
-        bgColor: '#dc3545',
-      },
+        bgColor: '#dc3545'
+      }
     };
     return configs[priorityLevel as keyof typeof configs] || configs.normal;
   };
@@ -47,10 +43,7 @@ export default function PriorityOption({
       onClick={() => onSelect(priority)}
       style={{ cursor: 'pointer' }}
     >
-      <div
-        className='priority-icon'
-        style={{ backgroundColor: config.bgColor }}
-      >
+      <div className='priority-icon' style={{ backgroundColor: config.bgColor }}>
         <i className='material-icons'>{config.icon}</i>
       </div>
       <div className='priority-content'>

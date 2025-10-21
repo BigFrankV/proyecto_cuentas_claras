@@ -2,7 +2,7 @@ import {
   Cargo,
   CargoFormData,
   CargoFilters,
-  CargoDetalle,
+  CargoDetalle
 } from '@/types/cargos';
 
 // Base URL para las APIs
@@ -20,13 +20,9 @@ const handleApiError = (error: any) => {
 // Helper para hacer peticiones autenticadas
 const apiRequest = async (url: string, options: RequestInit = {}) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
-  const token =
-    typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
-  console.log(
-    '🔐 Token obtenido para API:',
-    token ? 'Token presente' : 'No hay token',
-  );
+  console.log('🔐 Token obtenido para API:', token ? 'Token presente' : 'No hay token');
   console.log('🔐 URL de la petición:', `${API_BASE_URL}${url}`);
 
   if (!token) {
@@ -38,7 +34,7 @@ const apiRequest = async (url: string, options: RequestInit = {}) => {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      'Authorization': `Bearer ${token}`,
       ...options.headers,
     },
   };
@@ -49,9 +45,7 @@ const apiRequest = async (url: string, options: RequestInit = {}) => {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error || `HTTP error! status: ${response.status}`,
-    );
+    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
   }
 
   return response.json();
@@ -95,29 +89,16 @@ export const cargosApi = {
   },
 
   // Obtener todos los cargos de una comunidad con filtros
-  getByComunidad: async (
-    comunidadId: number,
-    filters?: CargoFilters,
-  ): Promise<Cargo[]> => {
+  getByComunidad: async (comunidadId: number, filters?: CargoFilters): Promise<Cargo[]> => {
     try {
       const queryParams = new URLSearchParams();
       queryParams.append('comunidadId', comunidadId.toString());
 
-      if (filters?.estado) {
-        queryParams.append('estado', filters.estado);
-      }
-      if (filters?.unidad) {
-        queryParams.append('unidad', filters.unidad.toString());
-      }
-      if (filters?.periodo) {
-        queryParams.append('periodo', filters.periodo);
-      }
-      if (filters?.page) {
-        queryParams.append('page', filters.page.toString());
-      }
-      if (filters?.limit) {
-        queryParams.append('limit', filters.limit.toString());
-      }
+      if (filters?.estado) queryParams.append('estado', filters.estado);
+      if (filters?.unidad) queryParams.append('unidad', filters.unidad.toString());
+      if (filters?.periodo) queryParams.append('periodo', filters.periodo);
+      if (filters?.page) queryParams.append('page', filters.page.toString());
+      if (filters?.limit) queryParams.append('limit', filters.limit.toString());
 
       const url = `/cargos/comunidad/${comunidadId}?${queryParams.toString()}`;
       const data = await apiRequest(url);
@@ -198,182 +179,6 @@ export const cargosApi = {
         interesAcumulado: cargo.interes_acumulado,
         fechaCreacion: new Date(cargo.fecha_creacion),
       }));
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Obtener detalle completo de un cargo (incluye detalles de conceptos)
-  getDetalle: async (id: number): Promise<any> => {
-    try {
-      const data = await apiRequest(`/cargos/${id}/detalle`);
-      return data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Obtener pagos aplicados a un cargo
-  getPagos: async (id: number): Promise<any[]> => {
-    try {
-      const data = await apiRequest(`/cargos/${id}/pagos`);
-      return data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Obtener estadísticas de una comunidad
-  getEstadisticas: async (comunidadId: number): Promise<any> => {
-    try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/estadisticas`);
-      return data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Obtener cargos por período
-  getByPeriodo: async (comunidadId: number, periodo: string): Promise<Cargo[]> => {
-    try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/periodo/${periodo}`);
-      return data.map((cargo: any) => ({
-        id: cargo.id,
-        concepto: cargo.concepto,
-        tipo: cargo.tipo,
-        estado: cargo.estado,
-        monto: cargo.monto,
-        fechaVencimiento: new Date(cargo.fecha_vencimiento),
-        unidad: cargo.unidad,
-        nombreComunidad: cargo.nombre_comunidad,
-        periodo: cargo.periodo,
-        propietario: cargo.propietario,
-        saldo: cargo.saldo,
-        interesAcumulado: cargo.interes_acumulado,
-        fechaCreacion: new Date(cargo.fecha_creacion),
-      }));
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Obtener cargos vencidos
-  getVencidos: async (comunidadId: number): Promise<Cargo[]> => {
-    try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/vencidos`);
-      return data.map((cargo: any) => ({
-        id: cargo.id,
-        concepto: cargo.concepto,
-        tipo: cargo.tipo,
-        estado: cargo.estado,
-        monto: cargo.monto,
-        fechaVencimiento: new Date(cargo.fecha_vencimiento),
-        unidad: cargo.unidad,
-        nombreComunidad: cargo.nombre_comunidad,
-        periodo: cargo.periodo,
-        propietario: cargo.propietario,
-        saldo: cargo.saldo,
-        interesAcumulado: cargo.interes_acumulado,
-        diasVencido: cargo.dias_vencido,
-        fechaCreacion: new Date(cargo.fecha_creacion),
-      }));
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Obtener historial de pagos de un cargo
-  getHistorialPagos: async (id: number): Promise<any[]> => {
-    try {
-      const data = await apiRequest(`/cargos/${id}/historial-pagos`);
-      return data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Obtener cargos por estado
-  getPorEstado: async (comunidadId: number): Promise<any> => {
-    try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/por-estado`);
-      return data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Validar cargos de una comunidad
-  getValidacion: async (comunidadId: number): Promise<any> => {
-    try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/validacion`);
-      return data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Obtener cargos con interés
-  getConInteres: async (comunidadId: number): Promise<any[]> => {
-    try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/con-interes`);
-      return data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Obtener resumen de pagos
-  getResumenPagos: async (comunidadId: number): Promise<any> => {
-    try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/resumen-pagos`);
-      return data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Obtener cargos por categoría
-  getPorCategoria: async (comunidadId: number): Promise<any> => {
-    try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/por-categoria`);
-      return data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Recalcular interés de un cargo
-  recalcularInteres: async (id: number): Promise<any> => {
-    try {
-      const data = await apiRequest(`/cargos/${id}/recalcular-interes`, {
-        method: 'POST',
-      });
-      return data;
-    } catch (error) {
-      handleApiError(error);
-      throw error;
-    }
-  },
-
-  // Notificar sobre un cargo
-  notificar: async (id: number): Promise<any> => {
-    try {
-      const data = await apiRequest(`/cargos/${id}/notificar`, {
-        method: 'POST',
-      });
-      return data;
     } catch (error) {
       handleApiError(error);
       throw error;

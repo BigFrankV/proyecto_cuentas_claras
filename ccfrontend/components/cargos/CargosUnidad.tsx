@@ -1,31 +1,13 @@
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-} from 'chart.js';
 import React, { useState, useEffect } from 'react';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
-
-import { Cargo } from '@/types/cargos';
-import { cargosApi } from '@/lib/api/cargos';
-
-import AmountCell from './AmountCell';
-import FilterCard, { FilterOptions } from './FilterCard';
 import StatusBadge from './StatusBadge';
 import TypeBadge from './TypeBadge';
+import AmountCell from './AmountCell';
+import FilterCard, { FilterOptions } from './FilterCard';
+import { Cargo } from './CargoCard';
 
-ChartJS.register(
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-);
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 export interface UnitInfo {
   numero: string;
@@ -40,27 +22,93 @@ export interface UnitInfo {
 
 export interface CargosUnidadProps {
   unidad: UnitInfo;
-  unidadId?: number;
-  comunidadId?: number;
+  cargos?: Cargo[];
   className?: string;
 }
 
-export default function CargosUnidad({
-  unidad,
-  unidadId,
-  comunidadId,
-  className = '',
+// Mock data for demonstration
+const mockUnit: UnitInfo = {
+  numero: '101-A',
+  torre: 'Torre A',
+  propietario: 'Juan Carlos Pérez',
+  residente: 'María Elena Rodríguez',
+  telefono: '+57 300 123 4567',
+  email: 'maria.rodriguez@email.com',
+  metrosCuadrados: 85.5,
+  coeficiente: 0.0342
+};
+
+const mockCargosUnidad: Cargo[] = [
+  {
+    id: 'CHG-2024-001',
+    concepto: 'Administración Enero 2024',
+    descripcion: 'Cuota de administración mensual',
+    tipo: 'administration',
+    estado: 'paid',
+    monto: 250000,
+    montoAplicado: 250000,
+    unidad: '101-A',
+    periodo: '2024-01',
+    fechaVencimiento: new Date('2024-01-15'),
+    fechaCreacion: new Date('2024-01-01'),
+    cuentaCosto: 'ADM-001',
+  },
+  {
+    id: 'CHG-2024-002',
+    concepto: 'Administración Febrero 2024',
+    descripcion: 'Cuota de administración mensual',
+    tipo: 'administration',
+    estado: 'pending',
+    monto: 250000,
+    montoAplicado: 0,
+    unidad: '101-A',
+    periodo: '2024-02',
+    fechaVencimiento: new Date('2024-02-15'),
+    fechaCreacion: new Date('2024-02-01'),
+    cuentaCosto: 'ADM-001',
+  },
+  {
+    id: 'CHG-2024-003',
+    concepto: 'Mantenimiento Ascensor',
+    descripcion: 'Mantenimiento preventivo del ascensor principal',
+    tipo: 'maintenance',
+    estado: 'approved',
+    monto: 180000,
+    montoAplicado: 180000,
+    unidad: '101-A',
+    periodo: '2024-02',
+    fechaVencimiento: new Date('2024-02-28'),
+    fechaCreacion: new Date('2024-02-01'),
+    cuentaCosto: 'MNT-002',
+  },
+  {
+    id: 'CHG-2024-004',
+    concepto: 'Seguro Todo Riesgo',
+    descripcion: 'Prima de seguro anual edificio',
+    tipo: 'insurance',
+    estado: 'partial',
+    monto: 450000,
+    montoAplicado: 225000,
+    unidad: '101-A',
+    periodo: '2024-03',
+    fechaVencimiento: new Date('2024-03-30'),
+    fechaCreacion: new Date('2024-03-01'),
+    cuentaCosto: 'SEG-001',
+  },
+];
+
+export default function CargosUnidad({ 
+  unidad = mockUnit, 
+  cargos = mockCargosUnidad,
+  className = '' 
 }: CargosUnidadProps) {
-  const [cargos, setCargos] = useState<Cargo[]>([]);
-  const [filteredCargos, setFilteredCargos] = useState<Cargo[]>([]);
+  const [filteredCargos, setFilteredCargos] = useState<Cargo[]>(cargos);
   const [selectedCargos, setSelectedCargos] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
-  const [chartView, setChartView] = useState<'status' | 'type' | 'monthly'>(
-    'status',
-  );
-
+  const [chartView, setChartView] = useState<'status' | 'type' | 'monthly'>('status');
+  
   const [filters, setFilters] = useState<FilterOptions>({
     searchTerm: '',
     status: '',
@@ -72,68 +120,35 @@ export default function CargosUnidad({
     amountMax: '',
   });
 
-  // Cargar cargos de la unidad desde la API
-  useEffect(() => {
-    const fetchCargos = async () => {
-      try {
-        setLoading(true);
-        
-        let data: Cargo[] = [];
-        
-        // Intentar cargar por unidadId primero, luego por comunidadId
-        if (unidadId) {
-          data = await cargosApi.getByUnidad(unidadId);
-        } else if (comunidadId) {
-          const allCargos = await cargosApi.getByComunidad(comunidadId);
-          // Filtrar por número de unidad
-          data = allCargos.filter(c => c.unidad === unidad.numero);
-        }
-        
-        setCargos(data);
-        setFilteredCargos(data);
-      } catch {
-        setCargos([]);
-        setFilteredCargos([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCargos();
-  }, [unidadId, comunidadId, unidad.numero]);
-
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
+      day: 'numeric'
     }).format(date);
   };
 
   const formatPeriod = (period: string): string => {
     const [year, month] = period.split('-');
-    if (!year || !month) {
-      return period;
-    }
+    if (!year || !month) return period;
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
-      month: 'long',
+      month: 'long'
     }).format(new Date(parseInt(year), parseInt(month) - 1));
   };
 
   const applyFilters = () => {
     setLoading(true);
-
+    
     let filtered = [...cargos];
 
     // Search term filter
     if (filters.searchTerm) {
       const searchLower = filters.searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        cargo =>
-          cargo.concepto.toLowerCase().includes(searchLower) ||
-          cargo.descripcion?.toLowerCase().includes(searchLower) ||
-          cargo.id.toLowerCase().includes(searchLower),
+      filtered = filtered.filter(cargo => 
+        cargo.concepto.toLowerCase().includes(searchLower) ||
+        cargo.descripcion?.toLowerCase().includes(searchLower) ||
+        cargo.id.toLowerCase().includes(searchLower)
       );
     }
 
@@ -209,29 +224,14 @@ export default function CargosUnidad({
 
   // Statistics
   const totalCargos = filteredCargos.length;
-  const pendingCargos = filteredCargos.filter(
-    c => c.estado === 'pending',
-  ).length;
-  const approvedCargos = filteredCargos.filter(
-    c => c.estado === 'approved',
-  ).length;
+  const pendingCargos = filteredCargos.filter(c => c.estado === 'pending').length;
+  const approvedCargos = filteredCargos.filter(c => c.estado === 'approved').length;
   const paidCargos = filteredCargos.filter(c => c.estado === 'paid').length;
-  const partialCargos = filteredCargos.filter(
-    c => c.estado === 'partial',
-  ).length;
-  const totalAmount = filteredCargos.reduce(
-    (sum, cargo) => sum + cargo.monto,
-    0,
-  );
-  const paidAmount = filteredCargos.reduce(
-    (sum, cargo) =>
-      cargo.estado === 'paid'
-        ? sum + cargo.monto
-        : cargo.estado === 'partial'
-          ? sum + cargo.montoAplicado
-          : sum,
-    0,
-  );
+  const partialCargos = filteredCargos.filter(c => c.estado === 'partial').length;
+  const totalAmount = filteredCargos.reduce((sum, cargo) => sum + cargo.monto, 0);
+  const paidAmount = filteredCargos.reduce((sum, cargo) => 
+    cargo.estado === 'paid' ? sum + cargo.monto : 
+    cargo.estado === 'partial' ? sum + cargo.montoAplicado : sum, 0);
 
   // Chart data
   const getChartData = () => {
@@ -239,25 +239,20 @@ export default function CargosUnidad({
       case 'status':
         return {
           labels: ['Pendiente', 'Aprobado', 'Pagado', 'Parcial'],
-          datasets: [
-            {
-              data: [pendingCargos, approvedCargos, paidCargos, partialCargos],
-              backgroundColor: ['#ffc107', '#17a2b8', '#28a745', '#fd7e14'],
-              borderColor: ['#fff', '#fff', '#fff', '#fff'],
-              borderWidth: 2,
-            },
-          ],
+          datasets: [{
+            data: [pendingCargos, approvedCargos, paidCargos, partialCargos],
+            backgroundColor: ['#ffc107', '#17a2b8', '#28a745', '#fd7e14'],
+            borderColor: ['#fff', '#fff', '#fff', '#fff'],
+            borderWidth: 2,
+          }]
         };
-
+      
       case 'type':
-        const typeGroups = filteredCargos.reduce(
-          (acc, cargo) => {
-            acc[cargo.tipo] = (acc[cargo.tipo] || 0) + 1;
-            return acc;
-          },
-          {} as Record<string, number>,
-        );
-
+        const typeGroups = filteredCargos.reduce((acc, cargo) => {
+          acc[cargo.tipo] = (acc[cargo.tipo] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        
         return {
           labels: Object.keys(typeGroups).map(type => {
             const labels = {
@@ -265,49 +260,36 @@ export default function CargosUnidad({
               maintenance: 'Mantenimiento',
               service: 'Servicios',
               insurance: 'Seguros',
-              other: 'Otros',
+              other: 'Otros'
             };
             return labels[type as keyof typeof labels] || type;
           }),
-          datasets: [
-            {
-              data: Object.values(typeGroups),
-              backgroundColor: [
-                '#6f42c1',
-                '#fd7e14',
-                '#20c997',
-                '#e83e8c',
-                '#6c757d',
-              ],
-              borderColor: ['#fff', '#fff', '#fff', '#fff', '#fff'],
-              borderWidth: 2,
-            },
-          ],
+          datasets: [{
+            data: Object.values(typeGroups),
+            backgroundColor: ['#6f42c1', '#fd7e14', '#20c997', '#e83e8c', '#6c757d'],
+            borderColor: ['#fff', '#fff', '#fff', '#fff', '#fff'],
+            borderWidth: 2,
+          }]
         };
-
+      
       case 'monthly':
-        const monthlyData = filteredCargos.reduce(
-          (acc, cargo) => {
-            const month = cargo.periodo;
-            acc[month] = (acc[month] || 0) + cargo.monto;
-            return acc;
-          },
-          {} as Record<string, number>,
-        );
-
+        const monthlyData = filteredCargos.reduce((acc, cargo) => {
+          const month = cargo.periodo;
+          acc[month] = (acc[month] || 0) + cargo.monto;
+          return acc;
+        }, {} as Record<string, number>);
+        
         return {
           labels: Object.keys(monthlyData).map(formatPeriod),
-          datasets: [
-            {
-              label: 'Monto Total',
-              data: Object.values(monthlyData),
-              backgroundColor: '#17a2b8',
-              borderColor: '#117a8b',
-              borderWidth: 1,
-            },
-          ],
+          datasets: [{
+            label: 'Monto Total',
+            data: Object.values(monthlyData),
+            backgroundColor: '#17a2b8',
+            borderColor: '#117a8b',
+            borderWidth: 1,
+          }]
         };
-
+      
       default:
         return { labels: [], datasets: [] };
     }
@@ -316,10 +298,7 @@ export default function CargosUnidad({
   // Pagination
   const totalPages = Math.ceil(filteredCargos.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedCargos = filteredCargos.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+  const paginatedCargos = filteredCargos.slice(startIndex, startIndex + itemsPerPage);
 
   const handleViewCargo = (id: string) => {
     window.location.href = `/cargos/${id}`;
@@ -355,86 +334,89 @@ export default function CargosUnidad({
   return (
     <div className={`cargos-unidad ${className}`}>
       {/* Unit Header */}
-      <div className='unit-header'>
-        <div className='d-flex justify-content-between align-items-start mb-3'>
+      <div className="unit-header">
+        <div className="d-flex justify-content-between align-items-start mb-3">
           <div>
-            <h1 className='unit-title'>Unidad {unidad.numero}</h1>
-            <p className='unit-subtitle'>
+            <h1 className="unit-title">Unidad {unidad.numero}</h1>
+            <p className="unit-subtitle">
               {unidad.torre && `${unidad.torre} • `}
               Gestión de cargos y estado de cuenta
             </p>
           </div>
         </div>
-
-        <div className='unit-stats'>
-          <div className='stat-item'>
-            <div className='stat-number'>{totalCargos}</div>
-            <div className='stat-label'>Total Cargos</div>
+        
+        <div className="unit-stats">
+          <div className="stat-item">
+            <div className="stat-number">{totalCargos}</div>
+            <div className="stat-label">Total Cargos</div>
           </div>
-          <div className='stat-item'>
-            <div className='stat-number'>{pendingCargos}</div>
-            <div className='stat-label'>Pendientes</div>
+          <div className="stat-item">
+            <div className="stat-number">{pendingCargos}</div>
+            <div className="stat-label">Pendientes</div>
           </div>
-          <div className='stat-item'>
-            <div className='stat-number'>{paidCargos}</div>
-            <div className='stat-label'>Pagados</div>
+          <div className="stat-item">
+            <div className="stat-number">{paidCargos}</div>
+            <div className="stat-label">Pagados</div>
           </div>
-          <div className='stat-item'>
-            <div className='stat-number'>
+          <div className="stat-item">
+            <div className="stat-number">
               <AmountCell amount={totalAmount} />
             </div>
-            <div className='stat-label'>Total</div>
+            <div className="stat-label">Total</div>
           </div>
-          <div className='stat-item'>
-            <div className='stat-number'>
+          <div className="stat-item">
+            <div className="stat-number">
               <AmountCell amount={paidAmount} />
             </div>
-            <div className='stat-label'>Pagado</div>
+            <div className="stat-label">Pagado</div>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className='row mb-4'>
-        <div className='col-12'>
-          <div className='quick-actions'>
-            <div className='quick-actions-header'>
-              <h5 className='quick-actions-title'>
-                <i className='material-icons'>flash_on</i>
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="quick-actions">
+            <div className="quick-actions-header">
+              <h5 className="quick-actions-title">
+                <i className="material-icons">flash_on</i>
                 Acciones Rápidas
               </h5>
             </div>
-            <div className='quick-actions-grid'>
-              <button
-                className='btn btn-primary'
+            <div className="quick-actions-grid">
+              <button 
+                className="btn btn-primary"
                 onClick={handleCreateNewCharge}
               >
-                <i className='material-icons me-2'>add</i>
+                <i className="material-icons me-2">add</i>
                 Nuevo Cargo
               </button>
-              <button
-                className='btn btn-success'
+              <button 
+                className="btn btn-success"
                 onClick={() => handleRegisterPayment()}
               >
-                <i className='material-icons me-2'>payment</i>
+                <i className="material-icons me-2">payment</i>
                 Registrar Pago
               </button>
-              <button className='btn btn-info' onClick={handleSendStatement}>
-                <i className='material-icons me-2'>mail</i>
+              <button 
+                className="btn btn-info"
+                onClick={handleSendStatement}
+              >
+                <i className="material-icons me-2">mail</i>
                 Enviar Estado de Cuenta
               </button>
-              <button
-                className='btn btn-outline-primary'
+              <button 
+                className="btn btn-outline-primary"
                 onClick={handleViewUnitDetails}
               >
-                <i className='material-icons me-2'>home</i>
+                <i className="material-icons me-2">home</i>
                 Ver Detalles Unidad
               </button>
-              <button
-                className='btn btn-outline-secondary'
+              <button 
+                className="btn btn-outline-secondary"
                 onClick={handleExportUnitCharges}
               >
-                <i className='material-icons me-2'>download</i>
+                <i className="material-icons me-2">download</i>
                 Exportar Cargos
               </button>
             </div>
@@ -442,80 +424,75 @@ export default function CargosUnidad({
         </div>
       </div>
 
-      <div className='row'>
+      <div className="row">
         {/* Filters and Table */}
-        <div className='col-lg-8'>
+        <div className="col-lg-8">
           {/* Filters */}
           <FilterCard
             filters={filters}
             onFiltersChange={setFilters}
             onApplyFilters={applyFilters}
             onClearFilters={clearFilters}
-            className='mb-4'
+            className="mb-4"
           />
 
           {/* Table */}
-          <div className='charges-table'>
-            <div className='table-header'>
-              <h5 className='table-title'>
-                <i className='material-icons'>receipt_long</i>
+          <div className="charges-table">
+            <div className="table-header">
+              <h5 className="table-title">
+                <i className="material-icons">receipt_long</i>
                 Cargos de la Unidad
               </h5>
-              <small className='table-info'>
+              <small className="table-info">
                 {filteredCargos.length} cargo(s) encontrado(s)
               </small>
             </div>
 
-            <div className='table-responsive'>
+            <div className="table-responsive">
               {loading ? (
-                <div className='text-center p-4'>
-                  <div className='spinner-border' role='status'>
-                    <span className='visually-hidden'>Cargando...</span>
+                <div className="text-center p-4">
+                  <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Cargando...</span>
                   </div>
                 </div>
               ) : filteredCargos.length === 0 ? (
-                <div className='empty-state'>
-                  <div className='empty-state-icon'>
-                    <i className='material-icons'>search_off</i>
+                <div className="empty-state">
+                  <div className="empty-state-icon">
+                    <i className="material-icons">search_off</i>
                   </div>
-                  <h4 className='empty-state-title'>
-                    No se encontraron cargos
-                  </h4>
-                  <p className='empty-state-description'>
+                  <h4 className="empty-state-title">No se encontraron cargos</h4>
+                  <p className="empty-state-description">
                     No hay cargos que coincidan con los filtros seleccionados.
                   </p>
                 </div>
               ) : (
-                <table className='table custom-table'>
+                <table className="table custom-table">
                   <thead>
                     <tr>
-                      <th scope='col' style={{ width: '50px' }}>
+                      <th scope="col" style={{ width: '50px' }}>
                         <input
-                          type='checkbox'
-                          className='form-check-input'
-                          checked={
-                            selectedCargos.size === filteredCargos.length &&
-                            filteredCargos.length > 0
-                          }
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={selectedCargos.size === filteredCargos.length && filteredCargos.length > 0}
                           onChange={toggleSelectAll}
                         />
                       </th>
-                      <th scope='col'>Concepto</th>
-                      <th scope='col'>Tipo</th>
-                      <th scope='col'>Período</th>
-                      <th scope='col'>Monto</th>
-                      <th scope='col'>Estado</th>
-                      <th scope='col'>Vencimiento</th>
-                      <th scope='col'>Acciones</th>
+                      <th scope="col">Concepto</th>
+                      <th scope="col">Tipo</th>
+                      <th scope="col">Período</th>
+                      <th scope="col">Monto</th>
+                      <th scope="col">Estado</th>
+                      <th scope="col">Vencimiento</th>
+                      <th scope="col">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedCargos.map(cargo => (
+                    {paginatedCargos.map((cargo) => (
                       <tr key={cargo.id}>
                         <td>
                           <input
-                            type='checkbox'
-                            className='form-check-input'
+                            type="checkbox"
+                            className="form-check-input"
                             checked={selectedCargos.has(cargo.id)}
                             onChange={() => toggleCargoSelection(cargo.id)}
                           />
@@ -523,13 +500,15 @@ export default function CargosUnidad({
                         <td>
                           <div>
                             <strong>{cargo.concepto}</strong>
-                            <div className='text-muted small'>#{cargo.id}</div>
+                            <div className="text-muted small">#{cargo.id}</div>
                           </div>
                         </td>
                         <td>
                           <TypeBadge type={cargo.tipo} />
                         </td>
-                        <td>{formatPeriod(cargo.periodo)}</td>
+                        <td>
+                          {formatPeriod(cargo.periodo)}
+                        </td>
                         <td>
                           <AmountCell amount={cargo.monto} />
                         </td>
@@ -537,32 +516,25 @@ export default function CargosUnidad({
                           <StatusBadge status={cargo.estado} />
                         </td>
                         <td>
-                          <span
-                            className={
-                              new Date() > cargo.fechaVencimiento &&
-                              cargo.estado !== 'paid'
-                                ? 'text-danger fw-bold'
-                                : ''
-                            }
-                          >
+                          <span className={new Date() > cargo.fechaVencimiento && cargo.estado !== 'paid' ? 'text-danger fw-bold' : ''}>
                             {formatDate(cargo.fechaVencimiento)}
                           </span>
                         </td>
                         <td>
-                          <div className='btn-group' role='group'>
+                          <div className="btn-group" role="group">
                             <button
-                              className='action-btn primary small'
+                              className="action-btn primary small"
                               onClick={() => handleViewCargo(cargo.id)}
-                              title='Ver detalle'
+                              title="Ver detalle"
                             >
-                              <i className='material-icons'>visibility</i>
+                              <i className="material-icons">visibility</i>
                             </button>
                             <button
-                              className='action-btn success small'
+                              className="action-btn success small"
                               onClick={() => handleRegisterPayment(cargo.id)}
-                              title='Registrar pago'
+                              title="Registrar pago"
                             >
-                              <i className='material-icons'>payment</i>
+                              <i className="material-icons">payment</i>
                             </button>
                           </div>
                         </td>
@@ -575,50 +547,35 @@ export default function CargosUnidad({
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className='pagination-container'>
-                <div className='pagination-info'>
-                  Mostrando {startIndex + 1} a{' '}
-                  {Math.min(startIndex + itemsPerPage, filteredCargos.length)}{' '}
-                  de {filteredCargos.length} cargos
+              <div className="pagination-container">
+                <div className="pagination-info">
+                  Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filteredCargos.length)} de {filteredCargos.length} cargos
                 </div>
                 <nav>
-                  <ul className='pagination'>
-                    <li
-                      className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}
-                    >
-                      <button
-                        className='page-link'
-                        onClick={() =>
-                          setCurrentPage(prev => Math.max(1, prev - 1))
-                        }
+                  <ul className="pagination">
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                      <button 
+                        className="page-link"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         disabled={currentPage === 1}
                       >
                         Anterior
                       </button>
                     </li>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      page => (
-                        <li
-                          key={page}
-                          className={`page-item ${currentPage === page ? 'active' : ''}`}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
+                        <button 
+                          className="page-link"
+                          onClick={() => setCurrentPage(page)}
                         >
-                          <button
-                            className='page-link'
-                            onClick={() => setCurrentPage(page)}
-                          >
-                            {page}
-                          </button>
-                        </li>
-                      ),
-                    )}
-                    <li
-                      className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}
-                    >
-                      <button
-                        className='page-link'
-                        onClick={() =>
-                          setCurrentPage(prev => Math.min(totalPages, prev + 1))
-                        }
+                          {page}
+                        </button>
+                      </li>
+                    ))}
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                      <button 
+                        className="page-link"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                         disabled={currentPage === totalPages}
                       >
                         Siguiente
@@ -632,82 +589,80 @@ export default function CargosUnidad({
         </div>
 
         {/* Charts and Unit Info */}
-        <div className='col-lg-4'>
+        <div className="col-lg-4">
           {/* Unit Information */}
-          <div className='info-card mb-4'>
-            <div className='info-card-header'>
-              <h5 className='info-card-title'>
-                <i className='material-icons'>home</i>
+          <div className="info-card mb-4">
+            <div className="info-card-header">
+              <h5 className="info-card-title">
+                <i className="material-icons">home</i>
                 Información de la Unidad
               </h5>
             </div>
-
-            <div className='info-row'>
-              <span className='info-label'>Número:</span>
-              <span className='info-value'>{unidad.numero}</span>
+            
+            <div className="info-row">
+              <span className="info-label">Número:</span>
+              <span className="info-value">{unidad.numero}</span>
             </div>
-
+            
             {unidad.torre && (
-              <div className='info-row'>
-                <span className='info-label'>Torre:</span>
-                <span className='info-value'>{unidad.torre}</span>
+              <div className="info-row">
+                <span className="info-label">Torre:</span>
+                <span className="info-value">{unidad.torre}</span>
               </div>
             )}
-
-            <div className='info-row'>
-              <span className='info-label'>Propietario:</span>
-              <span className='info-value'>{unidad.propietario}</span>
+            
+            <div className="info-row">
+              <span className="info-label">Propietario:</span>
+              <span className="info-value">{unidad.propietario}</span>
             </div>
-
-            <div className='info-row'>
-              <span className='info-label'>Residente:</span>
-              <span className='info-value'>{unidad.residente}</span>
+            
+            <div className="info-row">
+              <span className="info-label">Residente:</span>
+              <span className="info-value">{unidad.residente}</span>
             </div>
-
-            <div className='info-row'>
-              <span className='info-label'>Teléfono:</span>
-              <span className='info-value'>{unidad.telefono}</span>
+            
+            <div className="info-row">
+              <span className="info-label">Teléfono:</span>
+              <span className="info-value">{unidad.telefono}</span>
             </div>
-
-            <div className='info-row'>
-              <span className='info-label'>Email:</span>
-              <span className='info-value'>{unidad.email}</span>
+            
+            <div className="info-row">
+              <span className="info-label">Email:</span>
+              <span className="info-value">{unidad.email}</span>
             </div>
-
-            <div className='info-row'>
-              <span className='info-label'>Área (m²):</span>
-              <span className='info-value'>{unidad.metrosCuadrados}</span>
+            
+            <div className="info-row">
+              <span className="info-label">Área (m²):</span>
+              <span className="info-value">{unidad.metrosCuadrados}</span>
             </div>
-
-            <div className='info-row'>
-              <span className='info-label'>Coeficiente:</span>
-              <span className='info-value'>
-                {(unidad.coeficiente * 100).toFixed(4)}%
-              </span>
+            
+            <div className="info-row">
+              <span className="info-label">Coeficiente:</span>
+              <span className="info-value">{(unidad.coeficiente * 100).toFixed(4)}%</span>
             </div>
           </div>
 
           {/* Chart */}
-          <div className='chart-container'>
-            <div className='chart-header'>
-              <h5 className='chart-title'>
-                <i className='material-icons'>pie_chart</i>
+          <div className="chart-container">
+            <div className="chart-header">
+              <h5 className="chart-title">
+                <i className="material-icons">pie_chart</i>
                 Análisis de Cargos
               </h5>
-              <div className='btn-group btn-group-sm'>
-                <button
+              <div className="btn-group btn-group-sm">
+                <button 
                   className={`btn ${chartView === 'status' ? 'btn-primary' : 'btn-outline-primary'}`}
                   onClick={() => setChartView('status')}
                 >
                   Estado
                 </button>
-                <button
+                <button 
                   className={`btn ${chartView === 'type' ? 'btn-primary' : 'btn-outline-primary'}`}
                   onClick={() => setChartView('type')}
                 >
                   Tipo
                 </button>
-                <button
+                <button 
                   className={`btn ${chartView === 'monthly' ? 'btn-primary' : 'btn-outline-primary'}`}
                   onClick={() => setChartView('monthly')}
                 >
@@ -715,23 +670,23 @@ export default function CargosUnidad({
                 </button>
               </div>
             </div>
-
+            
             <div style={{ height: '300px', position: 'relative' }}>
               {chartView === 'monthly' ? (
-                <Bar
+                <Bar 
                   data={getChartData()}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                       legend: {
-                        display: false,
-                      },
-                    },
+                        display: false
+                      }
+                    }
                   }}
                 />
               ) : (
-                <Pie
+                <Pie 
                   data={getChartData()}
                   options={{
                     responsive: true,
@@ -739,8 +694,8 @@ export default function CargosUnidad({
                     plugins: {
                       legend: {
                         position: 'bottom' as const,
-                      },
-                    },
+                      }
+                    }
                   }}
                 />
               )}

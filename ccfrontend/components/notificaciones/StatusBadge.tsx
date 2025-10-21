@@ -5,58 +5,58 @@ interface StatusBadgeProps {
 }
 
 const statusConfig = {
-  sent: {
-    label: 'Enviada',
-    color: '#2E7D32',
-    bg: '#E8F5E9',
+  sent: { 
+    label: 'Enviada', 
+    color: '#2E7D32', 
+    bg: '#E8F5E9', 
     border: '#4CAF50',
-    icon: 'send',
+    icon: 'send'
   },
-  draft: {
-    label: 'Borrador',
-    color: '#757575',
-    bg: '#F5F5F5',
+  draft: { 
+    label: 'Borrador', 
+    color: '#757575', 
+    bg: '#F5F5F5', 
     border: '#9E9E9E',
-    icon: 'draft',
+    icon: 'draft'
   },
-  scheduled: {
-    label: 'Programada',
-    color: '#1565C0',
-    bg: '#E3F2FD',
+  scheduled: { 
+    label: 'Programada', 
+    color: '#1565C0', 
+    bg: '#E3F2FD', 
     border: '#2196F3',
-    icon: 'schedule',
+    icon: 'schedule'
   },
-  failed: {
-    label: 'Fallida',
-    color: '#C62828',
-    bg: '#FFEBEE',
+  failed: { 
+    label: 'Fallida', 
+    color: '#C62828', 
+    bg: '#FFEBEE', 
     border: '#F44336',
-    icon: 'error',
-  },
+    icon: 'error'
+  }
 };
 
 const sizeConfig = {
   sm: {
     padding: '0.125rem 0.5rem',
     fontSize: '0.7rem',
-    iconSize: '12px',
+    iconSize: '12px'
   },
   md: {
     padding: '0.25rem 0.75rem',
     fontSize: '0.75rem',
-    iconSize: '14px',
+    iconSize: '14px'
   },
   lg: {
     padding: '0.375rem 1rem',
     fontSize: '0.875rem',
-    iconSize: '16px',
-  },
+    iconSize: '16px'
+  }
 };
 
-export default function StatusBadge({
-  status,
+export default function StatusBadge({ 
+  status, 
   size = 'md',
-  showIcon = true,
+  showIcon = true 
 }: StatusBadgeProps) {
   const config = statusConfig[status];
   const sizing = sizeConfig[size];
@@ -75,7 +75,7 @@ export default function StatusBadge({
         display: 'inline-flex',
         alignItems: 'center',
         gap: '0.25rem',
-        whiteSpace: 'nowrap',
+        whiteSpace: 'nowrap'
       }}
     >
       {showIcon && (

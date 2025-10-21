@@ -27,11 +27,7 @@
 .map-actions .btn-outline-primary {
   border-color: #0d6efd;
   color: #0d6efd;
-  background: linear-gradient(
-    135deg,
-    rgba(13, 110, 253, 0.1),
-    rgba(11, 94, 215, 0.1)
-  );
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(11, 94, 215, 0.1));
 }
 
 .map-actions .btn-outline-primary:hover {
@@ -43,11 +39,7 @@
 .map-actions .btn-outline-success {
   border-color: #198754;
   color: #198754;
-  background: linear-gradient(
-    135deg,
-    rgba(25, 135, 84, 0.1),
-    rgba(21, 119, 74, 0.1)
-  );
+  background: linear-gradient(135deg, rgba(25, 135, 84, 0.1), rgba(21, 119, 74, 0.1));
 }
 
 .map-actions .btn-outline-success:hover {
@@ -120,21 +112,21 @@
     gap: 0.75rem;
     align-items: flex-start;
   }
-
+  
   .map-actions {
     width: 100%;
     justify-content: space-between;
   }
-
+  
   .map-actions .btn {
     flex: 1;
     justify-content: center;
   }
-
+  
   .map-info {
     padding: 0.75rem 1rem;
   }
-
+  
   .map-address {
     flex-direction: column;
     align-items: flex-start;

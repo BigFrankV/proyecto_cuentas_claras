@@ -17,10 +17,7 @@ export interface EmissionFilters {
   community: string;
 }
 
-export function EmissionFilters({
-  onFilterChange,
-  onClearFilters,
-}: EmissionFiltersProps) {
+export function EmissionFilters({ onFilterChange, onClearFilters }: EmissionFiltersProps) {
   const [filters, setFilters] = useState<EmissionFilters>({
     search: '',
     status: 'all',
@@ -28,7 +25,7 @@ export function EmissionFilters({
     period: 'all',
     dateFrom: '',
     dateTo: '',
-    community: 'all',
+    community: 'all'
   });
 
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -47,7 +44,7 @@ export function EmissionFilters({
       period: 'all',
       dateFrom: '',
       dateTo: '',
-      community: 'all',
+      community: 'all'
     };
     setFilters(clearedFilters);
     onClearFilters();
@@ -82,7 +79,7 @@ export function EmissionFilters({
                 className='form-control'
                 placeholder='Buscar por período, descripción...'
                 value={filters.search}
-                onChange={e => handleFilterChange('search', e.target.value)}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
               />
             </div>
           </div>
@@ -93,7 +90,7 @@ export function EmissionFilters({
             <select
               className='form-select'
               value={filters.status}
-              onChange={e => handleFilterChange('status', e.target.value)}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
             >
               <option value='all'>Todos</option>
               <option value='draft'>Borrador</option>
@@ -112,7 +109,7 @@ export function EmissionFilters({
             <select
               className='form-select'
               value={filters.type}
-              onChange={e => handleFilterChange('type', e.target.value)}
+              onChange={(e) => handleFilterChange('type', e.target.value)}
             >
               <option value='all'>Todos</option>
               <option value='gastos_comunes'>Gastos Comunes</option>
@@ -128,7 +125,7 @@ export function EmissionFilters({
             <select
               className='form-select'
               value={filters.period}
-              onChange={e => handleFilterChange('period', e.target.value)}
+              onChange={(e) => handleFilterChange('period', e.target.value)}
             >
               <option value='all'>Todos</option>
               <option value='2025-09'>Septiembre 2025</option>
@@ -146,7 +143,7 @@ export function EmissionFilters({
             <select
               className='form-select'
               value={filters.community}
-              onChange={e => handleFilterChange('community', e.target.value)}
+              onChange={(e) => handleFilterChange('community', e.target.value)}
             >
               <option value='all'>Todas</option>
               <option value='1'>Edificio Central</option>
@@ -162,7 +159,7 @@ export function EmissionFilters({
               type='date'
               className='form-control'
               value={filters.dateFrom}
-              onChange={e => handleFilterChange('dateFrom', e.target.value)}
+              onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
             />
           </div>
 
@@ -173,7 +170,7 @@ export function EmissionFilters({
               type='date'
               className='form-control'
               value={filters.dateTo}
-              onChange={e => handleFilterChange('dateTo', e.target.value)}
+              onChange={(e) => handleFilterChange('dateTo', e.target.value)}
             />
           </div>
 
@@ -335,7 +332,7 @@ export function ViewControls({
   selectedItems,
   onSelectAll,
   onDeselectAll,
-  onBulkAction,
+  onBulkAction
 }: ViewControlsProps) {
   return (
     <div className='view-controls'>
@@ -363,7 +360,7 @@ export function ViewControls({
                 <i className='material-icons me-1'>clear</i>
                 Deseleccionar
               </button>
-
+              
               <div className='btn-group' role='group'>
                 <button
                   type='button'
@@ -392,9 +389,7 @@ export function ViewControls({
                       Exportar seleccionadas
                     </button>
                   </li>
-                  <li>
-                    <hr className='dropdown-divider' />
-                  </li>
+                  <li><hr className='dropdown-divider' /></li>
                   <li>
                     <button
                       className='dropdown-item text-danger'
@@ -443,28 +438,19 @@ export function ViewControls({
             </button>
             <ul className='dropdown-menu dropdown-menu-end'>
               <li>
-                <button
-                  className='dropdown-item'
-                  onClick={() => onBulkAction('export-csv')}
-                >
+                <button className='dropdown-item' onClick={() => onBulkAction('export-csv')}>
                   <i className='material-icons me-2'>table_chart</i>
                   CSV
                 </button>
               </li>
               <li>
-                <button
-                  className='dropdown-item'
-                  onClick={() => onBulkAction('export-excel')}
-                >
+                <button className='dropdown-item' onClick={() => onBulkAction('export-excel')}>
                   <i className='material-icons me-2'>description</i>
                   Excel
                 </button>
               </li>
               <li>
-                <button
-                  className='dropdown-item'
-                  onClick={() => onBulkAction('export-pdf')}
-                >
+                <button className='dropdown-item' onClick={() => onBulkAction('export-pdf')}>
                   <i className='material-icons me-2'>picture_as_pdf</i>
                   PDF
                 </button>

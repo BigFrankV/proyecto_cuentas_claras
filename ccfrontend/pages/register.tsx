@@ -1,7 +1,6 @@
-import Head from 'next/head';
-
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import Head from 'next/head';
 
 export default function Register() {
   return (

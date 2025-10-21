@@ -5,8 +5,8 @@ declare module 'bootstrap/dist/js/bootstrap.bundle.min.js';
 declare global {
   interface Window {
     // Propiedades que pueden ser añadidas por extensiones
-    chrome?: string;
-    gpc?: string;
+    chrome?: any;
+    gpc?: any;
   }
 }
 

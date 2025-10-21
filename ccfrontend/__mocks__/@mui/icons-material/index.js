@@ -10,8 +10,7 @@ module.exports = {
   Clear: () => React.createElement('span', null, 'clear'),
   Assessment: () => React.createElement('span', null, 'assessment'),
   FileDownload: () => React.createElement('span', null, 'file-download'),
-  PlaylistAddCheck: () =>
-    React.createElement('span', null, 'playlist-add-check'),
+  PlaylistAddCheck: () => React.createElement('span', null, 'playlist-add-check'),
   ArrowBack: () => React.createElement('span', null, 'arrow-back'),
 };
 

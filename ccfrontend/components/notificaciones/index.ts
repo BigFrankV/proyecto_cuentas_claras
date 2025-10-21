@@ -35,12 +35,7 @@ export interface NotificationData {
   isRead?: boolean;
 }
 
-export type NotificationType =
-  | 'system'
-  | 'announcement'
-  | 'reminder'
-  | 'alert'
-  | 'maintenance';
+export type NotificationType = 'system' | 'announcement' | 'reminder' | 'alert' | 'maintenance';
 export type NotificationStatus = 'sent' | 'draft' | 'scheduled' | 'failed';
 export type NotificationChannel = 'email' | 'sms' | 'push' | 'app';
 export type AudienceType = 'all' | 'building' | 'unit' | 'custom';

@@ -9,28 +9,28 @@ export default function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
       draft: {
         text: 'Borrador',
         bgColor: '#ffc107',
-        textColor: '#000',
+        textColor: '#000'
       },
       pending: {
         text: 'Pendiente',
         bgColor: '#17a2b8',
-        textColor: '#fff',
+        textColor: '#fff'
       },
       approved: {
         text: 'Aprobado',
         bgColor: '#28a745',
-        textColor: '#fff',
+        textColor: '#fff'
       },
       rejected: {
         text: 'Rechazado',
         bgColor: '#dc3545',
-        textColor: '#fff',
+        textColor: '#fff'
       },
       paid: {
         text: 'Pagado',
         bgColor: '#6c757d',
-        textColor: '#fff',
-      },
+        textColor: '#fff'
+      }
     };
     return configs[st];
   };
@@ -38,7 +38,7 @@ export default function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
   const config = getStatusConfig(status);
 
   return (
-    <span
+    <span 
       className={`status-badge status-${status}`}
       style={{
         backgroundColor: config.bgColor,
@@ -49,17 +49,17 @@ export default function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
         borderRadius: '0.375rem',
         fontSize: size === 'sm' ? '0.75rem' : '0.875rem',
         fontWeight: '500',
-        gap: '0.25rem',
+        gap: '0.25rem'
       }}
     >
-      <span
+      <span 
         className={`doc-status status-${status}`}
         style={{
           width: '8px',
           height: '8px',
           borderRadius: '50%',
           backgroundColor: config.textColor,
-          opacity: 0.7,
+          opacity: 0.7
         }}
       />
       {config.text}

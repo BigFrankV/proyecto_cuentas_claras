@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from 'react';
-
-import { Cargo } from '@/types/cargos';
-import { cargosApi } from '@/lib/api/cargos';
-
+import React, { useState } from 'react';
+import StatusBadge from './StatusBadge';
+import TypeBadge from './TypeBadge';
 import AmountCell from './AmountCell';
 import PaymentProgress from './PaymentProgress';
-import StatusBadge from './StatusBadge';
 import Timeline, { TimelineItem } from './Timeline';
-import TypeBadge from './TypeBadge';
+import { Cargo } from './CargoCard';
 
 export interface PaymentRecord {
   id: string;
@@ -30,69 +27,96 @@ export interface Document {
 
 export interface CargoDetalleProps {
   cargo: Cargo;
-  cargoId?: number;
+  pagos?: PaymentRecord[];
+  documentos?: Document[];
+  historial?: TimelineItem[];
   className?: string;
 }
 
-export default function CargoDetalle({
-  cargo,
-  cargoId,
-  className = '',
+// Mock data for demonstration
+const mockPayments: PaymentRecord[] = [
+  {
+    id: 'PAY-001',
+    fecha: new Date('2024-01-10'),
+    monto: 125000,
+    metodo: 'Transferencia Bancaria',
+    referencia: 'TRF-001-2024',
+    estado: 'completed',
+    observaciones: 'Pago parcial inicial'
+  },
+  {
+    id: 'PAY-002',
+    fecha: new Date('2024-01-25'),
+    monto: 125000,
+    metodo: 'PSE',
+    referencia: 'PSE-002-2024',
+    estado: 'completed',
+    observaciones: 'Completar pago restante'
+  }
+];
+
+const mockDocuments: Document[] = [
+  {
+    id: 'DOC-001',
+    nombre: 'Factura_Administracion_Enero_2024.pdf',
+    tipo: 'PDF',
+    tamaño: 256789,
+    fechaSubida: new Date('2024-01-01'),
+    url: '/documents/factura-adm-ene-2024.pdf'
+  },
+  {
+    id: 'DOC-002',
+    nombre: 'Soporte_Pago_Transferencia.jpg',
+    tipo: 'Image',
+    tamaño: 98432,
+    fechaSubida: new Date('2024-01-10'),
+    url: '/documents/soporte-pago-001.jpg'
+  }
+];
+
+const mockTimeline: TimelineItem[] = [
+  {
+    id: 'TL-001',
+    type: 'info',
+    title: 'Cargo Creado',
+    content: 'Se creó el cargo de administración para enero 2024',
+    date: new Date('2024-01-01 09:00:00'),
+    user: 'Sistema Admin'
+  },
+  {
+    id: 'TL-002',
+    type: 'success',
+    title: 'Cargo Aprobado',
+    content: 'El cargo fue aprobado por el administrador',
+    date: new Date('2024-01-02 14:30:00'),
+    user: 'María González'
+  },
+  {
+    id: 'TL-003',
+    type: 'success',
+    title: 'Pago Parcial Recibido',
+    content: 'Se recibió pago parcial por $125.000 vía transferencia bancaria',
+    date: new Date('2024-01-10 16:45:00'),
+    user: 'Sistema Pagos'
+  },
+  {
+    id: 'TL-004',
+    type: 'success',
+    title: 'Pago Completado',
+    content: 'Se completó el pago total del cargo vía PSE',
+    date: new Date('2024-01-25 11:20:00'),
+    user: 'Sistema Pagos'
+  }
+];
+
+export default function CargoDetalle({ 
+  cargo, 
+  pagos = mockPayments,
+  documentos = mockDocuments,
+  historial = mockTimeline,
+  className = '' 
 }: CargoDetalleProps) {
   const [activeTab, setActiveTab] = useState('detalles');
-  const [pagos, setPagos] = useState<PaymentRecord[]>([]);
-  const [documentos] = useState<Document[]>([]);
-  const [historial, setHistorial] = useState<TimelineItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Cargar detalles del cargo desde la API
-  useEffect(() => {
-    const fetchCargoDetails = async () => {
-      try {
-        setLoading(true);
-        
-        if (!cargoId) {
-          setLoading(false);
-          return;
-        }
-
-        // Cargar pagos, documentos e historial
-        const [pagosData, historialData] = await Promise.all([
-          cargosApi.getPagos(cargoId),
-          cargosApi.getHistorialPagos(cargoId),
-        ]);
-
-        // Transformar pagos
-        setPagos(pagosData.map((p) => ({
-          id: String(p.id),
-          fecha: new Date(p.fecha),
-          monto: p.monto,
-          metodo: p.metodo,
-          referencia: p.referencia,
-          estado: p.estado,
-          observaciones: p.observaciones,
-        })));
-
-        // Transformar historial
-        setHistorial(historialData.map((h) => ({
-          id: String(h.id),
-          type: h.tipo || 'info',
-          title: h.titulo,
-          content: h.contenido,
-          date: new Date(h.fecha),
-          user: h.usuario,
-        })));
-
-      } catch {
-        setPagos([]);
-        setHistorial([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCargoDetails();
-  }, [cargoId, setLoading]);
 
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat('es-CO', {
@@ -100,29 +124,25 @@ export default function CargoDetalle({
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
+      minute: '2-digit'
     }).format(date);
   };
 
   const formatPeriod = (period: string): string => {
     const [year, month] = period.split('-');
-    if (!year || !month) {
-      return period;
-    }
+    if (!year || !month) return period;
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
-      month: 'long',
+      month: 'long'
     }).format(new Date(parseInt(year), parseInt(month) - 1));
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) {
-      return '0 Bytes';
-    }
+    if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const getTotalPaid = (): number => {
@@ -132,28 +152,32 @@ export default function CargoDetalle({
   };
 
   const isOverdue = (): boolean => {
-    return new Date() > cargo.fechaVencimiento && cargo.estado !== 'pagado';
+    return new Date() > cargo.fechaVencimiento && cargo.estado !== 'paid';
   };
 
   const handleRegisterPayment = () => {
-    // TODO: Implement payment registration
+    console.log('Register payment for cargo:', cargo.id);
     // TODO: Implement payment registration
   };
 
   const handleSendReminder = () => {
+    console.log('Send reminder for cargo:', cargo.id);
     // TODO: Implement send reminder
   };
 
   const handleEditCargo = () => {
+    console.log('Edit cargo:', cargo.id);
     // TODO: Implement edit functionality
   };
 
   const handleDuplicateCargo = () => {
+    console.log('Duplicate cargo:', cargo.id);
     // TODO: Implement duplicate functionality
   };
 
   const handleCancelCargo = () => {
     if (confirm('¿Está seguro de que desea cancelar este cargo?')) {
+      console.log('Cancel cargo:', cargo.id);
       // TODO: Implement cancel functionality
     }
   };
@@ -163,10 +187,12 @@ export default function CargoDetalle({
   };
 
   const handleExportCargo = () => {
+    console.log('Export cargo:', cargo.id);
     // TODO: Implement export functionality
   };
 
   const handleUploadDocument = () => {
+    console.log('Upload document for cargo:', cargo.id);
     // TODO: Implement document upload
   };
 
@@ -190,87 +216,100 @@ export default function CargoDetalle({
   return (
     <div className={`cargo-detalle ${className}`}>
       {/* Header */}
-      <div className='charge-header'>
-        <div className='d-flex justify-content-between align-items-start mb-3'>
+      <div className="charge-header">
+        <div className="d-flex justify-content-between align-items-start mb-3">
           <div>
-            <h1 className='charge-title'>{cargo.concepto}</h1>
-            <p className='charge-subtitle'>
-              {cargo.descripcion || 'Sin descripción'}
-            </p>
-            <div className='charge-id-badge'>#{cargo.id}</div>
+            <h1 className="charge-title">{cargo.concepto}</h1>
+            <p className="charge-subtitle">{cargo.descripcion || 'Sin descripción'}</p>
+            <div className="charge-id-badge">#{cargo.id}</div>
           </div>
-          <div className='d-flex gap-2'>
+          <div className="d-flex gap-2">
             <TypeBadge type={cargo.tipo} />
             <StatusBadge status={cargo.estado} />
           </div>
         </div>
-
-        <div className='charge-stats'>
-          <div className='stat-item'>
-            <div className='stat-number'>{cargo.unidad}</div>
-            <div className='stat-label'>Unidad</div>
+        
+        <div className="charge-stats">
+          <div className="stat-item">
+            <div className="stat-number">{cargo.unidad}</div>
+            <div className="stat-label">Unidad</div>
           </div>
-          <div className='stat-item'>
-            <div className='stat-number'>{formatPeriod(cargo.periodo || '')}</div>
-            <div className='stat-label'>Período</div>
+          <div className="stat-item">
+            <div className="stat-number">{formatPeriod(cargo.periodo)}</div>
+            <div className="stat-label">Período</div>
           </div>
-          <div className='stat-item'>
-            <div className='stat-number'>
+          <div className="stat-item">
+            <div className="stat-number">
               <AmountCell amount={cargo.monto} />
             </div>
-            <div className='stat-label'>Monto Total</div>
+            <div className="stat-label">Monto Total</div>
           </div>
-          <div className='stat-item'>
-            <div className='stat-number'>
+          <div className="stat-item">
+            <div className="stat-number">
               <AmountCell amount={getTotalPaid()} />
             </div>
-            <div className='stat-label'>Pagado</div>
+            <div className="stat-label">Pagado</div>
           </div>
-          <div className='stat-item'>
-            <div className='stat-number'>
+          <div className="stat-item">
+            <div className="stat-number">
               <AmountCell amount={cargo.monto - getTotalPaid()} />
             </div>
-            <div className='stat-label'>Pendiente</div>
+            <div className="stat-label">Pendiente</div>
           </div>
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className='row mb-4'>
-        <div className='col-12'>
-          <div className='d-flex flex-wrap gap-2'>
-            <button
-              className='action-btn primary'
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="d-flex flex-wrap gap-2">
+            <button 
+              className="action-btn primary"
               onClick={handleRegisterPayment}
             >
-              <i className='material-icons me-2'>payment</i>
+              <i className="material-icons me-2">payment</i>
               Registrar Pago
             </button>
-            <button className='action-btn outline' onClick={handleSendReminder}>
-              <i className='material-icons me-2'>notifications</i>
+            <button 
+              className="action-btn outline"
+              onClick={handleSendReminder}
+            >
+              <i className="material-icons me-2">notifications</i>
               Enviar Recordatorio
             </button>
-            <button className='action-btn secondary' onClick={handleEditCargo}>
-              <i className='material-icons me-2'>edit</i>
+            <button 
+              className="action-btn secondary"
+              onClick={handleEditCargo}
+            >
+              <i className="material-icons me-2">edit</i>
               Editar
             </button>
-            <button
-              className='action-btn outline'
+            <button 
+              className="action-btn outline"
               onClick={handleDuplicateCargo}
             >
-              <i className='material-icons me-2'>content_copy</i>
+              <i className="material-icons me-2">content_copy</i>
               Duplicar
             </button>
-            <button className='action-btn outline' onClick={handlePrintCargo}>
-              <i className='material-icons me-2'>print</i>
+            <button 
+              className="action-btn outline"
+              onClick={handlePrintCargo}
+            >
+              <i className="material-icons me-2">print</i>
               Imprimir
             </button>
-            <button className='action-btn outline' onClick={handleExportCargo}>
-              <i className='material-icons me-2'>download</i>
+            <button 
+              className="action-btn outline"
+              onClick={handleExportCargo}
+            >
+              <i className="material-icons me-2">download</i>
               Exportar
             </button>
-            <button className='action-btn danger' onClick={handleCancelCargo}>
-              <i className='material-icons me-2'>cancel</i>
+            <button 
+              className="action-btn danger"
+              onClick={handleCancelCargo}
+            >
+              <i className="material-icons me-2">cancel</i>
               Cancelar
             </button>
           </div>
@@ -278,176 +317,168 @@ export default function CargoDetalle({
       </div>
 
       {/* Navigation Tabs */}
-      <ul className='nav nav-tabs mb-4'>
-        <li className='nav-item'>
-          <button
+      <ul className="nav nav-tabs mb-4">
+        <li className="nav-item">
+          <button 
             className={`nav-link ${activeTab === 'detalles' ? 'active' : ''}`}
             onClick={() => setActiveTab('detalles')}
           >
-            <i className='material-icons me-2'>info</i>
+            <i className="material-icons me-2">info</i>
             Detalles
           </button>
         </li>
-        <li className='nav-item'>
-          <button
+        <li className="nav-item">
+          <button 
             className={`nav-link ${activeTab === 'pagos' ? 'active' : ''}`}
             onClick={() => setActiveTab('pagos')}
           >
-            <i className='material-icons me-2'>payments</i>
+            <i className="material-icons me-2">payments</i>
             Historial de Pagos ({pagos.length})
           </button>
         </li>
-        <li className='nav-item'>
-          <button
+        <li className="nav-item">
+          <button 
             className={`nav-link ${activeTab === 'documentos' ? 'active' : ''}`}
             onClick={() => setActiveTab('documentos')}
           >
-            <i className='material-icons me-2'>description</i>
+            <i className="material-icons me-2">description</i>
             Documentos ({documentos.length})
           </button>
         </li>
-        <li className='nav-item'>
-          <button
+        <li className="nav-item">
+          <button 
             className={`nav-link ${activeTab === 'historial' ? 'active' : ''}`}
             onClick={() => setActiveTab('historial')}
           >
-            <i className='material-icons me-2'>history</i>
+            <i className="material-icons me-2">history</i>
             Actividad ({historial.length})
           </button>
         </li>
       </ul>
 
       {/* Tab Content */}
-      <div className='tab-content'>
+      <div className="tab-content">
         {/* Detalles Tab */}
         {activeTab === 'detalles' && (
-          <div className='row'>
-            <div className='col-lg-8'>
-              <div className='info-card'>
-                <div className='info-card-header'>
-                  <h5 className='info-card-title'>
-                    <i className='material-icons'>receipt</i>
+          <div className="row">
+            <div className="col-lg-8">
+              <div className="info-card">
+                <div className="info-card-header">
+                  <h5 className="info-card-title">
+                    <i className="material-icons">receipt</i>
                     Información del Cargo
                   </h5>
                 </div>
-
-                <div className='info-row'>
-                  <span className='info-label'>ID del Cargo:</span>
-                  <span className='info-value'>{cargo.id}</span>
+                
+                <div className="info-row">
+                  <span className="info-label">ID del Cargo:</span>
+                  <span className="info-value">{cargo.id}</span>
                 </div>
-
-                <div className='info-row'>
-                  <span className='info-label'>Concepto:</span>
-                  <span className='info-value'>{cargo.concepto}</span>
+                
+                <div className="info-row">
+                  <span className="info-label">Concepto:</span>
+                  <span className="info-value">{cargo.concepto}</span>
                 </div>
-
+                
                 {cargo.descripcion && (
-                  <div className='info-row'>
-                    <span className='info-label'>Descripción:</span>
-                    <span className='info-value'>{cargo.descripcion}</span>
+                  <div className="info-row">
+                    <span className="info-label">Descripción:</span>
+                    <span className="info-value">{cargo.descripcion}</span>
                   </div>
                 )}
-
-                <div className='info-row'>
-                  <span className='info-label'>Tipo:</span>
-                  <span className='info-value'>
+                
+                <div className="info-row">
+                  <span className="info-label">Tipo:</span>
+                  <span className="info-value">
                     <TypeBadge type={cargo.tipo} />
                   </span>
                 </div>
-
-                <div className='info-row'>
-                  <span className='info-label'>Estado:</span>
-                  <span className='info-value'>
+                
+                <div className="info-row">
+                  <span className="info-label">Estado:</span>
+                  <span className="info-value">
                     <StatusBadge status={cargo.estado} />
                   </span>
                 </div>
-
-                <div className='info-row'>
-                  <span className='info-label'>Unidad:</span>
-                  <span className='info-value'>{cargo.unidad}</span>
+                
+                <div className="info-row">
+                  <span className="info-label">Unidad:</span>
+                  <span className="info-value">{cargo.unidad}</span>
                 </div>
-
-                <div className='info-row'>
-                  <span className='info-label'>Período:</span>
-                  <span className='info-value'>
-                    {formatPeriod(cargo.periodo || '')}
-                  </span>
+                
+                <div className="info-row">
+                  <span className="info-label">Período:</span>
+                  <span className="info-value">{formatPeriod(cargo.periodo)}</span>
                 </div>
-
-                <div className='info-row'>
-                  <span className='info-label'>Cuenta de Costo:</span>
-                  <span className='info-value'>{cargo.cuentaCosto}</span>
+                
+                <div className="info-row">
+                  <span className="info-label">Cuenta de Costo:</span>
+                  <span className="info-value">{cargo.cuentaCosto}</span>
                 </div>
-
-                <div className='info-row'>
-                  <span className='info-label'>Fecha de Creación:</span>
-                  <span className='info-value'>
-                    {formatDate(cargo.fechaCreacion)}
-                  </span>
+                
+                <div className="info-row">
+                  <span className="info-label">Fecha de Creación:</span>
+                  <span className="info-value">{formatDate(cargo.fechaCreacion)}</span>
                 </div>
-
-                <div className='info-row'>
-                  <span className='info-label'>Fecha de Vencimiento:</span>
-                  <span
-                    className={`info-value ${isOverdue() ? 'text-danger fw-bold' : ''}`}
-                  >
+                
+                <div className="info-row">
+                  <span className="info-label">Fecha de Vencimiento:</span>
+                  <span className={`info-value ${isOverdue() ? 'text-danger fw-bold' : ''}`}>
                     {formatDate(cargo.fechaVencimiento)}
                     {isOverdue() && (
-                      <i className='material-icons ms-1 text-danger'>warning</i>
+                      <i className="material-icons ms-1 text-danger">warning</i>
                     )}
                   </span>
                 </div>
-
+                
                 {cargo.observaciones && (
-                  <div className='info-row'>
-                    <span className='info-label'>Observaciones:</span>
-                    <span className='info-value'>{cargo.observaciones}</span>
+                  <div className="info-row">
+                    <span className="info-label">Observaciones:</span>
+                    <span className="info-value">{cargo.observaciones}</span>
                   </div>
                 )}
               </div>
             </div>
-
-            <div className='col-lg-4'>
-              <div className='info-card'>
-                <div className='info-card-header'>
-                  <h5 className='info-card-title'>
-                    <i className='material-icons'>account_balance_wallet</i>
+            
+            <div className="col-lg-4">
+              <div className="info-card">
+                <div className="info-card-header">
+                  <h5 className="info-card-title">
+                    <i className="material-icons">account_balance_wallet</i>
                     Información Financiera
                   </h5>
                 </div>
-
-                <div className='info-row'>
-                  <span className='info-label'>Monto Total:</span>
-                  <span className='info-value money'>
+                
+                <div className="info-row">
+                  <span className="info-label">Monto Total:</span>
+                  <span className="info-value money">
                     <AmountCell amount={cargo.monto} />
                   </span>
                 </div>
-
-                <div className='info-row'>
-                  <span className='info-label'>Monto Aplicado:</span>
-                  <span className='info-value money'>
-                    <AmountCell amount={cargo.montoAplicado || 0} />
+                
+                <div className="info-row">
+                  <span className="info-label">Monto Aplicado:</span>
+                  <span className="info-value money">
+                    <AmountCell amount={cargo.montoAplicado} />
                   </span>
                 </div>
-
-                <div className='info-row'>
-                  <span className='info-label'>Total Pagado:</span>
-                  <span className='info-value money positive'>
+                
+                <div className="info-row">
+                  <span className="info-label">Total Pagado:</span>
+                  <span className="info-value money positive">
                     <AmountCell amount={getTotalPaid()} />
                   </span>
                 </div>
-
-                <div className='info-row'>
-                  <span className='info-label'>Saldo Pendiente:</span>
-                  <span
-                    className={`info-value money ${cargo.monto - getTotalPaid() > 0 ? 'negative' : 'positive'}`}
-                  >
+                
+                <div className="info-row">
+                  <span className="info-label">Saldo Pendiente:</span>
+                  <span className={`info-value money ${cargo.monto - getTotalPaid() > 0 ? 'negative' : 'positive'}`}>
                     <AmountCell amount={cargo.monto - getTotalPaid()} />
                   </span>
                 </div>
-
-                <div className='mt-4'>
-                  <PaymentProgress
+                
+                <div className="mt-4">
+                  <PaymentProgress 
                     totalAmount={cargo.monto}
                     paidAmount={getTotalPaid()}
                   />
@@ -459,33 +490,31 @@ export default function CargoDetalle({
 
         {/* Pagos Tab */}
         {activeTab === 'pagos' && (
-          <div className='info-card'>
-            <div className='info-card-header'>
-              <h5 className='info-card-title'>
-                <i className='material-icons'>payment</i>
+          <div className="info-card">
+            <div className="info-card-header">
+              <h5 className="info-card-title">
+                <i className="material-icons">payment</i>
                 Historial de Pagos
               </h5>
-              <button
-                className='btn btn-primary btn-sm'
+              <button 
+                className="btn btn-primary btn-sm"
                 onClick={handleRegisterPayment}
               >
-                <i className='material-icons me-1'>add</i>
+                <i className="material-icons me-1">add</i>
                 Nuevo Pago
               </button>
             </div>
-
+            
             {pagos.length === 0 ? (
-              <div className='text-center py-4'>
-                <i className='material-icons display-4 text-muted'>payment</i>
-                <h5 className='mt-3'>No hay pagos registrados</h5>
-                <p className='text-muted'>
-                  Este cargo aún no tiene pagos asociados.
-                </p>
+              <div className="text-center py-4">
+                <i className="material-icons display-4 text-muted">payment</i>
+                <h5 className="mt-3">No hay pagos registrados</h5>
+                <p className="text-muted">Este cargo aún no tiene pagos asociados.</p>
               </div>
             ) : (
-              <div className='payment-history-table'>
-                <div className='table-responsive'>
-                  <table className='table'>
+              <div className="payment-history-table">
+                <div className="table-responsive">
+                  <table className="table">
                     <thead>
                       <tr>
                         <th>Fecha</th>
@@ -497,7 +526,7 @@ export default function CargoDetalle({
                       </tr>
                     </thead>
                     <tbody>
-                      {pagos.map(pago => (
+                      {pagos.map((pago) => (
                         <tr key={pago.id}>
                           <td>{formatDate(pago.fecha)}</td>
                           <td>
@@ -505,25 +534,16 @@ export default function CargoDetalle({
                           </td>
                           <td>{pago.metodo}</td>
                           <td>
-                            <span className='badge bg-secondary'>
-                              {pago.referencia}
-                            </span>
+                            <span className="badge bg-secondary">{pago.referencia}</span>
                           </td>
                           <td>
-                            <span
-                              className={`badge ${
-                                pago.estado === 'completed'
-                                  ? 'bg-success'
-                                  : pago.estado === 'pending'
-                                    ? 'bg-warning'
-                                    : 'bg-danger'
-                              }`}
-                            >
-                              {pago.estado === 'completed'
-                                ? 'Completado'
-                                : pago.estado === 'pending'
-                                  ? 'Pendiente'
-                                  : 'Fallido'}
+                            <span className={`badge ${
+                              pago.estado === 'completed' ? 'bg-success' :
+                              pago.estado === 'pending' ? 'bg-warning' :
+                              'bg-danger'
+                            }`}>
+                              {pago.estado === 'completed' ? 'Completado' :
+                               pago.estado === 'pending' ? 'Pendiente' : 'Fallido'}
                             </span>
                           </td>
                           <td>{pago.observaciones || '-'}</td>
@@ -539,64 +559,56 @@ export default function CargoDetalle({
 
         {/* Documentos Tab */}
         {activeTab === 'documentos' && (
-          <div className='info-card'>
-            <div className='info-card-header'>
-              <h5 className='info-card-title'>
-                <i className='material-icons'>folder</i>
+          <div className="info-card">
+            <div className="info-card-header">
+              <h5 className="info-card-title">
+                <i className="material-icons">folder</i>
                 Documentos Adjuntos
               </h5>
-              <button
-                className='btn btn-primary btn-sm'
+              <button 
+                className="btn btn-primary btn-sm"
                 onClick={handleUploadDocument}
               >
-                <i className='material-icons me-1'>upload</i>
+                <i className="material-icons me-1">upload</i>
                 Subir Documento
               </button>
             </div>
-
+            
             {documentos.length === 0 ? (
-              <div className='text-center py-4'>
-                <i className='material-icons display-4 text-muted'>
-                  description
-                </i>
-                <h5 className='mt-3'>No hay documentos</h5>
-                <p className='text-muted'>
-                  No se han subido documentos para este cargo.
-                </p>
+              <div className="text-center py-4">
+                <i className="material-icons display-4 text-muted">description</i>
+                <h5 className="mt-3">No hay documentos</h5>
+                <p className="text-muted">No se han subido documentos para este cargo.</p>
               </div>
             ) : (
-              <div className='row'>
-                {documentos.map(doc => (
-                  <div key={doc.id} className='col-md-6 col-lg-4 mb-3'>
-                    <div className='document-item'>
-                      <div className='document-icon'>
-                        <i className='material-icons'>
-                          {doc.tipo === 'PDF'
-                            ? 'picture_as_pdf'
-                            : doc.tipo === 'Image'
-                              ? 'image'
-                              : 'description'}
+              <div className="row">
+                {documentos.map((doc) => (
+                  <div key={doc.id} className="col-md-6 col-lg-4 mb-3">
+                    <div className="document-item">
+                      <div className="document-icon">
+                        <i className="material-icons">
+                          {doc.tipo === 'PDF' ? 'picture_as_pdf' :
+                           doc.tipo === 'Image' ? 'image' : 'description'}
                         </i>
                       </div>
-                      <div className='document-info'>
-                        <div className='document-name'>{doc.nombre}</div>
-                        <div className='document-meta'>
-                          {formatFileSize(doc.tamaño)} •{' '}
-                          {formatDate(doc.fechaSubida)}
+                      <div className="document-info">
+                        <div className="document-name">{doc.nombre}</div>
+                        <div className="document-meta">
+                          {formatFileSize(doc.tamaño)} • {formatDate(doc.fechaSubida)}
                         </div>
                       </div>
-                      <div className='document-actions'>
-                        <button
-                          className='btn btn-outline-primary btn-sm'
+                      <div className="document-actions">
+                        <button 
+                          className="btn btn-outline-primary btn-sm"
                           onClick={() => handleViewDocument(doc.id)}
                         >
-                          <i className='material-icons'>visibility</i>
+                          <i className="material-icons">visibility</i>
                         </button>
-                        <button
-                          className='btn btn-outline-secondary btn-sm'
+                        <button 
+                          className="btn btn-outline-secondary btn-sm"
                           onClick={() => handleDownloadDocument(doc.id)}
                         >
-                          <i className='material-icons'>download</i>
+                          <i className="material-icons">download</i>
                         </button>
                       </div>
                     </div>
@@ -609,14 +621,14 @@ export default function CargoDetalle({
 
         {/* Historial Tab */}
         {activeTab === 'historial' && (
-          <div className='info-card'>
-            <div className='info-card-header'>
-              <h5 className='info-card-title'>
-                <i className='material-icons'>history</i>
+          <div className="info-card">
+            <div className="info-card-header">
+              <h5 className="info-card-title">
+                <i className="material-icons">history</i>
                 Historial de Actividad
               </h5>
             </div>
-
+            
             <Timeline items={historial} />
           </div>
         )}

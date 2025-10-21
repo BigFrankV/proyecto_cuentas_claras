@@ -4,9 +4,7 @@ import { useRouter } from 'next/router';
 // Mock auth utilities BEFORE importing pages that use them
 jest.mock('@/lib/useAuth', () => ({
   // A simple ProtectedRoute that just renders children in tests
-  ProtectedRoute: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
+  ProtectedRoute: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   // useAuth returns a logged-in user by default for tests
   useAuth: () => ({
     user: { username: 'TestUser', id: 1 },
@@ -18,9 +16,7 @@ jest.mock('@/lib/useAuth', () => ({
     refreshUser: jest.fn(),
   }),
   // Provide AuthProvider as passthrough
-  AuthProvider: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 import Dashboard from '../pages/dashboard';
@@ -83,17 +79,17 @@ describe('Dashboard Page', () => {
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText(/Bienvenido de vuelta/i)).toBeInTheDocument();
 
-    // Verify components are rendered
-    // DashboardCharts is used in the page
-    expect(screen.getByTestId('dashboard-charts')).toBeInTheDocument();
+  // Verify components are rendered
+  // DashboardCharts is used in the page
+  expect(screen.getByTestId('dashboard-charts')).toBeInTheDocument();
   });
 
   it('has correct page title', () => {
     render(<Dashboard />);
 
-    const layout = screen.getByTestId('layout');
-    // Layout mock uses the title passed in the page
-    expect(layout).toHaveAttribute('data-title', 'Dashboard');
+  const layout = screen.getByTestId('layout');
+  // Layout mock uses the title passed in the page
+  expect(layout).toHaveAttribute('data-title', 'Dashboard');
   });
 
   it('renders action buttons', () => {
