@@ -1,21 +1,9 @@
-import Head from 'next/head';
-import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
-import {
-  Button,
-  Card,
-  Row,
-  Col,
-  Form,
-  Alert,
-  Spinner,
-  Table,
-  Modal,
-  ProgressBar,
-} from 'react-bootstrap';
-
+import { useRouter } from 'next/router';
+import { Button, Card, Row, Col, Form, Alert, Spinner, Table, Modal, ProgressBar } from 'react-bootstrap';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import Head from 'next/head';
 
 interface FormData {
   bank: string;
@@ -50,14 +38,14 @@ export default function NuevaConciliacion() {
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [showResults, setShowResults] = useState(false);
-
+  
   const [formData, setFormData] = useState<FormData>({
     bank: '',
     bankAccount: '',
     period: '',
     startDate: '',
     endDate: '',
-    uploadedFile: null,
+    uploadedFile: null
   });
 
   const [processSteps, setProcessSteps] = useState<ProcessStep[]>([
@@ -65,57 +53,57 @@ export default function NuevaConciliacion() {
       number: 1,
       title: 'Configuración Inicial',
       description: 'Selecciona banco, cuenta y período',
-      status: 'active',
+      status: 'active'
     },
     {
       number: 2,
       title: 'Carga de Archivos',
       description: 'Sube el estado bancario en formato Excel/CSV',
-      status: 'pending',
+      status: 'pending'
     },
     {
       number: 3,
       title: 'Procesamiento',
       description: 'Análisis automático de transacciones',
-      status: 'pending',
+      status: 'pending'
     },
     {
       number: 4,
       title: 'Revisión y Ajustes',
       description: 'Verificar coincidencias y resolver diferencias',
-      status: 'pending',
-    },
+      status: 'pending'
+    }
   ]);
 
-  const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>(
-    [],
-  );
+  const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>([]);
   const [matchingSummary, setMatchingSummary] = useState({
     totalTransactions: 0,
     matchedTransactions: 0,
     unmatchedTransactions: 0,
     manualMatches: 0,
     totalAmount: 0,
-    difference: 0,
+    difference: 0
   });
 
   // Bank accounts data
   const bankAccounts = {
     'banco-chile': [
       { value: '12345678-9', label: 'Cuenta Corriente 12345678-9' },
-      { value: '87654321-0', label: 'Cuenta Corriente 87654321-0' },
+      { value: '87654321-0', label: 'Cuenta Corriente 87654321-0' }
     ],
     'banco-santander': [
       { value: '11223344-5', label: 'Cuenta Corriente 11223344-5' },
-      { value: '99887766-3', label: 'Cuenta Vista 99887766-3' },
+      { value: '99887766-3', label: 'Cuenta Vista 99887766-3' }
     ],
-    'banco-estado': [{ value: '55667788-1', label: 'CuentaRUT 55667788-1' }],
+    'banco-estado': [
+      { value: '55667788-1', label: 'CuentaRUT 55667788-1' }
+    ]
   };
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }));
   };
 
@@ -134,14 +122,13 @@ export default function NuevaConciliacion() {
     }
   };
 
-  const updateStepStatus = (
-    stepNumber: number,
-    status: 'pending' | 'active' | 'completed',
-  ) => {
-    setProcessSteps(prev =>
-      prev.map(step =>
-        step.number === stepNumber ? { ...step, status } : step,
-      ),
+  const updateStepStatus = (stepNumber: number, status: 'pending' | 'active' | 'completed') => {
+    setProcessSteps(prev => 
+      prev.map(step => 
+        step.number === stepNumber 
+          ? { ...step, status }
+          : step
+      )
     );
   };
 
@@ -164,7 +151,7 @@ export default function NuevaConciliacion() {
   const processFiles = async () => {
     setProcessing(true);
     setLoading(true);
-
+    
     // Simulate file processing
     setTimeout(() => {
       // Mock transaction data
@@ -177,7 +164,7 @@ export default function NuevaConciliacion() {
           amount: 145000,
           type: 'credit',
           matched: true,
-          matchStatus: 'matched',
+          matchStatus: 'matched'
         },
         {
           id: 2,
@@ -187,7 +174,7 @@ export default function NuevaConciliacion() {
           amount: -85000,
           type: 'debit',
           matched: true,
-          matchStatus: 'matched',
+          matchStatus: 'matched'
         },
         {
           id: 3,
@@ -197,7 +184,7 @@ export default function NuevaConciliacion() {
           amount: 145000,
           type: 'credit',
           matched: false,
-          matchStatus: 'unmatched',
+          matchStatus: 'unmatched'
         },
         {
           id: 4,
@@ -207,27 +194,23 @@ export default function NuevaConciliacion() {
           amount: -2500,
           type: 'debit',
           matched: false,
-          matchStatus: 'manual',
-        },
+          matchStatus: 'manual'
+        }
       ];
 
       setBankTransactions(mockTransactions);
-
+      
       const matched = mockTransactions.filter(t => t.matched).length;
       const total = mockTransactions.length;
-      const totalAmount = mockTransactions.reduce(
-        (sum, t) => sum + t.amount,
-        0,
-      );
-
+      const totalAmount = mockTransactions.reduce((sum, t) => sum + t.amount, 0);
+      
       setMatchingSummary({
         totalTransactions: total,
         matchedTransactions: matched,
         unmatchedTransactions: total - matched,
-        manualMatches: mockTransactions.filter(t => t.matchStatus === 'manual')
-          .length,
+        manualMatches: mockTransactions.filter(t => t.matchStatus === 'manual').length,
         totalAmount,
-        difference: 0,
+        difference: 0
       });
 
       setProcessing(false);
@@ -240,18 +223,16 @@ export default function NuevaConciliacion() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP',
+      currency: 'CLP'
     }).format(amount);
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) {
-      return '0 Bytes';
-    }
+    if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const getStepIcon = (step: ProcessStep) => {
@@ -279,13 +260,7 @@ export default function NuevaConciliacion() {
   const canProceedToNextStep = () => {
     switch (currentStep) {
       case 1:
-        return (
-          formData.bank &&
-          formData.bankAccount &&
-          formData.period &&
-          formData.startDate &&
-          formData.endDate
-        );
+        return formData.bank && formData.bankAccount && formData.period && formData.startDate && formData.endDate;
       case 2:
         return formData.uploadedFile !== null;
       case 3:
@@ -302,18 +277,21 @@ export default function NuevaConciliacion() {
       </Head>
 
       <Layout title='Nueva Conciliación Bancaria'>
-        <div className='container-fluid p-4'>
+        <div className="container-fluid p-4">
           {/* Header */}
-          <div className='form-header'>
-            <div className='d-flex justify-content-between align-items-start'>
+          <div className="form-header">
+            <div className="d-flex justify-content-between align-items-start">
               <div>
-                <h1 className='form-title'>Nueva Conciliación Bancaria</h1>
-                <p className='form-subtitle'>
+                <h1 className="form-title">Nueva Conciliación Bancaria</h1>
+                <p className="form-subtitle">
                   Crea una nueva conciliación bancaria paso a paso
                 </p>
               </div>
-              <Button variant='outline-light' onClick={() => router.back()}>
-                <span className='material-icons me-2'>arrow_back</span>
+              <Button 
+                variant="outline-light" 
+                onClick={() => router.back()}
+              >
+                <span className="material-icons me-2">arrow_back</span>
                 Volver
               </Button>
             </div>
@@ -322,27 +300,20 @@ export default function NuevaConciliacion() {
           <Row>
             {/* Progress Steps */}
             <Col lg={3}>
-              <Card className='progress-section'>
+              <Card className="progress-section">
                 <Card.Body>
-                  <h6 className='progress-title'>
-                    <span className='material-icons'>timeline</span>
+                  <h6 className="progress-title">
+                    <span className="material-icons">timeline</span>
                     Progreso
                   </h6>
-                  {processSteps.map(step => (
-                    <div
-                      key={step.number}
-                      className={`progress-step ${step.status}`}
-                    >
+                  {processSteps.map((step) => (
+                    <div key={step.number} className={`progress-step ${step.status}`}>
                       <div className={getStepIconClass(step)}>
-                        <span className='material-icons'>
-                          {getStepIcon(step)}
-                        </span>
+                        <span className="material-icons">{getStepIcon(step)}</span>
                       </div>
-                      <div className='step-text'>
-                        <div className='step-title'>{step.title}</div>
-                        <div className='step-description'>
-                          {step.description}
-                        </div>
+                      <div className="step-text">
+                        <div className="step-title">{step.title}</div>
+                        <div className="step-description">{step.description}</div>
                       </div>
                     </div>
                   ))}
@@ -353,78 +324,60 @@ export default function NuevaConciliacion() {
             <Col lg={9}>
               {/* Step 1: Initial Configuration */}
               {currentStep === 1 && (
-                <Card className='form-section'>
-                  <div className='form-section-header'>
-                    <h5 className='form-section-title'>
-                      <span className='material-icons'>settings</span>
+                <Card className="form-section">
+                  <div className="form-section-header">
+                    <h5 className="form-section-title">
+                      <span className="material-icons">settings</span>
                       Configuración Inicial
                     </h5>
                   </div>
-                  <div className='form-section-body'>
-                    <Row className='g-4'>
+                  <div className="form-section-body">
+                    <Row className="g-4">
                       <Col md={6}>
                         <Form.Group>
-                          <Form.Label className='fw-semibold'>
-                            Banco *
-                          </Form.Label>
+                          <Form.Label className="fw-semibold">Banco *</Form.Label>
                           <Form.Select
                             value={formData.bank}
-                            onChange={e => {
+                            onChange={(e) => {
                               handleInputChange('bank', e.target.value);
                               handleInputChange('bankAccount', ''); // Reset account when bank changes
                             }}
                             className={formData.bank ? 'is-valid' : ''}
                           >
-                            <option value=''>Selecciona un banco</option>
-                            <option value='banco-chile'>Banco de Chile</option>
-                            <option value='banco-santander'>
-                              Banco Santander
-                            </option>
-                            <option value='banco-estado'>Banco Estado</option>
+                            <option value="">Selecciona un banco</option>
+                            <option value="banco-chile">Banco de Chile</option>
+                            <option value="banco-santander">Banco Santander</option>
+                            <option value="banco-estado">Banco Estado</option>
                           </Form.Select>
                         </Form.Group>
                       </Col>
 
                       <Col md={6}>
                         <Form.Group>
-                          <Form.Label className='fw-semibold'>
-                            Cuenta Bancaria *
-                          </Form.Label>
+                          <Form.Label className="fw-semibold">Cuenta Bancaria *</Form.Label>
                           <Form.Select
                             value={formData.bankAccount}
-                            onChange={e =>
-                              handleInputChange('bankAccount', e.target.value)
-                            }
+                            onChange={(e) => handleInputChange('bankAccount', e.target.value)}
                             disabled={!formData.bank}
                             className={formData.bankAccount ? 'is-valid' : ''}
                           >
-                            <option value=''>Selecciona una cuenta</option>
-                            {formData.bank &&
-                              bankAccounts[
-                                formData.bank as keyof typeof bankAccounts
-                              ]?.map(account => (
-                                <option
-                                  key={account.value}
-                                  value={account.value}
-                                >
-                                  {account.label}
-                                </option>
-                              ))}
+                            <option value="">Selecciona una cuenta</option>
+                            {formData.bank && bankAccounts[formData.bank as keyof typeof bankAccounts]?.map((account) => (
+                              <option key={account.value} value={account.value}>
+                                {account.label}
+                              </option>
+                            ))}
                           </Form.Select>
                         </Form.Group>
                       </Col>
 
                       <Col md={4}>
                         <Form.Group>
-                          <Form.Label className='fw-semibold'>
-                            Período *
-                          </Form.Label>
+                          <Form.Label className="fw-semibold">Período *</Form.Label>
                           <Form.Control
-                            type='month'
+                            type="month"
                             value={formData.period}
-                            onChange={e =>
-                              handleInputChange('period', e.target.value)
-                            }
+                            onChange={(e) => handleInputChange('period', e.target.value)}
                             className={formData.period ? 'is-valid' : ''}
                           />
                         </Form.Group>
@@ -432,15 +385,11 @@ export default function NuevaConciliacion() {
 
                       <Col md={4}>
                         <Form.Group>
-                          <Form.Label className='fw-semibold'>
-                            Fecha Inicio *
-                          </Form.Label>
+                          <Form.Label className="fw-semibold">Fecha Inicio *</Form.Label>
                           <Form.Control
-                            type='date'
+                            type="date"
                             value={formData.startDate}
-                            onChange={e =>
-                              handleInputChange('startDate', e.target.value)
-                            }
+                            onChange={(e) => handleInputChange('startDate', e.target.value)}
                             className={formData.startDate ? 'is-valid' : ''}
                           />
                         </Form.Group>
@@ -448,15 +397,11 @@ export default function NuevaConciliacion() {
 
                       <Col md={4}>
                         <Form.Group>
-                          <Form.Label className='fw-semibold'>
-                            Fecha Fin *
-                          </Form.Label>
+                          <Form.Label className="fw-semibold">Fecha Fin *</Form.Label>
                           <Form.Control
-                            type='date'
+                            type="date"
                             value={formData.endDate}
-                            onChange={e =>
-                              handleInputChange('endDate', e.target.value)
-                            }
+                            onChange={(e) => handleInputChange('endDate', e.target.value)}
                             className={formData.endDate ? 'is-valid' : ''}
                           />
                         </Form.Group>
@@ -468,86 +413,69 @@ export default function NuevaConciliacion() {
 
               {/* Step 2: File Upload */}
               {currentStep === 2 && (
-                <Card className='form-section'>
-                  <div className='form-section-header'>
-                    <h5 className='form-section-title'>
-                      <span className='material-icons'>cloud_upload</span>
+                <Card className="form-section">
+                  <div className="form-section-header">
+                    <h5 className="form-section-title">
+                      <span className="material-icons">cloud_upload</span>
                       Carga de Estado Bancario
                     </h5>
                   </div>
-                  <div className='form-section-body'>
+                  <div className="form-section-body">
                     {!formData.uploadedFile ? (
                       <div
-                        className='file-upload-area'
+                        className="file-upload-area"
                         onDrop={handleFileDrop}
-                        onDragOver={e => e.preventDefault()}
-                        onClick={() =>
-                          document.getElementById('fileInput')?.click()
-                        }
+                        onDragOver={(e) => e.preventDefault()}
+                        onClick={() => document.getElementById('fileInput')?.click()}
                       >
-                        <div className='file-upload-icon'>
-                          <span className='material-icons'>cloud_upload</span>
+                        <div className="file-upload-icon">
+                          <span className="material-icons">cloud_upload</span>
                         </div>
-                        <div className='file-upload-text'>
+                        <div className="file-upload-text">
                           Arrastra y suelta tu archivo aquí
                         </div>
-                        <div className='file-upload-hint'>
+                        <div className="file-upload-hint">
                           o haz clic para seleccionar (Excel, CSV - máx. 5MB)
                         </div>
                         <input
-                          id='fileInput'
-                          type='file'
-                          accept='.xlsx,.xls,.csv'
+                          id="fileInput"
+                          type="file"
+                          accept=".xlsx,.xls,.csv"
                           onChange={handleFileUpload}
                           style={{ display: 'none' }}
                         />
                       </div>
                     ) : (
-                      <div className='uploaded-files'>
-                        <div className='file-item'>
-                          <div className='file-info'>
-                            <div className='file-icon'>
-                              <span className='material-icons'>
-                                description
-                              </span>
+                      <div className="uploaded-files">
+                        <div className="file-item">
+                          <div className="file-info">
+                            <div className="file-icon">
+                              <span className="material-icons">description</span>
                             </div>
-                            <div className='file-details'>
-                              <div className='file-name'>
-                                {formData.uploadedFile.name}
-                              </div>
-                              <div className='file-size'>
-                                {formatFileSize(formData.uploadedFile.size)}
-                              </div>
+                            <div className="file-details">
+                              <div className="file-name">{formData.uploadedFile.name}</div>
+                              <div className="file-size">{formatFileSize(formData.uploadedFile.size)}</div>
                             </div>
                           </div>
                           <Button
-                            variant='outline-danger'
-                            size='sm'
-                            onClick={() =>
-                              handleInputChange('uploadedFile', null)
-                            }
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => handleInputChange('uploadedFile', null)}
                           >
-                            <span className='material-icons'>delete</span>
+                            <span className="material-icons">delete</span>
                           </Button>
                         </div>
                       </div>
                     )}
 
-                    <div className='mt-4'>
-                      <Alert
-                        variant='info'
-                        className='d-flex align-items-center'
-                      >
-                        <span className='material-icons me-2'>info</span>
+                    <div className="mt-4">
+                      <Alert variant="info" className="d-flex align-items-center">
+                        <span className="material-icons me-2">info</span>
                         <div>
-                          <strong>Formato requerido:</strong> El archivo debe
-                          contener columnas para Fecha, Descripción, Referencia
-                          y Monto.
-                          <div className='mt-2'>
-                            <Button variant='link' size='sm' className='p-0'>
-                              <span className='material-icons me-1'>
-                                download
-                              </span>
+                          <strong>Formato requerido:</strong> El archivo debe contener columnas para Fecha, Descripción, Referencia y Monto.
+                          <div className="mt-2">
+                            <Button variant="link" size="sm" className="p-0">
+                              <span className="material-icons me-1">download</span>
                               Descargar plantilla de ejemplo
                             </Button>
                           </div>
@@ -560,141 +488,101 @@ export default function NuevaConciliacion() {
 
               {/* Step 3: Processing */}
               {currentStep === 3 && (
-                <Card className='form-section'>
-                  <div className='form-section-header'>
-                    <h5 className='form-section-title'>
-                      <span className='material-icons'>analytics</span>
+                <Card className="form-section">
+                  <div className="form-section-header">
+                    <h5 className="form-section-title">
+                      <span className="material-icons">analytics</span>
                       Procesamiento de Datos
                     </h5>
                   </div>
-                  <div className='form-section-body'>
+                  <div className="form-section-body">
                     {!processing && !showResults && (
-                      <div className='text-center p-5'>
-                        <div className='mb-4'>
-                          <span
-                            className='material-icons text-primary'
-                            style={{ fontSize: '4rem' }}
-                          >
+                      <div className="text-center p-5">
+                        <div className="mb-4">
+                          <span className="material-icons text-primary" style={{fontSize: '4rem'}}>
                             play_circle
                           </span>
                         </div>
                         <h5>Listo para procesar</h5>
-                        <p className='text-muted'>
-                          Se analizarán las transacciones del archivo cargado y
-                          se buscarán coincidencias automáticamente.
+                        <p className="text-muted">
+                          Se analizarán las transacciones del archivo cargado y se buscarán coincidencias automáticamente.
                         </p>
                         <Button
-                          variant='primary'
-                          size='lg'
+                          variant="primary"
+                          size="lg"
                           onClick={processFiles}
                         >
-                          <span className='material-icons me-2'>
-                            play_arrow
-                          </span>
+                          <span className="material-icons me-2">play_arrow</span>
                           Iniciar Procesamiento
                         </Button>
                       </div>
                     )}
 
                     {processing && (
-                      <div className='text-center p-5'>
-                        <Spinner
-                          animation='border'
-                          variant='primary'
-                          size='sm'
-                          className='mb-3'
-                        />
+                      <div className="text-center p-5">
+                        <Spinner animation="border" variant="primary" size="sm" className="mb-3" />
                         <h5>Procesando archivo...</h5>
-                        <p className='text-muted'>
-                          Analizando transacciones y buscando coincidencias
-                          automáticas
+                        <p className="text-muted">
+                          Analizando transacciones y buscando coincidencias automáticas
                         </p>
-                        <ProgressBar
-                          animated
-                          variant='primary'
-                          now={75}
-                          className='mt-3'
-                          style={{ height: '8px' }}
+                        <ProgressBar 
+                          animated 
+                          variant="primary" 
+                          now={75} 
+                          className="mt-3"
+                          style={{height: '8px'}}
                         />
                       </div>
                     )}
 
                     {showResults && (
                       <div>
-                        <Alert
-                          variant='success'
-                          className='d-flex align-items-center mb-4'
-                        >
-                          <span className='material-icons me-2'>
-                            check_circle
-                          </span>
+                        <Alert variant="success" className="d-flex align-items-center mb-4">
+                          <span className="material-icons me-2">check_circle</span>
                           <div>
-                            <strong>Procesamiento completado</strong>
-                            <br />
-                            Se encontraron {
-                              matchingSummary.matchedTransactions
-                            }{' '}
-                            coincidencias automáticas de{' '}
-                            {matchingSummary.totalTransactions} transacciones.
+                            <strong>Procesamiento completado</strong><br />
+                            Se encontraron {matchingSummary.matchedTransactions} coincidencias automáticas de {matchingSummary.totalTransactions} transacciones.
                           </div>
                         </Alert>
 
-                        <div className='summary-cards mb-4'>
-                          <div className='summary-card'>
-                            <div className='summary-card-icon'>
-                              <span className='material-icons'>list</span>
+                        <div className="summary-cards mb-4">
+                          <div className="summary-card">
+                            <div className="summary-card-icon">
+                              <span className="material-icons">list</span>
                             </div>
-                            <div className='summary-card-number'>
-                              {matchingSummary.totalTransactions}
-                            </div>
-                            <div className='summary-card-label'>
-                              Total Transacciones
-                            </div>
-                            <div className='summary-card-description'>
+                            <div className="summary-card-number">{matchingSummary.totalTransactions}</div>
+                            <div className="summary-card-label">Total Transacciones</div>
+                            <div className="summary-card-description">
                               Procesadas del archivo
                             </div>
                           </div>
-                          <div className='summary-card'>
-                            <div className='summary-card-icon'>
-                              <span className='material-icons'>
-                                check_circle
-                              </span>
+                          <div className="summary-card">
+                            <div className="summary-card-icon">
+                              <span className="material-icons">check_circle</span>
                             </div>
-                            <div className='summary-card-number'>
-                              {matchingSummary.matchedTransactions}
-                            </div>
-                            <div className='summary-card-label'>
-                              Coincidencias
-                            </div>
-                            <div className='summary-card-description'>
+                            <div className="summary-card-number">{matchingSummary.matchedTransactions}</div>
+                            <div className="summary-card-label">Coincidencias</div>
+                            <div className="summary-card-description">
                               Automáticas encontradas
                             </div>
                           </div>
-                          <div className='summary-card'>
-                            <div className='summary-card-icon'>
-                              <span className='material-icons'>error</span>
+                          <div className="summary-card">
+                            <div className="summary-card-icon">
+                              <span className="material-icons">error</span>
                             </div>
-                            <div className='summary-card-number'>
-                              {matchingSummary.unmatchedTransactions}
-                            </div>
-                            <div className='summary-card-label'>
-                              Sin Coincidencias
-                            </div>
-                            <div className='summary-card-description'>
+                            <div className="summary-card-number">{matchingSummary.unmatchedTransactions}</div>
+                            <div className="summary-card-label">Sin Coincidencias</div>
+                            <div className="summary-card-description">
                               Requieren revisión manual
                             </div>
                           </div>
-                          <div className='summary-card'>
-                            <div className='summary-card-icon'>
-                              <span className='material-icons'>savings</span>
+                          <div className="summary-card">
+                            <div className="summary-card-icon">
+                              <span className="material-icons">savings</span>
                             </div>
-                            <div className='summary-card-number'>
-                              {formatCurrency(matchingSummary.totalAmount)}
-                            </div>
-                            <div className='summary-card-label'>
-                              Monto Total
-                            </div>
-                            <div className='summary-card-description'>
+                            <div className="summary-card-number">{formatCurrency(matchingSummary.totalAmount)}</div>
+                            <div className="summary-card-label">Monto Total</div>
+                            <div className="summary-card-description">
                               Suma de transacciones
                             </div>
                           </div>
@@ -707,24 +595,24 @@ export default function NuevaConciliacion() {
 
               {/* Step 4: Review and Adjustments */}
               {currentStep === 4 && (
-                <Card className='form-section'>
-                  <div className='form-section-header'>
-                    <h5 className='form-section-title'>
-                      <span className='material-icons'>fact_check</span>
+                <Card className="form-section">
+                  <div className="form-section-header">
+                    <h5 className="form-section-title">
+                      <span className="material-icons">fact_check</span>
                       Revisión y Ajustes
                     </h5>
                   </div>
-                  <div className='form-section-body'>
-                    <div className='matching-results'>
-                      <div className='conciliations-table'>
-                        <div className='table-header'>
-                          <h5 className='table-title'>
-                            <span className='material-icons'>view_list</span>
+                  <div className="form-section-body">
+                    <div className="matching-results">
+                      <div className="conciliations-table">
+                        <div className="table-header">
+                          <h5 className="table-title">
+                            <span className="material-icons">view_list</span>
                             Transacciones Procesadas ({bankTransactions.length})
                           </h5>
                         </div>
-                        <div className='table-responsive'>
-                          <Table hover className='custom-table mb-0'>
+                        <div className="table-responsive">
+                          <Table hover className="custom-table mb-0">
                             <thead>
                               <tr>
                                 <th>Fecha</th>
@@ -732,66 +620,43 @@ export default function NuevaConciliacion() {
                                 <th>Referencia</th>
                                 <th>Monto</th>
                                 <th>Estado</th>
-                                <th className='text-center'>Acciones</th>
+                                <th className="text-center">Acciones</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {bankTransactions.map(transaction => (
+                              {bankTransactions.map((transaction) => (
                                 <tr key={transaction.id}>
+                                  <td>{new Date(transaction.date).toLocaleDateString('es-CL')}</td>
                                   <td>
-                                    {new Date(
-                                      transaction.date,
-                                    ).toLocaleDateString('es-CL')}
+                                    <div className="fw-medium">{transaction.description}</div>
                                   </td>
                                   <td>
-                                    <div className='fw-medium'>
-                                      {transaction.description}
-                                    </div>
+                                    <small className="text-muted">{transaction.reference}</small>
                                   </td>
                                   <td>
-                                    <small className='text-muted'>
-                                      {transaction.reference}
-                                    </small>
-                                  </td>
-                                  <td>
-                                    <span
-                                      className={`amount-cell ${transaction.amount >= 0 ? 'positive' : 'negative'}`}
-                                    >
+                                    <span className={`amount-cell ${transaction.amount >= 0 ? 'positive' : 'negative'}`}>
                                       {formatCurrency(transaction.amount)}
                                     </span>
                                   </td>
                                   <td>
-                                    <span
-                                      className={`match-status ${transaction.matchStatus}`}
-                                    >
-                                      <span className='material-icons'>
-                                        {transaction.matchStatus === 'matched'
-                                          ? 'check_circle'
-                                          : transaction.matchStatus === 'manual'
-                                            ? 'build'
-                                            : 'error'}
+                                    <span className={`match-status ${transaction.matchStatus}`}>
+                                      <span className="material-icons">
+                                        {transaction.matchStatus === 'matched' ? 'check_circle' : 
+                                         transaction.matchStatus === 'manual' ? 'build' : 'error'}
                                       </span>
-                                      {transaction.matchStatus === 'matched'
-                                        ? 'Coincidente'
-                                        : transaction.matchStatus === 'manual'
-                                          ? 'Manual'
-                                          : 'Sin Coincidencia'}
+                                      {transaction.matchStatus === 'matched' ? 'Coincidente' :
+                                       transaction.matchStatus === 'manual' ? 'Manual' : 'Sin Coincidencia'}
                                     </span>
                                   </td>
-                                  <td className='text-center'>
-                                    <div className='action-buttons'>
-                                      {transaction.matchStatus ===
-                                        'unmatched' && (
-                                        <button className='btn-action link'>
-                                          <span className='material-icons'>
-                                            link
-                                          </span>
+                                  <td className="text-center">
+                                    <div className="action-buttons">
+                                      {transaction.matchStatus === 'unmatched' && (
+                                        <button className="btn-action link">
+                                          <span className="material-icons">link</span>
                                         </button>
                                       )}
-                                      <button className='btn-action view'>
-                                        <span className='material-icons'>
-                                          visibility
-                                        </span>
+                                      <button className="btn-action view">
+                                        <span className="material-icons">visibility</span>
                                       </button>
                                     </div>
                                   </td>
@@ -807,35 +672,33 @@ export default function NuevaConciliacion() {
               )}
 
               {/* Navigation Buttons */}
-              <div className='d-flex justify-content-between mt-4'>
+              <div className="d-flex justify-content-between mt-4">
                 <div>
                   {currentStep > 1 && (
-                    <Button variant='outline-secondary' onClick={prevStep}>
-                      <span className='material-icons me-2'>arrow_back</span>
+                    <Button variant="outline-secondary" onClick={prevStep}>
+                      <span className="material-icons me-2">arrow_back</span>
                       Anterior
                     </Button>
                   )}
                 </div>
-                <div className='d-flex gap-2'>
+                <div className="d-flex gap-2">
                   {currentStep < processSteps.length ? (
-                    <Button
-                      variant='primary'
+                    <Button 
+                      variant="primary" 
                       onClick={nextStep}
                       disabled={!canProceedToNextStep()}
                     >
                       Siguiente
-                      <span className='material-icons ms-2'>arrow_forward</span>
+                      <span className="material-icons ms-2">arrow_forward</span>
                     </Button>
                   ) : (
                     <>
-                      <Button variant='outline-secondary'>
-                        <span className='material-icons me-2'>save</span>
+                      <Button variant="outline-secondary">
+                        <span className="material-icons me-2">save</span>
                         Guardar Borrador
                       </Button>
-                      <Button variant='success'>
-                        <span className='material-icons me-2'>
-                          check_circle
-                        </span>
+                      <Button variant="success">
+                        <span className="material-icons me-2">check_circle</span>
                         Completar Conciliación
                       </Button>
                     </>

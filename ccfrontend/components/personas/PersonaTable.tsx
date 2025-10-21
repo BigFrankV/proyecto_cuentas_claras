@@ -17,11 +17,7 @@ interface PersonaTableProps {
 
 export default function PersonaTable({ personas }: PersonaTableProps) {
   const getInitials = (nombre: string) => {
-    return nombre
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase();
+    return nombre.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
   const getAvatarColor = (tipo: string) => {
@@ -56,18 +52,14 @@ export default function PersonaTable({ personas }: PersonaTableProps) {
         <table className='table table-hover mb-0'>
           <thead className='table-light'>
             <tr>
-              <th scope='col' style={{ width: '50px' }}>
-                #
-              </th>
+              <th scope='col' style={{ width: '50px' }}>#</th>
               <th scope='col'>Nombre</th>
               <th scope='col'>Tipo</th>
               <th scope='col'>Email</th>
               <th scope='col'>Teléfono</th>
               <th scope='col'>Unidades</th>
               <th scope='col'>Estado</th>
-              <th scope='col' style={{ width: '120px' }}>
-                Acciones
-              </th>
+              <th scope='col' style={{ width: '120px' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -76,14 +68,14 @@ export default function PersonaTable({ personas }: PersonaTableProps) {
                 <td>{index + 1}</td>
                 <td>
                   <div className='d-flex align-items-center'>
-                    <div
+                    <div 
                       className='me-2 d-flex align-items-center justify-content-center text-white'
                       style={{
                         width: '32px',
                         height: '32px',
                         borderRadius: '50%',
                         backgroundColor: getAvatarColor(persona.tipo),
-                        fontSize: '12px',
+                        fontSize: '12px'
                       }}
                     >
                       {getInitials(persona.nombre)}
@@ -105,24 +97,18 @@ export default function PersonaTable({ personas }: PersonaTableProps) {
                   {persona.tipo === 'Administrador' ? (
                     <span className='badge bg-secondary'>No aplica</span>
                   ) : (
-                    <span className='badge bg-primary'>
-                      {persona.unidades} unidad
-                      {persona.unidades !== 1 ? 'es' : ''}
-                    </span>
+                    <span className='badge bg-primary'>{persona.unidades} unidad{persona.unidades !== 1 ? 'es' : ''}</span>
                   )}
                 </td>
                 <td>
                   <span className='d-flex align-items-center'>
-                    <span
-                      className={'me-2'}
+                    <span 
+                      className={`me-2`}
                       style={{
                         width: '10px',
                         height: '10px',
                         borderRadius: '50%',
-                        backgroundColor:
-                          persona.estado === 'Activo'
-                            ? 'var(--color-success)'
-                            : 'var(--color-muted)',
+                        backgroundColor: persona.estado === 'Activo' ? 'var(--color-success)' : 'var(--color-muted)'
                       }}
                     />
                     {persona.estado}
@@ -130,27 +116,11 @@ export default function PersonaTable({ personas }: PersonaTableProps) {
                 </td>
                 <td>
                   <div className='btn-group'>
-                    <Link
-                      href={`/personas/${persona.id}`}
-                      className='btn btn-sm btn-outline-primary'
-                    >
-                      <i
-                        className='material-icons'
-                        style={{ fontSize: '16px' }}
-                      >
-                        visibility
-                      </i>
+                    <Link href={`/personas/${persona.id}`} className='btn btn-sm btn-outline-primary'>
+                      <i className='material-icons' style={{ fontSize: '16px' }}>visibility</i>
                     </Link>
-                    <button
-                      type='button'
-                      className='btn btn-sm btn-outline-secondary'
-                    >
-                      <i
-                        className='material-icons'
-                        style={{ fontSize: '16px' }}
-                      >
-                        more_vert
-                      </i>
+                    <button type='button' className='btn btn-sm btn-outline-secondary'>
+                      <i className='material-icons' style={{ fontSize: '16px' }}>more_vert</i>
                     </button>
                   </div>
                 </td>

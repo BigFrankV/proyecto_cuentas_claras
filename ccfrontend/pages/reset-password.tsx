@@ -1,7 +1,6 @@
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
-
 import authService from '@/lib/auth';
 
 export default function ResetPassword() {
@@ -32,9 +31,7 @@ export default function ResetPassword() {
       [name]: value,
     }));
     // Limpiar error cuando el usuario empiece a escribir
-    if (error) {
-      setError('');
-    }
+    if (error) setError('');
   };
 
   const togglePasswordVisibility = (field: 'password' | 'confirmPassword') => {

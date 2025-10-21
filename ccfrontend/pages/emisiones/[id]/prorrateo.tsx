@@ -1,24 +1,16 @@
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
+import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-
-import Layout from '@/components/layout/Layout';
-import emisionesService from '@/lib/emisionesService';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { EmissionStatusBadge, EmissionTypeBadge } from '@/components/emisiones';
 
 interface EmissionDetail {
   id: string;
   period: string;
   type: 'gastos_comunes' | 'extraordinaria' | 'multa' | 'interes';
-  status:
-    | 'draft'
-    | 'ready'
-    | 'sent'
-    | 'paid'
-    | 'partial'
-    | 'overdue'
-    | 'cancelled';
+  status: 'draft' | 'ready' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
   issueDate: string;
   dueDate: string;
   totalAmount: number;
@@ -64,149 +56,176 @@ export default function EmisionProrrateo() {
   const [loading, setLoading] = useState(true);
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'summary' | 'detailed'>('summary');
-  const [error, setError] = useState<string | null>(null);
-
-  // Mapear estado del backend al frontend
-  const mapEstado = (estado: string): EmissionDetail['status'] => {
-    const estadoMap: Record<string, EmissionDetail['status']> = {
-      'borrador': 'draft',
-      'emitida': 'sent',
-      'cerrada': 'paid',
-    };
-    return estadoMap[estado] || 'draft';
-  };
 
   useEffect(() => {
-    const loadProrrateoData = async () => {
-      if (!id || typeof id !== 'string') {
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-
-        const emisionId = parseInt(id);
-
-        // Cargar datos en paralelo
-        const [emisionData, unidadesData, detallesData] = await Promise.all([
-          emisionesService.getEmisionDetalleCompleto(emisionId),
-          emisionesService.getUnidadesProrrateo(emisionId),
-          emisionesService.getDetallesEmision(emisionId),
-        ]);
-
-        // Transformar emisión
-        const transformedEmission: EmissionDetail = {
-          id: emisionData.id.toString(),
-          period: emisionData.periodo,
-          type: emisionData.tipo || 'gastos_comunes',
-          status: mapEstado(emisionData.estado),
-          issueDate: emisionData.fecha_emision || emisionData.created_at || '',
-          dueDate: emisionData.fecha_vencimiento,
-          totalAmount: emisionData.monto_total || 0,
-          paidAmount: emisionData.monto_pagado || 0,
-          unitCount: emisionData.cantidad_unidades || unidadesData.length,
-          description: emisionData.observaciones || '',
-          communityName: emisionData.nombre_comunidad || 'Mi Comunidad',
-        };
-
-        // Transformar unidades con detalles
-        const transformedUnits: UnitDistribution[] = unidadesData.map(unidad => ({
-          id: (unidad.id || unidad.unidad_id)?.toString() || '',
-          unitNumber: unidad.numero || '',
-          unitType: unidad.tipo || 'Departamento',
-          owner: unidad.propietario || '',
-          participation: unidad.alicuota || 0,
-          totalAmount: unidad.monto_total || 0,
-          paidAmount: unidad.monto_pagado || 0,
-          status: unidad.estado === 'pagado' ? 'paid' : unidad.monto_pagado > 0 ? 'partial' : 'pending',
-          details: detallesData.map(detalle => {
-            const conceptName = detalle.nombre || 'Sin categoría';
-            const totalAmt = detalle.monto || 0;
-            const unitParticipation = unidad.alicuota || 0;
-            const distType =
-              detalle.tipo_prorrateo === 'proporcional' ? 'proportional'
-              : detalle.tipo_prorrateo === 'igual' ? 'equal'
-              : 'custom';
-            return {
-              conceptId: detalle.id?.toString() || '',
-              conceptName,
-              totalAmount: totalAmt,
-              unitAmount: totalAmt * unitParticipation / 100,
-              distributionType: distType,
-            };
-          }),
-        }));
-
-        // Crear datos del gráfico
-        const chartLabels = detallesData.map(d => d.categoria || 'Sin categoría');
-        const chartAmounts = detallesData.map(d => d.monto);
-        const chartColors = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1'];
-
-        const mockChartData: DistributionChart = {
-          labels: chartLabels,
-          amounts: chartAmounts,
-          colors: chartColors,
-        };
-
-        setEmission(transformedEmission);
-        setUnits(transformedUnits);
-        setChartData(mockChartData);
-        setLoading(false);
-      } catch (err) {
-        setError('Error al cargar el prorrateo');
-        setLoading(false);
-      }
-    };
-
-    loadProrrateoData();
+    if (id) {
+      loadProrrateoData();
+    }
   }, [id]);
 
+  const loadProrrateoData = () => {
+    // Mock data
+    setTimeout(() => {
+      const mockEmission: EmissionDetail = {
+        id: id as string,
+        period: 'Septiembre 2025',
+        type: 'gastos_comunes',
+        status: 'sent',
+        issueDate: '2025-09-01',
+        dueDate: '2025-09-15',
+        totalAmount: 2500000,
+        paidAmount: 1800000,
+        unitCount: 45,
+        description: 'Gastos comunes del mes de septiembre',
+        communityName: 'Edificio Central'
+      };
 
+      const mockUnits: UnitDistribution[] = [
+        {
+          id: '1',
+          unitNumber: '101',
+          unitType: 'Departamento',
+          owner: 'Juan Pérez',
+          participation: 2.5,
+          totalAmount: 62500,
+          paidAmount: 62500,
+          status: 'paid',
+          details: [
+            {
+              conceptId: '1',
+              conceptName: 'Administración',
+              totalAmount: 450000,
+              unitAmount: 11250,
+              distributionType: 'proportional'
+            },
+            {
+              conceptId: '2',
+              conceptName: 'Servicios Básicos',
+              totalAmount: 730000,
+              unitAmount: 18250,
+              distributionType: 'proportional'
+            },
+            {
+              conceptId: '3',
+              conceptName: 'Fondo de Reserva',
+              totalAmount: 900000,
+              unitAmount: 20000,
+              distributionType: 'equal'
+            }
+          ]
+        },
+        {
+          id: '2',
+          unitNumber: '102',
+          unitType: 'Departamento',
+          owner: 'María González',
+          participation: 2.2,
+          totalAmount: 55000,
+          paidAmount: 30000,
+          status: 'partial',
+          details: [
+            {
+              conceptId: '1',
+              conceptName: 'Administración',
+              totalAmount: 450000,
+              unitAmount: 9900,
+              distributionType: 'proportional'
+            },
+            {
+              conceptId: '2',
+              conceptName: 'Servicios Básicos',
+              totalAmount: 730000,
+              unitAmount: 16060,
+              distributionType: 'proportional'
+            },
+            {
+              conceptId: '3',
+              conceptName: 'Fondo de Reserva',
+              totalAmount: 900000,
+              unitAmount: 20000,
+              distributionType: 'equal'
+            }
+          ]
+        },
+        {
+          id: '3',
+          unitNumber: '201',
+          unitType: 'Departamento',
+          owner: 'Carlos Rodríguez',
+          participation: 2.8,
+          totalAmount: 70000,
+          paidAmount: 0,
+          status: 'pending',
+          details: [
+            {
+              conceptId: '1',
+              conceptName: 'Administración',
+              totalAmount: 450000,
+              unitAmount: 12600,
+              distributionType: 'proportional'
+            },
+            {
+              conceptId: '2',
+              conceptName: 'Servicios Básicos',
+              totalAmount: 730000,
+              unitAmount: 20440,
+              distributionType: 'proportional'
+            },
+            {
+              conceptId: '3',
+              conceptName: 'Fondo de Reserva',
+              totalAmount: 900000,
+              unitAmount: 20000,
+              distributionType: 'equal'
+            }
+          ]
+        }
+      ];
+
+      const mockChartData: DistributionChart = {
+        labels: ['Administración', 'Servicios Básicos', 'Fondo de Reserva', 'Mantención', 'Seguros'],
+        amounts: [450000, 730000, 900000, 320000, 100000],
+        colors: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1']
+      };
+
+      setEmission(mockEmission);
+      setUnits(mockUnits);
+      setChartData(mockChartData);
+      setLoading(false);
+    }, 1000);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP',
+      currency: 'CLP'
     }).format(amount);
   };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'paid':
-        return 'bg-success';
-      case 'partial':
-        return 'bg-warning';
-      case 'pending':
-        return 'bg-secondary';
-      default:
-        return 'bg-secondary';
+      case 'paid': return 'bg-success';
+      case 'partial': return 'bg-warning';
+      case 'pending': return 'bg-secondary';
+      default: return 'bg-secondary';
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'paid':
-        return 'Pagado';
-      case 'partial':
-        return 'Parcial';
-      case 'pending':
-        return 'Pendiente';
-      default:
-        return 'Desconocido';
+      case 'paid': return 'Pagado';
+      case 'partial': return 'Parcial';
+      case 'pending': return 'Pendiente';
+      default: return 'Desconocido';
     }
   };
 
   const getDistributionTypeText = (type: string) => {
     switch (type) {
-      case 'proportional':
-        return 'Proporcional';
-      case 'equal':
-        return 'Igualitario';
-      case 'custom':
-        return 'Personalizado';
-      default:
-        return 'Sin definir';
+      case 'proportional': return 'Proporcional';
+      case 'equal': return 'Igualitario';
+      case 'custom': return 'Personalizado';
+      default: return 'Sin definir';
     }
   };
 
@@ -214,10 +233,7 @@ export default function EmisionProrrateo() {
     return (
       <ProtectedRoute>
         <Layout title='Prorrateo de Emisión'>
-          <div
-            className='d-flex justify-content-center align-items-center'
-            style={{ minHeight: '400px' }}
-          >
+          <div className='d-flex justify-content-center align-items-center' style={{ minHeight: '400px' }}>
             <div className='text-center'>
               <div className='spinner-border text-primary' role='status'>
                 <span className='visually-hidden'>Cargando...</span>
@@ -236,9 +252,7 @@ export default function EmisionProrrateo() {
         <Layout title='Emisión no encontrada'>
           <div className='text-center py-5'>
             <h3>Emisión no encontrada</h3>
-            <p className='text-muted'>
-              La emisión solicitada no existe o no tienes permisos para verla.
-            </p>
+            <p className='text-muted'>La emisión solicitada no existe o no tienes permisos para verla.</p>
             <Link href='/emisiones' className='btn btn-primary'>
               Volver a Emisiones
             </Link>
@@ -292,9 +306,7 @@ export default function EmisionProrrateo() {
               <div className='summary-card total'>
                 <div className='card-body text-center'>
                   <i className='fa-solid fa-calculator fa-2x mb-2'></i>
-                  <h3 className='mb-0'>
-                    {formatCurrency(emission.totalAmount)}
-                  </h3>
+                  <h3 className='mb-0'>{formatCurrency(emission.totalAmount)}</h3>
                   <p className='text-muted mb-0'>Total Emisión</p>
                 </div>
               </div>
@@ -303,9 +315,7 @@ export default function EmisionProrrateo() {
               <div className='summary-card paid'>
                 <div className='card-body text-center'>
                   <i className='fa-solid fa-check-circle fa-2x mb-2'></i>
-                  <h3 className='mb-0'>
-                    {formatCurrency(emission.paidAmount)}
-                  </h3>
+                  <h3 className='mb-0'>{formatCurrency(emission.paidAmount)}</h3>
                   <p className='text-muted mb-0'>Total Pagado</p>
                 </div>
               </div>
@@ -314,9 +324,7 @@ export default function EmisionProrrateo() {
               <div className='summary-card pending'>
                 <div className='card-body text-center'>
                   <i className='fa-solid fa-clock fa-2x mb-2'></i>
-                  <h3 className='mb-0'>
-                    {formatCurrency(emission.totalAmount - emission.paidAmount)}
-                  </h3>
+                  <h3 className='mb-0'>{formatCurrency(emission.totalAmount - emission.paidAmount)}</h3>
                   <p className='text-muted mb-0'>Pendiente</p>
                 </div>
               </div>
@@ -345,38 +353,26 @@ export default function EmisionProrrateo() {
                 <div className='card-body'>
                   <div className='chart-placeholder'>
                     <div className='mock-chart'>
-                      {chartData &&
-                        chartData.labels.map((label, index) => (
-                          <div
-                            key={index}
-                            className='chart-segment'
-                            style={{
-                              width: `${((chartData.amounts[index] ?? 0) / chartData.amounts.reduce((a, b) => a + b, 0)) * 100}%`,
-                              backgroundColor:
-                                chartData.colors[index] ?? '#ccc',
-                            }}
-                          >
-                            <span className='chart-label'>{label}</span>
-                          </div>
-                        ))}
+                      {chartData && chartData.labels.map((label, index) => (
+                        <div key={index} className='chart-segment' style={{
+                          width: `${((chartData.amounts[index] ?? 0) / chartData.amounts.reduce((a, b) => a + b, 0)) * 100}%`,
+                          backgroundColor: chartData.colors[index] ?? '#ccc'
+                        }}>
+                          <span className='chart-label'>{label}</span>
+                        </div>
+                      ))}
                     </div>
                     <div className='chart-legend'>
-                      {chartData &&
-                        chartData.labels.map((label, index) => (
-                          <div key={index} className='legend-item'>
-                            <span
-                              className='legend-color'
-                              style={{
-                                backgroundColor:
-                                  chartData.colors[index] ?? '#ccc',
-                              }}
-                            ></span>
-                            <span className='legend-text'>{label}</span>
-                            <span className='legend-amount'>
-                              {formatCurrency(chartData.amounts[index] ?? 0)}
-                            </span>
-                          </div>
-                        ))}
+                      {chartData && chartData.labels.map((label, index) => (
+                        <div key={index} className='legend-item'>
+                          <span 
+                            className='legend-color'
+                            style={{ backgroundColor: chartData.colors[index] ?? '#ccc' }}
+                          ></span>
+                          <span className='legend-text'>{label}</span>
+                          <span className='legend-amount'>{formatCurrency(chartData.amounts[index] ?? 0)}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -418,23 +414,16 @@ export default function EmisionProrrateo() {
                       {formatCurrency(0)}
                     </div>
                   </div>
-
+                  
                   <div className='progress-section mt-3'>
                     <div className='progress-header'>
                       <span>Progreso total</span>
-                      <span>
-                        {Math.round(
-                          (emission.paidAmount / emission.totalAmount) * 100,
-                        )}
-                        %
-                      </span>
+                      <span>{Math.round((emission.paidAmount / emission.totalAmount) * 100)}%</span>
                     </div>
                     <div className='progress'>
                       <div
                         className='progress-bar bg-success'
-                        style={{
-                          width: `${(emission.paidAmount / emission.totalAmount) * 100}%`,
-                        }}
+                        style={{ width: `${(emission.paidAmount / emission.totalAmount) * 100}%` }}
                       ></div>
                     </div>
                   </div>
@@ -489,139 +478,87 @@ export default function EmisionProrrateo() {
                       </tr>
                     </thead>
                     <tbody>
-                      {units.map(unit => (
+                      {units.map((unit) => (
                         <tr key={unit.id}>
-                          <td>
-                            <strong>{unit.unitNumber}</strong>
-                          </td>
+                          <td><strong>{unit.unitNumber}</strong></td>
                           <td>{unit.unitType}</td>
                           <td>{unit.owner}</td>
                           <td>{unit.participation}%</td>
-                          <td>
-                            <strong>{formatCurrency(unit.totalAmount)}</strong>
-                          </td>
-                          <td className='text-success'>
-                            {formatCurrency(unit.paidAmount)}
-                          </td>
+                          <td><strong>{formatCurrency(unit.totalAmount)}</strong></td>
+                          <td className='text-success'>{formatCurrency(unit.paidAmount)}</td>
                           <td className='text-warning'>
                             {formatCurrency(unit.totalAmount - unit.paidAmount)}
                           </td>
                           <td>
-                            <span
-                              className={`badge ${getStatusBadgeClass(unit.status)}`}
-                            >
+                            <span className={`badge ${getStatusBadgeClass(unit.status)}`}>
                               {getStatusText(unit.status)}
                             </span>
                           </td>
                           <td>
                             <button
                               className='btn btn-sm btn-outline-primary'
-                              onClick={() =>
-                                setSelectedUnit(
-                                  selectedUnit === unit.id ? null : unit.id,
-                                )
-                              }
+                              onClick={() => setSelectedUnit(selectedUnit === unit.id ? null : unit.id)}
                             >
-                              {selectedUnit === unit.id ? 'Ocultar' : 'Ver'}{' '}
-                              Detalle
+                              {selectedUnit === unit.id ? 'Ocultar' : 'Ver'} Detalle
                             </button>
                           </td>
                         </tr>
                       ))}
-                      {units.map(
-                        unit =>
-                          selectedUnit === unit.id && (
-                            <tr
-                              key={`${unit.id}-detail`}
-                              className='unit-detail-row'
-                            >
-                              <td colSpan={9}>
-                                <div className='unit-detail-content'>
-                                  <h6>
-                                    Detalle de Conceptos - Unidad{' '}
-                                    {unit.unitNumber}
-                                  </h6>
-                                  <div className='table-responsive'>
-                                    <table className='table table-sm'>
-                                      <thead>
-                                        <tr>
-                                          <th>Concepto</th>
-                                          <th>Monto Total Concepto</th>
-                                          <th>Distribución</th>
-                                          <th>Monto Unidad</th>
+                      {units.map((unit) => (
+                        selectedUnit === unit.id && (
+                          <tr key={`${unit.id}-detail`} className='unit-detail-row'>
+                            <td colSpan={9}>
+                              <div className='unit-detail-content'>
+                                <h6>Detalle de Conceptos - Unidad {unit.unitNumber}</h6>
+                                <div className='table-responsive'>
+                                  <table className='table table-sm'>
+                                    <thead>
+                                      <tr>
+                                        <th>Concepto</th>
+                                        <th>Monto Total Concepto</th>
+                                        <th>Distribución</th>
+                                        <th>Monto Unidad</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {unit.details.map((detail) => (
+                                        <tr key={detail.conceptId}>
+                                          <td>{detail.conceptName}</td>
+                                          <td>{formatCurrency(detail.totalAmount)}</td>
+                                          <td>
+                                            <span className='badge bg-secondary'>
+                                              {getDistributionTypeText(detail.distributionType)}
+                                            </span>
+                                          </td>
+                                          <td><strong>{formatCurrency(detail.unitAmount)}</strong></td>
                                         </tr>
-                                      </thead>
-                                      <tbody>
-                                        {unit.details.map(detail => (
-                                          <tr key={detail.conceptId}>
-                                            <td>{detail.conceptName}</td>
-                                            <td>
-                                              {formatCurrency(
-                                                detail.totalAmount,
-                                              )}
-                                            </td>
-                                            <td>
-                                              <span className='badge bg-secondary'>
-                                                {getDistributionTypeText(
-                                                  detail.distributionType,
-                                                )}
-                                              </span>
-                                            </td>
-                                            <td>
-                                              <strong>
-                                                {formatCurrency(
-                                                  detail.unitAmount,
-                                                )}
-                                              </strong>
-                                            </td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                      <tfoot>
-                                        <tr className='table-primary'>
-                                          <th>Total Unidad:</th>
-                                          <th></th>
-                                          <th></th>
-                                          <th>
-                                            {formatCurrency(unit.totalAmount)}
-                                          </th>
-                                        </tr>
-                                      </tfoot>
-                                    </table>
-                                  </div>
+                                      ))}
+                                    </tbody>
+                                    <tfoot>
+                                      <tr className='table-primary'>
+                                        <th>Total Unidad:</th>
+                                        <th></th>
+                                        <th></th>
+                                        <th>{formatCurrency(unit.totalAmount)}</th>
+                                      </tr>
+                                    </tfoot>
+                                  </table>
                                 </div>
-                              </td>
-                            </tr>
-                          ),
-                      )}
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      ))}
                     </tbody>
                     <tfoot className='table-light'>
                       <tr>
                         <th colSpan={4}>Totales:</th>
-                        <th>
-                          {formatCurrency(
-                            units.reduce(
-                              (sum, unit) => sum + unit.totalAmount,
-                              0,
-                            ),
-                          )}
-                        </th>
+                        <th>{formatCurrency(units.reduce((sum, unit) => sum + unit.totalAmount, 0))}</th>
                         <th className='text-success'>
-                          {formatCurrency(
-                            units.reduce(
-                              (sum, unit) => sum + unit.paidAmount,
-                              0,
-                            ),
-                          )}
+                          {formatCurrency(units.reduce((sum, unit) => sum + unit.paidAmount, 0))}
                         </th>
                         <th className='text-warning'>
-                          {formatCurrency(
-                            units.reduce(
-                              (sum, unit) =>
-                                sum + (unit.totalAmount - unit.paidAmount),
-                              0,
-                            ),
-                          )}
+                          {formatCurrency(units.reduce((sum, unit) => sum + (unit.totalAmount - unit.paidAmount), 0))}
                         </th>
                         <th colSpan={2}></th>
                       </tr>
@@ -630,7 +567,7 @@ export default function EmisionProrrateo() {
                 </div>
               ) : (
                 <div className='row'>
-                  {units.map(unit => (
+                  {units.map((unit) => (
                     <div key={unit.id} className='col-lg-6 mb-4'>
                       <div className='unit-card'>
                         <div className='card-header d-flex justify-content-between align-items-center'>
@@ -638,9 +575,7 @@ export default function EmisionProrrateo() {
                             <h6 className='mb-0'>Unidad {unit.unitNumber}</h6>
                             <small className='text-muted'>{unit.owner}</small>
                           </div>
-                          <span
-                            className={`badge ${getStatusBadgeClass(unit.status)}`}
-                          >
+                          <span className={`badge ${getStatusBadgeClass(unit.status)}`}>
                             {getStatusText(unit.status)}
                           </span>
                         </div>
@@ -648,51 +583,34 @@ export default function EmisionProrrateo() {
                           <div className='unit-info'>
                             <div className='info-item'>
                               <span className='label'>Participación:</span>
-                              <span className='value'>
-                                {unit.participation}%
-                              </span>
+                              <span className='value'>{unit.participation}%</span>
                             </div>
                             <div className='info-item'>
                               <span className='label'>Total:</span>
-                              <span className='value total'>
-                                {formatCurrency(unit.totalAmount)}
-                              </span>
+                              <span className='value total'>{formatCurrency(unit.totalAmount)}</span>
                             </div>
                             <div className='info-item'>
                               <span className='label'>Pagado:</span>
-                              <span className='value paid'>
-                                {formatCurrency(unit.paidAmount)}
-                              </span>
+                              <span className='value paid'>{formatCurrency(unit.paidAmount)}</span>
                             </div>
                             <div className='info-item'>
                               <span className='label'>Saldo:</span>
                               <span className='value pending'>
-                                {formatCurrency(
-                                  unit.totalAmount - unit.paidAmount,
-                                )}
+                                {formatCurrency(unit.totalAmount - unit.paidAmount)}
                               </span>
                             </div>
                           </div>
-
+                          
                           <div className='concepts-breakdown'>
                             <h6>Conceptos:</h6>
-                            {unit.details.map(detail => (
-                              <div
-                                key={detail.conceptId}
-                                className='concept-item'
-                              >
+                            {unit.details.map((detail) => (
+                              <div key={detail.conceptId} className='concept-item'>
                                 <div className='concept-info'>
-                                  <span className='concept-name'>
-                                    {detail.conceptName}
-                                  </span>
-                                  <span className='concept-amount'>
-                                    {formatCurrency(detail.unitAmount)}
-                                  </span>
+                                  <span className='concept-name'>{detail.conceptName}</span>
+                                  <span className='concept-amount'>{formatCurrency(detail.unitAmount)}</span>
                                 </div>
                                 <small className='text-muted'>
-                                  {getDistributionTypeText(
-                                    detail.distributionType,
-                                  )}
+                                  {getDistributionTypeText(detail.distributionType)}
                                 </small>
                               </div>
                             ))}

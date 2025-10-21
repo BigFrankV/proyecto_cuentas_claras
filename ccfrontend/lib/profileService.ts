@@ -1,3 +1,4 @@
+import apiClient from './api';
 import {
   UserExtended,
   ProfileFormData,
@@ -13,8 +14,6 @@ import {
   SessionInfo,
 } from '@/types/profile';
 
-import apiClient from './api';
-
 class ProfileService {
   // Obtener perfil completo del usuario
   async getProfile(): Promise<UserExtended> {
@@ -24,7 +23,7 @@ class ProfileService {
     } catch (error: any) {
       console.error('Error obteniendo perfil:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al obtener perfil',
+        error.response?.data?.message || 'Error al obtener perfil'
       );
     }
   }
@@ -37,15 +36,13 @@ class ProfileService {
     } catch (error: any) {
       console.error('Error actualizando perfil:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al actualizar perfil',
+        error.response?.data?.message || 'Error al actualizar perfil'
       );
     }
   }
 
   // Cambiar contraseña
-  async changePassword(
-    data: PasswordChangeData,
-  ): Promise<PasswordChangeResponse> {
+  async changePassword(data: PasswordChangeData): Promise<PasswordChangeResponse> {
     try {
       const response = await apiClient.post('/auth/change-password', {
         currentPassword: data.currentPassword,
@@ -55,22 +52,20 @@ class ProfileService {
     } catch (error: any) {
       console.error('Error cambiando contraseña:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al cambiar contraseña',
+        error.response?.data?.message || 'Error al cambiar contraseña'
       );
     }
   }
 
   // Actualizar preferencias
-  async updatePreferences(
-    preferences: UserPreferences,
-  ): Promise<PreferencesUpdateResponse> {
+  async updatePreferences(preferences: UserPreferences): Promise<PreferencesUpdateResponse> {
     try {
       const response = await apiClient.patch('/auth/preferences', preferences);
       return response.data;
     } catch (error: any) {
       console.error('Error actualizando preferencias:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al actualizar preferencias',
+        error.response?.data?.message || 'Error al actualizar preferencias'
       );
     }
   }
@@ -95,7 +90,7 @@ class ProfileService {
     } catch (error: any) {
       console.error('Error cerrando sesión:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al cerrar sesión',
+        error.response?.data?.message || 'Error al cerrar sesión'
       );
     }
   }
@@ -108,7 +103,7 @@ class ProfileService {
     } catch (error: any) {
       console.error('Error cerrando todas las sesiones:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al cerrar sesiones',
+        error.response?.data?.message || 'Error al cerrar sesiones'
       );
     }
   }
@@ -123,11 +118,11 @@ class ProfileService {
       return { enabled: totp_enabled };
     } catch (error: any) {
       console.error('Error checking 2FA status via /auth/me:', error);
-
+      
       // Fallback al método anterior si /auth/me falla
       try {
         const response = await apiClient.get('/auth/2fa/setup');
-
+        
         if (response.data && response.data.qr && response.data.base32) {
           // Si setup devuelve QR code, significa que 2FA está desactivado
           return { enabled: false };
@@ -143,18 +138,14 @@ class ProfileService {
           return { enabled: false };
         } catch (disableError: any) {
           if (disableError.response?.status === 400) {
-            const errorMsg =
-              disableError.response?.data?.error?.toLowerCase() || '';
-            const message =
-              disableError.response?.data?.message?.toLowerCase() || '';
-
+            const errorMsg = disableError.response?.data?.error?.toLowerCase() || '';
+            const message = disableError.response?.data?.message?.toLowerCase() || '';
+            
             // Si el error es "invalid code", significa que SÍ está habilitado
-            if (
-              errorMsg.includes('invalid code') ||
-              message.includes('invalid code') ||
-              errorMsg.includes('código inválido') ||
-              message.includes('código inválido')
-            ) {
+            if (errorMsg.includes('invalid code') || 
+                message.includes('invalid code') ||
+                errorMsg.includes('código inválido') ||
+                message.includes('código inválido')) {
               return { enabled: true };
             } else {
               return { enabled: false };
@@ -175,7 +166,7 @@ class ProfileService {
     } catch (error: any) {
       console.error('Error configurando 2FA:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al configurar 2FA',
+        error.response?.data?.message || 'Error al configurar 2FA'
       );
     }
   }
@@ -190,7 +181,9 @@ class ProfileService {
       return { success: true, message: '2FA activado exitosamente' };
     } catch (error: any) {
       console.error('Error activando 2FA:', error);
-      throw new Error(error.response?.data?.message || 'Error al activar 2FA');
+      throw new Error(
+        error.response?.data?.message || 'Error al activar 2FA'
+      );
     }
   }
 
@@ -202,7 +195,7 @@ class ProfileService {
     } catch (error: any) {
       console.error('Error desactivando 2FA:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al desactivar 2FA',
+        error.response?.data?.message || 'Error al desactivar 2FA'
       );
     }
   }
@@ -217,7 +210,9 @@ class ProfileService {
       return response.data;
     } catch (error: any) {
       console.error('Error verificando 2FA:', error);
-      throw new Error(error.response?.data?.message || 'Código 2FA inválido');
+      throw new Error(
+        error.response?.data?.message || 'Código 2FA inválido'
+      );
     }
   }
 
@@ -231,8 +226,7 @@ class ProfileService {
         ip: '192.168.1.105',
         lastAccess: new Date().toISOString(),
         isCurrent: true,
-        userAgent:
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
       {
         id: '2',

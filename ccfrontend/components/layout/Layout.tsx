@@ -1,19 +1,16 @@
-import Head from 'next/head';
 import { ReactNode } from 'react';
-
-import MobileNavbar from './MobileNavbar';
+import Head from 'next/head';
 import Sidebar from './Sidebar';
+import MobileNavbar from './MobileNavbar';
 
 interface LayoutProps {
   children: ReactNode;
   title?: string;
-  noGutter?: boolean; // nueva prop opcional
 }
 
 export default function Layout({
   children,
   title = 'Cuentas Claras',
-  noGutter = false,
 }: LayoutProps) {
   return (
     <>
@@ -30,10 +27,8 @@ export default function Layout({
         {/* Sidebar para desktop */}
         <Sidebar />
 
-        {/* Contenido principal - agregamos clase detail-page si noGutter=true */}
-        <div
-          className={`main-content flex-grow-1 bg-light ${noGutter ? 'detail-page' : ''}`}
-        >
+        {/* Contenido principal */}
+        <div className='main-content flex-grow-1 bg-light'>
           {/* Navbar móvil */}
           <MobileNavbar />
 

@@ -1,7 +1,6 @@
-import { Chart, registerables } from 'chart.js';
 import React, { useEffect, useRef, useState } from 'react';
-
 import Sidebar from '@/components/layout/Sidebar';
+import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
@@ -52,26 +51,11 @@ export default function ConsumosPage(): JSX.Element {
         existingMain.destroy();
       }
       const ctx = mainRef.current.getContext('2d');
-      if (!ctx) {
-        return;
-      }
+      if (!ctx) return;
       const c = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: [
-            'Oct',
-            'Nov',
-            'Dic',
-            'Ene',
-            'Feb',
-            'Mar',
-            'Abr',
-            'May',
-            'Jun',
-            'Jul',
-            'Ago',
-            'Sep',
-          ],
+          labels: ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep'],
           datasets: [
             {
               label: 'Consumo (kWh)',
@@ -98,13 +82,9 @@ export default function ConsumosPage(): JSX.Element {
 
     if (monthlyRef.current) {
       const existingMonthly = Chart.getChart(monthlyRef.current as any);
-      if (existingMonthly) {
-        existingMonthly.destroy();
-      }
+      if (existingMonthly) existingMonthly.destroy();
       const ctx = monthlyRef.current.getContext('2d');
-      if (!ctx) {
-        return;
-      }
+      if (!ctx) return;
       const c = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -123,13 +103,9 @@ export default function ConsumosPage(): JSX.Element {
 
     if (weeklyRef.current) {
       const existingWeekly = Chart.getChart(weeklyRef.current as any);
-      if (existingWeekly) {
-        existingWeekly.destroy();
-      }
+      if (existingWeekly) existingWeekly.destroy();
       const ctx = weeklyRef.current.getContext('2d');
-      if (!ctx) {
-        return;
-      }
+      if (!ctx) return;
       const c = new Chart(ctx, {
         type: 'radar',
         data: {
@@ -151,9 +127,7 @@ export default function ConsumosPage(): JSX.Element {
   }
 
   function changeChartType(type: 'bar' | 'line' | 'area') {
-    if (!mainChart) {
-      return;
-    }
+    if (!mainChart) return;
     const chart = mainChart;
     if (type === 'area' || type === 'line') {
       // Chart.js types are strict — cast to any for runtime mutation
@@ -169,37 +143,28 @@ export default function ConsumosPage(): JSX.Element {
   }
 
   function applyFilters(e?: React.MouseEvent) {
-    if (e) {
-      e.preventDefault();
-    }
+    if (e) e.preventDefault();
     // Simulate filter application
     const btn = (e?.currentTarget as HTMLButtonElement) || null;
     if (btn) {
       const originalText = btn.innerHTML;
-      btn.innerHTML =
-        '<span class="spinner-border spinner-border-sm me-1"></span>Aplicando...';
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Aplicando...';
       btn.setAttribute('disabled', 'true');
       setTimeout(() => {
         btn.innerHTML = originalText;
         btn.removeAttribute('disabled');
         if (mainChart) {
-          const newData = Array.from(
-            { length: 12 },
-            () => Math.floor(Math.random() * 200) + 50,
-          );
+          const newData = Array.from({ length: 12 }, () => Math.floor(Math.random() * 200) + 50);
           // @ts-ignore
           mainChart.data.datasets[0].data = newData;
           mainChart.update();
         }
-         
+        // eslint-disable-next-line no-alert
         alert('Filtros aplicados correctamente');
       }, 1200);
     } else {
       if (mainChart) {
-        const newData = Array.from(
-          { length: 12 },
-          () => Math.floor(Math.random() * 200) + 50,
-        );
+        const newData = Array.from({ length: 12 }, () => Math.floor(Math.random() * 200) + 50);
         // @ts-ignore
         mainChart.data.datasets[0].data = newData;
         mainChart.update();
@@ -209,7 +174,7 @@ export default function ConsumosPage(): JSX.Element {
 
   function exportData(format: 'excel' | 'pdf' | 'csv') {
     const formatNames: any = { excel: 'Excel', pdf: 'PDF', csv: 'CSV' };
-     
+    // eslint-disable-next-line no-alert
     alert(`Exportando datos en formato ${formatNames[format]}...`);
     setTimeout(() => {
       const link = document.createElement('a');
@@ -253,81 +218,43 @@ export default function ConsumosPage(): JSX.Element {
   }
 
   return (
-    <div className='d-flex'>
+    <div className="d-flex">
       <Sidebar />
-      <div
-        className='main-content flex-grow-1 bg-light'
-        style={{ marginLeft: 280 }}
-      >
-        <header className='bg-white border-bottom shadow-sm p-3'>
-          <div className='container-fluid'>
-            <div className='row align-items-center'>
-              <div className='col-lg-4 d-flex align-items-center'>
-                <button
-                  className='btn toggle-sidebar d-lg-none me-2'
-                  onClick={() => {
-                    const sidebar = document.querySelector('.sidebar');
-                    const backdrop =
-                      document.querySelector('.sidebar-backdrop');
-                    sidebar?.classList.toggle('show');
-                    backdrop?.classList.toggle('show');
-                  }}
-                >
-                  <span className='material-icons'>menu</span>
+      <div className="main-content flex-grow-1 bg-light" style={{ marginLeft: 280 }}>
+        <header className="bg-white border-bottom shadow-sm p-3">
+          <div className="container-fluid">
+            <div className="row align-items-center">
+              <div className="col-lg-4 d-flex align-items-center">
+                <button className="btn toggle-sidebar d-lg-none me-2" onClick={() => {
+                  const sidebar = document.querySelector('.sidebar');
+                  const backdrop = document.querySelector('.sidebar-backdrop');
+                  sidebar?.classList.toggle('show');
+                  backdrop?.classList.toggle('show');
+                }}>
+                  <span className="material-icons">menu</span>
                 </button>
 
-                <div className='d-flex align-items-center'>
-                  <a
-                    href='/medidores'
-                    className='btn btn-outline-secondary me-2'
-                  >
-                    Volver a Medidores
-                  </a>
+                <div className="d-flex align-items-center">
+                  <a href="/medidores" className="btn btn-outline-secondary me-2">Volver a Medidores</a>
                   <div>
-                    <small className='text-muted'>
-                      Medidor seleccionado: <strong>Medidor 001</strong>
-                    </small>
+                    <small className="text-muted">Medidor seleccionado: <strong>Medidor 001</strong></small>
                   </div>
                 </div>
               </div>
 
-              <div className='col-lg-8'>
-                <div className='d-flex justify-content-end align-items-center'>
-                  <div className='me-3'>
-                    <input
-                      id='dateRange'
-                      className='form-control form-control-sm'
-                      placeholder='Rango de fechas'
-                      style={{ width: 220 }}
-                    />
+              <div className="col-lg-8">
+                <div className="d-flex justify-content-end align-items-center">
+                  <div className="me-3">
+                    <input id="dateRange" className="form-control form-control-sm" placeholder="Rango de fechas" style={{ width: 220 }} />
                   </div>
 
-                  <div className='dropdown'>
-                    <button
-                      className='btn btn-sm btn-outline-secondary dropdown-toggle'
-                      data-bs-toggle='dropdown'
-                    >
-                      Configuración
-                    </button>
-                    <ul className='dropdown-menu dropdown-menu-end'>
-                      <li>
-                        <a className='dropdown-item' href='/profile'>
-                          Mi Perfil
-                        </a>
-                      </li>
-                      <li>
-                        <a className='dropdown-item' href='/tarifas'>
-                          Tarifas de Consumo
-                        </a>
-                      </li>
-                      <li>
-                        <hr className='dropdown-divider' />
-                      </li>
-                      <li>
-                        <a className='dropdown-item text-danger' href='/login'>
-                          Cerrar Sesión
-                        </a>
-                      </li>
+                  <div className="dropdown">
+                    <button className="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">Configuración</button>
+                    <ul className="dropdown-menu dropdown-menu-end">
+                      <li><a className="dropdown-item" href="/profile">Mi Perfil</a></li>
+                      <li><a className="dropdown-item" href="/tarifas">Tarifas de Consumo</a></li>
+                      <li><hr className="dropdown-divider" /></li>
+                      <li><a className="dropdown-item text-danger" href="/login">Cerrar Sesión</a></li>
                     </ul>
                   </div>
                 </div>
@@ -336,228 +263,123 @@ export default function ConsumosPage(): JSX.Element {
           </div>
         </header>
 
-        <main className='container-fluid p-4'>
-          <div className='row'>
-            <div className='col-12 col-lg-3'>
-              <div className='filter-panel'>
-                <h5 className='mb-3'>
-                  <span className='material-icons me-2'>filter_list</span>
-                  Filtros
-                </h5>
-                <div className='mb-3'>
-                  <label className='form-label'>Medidor</label>
-                  <select id='meterSelect' className='form-select'>
-                    <option value='all'>Todos</option>
-                    <option value='001'>Medidor 001</option>
+        <main className="container-fluid p-4">
+          <div className="row">
+            <div className="col-12 col-lg-3">
+              <div className="filter-panel">
+                <h5 className="mb-3"><span className="material-icons me-2">filter_list</span>Filtros</h5>
+                <div className="mb-3">
+                  <label className="form-label">Medidor</label>
+                  <select id="meterSelect" className="form-select">
+                    <option value="all">Todos</option>
+                    <option value="001">Medidor 001</option>
                   </select>
                 </div>
-                <div className='mb-3'>
-                  <label className='form-label'>Unidad</label>
-                  <select id='unitSelect' className='form-select'>
-                    <option value='kwh'>kWh</option>
-                    <option value='m3'>m3</option>
+                <div className="mb-3">
+                  <label className="form-label">Unidad</label>
+                  <select id="unitSelect" className="form-select">
+                    <option value="kwh">kWh</option>
+                    <option value="m3">m3</option>
                   </select>
                 </div>
-                <div className='mb-3'>
-                  <label className='form-label'>Período</label>
-                  <div className='period-selector'>
-                    <button
-                      className='period-btn'
-                      data-period='month'
-                      onClick={e => {
-                        document
-                          .querySelectorAll('.period-btn')
-                          .forEach(b => b.classList.remove('active'));
-                        (e.currentTarget as HTMLElement).classList.add(
-                          'active',
-                        );
-                      }}
-                    >
-                      Mes
-                    </button>
-                    <button
-                      className='period-btn'
-                      data-period='quarter'
-                      onClick={e => {
-                        document
-                          .querySelectorAll('.period-btn')
-                          .forEach(b => b.classList.remove('active'));
-                        (e.currentTarget as HTMLElement).classList.add(
-                          'active',
-                        );
-                      }}
-                    >
-                      Trimestre
-                    </button>
-                    <button
-                      className='period-btn'
-                      data-period='year'
-                      onClick={e => {
-                        document
-                          .querySelectorAll('.period-btn')
-                          .forEach(b => b.classList.remove('active'));
-                        (e.currentTarget as HTMLElement).classList.add(
-                          'active',
-                        );
-                      }}
-                    >
-                      Año
-                    </button>
+                <div className="mb-3">
+                  <label className="form-label">Período</label>
+                  <div className="period-selector">
+                    <button className="period-btn" data-period="month" onClick={(e) => { document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active')); (e.currentTarget as HTMLElement).classList.add('active'); }}>Mes</button>
+                    <button className="period-btn" data-period="quarter" onClick={(e) => { document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active')); (e.currentTarget as HTMLElement).classList.add('active'); }}>Trimestre</button>
+                    <button className="period-btn" data-period="year" onClick={(e) => { document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active')); (e.currentTarget as HTMLElement).classList.add('active'); }}>Año</button>
                   </div>
                 </div>
-                <div className='d-grid'>
-                  <button className='btn btn-primary' onClick={applyFilters}>
-                    Aplicar filtros
-                  </button>
+                <div className="d-grid">
+                  <button className="btn btn-primary" onClick={applyFilters}>Aplicar filtros</button>
                 </div>
               </div>
 
-              <div className='stats-grid mt-3'>
-                <div className='stat-card'>
-                  <div className='stat-value'>1,847</div>
-                  <div className='stat-label'>kWh Total</div>
-                  <div className='stat-change positive'>
-                    +4.2% vs mes anterior
-                  </div>
+              <div className="stats-grid mt-3">
+                <div className="stat-card">
+                  <div className="stat-value">1,847</div>
+                  <div className="stat-label">kWh Total</div>
+                  <div className="stat-change positive">+4.2% vs mes anterior</div>
                 </div>
 
-                <div className='stat-card'>
-                  <div className='stat-value'>154</div>
-                  <div className='stat-label'>kWh Promedio/Mes</div>
-                  <div className='stat-change negative'>-1.1% vs periodo</div>
+                <div className="stat-card">
+                  <div className="stat-value">154</div>
+                  <div className="stat-label">kWh Promedio/Mes</div>
+                  <div className="stat-change negative">-1.1% vs periodo</div>
                 </div>
 
-                <div className='stat-card'>
-                  <div className='stat-value'>$567,230</div>
-                  <div className='stat-label'>Costo Total</div>
-                  <div className='stat-change positive'>-2.5% vs periodo</div>
+                <div className="stat-card">
+                  <div className="stat-value">$567,230</div>
+                  <div className="stat-label">Costo Total</div>
+                  <div className="stat-change positive">-2.5% vs periodo</div>
                 </div>
               </div>
             </div>
 
-            <div className='col-12 col-lg-9'>
-              <div
-                className='comparison-mode mb-3'
-                style={{ display: comparisonMode ? 'block' : 'none' }}
-              >
-                <div className='d-flex align-items-center'>
+            <div className="col-12 col-lg-9">
+              <div className="comparison-mode mb-3" style={{ display: comparisonMode ? 'block' : 'none' }}>
+                <div className="d-flex align-items-center">
                   <strong>Modo comparación activo</strong>
                 </div>
               </div>
 
-              <div className='chart-card'>
-                <div className='chart-header d-flex justify-content-between align-items-center'>
-                  <h5 className='mb-0'>Tendencia de Consumo</h5>
+              <div className="chart-card">
+                <div className="chart-header d-flex justify-content-between align-items-center">
+                  <h5 className="mb-0">Tendencia de Consumo</h5>
                   <div>
-                    <button
-                      className='btn btn-sm btn-outline-secondary me-2'
-                      onClick={() => exportData('csv')}
-                    >
-                      CSV
-                    </button>
-                    <button
-                      className='btn btn-sm btn-primary me-2'
-                      onClick={() => exportData('excel')}
-                    >
-                      Exportar
-                    </button>
-                    <div
-                      className='btn-group'
-                      role='group'
-                      aria-label='chart types'
-                    >
-                      <button
-                        className='btn btn-sm btn-outline-secondary'
-                        onClick={() => changeChartType('bar')}
-                      >
-                        Bar
-                      </button>
-                      <button
-                        className='btn btn-sm btn-outline-secondary'
-                        onClick={() => changeChartType('line')}
-                      >
-                        Line
-                      </button>
-                      <button
-                        className='btn btn-sm btn-outline-secondary'
-                        onClick={() => changeChartType('area')}
-                      >
-                        Area
-                      </button>
+                    <button className="btn btn-sm btn-outline-secondary me-2" onClick={() => exportData('csv')}>CSV</button>
+                    <button className="btn btn-sm btn-primary me-2" onClick={() => exportData('excel')}>Exportar</button>
+                    <div className="btn-group" role="group" aria-label="chart types">
+                      <button className="btn btn-sm btn-outline-secondary" onClick={() => changeChartType('bar')}>Bar</button>
+                      <button className="btn btn-sm btn-outline-secondary" onClick={() => changeChartType('line')}>Line</button>
+                      <button className="btn btn-sm btn-outline-secondary" onClick={() => changeChartType('area')}>Area</button>
                     </div>
-                    <div className='form-check form-switch d-inline-block ms-3'>
-                      <input
-                        className='form-check-input'
-                        type='checkbox'
-                        id='comparisonMode'
-                        checked={comparisonMode}
-                        onChange={e => toggleComparison(e.target.checked)}
-                      />
-                      <label
-                        className='form-check-label small'
-                        htmlFor='comparisonMode'
-                      >
-                        Comparación
-                      </label>
+                    <div className="form-check form-switch d-inline-block ms-3">
+                      <input className="form-check-input" type="checkbox" id="comparisonMode" checked={comparisonMode} onChange={(e) => toggleComparison(e.target.checked)} />
+                      <label className="form-check-label small" htmlFor="comparisonMode">Comparación</label>
                     </div>
                   </div>
                 </div>
 
-                <div className='chart-container' style={{ height: 400 }}>
-                  <canvas id='mainChart' ref={mainRef}></canvas>
+                <div className="chart-container" style={{ height: 400 }}>
+                  <canvas id="mainChart" ref={mainRef}></canvas>
                 </div>
               </div>
 
-              <div className='row mt-3'>
-                <div className='col-md-6'>
-                  <div className='chart-card'>
-                    <div className='chart-header d-flex justify-content-between align-items-center'>
-                      <h6 className='mb-0'>Distribución mensual</h6>
+              <div className="row mt-3">
+                <div className="col-md-6">
+                  <div className="chart-card">
+                    <div className="chart-header d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0">Distribución mensual</h6>
                     </div>
-                    <div
-                      className='chart-container small'
-                      style={{ height: 300 }}
-                    >
-                      <canvas id='monthlyChart' ref={monthlyRef}></canvas>
+                    <div className="chart-container small" style={{ height: 300 }}>
+                      <canvas id="monthlyChart" ref={monthlyRef}></canvas>
                     </div>
                   </div>
                 </div>
 
-                <div className='col-md-6'>
-                  <div className='chart-card'>
-                    <div className='chart-header d-flex justify-content-between align-items-center'>
-                      <h6 className='mb-0'>Promedio semanal</h6>
+                <div className="col-md-6">
+                  <div className="chart-card">
+                    <div className="chart-header d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0">Promedio semanal</h6>
                     </div>
-                    <div
-                      className='chart-container small'
-                      style={{ height: 300 }}
-                    >
-                      <canvas id='weeklyChart' ref={weeklyRef}></canvas>
+                    <div className="chart-container small" style={{ height: 300 }}>
+                      <canvas id="weeklyChart" ref={weeklyRef}></canvas>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className='consumption-table mt-3'>
-                <div className='d-flex justify-content-between align-items-center p-3 border-bottom'>
-                  <h6 className='mb-0'>Detalle de consumos</h6>
+              <div className="consumption-table mt-3">
+                <div className="d-flex justify-content-between align-items-center p-3 border-bottom">
+                  <h6 className="mb-0">Detalle de consumos</h6>
                   <div>
-                    <button
-                      className='btn btn-sm btn-outline-secondary me-2'
-                      onClick={() => exportData('pdf')}
-                    >
-                      PDF
-                    </button>
-                    <button
-                      className='btn btn-sm btn-outline-secondary'
-                      onClick={() => exportData('csv')}
-                    >
-                      CSV
-                    </button>
+                    <button className="btn btn-sm btn-outline-secondary me-2" onClick={() => exportData('pdf')}>PDF</button>
+                    <button className="btn btn-sm btn-outline-secondary" onClick={() => exportData('csv')}>CSV</button>
                   </div>
                 </div>
-                <div className='table-responsive p-3'>
-                  <table className='table table-striped mb-0'>
+                <div className="table-responsive p-3">
+                  <table className="table table-striped mb-0">
                     <thead>
                       <tr>
                         <th>Fecha</th>
@@ -573,22 +395,14 @@ export default function ConsumosPage(): JSX.Element {
                         <td>Medidor 001</td>
                         <td>34 m3</td>
                         <td>Mensual</td>
-                        <td>
-                          <button className='btn btn-sm btn-outline-secondary'>
-                            Ver
-                          </button>
-                        </td>
+                        <td><button className="btn btn-sm btn-outline-secondary">Ver</button></td>
                       </tr>
                       <tr>
                         <td>01/08/2025</td>
                         <td>Medidor 001</td>
                         <td>28 m3</td>
                         <td>Mensual</td>
-                        <td>
-                          <button className='btn btn-sm btn-outline-secondary'>
-                            Ver
-                          </button>
-                        </td>
+                        <td><button className="btn btn-sm btn-outline-secondary">Ver</button></td>
                       </tr>
                     </tbody>
                   </table>

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-
 import { TotpSetupResponse } from '@/types/profile';
 
 interface TwoFactorModalProps {
@@ -24,9 +23,7 @@ export default function TwoFactorModal({
   const [code, setCode] = useState('');
 
   const handleSubmit = async () => {
-    if (code.length !== 6) {
-      return;
-    }
+    if (code.length !== 6) return;
 
     try {
       if (mode === 'setup' && onEnable) {
@@ -46,22 +43,15 @@ export default function TwoFactorModal({
     onClose();
   };
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   return (
-    <div
-      className='modal fade show d-block'
-      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-    >
+    <div className='modal fade show d-block' style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
       <div className={`modal-dialog ${mode === 'setup' ? 'modal-lg' : ''}`}>
         <div className='modal-content'>
           <div className='modal-header'>
             <h5 className='modal-title'>
-              {mode === 'setup'
-                ? 'Configurar Autenticación de Dos Factores'
-                : 'Desactivar 2FA'}
+              {mode === 'setup' ? 'Configurar Autenticación de Dos Factores' : 'Desactivar 2FA'}
             </h5>
             <button
               type='button'
@@ -79,11 +69,11 @@ export default function TwoFactorModal({
                     Usa Google Authenticator, Authy u otra aplicación compatible
                   </p>
                   <div className='text-center mb-3'>
-                    <img
-                      src={setupData.qr}
-                      alt='QR Code'
-                      className='img-fluid border rounded'
-                      style={{ maxWidth: '200px' }}
+                    <img 
+                      src={setupData.qr} 
+                      alt='QR Code' 
+                      className='img-fluid border rounded' 
+                      style={{ maxWidth: '200px' }} 
                     />
                   </div>
                   <p className='text-muted small'>
@@ -105,9 +95,7 @@ export default function TwoFactorModal({
                       style={{ fontSize: '1.5rem', letterSpacing: '0.5rem' }}
                       placeholder='000000'
                       value={code}
-                      onChange={e =>
-                        setCode(e.target.value.replace(/\D/g, '').slice(0, 6))
-                      }
+                      onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       maxLength={6}
                       disabled={isLoading}
                       autoFocus
@@ -116,8 +104,7 @@ export default function TwoFactorModal({
                   <div className='alert alert-info'>
                     <span className='material-icons me-2'>info</span>
                     <small>
-                      Una vez activado, necesitarás tu aplicación de
-                      autenticación para iniciar sesión.
+                      Una vez activado, necesitarás tu aplicación de autenticación para iniciar sesión.
                     </small>
                   </div>
                 </div>
@@ -126,27 +113,21 @@ export default function TwoFactorModal({
               <div>
                 <div className='alert alert-warning'>
                   <span className='material-icons me-2'>warning</span>
-                  <strong>¡Atención!</strong> Desactivar 2FA reducirá la
-                  seguridad de tu cuenta.
+                  <strong>¡Atención!</strong> Desactivar 2FA reducirá la seguridad de tu cuenta.
                 </div>
-                <p>
-                  Para confirmar, introduce el código de verificación de tu
-                  aplicación:
-                </p>
+                <p>Para confirmar, introduce el código de verificación de tu aplicación:</p>
                 <div className='text-center'>
                   <input
                     type='text'
                     className='form-control text-center d-inline-block'
-                    style={{
-                      fontSize: '1.5rem',
+                    style={{ 
+                      fontSize: '1.5rem', 
                       letterSpacing: '0.5rem',
-                      width: '200px',
+                      width: '200px'
                     }}
                     placeholder='000000'
                     value={code}
-                    onChange={e =>
-                      setCode(e.target.value.replace(/\D/g, '').slice(0, 6))
-                    }
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     maxLength={6}
                     disabled={isLoading}
                     autoFocus
@@ -172,10 +153,7 @@ export default function TwoFactorModal({
             >
               {isLoading ? (
                 <>
-                  <span
-                    className='spinner-border spinner-border-sm me-2'
-                    role='status'
-                  ></span>
+                  <span className='spinner-border spinner-border-sm me-2' role='status'></span>
                   {mode === 'setup' ? 'Activando...' : 'Desactivando...'}
                 </>
               ) : (

@@ -15,7 +15,7 @@ export interface Comunidad {
   imagen?: string;
   fechaCreacion: string;
   fechaActualizacion: string;
-
+  
   // Estadísticas
   totalUnidades: number;
   unidadesOcupadas: number;
@@ -24,7 +24,7 @@ export interface Comunidad {
   ingresosMensuales: number;
   gastosMensuales: number;
   morosidad: number;
-
+  
   // Configuración
   configuracionCobranza?: ParametrosCobranza;
 }
@@ -80,7 +80,7 @@ export interface DocumentoComunidad {
 export interface ParametrosCobranza {
   id: number;
   comunidadId: number;
-
+  
   // Intereses y mora
   diasGracia: number;
   tasaMora: number; // porcentaje mensual
@@ -88,31 +88,31 @@ export interface ParametrosCobranza {
   interesMaximo: number; // porcentaje máximo mensual
   aplicacionInteres: 'capital' | 'saldo';
   tipoRedondeo: 'normal' | 'arriba' | 'abajo';
-
+  
   // Políticas de pago
   politicaPago: 'antiguos' | 'recientes' | 'especificada';
   ordenAplicacion: 'interes-capital' | 'capital-interes';
   diaEmision: number; // día del mes
   diaVencimiento: number; // día del mes
-
+  
   // Notificaciones
   notificacionesAuto: boolean;
   notificacion3Dias: boolean;
   notificacion1Dia: boolean;
   notificacionVencido: boolean;
-
+  
   // Medios de pago
   pagoTransferencia: boolean;
   pagoWebpay: boolean;
   pagoKhipu: boolean;
   pagoEfectivo: boolean;
-
+  
   // Cuenta bancaria
   cuentaBancaria?: CuentaBancaria;
-
+  
   // Multas predefinidas
   multasPredefinidas: MultaPredefinida[];
-
+  
   // Auditoría
   fechaCreacion: string;
   fechaActualizacion: string;
@@ -189,20 +189,20 @@ export interface VistaConfiguracion {
 export enum EstadoComunidad {
   ACTIVA = 'Activa',
   INACTIVA = 'Inactiva',
-  SUSPENDIDA = 'Suspendida',
+  SUSPENDIDA = 'Suspendida'
 }
 
 export enum TipoComunidad {
   CONDOMINIO = 'Condominio',
   EDIFICIO = 'Edificio',
   CONJUNTO_RESIDENCIAL = 'Conjunto Residencial',
-  OTRO = 'Otro',
+  OTRO = 'Otro'
 }
 
 export enum EstadoAmenidad {
   DISPONIBLE = 'Disponible',
   MANTENIMIENTO = 'Mantenimiento',
-  NO_DISPONIBLE = 'No disponible',
+  NO_DISPONIBLE = 'No disponible'
 }
 
 // Constantes para validaciones
@@ -210,36 +210,36 @@ export const VALIDATION_RULES = {
   nombre: {
     min: 3,
     max: 100,
-    required: true,
+    required: true
   },
   direccion: {
     min: 10,
     max: 200,
-    required: true,
+    required: true
   },
   telefono: {
-    pattern: /^[+]?[0-9\s\-()]{8,15}$/,
-    required: false,
+    pattern: /^[\+]?[0-9\s\-\(\)]{8,15}$/,
+    required: false
   },
   email: {
     pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    required: false,
+    required: false
   },
   rut: {
     pattern: /^\d{7,8}$/,
     min: 7,
     max: 8,
     required: false,
-    message: 'El RUT debe tener entre 7 y 8 dígitos',
+    message: 'El RUT debe tener entre 7 y 8 dígitos'
   },
   dv: {
     pattern: /^[0-9kK]$/,
     required: false,
-    message: 'El dígito verificador debe ser un número del 0-9 o K',
+    message: 'El dígito verificador debe ser un número del 0-9 o K'
   },
   tasaMora: {
     min: 0,
     max: 100,
-    required: true,
-  },
+    required: true
+  }
 } as const;

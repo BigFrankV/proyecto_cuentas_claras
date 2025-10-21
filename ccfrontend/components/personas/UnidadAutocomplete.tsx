@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-
 import { usePersonas } from '@/hooks/usePersonas';
 import { UnidadAutocomplete as UnidadAutocompleteType } from '@/types/personas';
 
@@ -16,7 +15,7 @@ export const UnidadAutocomplete: React.FC<UnidadAutocompleteProps> = ({
   onChange,
   placeholder = 'Buscar unidad...',
   disabled = false,
-  className = '',
+  className = ''
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState<UnidadAutocompleteType[]>([]);
@@ -54,10 +53,7 @@ export const UnidadAutocomplete: React.FC<UnidadAutocompleteProps> = ({
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -87,9 +83,7 @@ export const UnidadAutocomplete: React.FC<UnidadAutocompleteProps> = ({
 
   const handleSelectUnit = (unidad: UnidadAutocompleteType) => {
     onChange(unidad);
-    setSearchTerm(
-      `${unidad.nombre} - ${unidad.edificio} (${unidad.comunidad})`,
-    );
+    setSearchTerm(`${unidad.nombre} - ${unidad.edificio} (${unidad.comunidad})`);
     setIsOpen(false);
   };
 
@@ -122,9 +116,7 @@ export const UnidadAutocomplete: React.FC<UnidadAutocompleteProps> = ({
             disabled={disabled}
             title='Limpiar selección'
           >
-            <i className='material-icons' style={{ fontSize: '16px' }}>
-              clear
-            </i>
+            <i className='material-icons' style={{ fontSize: '16px' }}>clear</i>
           </button>
         )}
         <button
@@ -134,36 +126,29 @@ export const UnidadAutocomplete: React.FC<UnidadAutocompleteProps> = ({
           disabled={disabled}
           title='Buscar unidades'
         >
-          <i className='material-icons' style={{ fontSize: '16px' }}>
-            search
-          </i>
+          <i className='material-icons' style={{ fontSize: '16px' }}>search</i>
         </button>
       </div>
 
       {isOpen && (
-        <div
-          className='position-absolute top-100 start-0 w-100 bg-white border rounded shadow-sm z-index-1050'
-          style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1050 }}
-        >
+        <div className='position-absolute top-100 start-0 w-100 bg-white border rounded shadow-sm z-index-1050'
+             style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1050 }}>
           {isLoading ? (
             <div className='p-3 text-center'>
-              <div
-                className='spinner-border spinner-border-sm text-primary me-2'
-                role='status'
-              >
+              <div className='spinner-border spinner-border-sm text-primary me-2' role='status'>
                 <span className='visually-hidden'>Cargando...</span>
               </div>
               Buscando unidades...
             </div>
           ) : suggestions.length > 0 ? (
-            suggestions.map(unidad => (
+            suggestions.map((unidad) => (
               <div
                 key={unidad.id}
                 className='p-2 border-bottom cursor-pointer hover-bg-light'
                 onClick={() => handleSelectUnit(unidad)}
                 style={{ cursor: 'pointer' }}
-                onMouseEnter={e => e.currentTarget.classList.add('bg-light')}
-                onMouseLeave={e => e.currentTarget.classList.remove('bg-light')}
+                onMouseEnter={(e) => e.currentTarget.classList.add('bg-light')}
+                onMouseLeave={(e) => e.currentTarget.classList.remove('bg-light')}
               >
                 <div className='fw-medium'>{unidad.nombre}</div>
                 <div className='small text-muted'>

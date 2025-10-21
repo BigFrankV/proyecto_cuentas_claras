@@ -11,7 +11,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       // Validaciones básicas
       if (!bank || !bankAccount || !period || !startDate || !endDate) {
         return res.status(400).json({
-          error: 'Todos los campos son requeridos',
+          error: 'Todos los campos son requeridos'
         });
       }
 
@@ -28,26 +28,27 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         totalTransactions: 0,
         matchedTransactions: 0,
         unMatchedTransactions: 0,
-        totalAmount: 0,
+        totalAmount: 0
       };
 
       // Simular delay de API
       setTimeout(() => {
         res.status(200).json({
           message: 'Conciliación actualizada exitosamente',
-          data: updatedConciliation,
+          data: updatedConciliation
         });
       }, 1000);
+
     } catch (error) {
       console.error('Error updating conciliation:', error);
       res.status(500).json({
-        error: 'Error interno del servidor',
+        error: 'Error interno del servidor'
       });
     }
   } else {
     res.setHeader('Allow', ['PUT']);
     res.status(405).json({
-      error: `Método ${req.method} no permitido`,
+      error: `Método ${req.method} no permitido`
     });
   }
 }

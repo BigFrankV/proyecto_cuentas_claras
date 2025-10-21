@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,9 +10,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import React from 'react';
 import { Line } from 'react-chartjs-2';
-
 import { TendenciaEmision } from '@/lib/dashboardService';
 
 ChartJS.register(
@@ -22,7 +21,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler,
+  Filler
 );
 
 interface TendenciasEmisionesChartProps {
@@ -59,9 +58,6 @@ export default function TendenciasEmisionesChart({
 
   // Formatear fechas para mostrar
   const formatearFecha = (fecha: string) => {
-    if (!fecha || typeof fecha !== 'string') {
-      return 'Fecha desconocida';
-    }
     const [year, month] = fecha.split('-');
     const date = new Date(parseInt(year || '2024'), parseInt(month || '1') - 1);
     return date.toLocaleDateString('es-CL', {
@@ -131,7 +127,7 @@ export default function TendenciasEmisionesChart({
         borderColor: '#ddd',
         borderWidth: 1,
         callbacks: {
-          label(context: any) {
+          label: function (context: any) {
             if (context.datasetIndex === 0) {
               const value = new Intl.NumberFormat('es-CL', {
                 style: 'currency',
@@ -166,7 +162,7 @@ export default function TendenciasEmisionesChart({
           color: 'rgba(0, 0, 0, 0.1)',
         },
         ticks: {
-          callback(value: any) {
+          callback: function (value: any) {
             return new Intl.NumberFormat('es-CL', {
               style: 'currency',
               currency: 'CLP',
@@ -187,7 +183,7 @@ export default function TendenciasEmisionesChart({
           drawOnChartArea: false,
         },
         ticks: {
-          callback(value: any) {
+          callback: function (value: any) {
             return Math.round(value / 10000);
           },
           font: {

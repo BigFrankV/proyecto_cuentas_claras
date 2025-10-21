@@ -1,39 +1,28 @@
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-
 import Layout from '@/components/layout/Layout';
-import { getCuentasCobroUnidad, type CuentaCobro } from '@/lib/unidadesService';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
+import { useEffect, useState } from 'react';
+import apiClient from '@/lib/api';
 
 export default function CargosUnidad() {
   const router = useRouter();
   const { id } = router.query;
-  const [cargos, setCargos] = useState<CuentaCobro[]>([]);
+  const [cargos, setCargos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!id) {
-      return;
-    }
+    if (!id) return;
     let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
-        const data = await getCuentasCobroUnidad(Number(id));
-        if (mounted) {
-          setCargos(data || []);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+        const res = await apiClient.get(`/unidades/${id}/cuentas`);
+        if (mounted) setCargos(res.data || []);
+      } catch (err) { console.error(err); } finally { setLoading(false); }
     };
     load();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [id]);
 
   return (
@@ -65,50 +54,20 @@ export default function CargosUnidad() {
 
               <div className='card'>
                 <div className='card-body'>
-                  <p className='text-muted'>
-                    Cuentas / cargos emitidos a la unidad
-                  </p>
-                  {loading && (
-                    <div className='alert alert-info'>Cargando...</div>
-                  )}
-                  {!loading && cargos.length === 0 && (
-                    <div className='alert alert-warning'>No hay cargos</div>
-                  )}
+                  <p className='text-muted'>Cuentas / cargos emitidos a la unidad</p>
+                  {loading && <div className='alert alert-info'>Cargando...</div>}
+                  {!loading && cargos.length === 0 && <div className='alert alert-warning'>No hay cargos</div>}
                   {!loading && cargos.length > 0 && (
                     <ul className='list-group'>
                       {cargos.map(c => (
-                        <li
-                          key={c.id}
-                          className='list-group-item d-flex justify-content-between align-items-center'
-                        >
+                        <li key={c.id} className='list-group-item d-flex justify-content-between align-items-center'>
                           <div>
-                            <div className='fw-medium'>
-                              {c.periodo || c.concepto || 'Periodo'}
-                            </div>
-                            <div className='small text-muted'>
-                              {c.concepto || ''} • Vence: {c.fecha_vencimiento}
-                            </div>
+                            <div className='fw-medium'>{c.periodo || c.concepto || 'Periodo'}</div>
+                            <div className='small text-muted'>{c.concepto || ''}</div>
                           </div>
                           <div className='text-end'>
-                            <div className='fw-medium'>
-                              {new Intl.NumberFormat('es-CL', {
-                                style: 'currency',
-                                currency: 'CLP',
-                              }).format(c.monto || c.total || 0)}
-                            </div>
-                            <div className='small'>
-                              <span
-                                className={`badge ${
-                                  c.estado === 'pagado'
-                                    ? 'bg-success'
-                                    : c.estado === 'vencido'
-                                      ? 'bg-danger'
-                                      : 'bg-warning'
-                                }`}
-                              >
-                                {c.estado || 'pendiente'}
-                              </span>
-                            </div>
+                            <div className='fw-medium'>{new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP'}).format(c.monto || c.total || 0)}</div>
+                            <div className='small text-muted'>{c.estado || ''}</div>
                           </div>
                         </li>
                       ))}

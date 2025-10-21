@@ -1,6 +1,5 @@
-import { jwtDecode } from 'jwt-decode';
-
 import apiClient from './api';
+import { jwtDecode } from 'jwt-decode';
 
 // Tipos para la autenticación
 export interface LoginCredentials {
@@ -47,14 +46,14 @@ export interface User {
   memberships?: Membership[];
   is_2fa_enabled?: boolean;
   totp_enabled?: boolean;
-
+  
   // Campos adicionales opcionales
   firstName?: string;
   lastName?: string;
   phone?: string;
   activo?: boolean;
   created_at?: string;
-
+  
   // Datos de persona relacionados
   persona?: Persona | null;
 }
@@ -63,7 +62,7 @@ export interface AuthResponse {
   token?: string;
   user?: User;
   expires_in?: number;
-
+  
   // Campos para 2FA
   twoFactorRequired?: boolean;
   tempToken?: string;
@@ -136,7 +135,7 @@ class AuthService {
         user = userObj;
 
         console.log('🔍 Usuario extraído del token:', user);
-
+        
         // Intentar obtener información completa del usuario del servidor
         try {
           const fullUserData = await this.getCurrentUser();
@@ -146,9 +145,7 @@ class AuthService {
             console.log('🔍 Usuario completo con datos del servidor:', user);
           }
         } catch (serverError) {
-          console.log(
-            '⚠️ No se pudo obtener datos completos del servidor, usando datos del token',
-          );
+          console.log('⚠️ No se pudo obtener datos completos del servidor, usando datos del token');
         }
       } catch (jwtError) {
         console.error('❌ Error decodificando token:', jwtError);
@@ -168,11 +165,11 @@ class AuthService {
         throw new Error(error.response.data.message);
       } else if (error.response?.status === 401) {
         throw new Error(
-          'Credenciales inválidas. Verifica tu usuario y contraseña.',
+          'Credenciales inválidas. Verifica tu usuario y contraseña.'
         );
       } else if (error.code === 'ECONNREFUSED') {
         throw new Error(
-          'No se pudo conectar con el servidor. Verifica que la API esté ejecutándose.',
+          'No se pudo conectar con el servidor. Verifica que la API esté ejecutándose.'
         );
       } else {
         throw new Error('Error de conexión. Por favor intenta nuevamente.');
@@ -181,10 +178,7 @@ class AuthService {
   }
 
   // Completar login con código 2FA
-  async complete2FALogin(
-    tempToken: string,
-    code: string,
-  ): Promise<AuthResponse> {
+  async complete2FALogin(tempToken: string, code: string): Promise<AuthResponse> {
     try {
       const response = await apiClient.post('/auth/2fa/verify', {
         tempToken,
@@ -217,22 +211,17 @@ class AuthService {
         user = userObj;
 
         console.log('🔍 Usuario extraído del token 2FA:', user);
-
+        
         // Intentar obtener información completa del usuario del servidor
         try {
           const fullUserData = await this.getCurrentUser();
           if (fullUserData) {
             // Combinar datos del token con datos completos del servidor
             user = { ...user, ...fullUserData };
-            console.log(
-              '🔍 Usuario 2FA completo con datos del servidor:',
-              user,
-            );
+            console.log('🔍 Usuario 2FA completo con datos del servidor:', user);
           }
         } catch (serverError) {
-          console.log(
-            '⚠️ No se pudo obtener datos completos del servidor en 2FA, usando datos del token',
-          );
+          console.log('⚠️ No se pudo obtener datos completos del servidor en 2FA, usando datos del token');
         }
       } catch (jwtError) {
         console.error('❌ Error decodificando token 2FA:', jwtError);
@@ -282,11 +271,11 @@ class AuthService {
         throw new Error(error.response.data.message);
       } else if (error.response?.status === 400) {
         throw new Error(
-          'Datos de registro inválidos. Verifica que el usuario tenga al menos 3 caracteres y la contraseña 6.',
+          'Datos de registro inválidos. Verifica que el usuario tenga al menos 3 caracteres y la contraseña 6.'
         );
       } else {
         throw new Error(
-          'Error al registrar usuario. Por favor intenta nuevamente.',
+          'Error al registrar usuario. Por favor intenta nuevamente.'
         );
       }
     }
@@ -311,7 +300,7 @@ class AuthService {
     try {
       const response = await apiClient.get('/auth/me');
       const userData = response.data;
-
+      
       // ✅ CORREGIR: Mapear correctamente todos los campos
       const user: User = {
         id: userData.id || userData.sub,
@@ -324,8 +313,7 @@ class AuthService {
         roles: userData.roles || [],
         comunidad_id: userData.comunidad_id,
         memberships: userData.memberships || [], // ✅ AGREGAR
-        is_2fa_enabled:
-          userData.totp_enabled || userData.is_2fa_enabled || false,
+        is_2fa_enabled: userData.totp_enabled || userData.is_2fa_enabled || false,
         firstName: userData.firstName,
         lastName: userData.lastName,
         phone: userData.phone,
@@ -333,7 +321,7 @@ class AuthService {
         created_at: userData.created_at,
         persona: userData.persona,
       };
-
+      
       console.log('✅ Usuario actual obtenido del servidor:', user);
       return user;
     } catch (error) {
@@ -345,7 +333,7 @@ class AuthService {
   // Verificar si el usuario está logueado
   isAuthenticated(): boolean {
     const token = localStorage.getItem('auth_token');
-
+    
     if (!token) {
       console.log('❌ No se encontró token en localStorage');
       return false;
@@ -355,14 +343,14 @@ class AuthService {
       // Verificar si el token es válido y no ha expirado
       const decodedToken = jwtDecode<JWTPayload>(token);
       const currentTime = Date.now() / 1000;
-
+      
       if (decodedToken.exp < currentTime) {
         console.log('❌ Token expirado, limpiando localStorage');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user_data');
         return false;
       }
-
+      
       console.log('✅ Token válido y no expirado');
       return true;
     } catch (error) {
@@ -397,12 +385,12 @@ class AuthService {
   debugAuthState(): void {
     const token = localStorage.getItem('auth_token');
     const userData = localStorage.getItem('user_data');
-
+    
     console.log('🔍 DEBUG - Estado de autenticación:');
     console.log('  Token presente:', !!token);
     console.log('  Token:', token ? `${token.substring(0, 20)}...` : 'null');
     console.log('  Datos de usuario:', userData);
-
+    
     if (token) {
       try {
         const decoded = jwtDecode<JWTPayload>(token);
@@ -416,10 +404,7 @@ class AuthService {
   }
 
   // Cambiar contraseña
-  async changePassword(
-    currentPassword: string,
-    newPassword: string,
-  ): Promise<void> {
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     try {
       await apiClient.post('/auth/change-password', {
         currentPassword,
@@ -437,17 +422,14 @@ class AuthService {
   }
 
   // Actualizar perfil de usuario
-  async updateProfile(data: {
-    username?: string;
-    email?: string;
-  }): Promise<User> {
+  async updateProfile(data: { username?: string; email?: string }): Promise<User> {
     try {
       const response = await apiClient.patch('/auth/profile', data);
       const updatedUser = response.data.user;
-
+      
       // Actualizar datos en localStorage
       localStorage.setItem('user_data', JSON.stringify(updatedUser));
-
+      
       return updatedUser;
     } catch (error: any) {
       if (error.response?.data?.message) {
@@ -464,14 +446,14 @@ class AuthService {
   async updatePersona(data: Partial<Persona>): Promise<Persona> {
     try {
       const response = await apiClient.patch('/auth/profile/persona', data);
-
+      
       // Actualizar datos de usuario en localStorage con la nueva información de persona
       const currentUser = this.getUserData();
       if (currentUser) {
         currentUser.persona = response.data.persona;
         localStorage.setItem('user_data', JSON.stringify(currentUser));
       }
-
+      
       return response.data.persona;
     } catch (error: any) {
       if (error.response?.data?.message) {
@@ -496,13 +478,13 @@ class AuthService {
         notifications: {
           email_enabled: true,
           payment_notifications: true,
-          weekly_summaries: true,
+          weekly_summaries: true
         },
         display: {
           timezone: 'America/Santiago',
           date_format: 'DD/MM/YYYY',
-          language: 'es',
-        },
+          language: 'es'
+        }
       };
     }
   }
@@ -570,19 +552,6 @@ class AuthService {
     } catch (error) {
       console.error('Error refrescando token:', error);
       return null;
-    }
-  }
-
-  // Limpieza local sin llamadas al servidor ni redirección
-  clearLocalAuth(): void {
-    try {
-      console.log(
-        '🧹 clearLocalAuth: limpiando token y datos de usuario localmente',
-      );
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
-    } catch (e) {
-      console.warn('⚠️ Error en clearLocalAuth:', e);
     }
   }
 

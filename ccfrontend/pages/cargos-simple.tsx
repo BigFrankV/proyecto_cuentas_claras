@@ -1,9 +1,7 @@
-import Head from 'next/head';
-
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
-
 import CargosListado from '../components/cargos/CargosListadoSimple';
+import Head from 'next/head';
 
 export default function CargosPage() {
   return (

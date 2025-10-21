@@ -1,11 +1,10 @@
-// import { useRouter } from 'next/router'; // Removed unused
-
-import MultaDetallePage from '@/components/multas/MultaDetallePage';
+import { useRouter } from 'next/router';
 import { ProtectedRoute } from '@/lib/useAuth';
+import MultaDetallePage from '@/components/multas/MultaDetallePage';
 
 export default function MultaDetalle() {
-  // const router = useRouter(); // Removed unused
-  // const { id } = router.query; // Removed unused
+  const router = useRouter();
+  const { id } = router.query;
 
   return (
     <ProtectedRoute>

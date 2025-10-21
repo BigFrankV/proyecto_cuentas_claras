@@ -1,11 +1,4 @@
-import {
-  validateEmail,
-  validateRUT,
-  validateDNI,
-  validateIdentifier,
-  formatIdentifier,
-  getIdentifierHelpText,
-} from '../lib/validators';
+import { validateEmail, validateRUT, validateDNI, validateIdentifier, formatIdentifier, getIdentifierHelpText } from '../lib/validators';
 
 describe('validators utilities', () => {
   test('validateEmail: valid and invalid', () => {

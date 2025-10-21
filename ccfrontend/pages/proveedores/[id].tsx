@@ -1,8 +1,7 @@
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
 
 export default function ProveedorDetalle() {
   const router = useRouter();

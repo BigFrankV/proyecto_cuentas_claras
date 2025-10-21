@@ -1,13 +1,11 @@
-import Head from 'next/head';
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
-
 import Layout from '@/components/layout/Layout';
-import TwoFactorModal from '@/components/ui/TwoFactorModal';
-import profileService from '@/lib/profileService';
-import { getUserRole, getRoleTagClass } from '@/lib/roles';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
+import Head from 'next/head';
+import profileService from '@/lib/profileService';
+import TwoFactorModal from '@/components/ui/TwoFactorModal';
+import { getUserRole, getRoleTagClass } from '@/lib/roles';
 import {
   UserExtended,
   ProfileFormData,
@@ -22,10 +20,7 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(false);
   const [userProfile, setUserProfile] = useState<UserExtended | null>(null);
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
-  const [message, setMessage] = useState<{
-    type: 'success' | 'error';
-    text: string;
-  } | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Estados para formularios
   const [profileForm, setProfileForm] = useState<ProfileFormData>({
@@ -78,7 +73,7 @@ export default function Profile() {
       // Cargar perfil
       const profile = await profileService.getProfile();
       setUserProfile(profile);
-
+      
       // Verificar estado del 2FA solo si no tenemos la info del usuario o es inconsistente
       if (user?.totp_enabled === undefined && !checking2FA) {
         setChecking2FA(true);
@@ -92,19 +87,11 @@ export default function Profile() {
           setChecking2FA(false);
         }
       }
-
+      
       // Mapear datos del perfil al formulario, priorizando datos de persona si existen
       setProfileForm({
-        firstName:
-          user?.persona?.nombres ||
-          profile.firstName ||
-          user?.username?.split(' ')[0] ||
-          '',
-        lastName:
-          user?.persona?.apellidos ||
-          profile.lastName ||
-          user?.username?.split(' ')[1] ||
-          '',
+        firstName: user?.persona?.nombres || profile.firstName || user?.username?.split(' ')[0] || '',
+        lastName: user?.persona?.apellidos || profile.lastName || user?.username?.split(' ')[1] || '',
         email: user?.email || profile.email || '',
         phone: user?.persona?.telefono || profile.phone || '',
       });
@@ -112,6 +99,7 @@ export default function Profile() {
       // Cargar sesiones activas
       const activeSessions = await profileService.getActiveSessions();
       setSessions(activeSessions);
+
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
     } finally {
@@ -131,35 +119,26 @@ export default function Profile() {
           const authService = (await import('@/lib/auth')).default;
           await authService.updateProfile({ email: profileForm.email });
         }
-
+        
         // Actualizar datos de persona
         const personaData: {
           nombres?: string;
           apellidos?: string;
           telefono?: string;
         } = {};
-
-        if (profileForm.firstName) {
-          personaData.nombres = profileForm.firstName;
-        }
-        if (profileForm.lastName) {
-          personaData.apellidos = profileForm.lastName;
-        }
-        if (profileForm.phone) {
-          personaData.telefono = profileForm.phone;
-        }
-
+        
+        if (profileForm.firstName) personaData.nombres = profileForm.firstName;
+        if (profileForm.lastName) personaData.apellidos = profileForm.lastName;
+        if (profileForm.phone) personaData.telefono = profileForm.phone;
+        
         const authService = (await import('@/lib/auth')).default;
         await authService.updatePersona(personaData);
       } else {
         // Usuario sin persona vinculada, usar servicio de perfil tradicional
         await profileService.updateProfile(profileForm);
       }
-
-      setMessage({
-        type: 'success',
-        text: '¡Perfil actualizado correctamente!',
-      });
+      
+      setMessage({ type: 'success', text: '¡Perfil actualizado correctamente!' });
       await refreshUser();
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
@@ -171,32 +150,22 @@ export default function Profile() {
   // Manejar cambio de contraseña
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setMessage({ type: 'error', text: 'Las contraseñas no coinciden' });
       return;
     }
 
     if (passwordForm.newPassword.length < 8) {
-      setMessage({
-        type: 'error',
-        text: 'La contraseña debe tener al menos 8 caracteres',
-      });
+      setMessage({ type: 'error', text: 'La contraseña debe tener al menos 8 caracteres' });
       return;
     }
 
     setIsLoading(true);
     try {
       await profileService.changePassword(passwordForm);
-      setMessage({
-        type: 'success',
-        text: '¡Contraseña actualizada correctamente!',
-      });
-      setPasswordForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
+      setMessage({ type: 'success', text: '¡Contraseña actualizada correctamente!' });
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
     } finally {
@@ -235,10 +204,8 @@ export default function Profile() {
 
   // Activar 2FA
   const handleEnable2FA = async (code: string) => {
-    if (!totpSetup) {
-      return;
-    }
-
+    if (!totpSetup) return;
+    
     setIsLoading(true);
     try {
       await profileService.enable2FA({ code, base32: totpSetup.base32 });
@@ -301,16 +268,11 @@ export default function Profile() {
 
   // Cerrar todas las sesiones
   const handleCloseAllSessions = async () => {
-    if (!confirm('¿Estás seguro de que quieres cerrar todas las sesiones?')) {
-      return;
-    }
-
+    if (!confirm('¿Estás seguro de que quieres cerrar todas las sesiones?')) return;
+    
     try {
       await profileService.closeAllSessions();
-      setMessage({
-        type: 'success',
-        text: 'Todas las sesiones han sido cerradas',
-      });
+      setMessage({ type: 'success', text: 'Todas las sesiones han sido cerradas' });
       await loadProfileData();
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
@@ -321,10 +283,8 @@ export default function Profile() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInMinutes = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60),
-    );
-
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
     if (diffInMinutes < 60) {
       return `Hace ${diffInMinutes} minutos`;
     } else if (diffInMinutes < 1440) {
@@ -343,15 +303,9 @@ export default function Profile() {
 
   // Obtener ícono del dispositivo
   const getDeviceIcon = (device: string) => {
-    if (
-      device.toLowerCase().includes('iphone') ||
-      device.toLowerCase().includes('mobile')
-    ) {
+    if (device.toLowerCase().includes('iphone') || device.toLowerCase().includes('mobile')) {
       return 'fa-mobile-alt';
-    } else if (
-      device.toLowerCase().includes('ipad') ||
-      device.toLowerCase().includes('tablet')
-    ) {
+    } else if (device.toLowerCase().includes('ipad') || device.toLowerCase().includes('tablet')) {
       return 'fa-tablet-alt';
     } else {
       return 'fa-laptop';
@@ -362,7 +316,7 @@ export default function Profile() {
     // Priorizar datos de persona si existen
     const firstName = user?.persona?.nombres || profileForm.firstName?.trim();
     const lastName = user?.persona?.apellidos || profileForm.lastName?.trim();
-
+    
     if (firstName && lastName && firstName.length > 0 && lastName.length > 0) {
       return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
     }
@@ -372,14 +326,12 @@ export default function Profile() {
   const getCommunityBadges = () => {
     if (userProfile?.communities && userProfile.communities.length > 0) {
       return userProfile.communities.map((community, index) => (
-        <span key={index} className='badge bg-primary me-1'>
+        <span key={index} className="badge bg-primary me-1">
           {community.name}
         </span>
       ));
     }
-    return (
-      <span className='badge bg-primary me-1'>Sin comunidades asignadas</span>
-    );
+    return <span className="badge bg-primary me-1">Sin comunidades asignadas</span>;
   };
 
   return (
@@ -396,7 +348,7 @@ export default function Profile() {
             <nav aria-label='breadcrumb'>
               <ol className='breadcrumb mb-0'>
                 <li className='breadcrumb-item'>
-                  <Link href='/dashboard'>Dashboard</Link>
+                  <a href='/dashboard'>Dashboard</a>
                 </li>
                 <li className='breadcrumb-item active' aria-current='page'>
                   Mi Perfil
@@ -407,19 +359,16 @@ export default function Profile() {
 
           {/* Mensaje de estado */}
           {message && (
-            <div
-              className={`alert alert-${message.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`}
-              role='alert'
-            >
-              <span className='material-icons me-2'>
+            <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`} role="alert">
+              <span className="material-icons me-2">
                 {message.type === 'success' ? 'check_circle' : 'error'}
               </span>
               {message.text}
               <button
-                type='button'
-                className='btn-close'
+                type="button"
+                className="btn-close"
                 onClick={() => setMessage(null)}
-                aria-label='Close'
+                aria-label="Close"
               ></button>
             </div>
           )}
@@ -467,9 +416,10 @@ export default function Profile() {
                       Última conexión
                     </label>
                     <p className='mb-0'>
-                      {userProfile?.lastConnection
+                      {userProfile?.lastConnection 
                         ? formatDate(userProfile.lastConnection)
-                        : 'Sesión actual'}
+                        : 'Sesión actual'
+                      }
                     </p>
                   </div>
 
@@ -477,7 +427,9 @@ export default function Profile() {
                     <label className='form-label fw-bold small mb-1'>
                       Comunidades que administra
                     </label>
-                    <p className='mb-0'>{getCommunityBadges()}</p>
+                    <p className='mb-0'>
+                      {getCommunityBadges()}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -498,11 +450,8 @@ export default function Profile() {
                           type='text'
                           className='form-control'
                           value={profileForm.firstName}
-                          onChange={e =>
-                            setProfileForm({
-                              ...profileForm,
-                              firstName: e.target.value,
-                            })
+                          onChange={(e) =>
+                            setProfileForm({ ...profileForm, firstName: e.target.value })
                           }
                           required
                         />
@@ -513,11 +462,8 @@ export default function Profile() {
                           type='text'
                           className='form-control'
                           value={profileForm.lastName}
-                          onChange={e =>
-                            setProfileForm({
-                              ...profileForm,
-                              lastName: e.target.value,
-                            })
+                          onChange={(e) =>
+                            setProfileForm({ ...profileForm, lastName: e.target.value })
                           }
                           required
                         />
@@ -530,11 +476,8 @@ export default function Profile() {
                         type='email'
                         className='form-control'
                         value={profileForm.email}
-                        onChange={e =>
-                          setProfileForm({
-                            ...profileForm,
-                            email: e.target.value,
-                          })
+                        onChange={(e) =>
+                          setProfileForm({ ...profileForm, email: e.target.value })
                         }
                         required
                       />
@@ -546,11 +489,8 @@ export default function Profile() {
                         type='tel'
                         className='form-control'
                         value={profileForm.phone}
-                        onChange={e =>
-                          setProfileForm({
-                            ...profileForm,
-                            phone: e.target.value,
-                          })
+                        onChange={(e) =>
+                          setProfileForm({ ...profileForm, phone: e.target.value })
                         }
                       />
                     </div>
@@ -566,11 +506,8 @@ export default function Profile() {
                         type='password'
                         className='form-control'
                         value={passwordForm.currentPassword}
-                        onChange={e =>
-                          setPasswordForm({
-                            ...passwordForm,
-                            currentPassword: e.target.value,
-                          })
+                        onChange={(e) =>
+                          setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
                         }
                       />
                     </div>
@@ -582,11 +519,8 @@ export default function Profile() {
                           type='password'
                           className='form-control'
                           value={passwordForm.newPassword}
-                          onChange={e =>
-                            setPasswordForm({
-                              ...passwordForm,
-                              newPassword: e.target.value,
-                            })
+                          onChange={(e) =>
+                            setPasswordForm({ ...passwordForm, newPassword: e.target.value })
                           }
                         />
                         <div className='form-text'>
@@ -601,11 +535,8 @@ export default function Profile() {
                           type='password'
                           className='form-control'
                           value={passwordForm.confirmPassword}
-                          onChange={e =>
-                            setPasswordForm({
-                              ...passwordForm,
-                              confirmPassword: e.target.value,
-                            })
+                          onChange={(e) =>
+                            setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
                           }
                         />
                       </div>
@@ -617,27 +548,12 @@ export default function Profile() {
                         className='btn btn-outline-secondary me-2'
                         onClick={() => {
                           setProfileForm({
-                            firstName:
-                              user?.persona?.nombres ||
-                              userProfile?.firstName ||
-                              user?.username?.split(' ')[0] ||
-                              '',
-                            lastName:
-                              user?.persona?.apellidos ||
-                              userProfile?.lastName ||
-                              user?.username?.split(' ')[1] ||
-                              '',
+                            firstName: user?.persona?.nombres || userProfile?.firstName || user?.username?.split(' ')[0] || '',
+                            lastName: user?.persona?.apellidos || userProfile?.lastName || user?.username?.split(' ')[1] || '',
                             email: user?.email || userProfile?.email || '',
-                            phone:
-                              user?.persona?.telefono ||
-                              userProfile?.phone ||
-                              '',
+                            phone: user?.persona?.telefono || userProfile?.phone || '',
                           });
-                          setPasswordForm({
-                            currentPassword: '',
-                            newPassword: '',
-                            confirmPassword: '',
-                          });
+                          setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
                         }}
                       >
                         Cancelar
@@ -646,11 +562,7 @@ export default function Profile() {
                         type='button'
                         className='btn btn-secondary me-2'
                         onClick={handlePasswordSubmit}
-                        disabled={
-                          !passwordForm.currentPassword ||
-                          !passwordForm.newPassword ||
-                          isLoading
-                        }
+                        disabled={!passwordForm.currentPassword || !passwordForm.newPassword || isLoading}
                       >
                         {isLoading ? 'Cambiando...' : 'Cambiar Contraseña'}
                       </button>
@@ -672,24 +584,19 @@ export default function Profile() {
               <div className='app-card'>
                 <div className='card-header d-flex justify-content-between align-items-center'>
                   <h5 className='mb-0'>Autenticación de Dos Factores (2FA)</h5>
-                  <span
-                    className={`tag ${totp2FAEnabled ? 'tag--success' : 'tag--warning'}`}
-                  >
+                  <span className={`tag ${totp2FAEnabled ? 'tag--success' : 'tag--warning'}`}>
                     {totp2FAEnabled ? 'Activado' : 'Desactivado'}
                   </span>
                 </div>
                 <div className='card-body'>
                   <p className='text-muted mb-3'>
-                    Agrega una capa extra de seguridad a tu cuenta usando Google
-                    Authenticator o una aplicación compatible.
+                    Agrega una capa extra de seguridad a tu cuenta usando Google Authenticator o una aplicación compatible.
                   </p>
-
+                  
                   {!totp2FAEnabled ? (
                     <div>
                       <div className='d-flex align-items-center mb-3'>
-                        <span className='material-icons text-warning me-2'>
-                          security
-                        </span>
+                        <span className='material-icons text-warning me-2'>security</span>
                         <span>Tu cuenta no tiene 2FA activado</span>
                       </div>
                       <button
@@ -698,18 +605,14 @@ export default function Profile() {
                         onClick={handleSetup2FA}
                         disabled={isLoading}
                       >
-                        <span className='material-icons me-2'>
-                          add_moderator
-                        </span>
+                        <span className='material-icons me-2'>add_moderator</span>
                         Activar 2FA
                       </button>
                     </div>
                   ) : (
                     <div>
                       <div className='d-flex align-items-center mb-3'>
-                        <span className='material-icons text-success me-2'>
-                          verified_user
-                        </span>
+                        <span className='material-icons text-success me-2'>verified_user</span>
                         <span>2FA está activado en tu cuenta</span>
                       </div>
                       <button
@@ -718,9 +621,7 @@ export default function Profile() {
                         onClick={showDisable2FAModal}
                         disabled={isLoading}
                       >
-                        <span className='material-icons me-2'>
-                          remove_moderator
-                        </span>
+                        <span className='material-icons me-2'>remove_moderator</span>
                         Desactivar 2FA
                       </button>
                     </div>
@@ -747,17 +648,11 @@ export default function Profile() {
                             type='checkbox'
                             id='emailNoti'
                             checked={preferences.emailNotifications}
-                            onChange={e =>
-                              setPreferences({
-                                ...preferences,
-                                emailNotifications: e.target.checked,
-                              })
+                            onChange={(e) =>
+                              setPreferences({ ...preferences, emailNotifications: e.target.checked })
                             }
                           />
-                          <label
-                            className='form-check-label'
-                            htmlFor='emailNoti'
-                          >
+                          <label className='form-check-label' htmlFor='emailNoti'>
                             Recibir notificaciones por email
                           </label>
                         </div>
@@ -768,17 +663,11 @@ export default function Profile() {
                             type='checkbox'
                             id='paymentNoti'
                             checked={preferences.paymentNotifications}
-                            onChange={e =>
-                              setPreferences({
-                                ...preferences,
-                                paymentNotifications: e.target.checked,
-                              })
+                            onChange={(e) =>
+                              setPreferences({ ...preferences, paymentNotifications: e.target.checked })
                             }
                           />
-                          <label
-                            className='form-check-label'
-                            htmlFor='paymentNoti'
-                          >
+                          <label className='form-check-label' htmlFor='paymentNoti'>
                             Notificaciones de pagos registrados
                           </label>
                         </div>
@@ -789,17 +678,11 @@ export default function Profile() {
                             type='checkbox'
                             id='reportNoti'
                             checked={preferences.weeklyReports}
-                            onChange={e =>
-                              setPreferences({
-                                ...preferences,
-                                weeklyReports: e.target.checked,
-                              })
+                            onChange={(e) =>
+                              setPreferences({ ...preferences, weeklyReports: e.target.checked })
                             }
                           />
-                          <label
-                            className='form-check-label'
-                            htmlFor='reportNoti'
-                          >
+                          <label className='form-check-label' htmlFor='reportNoti'>
                             Resúmenes semanales
                           </label>
                         </div>
@@ -815,11 +698,8 @@ export default function Profile() {
                           <select
                             className='form-select'
                             value={preferences.timezone}
-                            onChange={e =>
-                              setPreferences({
-                                ...preferences,
-                                timezone: e.target.value,
-                              })
+                            onChange={(e) =>
+                              setPreferences({ ...preferences, timezone: e.target.value })
                             }
                           >
                             <option>(GMT-4) Santiago de Chile</option>
@@ -834,11 +714,8 @@ export default function Profile() {
                           <select
                             className='form-select'
                             value={preferences.dateFormat}
-                            onChange={e =>
-                              setPreferences({
-                                ...preferences,
-                                dateFormat: e.target.value,
-                              })
+                            onChange={(e) =>
+                              setPreferences({ ...preferences, dateFormat: e.target.value })
                             }
                           >
                             <option>DD/MM/AAAA</option>
@@ -889,12 +766,10 @@ export default function Profile() {
                         </tr>
                       </thead>
                       <tbody>
-                        {sessions.map(session => (
+                        {sessions.map((session) => (
                           <tr key={session.id}>
                             <td>
-                              <i
-                                className={`fa ${getDeviceIcon(session.device)} me-2`}
-                              ></i>
+                              <i className={`fa ${getDeviceIcon(session.device)} me-2`}></i>
                               {session.device}
                             </td>
                             <td>{session.location}</td>

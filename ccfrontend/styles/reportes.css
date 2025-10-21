@@ -1,14 +1,12 @@
 /* Estilos específicos para la página de reportes */
 
-.app-card {
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+.app-card { 
+  transition: transform 0.2s ease, box-shadow 0.2s ease; 
 }
 
-.app-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1) !important;
+.app-card:hover { 
+  transform: translateY(-5px); 
+  box-shadow: 0 10px 15px rgba(0,0,0,0.1) !important; 
 }
 
 .tab-report {
@@ -30,7 +28,7 @@
 }
 
 .filter-badge {
-  background-color: rgba(3, 14, 39, 0.08);
+  background-color: rgba(3,14,39,0.08);
   padding: 0.5rem 0.8rem;
   border-radius: 20px;
   display: inline-flex;
@@ -42,7 +40,7 @@
 }
 
 .filter-badge:hover {
-  background-color: rgba(3, 14, 39, 0.12);
+  background-color: rgba(3,14,39,0.12);
 }
 
 .filter-badge .material-icons {
@@ -98,13 +96,13 @@
     padding: 10px;
     max-width: 100%;
   }
-
+  
   /* Estilos específicos para impresión */
   .app-card {
     box-shadow: none !important;
     border: 1px solid #dee2e6 !important;
   }
-
+  
   .chart-container {
     height: 300px !important;
   }
@@ -115,11 +113,11 @@
   .filter-badge {
     margin-bottom: 0.5rem;
   }
-
+  
   .chart-container {
     height: 250px;
   }
-
+  
   .tab-report {
     margin-bottom: 0.5rem;
   }
@@ -131,13 +129,13 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
   }
 }
 

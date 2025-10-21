@@ -1,37 +1,36 @@
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
+import { useState, useRef, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, useRef, useEffect } from 'react';
-
-import Layout from '@/components/layout/Layout';
-import {
-  useEdificios,
-  useEdificioForm,
-  useEdificiosUtils,
-} from '@/hooks/useEdificios';
-import { ProtectedRoute } from '@/lib/useAuth';
-import {
+import { 
   EdificioFormData,
   TIPOS_EDIFICIO,
   SERVICIOS_DISPONIBLES,
-  AMENIDADES_DISPONIBLES,
+  AMENIDADES_DISPONIBLES 
 } from '@/types/edificios';
+import { useEdificios, useEdificioForm, useEdificiosUtils } from '@/hooks/useEdificios';
 
 export default function EdificioNuevo() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-
+  
   // Hooks personalizados
   const { createEdificio, loading, error } = useEdificios();
   const { getComunidadesOpciones } = useEdificiosUtils();
-  const { formData, errors, updateField, touchField, validate, reset } =
-    useEdificioForm();
+  const { 
+    formData, 
+    errors, 
+    updateField, 
+    touchField, 
+    validate, 
+    reset 
+  } = useEdificioForm();
 
   // Estado local para comunidades
-  const [comunidades, setComunidades] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+  const [comunidades, setComunidades] = useState<Array<{value: string, label: string}>>([]);
 
   // Cargar comunidades al montar el componente
   useEffect(() => {
@@ -43,34 +42,29 @@ export default function EdificioNuevo() {
   }, [getComunidadesOpciones]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
-
+    
     if (type === 'number') {
-      updateField(
-        name as keyof EdificioFormData,
-        value === '' ? undefined : Number(value),
-      );
+      updateField(name as keyof EdificioFormData, value === '' ? undefined : Number(value));
     } else {
       updateField(name as keyof EdificioFormData, value);
     }
-
+    
     touchField(name as keyof EdificioFormData);
   };
 
   const handleCheckboxChange = (
     type: 'servicios' | 'amenidades',
     value: string,
-    checked: boolean,
+    checked: boolean
   ) => {
     const currentValues = formData[type] || [];
     const newValues = checked
       ? [...currentValues, value]
       : currentValues.filter(item => item !== value);
-
+    
     updateField(type, newValues);
   };
 
@@ -78,10 +72,10 @@ export default function EdificioNuevo() {
     const file = e.target.files?.[0];
     if (file) {
       updateField('imagen', file);
-
+      
       // Crear preview
       const reader = new FileReader();
-      reader.onload = e => {
+      reader.onload = (e) => {
         setImagePreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
@@ -94,11 +88,11 @@ export default function EdificioNuevo() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!validate()) {
       return;
     }
-
+    
     try {
       const success = await createEdificio(formData);
       if (success) {
@@ -118,15 +112,15 @@ export default function EdificioNuevo() {
       <Layout title='Crear Nuevo Edificio'>
         <div className='container-fluid py-4'>
           {/* Breadcrumb */}
-          <nav aria-label='breadcrumb' className='mb-4'>
-            <ol className='breadcrumb'>
-              <li className='breadcrumb-item'>
-                <Link href='/dashboard'>Dashboard</Link>
+          <nav aria-label="breadcrumb" className="mb-4">
+            <ol className="breadcrumb">
+              <li className="breadcrumb-item">
+                <Link href="/dashboard">Dashboard</Link>
               </li>
-              <li className='breadcrumb-item'>
-                <Link href='/edificios'>Edificios</Link>
+              <li className="breadcrumb-item">
+                <Link href="/edificios">Edificios</Link>
               </li>
-              <li className='breadcrumb-item active'>Nuevo Edificio</li>
+              <li className="breadcrumb-item active">Nuevo Edificio</li>
             </ol>
           </nav>
 
@@ -153,8 +147,7 @@ export default function EdificioNuevo() {
                     <div className='row'>
                       <div className='col-md-8 mb-3'>
                         <label htmlFor='nombre' className='form-label'>
-                          Nombre del Edificio{' '}
-                          <span className='text-danger'>*</span>
+                          Nombre del Edificio <span className='text-danger'>*</span>
                         </label>
                         <input
                           type='text'
@@ -166,15 +159,11 @@ export default function EdificioNuevo() {
                           placeholder='Ej: Torre Azul'
                         />
                         {errors.nombre && (
-                          <div className='invalid-feedback'>
-                            {errors.nombre}
-                          </div>
+                          <div className='invalid-feedback'>{errors.nombre}</div>
                         )}
                       </div>
                       <div className='col-md-4 mb-3'>
-                        <label htmlFor='codigo' className='form-label'>
-                          Código
-                        </label>
+                        <label htmlFor='codigo' className='form-label'>Código</label>
                         <input
                           type='text'
                           className='form-control'
@@ -201,9 +190,7 @@ export default function EdificioNuevo() {
                         placeholder='Ej: Calle 85 # 15-32, Chapinero'
                       />
                       {errors.direccion && (
-                        <div className='invalid-feedback'>
-                          {errors.direccion}
-                        </div>
+                        <div className='invalid-feedback'>{errors.direccion}</div>
                       )}
                     </div>
 
@@ -221,24 +208,17 @@ export default function EdificioNuevo() {
                         >
                           <option value=''>Seleccionar comunidad</option>
                           {comunidades.map(comunidad => (
-                            <option
-                              key={comunidad.value}
-                              value={comunidad.value}
-                            >
+                            <option key={comunidad.value} value={comunidad.value}>
                               {comunidad.label}
                             </option>
                           ))}
                         </select>
                         {errors.comunidadId && (
-                          <div className='invalid-feedback'>
-                            {errors.comunidadId}
-                          </div>
+                          <div className='invalid-feedback'>{errors.comunidadId}</div>
                         )}
                       </div>
                       <div className='col-md-6 mb-3'>
-                        <label htmlFor='tipo' className='form-label'>
-                          Tipo de Edificio
-                        </label>
+                        <label htmlFor='tipo' className='form-label'>Tipo de Edificio</label>
                         <select
                           className='form-select'
                           id='tipo'
@@ -268,12 +248,7 @@ export default function EdificioNuevo() {
                   <div className='form-section-body'>
                     <div className='row'>
                       <div className='col-md-4 mb-3'>
-                        <label
-                          htmlFor='anoConstructccion'
-                          className='form-label'
-                        >
-                          Año de Construcción
-                        </label>
+                        <label htmlFor='anoConstructccion' className='form-label'>Año de Construcción</label>
                         <input
                           type='number'
                           className='form-control'
@@ -287,8 +262,7 @@ export default function EdificioNuevo() {
                       </div>
                       <div className='col-md-4 mb-3'>
                         <label htmlFor='numeroTorres' className='form-label'>
-                          Número de Torres{' '}
-                          <span className='text-danger'>*</span>
+                          Número de Torres <span className='text-danger'>*</span>
                         </label>
                         <input
                           type='number'
@@ -300,9 +274,7 @@ export default function EdificioNuevo() {
                           min='1'
                         />
                         {errors.numeroTorres && (
-                          <div className='invalid-feedback'>
-                            {errors.numeroTorres}
-                          </div>
+                          <div className='invalid-feedback'>{errors.numeroTorres}</div>
                         )}
                       </div>
                       <div className='col-md-4 mb-3'>
@@ -326,9 +298,7 @@ export default function EdificioNuevo() {
 
                     <div className='row'>
                       <div className='col-md-3 mb-3'>
-                        <label htmlFor='areaComun' className='form-label'>
-                          Área Común (m²)
-                        </label>
+                        <label htmlFor='areaComun' className='form-label'>Área Común (m²)</label>
                         <input
                           type='number'
                           className='form-control'
@@ -341,9 +311,7 @@ export default function EdificioNuevo() {
                         />
                       </div>
                       <div className='col-md-3 mb-3'>
-                        <label htmlFor='areaPrivada' className='form-label'>
-                          Área Privada (m²)
-                        </label>
+                        <label htmlFor='areaPrivada' className='form-label'>Área Privada (m²)</label>
                         <input
                           type='number'
                           className='form-control'
@@ -356,9 +324,7 @@ export default function EdificioNuevo() {
                         />
                       </div>
                       <div className='col-md-3 mb-3'>
-                        <label htmlFor='parqueaderos' className='form-label'>
-                          Parqueaderos
-                        </label>
+                        <label htmlFor='parqueaderos' className='form-label'>Parqueaderos</label>
                         <input
                           type='number'
                           className='form-control'
@@ -370,9 +336,7 @@ export default function EdificioNuevo() {
                         />
                       </div>
                       <div className='col-md-3 mb-3'>
-                        <label htmlFor='depositos' className='form-label'>
-                          Depósitos
-                        </label>
+                        <label htmlFor='depositos' className='form-label'>Depósitos</label>
                         <input
                           type='number'
                           className='form-control'
@@ -398,9 +362,7 @@ export default function EdificioNuevo() {
                   <div className='form-section-body'>
                     <div className='row'>
                       <div className='col-md-4 mb-3'>
-                        <label htmlFor='administrador' className='form-label'>
-                          Administrador
-                        </label>
+                        <label htmlFor='administrador' className='form-label'>Administrador</label>
                         <input
                           type='text'
                           className='form-control'
@@ -412,12 +374,7 @@ export default function EdificioNuevo() {
                         />
                       </div>
                       <div className='col-md-4 mb-3'>
-                        <label
-                          htmlFor='telefonoAdministrador'
-                          className='form-label'
-                        >
-                          Teléfono
-                        </label>
+                        <label htmlFor='telefonoAdministrador' className='form-label'>Teléfono</label>
                         <input
                           type='tel'
                           className='form-control'
@@ -429,12 +386,7 @@ export default function EdificioNuevo() {
                         />
                       </div>
                       <div className='col-md-4 mb-3'>
-                        <label
-                          htmlFor='emailAdministrador'
-                          className='form-label'
-                        >
-                          Email
-                        </label>
+                        <label htmlFor='emailAdministrador' className='form-label'>Email</label>
                         <input
                           type='email'
                           className={`form-control ${errors.emailAdministrador ? 'is-invalid' : ''}`}
@@ -445,9 +397,7 @@ export default function EdificioNuevo() {
                           placeholder='admin@example.com'
                         />
                         {errors.emailAdministrador && (
-                          <div className='invalid-feedback'>
-                            {errors.emailAdministrador}
-                          </div>
+                          <div className='invalid-feedback'>{errors.emailAdministrador}</div>
                         )}
                       </div>
                     </div>
@@ -471,21 +421,10 @@ export default function EdificioNuevo() {
                               className='form-check-input'
                               type='checkbox'
                               id={`servicio-${servicio.value}`}
-                              checked={(formData.servicios || []).includes(
-                                servicio.value,
-                              )}
-                              onChange={e =>
-                                handleCheckboxChange(
-                                  'servicios',
-                                  servicio.value,
-                                  e.target.checked,
-                                )
-                              }
+                              checked={(formData.servicios || []).includes(servicio.value)}
+                              onChange={(e) => handleCheckboxChange('servicios', servicio.value, e.target.checked)}
                             />
-                            <label
-                              className='form-check-label'
-                              htmlFor={`servicio-${servicio.value}`}
-                            >
+                            <label className='form-check-label' htmlFor={`servicio-${servicio.value}`}>
                               {servicio.label}
                             </label>
                           </div>
@@ -512,21 +451,10 @@ export default function EdificioNuevo() {
                               className='form-check-input'
                               type='checkbox'
                               id={`amenidad-${amenidad.value}`}
-                              checked={(formData.amenidades || []).includes(
-                                amenidad.value,
-                              )}
-                              onChange={e =>
-                                handleCheckboxChange(
-                                  'amenidades',
-                                  amenidad.value,
-                                  e.target.checked,
-                                )
-                              }
+                              checked={(formData.amenidades || []).includes(amenidad.value)}
+                              onChange={(e) => handleCheckboxChange('amenidades', amenidad.value, e.target.checked)}
                             />
-                            <label
-                              className='form-check-label'
-                              htmlFor={`amenidad-${amenidad.value}`}
-                            >
+                            <label className='form-check-label' htmlFor={`amenidad-${amenidad.value}`}>
                               {amenidad.label}
                             </label>
                           </div>
@@ -557,10 +485,7 @@ export default function EdificioNuevo() {
                         />
                       ) : (
                         <div className='text-center py-4'>
-                          <i
-                            className='material-icons mb-2'
-                            style={{ fontSize: '48px', color: '#ddd' }}
-                          >
+                          <i className='material-icons mb-2' style={{ fontSize: '48px', color: '#ddd' }}>
                             add_a_photo
                           </i>
                           <div className='text-muted'>
@@ -591,9 +516,7 @@ export default function EdificioNuevo() {
                   <div className='form-section-body'>
                     <div className='row'>
                       <div className='col-6 mb-3'>
-                        <label htmlFor='latitud' className='form-label'>
-                          Latitud
-                        </label>
+                        <label htmlFor='latitud' className='form-label'>Latitud</label>
                         <input
                           type='number'
                           className='form-control'
@@ -606,9 +529,7 @@ export default function EdificioNuevo() {
                         />
                       </div>
                       <div className='col-6 mb-3'>
-                        <label htmlFor='longitud' className='form-label'>
-                          Longitud
-                        </label>
+                        <label htmlFor='longitud' className='form-label'>Longitud</label>
                         <input
                           type='number'
                           className='form-control'
@@ -624,12 +545,7 @@ export default function EdificioNuevo() {
                     <div className='map-container'>
                       <div className='d-flex align-items-center justify-content-center h-100 text-muted'>
                         <div className='text-center'>
-                          <i
-                            className='material-icons mb-2'
-                            style={{ fontSize: '48px' }}
-                          >
-                            map
-                          </i>
+                          <i className='material-icons mb-2' style={{ fontSize: '48px' }}>map</i>
                           <div>Mapa interactivo</div>
                           <small>Próximamente</small>
                         </div>
@@ -668,10 +584,7 @@ export default function EdificioNuevo() {
                   >
                     {loading ? (
                       <>
-                        <div
-                          className='spinner-border spinner-border-sm me-2'
-                          role='status'
-                        >
+                        <div className='spinner-border spinner-border-sm me-2' role='status'>
                           <span className='visually-hidden'>Loading...</span>
                         </div>
                         Creando Edificio...
@@ -697,20 +610,20 @@ export default function EdificioNuevo() {
           .form-section {
             background-color: #fff;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             overflow: hidden;
           }
-
+          
           .form-section-header {
             padding: 1rem;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
             background-color: #f9f9f9;
           }
-
+          
           .form-section-body {
             padding: 1.5rem;
           }
-
+          
           .upload-area {
             border: 2px dashed #ddd;
             border-radius: 8px;
@@ -723,12 +636,12 @@ export default function EdificioNuevo() {
             align-items: center;
             justify-content: center;
           }
-
+          
           .upload-area:hover {
             border-color: var(--bs-primary);
-            background-color: rgba(13, 110, 253, 0.02);
+            background-color: rgba(13,110,253,0.02);
           }
-
+          
           .map-container {
             height: 200px;
             background-color: #f8f9fa;

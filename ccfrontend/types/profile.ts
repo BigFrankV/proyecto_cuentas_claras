@@ -9,7 +9,7 @@ export interface UserPreferences {
   platformMessages: boolean;
   platformTasks: boolean;
   marketingEmails: boolean;
-
+  
   // Visualización
   timezone: string;
   dateFormat: string;
@@ -63,14 +63,14 @@ export interface UserExtended {
   lastName?: string;
   phone?: string;
   lastConnection?: string;
-
+  
   // 2FA fields
   totp_enabled: boolean;
   totp_secret?: string;
-
+  
   // Preferencias
   preferences?: UserPreferences;
-
+  
   // Datos adicionales para el perfil
   communities?: Array<{
     id: number;

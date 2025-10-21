@@ -1,11 +1,10 @@
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useRef } from 'react';
-
 import { FileIcon } from '@/components/documentos';
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 
 interface UploadedFile {
   id: string;
@@ -17,7 +16,7 @@ interface UploadedFile {
 export default function NuevoDocumento() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  
   const [selectedFiles, setSelectedFiles] = useState<UploadedFile[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedAccess, setSelectedAccess] = useState('');
@@ -30,69 +29,19 @@ export default function NuevoDocumento() {
   const [dragOver, setDragOver] = useState(false);
 
   const categories = [
-    {
-      id: 'legal',
-      name: 'Legal',
-      icon: 'gavel',
-      description: 'Contratos, reglamentos, actas',
-    },
-    {
-      id: 'financial',
-      name: 'Financiero',
-      icon: 'attach_money',
-      description: 'Estados, presupuestos, pagos',
-    },
-    {
-      id: 'technical',
-      name: 'Técnico',
-      icon: 'build',
-      description: 'Manuales, especificaciones',
-    },
-    {
-      id: 'administrative',
-      name: 'Administrativo',
-      icon: 'business',
-      description: 'Procedimientos, políticas',
-    },
-    {
-      id: 'maintenance',
-      name: 'Mantenimiento',
-      icon: 'handyman',
-      description: 'Reportes, programación',
-    },
-    {
-      id: 'meeting',
-      name: 'Reuniones',
-      icon: 'groups',
-      description: 'Actas, convocatorias',
-    },
+    { id: 'legal', name: 'Legal', icon: 'gavel', description: 'Contratos, reglamentos, actas' },
+    { id: 'financial', name: 'Financiero', icon: 'attach_money', description: 'Estados, presupuestos, pagos' },
+    { id: 'technical', name: 'Técnico', icon: 'build', description: 'Manuales, especificaciones' },
+    { id: 'administrative', name: 'Administrativo', icon: 'business', description: 'Procedimientos, políticas' },
+    { id: 'maintenance', name: 'Mantenimiento', icon: 'handyman', description: 'Reportes, programación' },
+    { id: 'meeting', name: 'Reuniones', icon: 'groups', description: 'Actas, convocatorias' }
   ];
 
   const accessLevels = [
-    {
-      id: 'public',
-      name: 'Público',
-      icon: 'public',
-      description: 'Visible para todos los usuarios',
-    },
-    {
-      id: 'residents',
-      name: 'Residentes',
-      icon: 'home',
-      description: 'Solo residentes pueden ver',
-    },
-    {
-      id: 'owners',
-      name: 'Propietarios',
-      icon: 'vpn_key',
-      description: 'Solo propietarios pueden ver',
-    },
-    {
-      id: 'admin',
-      name: 'Administración',
-      icon: 'admin_panel_settings',
-      description: 'Solo administradores',
-    },
+    { id: 'public', name: 'Público', icon: 'public', description: 'Visible para todos los usuarios' },
+    { id: 'residents', name: 'Residentes', icon: 'home', description: 'Solo residentes pueden ver' },
+    { id: 'owners', name: 'Propietarios', icon: 'vpn_key', description: 'Solo propietarios pueden ver' },
+    { id: 'admin', name: 'Administración', icon: 'admin_panel_settings', description: 'Solo administradores' }
   ];
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -124,7 +73,7 @@ export default function NuevoDocumento() {
       id: Math.random().toString(36).substr(2, 9),
       file,
       progress: 0,
-      uploaded: false,
+      uploaded: false
     }));
 
     setSelectedFiles(prev => [...prev, ...newFiles]);
@@ -132,22 +81,20 @@ export default function NuevoDocumento() {
     // Simulate upload progress
     newFiles.forEach(uploadFile => {
       const interval = setInterval(() => {
-        setSelectedFiles(prev =>
-          prev.map(f =>
-            f.id === uploadFile.id
-              ? { ...f, progress: Math.min(f.progress + 10, 100) }
-              : f,
-          ),
-        );
+        setSelectedFiles(prev => prev.map(f => 
+          f.id === uploadFile.id 
+            ? { ...f, progress: Math.min(f.progress + 10, 100) }
+            : f
+        ));
       }, 200);
 
       setTimeout(() => {
         clearInterval(interval);
-        setSelectedFiles(prev =>
-          prev.map(f =>
-            f.id === uploadFile.id ? { ...f, progress: 100, uploaded: true } : f,
-          ),
-        );
+        setSelectedFiles(prev => prev.map(f => 
+          f.id === uploadFile.id 
+            ? { ...f, progress: 100, uploaded: true }
+            : f
+        ));
       }, 2000);
     });
   };
@@ -157,18 +104,16 @@ export default function NuevoDocumento() {
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) {
-      return '0 Bytes';
-    }
+    if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (selectedFiles.length === 0) {
       alert('Debes seleccionar al menos un archivo');
       return;
@@ -215,9 +160,7 @@ export default function NuevoDocumento() {
             </Link>
             <div>
               <h1 className='h3 mb-1'>Subir Documento</h1>
-              <p className='text-muted mb-0'>
-                Sube documentos para compartir con la comunidad
-              </p>
+              <p className='text-muted mb-0'>Sube documentos para compartir con la comunidad</p>
             </div>
           </div>
 
@@ -240,34 +183,20 @@ export default function NuevoDocumento() {
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
-                      style={{
-                        cursor: 'pointer',
-                        minHeight: '200px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                      }}
+                      style={{ cursor: 'pointer', minHeight: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
                     >
                       <div className='upload-icon mb-3'>
-                        <i
-                          className='material-icons text-primary'
-                          style={{ fontSize: '4rem' }}
-                        >
+                        <i className='material-icons text-primary' style={{ fontSize: '4rem' }}>
                           cloud_upload
                         </i>
                       </div>
                       <div className='upload-text mb-2'>
-                        <h6>
-                          Arrastra archivos aquí o haz clic para seleccionar
-                        </h6>
+                        <h6>Arrastra archivos aquí o haz clic para seleccionar</h6>
                       </div>
                       <div className='upload-hint text-muted'>
-                        <small>
-                          Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, JPG,
-                          PNG (máx. 10MB)
-                        </small>
+                        <small>Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (máx. 10MB)</small>
                       </div>
-
+                      
                       <input
                         ref={fileInputRef}
                         type='file'
@@ -281,30 +210,19 @@ export default function NuevoDocumento() {
                     {/* File List */}
                     {selectedFiles.length > 0 && (
                       <div className='file-list mt-4'>
-                        <h6 className='mb-3'>
-                          Archivos seleccionados ({selectedFiles.length})
-                        </h6>
-                        {selectedFiles.map(fileItem => (
-                          <div
-                            key={fileItem.id}
-                            className='file-item d-flex align-items-center p-3 mb-2 border rounded-3'
-                          >
+                        <h6 className='mb-3'>Archivos seleccionados ({selectedFiles.length})</h6>
+                        {selectedFiles.map((fileItem) => (
+                          <div key={fileItem.id} className='file-item d-flex align-items-center p-3 mb-2 border rounded-3'>
                             <FileIcon fileName={fileItem.file.name} size='md' />
-
+                            
                             <div className='file-info flex-grow-1 ms-3'>
-                              <div className='file-name fw-medium'>
-                                {fileItem.file.name}
-                              </div>
+                              <div className='file-name fw-medium'>{fileItem.file.name}</div>
                               <div className='file-details text-muted small'>
-                                {formatFileSize(fileItem.file.size)} •{' '}
-                                {fileItem.file.type || 'Archivo'}
+                                {formatFileSize(fileItem.file.size)} • {fileItem.file.type || 'Archivo'}
                               </div>
                               {!fileItem.uploaded && (
                                 <div className='file-progress mt-2'>
-                                  <div
-                                    className='progress'
-                                    style={{ height: '4px' }}
-                                  >
+                                  <div className='progress' style={{ height: '4px' }}>
                                     <div
                                       className='progress-bar'
                                       role='progressbar'
@@ -352,28 +270,24 @@ export default function NuevoDocumento() {
 
                     <div className='row g-3'>
                       <div className='col-md-8'>
-                        <label className='form-label'>
-                          Nombre del documento *
-                        </label>
+                        <label className='form-label'>Nombre del documento *</label>
                         <input
                           type='text'
                           className='form-control'
                           placeholder='Ej: Reglamento de Copropiedad 2024'
                           value={documentName}
-                          onChange={e => setDocumentName(e.target.value)}
+                          onChange={(e) => setDocumentName(e.target.value)}
                           required
                         />
                       </div>
 
                       <div className='col-md-4'>
-                        <label className='form-label'>
-                          Fecha de vencimiento
-                        </label>
+                        <label className='form-label'>Fecha de vencimiento</label>
                         <input
                           type='date'
                           className='form-control'
                           value={expirationDate}
-                          onChange={e => setExpirationDate(e.target.value)}
+                          onChange={(e) => setExpirationDate(e.target.value)}
                         />
                       </div>
 
@@ -384,7 +298,7 @@ export default function NuevoDocumento() {
                           rows={3}
                           placeholder='Describe brevemente el contenido del documento...'
                           value={documentDescription}
-                          onChange={e => setDocumentDescription(e.target.value)}
+                          onChange={(e) => setDocumentDescription(e.target.value)}
                         ></textarea>
                       </div>
 
@@ -395,12 +309,9 @@ export default function NuevoDocumento() {
                           className='form-control'
                           placeholder='Separadas por comas: presupuesto, 2024, aprobado'
                           value={tags}
-                          onChange={e => setTags(e.target.value)}
+                          onChange={(e) => setTags(e.target.value)}
                         />
-                        <div className='form-text'>
-                          Las etiquetas ayudan a encontrar el documento más
-                          fácilmente
-                        </div>
+                        <div className='form-text'>Las etiquetas ayudan a encontrar el documento más fácilmente</div>
                       </div>
                     </div>
                   </div>
@@ -419,7 +330,7 @@ export default function NuevoDocumento() {
                     </div>
 
                     <div className='category-grid row g-2'>
-                      {categories.map(category => (
+                      {categories.map((category) => (
                         <div key={category.id} className='col-12'>
                           <div
                             className={`category-card card border-2 ${selectedCategory === category.id ? 'border-primary bg-light' : 'border-light'}`}
@@ -428,36 +339,20 @@ export default function NuevoDocumento() {
                           >
                             <div className='card-body p-3'>
                               <div className='d-flex align-items-center'>
-                                <div
-                                  className={
-                                    'category-icon rounded-3 p-2 me-3 text-white'
-                                  }
-                                  style={{
-                                    backgroundColor:
-                                      category.id === 'legal'
-                                        ? '#2196F3'
-                                        : category.id === 'financial'
-                                          ? '#4CAF50'
-                                          : category.id === 'technical'
-                                            ? '#FF9800'
-                                            : category.id === 'administrative'
-                                              ? '#9C27B0'
-                                              : category.id === 'maintenance'
-                                                ? '#F44336'
-                                                : '#009688',
-                                  }}
-                                >
-                                  <i className='material-icons'>
-                                    {category.icon}
-                                  </i>
+                                <div className={`category-icon rounded-3 p-2 me-3 text-white`}
+                                     style={{ 
+                                       backgroundColor: category.id === 'legal' ? '#2196F3' :
+                                                      category.id === 'financial' ? '#4CAF50' :
+                                                      category.id === 'technical' ? '#FF9800' :
+                                                      category.id === 'administrative' ? '#9C27B0' :
+                                                      category.id === 'maintenance' ? '#F44336' :
+                                                      '#009688'
+                                     }}>
+                                  <i className='material-icons'>{category.icon}</i>
                                 </div>
                                 <div>
-                                  <div className='category-name fw-medium'>
-                                    {category.name}
-                                  </div>
-                                  <div className='category-description text-muted small'>
-                                    {category.description}
-                                  </div>
+                                  <div className='category-name fw-medium'>{category.name}</div>
+                                  <div className='category-description text-muted small'>{category.description}</div>
                                 </div>
                               </div>
                             </div>
@@ -479,7 +374,7 @@ export default function NuevoDocumento() {
                     </div>
 
                     <div className='access-grid row g-2'>
-                      {accessLevels.map(access => (
+                      {accessLevels.map((access) => (
                         <div key={access.id} className='col-12'>
                           <div
                             className={`access-card card border-2 ${selectedAccess === access.id ? 'border-primary bg-light' : 'border-light'}`}
@@ -489,17 +384,11 @@ export default function NuevoDocumento() {
                             <div className='card-body p-3'>
                               <div className='d-flex align-items-center'>
                                 <div className='access-icon bg-secondary text-white rounded-3 p-2 me-3'>
-                                  <i className='material-icons'>
-                                    {access.icon}
-                                  </i>
+                                  <i className='material-icons'>{access.icon}</i>
                                 </div>
                                 <div>
-                                  <div className='access-name fw-medium'>
-                                    {access.name}
-                                  </div>
-                                  <div className='access-description text-muted small'>
-                                    {access.description}
-                                  </div>
+                                  <div className='access-name fw-medium'>{access.name}</div>
+                                  <div className='access-description text-muted small'>{access.description}</div>
                                 </div>
                               </div>
                             </div>
@@ -534,12 +423,8 @@ export default function NuevoDocumento() {
                           onChange={() => setVersionOption('new')}
                         />
                         <div className='version-info ms-3'>
-                          <div className='version-title fw-medium'>
-                            Nuevo documento
-                          </div>
-                          <div className='version-description text-muted small'>
-                            Crear un documento completamente nuevo
-                          </div>
+                          <div className='version-title fw-medium'>Nuevo documento</div>
+                          <div className='version-description text-muted small'>Crear un documento completamente nuevo</div>
                         </div>
                       </div>
 
@@ -556,12 +441,8 @@ export default function NuevoDocumento() {
                           onChange={() => setVersionOption('update')}
                         />
                         <div className='version-info ms-3'>
-                          <div className='version-title fw-medium'>
-                            Actualizar existente
-                          </div>
-                          <div className='version-description text-muted small'>
-                            Nueva versión de un documento existente
-                          </div>
+                          <div className='version-title fw-medium'>Actualizar existente</div>
+                          <div className='version-description text-muted small'>Nueva versión de un documento existente</div>
                         </div>
                       </div>
                     </div>
@@ -582,10 +463,7 @@ export default function NuevoDocumento() {
               >
                 {uploading ? (
                   <>
-                    <span
-                      className='spinner-border spinner-border-sm me-2'
-                      role='status'
-                    ></span>
+                    <span className='spinner-border spinner-border-sm me-2' role='status'></span>
                     Subiendo...
                   </>
                 ) : (
@@ -603,10 +481,7 @@ export default function NuevoDocumento() {
         {uploading && (
           <div className='upload-progress position-fixed top-0 end-0 m-4 p-3 bg-white rounded-3 shadow-lg border'>
             <div className='d-flex align-items-center'>
-              <div
-                className='spinner-border spinner-border-sm text-primary me-3'
-                role='status'
-              ></div>
+              <div className='spinner-border spinner-border-sm text-primary me-3' role='status'></div>
               <div>
                 <div className='fw-medium'>Subiendo documento...</div>
                 <div className='text-muted small'>Por favor espera...</div>

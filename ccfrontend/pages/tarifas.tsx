@@ -1,11 +1,9 @@
-import Head from 'next/head';
 import { useState } from 'react';
-import { Modal, Button } from 'react-bootstrap';
-
+import styles from '../styles/tarifas.module.css';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
-
-import styles from '../styles/tarifas.module.css';
+import Head from 'next/head';
+import { Modal, Button } from 'react-bootstrap';
 
 export default function TarifasListado() {
   // Estado para modales
@@ -94,12 +92,8 @@ export default function TarifasListado() {
               <div className='d-flex justify-content-between align-items-center mb-4'>
                 <h1 className='h3'>Tarifas de Consumo</h1>
                 <div className='d-flex gap-2'>
-                  <button
-                    className='btn btn-outline-secondary'
-                    onClick={() => setShowImport(true)}
-                  >
-                    <span className='material-icons me-1'>file_upload</span>{' '}
-                    Importar
+                  <button className='btn btn-outline-secondary' onClick={() => setShowImport(true)}>
+                    <span className='material-icons me-1'>file_upload</span> Importar
                   </button>
                   <button className='btn btn-primary'>
                     <span className='material-icons me-2'>add</span>
@@ -115,94 +109,50 @@ export default function TarifasListado() {
                     {f.label}
                   </span>
                 ))}
-                <button
-                  className='btn btn-sm btn-outline-primary float-end'
-                  onClick={() => alert('Exportando tarifas a Excel...')}
-                >
-                  <span className='material-icons me-1'>file_download</span>{' '}
-                  Exportar
+                <button className='btn btn-sm btn-outline-primary float-end' onClick={() => alert('Exportando tarifas a Excel...')}>
+                  <span className='material-icons me-1'>file_download</span> Exportar
                 </button>
               </div>
 
               {/* Listado de tarifas (cards) */}
               <div>
                 {tarifas.map(tarifa => (
-                  <div
-                    key={tarifa.id}
-                    className={`${styles['tariff-card']} mb-3 ${tarifa.servicio}`}
-                  >
-                    <div
-                      className={`${styles['tariff-header']} d-flex justify-content-between align-items-start`}
-                    >
+                  <div key={tarifa.id} className={`${styles['tariff-card']} mb-3 ${tarifa.servicio}`}>
+                    <div className={`${styles['tariff-header']} d-flex justify-content-between align-items-start`}>
                       <div>
-                        <div className={styles['tariff-title']}>
-                          {tarifa.nombre}
-                        </div>
-                        <div className={styles['tariff-subtitle']}>
-                          Desde {tarifa.fecha}
-                        </div>
-                        <span
-                          className={`${styles['type-badge']} ${styles[`type-${tarifa.tipo.toLowerCase().replace(' ', '-')}`]}`}
-                        >
-                          {tarifa.tipo}
-                        </span>{' '}
-                        <span
-                          className={`${styles['status-badge']} ${styles[`status-${tarifa.estado.toLowerCase()}`]}`}
-                        >
-                          {tarifa.estado}
-                        </span>
+                        <div className={styles['tariff-title']}>{tarifa.nombre}</div>
+                        <div className={styles['tariff-subtitle']}>Desde {tarifa.fecha}</div>
+                        <span className={`${styles['type-badge']} ${styles[`type-${tarifa.tipo.toLowerCase().replace(' ', '-')}`]}`}>{tarifa.tipo}</span>
+                        {' '}
+                        <span className={`${styles['status-badge']} ${styles[`status-${tarifa.estado.toLowerCase()}`]}`}>{tarifa.estado}</span>
                       </div>
                       <div className='text-end'>
                         {tarifa.tipo === 'Fija' && (
                           <>
-                            <div className={styles['tariff-price']}>
-                              ${tarifa.precio.toLocaleString('es-CL')}
-                            </div>
-                            <div className={styles['tariff-unit']}>
-                              por {tarifa.unidad}
-                            </div>
+                            <div className={styles['tariff-price']}>${tarifa.precio.toLocaleString('es-CL')}</div>
+                            <div className={styles['tariff-unit']}>por {tarifa.unidad}</div>
                           </>
                         )}
-                        {tarifa.tipo === 'Por Tramos' &&
-                          Array.isArray(tarifa.estructura) && (
+                        {tarifa.tipo === 'Por Tramos' && Array.isArray(tarifa.estructura) && (
                           <div className={styles['tier-structure']}>
-                            {(tarifa.estructura as Tramo[]).map(
-                              (tramo, idx) => (
-                                <div
-                                  key={idx}
-                                  className={styles['tier-item']}
-                                >
-                                  <span className={styles['tier-range']}>
-                                    {tramo.min} -{' '}
-                                    {tramo.max !== null ? tramo.max : '∞'}{' '}
-                                    {tarifa.unidad}
-                                  </span>
-                                  <span className={styles['tier-price']}>
-                                      ${tramo.precio}
-                                  </span>
-                                </div>
-                              ),
-                            )}
+                            {(tarifa.estructura as Tramo[]).map((tramo, idx) => (
+                              <div key={idx} className={styles['tier-item']}>
+                                <span className={styles['tier-range']}>
+                                  {tramo.min} - {tramo.max !== null ? tramo.max : '∞'} {tarifa.unidad}
+                                </span>
+                                <span className={styles['tier-price']}>${tramo.precio}</span>
+                              </div>
+                            ))}
                           </div>
                         )}
-                        {tarifa.tipo === 'Estacional' &&
-                          Array.isArray(tarifa.estructura) && (
+                        {tarifa.tipo === 'Estacional' && Array.isArray(tarifa.estructura) && (
                           <div className={styles['tier-structure']}>
-                            {(tarifa.estructura as Estacional[]).map(
-                              (est, idx) => (
-                                <div
-                                  key={idx}
-                                  className={styles['tier-item']}
-                                >
-                                  <span className={styles['tier-range']}>
-                                    {est.estacion}
-                                  </span>
-                                  <span className={styles['tier-price']}>
-                                      ${est.precio}
-                                  </span>
-                                </div>
-                              ),
-                            )}
+                            {(tarifa.estructura as Estacional[]).map((est, idx) => (
+                              <div key={idx} className={styles['tier-item']}>
+                                <span className={styles['tier-range']}>{est.estacion}</span>
+                                <span className={styles['tier-price']}>${est.precio}</span>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -211,12 +161,8 @@ export default function TarifasListado() {
                       <button className='btn btn-sm btn-outline-primary'>
                         <span className='material-icons'>edit</span> Editar
                       </button>
-                      <button
-                        className='btn btn-sm btn-outline-secondary'
-                        onClick={() => setShowDuplicate(true)}
-                      >
-                        <span className='material-icons'>content_copy</span>{' '}
-                        Duplicar
+                      <button className='btn btn-sm btn-outline-secondary' onClick={() => setShowDuplicate(true)}>
+                        <span className='material-icons'>content_copy</span> Duplicar
                       </button>
                       <button className='btn btn-sm btn-outline-danger'>
                         <span className='material-icons'>delete</span> Eliminar
@@ -238,29 +184,19 @@ export default function TarifasListado() {
             <form>
               <div className='mb-3'>
                 <label className='form-label'>Archivo Excel</label>
-                <input
-                  type='file'
-                  className='form-control'
-                  accept='.xlsx,.xls'
-                />
+                <input type='file' className='form-control' accept='.xlsx,.xls' />
               </div>
             </form>
           </Modal.Body>
           <Modal.Footer>
             <Button variant='outline-secondary'>Descargar Plantilla</Button>
-            <Button variant='secondary' onClick={() => setShowImport(false)}>
-              Cancelar
-            </Button>
+            <Button variant='secondary' onClick={() => setShowImport(false)}>Cancelar</Button>
             <Button variant='primary'>Importar</Button>
           </Modal.Footer>
         </Modal>
 
         {/* Modal Duplicar */}
-        <Modal
-          show={showDuplicate}
-          onHide={() => setShowDuplicate(false)}
-          centered
-        >
+        <Modal show={showDuplicate} onHide={() => setShowDuplicate(false)} centered>
           <Modal.Header closeButton>
             <Modal.Title>Duplicar Tarifa</Modal.Title>
           </Modal.Header>
@@ -268,18 +204,12 @@ export default function TarifasListado() {
             <form>
               <div className='mb-3'>
                 <label className='form-label'>Nombre de la nueva tarifa</label>
-                <input
-                  type='text'
-                  className='form-control'
-                  placeholder='Ej: Tarifa Residencial Copia'
-                />
+                <input type='text' className='form-control' placeholder='Ej: Tarifa Residencial Copia' />
               </div>
             </form>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant='secondary' onClick={() => setShowDuplicate(false)}>
-              Cancelar
-            </Button>
+            <Button variant='secondary' onClick={() => setShowDuplicate(false)}>Cancelar</Button>
             <Button variant='primary'>Duplicar Tarifa</Button>
           </Modal.Footer>
         </Modal>

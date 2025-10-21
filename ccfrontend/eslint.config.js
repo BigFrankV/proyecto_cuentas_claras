@@ -1,6 +1,3 @@
-// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
-import storybook from 'eslint-plugin-storybook';
-
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import typescriptParser from '@typescript-eslint/parser';
@@ -9,7 +6,6 @@ import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 import importPlugin from 'eslint-plugin-import';
-import stylistic from '@stylistic/eslint-plugin';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -62,7 +58,6 @@ export default [
       'react-hooks': reactHooksPlugin,
       'jsx-a11y': jsxA11yPlugin,
       import: importPlugin,
-      '@stylistic': stylistic,
     },
     rules: {
       // TypeScript specific rules
@@ -134,19 +129,7 @@ export default [
       quotes: ['error', 'single', { avoidEscape: true }],
       semi: ['error', 'always'],
       indent: ['error', 2, { SwitchCase: 1 }],
-      '@stylistic/max-len': [
-        'warn',
-        {
-          code: 100,
-          tabWidth: 2,
-          ignoreUrls: true,
-          ignoreStrings: true,
-          ignoreTemplateLiterals: true,
-          ignoreRegExpLiterals: true,
-          ignoreComments: false,
-          ignoreTrailingComments: true,
-        },
-      ],
+      'max-len': ['warn', { code: 100, ignoreUrls: true }],
       eqeqeq: ['error', 'always'],
       curly: ['error', 'all'],
     },
@@ -188,5 +171,4 @@ export default [
       'public/**',
     ],
   },
-  ...storybook.configs['flat/recommended'],
 ];

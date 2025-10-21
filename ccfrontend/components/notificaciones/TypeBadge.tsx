@@ -5,60 +5,60 @@ interface TypeBadgeProps {
 }
 
 const typeConfig = {
-  system: {
-    label: 'Sistema',
-    color: '#1565C0',
+  system: { 
+    label: 'Sistema', 
+    color: '#1565C0', 
     bg: '#E3F2FD',
-    icon: 'settings',
+    icon: 'settings'
   },
-  announcement: {
-    label: 'Anuncio',
-    color: '#7B1FA2',
+  announcement: { 
+    label: 'Anuncio', 
+    color: '#7B1FA2', 
     bg: '#F3E5F5',
-    icon: 'campaign',
+    icon: 'campaign'
   },
-  reminder: {
-    label: 'Recordatorio',
-    color: '#F57F17',
+  reminder: { 
+    label: 'Recordatorio', 
+    color: '#F57F17', 
     bg: '#FFF8E1',
-    icon: 'alarm',
+    icon: 'alarm'
   },
-  alert: {
-    label: 'Alerta',
-    color: '#C62828',
+  alert: { 
+    label: 'Alerta', 
+    color: '#C62828', 
     bg: '#FFEBEE',
-    icon: 'warning',
+    icon: 'warning'
   },
-  maintenance: {
-    label: 'Mantenimiento',
-    color: '#2E7D32',
+  maintenance: { 
+    label: 'Mantenimiento', 
+    color: '#2E7D32', 
     bg: '#E8F5E9',
-    icon: 'build',
-  },
+    icon: 'build'
+  }
 };
 
 const sizeConfig = {
   sm: {
     padding: '0.125rem 0.375rem',
     fontSize: '0.7rem',
-    iconSize: '12px',
+    iconSize: '12px'
   },
   md: {
     padding: '0.25rem 0.5rem',
     fontSize: '0.75rem',
-    iconSize: '14px',
+    iconSize: '14px'
   },
   lg: {
     padding: '0.375rem 0.75rem',
     fontSize: '0.875rem',
-    iconSize: '16px',
-  },
+    iconSize: '16px'
+  }
 };
 
-export default function TypeBadge({
-  type,
+export default function TypeBadge({ 
+  type, 
   size = 'md',
-  showIcon = true,
+  showIcon = true 
 }: TypeBadgeProps) {
   const config = typeConfig[type];
   const sizing = sizeConfig[size];
@@ -76,7 +76,7 @@ export default function TypeBadge({
         display: 'inline-flex',
         alignItems: 'center',
         gap: '0.25rem',
-        whiteSpace: 'nowrap',
+        whiteSpace: 'nowrap'
       }}
     >
       {showIcon && (
