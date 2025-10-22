@@ -4,12 +4,15 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
+import { ticketsApi } from '@/lib/api/tickets';
+import { TicketFormData } from '@/types/tickets';
 
 interface TicketForm {
-  subject: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  category: string;
+  titulo: string;
+  descripcion: string;
+  prioridad: 'alta' | 'media' | 'baja';
+  categoria: string;
+  unidad_id?: number;
   unit: string;
   requesterName: string;
   requesterEmail: string;
@@ -20,32 +23,25 @@ interface TicketForm {
 
 const priorityOptions = [
   {
-    value: 'low',
+    value: 'baja',
     label: 'Baja',
     description: 'Problema menor que no afecta el funcionamiento normal',
     color: '#28a745',
     icon: 'arrow_downward'
   },
   {
-    value: 'medium',
+    value: 'media',
     label: 'Media',
     description: 'Problema moderado que requiere atención',
     color: '#ffc107',
     icon: 'remove'
   },
   {
-    value: 'high',
+    value: 'alta',
     label: 'Alta',
     description: 'Problema importante que afecta el funcionamiento',
     color: '#fd7e14',
     icon: 'arrow_upward'
-  },
-  {
-    value: 'urgent',
-    label: 'Urgente',
-    description: 'Problema crítico que requiere atención inmediata',
-    color: '#dc3545',
-    icon: 'priority_high'
   }
 ];
 
@@ -99,10 +95,10 @@ export default function NuevoTicket() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState<TicketForm>({
-    subject: '',
-    description: '',
-    priority: 'medium',
-    category: '',
+    titulo: '',
+    descripcion: '',
+    prioridad: 'media',
+    categoria: '',
     unit: '',
     requesterName: '',
     requesterEmail: '',
@@ -170,16 +166,16 @@ export default function NuevoTicket() {
   const validateForm = (): boolean => {
     const newErrors: Partial<TicketForm> = {};
 
-    if (!formData.subject.trim()) {
-      newErrors.subject = 'El asunto es requerido';
+    if (!formData.titulo.trim()) {
+      newErrors.titulo = 'El asunto es requerido';
     }
 
-    if (!formData.description.trim()) {
-      newErrors.description = 'La descripción es requerida';
+    if (!formData.descripcion.trim()) {
+      newErrors.descripcion = 'La descripción es requerida';
     }
 
-    if (!formData.category) {
-      newErrors.category = 'La categoría es requerida';
+    if (!formData.categoria) {
+      newErrors.categoria = 'La categoría es requerida';
     }
 
     if (!formData.unit.trim()) {
@@ -210,13 +206,25 @@ export default function NuevoTicket() {
     setIsSubmitting(true);
 
     try {
-      // Mock API call - replace with actual API
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Obtener el ID de la comunidad del localStorage o contexto
+      const comunidadId = 1; // TODO: Obtener del contexto de usuario/comunidad actual
+      
+      // Preparar los datos para la API
+      const ticketData: TicketFormData = {
+        titulo: formData.titulo,
+        descripcion: formData.descripcion,
+        prioridad: formData.prioridad,
+        categoria: formData.categoria,
+        // TODO: Agregar unidad_id cuando esté disponible
+      };
+
+      await ticketsApi.create(comunidadId, ticketData);
       
       // Success - redirect to tickets list
       router.push('/tickets');
     } catch (error) {
       console.error('Error creating ticket:', error);
+      // TODO: Mostrar error al usuario
     } finally {
       setIsSubmitting(false);
     }
@@ -270,13 +278,13 @@ export default function NuevoTicket() {
                         </label>
                         <input
                           type='text'
-                          className={`form-control ${errors.subject ? 'is-invalid' : ''}`}
+                          className={`form-control ${errors.titulo ? 'is-invalid' : ''}`}
                           placeholder='Describe brevemente el problema o solicitud'
-                          value={formData.subject}
-                          onChange={(e) => handleInputChange('subject', e.target.value)}
+                          value={formData.titulo}
+                          onChange={(e) => handleInputChange('titulo', e.target.value)}
                         />
-                        {errors.subject && (
-                          <div className='invalid-feedback'>{errors.subject}</div>
+                        {errors.titulo && (
+                          <div className='invalid-feedback'>{errors.titulo}</div>
                         )}
                       </div>
 
@@ -285,14 +293,14 @@ export default function NuevoTicket() {
                           Descripción <span className='text-danger'>*</span>
                         </label>
                         <textarea
-                          className={`form-control ${errors.description ? 'is-invalid' : ''}`}
+                          className={`form-control ${errors.descripcion ? 'is-invalid' : ''}`}
                           rows={4}
                           placeholder='Proporciona todos los detalles relevantes sobre el problema o solicitud'
-                          value={formData.description}
-                          onChange={(e) => handleInputChange('description', e.target.value)}
+                          value={formData.descripcion}
+                          onChange={(e) => handleInputChange('descripcion', e.target.value)}
                         />
-                        {errors.description && (
-                          <div className='invalid-feedback'>{errors.description}</div>
+                        {errors.descripcion && (
+                          <div className='invalid-feedback'>{errors.descripcion}</div>
                         )}
                         <div className='form-text'>
                           Incluye detalles como cuándo ocurrió el problema, qué estabas haciendo, etc.
@@ -315,20 +323,20 @@ export default function NuevoTicket() {
                       {priorityOptions.map((priority) => (
                         <div key={priority.value} className='col-6 col-lg-3 mb-3'>
                           <div
-                            className={`priority-card ${formData.priority === priority.value ? 'selected' : ''}`}
+                            className={`priority-card ${formData.prioridad === priority.value ? 'selected' : ''}`}
                             style={{
-                              border: formData.priority === priority.value 
+                              border: formData.prioridad === priority.value 
                                 ? `2px solid ${priority.color}` 
                                 : '2px solid #e9ecef',
                               borderRadius: 'var(--radius)',
                               padding: '1rem',
                               cursor: 'pointer',
-                              backgroundColor: formData.priority === priority.value 
+                              backgroundColor: formData.prioridad === priority.value 
                                 ? `${priority.color}10` 
                                 : '#fff',
                               transition: 'all 0.2s ease'
                             }}
-                            onClick={() => handleInputChange('priority', priority.value)}
+                            onClick={() => handleInputChange('prioridad', priority.value)}
                           >
                             <div className='text-center'>
                               <div
@@ -371,20 +379,20 @@ export default function NuevoTicket() {
                       {categoryOptions.map((category) => (
                         <div key={category.value} className='col-6 col-lg-4 mb-3'>
                           <div
-                            className={`category-card ${formData.category === category.value ? 'selected' : ''}`}
+                            className={`category-card ${formData.categoria === category.value ? 'selected' : ''}`}
                             style={{
-                              border: formData.category === category.value 
+                              border: formData.categoria === category.value 
                                 ? `2px solid ${category.color}` 
                                 : '2px solid #e9ecef',
                               borderRadius: 'var(--radius)',
                               padding: '1rem',
                               cursor: 'pointer',
-                              backgroundColor: formData.category === category.value 
+                              backgroundColor: formData.categoria === category.value 
                                 ? `${category.color}10` 
                                 : '#fff',
                               transition: 'all 0.2s ease'
                             }}
-                            onClick={() => handleInputChange('category', category.value)}
+                            onClick={() => handleInputChange('categoria', category.value)}
                           >
                             <div className='d-flex align-items-center'>
                               <div
@@ -412,8 +420,8 @@ export default function NuevoTicket() {
                         </div>
                       ))}
                     </div>
-                    {errors.category && (
-                      <div className='text-danger small mt-2'>{errors.category}</div>
+                    {errors.categoria && (
+                      <div className='text-danger small mt-2'>{errors.categoria}</div>
                     )}
                   </div>
                 </div>
@@ -624,13 +632,13 @@ export default function NuevoTicket() {
                     <div className='summary-item d-flex justify-content-between mb-2'>
                       <span className='text-muted'>Prioridad:</span>
                       <span className='fw-semibold'>
-                        {priorityOptions.find(p => p.value === formData.priority)?.label || 'No seleccionada'}
+                        {priorityOptions.find(p => p.value === formData.prioridad)?.label || 'No seleccionada'}
                       </span>
                     </div>
                     <div className='summary-item d-flex justify-content-between mb-2'>
                       <span className='text-muted'>Categoría:</span>
                       <span className='fw-semibold'>
-                        {categoryOptions.find(c => c.value === formData.category)?.label || 'No seleccionada'}
+                        {categoryOptions.find(c => c.value === formData.categoria)?.label || 'No seleccionada'}
                       </span>
                     </div>
                     <div className='summary-item d-flex justify-content-between mb-2'>

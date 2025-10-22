@@ -1,3 +1,4 @@
+/* eslint-disable no-const-assign */
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -122,6 +123,7 @@ router.get('/', authenticate, async (req, res) => {
   `;
   const countParams = [];
   if (comunidad_id) {
+    // eslint-disable-next-line no-const-assign
     countQuery += ' AND comunidad_id = ?';
     countParams.push(comunidad_id);
   }

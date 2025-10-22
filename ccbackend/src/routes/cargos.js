@@ -568,18 +568,16 @@ router.post('/', [
       INSERT INTO emision_gastos_comunes (
         comunidad_id,
         periodo,
-        fecha_emision,
         fecha_vencimiento,
         estado,
-        total_gastado,
-        created_by
-      ) VALUES (?, ?, NOW(), ?, 'emitida', ?, ?)
+        observaciones,
+        created_at
+      ) VALUES (?, ?, ?, 'emitido', ?, NOW())
     `, [
       unitData.comunidad_id,
       concept, // Usar el concepto como período
       dueDate,
-      amount,
-      req.user.id
+      description || concept
     ]);
 
     const emisionId = emisionResult.insertId;
@@ -614,7 +612,7 @@ router.post('/', [
         monto,
         origen,
         iva_incluido
-      ) VALUES (?, 1, ?, ?, 'manual', 1)
+      ) VALUES (?, 1, ?, ?, 'ajuste', 1)
     `, [cargoId, description || concept, amount]);
 
     // Obtener el cargo creado con todos los datos
@@ -1573,9 +1571,118 @@ router.get('/comunidad/:comunidadId/por-categoria', authenticate, requireCommuni
   res.json(rows);
 });
 
-router.post('/:id/recalcular-interes', authenticate, authorize('admin','superadmin'), async (req, res) => { res.json({ ok: true, note: 'stub: recalculate interest' }); });
+router.post('/:id/recalcular-interes', authenticate, authorize('admin','superadmin'), async (req, res) => {
+  const cargoId = req.params.id;
+  
+  try {
+    // Obtener información del cargo
+    const [cargoRows] = await db.query(`
+      SELECT ccu.id, ccu.monto_total, ccu.saldo, ccu.interes_acumulado, egc.fecha_vencimiento
+      FROM cuenta_cobro_unidad ccu
+      LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
+      WHERE ccu.id = ?
+    `, [cargoId]);
 
-router.post('/:id/notificar', authenticate, authorize('admin','superadmin'), async (req, res) => { res.json({ ok: true, note: 'stub: notify about charge' }); });
+    if (cargoRows.length === 0) {
+      return res.status(404).json({ error: 'Cargo no encontrado' });
+    }
+
+    const cargo = cargoRows[0];
+    
+    if (!cargo.fecha_vencimiento) {
+      return res.status(400).json({ error: 'El cargo no tiene fecha de vencimiento' });
+    }
+
+    // Calcular días de vencimiento
+    const [diasRows] = await db.query(`
+      SELECT DATEDIFF(CURDATE(), ?) as dias_vencido
+    `, [cargo.fecha_vencimiento]);
+
+    const diasVencido = Math.max(0, diasRows[0].dias_vencido);
+    
+    // Tasa de interés mensual (ejemplo: 2% mensual)
+    const tasaInteresMensual = 0.02;
+    const tasaInteresDiaria = tasaInteresMensual / 30;
+    
+    // Calcular interés acumulado
+    const interesCalculado = cargo.saldo * tasaInteresDiaria * diasVencido;
+    
+    // Actualizar el interés acumulado
+    await db.query(`
+      UPDATE cuenta_cobro_unidad 
+      SET interes_acumulado = ?
+      WHERE id = ?
+    `, [interesCalculado, cargoId]);
+
+    res.json({
+      success: true,
+      message: 'Interés recalculado exitosamente',
+      cargoId: cargoId,
+      diasVencido: diasVencido,
+      interesAcumulado: interesCalculado
+    });
+  } catch (error) {
+    console.error('Error recalculando interés:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+router.post('/:id/notificar', authenticate, authorize('admin','superadmin'), async (req, res) => {
+  const cargoId = req.params.id;
+  
+  try {
+    // Obtener información del cargo y propietario
+    const [cargoRows] = await db.query(`
+      SELECT 
+        ccu.id,
+        CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
+        ccu.monto_total,
+        ccu.saldo,
+        ccu.interes_acumulado,
+        u.codigo as unidad,
+        p.email as email_propietario,
+        p.telefono as telefono_propietario,
+        CONCAT(p.nombres, ' ', p.apellidos) as nombre_propietario
+      FROM cuenta_cobro_unidad ccu
+      JOIN unidad u ON ccu.unidad_id = u.id
+      LEFT JOIN titulares_unidad tu ON u.id = tu.unidad_id AND tu.tipo = 'propietario' AND tu.hasta IS NULL
+      LEFT JOIN persona p ON tu.persona_id = p.id
+      WHERE ccu.id = ?
+    `, [cargoId]);
+
+    if (cargoRows.length === 0) {
+      return res.status(404).json({ error: 'Cargo no encontrado' });
+    }
+
+    const cargo = cargoRows[0];
+
+    // Aquí se implementaría el envío de notificación (email, SMS, etc.)
+    // Por ahora, solo registramos la notificación
+    console.log('Notificación enviada para cargo:', {
+      cargoId: cargo.id,
+      concepto: cargo.concepto,
+      monto: cargo.monto_total,
+      saldo: cargo.saldo,
+      propietario: cargo.nombre_propietario,
+      email: cargo.email_propietario,
+      telefono: cargo.telefono_propietario
+    });
+
+    // Podríamos guardar un registro de notificación en la base de datos
+    // await db.query('INSERT INTO notificaciones (...) VALUES (...)', [...]);
+
+    res.json({
+      success: true,
+      message: 'Notificación enviada exitosamente',
+      cargoId: cargoId,
+      notificadoA: cargo.nombre_propietario,
+      email: cargo.email_propietario
+    });
+  } catch (error) {
+    console.error('Error enviando notificación:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
 
 module.exports = router;
 

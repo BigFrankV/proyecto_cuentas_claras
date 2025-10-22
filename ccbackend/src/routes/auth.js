@@ -550,7 +550,6 @@ router.post('/forgot-password', [body('email').isEmail()], async (req, res) => {
   try {
     const [rows] = await db.query('SELECT id, username FROM usuario WHERE email = ? LIMIT 1', [email]);
     if (!rows.length) return res.status(200).json({ ok: true }); // don't reveal
-    const user = rows[0];
     const token = crypto.randomBytes(24).toString('hex');
     // store token in a simple table reset_tokens if exists; here we just return it for demo
     // In production: save token with expiry and send email
@@ -565,7 +564,6 @@ router.post('/forgot-password', [body('email').isEmail()], async (req, res) => {
 router.post('/reset-password', [body('token').exists(), body('password').isLength({ min: 6 })], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const { token, password } = req.body;
   try {
     // For demo we don't persist tokens; in production validate token and map to user
     // Here we return success to keep flow consistent
@@ -981,7 +979,6 @@ router.get('/sessions', authenticate, async (req, res) => {
  */
 router.delete('/sessions/:sessionId', authenticate, async (req, res) => {
   try {
-    const { sessionId } = req.params;
     
     // For now, just return success
     // In a real implementation, you would revoke the specific session token

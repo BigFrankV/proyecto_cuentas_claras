@@ -76,7 +76,7 @@ const validateGatewayConfig = (gateway) => {
       });
     }
 
-    const missingValues = Object.entries(config).filter(([key, value]) => !value);
+    const missingValues = Object.entries(config).filter(([, value]) => !value);
     
     if (missingValues.length > 0) {
       return res.status(503).json({

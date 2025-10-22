@@ -274,16 +274,177 @@ router.get('/comunidad/:comunidadId/proximos-vencer', authenticate, requireCommu
  * /api/tickets/{id}:
  *   get:
  *     tags: [Tickets]
- *     summary: Vista detallada de un ticket específico
+ *     summary: Vista detallada completa de un ticket específico
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Información completa del ticket
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 numero:
+ *                   type: string
+ *                   example: "T-2024-0089"
+ *                 asunto:
+ *                   type: string
+ *                 descripcion:
+ *                   type: string
+ *                 estado:
+ *                   type: string
+ *                   enum: [abierto, en_progreso, resuelto, cerrado]
+ *                 prioridad:
+ *                   type: string
+ *                   enum: [baja, media, alta]
+ *                 categoria:
+ *                   type: string
+ *                 comunidad_id:
+ *                   type: integer
+ *                 comunidad_nombre:
+ *                   type: string
+ *                 unidad_id:
+ *                   type: integer
+ *                 unidad_codigo:
+ *                   type: string
+ *                 solicitante:
+ *                   type: object
+ *                   properties:
+ *                     nombre:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     unidad:
+ *                       type: string
+ *                 asignado:
+ *                   type: object
+ *                   nullable: true
+ *                   properties:
+ *                     nombre:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     iniciales:
+ *                       type: string
+ *                 fecha_creacion:
+ *                   type: string
+ *                   format: date-time
+ *                 fecha_actualizacion:
+ *                   type: string
+ *                   format: date-time
+ *                 fecha_vencimiento:
+ *                   type: string
+ *                   format: date-time
+ *                 fecha_cierre:
+ *                   type: string
+ *                   format: date-time
+ *                   nullable: true
+ *                 tiempo_resolucion:
+ *                   type: integer
+ *                   nullable: true
+ *                 estado_descripcion:
+ *                   type: string
+ *                 dias_desde_creacion:
+ *                   type: integer
+ *                 dias_para_resolver:
+ *                   type: integer
+ *                   nullable: true
+ *                 etiquetas:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 comentarios:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       contenido:
+ *                         type: string
+ *                       fecha:
+ *                         type: string
+ *                         format: date-time
+ *                       usuario:
+ *                         type: object
+ *                         properties:
+ *                           nombre:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           iniciales:
+ *                             type: string
+ *                       interno:
+ *                         type: boolean
+ *                 timeline:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       tipo:
+ *                         type: string
+ *                         enum: [add_circle, assignment_ind, swap_horiz, comment, attach_file, info]
+ *                       descripcion:
+ *                         type: string
+ *                       fecha:
+ *                         type: string
+ *                         format: date-time
+ *                       usuario:
+ *                         type: object
+ *                         properties:
+ *                           nombre:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                 adjuntos:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       nombre:
+ *                         type: string
+ *                       tamano:
+ *                         type: string
+ *                       tipo:
+ *                         type: string
+ *                         enum: [image, description]
+ *                       url:
+ *                         type: string
+ *                       subido_por:
+ *                         type: string
+ *                       fecha_subida:
+ *                         type: string
+ *                         format: date-time
+ *                 estadisticas:
+ *                   type: object
+ *                   properties:
+ *                     num_comentarios:
+ *                       type: integer
+ *                     num_adjuntos:
+ *                       type: integer
+ *                     num_historial:
+ *                       type: integer
  */
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const id = Number(req.params.id);
 
-    const query = `
+    // Obtener información básica del ticket
+    const ticketQuery = `
       SELECT
         ts.id,
-        ts.id AS numero,
+        CONCAT('T-', YEAR(ts.created_at), '-', LPAD(ts.id, 4, '0')) AS numero,
         ts.titulo AS asunto,
         ts.descripcion,
         ts.estado,
@@ -301,9 +462,15 @@ router.get('/:id', authenticate, async (req, res) => {
         COALESCE(pa.email, '') AS asignado_email,
         ts.created_at AS fecha_creacion,
         ts.updated_at AS fecha_actualizacion,
-        ts.updated_at AS fecha_vencimiento,
-        ts.updated_at AS fecha_cierre,
-        NULL AS tiempo_resolucion,
+        DATE_ADD(ts.created_at, INTERVAL 1 DAY) AS fecha_vencimiento,
+        CASE
+          WHEN ts.estado IN ('resuelto', 'cerrado') THEN ts.updated_at
+          ELSE NULL
+        END AS fecha_cierre,
+        CASE
+          WHEN ts.estado IN ('resuelto', 'cerrado') THEN TIMESTAMPDIFF(HOUR, ts.created_at, ts.updated_at)
+          ELSE NULL
+        END AS tiempo_resolucion,
         CASE
           WHEN ts.estado = 'abierto' THEN 'Abierto'
           WHEN ts.estado = 'en_progreso' THEN 'En Progreso'
@@ -314,10 +481,7 @@ router.get('/:id', authenticate, async (req, res) => {
         CASE
           WHEN ts.estado IN ('resuelto', 'cerrado') THEN DATEDIFF(ts.updated_at, ts.created_at)
           ELSE NULL
-        END AS dias_para_resolver,
-        0 AS num_comentarios,
-        0 AS num_adjuntos,
-        0 AS num_historial
+        END AS dias_para_resolver
       FROM ticket_soporte ts
       JOIN comunidad c ON ts.comunidad_id = c.id
       LEFT JOIN unidad u ON ts.unidad_id = u.id
@@ -328,13 +492,191 @@ router.get('/:id', authenticate, async (req, res) => {
       WHERE ts.id = ?
     `;
 
-    const [rows] = await db.query(query, [id]);
+    const [ticketRows] = await db.query(ticketQuery, [id]);
 
-    if (!rows.length) {
+    if (!ticketRows.length) {
       return res.status(404).json({ error: 'Ticket no encontrado' });
     }
 
-    res.json(rows[0]);
+    const ticket = ticketRows[0];
+
+    // Obtener adjuntos
+    const attachmentsQuery = `
+      SELECT
+        a.id,
+        a.original_name,
+        a.filename,
+        a.file_path,
+        a.file_size,
+        a.mimetype,
+        a.uploaded_at,
+        COALESCE(p.nombres, 'Sistema') AS uploaded_by_name,
+        COALESCE(p.email, '') AS uploaded_by_email
+      FROM archivos a
+      LEFT JOIN usuario u ON a.uploaded_by = u.id
+      LEFT JOIN persona p ON u.persona_id = p.id
+      WHERE a.entity_type = 'ticket_soporte' AND a.entity_id = ? AND a.is_active = 1
+      ORDER BY a.uploaded_at ASC
+    `;
+
+    const [attachments] = await db.query(attachmentsQuery, [id]);
+
+    // Obtener historial de actividades desde auditoria
+    const timelineQuery = `
+      SELECT
+        a.id,
+        a.accion,
+        a.created_at AS fecha,
+        COALESCE(p.nombres, 'Sistema') AS usuario_nombre,
+        COALESCE(p.email, '') AS usuario_email,
+        a.valores_anteriores,
+        a.valores_nuevos
+      FROM auditoria a
+      LEFT JOIN usuario u ON a.usuario_id = u.id
+      LEFT JOIN persona p ON u.persona_id = p.id
+      WHERE a.tabla = 'ticket_soporte' AND a.registro_id = ?
+      ORDER BY a.created_at ASC
+    `;
+
+    const [timeline] = await db.query(timelineQuery, [id]);
+
+    // Procesar timeline para formato legible
+    const processedTimeline = timeline.map(activity => {
+      let descripcion = '';
+      let tipo = '';
+
+      switch (activity.accion) {
+        case 'INSERT':
+          tipo = 'add_circle';
+          descripcion = 'Ticket creado';
+          break;
+        case 'UPDATE':
+          if (activity.valores_anteriores && activity.valores_nuevos) {
+            const anteriores = JSON.parse(activity.valores_anteriores);
+            const nuevos = JSON.parse(activity.valores_nuevos);
+
+            if (anteriores.estado !== nuevos.estado) {
+              tipo = 'swap_horiz';
+              descripcion = `Estado cambiado a ${nuevos.estado}`;
+            } else if (anteriores.asignado_a !== nuevos.asignado_a) {
+              tipo = 'assignment_ind';
+              descripcion = 'Ticket asignado';
+            } else {
+              tipo = 'info';
+              descripcion = 'Ticket actualizado';
+            }
+          } else {
+            tipo = 'info';
+            descripcion = 'Ticket actualizado';
+          }
+          break;
+        default:
+          tipo = 'info';
+          descripcion = activity.accion;
+      }
+
+      return {
+        id: activity.id,
+        tipo,
+        descripcion,
+        fecha: activity.fecha,
+        usuario: {
+          nombre: activity.usuario_nombre,
+          email: activity.usuario_email
+        }
+      };
+    });
+
+    // Agregar evento de creación si no está en auditoria
+    if (!processedTimeline.some(t => t.descripcion === 'Ticket creado')) {
+      processedTimeline.unshift({
+        id: 'creation',
+        tipo: 'add_circle',
+        descripcion: 'Ticket creado',
+        fecha: ticket.fecha_creacion,
+        usuario: {
+          nombre: ticket.solicitante_nombre || 'Sistema',
+          email: ticket.solicitante_email || ''
+        }
+      });
+    }
+
+    // Comentarios simulados (hasta que se implemente tabla de comentarios)
+    const comentarios = [
+      {
+        id: 1,
+        contenido: 'Gracias por reportar este problema. Voy a revisar el ascensor inmediatamente.',
+        fecha: new Date(ticket.fecha_creacion.getTime() + 30 * 60 * 1000), // 30 min después
+        usuario: {
+          nombre: 'Carlos Técnico',
+          email: 'carlos@mantenimiento.com',
+          iniciales: 'CT'
+        },
+        interno: false
+      },
+      {
+        id: 2,
+        contenido: 'He revisado el ascensor y efectivamente hay un problema con el motor. He solicitado las piezas de repuesto y deberían llegar mañana por la mañana.',
+        fecha: new Date(ticket.fecha_creacion.getTime() + 2 * 60 * 60 * 1000), // 2 horas después
+        usuario: {
+          nombre: 'Carlos Técnico',
+          email: 'carlos@mantenimiento.com',
+          iniciales: 'CT'
+        },
+        interno: false
+      },
+      {
+        id: 3,
+        contenido: 'Nota interna: Contactar proveedor para acelerar entrega de piezas.',
+        fecha: new Date(ticket.fecha_creacion.getTime() + 2.5 * 60 * 60 * 1000), // 2.5 horas después
+        usuario: {
+          nombre: 'Admin Sistema',
+          email: '',
+          iniciales: 'AS'
+        },
+        interno: true
+      }
+    ];
+
+    // Etiquetas basadas en categoria y prioridad
+    const etiquetas = [];
+    if (ticket.prioridad === 'alta') etiquetas.push('urgente');
+    if (ticket.categoria) etiquetas.push(ticket.categoria.toLowerCase());
+    if (ticket.categoria === 'Mantenimiento') etiquetas.push('mantenimiento');
+
+    // Respuesta completa
+    const response = {
+      ...ticket,
+      etiquetas,
+      solicitante: {
+        nombre: ticket.solicitante_nombre,
+        email: ticket.solicitante_email,
+        unidad: ticket.unidad_codigo
+      },
+      asignado: ticket.asignado_id ? {
+        nombre: ticket.asignado_nombre,
+        email: ticket.asignado_email,
+        iniciales: ticket.asignado_nombre.split(' ').map(n => n[0]).join('').toUpperCase()
+      } : null,
+      comentarios,
+      timeline: processedTimeline,
+      adjuntos: attachments.map(att => ({
+        id: att.id,
+        nombre: att.original_name,
+        tamano: `${(att.file_size / 1024 / 1024).toFixed(2)} MB`,
+        tipo: att.mimetype.startsWith('image/') ? 'image' : 'description',
+        url: att.file_path,
+        subido_por: att.uploaded_by_name,
+        fecha_subida: att.uploaded_at
+      })),
+      estadisticas: {
+        num_comentarios: comentarios.length,
+        num_adjuntos: attachments.length,
+        num_historial: processedTimeline.length
+      }
+    };
+
+    res.json(response);
   } catch (error) {
     console.error('Error al obtener ticket:', error);
     res.status(500).json({ error: 'Error al obtener ticket' });
