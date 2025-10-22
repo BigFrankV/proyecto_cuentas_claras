@@ -2,215 +2,54 @@ import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, AwaitedReactNode, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from 'react';
 import { useRouter } from 'next/router';
-
-interface TicketDetail {
-  id: string;
-  number: string;
-  subject: string;
-  description: string;
-  status: 'open' | 'in-progress' | 'resolved' | 'closed' | 'escalated';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  category: string;
-  requester: {
-    name: string;
-    email: string;
-    type: 'resident' | 'admin';
-    unit?: string;
-    avatar: string;
-  };
-  assignee?: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-  dueDate?: string;
-  tags: string[];
-  attachments: {
-    id: string;
-    name: string;
-    size: number;
-    type: string;
-    uploadedAt: string;
-    uploadedBy: string;
-  }[];
-  timeline: {
-    id: string;
-    type: 'created' | 'updated' | 'comment' | 'status_change' | 'assigned' | 'attachment';
-    timestamp: string;
-    user: {
-      name: string;
-      avatar: string;
-    };
-    content?: string;
-    details?: any;
-  }[];
-  comments: {
-    id: string;
-    content: string;
-    author: {
-      name: string;
-      avatar: string;
-      type: 'admin' | 'resident';
-    };
-    createdAt: string;
-    isInternal: boolean;
-  }[];
-}
+import { ticketsApi } from '@/lib/api/tickets';
+import type { TicketDetalle as TicketDetailType } from '@/types/tickets';
 
 const statusConfig = {
-  open: { label: 'Abierto', class: 'open', color: '#1565C0', bg: '#E3F2FD', border: '#2196F3' },
-  'in-progress': { label: 'En Progreso', class: 'in-progress', color: '#F57F17', bg: '#FFF8E1', border: '#FFEB3B' },
-  resolved: { label: 'Resuelto', class: 'resolved', color: '#2E7D32', bg: '#E8F5E9', border: '#4CAF50' },
-  closed: { label: 'Cerrado', class: 'closed', color: '#757575', bg: '#F5F5F5', border: '#9E9E9E' },
-  escalated: { label: 'Escalado', class: 'escalated', color: '#C62828', bg: '#FFEBEE', border: '#F44336' }
+  abierto: { label: 'Abierto', class: 'open', color: '#1565C0', bg: '#E3F2FD', border: '#2196F3' },
+  en_progreso: { label: 'En Progreso', class: 'in-progress', color: '#F57F17', bg: '#FFF8E1', border: '#FFEB3B' },
+  resuelto: { label: 'Resuelto', class: 'resolved', color: '#2E7D32', bg: '#E8F5E9', border: '#4CAF50' },
+  cerrado: { label: 'Cerrado', class: 'closed', color: '#757575', bg: '#F5F5F5', border: '#9E9E9E' }
 };
 
 const priorityConfig = {
-  low: { label: 'Baja', class: 'low', color: '#2E7D32', bg: '#E8F5E9' },
-  medium: { label: 'Media', class: 'medium', color: '#F57F17', bg: '#FFF8E1' },
-  high: { label: 'Alta', class: 'high', color: '#C62828', bg: '#FFEBEE' },
-  urgent: { label: 'Urgente', class: 'urgent', color: '#FFFFFF', bg: '#7B1FA2' }
+  baja: { label: 'Baja', class: 'low', color: '#2E7D32', bg: '#E8F5E9' },
+  media: { label: 'Media', class: 'medium', color: '#F57F17', bg: '#FFF8E1' },
+  alta: { label: 'Alta', class: 'high', color: '#C62828', bg: '#FFEBEE' }
 };
 
 export default function TicketDetalle() {
   const router = useRouter();
   const { id } = router.query;
   
-  const [ticket, setTicket] = useState<TicketDetail | null>(null);
+  const [ticket, setTicket] = useState<TicketDetailType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [showInternalComments, setShowInternalComments] = useState(true);
 
   useEffect(() => {
     if (id) {
-      // Mock data - replace with API call
-      setTimeout(() => {
-        const mockTicket: TicketDetail = {
-          id: id as string,
-          number: 'T-2024-089',
-          subject: 'Problema con ascensor principal',
-          description: 'El ascensor principal no funciona desde esta mañana. Los residentes no pueden subir a los pisos superiores y esto está causando muchas molestias, especialmente para personas mayores y personas con movilidad reducida. He notado que el ascensor hace un ruido extraño antes de detenerse completamente.',
-          status: 'in-progress',
-          priority: 'high',
-          category: 'Mantenimiento',
-          requester: {
-            name: 'María González',
-            email: 'maria.gonzalez@email.com',
-            type: 'resident',
-            unit: 'Edificio A - Depto 301',
-            avatar: 'MG'
-          },
-          assignee: {
-            name: 'Carlos Técnico',
-            email: 'carlos@mantenimiento.com',
-            avatar: 'CT'
-          },
-          createdAt: '2024-01-15T10:30:00Z',
-          updatedAt: '2024-01-15T14:20:00Z',
-          dueDate: '2024-01-16T18:00:00Z',
-          tags: ['urgente', 'ascensor', 'mantenimiento'],
-          attachments: [
-            {
-              id: '1',
-              name: 'foto_ascensor_error.jpg',
-              size: 2048576,
-              type: 'image/jpeg',
-              uploadedAt: '2024-01-15T10:35:00Z',
-              uploadedBy: 'María González'
-            },
-            {
-              id: '2',
-              name: 'reporte_tecnico.pdf',
-              size: 1024000,
-              type: 'application/pdf',
-              uploadedAt: '2024-01-15T13:20:00Z',
-              uploadedBy: 'Carlos Técnico'
-            }
-          ],
-          timeline: [
-            {
-              id: '1',
-              type: 'created',
-              timestamp: '2024-01-15T10:30:00Z',
-              user: { name: 'María González', avatar: 'MG' },
-              content: 'Ticket creado'
-            },
-            {
-              id: '2',
-              type: 'assigned',
-              timestamp: '2024-01-15T11:15:00Z',
-              user: { name: 'Admin Sistema', avatar: 'AS' },
-              content: 'Ticket asignado a Carlos Técnico'
-            },
-            {
-              id: '3',
-              type: 'status_change',
-              timestamp: '2024-01-15T11:16:00Z',
-              user: { name: 'Carlos Técnico', avatar: 'CT' },
-              content: 'Estado cambiado a En Progreso',
-              details: { from: 'open', to: 'in-progress' }
-            },
-            {
-              id: '4',
-              type: 'comment',
-              timestamp: '2024-01-15T13:20:00Z',
-              user: { name: 'Carlos Técnico', avatar: 'CT' },
-              content: 'He revisado el ascensor y efectivamente hay un problema con el motor. He solicitado las piezas de repuesto.'
-            },
-            {
-              id: '5',
-              type: 'attachment',
-              timestamp: '2024-01-15T13:21:00Z',
-              user: { name: 'Carlos Técnico', avatar: 'CT' },
-              content: 'Archivo adjuntado: reporte_tecnico.pdf'
-            }
-          ],
-          comments: [
-            {
-              id: '1',
-              content: 'Gracias por reportar este problema. Voy a revisar el ascensor inmediatamente.',
-              author: {
-                name: 'Carlos Técnico',
-                avatar: 'CT',
-                type: 'admin'
-              },
-              createdAt: '2024-01-15T11:20:00Z',
-              isInternal: false
-            },
-            {
-              id: '2',
-              content: 'He revisado el ascensor y efectivamente hay un problema con el motor. He solicitado las piezas de repuesto y deberían llegar mañana por la mañana.',
-              author: {
-                name: 'Carlos Técnico',
-                avatar: 'CT',
-                type: 'admin'
-              },
-              createdAt: '2024-01-15T13:20:00Z',
-              isInternal: false
-            },
-            {
-              id: '3',
-              content: 'Nota interna: Contactar proveedor para acelerar entrega de piezas.',
-              author: {
-                name: 'Admin Sistema',
-                avatar: 'AS',
-                type: 'admin'
-              },
-              createdAt: '2024-01-15T14:00:00Z',
-              isInternal: true
-            }
-          ]
-        };
-        setTicket(mockTicket);
-        setLoading(false);
-      }, 1000);
+      loadTicket();
     }
   }, [id]);
+
+  const loadTicket = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const ticketData = await ticketsApi.getById(Number(id));
+      setTicket(ticketData);
+    } catch (err) {
+      console.error('Error loading ticket:', err);
+      setError(err instanceof Error ? err.message : 'Error al cargar el ticket');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-CL', {
@@ -334,10 +173,10 @@ export default function TicketDetalle() {
   return (
     <ProtectedRoute>
       <Head>
-        <title>{ticket.number} — {ticket.subject} — Cuentas Claras</title>
+        <title>{ticket.numero} — {ticket.titulo} — Cuentas Claras</title>
       </Head>
 
-      <Layout title={`Ticket ${ticket.number}`}>
+      <Layout title={`Ticket ${ticket.numero}`}>
         <div className='container-fluid py-3'>
           {/* Header */}
           <div className='d-flex justify-content-between align-items-start mb-4'>
@@ -347,38 +186,38 @@ export default function TicketDetalle() {
                   <i className='material-icons me-1'>arrow_back</i>
                   Volver
                 </Link>
-                <h1 className='h4 mb-0'>{ticket.number}</h1>
+                <h1 className='h4 mb-0'>{ticket.numero}</h1>
               </div>
-              <h2 className='h5 text-muted mb-1'>{ticket.subject}</h2>
+              <h2 className='h5 text-muted mb-1'>{ticket.titulo}</h2>
               <div className='d-flex align-items-center gap-2'>
                 <span
-                  className={`status-badge ${statusConfig[ticket.status].class}`}
+                  className={`status-badge ${statusConfig[ticket.estado].class}`}
                   style={{
-                    backgroundColor: statusConfig[ticket.status].bg,
-                    color: statusConfig[ticket.status].color,
-                    border: `1px solid ${statusConfig[ticket.status].border}`,
+                    backgroundColor: statusConfig[ticket.estado].bg,
+                    color: statusConfig[ticket.estado].color,
+                    border: `1px solid ${statusConfig[ticket.estado].border}`,
                     padding: '0.25rem 0.75rem',
                     borderRadius: '1rem',
                     fontSize: '0.75rem',
                     fontWeight: '500'
                   }}
                 >
-                  {statusConfig[ticket.status].label}
+                  {statusConfig[ticket.estado].label}
                 </span>
                 <span
-                  className={`priority-badge ${priorityConfig[ticket.priority].class}`}
+                  className={`priority-badge ${priorityConfig[ticket.prioridad].class}`}
                   style={{
-                    backgroundColor: priorityConfig[ticket.priority].bg,
-                    color: priorityConfig[ticket.priority].color,
+                    backgroundColor: priorityConfig[ticket.prioridad].bg,
+                    color: priorityConfig[ticket.prioridad].color,
                     padding: '0.25rem 0.5rem',
                     borderRadius: '0.375rem',
                     fontSize: '0.75rem',
                     fontWeight: '500'
                   }}
                 >
-                  {priorityConfig[ticket.priority].label}
+                  {priorityConfig[ticket.prioridad].label}
                 </span>
-                <span className='badge bg-secondary'>{ticket.category}</span>
+                <span className='badge bg-secondary'>{ticket.categoria}</span>
               </div>
             </div>
             <div className='d-flex gap-2'>
@@ -421,7 +260,7 @@ export default function TicketDetalle() {
                   </h5>
                 </div>
                 <div className='card-body'>
-                  <p className='mb-0'>{ticket.description}</p>
+                  <p className='mb-0'>{ticket.descripcion}</p>
                 </div>
               </div>
 
@@ -430,7 +269,7 @@ export default function TicketDetalle() {
                 <div className='card-header d-flex justify-content-between align-items-center'>
                   <h5 className='card-title mb-0'>
                     <i className='material-icons me-2'>forum</i>
-                    Comentarios ({ticket.comments.filter(c => !c.isInternal || showInternalComments).length})
+                    Comentarios ({ticket.comments.filter((c: { isInternal: any; }) => !c.isInternal || showInternalComments).length})
                   </h5>
                   <div className='form-check form-switch'>
                     <input
@@ -448,8 +287,8 @@ export default function TicketDetalle() {
                   {/* Comments List */}
                   <div className='comments-list mb-4'>
                     {ticket.comments
-                      .filter(comment => !comment.isInternal || showInternalComments)
-                      .map((comment) => (
+                      .filter((comment: { isInternal: any; }) => !comment.isInternal || showInternalComments)
+                      .map((comment: { id: Key | null | undefined; isInternal: any; author: { type: string; avatar: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }; createdAt: string; content: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }) => (
                         <div key={comment.id} className='comment mb-3' style={{
                           backgroundColor: comment.isInternal ? '#fff3cd' : '#f8f9fa',
                           border: comment.isInternal ? '1px solid #ffeaa7' : '1px solid #e9ecef',
@@ -546,7 +385,7 @@ export default function TicketDetalle() {
                 </div>
                 <div className='card-body'>
                   <div className='timeline'>
-                    {ticket.timeline.map((item, index) => (
+                    {ticket.timeline.map((item: { id: Key | null | undefined; type: string; content: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; timestamp: string; user: { name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }; }, index: number) => (
                       <div key={item.id} className='timeline-item d-flex' style={{
                         paddingBottom: index === ticket.timeline.length - 1 ? '0' : '1.5rem',
                         position: 'relative'
@@ -611,30 +450,30 @@ export default function TicketDetalle() {
                 <div className='card-body'>
                   <div className='info-item mb-3'>
                     <label className='form-label text-muted'>Número de Ticket</label>
-                    <div className='fw-semibold'>{ticket.number}</div>
+                    <div className='fw-semibold'>{ticket.numero}</div>
                   </div>
                   
                   <div className='info-item mb-3'>
                     <label className='form-label text-muted'>Fecha de Creación</label>
-                    <div>{formatDate(ticket.createdAt)}</div>
+                    <div>{new Date(ticket.fecha_creacion).toLocaleDateString('es-ES')}</div>
                   </div>
 
                   <div className='info-item mb-3'>
                     <label className='form-label text-muted'>Última Actualización</label>
-                    <div>{formatDate(ticket.updatedAt)}</div>
+                    <div>{new Date(ticket.fecha_actualizacion).toLocaleDateString('es-ES')}</div>
                   </div>
 
-                  {ticket.dueDate && (
+                  {ticket.fecha_vencimiento && (
                     <div className='info-item mb-3'>
                       <label className='form-label text-muted'>Fecha Límite</label>
-                      <div className='text-warning fw-semibold'>{formatDate(ticket.dueDate)}</div>
+                      <div className='text-warning fw-semibold'>{new Date(ticket.fecha_vencimiento).toLocaleDateString('es-ES')}</div>
                     </div>
                   )}
 
                   <div className='info-item mb-3'>
                     <label className='form-label text-muted'>Etiquetas</label>
                     <div className='d-flex flex-wrap gap-1'>
-                      {ticket.tags.map((tag, index) => (
+                      {ticket.tags.map((tag: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined, index: Key | null | undefined) => (
                         <span key={index} className='badge bg-light text-dark'>
                           {tag}
                         </span>
@@ -645,46 +484,48 @@ export default function TicketDetalle() {
               </div>
 
               {/* Requester */}
-              <div className='card mb-4'>
-                <div className='card-header'>
-                  <h5 className='card-title mb-0'>
-                    <i className='material-icons me-2'>person</i>
-                    Solicitante
-                  </h5>
-                </div>
-                <div className='card-body'>
-                  <div className='d-flex align-items-center mb-3'>
-                    <div
-                      className='user-avatar me-3'
-                      style={{
-                        width: '50px',
-                        height: '50px',
-                        borderRadius: '50%',
-                        backgroundColor: '#6c757d',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.25rem',
-                        fontWeight: '600'
-                      }}
-                    >
-                      {ticket.requester.avatar}
-                    </div>
-                    <div>
-                      <h6 className='mb-1'>{ticket.requester.name}</h6>
-                      <p className='text-muted mb-0'>{ticket.requester.email}</p>
-                    </div>
+              {ticket.requester && (
+                <div className='card mb-4'>
+                  <div className='card-header'>
+                    <h5 className='card-title mb-0'>
+                      <i className='material-icons me-2'>person</i>
+                      Solicitante
+                    </h5>
                   </div>
-                  
-                  {ticket.requester.unit && (
-                    <div className='info-item'>
-                      <label className='form-label text-muted'>Unidad</label>
-                      <div>{ticket.requester.unit}</div>
+                  <div className='card-body'>
+                    <div className='d-flex align-items-center mb-3'>
+                      <div
+                        className='user-avatar me-3'
+                        style={{
+                          width: '50px',
+                          height: '50px',
+                          borderRadius: '50%',
+                          backgroundColor: '#6c757d',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.25rem',
+                          fontWeight: '600'
+                        }}
+                      >
+                        {ticket.requester.avatar}
+                      </div>
+                      <div>
+                        <h6 className='mb-1'>{ticket.requester.name}</h6>
+                        <p className='text-muted mb-0'>{ticket.requester.email}</p>
+                      </div>
                     </div>
-                  )}
+                    
+                    {ticket.requester.unit && (
+                      <div className='info-item'>
+                        <label className='form-label text-muted'>Unidad</label>
+                        <div>{ticket.requester.unit}</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Assignee */}
               {ticket.assignee && (
@@ -736,7 +577,7 @@ export default function TicketDetalle() {
                     <p className='text-muted mb-0'>No hay archivos adjuntos</p>
                   ) : (
                     <div className='attachments-list'>
-                      {ticket.attachments.map((attachment) => (
+                      {ticket.attachments.map((attachment: { id: Key | null | undefined; type: string; name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; size: number; uploadedBy: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }) => (
                         <div key={attachment.id} className='attachment-item d-flex align-items-center p-2 border rounded mb-2'>
                           <div className='attachment-icon me-3'>
                             <i className='material-icons text-primary'>

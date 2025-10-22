@@ -1,137 +1,116 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
-interface TicketData {
-  id: string;
-  number: string;
-  subject: string;
-  description: string;
-  status: 'open' | 'in-progress' | 'resolved' | 'closed' | 'escalated';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  category: string;
-  requester: {
-    name: string;
-    email: string;
-    type: 'resident' | 'admin';
-    unit?: string;
-  };
-  assignee?: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-  dueDate?: string;
-  tags: string[];
-}
+import Layout from '@/components/layout/Layout';
+import { ticketsApi } from '@/lib/api/tickets';
+import { ProtectedRoute } from '@/lib/useAuth';
+import type { Ticket } from '@/types/tickets';
+
 
 const statusConfig = {
-  open: { label: 'Abierto', class: 'open', color: '#1565C0', bg: '#E3F2FD', border: '#2196F3' },
-  'in-progress': { label: 'En Progreso', class: 'in-progress', color: '#F57F17', bg: '#FFF8E1', border: '#FFEB3B' },
-  resolved: { label: 'Resuelto', class: 'resolved', color: '#2E7D32', bg: '#E8F5E9', border: '#4CAF50' },
-  closed: { label: 'Cerrado', class: 'closed', color: '#757575', bg: '#F5F5F5', border: '#9E9E9E' },
-  escalated: { label: 'Escalado', class: 'escalated', color: '#C62828', bg: '#FFEBEE', border: '#F44336' }
+  open: {
+    label: 'Abierto',
+    class: 'open',
+    color: '#1565C0',
+    bg: '#E3F2FD',
+    border: '#2196F3',
+  },
+  'in-progress': {
+    label: 'En Progreso',
+    class: 'in-progress',
+    color: '#F57F17',
+    bg: '#FFF8E1',
+    border: '#FFEB3B',
+  },
+  resolved: {
+    label: 'Resuelto',
+    class: 'resolved',
+    color: '#2E7D32',
+    bg: '#E8F5E9',
+    border: '#4CAF50',
+  },
+  closed: {
+    label: 'Cerrado',
+    class: 'closed',
+    color: '#757575',
+    bg: '#F5F5F5',
+    border: '#9E9E9E',
+  },
+  escalated: {
+    label: 'Escalado',
+    class: 'escalated',
+    color: '#C62828',
+    bg: '#FFEBEE',
+    border: '#F44336',
+  },
 };
 
 const priorityConfig = {
   low: { label: 'Baja', class: 'low', color: '#2E7D32', bg: '#E8F5E9' },
   medium: { label: 'Media', class: 'medium', color: '#F57F17', bg: '#FFF8E1' },
   high: { label: 'Alta', class: 'high', color: '#C62828', bg: '#FFEBEE' },
-  urgent: { label: 'Urgente', class: 'urgent', color: '#FFFFFF', bg: '#7B1FA2' }
+  urgent: { label: 'Urgente', class: 'urgent', color: '#FFFFFF', bg: '#7B1FA2' },
+};
+
+// Helper functions for mapping backend values to frontend config
+const mapEstadoToFrontend = (estado: string): keyof typeof statusConfig => {
+  switch (estado) {
+    case 'abierto': return 'open';
+    case 'en_progreso': return 'in-progress';
+    case 'resuelto': return 'resolved';
+    case 'cerrado': return 'closed';
+    default: return 'open';
+  }
+};
+
+const mapPrioridadToFrontend = (prioridad: string): keyof typeof priorityConfig => {
+  switch (prioridad) {
+    case 'baja': return 'low';
+    case 'media': return 'medium';
+    case 'alta': return 'high';
+    default: return 'medium';
+  }
 };
 
 export default function TicketsListado() {
-  const [tickets, setTickets] = useState<TicketData[]>([]);
-  const [filteredTickets, setFilteredTickets] = useState<TicketData[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
+  const [, setError] = useState<string | null>(null);
+  const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     status: '',
     priority: '',
     category: '',
-    assignee: ''
+    assignee: '',
   });
 
   useEffect(() => {
-    // Mock data - reemplazar con API call
-    setTimeout(() => {
-      const mockTickets: TicketData[] = [
-        {
-          id: '1',
-          number: 'T-2024-089',
-          subject: 'Problema con ascensor principal',
-          description: 'El ascensor principal no funciona desde esta mañana',
-          status: 'open',
-          priority: 'high',
-          category: 'Mantenimiento',
-          requester: {
-            name: 'María González',
-            email: 'maria.gonzalez@email.com',
-            type: 'resident',
-            unit: 'Edificio A - Depto 301'
-          },
-          assignee: {
-            name: 'Carlos Técnico',
-            email: 'carlos@mantenimiento.com',
-            avatar: 'CT'
-          },
-          createdAt: '2024-01-15T10:30:00Z',
-          updatedAt: '2024-01-15T14:20:00Z',
-          dueDate: '2024-01-16T18:00:00Z',
-          tags: ['urgente', 'ascensor']
-        },
-        {
-          id: '2',
-          number: 'T-2024-088',
-          subject: 'Solicitud de cambio de cerradura',
-          description: 'Necesito cambiar la cerradura de mi departamento',
-          status: 'resolved',
-          priority: 'medium',
-          category: 'Seguridad',
-          requester: {
-            name: 'Juan Pérez',
-            email: 'juan.perez@email.com',
-            type: 'resident',
-            unit: 'Edificio B - Depto 205'
-          },
-          createdAt: '2024-01-14T09:15:00Z',
-          updatedAt: '2024-01-15T11:30:00Z',
-          tags: ['cerradura', 'seguridad']
-        },
-        {
-          id: '3',
-          number: 'T-2024-087',
-          subject: 'Ruido excesivo en las noches',
-          description: 'Los vecinos del departamento de arriba hacen mucho ruido por las noches',
-          status: 'in-progress',
-          priority: 'low',
-          category: 'Convivencia',
-          requester: {
-            name: 'Ana Rodríguez',
-            email: 'ana.rodriguez@email.com',
-            type: 'resident',
-            unit: 'Edificio A - Depto 102'
-          },
-          assignee: {
-            name: 'Patricia Contreras',
-            email: 'patricia@admin.com',
-            avatar: 'PC'
-          },
-          createdAt: '2024-01-13T20:45:00Z',
-          updatedAt: '2024-01-15T08:10:00Z',
-          tags: ['ruido', 'convivencia']
-        }
-      ];
-      setTickets(mockTickets);
-      setFilteredTickets(mockTickets);
-      setLoading(false);
-    }, 1000);
+    const loadTickets = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // TODO: Obtener la comunidad del usuario autenticado
+        // Por ahora usamos una comunidad por defecto
+        const comunidadId = 1; // Esto debería venir del contexto de autenticación
+        const ticketsData = await ticketsApi.getByComunidad(comunidadId);
+        setTickets(ticketsData);
+        setFilteredTickets(ticketsData);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (err) {
+        
+        setError('Error al cargar los tickets');
+        setTickets([]);
+        setFilteredTickets([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTickets();
   }, []);
 
   useEffect(() => {
@@ -139,43 +118,68 @@ export default function TicketsListado() {
 
     if (searchTerm) {
       filtered = filtered.filter(ticket =>
-        ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ticket.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ticket.requester.name.toLowerCase().includes(searchTerm.toLowerCase())
+        ticket.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.numero.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.solicitante.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
     if (filters.status) {
-      filtered = filtered.filter(ticket => ticket.status === filters.status);
+      const statusMap: Record<string, string> = {
+        'open': 'abierto',
+        'in-progress': 'en_progreso',
+        'resolved': 'resuelto',
+        'closed': 'cerrado',
+      };
+      const backendStatus = statusMap[filters.status] || filters.status;
+      filtered = filtered.filter(ticket => ticket.estado === backendStatus);
     }
 
     if (filters.priority) {
-      filtered = filtered.filter(ticket => ticket.priority === filters.priority);
+      const priorityMap: Record<string, string> = {
+        'low': 'baja',
+        'medium': 'media',
+        'high': 'alta',
+        'urgent': 'alta', // Map urgent to alta as well
+      };
+      const backendPriority = priorityMap[filters.priority] || filters.priority;
+      filtered = filtered.filter(ticket => ticket.prioridad === backendPriority);
     }
 
     if (filters.category) {
-      filtered = filtered.filter(ticket => ticket.category === filters.category);
+      filtered = filtered.filter(ticket => ticket.categoria === filters.category);
     }
 
     setFilteredTickets(filtered);
   }, [tickets, searchTerm, filters]);
 
   const getStats = () => {
-    const open = tickets.filter(t => t.status === 'open').length;
-    const inProgress = tickets.filter(t => t.status === 'in-progress').length;
-    const resolved = tickets.filter(t => t.status === 'resolved').length;
-    const escalated = tickets.filter(t => t.status === 'escalated').length;
-    
-    return { open, inProgress, resolved, escalated };
-  };
+    const open = tickets.filter(t => t.estado === 'abierto').length;
+    const inProgress = tickets.filter(t => t.estado === 'en_progreso').length;
+    const resolved = tickets.filter(t => t.estado === 'resuelto').length;
+    const escalated = tickets.filter(t =>
+      t.nivel_urgencia === 'critico' || t.nivel_urgencia === 'urgente',
+    ).length;
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-CL', {
+    return { open, inProgress, resolved, escalated };
+  };  const formatDate = (date?: string | number | Date | null) : string => {
+    if (!date) {return '';}
+    let d: Date;
+    if (date instanceof Date) {
+      d = date;
+    } else if (typeof date === 'number') {
+      d = new Date(date);
+    } else {
+      // coerce other types (including unexpected values) to string to avoid TS errors
+      d = new Date(String(date));
+    }
+    if (isNaN(d.getTime())) {return '';}
+    return d.toLocaleDateString('es-CL', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -187,11 +191,11 @@ export default function TicketsListado() {
     }
   };
 
-  const handleTicketSelect = (ticketId: string) => {
+  const handleTicketSelect = (ticketId: number) => {
     setSelectedTickets(prev =>
       prev.includes(ticketId)
         ? prev.filter(id => id !== ticketId)
-        : [...prev, ticketId]
+        : [...prev, ticketId],
     );
   };
 
@@ -242,7 +246,7 @@ export default function TicketsListado() {
                 padding: '1.5rem',
                 boxShadow: 'var(--shadow-sm)',
                 borderLeft: '4px solid #dc3545',
-                height: '100%'
+                height: '100%',
               }}>
                 <div className='d-flex align-items-center'>
                   <div className='stats-icon danger me-3' style={{
@@ -254,7 +258,7 @@ export default function TicketsListado() {
                     justifyContent: 'center',
                     fontSize: '1.5rem',
                     color: 'white',
-                    backgroundColor: '#dc3545'
+                    backgroundColor: '#dc3545',
                   }}>
                     <i className='material-icons'>report_problem</i>
                   </div>
@@ -277,7 +281,7 @@ export default function TicketsListado() {
                 padding: '1.5rem',
                 boxShadow: 'var(--shadow-sm)',
                 borderLeft: '4px solid #ffc107',
-                height: '100%'
+                height: '100%',
               }}>
                 <div className='d-flex align-items-center'>
                   <div className='stats-icon warning me-3' style={{
@@ -289,7 +293,7 @@ export default function TicketsListado() {
                     justifyContent: 'center',
                     fontSize: '1.5rem',
                     color: 'white',
-                    backgroundColor: '#ffc107'
+                    backgroundColor: '#ffc107',
                   }}>
                     <i className='material-icons'>schedule</i>
                   </div>
@@ -312,7 +316,7 @@ export default function TicketsListado() {
                 padding: '1.5rem',
                 boxShadow: 'var(--shadow-sm)',
                 borderLeft: '4px solid #28a745',
-                height: '100%'
+                height: '100%',
               }}>
                 <div className='d-flex align-items-center'>
                   <div className='stats-icon success me-3' style={{
@@ -324,7 +328,7 @@ export default function TicketsListado() {
                     justifyContent: 'center',
                     fontSize: '1.5rem',
                     color: 'white',
-                    backgroundColor: '#28a745'
+                    backgroundColor: '#28a745',
                   }}>
                     <i className='material-icons'>check_circle</i>
                   </div>
@@ -347,7 +351,7 @@ export default function TicketsListado() {
                 padding: '1.5rem',
                 boxShadow: 'var(--shadow-sm)',
                 borderLeft: '4px solid #17a2b8',
-                height: '100%'
+                height: '100%',
               }}>
                 <div className='d-flex align-items-center'>
                   <div className='stats-icon info me-3' style={{
@@ -359,7 +363,7 @@ export default function TicketsListado() {
                     justifyContent: 'center',
                     fontSize: '1.5rem',
                     color: 'white',
-                    backgroundColor: '#17a2b8'
+                    backgroundColor: '#17a2b8',
                   }}>
                     <i className='material-icons'>priority_high</i>
                   </div>
@@ -382,7 +386,7 @@ export default function TicketsListado() {
             borderRadius: 'var(--radius)',
             padding: '1.5rem',
             boxShadow: 'var(--shadow-sm)',
-            border: '1px solid #e9ecef'
+            border: '1px solid #e9ecef',
           }}>
             <div className='row g-3'>
               <div className='col-md-3'>
@@ -393,7 +397,7 @@ export default function TicketsListado() {
                     top: '50%',
                     transform: 'translateY(-50%)',
                     color: '#6c757d',
-                    fontSize: '20px'
+                    fontSize: '20px',
                   }}>search</i>
                   <input
                     type='text'
@@ -489,7 +493,7 @@ export default function TicketsListado() {
               borderRadius: 'var(--radius)',
               padding: '1rem',
               boxShadow: 'var(--shadow-sm)',
-              border: '1px solid #e9ecef'
+              border: '1px solid #e9ecef',
             }}>
               <div className='d-flex justify-content-between align-items-center'>
                 <span>{selectedTickets.length} ticket(s) seleccionado(s)</span>
@@ -509,12 +513,12 @@ export default function TicketsListado() {
             borderRadius: 'var(--radius)',
             overflow: 'hidden',
             boxShadow: 'var(--shadow-sm)',
-            border: '1px solid #e9ecef'
+            border: '1px solid #e9ecef',
           }}>
             <div className='ticket-header' style={{
               backgroundColor: '#f8f9fa',
               padding: '1rem 1.5rem',
-              borderBottom: '1px solid #e9ecef'
+              borderBottom: '1px solid #e9ecef',
             }}>
               <div className='d-flex justify-content-between align-items-center'>
                 <h6 className='mb-0'>Tickets ({filteredTickets.length})</h6>
@@ -557,137 +561,150 @@ export default function TicketsListado() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTickets.map((ticket) => (
-                      <tr key={ticket.id}>
-                        <td>
-                          <div className='form-check'>
-                            <input
-                              className='form-check-input'
-                              type='checkbox'
-                              checked={selectedTickets.includes(ticket.id)}
-                              onChange={() => handleTicketSelect(ticket.id)}
-                            />
-                          </div>
-                        </td>
-                        <td>
-                          <Link href={`/tickets/${ticket.id}`} className='ticket-number fw-bold text-primary text-decoration-none'>
-                            {ticket.number}
-                          </Link>
-                        </td>
-                        <td>
-                          <div className='ticket-subject fw-semibold'>{ticket.subject}</div>
-                          <div className='small text-muted'>{ticket.category}</div>
-                        </td>
-                        <td>
-                          <div>{ticket.requester.name}</div>
-                          <div className='small text-muted'>{ticket.requester.unit}</div>
-                        </td>
-                        <td>
-                          <span
-                            className={`ticket-status ${statusConfig[ticket.status].class}`}
-                            style={{
-                              backgroundColor: statusConfig[ticket.status].bg,
-                              color: statusConfig[ticket.status].color,
-                              border: `1px solid ${statusConfig[ticket.status].border}`,
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '1rem',
-                              fontSize: '0.75rem',
-                              fontWeight: '500'
-                            }}
-                          >
-                            {statusConfig[ticket.status].label}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className={`priority-badge ${priorityConfig[ticket.priority].class}`}
-                            style={{
-                              backgroundColor: priorityConfig[ticket.priority].bg,
-                              color: priorityConfig[ticket.priority].color,
-                              padding: '0.25rem 0.5rem',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.75rem',
-                              fontWeight: '500'
-                            }}
-                          >
-                            {priorityConfig[ticket.priority].label}
-                          </span>
-                        </td>
-                        <td>
-                          {ticket.assignee ? (
-                            <div className='d-flex align-items-center'>
-                              <div
-                                className='assignee-avatar me-2'
-                                style={{
-                                  width: '28px',
-                                  height: '28px',
-                                  borderRadius: '50%',
-                                  backgroundColor: 'var(--color-primary)',
-                                  color: 'white',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontSize: '0.75rem',
-                                  fontWeight: '600'
-                                }}
-                              >
-                                {ticket.assignee.avatar}
-                              </div>
-                              <span className='small'>{ticket.assignee.name}</span>
+                    {filteredTickets.map((ticket) => {
+                      return (
+                        <tr key={ticket.id}>
+                          <td>
+                            <div className='form-check'>
+                              <input
+                                className='form-check-input'
+                                type='checkbox'
+                                checked={selectedTickets.includes(ticket.id)}
+                                onChange={() => handleTicketSelect(ticket.id)} />
                             </div>
-                          ) : (
-                            <span className='text-muted small'>Sin asignar</span>
-                          )}
-                        </td>
-                        <td>
-                          <div className='small'>{formatDate(ticket.createdAt)}</div>
-                        </td>
-                        <td>
-                          <div className='dropdown'>
-                            <button
-                              className='btn btn-sm btn-outline-secondary dropdown-toggle'
-                              type='button'
-                              data-bs-toggle='dropdown'
-                            >
-                              <i className='material-icons'>more_vert</i>
-                            </button>
-                            <ul className='dropdown-menu'>
-                              <li>
-                                <Link className='dropdown-item' href={`/tickets/${ticket.id}`}>
-                                  <i className='material-icons me-2'>visibility</i>
-                                  Ver detalle
-                                </Link>
-                              </li>
-                              <li>
-                                <a className='dropdown-item' href='#'>
-                                  <i className='material-icons me-2'>edit</i>
-                                  Editar
-                                </a>
-                              </li>
-                              <li>
-                                <a className='dropdown-item' href='#'>
-                                  <i className='material-icons me-2'>assignment_ind</i>
-                                  Asignar
-                                </a>
-                              </li>
-                              <li><hr className='dropdown-divider' /></li>
-                              <li>
-                                <a className='dropdown-item text-success' href='#'>
-                                  <i className='material-icons me-2'>check_circle</i>
-                                  Resolver
-                                </a>
-                              </li>
-                              <li>
-                                <a className='dropdown-item text-secondary' href='#'>
-                                  <i className='material-icons me-2'>close</i>
-                                  Cerrar
-                                </a>
-                              </li>
-                            </ul>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td>
+                            <Link href={`/tickets/${ticket.id}`} className='ticket-number fw-bold text-primary text-decoration-none'>
+                              T-{ticket.numero}
+                            </Link>
+                          </td>
+                          <td>
+                            <div className='ticket-subject fw-semibold'>{ticket.titulo}</div>
+                            <div className='small text-muted'>{ticket.categoria}</div>
+                          </td>
+                          <td>
+                            <div>{ticket.solicitante}</div>
+                            <div className='small text-muted'>{ticket.unidad}</div>
+                          </td>
+                          <td>
+                            {(() => {
+                              const statusKey = mapEstadoToFrontend(ticket.estado);
+                              const status = statusConfig[statusKey];
+                              return (
+                                <span
+                                  className={`ticket-status ${status.class}`}
+                                  style={{
+                                    backgroundColor: status.bg,
+                                    color: status.color,
+                                    border: `1px solid ${status.border}`,
+                                    padding: '0.25rem 0.75rem',
+                                    borderRadius: '1rem',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '500',
+                                  }}
+                                >
+                                  {status.label}
+                                </span>
+                              );
+                            })()}
+                          </td>
+                          <td>
+                            {(() => {
+                              const priorityKey = mapPrioridadToFrontend(ticket.prioridad);
+                              const priority = priorityConfig[priorityKey];
+                              return (
+                                <span
+                                  className={`priority-badge ${priority.class}`}
+                                  style={{
+                                    backgroundColor: priority.bg,
+                                    color: priority.color,
+                                    padding: '0.25rem 0.5rem',
+                                    borderRadius: '0.375rem',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '500',
+                                  }}
+                                >
+                                  {priority.label}
+                                </span>
+                              );
+                            })()}
+                          </td>
+                          <td>
+                            {ticket.asignado_a ? (
+                              <div className='d-flex align-items-center'>
+                                <div
+                                  className='assignee-avatar me-2'
+                                  style={{
+                                    width: '28px',
+                                    height: '28px',
+                                    borderRadius: '50%',
+                                    backgroundColor: 'var(--color-primary)',
+                                    color: 'white',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '600',
+                                  }}
+                                >
+                                  {ticket.asignado_a.charAt(0).toUpperCase()}
+                                </div>
+                                <span className='small'>{ticket.asignado_a}</span>
+                              </div>
+                            ) : (
+                              <span className='text-muted small'>Sin asignar</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className='small'>{formatDate(ticket.fecha_creacion)}</div>
+                          </td>
+                          <td>
+                            <div className='dropdown'>
+                              <button
+                                className='btn btn-sm btn-outline-secondary dropdown-toggle'
+                                type='button'
+                                data-bs-toggle='dropdown'
+                              >
+                                <i className='material-icons'>more_vert</i>
+                              </button>
+                              <ul className='dropdown-menu'>
+                                <li>
+                                  <Link className='dropdown-item' href={`/tickets/${ticket.id}`}>
+                                    <i className='material-icons me-2'>visibility</i>
+                                    Ver detalle
+                                  </Link>
+                                </li>
+                                <li>
+                                  <button className='dropdown-item' type='button'>
+                                    <i className='material-icons me-2'>edit</i>
+                                    Editar
+                                  </button>
+                                </li>
+                                <li>
+                                  <button className='dropdown-item' type='button'>
+                                    <i className='material-icons me-2'>assignment_ind</i>
+                                    Asignar
+                                  </button>
+                                </li>
+                                <li><hr className='dropdown-divider' /></li>
+                                <li>
+                                  <button className='dropdown-item text-success' type='button'>
+                                    <i className='material-icons me-2'>check_circle</i>
+                                    Resolver
+                                  </button>
+                                </li>
+                                <li>
+                                  <button className='dropdown-item text-secondary' type='button'>
+                                    <i className='material-icons me-2'>close</i>
+                                    Cerrar
+                                  </button>
+                                </li>
+                              </ul>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -702,11 +719,11 @@ export default function TicketsListado() {
                         padding: '1rem',
                         boxShadow: 'var(--shadow-sm)',
                         border: '1px solid #e9ecef',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
                       }}>
                         <div className='ticket-card-header d-flex justify-content-between align-items-start mb-3'>
                           <Link href={`/tickets/${ticket.id}`} className='ticket-number fw-bold text-primary text-decoration-none'>
-                            {ticket.number}
+                            {ticket.numero}
                           </Link>
                           <div className='form-check'>
                             <input
@@ -718,56 +735,68 @@ export default function TicketsListado() {
                           </div>
                         </div>
 
-                        <h6 className='ticket-subject mb-2'>{ticket.subject}</h6>
+                        <h6 className='ticket-subject mb-2'>{ticket.titulo}</h6>
 
                         <div className='ticket-meta mb-3'>
                           <div className='ticket-meta-item d-flex align-items-center mb-1'>
                             <i className='material-icons me-1' style={{ fontSize: '16px', color: '#6c757d' }}>person</i>
-                            <span className='small text-muted'>{ticket.requester.name}</span>
+                            <span className='small text-muted'>{ticket.solicitante}</span>
                           </div>
-                          {ticket.requester.unit && (
+                          {ticket.unidad && (
                             <div className='ticket-meta-item d-flex align-items-center mb-1'>
                               <i className='material-icons me-1' style={{ fontSize: '16px', color: '#6c757d' }}>home</i>
-                              <span className='small text-muted'>{ticket.requester.unit}</span>
+                              <span className='small text-muted'>{ticket.unidad}</span>
                             </div>
                           )}
                           <div className='ticket-meta-item d-flex align-items-center'>
                             <i className='material-icons me-1' style={{ fontSize: '16px', color: '#6c757d' }}>schedule</i>
-                            <span className='small text-muted'>{formatDate(ticket.createdAt)}</span>
+                            <span className='small text-muted'>{formatDate(ticket.fecha_creacion)}</span>
                           </div>
                         </div>
 
                         <div className='ticket-badges d-flex flex-wrap gap-2 mb-3'>
-                          <span
-                            className={`ticket-status ${statusConfig[ticket.status].class}`}
-                            style={{
-                              backgroundColor: statusConfig[ticket.status].bg,
-                              color: statusConfig[ticket.status].color,
-                              border: `1px solid ${statusConfig[ticket.status].border}`,
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '1rem',
-                              fontSize: '0.75rem',
-                              fontWeight: '500'
-                            }}
-                          >
-                            {statusConfig[ticket.status].label}
-                          </span>
-                          <span
-                            className={`priority-badge ${priorityConfig[ticket.priority].class}`}
-                            style={{
-                              backgroundColor: priorityConfig[ticket.priority].bg,
-                              color: priorityConfig[ticket.priority].color,
-                              padding: '0.25rem 0.5rem',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.75rem',
-                              fontWeight: '500'
-                            }}
-                          >
-                            {priorityConfig[ticket.priority].label}
-                          </span>
+                          {(() => {
+                            const statusKey = mapEstadoToFrontend(ticket.estado);
+                            const status = statusConfig[statusKey];
+                            return (
+                              <span
+                                className={`ticket-status ${status.class}`}
+                                style={{
+                                  backgroundColor: status.bg,
+                                  color: status.color,
+                                  border: `1px solid ${status.border}`,
+                                  padding: '0.25rem 0.75rem',
+                                  borderRadius: '1rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '500',
+                                }}
+                              >
+                                {status.label}
+                              </span>
+                            );
+                          })()}
+                          {(() => {
+                            const priorityKey = mapPrioridadToFrontend(ticket.prioridad);
+                            const priority = priorityConfig[priorityKey];
+                            return (
+                              <span
+                                className={`priority-badge ${priority.class}`}
+                                style={{
+                                  backgroundColor: priority.bg,
+                                  color: priority.color,
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '0.375rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '500',
+                                }}
+                              >
+                                {priority.label}
+                              </span>
+                            );
+                          })()}
                         </div>
 
-                        {ticket.assignee && (
+                        {ticket.asignado_a && (
                           <div className='ticket-assignee d-flex align-items-center mb-3'>
                             <div
                               className='assignee-avatar me-2'
@@ -781,13 +810,13 @@ export default function TicketsListado() {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 fontSize: '0.875rem',
-                                fontWeight: '600'
+                                fontWeight: '600',
                               }}
                             >
-                              {ticket.assignee.avatar}
+                              {ticket.asignado_a.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <div className='small fw-semibold'>{ticket.assignee.name}</div>
+                              <div className='small fw-semibold'>{ticket.asignado_a}</div>
                               <div className='small text-muted'>Asignado</div>
                             </div>
                           </div>
@@ -817,19 +846,19 @@ export default function TicketsListado() {
             <nav>
               <ul className='pagination mb-0'>
                 <li className='page-item disabled'>
-                  <a className='page-link' href='#'>Anterior</a>
+                  <button className='page-link' type='button'>Anterior</button>
                 </li>
                 <li className='page-item active'>
-                  <a className='page-link' href='#'>1</a>
+                  <button className='page-link' type='button'>1</button>
                 </li>
                 <li className='page-item'>
-                  <a className='page-link' href='#'>2</a>
+                  <button className='page-link' type='button'>2</button>
                 </li>
                 <li className='page-item'>
-                  <a className='page-link' href='#'>3</a>
+                  <button className='page-link' type='button'>3</button>
                 </li>
                 <li className='page-item'>
-                  <a className='page-link' href='#'>Siguiente</a>
+                  <button className='page-link' type='button'>Siguiente</button>
                 </li>
               </ul>
             </nav>
