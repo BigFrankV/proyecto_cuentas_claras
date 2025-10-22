@@ -1,29 +1,57 @@
 import React, { useState } from 'react';
+
 import Layout from '@/components/layout/Layout';
 
 const MultaNuevaPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedViolationType, setSelectedViolationType] = useState<string | null>(null);
+  const [selectedViolationType, setSelectedViolationType] = useState<
+    string | null
+  >(null);
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const [unitSearch, setUnitSearch] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   const violationTypes = [
-    { id: 'noise', title: 'Ruido excesivo', description: 'Violación de normas de ruido', amount: 50000, icon: 'volume_up' },
-    { id: 'parking', title: 'Estacionamiento indebido', description: 'Vehículo mal estacionado', amount: 30000, icon: 'local_parking' },
-    { id: 'pets', title: 'Mascotas sin control', description: 'Mascotas sin correa o supervisión', amount: 25000, icon: 'pets' },
-    { id: 'cleanliness', title: 'Falta de limpieza', description: 'Áreas comunes sucias', amount: 20000, icon: 'cleaning_services' }
+    {
+      id: 'noise',
+      title: 'Ruido excesivo',
+      description: 'Violación de normas de ruido',
+      amount: 50000,
+      icon: 'volume_up',
+    },
+    {
+      id: 'parking',
+      title: 'Estacionamiento indebido',
+      description: 'Vehículo mal estacionado',
+      amount: 30000,
+      icon: 'local_parking',
+    },
+    {
+      id: 'pets',
+      title: 'Mascotas sin control',
+      description: 'Mascotas sin correa o supervisión',
+      amount: 25000,
+      icon: 'pets',
+    },
+    {
+      id: 'cleanliness',
+      title: 'Falta de limpieza',
+      description: 'Áreas comunes sucias',
+      amount: 20000,
+      icon: 'cleaning_services',
+    },
   ];
 
   const units = [
     { id: 'A-101', owner: 'Juan Pérez', details: 'Piso 1, Torre A' },
     { id: 'B-205', owner: 'María González', details: 'Piso 2, Torre B' },
-    { id: 'C-303', owner: 'Carlos Rodríguez', details: 'Piso 3, Torre C' }
+    { id: 'C-303', owner: 'Carlos Rodríguez', details: 'Piso 3, Torre C' },
   ];
 
-  const filteredUnits = units.filter(unit =>
-    unit.id.toLowerCase().includes(unitSearch.toLowerCase()) ||
-    unit.owner.toLowerCase().includes(unitSearch.toLowerCase())
+  const filteredUnits = units.filter(
+    unit =>
+      unit.id.toLowerCase().includes(unitSearch.toLowerCase()) ||
+      unit.owner.toLowerCase().includes(unitSearch.toLowerCase()),
   );
 
   const handleFileUpload = (files: FileList) => {
@@ -57,7 +85,9 @@ const MultaNuevaPage: React.FC = () => {
     }
   };
 
-  const selectedViolation = violationTypes.find(v => v.id === selectedViolationType);
+  const selectedViolation = violationTypes.find(
+    v => v.id === selectedViolationType,
+  );
 
   return (
     <Layout title='Nueva Multa'>
@@ -65,7 +95,10 @@ const MultaNuevaPage: React.FC = () => {
         {/* Header */}
         <div className='d-flex justify-content-between align-items-center mb-4'>
           <h1 className='h3'>Nueva Multa</h1>
-          <button className='btn btn-secondary' onClick={() => window.history.back()}>
+          <button
+            className='btn btn-secondary'
+            onClick={() => window.history.back()}
+          >
             <i className='material-icons me-2'>arrow_back</i>
             Cancelar
           </button>
@@ -73,15 +106,21 @@ const MultaNuevaPage: React.FC = () => {
 
         {/* Wizard steps */}
         <div className='wizard-steps'>
-          <div className={`wizard-step ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
+          <div
+            className={`wizard-step ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}
+          >
             <div className='wizard-step-number'>1</div>
             <div className='wizard-step-title'>Tipo de infracción</div>
           </div>
-          <div className={`wizard-step ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
+          <div
+            className={`wizard-step ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}
+          >
             <div className='wizard-step-number'>2</div>
             <div className='wizard-step-title'>Buscar unidad</div>
           </div>
-          <div className={`wizard-step ${currentStep >= 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
+          <div
+            className={`wizard-step ${currentStep >= 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}
+          >
             <div className='wizard-step-number'>3</div>
             <div className='wizard-step-title'>Detalles</div>
           </div>
@@ -95,7 +134,7 @@ const MultaNuevaPage: React.FC = () => {
         <div className={`wizard-section ${currentStep === 1 ? 'active' : ''}`}>
           <h4 className='mb-4'>Seleccione el tipo de infracción</h4>
           <div className='row'>
-            {violationTypes.map((type) => (
+            {violationTypes.map(type => (
               <div key={type.id} className='col-md-6 col-lg-3 mb-4'>
                 <div
                   className={`violation-type-card ${selectedViolationType === type.id ? 'selected' : ''}`}
@@ -105,8 +144,12 @@ const MultaNuevaPage: React.FC = () => {
                     <i className='material-icons'>{type.icon}</i>
                   </div>
                   <div className='violation-title'>{type.title}</div>
-                  <div className='violation-description'>{type.description}</div>
-                  <div className='violation-amount'>${type.amount.toLocaleString()}</div>
+                  <div className='violation-description'>
+                    {type.description}
+                  </div>
+                  <div className='violation-amount'>
+                    ${type.amount.toLocaleString()}
+                  </div>
                 </div>
               </div>
             ))}
@@ -122,11 +165,11 @@ const MultaNuevaPage: React.FC = () => {
               className='form-control'
               placeholder='Buscar por número de unidad o nombre del propietario...'
               value={unitSearch}
-              onChange={(e) => setUnitSearch(e.target.value)}
+              onChange={e => setUnitSearch(e.target.value)}
             />
           </div>
           <div>
-            {filteredUnits.map((unit) => (
+            {filteredUnits.map(unit => (
               <div
                 key={unit.id}
                 className={`unit-search-result ${selectedUnit === unit.id ? 'selected' : ''}`}
@@ -191,7 +234,9 @@ const MultaNuevaPage: React.FC = () => {
                 </h5>
                 <div
                   className='evidence-upload-zone'
-                  onClick={() => document.getElementById('evidenceFiles')?.click()}
+                  onClick={() =>
+                    document.getElementById('evidenceFiles')?.click()
+                  }
                 >
                   <i className='material-icons mb-2'>cloud_upload</i>
                   <div>Haga clic para subir archivos o arrastre y suelte</div>
@@ -202,7 +247,9 @@ const MultaNuevaPage: React.FC = () => {
                   id='evidenceFiles'
                   multiple
                   style={{ display: 'none' }}
-                  onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
+                  onChange={e =>
+                    e.target.files && handleFileUpload(e.target.files)
+                  }
                 />
                 <div id='uploadedFiles' className='mt-3'>
                   {uploadedFiles.map((file, index) => (
@@ -213,7 +260,9 @@ const MultaNuevaPage: React.FC = () => {
                         </div>
                         <div className='file-info'>
                           <div className='file-name'>{file.name}</div>
-                          <div className='file-size'>{(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                          <div className='file-size'>
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </div>
                         </div>
                         <button
                           className='file-remove btn btn-sm btn-outline-danger'
@@ -235,7 +284,9 @@ const MultaNuevaPage: React.FC = () => {
                 </h5>
                 <div className='summary-item'>
                   <div className='summary-label'>Tipo de infracción:</div>
-                  <div className='summary-value'>{selectedViolation?.title}</div>
+                  <div className='summary-value'>
+                    {selectedViolation?.title}
+                  </div>
                 </div>
                 <div className='summary-item'>
                   <div className='summary-label'>Unidad:</div>
@@ -243,7 +294,9 @@ const MultaNuevaPage: React.FC = () => {
                 </div>
                 <div className='summary-item'>
                   <div className='summary-label'>Monto:</div>
-                  <div className='summary-value'>${selectedViolation?.amount.toLocaleString()}</div>
+                  <div className='summary-value'>
+                    ${selectedViolation?.amount.toLocaleString()}
+                  </div>
                 </div>
               </div>
             </div>
@@ -271,7 +324,10 @@ const MultaNuevaPage: React.FC = () => {
                 </h5>
                 <p>¿Está seguro de que desea crear esta multa?</p>
                 <div className='d-grid'>
-                  <button className='btn btn-success' onClick={() => alert('Multa creada exitosamente')}>
+                  <button
+                    className='btn btn-success'
+                    onClick={() => alert('Multa creada exitosamente')}
+                  >
                     <i className='material-icons me-2'>check</i>
                     Crear Multa
                   </button>

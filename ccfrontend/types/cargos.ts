@@ -4,7 +4,15 @@ export interface Cargo {
   id: number;
   concepto: string;
   descripcion?: string;
-  tipo: 'Administración' | 'extraordinaria' | 'multa' | 'interes' | 'Mantenimiento' | 'Servicio' | 'Seguro' | 'Otro';
+  tipo:
+    | 'Administración'
+    | 'extraordinaria'
+    | 'multa'
+    | 'interes'
+    | 'Mantenimiento'
+    | 'Servicio'
+    | 'Seguro'
+    | 'Otro';
   estado: 'pendiente' | 'pagado' | 'vencido' | 'parcial';
   monto: number;
   montoAplicado?: number;

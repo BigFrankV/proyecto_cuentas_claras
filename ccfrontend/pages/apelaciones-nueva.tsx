@@ -1,5 +1,5 @@
-import { ProtectedRoute } from '@/lib/useAuth';
 import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 export default function ApelacionesNueva() {
   return (
@@ -10,7 +10,10 @@ export default function ApelacionesNueva() {
             <div className='col-12'>
               <div className='d-flex justify-content-between align-items-center mb-4'>
                 <h1 className='h3'>Nueva Apelación</h1>
-                <button className='btn btn-secondary' onClick={() => window.history.back()}>
+                <button
+                  className='btn btn-secondary'
+                  onClick={() => window.history.back()}
+                >
                   <i className='material-icons me-2'>arrow_back</i>
                   Cancelar
                 </button>

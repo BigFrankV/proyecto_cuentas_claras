@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
-import { ProtectedRoute } from '@/lib/useAuth';
+
 import MultaDetallePage from '@/components/multas/MultaDetallePage';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 export default function MultaDetalle() {
   const router = useRouter();
