@@ -1,0 +1,160 @@
+// Tipos para módulo Gastos (backend <-> frontend)
+
+export type GastoStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'paid'
+  | 'completed';
+export type GastoPriority = 'low' | 'medium' | 'high';
+
+export interface AttachmentFile {
+  id: number;
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+  uploadedAt: string;
+}
+
+export interface ApprovalRecord {
+  id: number;
+  approver: string;
+  action: 'approved' | 'rejected' | 'requested_changes';
+  date: string;
+  comments?: string;
+}
+
+/** Estructura probable recibida desde el backend */
+export interface GastoBackend {
+  id: number;
+  fecha?: string;
+  monto?: number;
+  glosa?: string;
+  proveedor_nombre?: string;
+  centro_costo?: string;
+  categoria?: string;
+  documento_compra_id?: number | null;
+  documento_tipo?: string | null;
+  documento_numero?: string | null;
+  has_attachments?: boolean;
+  creado_por?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  status?: GastoStatus;
+  due_date?: string | null;
+  tags?: string[] | null;
+  priority?: GastoPriority | null;
+  required_approvals?: number | null;
+  current_approvals?: number | null;
+  observations?: string | null;
+  is_recurring?: boolean | null;
+  recurring_period?: string | null;
+  payment_method?: string | null;
+  approval_history?: ApprovalRecord[] | null;
+  attachments?: AttachmentFile[] | null;
+}
+
+/** Tipo usado por la UI */
+export interface Expense {
+  id: number;
+  description: string;
+  category: string;
+  provider: string;
+  amount: number;
+  date: string;
+  status: GastoStatus;
+  dueDate?: string | null;
+  documentType?: string | null;
+  documentNumber?: string | null;
+  hasAttachments: boolean;
+  createdBy?: string | null;
+  createdAt?: string | null;
+  tags: string[];
+  priority: GastoPriority;
+  requiredApprovals: number;
+  currentApprovals: number;
+  costCenter?: string | null;
+  observations?: string | null;
+  isRecurring: boolean;
+  recurringPeriod?: string | null;
+  paymentMethod?: string | null;
+  approvalHistory: ApprovalRecord[];
+  attachments: AttachmentFile[];
+}
+
+export interface GastosListResponse {
+  data: GastoBackend[] | GastoBackend;
+  pagination?: {
+    total?: number;
+    limit?: number;
+    offset?: number;
+    page?: number;
+    hasMore?: boolean;
+  };
+}
+
+export interface CreateGastoPayload {
+  fecha: string;
+  monto: number;
+  glosa?: string;
+  proveedor_id?: number;
+  centro_costo?: string;
+  categoria?: string;
+  documento_tipo?: string;
+  documento_numero?: string;
+  due_date?: string | null;
+  tags?: string[];
+  priority?: GastoPriority;
+  required_approvals?: number;
+  observations?: string;
+  is_recurring?: boolean;
+  recurring_period?: string | null;
+  payment_method?: string | null;
+  attachments_ids?: number[];
+}
+
+export interface UpdateGastoPayload extends Partial<CreateGastoPayload> {}
+
+export interface GastosFilters {
+  search?: string;
+  category?: string;
+  status?: GastoStatus;
+  provider?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  amountFrom?: number;
+  amountTo?: number;
+  page?: number;
+  limit?: number;
+}
+
+/** Mapea GastoBackend -> Expense (UI) */
+export function mapBackendToExpense(g: GastoBackend): Expense {
+  return {
+    id: g.id,
+    description: g.glosa || g.documento_numero || `Gasto #${g.id}`,
+    category: (g.categoria as string) || 'otros',
+    provider: g.proveedor_nombre || g.creado_por || '',
+    amount: Number(g.monto) || 0,
+    date: g.fecha || g.created_at || '',
+    status: (g.status as GastoStatus) || 'pending',
+    dueDate: (g.due_date as string) || null,
+    documentType: g.documento_tipo || null,
+    documentNumber: g.documento_numero || null,
+    hasAttachments: Boolean(g.has_attachments),
+    createdBy: g.creado_por || null,
+    createdAt: g.created_at || null,
+    tags: g.tags || [],
+    priority: (g.priority as GastoPriority) || 'medium',
+    requiredApprovals: g.required_approvals || 0,
+    currentApprovals: g.current_approvals || 0,
+    costCenter: g.centro_costo || null,
+    observations: g.observations || null,
+    isRecurring: Boolean(g.is_recurring),
+    recurringPeriod: g.recurring_period || null,
+    paymentMethod: g.payment_method || null,
+    approvalHistory: g.approval_history || [],
+    attachments: g.attachments || [],
+  };
+}

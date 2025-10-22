@@ -1,3 +1,5 @@
+const db = require('../db');
+
 /**
  * Permisos para multas — roles según tabla de la base de datos.
  * Roles disponibles: superadmin, admin_comunidad, conserje, contador,
