@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Badge,
   Button,
@@ -12,162 +12,37 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
+import { pagosApi } from '@/lib/api/pagos';
 import { ProtectedRoute } from '@/lib/useAuth';
-
-interface PaymentDetail {
-  id: string;
-  orderId: string;
-  amount: number;
-  gateway: string;
-  status: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-  paymentMethod: string;
-  reference: string;
-  unitNumber: string;
-  unitId: number;
-  resident: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  charges: Array<{
-    id: number;
-    type: string;
-    description: string;
-    amount: number;
-    month: string;
-    year: number;
-  }>;
-  documents: Array<{
-    id: number;
-    name: string;
-    type: string;
-    size: string;
-    url: string;
-  }>;
-  timeline: Array<{
-    id: number;
-    action: string;
-    description: string;
-    date: string;
-    user: string;
-  }>;
-}
+import { PaymentDetail as PaymentDetailType } from '@/types/pagos';
 
 export default function PaymentDetail() {
   const router = useRouter();
   const { id } = router.query;
-  const [payment, setPayment] = useState<PaymentDetail | null>(null);
+  const [payment, setPayment] = useState<PaymentDetailType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReverseModal, setShowReverseModal] = useState(false);
 
+  const loadPaymentDetail = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const paymentData = await pagosApi.getById(Number(id));
+      setPayment(paymentData);
+    } catch {
+      setError('Error al cargar el detalle del pago');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (id) {
       loadPaymentDetail();
     }
-  }, [id]);
-
-  const loadPaymentDetail = async () => {
-    try {
-      setLoading(true);
-      // Simular datos hasta que se implemente la API
-      const mockPayment: PaymentDetail = {
-        id: id as string,
-        orderId: `ORD-${id}-2024-001`,
-        amount: 85500,
-        gateway: 'webpay',
-        status: 'approved',
-        description: 'Pago gastos comunes Febrero 2024',
-        createdAt: '2024-02-15T10:30:00Z',
-        updatedAt: '2024-02-15T10:45:00Z',
-        paymentMethod: 'Tarjeta de Crédito',
-        reference: 'TXN-789456123',
-        unitNumber: 'Dpto. 304 Torre B',
-        unitId: 304,
-        resident: {
-          name: 'María González López',
-          email: 'maria.gonzalez@email.com',
-          phone: '+56 9 8765 4321',
-        },
-        charges: [
-          {
-            id: 1,
-            type: 'Gasto Común',
-            description: 'Gastos comunes Febrero 2024',
-            amount: 65000,
-            month: 'Febrero',
-            year: 2024,
-          },
-          {
-            id: 2,
-            type: 'Fondo de Reserva',
-            description: 'Fondo de reserva 2024',
-            amount: 15000,
-            month: 'Febrero',
-            year: 2024,
-          },
-          {
-            id: 3,
-            type: 'Multa',
-            description: 'Multa por ruidos molestos',
-            amount: 5500,
-            month: 'Enero',
-            year: 2024,
-          },
-        ],
-        documents: [
-          {
-            id: 1,
-            name: 'comprobante-pago.pdf',
-            type: 'receipt',
-            size: '245 KB',
-            url: '/documents/comprobante-pago.pdf',
-          },
-          {
-            id: 2,
-            name: 'detalle-cargos.pdf',
-            type: 'detail',
-            size: '182 KB',
-            url: '/documents/detalle-cargos.pdf',
-          },
-        ],
-        timeline: [
-          {
-            id: 1,
-            action: 'Pago Confirmado',
-            description: 'El pago fue procesado exitosamente por Webpay Plus',
-            date: '2024-02-15T10:45:00Z',
-            user: 'Sistema',
-          },
-          {
-            id: 2,
-            action: 'Procesando Pago',
-            description: 'Pago enviado a procesamiento con Webpay Plus',
-            date: '2024-02-15T10:32:00Z',
-            user: 'Sistema',
-          },
-          {
-            id: 3,
-            action: 'Pago Iniciado',
-            description: 'Pago iniciado por el residente María González',
-            date: '2024-02-15T10:30:00Z',
-            user: 'María González',
-          },
-        ],
-      };
-
-      setPayment(mockPayment);
-    } catch (error) {
-      setError('Error al cargar el detalle del pago');
-      console.error('Error loading payment detail:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [id, loadPaymentDetail]);
 
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('es-CL', {
@@ -255,7 +130,9 @@ export default function PaymentDetail() {
     setShowReverseModal(true);
   };
 
-  const handleViewDocument = (doc: any) => {
+  const handleViewDocument = (
+    doc: { id: number; name: string; type: string; size: string; url: string },
+  ) => {
     // Implementar visualización de documento
     window.open(doc.url, '_blank');
   };
@@ -486,17 +363,18 @@ export default function PaymentDetail() {
                 <div className='detail-card-body'>
                   <div className='document-list'>
                     {payment.documents.map(doc => (
-                      <div
+                      <button
                         key={doc.id}
                         className='document-item'
                         onClick={() => handleViewDocument(doc)}
+                        type='button'
                       >
                         <div className='document-icon'>
                           <i className='material-icons'>description</i>
                         </div>
                         <div className='document-name'>{doc.name}</div>
                         <div className='document-size'>{doc.size}</div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>

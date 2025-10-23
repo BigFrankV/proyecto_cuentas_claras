@@ -1,7 +1,6 @@
 import {
   Ticket,
   TicketDetalle,
-  TicketCompleto,
   TicketEstadisticas,
   TicketProximoVencer,
   EstadisticasGenerales,
@@ -260,37 +259,48 @@ export const ticketsApi = {
   },
 
   // Vista de tickets con información completa
-  getTodosCompletos: async (): Promise<TicketCompleto[]> => {
+  getTodosCompletos: async (): Promise<Ticket[]> => {
     try {
       const data = await apiRequest('/tickets/todos/completos');
       return data.map((ticket: {
         id: number;
         numero: number;
-        titulo: string;
+        asunto: string;
+        descripcion: string;
         estado: string;
         prioridad: string;
         categoria: string;
         comunidad: string;
         unidad: string;
         solicitante: string;
-        asignado: string;
+        asignado_a: string;
         fecha_creacion: string;
+        fecha_actualizacion: string;
         fecha_vencimiento: string;
-        informacion_completa: string;
+        fecha_cierre: string;
+        dias_vencimiento: number | null;
+        nivel_urgencia: string;
+        dias_abiertos: number;
       }) => ({
         id: ticket.id,
         numero: ticket.numero,
-        titulo: ticket.titulo,
+        titulo: ticket.asunto,
+        descripcion: ticket.descripcion,
         estado: ticket.estado as 'abierto' | 'en_progreso' | 'resuelto' | 'cerrado',
         prioridad: ticket.prioridad as 'alta' | 'media' | 'baja',
         categoria: ticket.categoria,
         comunidad: ticket.comunidad,
         unidad: ticket.unidad,
         solicitante: ticket.solicitante,
-        asignado: ticket.asignado,
+        asignado_a: ticket.asignado_a,
         fecha_creacion: ticket.fecha_creacion,
+        fecha_actualizacion: ticket.fecha_actualizacion,
         fecha_vencimiento: ticket.fecha_vencimiento,
-        informacion_completa: ticket.informacion_completa,
+        fecha_cierre: ticket.fecha_cierre,
+        dias_vencimiento: ticket.dias_vencimiento,
+        nivel_urgencia: ticket.nivel_urgencia as
+          'finalizado' | 'vencido' | 'critico' | 'urgente' | 'normal',
+        dias_abiertos: ticket.dias_abiertos,
       }));
     } catch (error) {
       handleApiError(error);

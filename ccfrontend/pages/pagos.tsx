@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Row,
@@ -13,40 +13,16 @@ import {
   InputGroup,
 } from 'react-bootstrap';
 
+import { pagosApi } from '@/lib/api/pagos';
 import { ProtectedRoute } from '@/lib/useAuth';
+import {
+  Pago,
+  PaymentFilters,
+  PaymentStats,
+} from '@/types/pagos';
 
 import Layout from '../components/layout/Layout';
 import PaymentComponent from '../components/PaymentComponent';
-
-interface Pago {
-  id: number;
-  concepto: string;
-  monto: number;
-  fecha: string;
-  estado: string;
-  metodoPago: string;
-  personaId: number;
-  comunidadId: number;
-  transactionId?: string;
-  gateway?: string;
-}
-
-interface PaymentFilters {
-  search: string;
-  status: string;
-  method: string;
-  dateFrom: string;
-  dateTo: string;
-}
-
-interface PaymentStats {
-  totalPayments: number;
-  approvedPayments: number;
-  pendingPayments: number;
-  rejectedPayments: number;
-  totalAmount: number;
-  avgAmount: number;
-}
 
 const Pagos: React.FC = () => {
   const [pagos, setPagos] = useState<Pago[]>([]);
@@ -62,66 +38,100 @@ const Pagos: React.FC = () => {
     totalPayments: 0,
     approvedPayments: 0,
     pendingPayments: 0,
-    rejectedPayments: 0,
+    cancelledPayments: 0,
     totalAmount: 0,
-    avgAmount: 0,
+    averageAmount: 0,
+  });
+  const [pagination, setPagination] = useState({
+    total: 0,
+    limit: 20, // Restored to 20 to match backend default
+    offset: 0,
+    hasMore: false,
   });
 
-  // Mock data
-  const mockPagos: Pago[] = [
-    {
-      id: 1,
-      concepto: 'Cuota de mantenimiento',
-      monto: 150000,
-      fecha: '2025-09-15',
-      estado: 'aprobado',
-      metodoPago: 'transferencia',
-      personaId: 1,
-      comunidadId: 1,
-      transactionId: 'TXN-001-2025',
-      gateway: 'webpay',
-    },
-    {
-      id: 2,
-      concepto: 'Servicios generales',
-      monto: 75000,
-      fecha: '2025-09-20',
-      estado: 'pendiente',
-      metodoPago: 'tarjeta_credito',
-      personaId: 2,
-      comunidadId: 1,
-      transactionId: 'TXN-002-2025',
-      gateway: 'khipu',
-    },
-  ];
+  // Load payments data
+  const loadPayments = useCallback(async () => {
+    try {
+      setLoading(true);
+      // TODO: Get comunidadId from user context
+      const comunidadId = 1; // Default for now
 
-  useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setPagos(mockPagos);
-      calculateStats(mockPagos);
+      const response = await pagosApi.getByComunidad(comunidadId, {
+        ...filters,
+        limit: pagination.limit,
+        offset: pagination.offset,
+      });
+
+      setPagos(response.data);
+      setPagination(response.pagination);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      // Error loading payments
+      setPagos([]);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
+  }, [filters, pagination.limit, pagination.offset]);
+
+  // Load stats data
+  const loadStats = useCallback(async () => {
+    try {
+      // TODO: Get comunidadId from user context
+      const comunidadId = 1; // Default for now
+
+      const statsData = await pagosApi.getEstadisticas(comunidadId);
+      setStats({
+        totalPayments: statsData.totalPayments,
+        approvedPayments: statsData.approvedPayments,
+        pendingPayments: statsData.pendingPayments,
+        cancelledPayments: statsData.cancelledPayments,
+        totalAmount: statsData.totalAmount,
+        averageAmount: statsData.averageAmount,
+      });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      // Error loading stats
+    }
   }, []);
 
-  const calculateStats = (payments: Pago[]) => {
-    const approved = payments.filter(p => p.estado === 'aprobado').length;
-    const pending = payments.filter(p => p.estado === 'pendiente').length;
-    const rejected = payments.filter(p => p.estado === 'rechazado').length;
-    const total = payments.reduce((sum, p) => sum + p.monto, 0);
+  useEffect(() => {
+    loadPayments();
+    loadStats();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
-    setStats({
-      totalPayments: payments.length,
-      approvedPayments: approved,
-      pendingPayments: pending,
-      rejectedPayments: rejected,
-      totalAmount: total,
-      avgAmount: payments.length > 0 ? total / payments.length : 0,
-    });
-  };
+  // Auto-apply search filter with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (filters.search !== '') {
+        setPagination(prev => ({ ...prev, offset: 0 }));
+        loadPayments();
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [filters.search, loadPayments]);
 
   const handleFilterChange = (field: keyof PaymentFilters, value: string) => {
     setFilters(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSearch = () => {
+    // Reset pagination when applying filters
+    setPagination(prev => ({ ...prev, offset: 0 }));
+    loadPayments();
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      search: '',
+      status: '',
+      method: '',
+      dateFrom: '',
+      dateTo: '',
+    });
+    setPagination(prev => ({ ...prev, offset: 0 }));
+    loadPayments();
   };
 
   const formatCurrency = (amount: number) => {
@@ -322,7 +332,7 @@ const Pagos: React.FC = () => {
                   </h6>
                 </Col>
                 <Col xs='auto'>
-                  <Button variant='outline-secondary' size='sm'>
+                  <Button variant='outline-secondary' size='sm' onClick={handleClearFilters}>
                     <span className='material-icons me-1'>refresh</span>
                     Limpiar
                   </Button>
@@ -384,11 +394,11 @@ const Pagos: React.FC = () => {
 
                 <Col md={3}>
                   <div className='d-flex gap-2'>
-                    <Button variant='primary' size='sm'>
+                    <Button variant='primary' size='sm' onClick={handleSearch}>
                       <span className='material-icons me-1'>search</span>
                       Buscar
                     </Button>
-                    <Button variant='outline-secondary' size='sm'>
+                    <Button variant='outline-secondary' size='sm' onClick={handleClearFilters}>
                       <span className='material-icons me-1'>clear</span>
                       Limpiar
                     </Button>
@@ -589,30 +599,44 @@ const Pagos: React.FC = () => {
               {/* Pagination */}
               <div className='d-flex justify-content-between align-items-center p-3 border-top'>
                 <div className='text-muted'>
-                  Mostrando 1-{pagos.length} de {pagos.length} pagos
+                  Mostrando {pagination.offset + 1}-
+                  {Math.min(pagination.offset + pagos.length, pagination.total)} de{' '}
+                  {pagination.total} pagos
                 </div>
                 <nav>
                   <ul className='pagination pagination-sm mb-0'>
-                    <li className='page-item disabled'>
-                      <span className='page-link'>Anterior</span>
+                    <li className={`page-item ${pagination.offset === 0 ? 'disabled' : ''}`}>
+                      <button
+                        className='page-link'
+                        onClick={() =>
+                          setPagination(prev => ({
+                            ...prev,
+                            offset: Math.max(0, prev.offset - prev.limit),
+                          }))
+                        }
+                        disabled={pagination.offset === 0}
+                      >
+                        Anterior
+                      </button>
                     </li>
                     <li className='page-item active'>
-                      <span className='page-link'>1</span>
+                      <span className='page-link'>
+                        {Math.floor(pagination.offset / pagination.limit) + 1}
+                      </span>
                     </li>
-                    <li className='page-item'>
-                      <a className='page-link' href='#'>
-                        2
-                      </a>
-                    </li>
-                    <li className='page-item'>
-                      <a className='page-link' href='#'>
-                        3
-                      </a>
-                    </li>
-                    <li className='page-item'>
-                      <a className='page-link' href='#'>
+                    <li className={`page-item ${!pagination.hasMore ? 'disabled' : ''}`}>
+                      <button
+                        className='page-link'
+                        onClick={() =>
+                          setPagination(prev => ({
+                            ...prev,
+                            offset: prev.offset + prev.limit,
+                          }))
+                        }
+                        disabled={!pagination.hasMore}
+                      >
                         Siguiente
-                      </a>
+                      </button>
                     </li>
                   </ul>
                 </nav>
@@ -634,13 +658,12 @@ const Pagos: React.FC = () => {
                   communityId={1}
                   amount={150000}
                   description='Pago de cuota mensual'
-                  onSuccess={transactionId => {
-                    console.log('Pago exitoso:', transactionId);
-                    // Refresh the payment list
+                  onSuccess={_transactionId => {
+                    // Payment successful
                     window.location.reload();
                   }}
-                  onError={error => {
-                    console.error('Error en pago:', error);
+                  onError={_error => {
+                    // Payment error
                   }}
                 />
               </Card.Body>
