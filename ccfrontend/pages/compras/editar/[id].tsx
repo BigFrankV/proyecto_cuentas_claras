@@ -15,6 +15,8 @@ import {
 
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { comprasApi } from '@/lib/api/compras';
+import { CompraBackend } from '@/types/compras';
 
 // Función para formatear moneda chilena
 const formatCurrency = (
@@ -144,104 +146,82 @@ export default function EditarCompra() {
   const loadPurchaseData = async () => {
     try {
       setLoading(true);
-      // Simular carga de datos de la compra
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const mockPurchase: Purchase = {
-        id: parseInt(id as string),
-        number: `COM-${String(id).padStart(6, '0')}`,
-        type: 'order',
-        status: 'pending',
-        priority: 'high',
-        description:
-          'Materiales de construcción para mantenimiento de áreas comunes',
+      const compra: CompraBackend = await comprasApi.getById(Number(id));
+
+      // Mapear CompraBackend a Purchase local
+      const mappedPurchase: Purchase = {
+        id: Number(compra.id),
+        number: compra.folio ?? `#${compra.id}`,
+        type: 'order', // por defecto
+        status: 'pending', // por defecto
+        priority: 'medium', // por defecto
+        description: compra.glosa ?? '',
         provider: {
-          id: 1,
-          name: 'Materiales San Fernando Ltda.',
-          category: 'construction',
-          rating: 4.5,
+          id: Number(compra.proveedor_id ?? 0),
+          name: compra.proveedor_nombre ?? '-',
+          category: '',
+          rating: 0,
         },
         costCenter: {
-          id: 1,
-          name: 'Mantenimiento General',
-          department: 'maintenance',
-          budget: 8500000,
-          spent: 2850000,
+          id: Number(compra.centro_costo_id ?? 0),
+          name: compra.centro_costo_nombre ?? '',
+          department: '',
+          budget: 0,
+          spent: 0,
         },
         category: {
-          id: 1,
-          name: 'Materiales de Construcción',
-          color: '#ff9800',
+          id: 0,
+          name: compra.categoria_gasto ?? '',
+          color: '#ccc',
         },
-        items: [
-          {
-            id: '1',
-            description: 'Cemento Portland 42.5 kg',
-            quantity: 20,
-            unit: 'saco',
-            unitPrice: 12500,
-            totalPrice: 250000,
-            category: 'construction',
-            notes: 'Marca Premium requerida',
-            status: 'pending',
-          },
-          {
-            id: '2',
-            description: 'Pintura latex blanca para exteriores',
-            quantity: 15,
-            unit: 'galón',
-            unitPrice: 32000,
-            totalPrice: 480000,
-            category: 'construction',
-            status: 'pending',
-          },
-        ],
-        totalAmount: 730000,
+        items: [], // por ahora vacío
+        totalAmount: Number(compra.total ?? 0),
         currency: 'clp',
-        requiredDate: '2024-02-15',
-        requestedBy: 'María González',
-        requestedDate: '2024-01-15T10:00:00Z',
-        notes: 'Urgente para reparaciones de emergencia',
-        requestJustification:
-          'Se requiere reparar filtraciones en el techo del edificio A',
+        requiredDate: compra.fecha_emision ?? (compra.created_at ?? ''),
+        requestedBy: '',
+        requestedDate: compra.created_at ?? '',
+        notes: '',
+        requestJustification: '',
       };
 
-      setPurchase(mockPurchase);
+      setPurchase(mappedPurchase);
 
       // Llenar formulario con datos existentes
       setFormData({
-        type: mockPurchase.type,
-        priority: mockPurchase.priority,
-        providerId: mockPurchase.provider.id.toString(),
-        costCenterId: mockPurchase.costCenter.id.toString(),
-        categoryId: mockPurchase.category.id.toString(),
-        description: mockPurchase.description,
-        requiredDate: mockPurchase.requiredDate,
-        currency: mockPurchase.currency,
-        notes: mockPurchase.notes || '',
-        requestJustification: mockPurchase.requestJustification || '',
+        type: mappedPurchase.type,
+        priority: mappedPurchase.priority,
+        providerId: mappedPurchase.provider.id.toString(),
+        costCenterId: mappedPurchase.costCenter.id.toString(),
+        categoryId: mappedPurchase.category.id.toString(),
+        description: mappedPurchase.description,
+        requiredDate: mappedPurchase.requiredDate,
+        currency: mappedPurchase.currency,
+        notes: mappedPurchase.notes || '',
+        requestJustification: mappedPurchase.requestJustification || '',
       });
 
-      setItems(mockPurchase.items);
+      setItems(mappedPurchase.items);
 
       // Guardar datos originales para detectar cambios
       setOriginalData({
         formData: {
-          type: mockPurchase.type,
-          priority: mockPurchase.priority,
-          providerId: mockPurchase.provider.id.toString(),
-          costCenterId: mockPurchase.costCenter.id.toString(),
-          categoryId: mockPurchase.category.id.toString(),
-          description: mockPurchase.description,
-          requiredDate: mockPurchase.requiredDate,
-          currency: mockPurchase.currency,
-          notes: mockPurchase.notes || '',
-          requestJustification: mockPurchase.requestJustification || '',
+          type: mappedPurchase.type,
+          priority: mappedPurchase.priority,
+          providerId: mappedPurchase.provider.id.toString(),
+          costCenterId: mappedPurchase.costCenter.id.toString(),
+          categoryId: mappedPurchase.category.id.toString(),
+          description: mappedPurchase.description,
+          requiredDate: mappedPurchase.requiredDate,
+          currency: mappedPurchase.currency,
+          notes: mappedPurchase.notes || '',
+          requestJustification: mappedPurchase.requestJustification || '',
         },
-        items: mockPurchase.items,
+        items: mappedPurchase.items,
       });
     } catch (error) {
       console.error('Error loading purchase data:', error);
+      setPurchase(null);
     } finally {
       setLoading(false);
     }

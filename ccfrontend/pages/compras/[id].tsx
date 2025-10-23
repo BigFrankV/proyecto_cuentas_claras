@@ -17,6 +17,8 @@ import {
 
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { comprasApi } from '@/lib/api/compras';
+import { CompraBackend } from '@/types/compras';
 
 // Función para formatear moneda chilena
 const formatCurrency = (
@@ -148,146 +150,54 @@ export default function DetallePurchase() {
   const loadPurchaseData = async () => {
     try {
       setLoading(true);
-      // Simular carga de datos
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const mockPurchase: Purchase = {
-        id: parseInt(id as string),
-        number: `COM-${String(id).padStart(6, '0')}`,
-        type: 'order',
-        status: 'pending',
-        priority: 'high',
-        description:
-          'Materiales de construcción para mantenimiento de áreas comunes',
+      const compra: CompraBackend = await comprasApi.getById(Number(id));
+
+      // Mapear CompraBackend a Purchase local
+      const mappedPurchase: Purchase = {
+        id: Number(compra.id),
+        number: compra.folio ?? `#${compra.id}`,
+        type: 'order', // por defecto, podría mapearse según algún campo
+        status: 'pending', // por defecto, podría mapearse según algún campo
+        priority: 'medium', // por defecto
+        description: compra.glosa ?? '',
         provider: {
-          id: 1,
-          name: 'Materiales San Fernando Ltda.',
-          category: 'construction',
-          rating: 4.5,
-          contact: 'Juan Pérez',
-          phone: '+58 212-555-0123',
-          email: 'ventas@constructoraabc.com',
+          id: Number(compra.proveedor_id ?? 0),
+          name: compra.proveedor_nombre ?? '-',
+          category: '',
+          rating: 0,
+          contact: '',
+          phone: '',
+          email: '',
         },
         costCenter: {
-          id: 1,
-          name: 'Mantenimiento General',
-          department: 'maintenance',
-          budget: 100000,
-          spent: 35000,
+          id: Number(compra.centro_costo_id ?? 0),
+          name: compra.centro_costo_nombre ?? '',
+          department: '',
+          budget: 0,
+          spent: 0,
         },
         category: {
-          id: 1,
-          name: 'Materiales de Construcción',
-          color: '#ff9800',
+          id: 0,
+          name: compra.categoria_gasto ?? '',
+          color: '#ccc',
         },
-        items: [
-          {
-            id: '1',
-            description: 'Cemento Portland 42.5 kg',
-            quantity: 20,
-            unit: 'saco',
-            unitPrice: 45,
-            totalPrice: 900,
-            category: 'construction',
-            notes: 'Marca Premium requerida',
-            status: 'pending',
-          },
-          {
-            id: '2',
-            description: 'Pintura latex blanca para exteriores',
-            quantity: 15,
-            unit: 'galón',
-            unitPrice: 25,
-            totalPrice: 375,
-            category: 'construction',
-            status: 'pending',
-          },
-          {
-            id: '3',
-            description: 'Tubería PVC 4 pulgadas',
-            quantity: 50,
-            unit: 'metro',
-            unitPrice: 12,
-            totalPrice: 600,
-            category: 'construction',
-            status: 'pending',
-          },
-        ],
-        totalAmount: 1875000,
+        items: [], // por ahora vacío, podría mapearse si hay detalle de items
+        totalAmount: Number(compra.total ?? 0),
         currency: 'clp',
-        requiredDate: '2024-02-15',
-        requestedBy: 'María González',
-        requestedDate: '2024-01-15T10:00:00Z',
-        documentsCount: 3,
-        timeline: [
-          {
-            id: '1',
-            type: 'created',
-            title: 'Compra creada',
-            description: 'Solicitud de compra creada como borrador',
-            date: '2024-01-15T09:30:00Z',
-            user: 'María González',
-            icon: 'add_shopping_cart',
-            color: 'primary',
-          },
-          {
-            id: '2',
-            type: 'submitted',
-            title: 'Enviada para aprobación',
-            description: 'Solicitud enviada al departamento de compras',
-            date: '2024-01-15T10:00:00Z',
-            user: 'María González',
-            icon: 'send',
-            color: 'info',
-          },
-          {
-            id: '3',
-            type: 'note',
-            title: 'Nota agregada',
-            description:
-              'Se requiere cotización adicional para comparar precios',
-            date: '2024-01-16T14:30:00Z',
-            user: 'Carlos Admin',
-            icon: 'note',
-            color: 'warning',
-          },
-        ],
+        requiredDate: compra.fecha_emision ?? (compra.created_at ?? ''),
+        requestedBy: '', // no hay campo específico en la vista
+        requestedDate: compra.created_at ?? '',
+        documentsCount: 0, // por ahora 0
+        timeline: [], // por ahora vacío
       };
 
-      const mockDocuments: Document[] = [
-        {
-          id: '1',
-          name: 'Cotización Constructora ABC.pdf',
-          type: 'application/pdf',
-          size: 245760,
-          uploadDate: '2024-01-15T10:15:00Z',
-          uploadedBy: 'María González',
-          category: 'quote',
-        },
-        {
-          id: '2',
-          name: 'Especificaciones técnicas.docx',
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          size: 98304,
-          uploadDate: '2024-01-15T10:20:00Z',
-          uploadedBy: 'María González',
-          category: 'other',
-        },
-        {
-          id: '3',
-          name: 'Presupuesto comparativo.xlsx',
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          size: 156672,
-          uploadDate: '2024-01-16T09:45:00Z',
-          uploadedBy: 'Carlos Admin',
-          category: 'quote',
-        },
-      ];
-
-      setPurchase(mockPurchase);
-      setDocuments(mockDocuments);
+      setPurchase(mappedPurchase);
+      setDocuments([]); // por ahora vacío
     } catch (error) {
       console.error('Error loading purchase data:', error);
+      setPurchase(null);
+      setDocuments([]);
     } finally {
       setLoading(false);
     }

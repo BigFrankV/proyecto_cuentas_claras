@@ -10,17 +10,7 @@ import { useAuth } from '@/lib/useAuth';
 import { usePermissions } from '@/lib/usePermissions';
 import { CategoriaGasto } from '@/types/categoriasGasto';
 
-interface ExpenseCategory {
-  id: number;
-  name: string;
-  description: string;
-  community: string;
-  status: 'active' | 'inactive';
-  icon: string;
-  color: string;
-  createdAt: string;
-  updatedAt: string;
-}
+type ExpenseCategory = CategoriaGasto;
 
 export default function CategoriasGastoListado() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
@@ -134,7 +124,7 @@ export default function CategoriasGastoListado() {
     recent: categories.filter(cat => {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 30);
-      return new Date(cat.createdAt) > weekAgo;
+      return new Date(cat.created_at) > weekAgo;
     }).length,
   };
 

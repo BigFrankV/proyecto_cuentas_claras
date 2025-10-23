@@ -697,54 +697,36 @@ router.get('/todos/completos', authenticate, async (req, res) => {
         ts.id,
         ts.id AS numero,
         ts.titulo AS asunto,
+        ts.descripcion,
         ts.estado,
         ts.prioridad,
         ts.categoria,
         c.razon_social AS comunidad,
         u.codigo AS unidad,
         COALESCE(pu.nombres, '') AS solicitante,
-        COALESCE(pa.nombres, '') AS asignado,
+        COALESCE(pa.nombres, '') AS asignado_a,
         ts.created_at AS fecha_creacion,
+        ts.updated_at AS fecha_actualizacion,
         ts.updated_at AS fecha_vencimiento,
-        JSON_OBJECT(
-          'ticket', JSON_OBJECT(
-            'id', ts.id,
-            'numero', ts.id,
-            'asunto', ts.titulo,
-            'estado', ts.estado,
-            'prioridad', ts.prioridad,
-            'categoria', ts.categoria
-          ),
-          'comunidad', JSON_OBJECT(
-            'id', c.id,
-            'razon_social', c.razon_social
-          ),
-          'unidad', CASE
-            WHEN u.id IS NOT NULL THEN JSON_OBJECT(
-              'id', u.id,
-              'codigo', u.codigo
-            )
-            ELSE NULL
-          END,
-          'solicitante', JSON_OBJECT(
-            'nombre', COALESCE(pu.nombres, ''),
-            'email', COALESCE(pu.email, '')
-          ),
-          'asignado', JSON_OBJECT(
-            'nombre', COALESCE(pa.nombres, ''),
-            'email', COALESCE(pa.email, '')
-          ),
-          'fechas', JSON_OBJECT(
-            'creacion', ts.created_at,
-            'vencimiento', ts.updated_at,
-            'cierre', ts.updated_at
-          )
-        ) AS informacion_completa
+        ts.updated_at AS fecha_cierre,
+        CASE
+          WHEN ts.estado IN ('resuelto', 'cerrado') THEN NULL
+          WHEN CURDATE() > ts.updated_at THEN DATEDIFF(CURDATE(), ts.updated_at)
+          ELSE DATEDIFF(ts.updated_at, CURDATE())
+        END AS dias_vencimiento,
+        CASE
+          WHEN ts.estado IN ('resuelto', 'cerrado') THEN 'finalizado'
+          WHEN CURDATE() > ts.updated_at THEN 'vencido'
+          WHEN DATEDIFF(ts.updated_at, CURDATE()) <= 1 THEN 'critico'
+          WHEN DATEDIFF(ts.updated_at, CURDATE()) <= 3 THEN 'urgente'
+          ELSE 'normal'
+        END AS nivel_urgencia,
+        DATEDIFF(CURDATE(), ts.created_at) AS dias_abiertos
       FROM ticket_soporte ts
       JOIN comunidad c ON ts.comunidad_id = c.id
       LEFT JOIN unidad u ON ts.unidad_id = u.id
-      LEFT JOIN usuario us_asig ON ts.asignado_a = us_asig.id
-      LEFT JOIN persona pa ON us_asig.persona_id = pa.id
+      LEFT JOIN usuario us ON ts.asignado_a = us.id
+      LEFT JOIN persona pa ON us.persona_id = pa.id
       LEFT JOIN titulares_unidad tu ON ts.unidad_id = tu.unidad_id AND tu.tipo = 'propietario' AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
       LEFT JOIN persona pu ON tu.persona_id = pu.id
       ORDER BY ts.created_at DESC

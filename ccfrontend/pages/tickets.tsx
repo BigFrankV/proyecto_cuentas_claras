@@ -95,8 +95,8 @@ export default function TicketsListado() {
         setError(null);
         // TODO: Obtener la comunidad del usuario autenticado
         // Por ahora usamos una comunidad por defecto
-        const comunidadId = 1; // Esto debería venir del contexto de autenticación
-        const ticketsData = await ticketsApi.getByComunidad(comunidadId);
+        // const comunidadId = 1; // Esto debería venir del contexto de autenticación
+        const ticketsData = await ticketsApi.getTodosCompletos();
         setTickets(ticketsData);
         setFilteredTickets(ticketsData);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
