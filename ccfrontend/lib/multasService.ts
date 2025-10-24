@@ -10,71 +10,22 @@ import {
 import api from './api';
 
 class MultasService {
-  // ===== OPCIONES PREDEFINIDAS (SIN BD) =====
 
-  getTiposInfraccionPredefinidos(): TipoInfraccion[] {
-    return [
-      {
-        id: 'ruidos_molestos',
-        nombre: 'Ruidos molestos',
-        monto_base: 50000,
-        categoria: 'Convivencia',
-      },
-      {
-        id: 'mascotas_sin_correa',
-        nombre: 'Mascotas sin correa',
-        monto_base: 30000,
-        categoria: 'Mascotas',
-      },
-      {
-        id: 'estacionamiento_indebido',
-        nombre: 'Estacionamiento indebido',
-        monto_base: 40000,
-        categoria: 'Estacionamiento',
-      },
-      {
-        id: 'basura_fuera_horario',
-        nombre: 'Basura fuera de horario',
-        monto_base: 25000,
-        categoria: 'Aseo',
-      },
-      {
-        id: 'uso_inadecuado_areas',
-        nombre: 'Uso inadecuado áreas comunes',
-        monto_base: 60000,
-        categoria: 'Áreas Comunes',
-      },
-      {
-        id: 'no_recoger_desechos',
-        nombre: 'No recoger desechos mascota',
-        monto_base: 35000,
-        categoria: 'Mascotas',
-      },
-      {
-        id: 'fumar_prohibido',
-        nombre: 'Fumar en áreas prohibidas',
-        monto_base: 45000,
-        categoria: 'Salud',
-      },
-      {
-        id: 'trabajos_horario',
-        nombre: 'Trabajos en horario no permitido',
-        monto_base: 55000,
-        categoria: 'Convivencia',
-      },
-      {
-        id: 'danos_propiedad',
-        nombre: 'Daños menores propiedad común',
-        monto_base: 80000,
-        categoria: 'Daños',
-      },
-      {
-        id: 'normas_piscina',
-        nombre: 'Incumplimiento normas piscina',
-        monto_base: 40000,
-        categoria: 'Áreas Comunes',
-      },
-    ];
+  // ===== NUEVO: obtener tipos desde el backend (acepta opcional comunidadId) =====
+  async obtenerTipos(comunidadId?: number): Promise<TipoInfraccion[]> {
+    try {
+      const params: any = {};
+      if (comunidadId) params.comunidadId = comunidadId;
+      const response = await api.get('/multas/tipos-infraccion', { params });
+      return response.data?.data ?? response.data ?? [];
+    } catch (err) {
+      console.error('❌ Error obteniendo tipos de infracción:', err);
+      // fallback seguro: devolver array vacío (o llamar a getTiposInfraccionPredefinidos si existe)
+      if (typeof (this as any).getTiposInfraccionPredefinidos === 'function') {
+        return (this as any).getTiposInfraccionPredefinidos();
+      }
+      return [];
+    }
   }
 
   // ===== CRUD ADAPTADO A TU BACKEND =====
@@ -154,8 +105,10 @@ class MultasService {
     const payload = {
       unidad_id: data.unidad_id,
       comunidad_id: data.comunidad_id,
+      tipo_infraccion_id: data.tipo_infraccion_id ?? undefined,
       tipo_infraccion: data.tipo_infraccion || data.motivo,
-      motivo: data.tipo_infraccion || data.motivo, // backend expects tipo_infraccion but stores motivo
+      motivo: data.motivo || data.tipo_infraccion,
+      persona_id: data.persona_id ?? undefined,
       descripcion: data.descripcion,
       monto: data.monto,
       prioridad: data.prioridad,
@@ -165,8 +118,8 @@ class MultasService {
       fecha_vencimiento: data.fecha_vencimiento,
     };
     const response = await api.post('/multas', payload);
-    const raw = response.data?.data ?? response.data;
-    return this.adaptMultaFromBackend(raw);
+    // devolver objeto creado para que la UI reciba el id
+    return response.data?.data ?? response.data;
   }
 
   async updateMulta(id: number, data: any): Promise<any> {
@@ -441,6 +394,31 @@ class MultasService {
   async eliminarMulta(id: number): Promise<void> {
     await api.delete(`/multas/${id}`);
   }
+
+  async uploadDocumentos(multaId: number, files: File[]) {
+    const fd = new FormData();
+    files.forEach(f => fd.append('files[]', f));
+    const resp = await api.post(`/multas/${multaId}/documentos`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return resp.data?.data ?? resp.data;
+  }
+
+  // Agregar este método en la clase MultasService
+  async obtenerUnidadesAutocompletar(search: string, comunidadId?: number): Promise<any[]> {
+    const params: any = { search, limit: 10 };
+    if (comunidadId) params.comunidad_id = comunidadId;
+    const response = await api.get('/unidades', { params });
+    return response.data.map((u: any) => ({
+      id: u.id,
+      codigo: u.numero,
+      comunidad_id: u.comunidad_id ?? null,
+      propietario: u.propietario_nombre || '',
+      edificio: u.edificio_nombre || '',
+      torre: u.torre_nombre || '',
+      display: `${u.numero} - ${u.propietario_nombre || 'Sin propietario'} ${u.edificio_nombre ? `(${u.edificio_nombre})` : ''}`.trim()
+    }));
+  }
 }
 
 // ✅ CREAR LA INSTANCIA Y EXPORTARLA
@@ -449,3 +427,45 @@ const multasService = new MultasService();
 export default multasService;
 export const getMultaById = (id: number) => multasService.getMulta(id);
 export const createMulta = (data: any) => multasService.createMulta(data);
+
+// ===== HELPERS DE AUTENTICACIÓN PARA FETCH / AXIOS =====
+export function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (typeof window === 'undefined') return headers;
+  const token = localStorage.getItem('token'); // confirmar key ('token' o 'accessToken')
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
+
+/**
+ * Uso recomendado para llamadas fetch desde componentes:
+ * const resp = await fetchWithAuth(url, { method: 'GET' });
+ */
+export async function fetchWithAuth(input: RequestInfo, init: RequestInit = {}) {
+  const baseHeaders = getAuthHeaders();
+  const mergedHeaders = Object.assign({}, baseHeaders, init.headers || {});
+  const opts: RequestInit = { ...init, headers: mergedHeaders, credentials: init.credentials ?? 'omit' };
+  return fetch(input, opts);
+}
+
+/**
+ * Si `api` es un axios instance, permite setear el header Authorization globalmente.
+ * Llamar en el bootstrap de la app (por ejemplo _app.tsx) con el token de localStorage.
+ */
+export function setAxiosAuthToken(token?: string | null) {
+  try {
+    const anyApi: any = api as any;
+    if (!anyApi || !anyApi.defaults) return;
+    if (token) {
+      anyApi.defaults.headers = anyApi.defaults.headers || {};
+      anyApi.defaults.headers.common = anyApi.defaults.headers.common || {};
+      anyApi.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      if (anyApi.defaults.headers && anyApi.defaults.headers.common) {
+        delete anyApi.defaults.headers.common['Authorization'];
+      }
+    }
+  } catch (err) {
+    console.warn('setAxiosAuthToken error', err);
+  }
+}

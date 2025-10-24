@@ -119,6 +119,25 @@ router.get('/', authenticate, async (req, res) => {
   try {
     const { comunidad_id, edificio_id, torre_id, search, activa, limit = 100, offset = 0 } = req.query;
     const params = [comunidad_id || null, edificio_id || null, torre_id || null, activa === undefined ? null : (activa === '1' || activa === 'true' ? 1 : 0), search || null, Number(limit), Number(offset)];
+
+    // Agregar filtro por permisos si no es superadmin
+    let comunidadFilter = '';
+    let comunidadParams = [];
+    if (!req.user?.is_superadmin) {
+      const [comRows] = await db.query(
+        `SELECT DISTINCT comunidad_id 
+         FROM usuario_miembro_comunidad 
+         WHERE persona_id = ? AND activo = 1 AND (hasta IS NULL OR hasta > CURDATE())`,
+        [req.user.persona_id]
+      );
+      const comunidadIds = comRows.map(r => r.comunidad_id);
+      if (comunidadIds.length === 0) {
+        return res.json([]); // Usuario sin comunidades asignadas
+      }
+      comunidadFilter = ` AND u.comunidad_id IN (${comunidadIds.map(() => '?').join(',')})`;
+      comunidadParams = comunidadIds;
+    }
+
     const sql = `
       SELECT
         u.id,
@@ -153,6 +172,7 @@ router.get('/', authenticate, async (req, res) => {
         AND (? IS NULL OR u.edificio_id = ?)
         AND (? IS NULL OR u.torre_id = ?)
         AND (? IS NULL OR u.activa = ?)
+        ${comunidadFilter}
         AND (
           ? IS NULL
           OR u.codigo LIKE CONCAT('%', ?, '%')
@@ -167,8 +187,8 @@ router.get('/', authenticate, async (req, res) => {
       LIMIT ? OFFSET ?
     `;
 
-    // Prepare params in the order used above
-    const execParams = [params[0], params[0], params[1], params[1], params[2], params[2], params[3], params[3], params[4], params[4], params[4], params[4], params[4], params[5], params[6]];
+    // Preparar params en el orden usado arriba
+    const execParams = [params[0], params[0], params[1], params[1], params[2], params[2], params[3], params[3], ...comunidadParams, params[4], params[4], params[4], params[4], params[4], params[5], params[6]];
     const [rows] = await db.query(sql, execParams);
     res.json(rows);
   } catch (err) {

@@ -10,26 +10,39 @@ const MultasPermissions = require('../middleware/multasPermissions');
 // ============================================
 // HELPER: Obtener comunidades del usuario
 // ============================================
-async function obtenerComunidadesUsuario(userId, personaId, isSuperAdmin) {
-  try {
-    if (isSuperAdmin) {
-      // Superadmin ve todas las comunidades
-      const [comunidades] = await db.query('SELECT id FROM comunidad WHERE activo = 1');
-      return comunidades.map(c => c.id);
-    }
-
-    // Obtener comunidades donde tiene roles activos
-    const [memberships] = await db.query(`
-      SELECT DISTINCT comunidad_id 
-      FROM usuario_rol_comunidad 
-      WHERE usuario_id = ? AND activo = 1
-    `, [userId]);
-    console.log('🏘️ Comunidades obtenidas:', memberships.map(m => m.comunidad_id));
-    return memberships.map(m => m.comunidad_id);
-  } catch (error) {
-    console.error('❌ Error obteniendo comunidades del usuario:', error);
-    return [];
+async function obtenerComunidadesUsuario(usuarioId, personaId, isSuperAdmin = false) {
+  if (isSuperAdmin) {
+    // La tabla comunidad no tiene columna "activo" -> devolver todas las comunidades
+    const [all] = await db.query(`SELECT id FROM comunidad`);
+    return Array.isArray(all) ? all.map(r => Number(r.id)) : [];
   }
+
+  // por rol en usuariorolcomunidad (mantener filtro de activo y vigencia aquí)
+  const [porRol] = await db.query(
+    `SELECT DISTINCT comunidad_id
+     FROM usuariorolcomunidad
+     WHERE usuario_id = ?
+       AND activo = 1
+       AND (desde <= CURDATE())
+       AND (hasta IS NULL OR hasta >= CURDATE())`,
+    [usuarioId]
+  );
+
+  // por pertenencia como miembro (vista usuario_miembro_comunidad)
+  const [porMiembro] = await db.query(
+    `SELECT DISTINCT comunidad_id
+     FROM usuario_miembro_comunidad
+     WHERE persona_id = ?
+       AND activo = 1
+       AND (desde <= CURDATE())
+       AND (hasta IS NULL OR hasta >= CURDATE())`,
+    [personaId]
+  );
+
+  const ids = new Set();
+  porRol.forEach(r => ids.add(Number(r.comunidad_id)));
+  porMiembro.forEach(r => ids.add(Number(r.comunidad_id)));
+  return Array.from(ids);
 }
 
 // ============================================
@@ -61,30 +74,42 @@ async function registrarHistorial(multaId, usuarioId, accion, descripcion, extra
 }
 
 // ============================================
-// HELPER: Generar número de multa
+// HELPER: Generar número de multa  (mejorado: usa MAX para evitar saltos)
 // ============================================
 async function generarNumeroMulta(comunidadId) {
+  const connection = await db.getConnection();
   try {
+    await connection.beginTransaction();
     const year = new Date().getFullYear();
+    const likePattern = `M-${year}-%`;
 
-    const [lastMulta] = await db.query(
-      "SELECT numero FROM multa WHERE comunidad_id = ? AND numero LIKE ? ORDER BY id DESC LIMIT 1",
-      [comunidadId, `M-${year}-%`]
+    // Bloquear y ordenar por el número numérico para obtener el último
+    const [lastRows] = await connection.query(
+      `SELECT numero
+       FROM multa
+       WHERE comunidad_id = ? AND numero LIKE ?
+       ORDER BY CAST(SUBSTRING_INDEX(numero, '-', -1) AS UNSIGNED) DESC
+       LIMIT 1
+       FOR UPDATE`,  // Bloquea para evitar lecturas simultáneas
+      [comunidadId, likePattern]
     );
 
     let nextNum = 1;
-    if (lastMulta.length > 0 && lastMulta[0].numero) {
-      const parts = lastMulta[0].numero.split('-');
-      nextNum = parseInt(parts[2]) + 1;
+    if (lastRows && lastRows.length) {
+      const last = lastRows[0].numero;
+      const m = last.match(/M-\d{4}-(\d+)/);
+      nextNum = m ? Number(m[1]) + 1 : 1;
     }
 
     const numero = `M-${year}-${String(nextNum).padStart(4, '0')}`;
-    console.log(`🔢 Número generado: ${numero}`);
+    await connection.commit();
     return numero;
-
-  } catch (error) {
-    console.error('❌ Error generando número:', error);
-    return `M-${new Date().getFullYear()}-0001`;
+  } catch (err) {
+    await connection.rollback();
+    console.error('❌ Error generando número:', err);
+    throw err;
+  } finally {
+    connection.release();
   }
 }
 
@@ -412,35 +437,89 @@ router.post('/',
         }
       }
 
-      // Generar número de multa
-      const numero = await generarNumeroMulta(comunidad_id);
+      // Resolver tipo_infraccion_id (si existe tabla tipo_infraccion)
+      let tipo_infraccion_id = null;
+      try {
+        if (req.body.tipo_infraccion_id) {
+          tipo_infraccion_id = Number(req.body.tipo_infraccion_id);
+        } else if (typeof tipo_infraccion === 'string' && tipo_infraccion.trim()) {
+          const [tRows] = await db.query(
+            `SELECT id FROM tipo_infraccion 
+             WHERE (clave = ? OR nombre = ?) 
+               AND (comunidad_id = ? OR comunidad_id IS NULL) 
+               AND activo = 1
+             LIMIT 1`,
+            [tipo_infraccion, tipo_infraccion, comunidad_id]
+          );
+          if (tRows.length) tipo_infraccion_id = tRows[0].id;
+        }
+      } catch (err) {
+        console.error('❌ Error buscando tipo_infraccion:', err);
+      }
 
-      // Insertar multa
-      const [result] = await db.query(
-        `INSERT INTO multa (
-          numero, comunidad_id, unidad_id, persona_id, motivo, descripcion, 
-          monto, fecha, fecha_vencimiento, prioridad, estado
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')`,
-        [
-          numero,
-          comunidad_id,
-          unidad_id,
-          persona_id || null,
-          tipo_infraccion,
-          descripcion || null,
-          monto,
-          fecha_infraccion,
-          fecha_vencimiento,
-          prioridad
-        ]
-      );
+      // Intentar INSERT con reintentos en caso de conflicto en multa.numero
+      let numeroGenerado = await generarNumeroMulta(comunidad_id);
+      let insertResult = null;
+      const maxRetries = 20;
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`🔄 Intento ${attempt}/${maxRetries} con número: ${numeroGenerado}`);
+          const [resInsert] = await db.query(
+            `INSERT INTO multa (
+              numero, comunidad_id, unidad_id, persona_id, motivo, descripcion, 
+              monto, fecha, fecha_vencimiento, prioridad, tipo_infraccion_id, creada_por, estado
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')`,
+            [
+              numeroGenerado,
+              comunidad_id,
+              unidad_id,
+              persona_id || null,
+              tipo_infraccion,
+              descripcion || null,
+              monto,
+              fecha_infraccion,
+              fecha_vencimiento,
+              prioridad,
+              tipo_infraccion_id,
+              req.user ? req.user.sub : null
+            ]
+          );
+          insertResult = resInsert;
+          console.log(`✅ Multa creada exitosamente con número: ${numeroGenerado}`);
+          break; // Salir del bucle si inserta correctamente
+        } catch (err) {
+          if (err.code === 'ER_DUP_ENTRY' && attempt < maxRetries) {
+            console.warn(`⚠️ Conflicto número ${numeroGenerado}, reintentando con siguiente...`);
+            // Incrementar el número en 1
+            const m = numeroGenerado.match(/M-(\d{4})-(\d{4})/);
+            if (m) {
+              const year = m[1];
+              const num = parseInt(m[2], 10) + 1;
+              numeroGenerado = `M-${year}-${String(num).padStart(4, '0')}`;
+            } else {
+              // Fallback si no coincide
+              numeroGenerado = await generarNumeroMulta(comunidad_id);
+            }
+          } else {
+            console.error(`❌ Error en intento ${attempt}:`, err.message);
+            throw err; // Re-lanzar si no es duplicado o se agotaron reintentos
+          }
+        }
+      }
+
+      if (!insertResult) {
+        throw new Error('No se pudo insertar multa: se agotaron los reintentos por conflicto en número.');
+      }
+
+      const result = insertResult;
 
       // Registrar en historial
       await registrarHistorial(
         result.insertId,
         req.user.sub,
         'creada',
-        `Multa ${numero} creada`,
+        `Multa ${numeroGenerado} creada`,
         {
           estado_nuevo: 'pendiente',
           ip_address: req.ip
@@ -479,6 +558,51 @@ router.post('/',
     }
   }
 );
+
+// -------------------- NUEVO: mover AQUI --------------------
+// GET /multas/tipos-infraccion
+router.get('/tipos-infraccion', authenticate, async (req, res) => {
+  try {
+    const comunidadId = req.query.comunidadId ? Number(req.query.comunidadId) : null;
+    const isSuperAdmin = !!req.user?.is_superadmin;
+    const userId = req.user?.sub;
+    const personaId = req.user?.persona_id;
+
+    const comunidadIds = await obtenerComunidadesUsuario(userId, personaId, isSuperAdmin);
+
+    if (comunidadId && !isSuperAdmin && !comunidadIds.includes(comunidadId)) {
+      return res.status(403).json({ success: false, error: 'Sin permisos para ver tipos en esta comunidad' });
+    }
+
+    let sql = `
+      SELECT id, clave, nombre, descripcion, monto_default, prioridad_default, icono, comunidad_id, activo
+      FROM tipo_infraccion
+      WHERE activo = 1
+    `;
+    const params = [];
+
+    if (comunidadId) {
+      sql += ' AND (comunidad_id IS NULL OR comunidad_id = ?)';
+      params.push(comunidadId);
+    } else if (!isSuperAdmin) {
+      if (comunidadIds.length > 0) {
+        const placeholders = comunidadIds.map(() => '?').join(',');
+        sql += ` AND (comunidad_id IS NULL OR comunidad_id IN (${placeholders}))`;
+        params.push(...comunidadIds);
+      } else {
+        sql += ' AND comunidad_id IS NULL';
+      }
+    }
+
+    sql += ' ORDER BY comunidad_id IS NULL DESC, nombre';
+    const [rows] = await db.query(sql, params);
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('❌ Error GET /multas/tipos-infraccion:', err);
+    res.status(500).json({ success: false, error: 'Error del servidor', message: err.message });
+  }
+});
+// -------------------- FIN NUEVO --------------------
 
 // ============================================
 // GET /multas/:id - DETALLE DE MULTA
@@ -1204,11 +1328,12 @@ router.get('/:id/documentos',
       res.status(500).json({ success: false, error: 'Error del servidor' });
     }
   }
+);
 
-  
-); 
+
+
+
 module.exports = router;
-
 // =========================================
 // ENDPOINTS DE MULTAS
 // =========================================
