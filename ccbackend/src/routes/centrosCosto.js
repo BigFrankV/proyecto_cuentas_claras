@@ -11,7 +11,7 @@ const { requireCommunity } = require('../middleware/tenancy');
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}:
  *   get:
  *     tags: [CentrosCosto]
@@ -45,7 +45,7 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/filtrar:
  *   get:
  *     tags: [CentrosCosto]
@@ -123,7 +123,7 @@ router.get('/comunidad/:comunidadId/filtrar', authenticate, requireCommunity('co
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/{id}/detalle:
  *   get:
  *     tags: [CentrosCosto]
@@ -187,7 +187,7 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/{id}/gastos:
  *   get:
  *     tags: [CentrosCosto]
@@ -226,7 +226,7 @@ router.get('/:id/gastos', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/{id}/resumen-mensual:
  *   get:
  *     tags: [CentrosCosto]
@@ -264,7 +264,7 @@ router.get('/:id/resumen-mensual', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}:
  *   post:
  *     tags: [CentrosCosto]
@@ -310,7 +310,7 @@ router.post(
 );
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/{id}:
  *   get:
  *     tags: [CentrosCosto]
@@ -336,7 +336,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/{id}:
  *   patch:
  *     tags: [CentrosCosto]
@@ -385,7 +385,7 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req,
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/{id}:
  *   delete:
  *     tags: [CentrosCosto]
@@ -417,7 +417,7 @@ router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/estadisticas/generales:
  *   get:
  *     tags: [CentrosCosto]
@@ -455,7 +455,7 @@ router.get('/comunidad/:comunidadId/estadisticas/generales', authenticate, requi
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/mas-utilizados:
  *   get:
  *     tags: [CentrosCosto]
@@ -501,7 +501,7 @@ router.get('/comunidad/:comunidadId/mas-utilizados', authenticate, requireCommun
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/mas-costosos:
  *   get:
  *     tags: [CentrosCosto]
@@ -548,7 +548,7 @@ router.get('/comunidad/:comunidadId/mas-costosos', authenticate, requireCommunit
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/sin-uso:
  *   get:
  *     tags: [CentrosCosto]
@@ -582,7 +582,7 @@ router.get('/comunidad/:comunidadId/sin-uso', authenticate, requireCommunity('co
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/analisis-por-categoria:
  *   get:
  *     tags: [CentrosCosto]
@@ -632,7 +632,7 @@ router.get('/comunidad/:comunidadId/analisis-por-categoria', authenticate, requi
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/{id}/existe:
  *   get:
  *     tags: [CentrosCosto]
@@ -660,7 +660,7 @@ router.get('/:id/existe', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/validar-nombre:
  *   get:
  *     tags: [CentrosCosto]
@@ -696,7 +696,7 @@ router.get('/comunidad/:comunidadId/validar-nombre', authenticate, requireCommun
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/validar-codigo:
  *   get:
  *     tags: [CentrosCosto]
@@ -732,7 +732,7 @@ router.get('/comunidad/:comunidadId/validar-codigo', authenticate, requireCommun
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/{id}/tiene-gastos:
  *   get:
  *     tags: [CentrosCosto]
@@ -757,7 +757,7 @@ router.get('/:id/tiene-gastos', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/dropdown:
  *   get:
  *     tags: [CentrosCosto]
@@ -787,7 +787,7 @@ router.get('/comunidad/:comunidadId/dropdown', authenticate, requireCommunity('c
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/con-estadisticas:
  *   get:
  *     tags: [CentrosCosto]
@@ -831,7 +831,7 @@ router.get('/comunidad/:comunidadId/con-estadisticas', authenticate, requireComm
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/reporte/por-mes:
  *   get:
  *     tags: [CentrosCosto]
@@ -872,7 +872,7 @@ router.get('/comunidad/:comunidadId/reporte/por-mes', authenticate, requireCommu
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/reporte/comparativo:
  *   get:
  *     tags: [CentrosCosto]
@@ -908,7 +908,7 @@ router.get('/comunidad/:comunidadId/reporte/comparativo', authenticate, requireC
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/reporte/variabilidad:
  *   get:
  *     tags: [CentrosCosto]
@@ -960,7 +960,7 @@ router.get('/comunidad/:comunidadId/reporte/variabilidad', authenticate, require
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/exportar:
  *   get:
  *     tags: [CentrosCosto]
@@ -1013,7 +1013,7 @@ router.get('/comunidad/:comunidadId/exportar', authenticate, requireCommunity('c
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/dashboard/resumen:
  *   get:
  *     tags: [CentrosCosto]
@@ -1050,7 +1050,7 @@ router.get('/comunidad/:comunidadId/dashboard/resumen', authenticate, requireCom
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/dashboard/top-mes:
  *   get:
  *     tags: [CentrosCosto]
@@ -1085,7 +1085,7 @@ router.get('/comunidad/:comunidadId/dashboard/top-mes', authenticate, requireCom
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/dashboard/sin-uso-reciente:
  *   get:
  *     tags: [CentrosCosto]
@@ -1120,7 +1120,7 @@ router.get('/comunidad/:comunidadId/dashboard/sin-uso-reciente', authenticate, r
 });
 
 /**
- * @openapi
+ * @swagger
  * /centros-costo/comunidad/{comunidadId}/dashboard/distribucion:
  *   get:
  *     tags: [CentrosCosto]
@@ -1300,3 +1300,7 @@ module.exports = router;
 // GET: /centros-costo/comunidad/:comunidadId/dashboard/top-mes
 // GET: /centros-costo/comunidad/:comunidadId/dashboard/sin-uso-reciente
 // GET: /centros-costo/comunidad/:comunidadId/dashboard/distribucion
+
+
+
+

@@ -4,7 +4,7 @@ const db = require('../db');
 
 // webhooks are public endpoints; do not require authenticate
 /**
- * @openapi
+ * @swagger
  * /webhooks/pagos/webpay:
  *   post:
  *     tags: [Webhooks]
@@ -31,7 +31,7 @@ router.post('/pagos/khipu', async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /webhooks/pagos/khipu:
  *   post:
  *     tags: [Webhooks]

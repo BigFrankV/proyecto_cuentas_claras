@@ -7,7 +7,7 @@ const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Pagos
  *     description: Gestión de pagos, aplicaciones a cuentas de cobro y reversos
@@ -249,7 +249,7 @@ const { requireCommunity } = require('../middleware/tenancy');
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/comunidad/{comunidadId}:
  *   get:
  *     tags: [Pagos]
@@ -451,7 +451,7 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/{id}:
  *   get:
  *     tags: [Pagos]
@@ -545,7 +545,7 @@ router.get('/:id', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/comunidad/{comunidadId}/estadisticas:
  *   get:
  *     tags: [Pagos]
@@ -604,7 +604,7 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/comunidad/{comunidadId}/estadisticas/estado:
  *   get:
  *     tags: [Pagos]
@@ -686,7 +686,7 @@ router.get('/comunidad/:comunidadId/estadisticas/estado', authenticate, requireC
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/comunidad/{comunidadId}/estadisticas/metodo:
  *   get:
  *     tags: [Pagos]
@@ -761,7 +761,7 @@ router.get('/comunidad/:comunidadId/estadisticas/metodo', authenticate, requireC
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/comunidad/{comunidadId}/estadisticas/periodo:
  *   get:
  *     tags: [Pagos]
@@ -853,7 +853,7 @@ router.get('/comunidad/:comunidadId/estadisticas/periodo', authenticate, require
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/comunidad/{comunidadId}/pendientes:
  *   get:
  *     tags: [Pagos]
@@ -947,7 +947,7 @@ router.get('/comunidad/:comunidadId/pendientes', authenticate, requireCommunity(
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/{id}/aplicaciones:
  *   get:
  *     tags: [Pagos]
@@ -1053,7 +1053,7 @@ router.get('/:id/aplicaciones', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/unidad/{unidadId}/historial:
  *   get:
  *     tags: [Pagos]
@@ -1152,7 +1152,7 @@ router.get('/unidad/:unidadId/historial', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/comunidad/{comunidadId}/por-residente:
  *   get:
  *     tags: [Pagos]
@@ -1259,7 +1259,7 @@ router.get('/comunidad/:comunidadId/por-residente', authenticate, requireCommuni
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/comunidad/{comunidadId}/conciliacion:
  *   get:
  *     tags: [Pagos]
@@ -1367,7 +1367,7 @@ router.get('/comunidad/:comunidadId/conciliacion', authenticate, requireCommunit
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/{id}/webhooks:
  *   get:
  *     tags: [Pagos]
@@ -1451,7 +1451,7 @@ router.get('/:id/webhooks', authenticate, authorize('admin', 'superadmin'), asyn
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/comunidad/{comunidadId}/validar:
  *   get:
  *     tags: [Pagos]
@@ -1548,7 +1548,7 @@ router.get('/comunidad/:comunidadId/validar', authenticate, requireCommunity('co
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/comunidad/{comunidadId}:
  *   post:
  *     tags: [Pagos]
@@ -1657,7 +1657,7 @@ router.post('/comunidad/:comunidadId', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/{id}/aplicar:
  *   post:
  *     tags: [Pagos]
@@ -1839,7 +1839,7 @@ router.post('/:id/aplicar', authenticate, authorize('admin', 'superadmin'), asyn
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/pagos/{id}/reversar:
  *   post:
  *     tags: [Pagos]
@@ -1981,3 +1981,7 @@ module.exports = router;
 // POST: /pagos/comunidad/:comunidadId
 // POST: /pagos/:id/aplicar
 // POST: /pagos/:id/reversar
+
+
+
+

@@ -5,7 +5,7 @@ const { authenticate } = require('../middleware/auth');
 const { requireCommunity } = require('../middleware/tenancy');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Reportes
  *     description: Reportes y análisis financieros
@@ -16,7 +16,7 @@ const { requireCommunity } = require('../middleware/tenancy');
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/resumen-financiero:
  *   get:
  *     tags: [Reportes]
@@ -67,7 +67,7 @@ router.get('/comunidad/:comunidadId/resumen-financiero', authenticate, requireCo
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/kpis-financieros:
  *   get:
  *     tags: [Reportes]
@@ -125,7 +125,7 @@ router.get('/comunidad/:comunidadId/kpis-financieros', authenticate, requireComm
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/tendencias-mensuales:
  *   get:
  *     tags: [Reportes]
@@ -174,7 +174,7 @@ router.get('/comunidad/:comunidadId/tendencias-mensuales', authenticate, require
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/morosidad-unidades:
  *   get:
  *     tags: [Reportes]
@@ -252,7 +252,7 @@ router.get('/comunidad/:comunidadId/morosidad-unidades', authenticate, requireCo
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/estadisticas-morosidad:
  *   get:
  *     tags: [Reportes]
@@ -305,7 +305,7 @@ router.get('/comunidad/:comunidadId/estadisticas-morosidad', authenticate, requi
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/gastos-detallados:
  *   get:
  *     tags: [Reportes]
@@ -394,7 +394,7 @@ router.get('/comunidad/:comunidadId/gastos-detallados', authenticate, requireCom
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/gastos-por-categoria:
  *   get:
  *     tags: [Reportes]
@@ -440,7 +440,7 @@ router.get('/comunidad/:comunidadId/gastos-por-categoria', authenticate, require
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/consumo-servicios:
  *   get:
  *     tags: [Reportes]
@@ -508,7 +508,7 @@ router.get('/comunidad/:comunidadId/consumo-servicios', authenticate, requireCom
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/estadisticas-consumo:
  *   get:
  *     tags: [Reportes]
@@ -548,7 +548,7 @@ router.get('/comunidad/:comunidadId/estadisticas-consumo', authenticate, require
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/tickets-soporte:
  *   get:
  *     tags: [Reportes]
@@ -623,7 +623,7 @@ router.get('/comunidad/:comunidadId/tickets-soporte', authenticate, requireCommu
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/reservas-amenidades:
  *   get:
  *     tags: [Reportes]
@@ -706,7 +706,7 @@ router.get('/comunidad/:comunidadId/reservas-amenidades', authenticate, requireC
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/ingresos-amenidades:
  *   get:
  *     tags: [Reportes]
@@ -748,7 +748,7 @@ router.get('/comunidad/:comunidadId/ingresos-amenidades', authenticate, requireC
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/multas-sanciones:
  *   get:
  *     tags: [Reportes]
@@ -813,7 +813,7 @@ router.get('/comunidad/:comunidadId/multas-sanciones', authenticate, requireComm
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/estadisticas-multas:
  *   get:
  *     tags: [Reportes]
@@ -852,7 +852,7 @@ router.get('/comunidad/:comunidadId/estadisticas-multas', authenticate, requireC
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/bitacora-conserjeria:
  *   get:
  *     tags: [Reportes]
@@ -941,7 +941,7 @@ router.get('/comunidad/:comunidadId/bitacora-conserjeria', authenticate, require
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/reportes/comunidad/{comunidadId}/reporte-completo:
  *   get:
  *     tags: [Reportes]
@@ -1081,3 +1081,7 @@ module.exports = router;
 
 // // 9. REPORTES PERSONALIZADOS/EXPORTACIÓN
 // GET: /reportes/comunidad/:comunidadId/reporte-completo
+
+
+
+

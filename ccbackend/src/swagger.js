@@ -478,7 +478,7 @@ const options = {
         description: '📂 Categorías para clasificar gastos'
       },
       {
-        name: 'Centros de Costo',
+        name: 'CentrosCosto',
         description: '🎯 Centros de costo para contabilidad'
       },
       {
@@ -486,7 +486,7 @@ const options = {
         description: '🏪 Gestión de proveedores y servicios'
       },
       {
-        name: 'Documentos de Compra',
+        name: 'DocumentosCompra',
         description: '📄 Facturas y documentos tributarios'
       },
       {
@@ -498,16 +498,36 @@ const options = {
         description: '⚡ Gestión de amenidades y reservas'
       },
       {
-        name: 'Multas',
-        description: '⚠️ Registro y gestión de multas'
+        name: 'Notificaciones',
+        description: '📢 Sistema de notificaciones push y email'
       },
       {
-        name: 'Medidores',
-        description: '📊 Medidores de consumo (agua, luz, gas) y lecturas'
+        name: 'Reportes',
+        description: '📊 Generación de reportes y estadísticas'
       },
       {
-        name: 'Tarifas de Consumo',
-        description: '💲 Tarifas para cálculo de consumos'
+        name: 'Tickets',
+        description: '🎫 Sistema de tickets de soporte'
+      },
+      {
+        name: 'Compras',
+        description: '� Gestión de compras y adquisiciones'
+      },
+      {
+        name: 'Prorrateo',
+        description: '⚖️ Cálculo y distribución de gastos comunes'
+      },
+      {
+        name: 'Dashboard',
+        description: '📈 Dashboard administrativo con KPIs'
+      },
+      {
+        name: 'Consumos',
+        description: '� Registro de consumos de servicios'
+      },
+      {
+        name: 'Apelaciones',
+        description: '⚖️ Gestión de apelaciones y reclamos'
       },
       {
         name: 'Soporte',
@@ -528,6 +548,22 @@ const options = {
       {
         name: 'Utilidades',
         description: '🛠️ Health check, UF, UTM, validación RUT, sync e indicadores'
+      },
+      {
+        name: 'Tarifas de Consumo',
+        description: '💲 Tarifas para cálculo de consumos'
+      },
+      {
+        name: 'Medidores',
+        description: '📊 Gestión de medidores y lecturas'
+      },
+      {
+        name: 'Multas',
+        description: '⚠️ Gestión de multas e infracciones'
+      },
+      {
+        name: 'UTM',
+        description: '📈 Valores UTM, conversiones y estadísticas'
       }
     ]
   },
@@ -537,422 +573,12 @@ const options = {
 const specs = swaggerJsdoc(options);
 
 // Configuración personalizada de Swagger UI
-const swaggerUiOptions = {
-  customCss: `
-    /* Variables CSS personalizadas para Swagger UI */
-    :root {
-      --color-primary: #0d47a1;
-      --color-secondary: #1976d2;
-      --color-accent: #fd5d14;
-      --color-success: #28a745;
-      --color-warning: #ffc107;
-      --color-danger: #dc3545;
-      --color-info: #17a2b8;
-      --color-light: #f8f9fa;
-      --color-dark: #343a40;
-      --color-muted: #6c757d;
-
-      --font-family-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
-      --font-size-base: 1rem;
-      --font-size-sm: 0.875rem;
-      --font-size-lg: 1.125rem;
-      --font-size-xl: 1.25rem;
-      --font-size-xxl: 2rem;
-
-      --border-radius: 0.375rem;
-      --border-radius-sm: 0.25rem;
-      --border-radius-lg: 0.5rem;
-
-      --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-      --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-      --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
-
-      --transition-base: all 0.15s ease-in-out;
-      --transition-slow: all 0.3s ease-in-out;
-    }
-
-    /* Reset y base */
-    .swagger-ui * {
-      box-sizing: border-box;
-    }
-
-    /* Ocultar elementos no deseados */
-    .swagger-ui .topbar { 
-      display: none !important; 
-    }
-
-    /* Contenedor principal */
-    .swagger-ui {
-      font-family: var(--font-family-primary) !important;
-      background-color: var(--color-light);
-      color: var(--color-dark);
-      line-height: 1.6;
-    }
-
-    /* Header y título */
-    .swagger-ui .info {
-      margin: 2rem 0;
-      padding: 2rem;
-      background: linear-gradient(135deg, #e3f2fd, #f8f9fa);
-      border: 1px solid #e1f5fe;
-      border-radius: var(--border-radius-lg);
-      color: var(--color-dark);
-      box-shadow: var(--shadow-sm);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .swagger-ui .info::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
-    }
-
-    .swagger-ui .info hgroup.main {
-      margin: 0 !important;
-    }
-
-    .swagger-ui .info .title {
-      color: var(--color-primary) !important;
-      font-size: var(--font-size-xxl) !important;
-      font-weight: 700 !important;
-      margin: 0 0 1rem 0 !important;
-      text-shadow: none;
-    }
-
-    .swagger-ui .info .description {
-      color: var(--color-dark) !important;
-      margin: 1.5rem 0 !important;
-      font-size: var(--font-size-base);
-      line-height: 1.7;
-    }
-
-    .swagger-ui .info .description p {
-      margin: 1rem 0 !important;
-    }
-
-    .swagger-ui .info .description ul {
-      margin: 1rem 0 !important;
-      padding-left: 1.5rem !important;
-    }
-
-    .swagger-ui .info .description li {
-      margin: 0.5rem 0 !important;
-    }
-
-    .swagger-ui .info .description h3 {
-      color: var(--color-primary) !important;
-      font-weight: 600 !important;
-      margin: 1.5rem 0 1rem 0 !important;
-      font-size: var(--font-size-lg) !important;
-    }
-
-    /* Esquema de autorización */
-    .swagger-ui .scheme-container {
-      background: white !important;
-      padding: 1.5rem !important;
-      border-radius: var(--border-radius) !important;
-      margin: 2rem 0 !important;
-      border: 1px solid #e0e7ff !important;
-      box-shadow: var(--shadow-sm) !important;
-    }
-
-    .swagger-ui .auth-wrapper {
-      padding: 1rem;
-      background: #f8fafc;
-      border-radius: var(--border-radius);
-      border: 1px solid #e2e8f0;
-    }
-
-    /* Tags de secciones */
-    .swagger-ui .opblock-tag {
-      border-bottom: 3px solid var(--color-primary) !important;
-      margin: 2rem 0 1rem 0 !important;
-      padding-bottom: 0.5rem !important;
-      background: linear-gradient(90deg, rgba(13, 71, 161, 0.05), transparent) !important;
-      border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0 !important;
-    }
-
-    .swagger-ui .opblock-tag-section h3 {
-      color: var(--color-primary) !important;
-      font-size: var(--font-size-xl) !important;
-      font-weight: 600 !important;
-      margin: 0 !important;
-      padding: 1rem !important;
-    }
-
-    /* Bloques de operaciones */
-    .swagger-ui .opblock {
-      margin: 1rem 0 !important;
-      border-radius: var(--border-radius) !important;
-      border: 1px solid #e2e8f0 !important;
-      box-shadow: var(--shadow-sm) !important;
-      overflow: hidden !important;
-      transition: var(--transition-base) !important;
-    }
-
-    .swagger-ui .opblock:hover {
-      box-shadow: var(--shadow) !important;
-      transform: translateY(-2px) !important;
-    }
-
-    /* Métodos HTTP con colores personalizados */
-    .swagger-ui .opblock.opblock-get {
-      border-left: 5px solid var(--color-success) !important;
-    }
-
-    .swagger-ui .opblock.opblock-get .opblock-summary-method {
-      background: var(--color-success) !important;
-      color: white !important;
-      font-weight: 600 !important;
-    }
-
-    .swagger-ui .opblock.opblock-post {
-      border-left: 5px solid var(--color-primary) !important;
-    }
-
-    .swagger-ui .opblock.opblock-post .opblock-summary-method {
-      background: var(--color-primary) !important;
-      color: white !important;
-      font-weight: 600 !important;
-    }
-
-    .swagger-ui .opblock.opblock-put {
-      border-left: 5px solid var(--color-warning) !important;
-    }
-
-    .swagger-ui .opblock.opblock-put .opblock-summary-method {
-      background: var(--color-warning) !important;
-      color: var(--color-dark) !important;
-      font-weight: 600 !important;
-    }
-
-    .swagger-ui .opblock.opblock-delete {
-      border-left: 5px solid var(--color-danger) !important;
-    }
-
-    .swagger-ui .opblock.opblock-delete .opblock-summary-method {
-      background: var(--color-danger) !important;
-      color: white !important;
-      font-weight: 600 !important;
-    }
-
-    .swagger-ui .opblock.opblock-patch {
-      border-left: 5px solid var(--color-info) !important;
-    }
-
-    .swagger-ui .opblock.opblock-patch .opblock-summary-method {
-      background: var(--color-info) !important;
-      color: white !important;
-      font-weight: 600 !important;
-    }
-
-    /* Resumen de operaciones */
-    .swagger-ui .opblock-summary {
-      padding: 1rem 1.5rem !important;
-      background: white !important;
-      transition: var(--transition-base) !important;
-    }
-
-    .swagger-ui .opblock-summary:hover {
-      background: #f8fafc !important;
-    }
-
-    .swagger-ui .opblock-summary-path {
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
-      font-size: var(--font-size-sm) !important;
-      font-weight: 600 !important;
-    }
-
-    .swagger-ui .opblock-summary-description {
-      color: var(--color-muted) !important;
-      font-size: var(--font-size-sm) !important;
-      margin-top: 0.5rem !important;
-    }
-
-    /* Contenido expandido */
-    .swagger-ui .opblock-body {
-      background: #f8fafc !important;
-      border-top: 1px solid #e2e8f0 !important;
-    }
-
-    /* Parámetros */
-    .swagger-ui .parameters-col_description p,
-    .swagger-ui .response-col_description p {
-      margin: 0.5rem 0 !important;
-      font-size: var(--font-size-sm) !important;
-      line-height: 1.5 !important;
-    }
-
-    .swagger-ui table thead tr th {
-      background: var(--color-primary) !important;
-      color: white !important;
-      font-weight: 600 !important;
-      padding: 1rem !important;
-      border: none !important;
-    }
-
-    .swagger-ui table tbody tr td {
-      padding: 1rem !important;
-      border-bottom: 1px solid #e2e8f0 !important;
-    }
-
-    /* Botones */
-    .swagger-ui .btn {
-      border-radius: var(--border-radius) !important;
-      font-weight: 600 !important;
-      padding: 0.75rem 1.5rem !important;
-      transition: var(--transition-base) !important;
-      text-transform: none !important;
-      font-size: var(--font-size-sm) !important;
-    }
-
-    .swagger-ui .btn.execute {
-      background: var(--color-primary) !important;
-      border-color: var(--color-primary) !important;
-      color: white !important;
-    }
-
-    .swagger-ui .btn.execute:hover {
-      background: var(--color-secondary) !important;
-      border-color: var(--color-secondary) !important;
-      transform: translateY(-1px) !important;
-      box-shadow: var(--shadow) !important;
-    }
-
-    .swagger-ui .btn.clear {
-      background: var(--color-muted) !important;
-      border-color: var(--color-muted) !important;
-      color: white !important;
-    }
-
-    .swagger-ui .btn.clear:hover {
-      background: var(--color-dark) !important;
-      border-color: var(--color-dark) !important;
-    }
-
-    /* Inputs y formularios */
-    .swagger-ui input[type="text"],
-    .swagger-ui input[type="password"],
-    .swagger-ui input[type="email"],
-    .swagger-ui textarea,
-    .swagger-ui select {
-      border: 1px solid #d1d5db !important;
-      border-radius: var(--border-radius) !important;
-      padding: 0.75rem !important;
-      font-size: var(--font-size-sm) !important;
-      transition: var(--transition-base) !important;
-    }
-
-    .swagger-ui input:focus,
-    .swagger-ui textarea:focus,
-    .swagger-ui select:focus {
-      border-color: var(--color-primary) !important;
-      box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.1) !important;
-      outline: none !important;
-    }
-
-    /* Código y responses */
-    .swagger-ui .highlight-code {
-      background: #1f2937 !important;
-      border-radius: var(--border-radius) !important;
-      padding: 1.5rem !important;
-    }
-
-    .swagger-ui .highlight-code pre {
-      color: #f9fafb !important;
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
-      font-size: var(--font-size-sm) !important;
-      line-height: 1.5 !important;
-    }
-
-    /* Modelos/Schemas */
-    .swagger-ui .model-box {
-      background: white !important;
-      border: 1px solid #e2e8f0 !important;
-      border-radius: var(--border-radius) !important;
-      box-shadow: var(--shadow-sm) !important;
-    }
-
-    .swagger-ui .model-title {
-      background: var(--color-light) !important;
-      color: var(--color-primary) !important;
-      font-weight: 600 !important;
-      padding: 1rem !important;
-      border-bottom: 1px solid #e2e8f0 !important;
-    }
-
-    /* Animaciones suaves */
-    .swagger-ui .opblock-body,
-    .swagger-ui .opblock-summary {
-      transition: var(--transition-base) !important;
-    }
-
-    /* Scrollbar personalizado */
-    .swagger-ui ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    .swagger-ui ::-webkit-scrollbar-track {
-      background: #f1f5f9;
-      border-radius: var(--border-radius-sm);
-    }
-
-    .swagger-ui ::-webkit-scrollbar-thumb {
-      background: var(--color-muted);
-      border-radius: var(--border-radius-sm);
-    }
-
-    .swagger-ui ::-webkit-scrollbar-thumb:hover {
-      background: var(--color-dark);
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .swagger-ui .info {
-        margin: 1rem;
-        padding: 1.5rem;
-      }
-
-      .swagger-ui .info .title {
-        font-size: var(--font-size-xl) !important;
-      }
-
-      .swagger-ui .opblock {
-        margin: 0.5rem;
-      }
-
-      .swagger-ui .btn {
-        font-size: 0.8rem !important;
-        padding: 0.5rem 1rem !important;
-      }
-    }
-  `,
-  customSiteTitle: 'Cuentas Claras API - Documentación',
-  customfavIcon: '/favicon.ico',
-  swaggerOptions: {
-    persistAuthorization: true,
-    displayRequestDuration: true,
-    filter: true,
-    showExtensions: true,
-    showCommonExtensions: true,
-    docExpansion: 'none',
-    defaultModelsExpandDepth: 2,
-    defaultModelExpandDepth: 2
-  }
-};
-
 function setupSwagger(app) {
   // Endpoint principal de documentación
-  app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs, swaggerUiOptions));
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
   
   // Endpoint alternativo para la documentación
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, swaggerUiOptions));
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
   
   // Endpoint para obtener el JSON de Swagger
   app.get('/swagger.json', (req, res) => {

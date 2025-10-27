@@ -3,6 +3,89 @@ const router = express.Router();
 const db = require('../db');
 const { authenticate } = require('../middleware/auth');
 
+/**
+ * @swagger
+ * /compras:
+ *   get:
+ *     tags: [Compras]
+ *     summary: Listar compras con filtros y paginación
+ *     description: Obtiene una lista de compras con filtros opcionales por búsqueda, tipo de documento, fechas, etc.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Cantidad de registros por página
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda en folio o nombre de proveedor
+ *       - in: query
+ *         name: tipo_doc
+ *         schema:
+ *           type: string
+ *         description: Tipo de documento
+ *       - in: query
+ *         name: fecha_desde
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Fecha desde (YYYY-MM-DD)
+ *       - in: query
+ *         name: fecha_hasta
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Fecha hasta (YYYY-MM-DD)
+ *       - in: query
+ *         name: comunidad_id
+ *         schema:
+ *           type: integer
+ *         description: ID de comunidad (solo para superadmin)
+ *     responses:
+ *       200:
+ *         description: Lista de compras obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     description: Datos de la compra desde vista_compras
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       description: Total de registros
+ *                     page:
+ *                       type: integer
+ *                       description: Página actual
+ *                     limit:
+ *                       type: integer
+ *                       description: Registros por página
+ *                     pages:
+ *                       type: integer
+ *                       description: Total de páginas
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
 router.get('/', authenticate, async (req, res) => {
   try {
     const { page = 1, limit = 20, search = '', tipo_doc, fecha_desde, fecha_hasta } = req.query;
@@ -67,3 +150,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 module.exports = router;
+
+
+
+

@@ -7,7 +7,7 @@ const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Membresias
  *     description: |
@@ -152,7 +152,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /comunidad/{comunidadId}:
  *   post:
  *     tags: [Membresias]
@@ -413,7 +413,7 @@ router.delete('/:id', authenticate, authorize('admin','superadmin'), async (req,
 });
 
 /**
- * @openapi
+ * @swagger
  * /membresias/{id}:
  *   get:
  *     tags: [Membresias]
@@ -474,7 +474,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /membresias/catalogos/planes:
  *   get:
  *     tags: [Membresias]
@@ -508,7 +508,7 @@ router.get('/catalogos/planes', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /membresias/catalogos/estados:
  *   get:
  *     tags: [Membresias]
@@ -532,7 +532,7 @@ router.get('/catalogos/estados', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * components:
  *   schemas:
  *     Membresia:
@@ -616,3 +616,7 @@ module.exports = router;
 // // CATÁLOGOS
 // GET: /membresias/catalogos/planes
 // GET: /membresias/catalogos/estados
+
+
+
+

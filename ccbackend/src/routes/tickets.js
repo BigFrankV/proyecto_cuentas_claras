@@ -7,7 +7,7 @@ const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Tickets
  *     description: Gestión de tickets de soporte
@@ -18,7 +18,7 @@ const { requireCommunity } = require('../middleware/tenancy');
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/comunidad/{comunidadId}:
  *   get:
  *     tags: [Tickets]
@@ -180,7 +180,7 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/comunidad/{comunidadId}/estadisticas:
  *   get:
  *     tags: [Tickets]
@@ -217,7 +217,7 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/comunidad/{comunidadId}/proximos-vencer:
  *   get:
  *     tags: [Tickets]
@@ -270,7 +270,7 @@ router.get('/comunidad/:comunidadId/proximos-vencer', authenticate, requireCommu
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/{id}:
  *   get:
  *     tags: [Tickets]
@@ -684,7 +684,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/todos/completos:
  *   get:
  *     tags: [Tickets]
@@ -747,7 +747,7 @@ router.get('/todos/completos', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/estadisticas/generales:
  *   get:
  *     tags: [Tickets]
@@ -780,7 +780,7 @@ router.get('/estadisticas/generales', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/estadisticas/por-estado:
  *   get:
  *     tags: [Tickets]
@@ -813,7 +813,7 @@ router.get('/estadisticas/por-estado', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/estadisticas/por-prioridad:
  *   get:
  *     tags: [Tickets]
@@ -853,7 +853,7 @@ router.get('/estadisticas/por-prioridad', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/estadisticas/por-categoria:
  *   get:
  *     tags: [Tickets]
@@ -890,7 +890,7 @@ router.get('/estadisticas/por-categoria', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/estadisticas/mensuales:
  *   get:
  *     tags: [Tickets]
@@ -932,7 +932,7 @@ router.get('/estadisticas/mensuales', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/busqueda/avanzada:
  *   get:
  *     tags: [Tickets]
@@ -1041,7 +1041,7 @@ router.get('/busqueda/avanzada', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/por-asignado/estadisticas:
  *   get:
  *     tags: [Tickets]
@@ -1100,7 +1100,7 @@ router.get('/por-asignado/estadisticas', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/export/completo:
  *   get:
  *     tags: [Tickets]
@@ -1150,7 +1150,7 @@ router.get('/export/completo', authenticate, authorize('admin', 'superadmin'), a
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/export/abiertos:
  *   get:
  *     tags: [Tickets]
@@ -1205,7 +1205,7 @@ router.get('/export/abiertos', authenticate, authorize('admin', 'superadmin'), a
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/export/estadisticas-resolucion:
  *   get:
  *     tags: [Tickets]
@@ -1249,7 +1249,7 @@ router.get('/export/estadisticas-resolucion', authenticate, authorize('admin', '
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/validacion/integridad:
  *   get:
  *     tags: [Tickets]
@@ -1305,7 +1305,7 @@ router.get('/validacion/integridad', authenticate, authorize('admin', 'superadmi
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/comunidad/{comunidadId}:
  *   post:
  *     tags: [Tickets]
@@ -1344,7 +1344,7 @@ router.post('/comunidad/:comunidadId', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/{id}:
  *   patch:
  *     tags: [Tickets]
@@ -1381,7 +1381,7 @@ router.patch('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tickets/{id}:
  *   delete:
  *     tags: [Tickets]
@@ -1439,3 +1439,7 @@ module.exports = router;
 // POST: /tickets/comunidad/:comunidadId
 // PATCH: /tickets/:id
 // DELETE: /tickets/:id
+
+
+
+

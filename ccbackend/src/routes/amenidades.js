@@ -11,7 +11,7 @@ const { requireCommunity } = require('../middleware/tenancy');
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /amenidades:
  *   get:
  *     tags: [Amenidades]
@@ -117,7 +117,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/por-comunidad:
  *   get:
  *     tags: [Amenidades]
@@ -148,7 +148,7 @@ router.get('/por-comunidad', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/disponibles:
  *   get:
  *     tags: [Amenidades]
@@ -192,7 +192,7 @@ router.get('/disponibles', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/{id}/detalle:
  *   get:
  *     tags: [Amenidades]
@@ -263,7 +263,7 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/completas:
  *   get:
  *     tags: [Amenidades]
@@ -317,7 +317,7 @@ router.get('/completas', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/estadisticas/generales:
  *   get:
  *     tags: [Amenidades]
@@ -349,7 +349,7 @@ router.get('/estadisticas/generales', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/estadisticas/comunidad:
  *   get:
  *     tags: [Amenidades]
@@ -381,7 +381,7 @@ router.get('/estadisticas/comunidad', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/estadisticas/tipo:
  *   get:
  *     tags: [Amenidades]
@@ -422,7 +422,7 @@ router.get('/estadisticas/tipo', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/buscar:
  *   get:
  *     tags: [Amenidades]
@@ -511,7 +511,7 @@ router.get('/buscar', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/por-capacidad:
  *   get:
  *     tags: [Amenidades]
@@ -545,7 +545,7 @@ router.get('/por-capacidad', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/por-tarifa:
  *   get:
  *     tags: [Amenidades]
@@ -584,7 +584,7 @@ router.get('/por-tarifa', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/exportar/completo:
  *   get:
  *     tags: [Amenidades]
@@ -618,7 +618,7 @@ router.get('/exportar/completo', authenticate, authorize('admin', 'superadmin'),
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/exportar/estadisticas:
  *   get:
  *     tags: [Amenidades]
@@ -668,7 +668,7 @@ router.get('/exportar/estadisticas', authenticate, authorize('admin', 'superadmi
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/exportar/reglas:
  *   get:
  *     tags: [Amenidades]
@@ -702,7 +702,7 @@ router.get('/exportar/reglas', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/validar/integridad:
  *   get:
  *     tags: [Amenidades]
@@ -752,7 +752,7 @@ router.get('/validar/integridad', authenticate, authorize('admin', 'superadmin')
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/validar/duplicados:
  *   get:
  *     tags: [Amenidades]
@@ -781,7 +781,7 @@ router.get('/validar/duplicados', authenticate, authorize('admin', 'superadmin')
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/validar/anomalias:
  *   get:
  *     tags: [Amenidades]
@@ -818,7 +818,7 @@ router.get('/validar/anomalias', authenticate, authorize('admin', 'superadmin'),
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/comunidad/{comunidadId}:
  *   get:
  *     tags: [Amenidades]
@@ -839,7 +839,7 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/comunidad/{comunidadId}:
  *   post:
  *     tags: [Amenidades]
@@ -879,7 +879,7 @@ router.post(
 );
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/{id}:
  *   get:
  *     tags: [Amenidades]
@@ -902,7 +902,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/{id}:
  *   patch:
  *     tags: [Amenidades]
@@ -938,7 +938,7 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req,
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/{id}:
  *   delete:
  *     tags: [Amenidades]
@@ -960,7 +960,7 @@ router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/{id}/reservas:
  *   get:
  *     tags: [Amenidades]
@@ -992,7 +992,7 @@ router.get('/:id/reservas', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /amenidades/{id}/reservas:
  *   post:
  *     tags: [Amenidades]
@@ -1082,3 +1082,7 @@ module.exports = router;
 // // 8. RESERVAS DE AMENIDADES
 // GET: /amenidades/:id/reservas
 // POST: /amenidades/:id/reservas
+
+
+
+

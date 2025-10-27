@@ -226,7 +226,7 @@ router.get('/comunidad/:comunidadId/resumen', authenticate, async (req, res) => 
 });
 
 /**
- * @openapi
+ * @swagger
  * /comunidades/{comunidadId}/emisiones:
  *   post:
  *     tags: [Emisiones]
@@ -1099,3 +1099,7 @@ module.exports = router;
 // GET: /emisiones/validar/gastos/:id
 // GET: /emisiones/validar/cuentas/:id
 // GET: /emisiones/validar/cobertura/:comunidadId/:emisionId
+
+
+
+

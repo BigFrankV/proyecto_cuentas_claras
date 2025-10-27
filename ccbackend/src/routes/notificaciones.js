@@ -6,7 +6,7 @@ const { requireCommunity } = require('../middleware/tenancy');
 const { body, validationResult } = require('express-validator');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Notificaciones
  *     description: Sistema de notificaciones de usuario
@@ -17,7 +17,7 @@ const { body, validationResult } = require('express-validator');
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/comunidad/{comunidadId}:
  *   get:
  *     tags: [Notificaciones]
@@ -131,7 +131,7 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/comunidad/{comunidadId}/estadisticas-general:
  *   get:
  *     tags: [Notificaciones]
@@ -171,7 +171,7 @@ router.get('/comunidad/:comunidadId/estadisticas-general', authenticate, require
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/comunidad/{comunidadId}/pendientes:
  *   get:
  *     tags: [Notificaciones]
@@ -213,7 +213,7 @@ router.get('/comunidad/:comunidadId/pendientes', authenticate, requireCommunity(
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/{id}:
  *   get:
  *     tags: [Notificaciones]
@@ -267,7 +267,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/comunidad/{comunidadId}/listado-completo:
  *   get:
  *     tags: [Notificaciones]
@@ -333,7 +333,7 @@ router.get('/comunidad/:comunidadId/listado-completo', authenticate, requireComm
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/estadisticas/generales:
  *   get:
  *     tags: [Notificaciones]
@@ -372,7 +372,7 @@ router.get('/estadisticas/generales', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/estadisticas/por-estado:
  *   get:
  *     tags: [Notificaciones]
@@ -408,7 +408,7 @@ router.get('/estadisticas/por-estado', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/estadisticas/por-tipo:
  *   get:
  *     tags: [Notificaciones]
@@ -446,7 +446,7 @@ router.get('/estadisticas/por-tipo', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/estadisticas/por-canal:
  *   get:
  *     tags: [Notificaciones]
@@ -483,7 +483,7 @@ router.get('/estadisticas/por-canal', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/estadisticas/mensuales:
  *   get:
  *     tags: [Notificaciones]
@@ -524,7 +524,7 @@ router.get('/estadisticas/mensuales', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/buscar:
  *   get:
  *     tags: [Notificaciones]
@@ -637,7 +637,7 @@ router.get('/buscar', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/por-comunidad:
  *   get:
  *     tags: [Notificaciones]
@@ -688,7 +688,7 @@ router.get('/por-comunidad', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/por-audiencia:
  *   get:
  *     tags: [Notificaciones]
@@ -728,7 +728,7 @@ router.get('/por-audiencia', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/exportar/completo:
  *   get:
  *     tags: [Notificaciones]
@@ -770,7 +770,7 @@ router.get('/exportar/completo', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/exportar/enviadas:
  *   get:
  *     tags: [Notificaciones]
@@ -809,7 +809,7 @@ router.get('/exportar/enviadas', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/exportar/estadisticas-mensuales:
  *   get:
  *     tags: [Notificaciones]
@@ -852,7 +852,7 @@ router.get('/exportar/estadisticas-mensuales', authenticate, async (req, res) =>
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/validaciones/integridad:
  *   get:
  *     tags: [Notificaciones]
@@ -890,7 +890,7 @@ router.get('/validaciones/integridad', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones:
  *   post:
  *     tags: [Notificaciones]
@@ -941,7 +941,7 @@ router.post('/',
 );
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/{id}/marcar-leida:
  *   patch:
  *     tags: [Notificaciones]
@@ -977,7 +977,7 @@ router.patch('/:id/marcar-leida', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/notificaciones/{id}:
  *   delete:
  *     tags: [Notificaciones]
@@ -1051,3 +1051,7 @@ module.exports = router;
 // POST: /notificaciones
 // PATCH: /notificaciones/:id/marcar-leida
 // DELETE: /notificaciones/:id
+
+
+
+

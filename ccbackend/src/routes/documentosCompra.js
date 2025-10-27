@@ -1,4 +1,3 @@
-// ...existing code...
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -8,10 +7,224 @@ const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: DocumentosCompra
  *     description: Documentos de compra (facturas, boletas)
+ */
+
+/**
+ * @swagger
+ * /documentos-compra/comunidad/{comunidadId}:
+ *   get:
+ *     tags: [DocumentosCompra]
+ *     summary: Listar documentos de compra por comunidad
+ *     description: Obtiene una lista paginada de documentos de compra para una comunidad específica
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la comunidad
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 100
+ *         description: Cantidad de registros por página
+ *     responses:
+ *       200:
+ *         description: Lista de documentos obtenida exitosamente
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+/**
+ * @swagger
+ * /documentos-compra/comunidad/{comunidadId}:
+ *   post:
+ *     tags: [DocumentosCompra]
+ *     summary: Crear documento de compra
+ *     description: Crea un nuevo documento de compra para una comunidad
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la comunidad
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - proveedor_id
+ *               - tipo_doc
+ *               - folio
+ *               - fecha_emision
+ *               - total
+ *             properties:
+ *               proveedor_id:
+ *                 type: integer
+ *                 description: ID del proveedor
+ *               tipo_doc:
+ *                 type: string
+ *                 description: Tipo de documento
+ *               folio:
+ *                 type: string
+ *                 description: Número de folio
+ *               fecha_emision:
+ *                 type: string
+ *                 format: date
+ *                 description: Fecha de emisión
+ *               neto:
+ *                 type: number
+ *                 default: 0
+ *                 description: Monto neto
+ *               iva:
+ *                 type: number
+ *                 default: 0
+ *                 description: Monto IVA
+ *               exento:
+ *                 type: number
+ *                 default: 0
+ *                 description: Monto exento
+ *               total:
+ *                 type: number
+ *                 description: Monto total
+ *               glosa:
+ *                 type: string
+ *                 description: Descripción opcional
+ *     responses:
+ *       201:
+ *         description: Documento creado exitosamente
+ *       400:
+ *         description: Datos inválidos
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+/**
+ * @swagger
+ * /documentos-compra/{id}:
+ *   get:
+ *     tags: [DocumentosCompra]
+ *     summary: Obtener documento de compra por ID
+ *     description: Obtiene los detalles de un documento de compra específico
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del documento
+ *     responses:
+ *       200:
+ *         description: Documento obtenido exitosamente
+ *       404:
+ *         description: Documento no encontrado
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+/**
+ * @swagger
+ * /documentos-compra/{id}:
+ *   patch:
+ *     tags: [DocumentosCompra]
+ *     summary: Actualizar documento de compra
+ *     description: Actualiza los datos de un documento de compra existente
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del documento
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               proveedor_id:
+ *                 type: integer
+ *               tipo_doc:
+ *                 type: string
+ *               folio:
+ *                 type: string
+ *               fecha_emision:
+ *                 type: string
+ *                 format: date
+ *               neto:
+ *                 type: number
+ *               iva:
+ *                 type: number
+ *               exento:
+ *                 type: number
+ *               total:
+ *                 type: number
+ *               glosa:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Documento actualizado exitosamente
+ *       400:
+ *         description: Datos inválidos
+ *       401:
+ *         description: No autorizado
+ *       404:
+ *         description: Documento no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+/**
+ * @swagger
+ * /documentos-compra/{id}:
+ *   delete:
+ *     tags: [DocumentosCompra]
+ *     summary: Eliminar documento de compra
+ *     description: Elimina un documento de compra existente
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del documento
+ *     responses:
+ *       204:
+ *         description: Documento eliminado exitosamente
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  */
 
 router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -46,3 +259,7 @@ module.exports = router;
 // GET: /documentos-compra/:id
 // PATCH: /documentos-compra/:id
 // DELETE: /documentos-compra/:id
+
+
+
+

@@ -5,10 +5,10 @@ const indicadoresService = require('../services/indicadoresService');
 const schedulerService = require('../services/schedulerService');
 
 /**
- * @openapi
+ * @swagger
  * /health:
  *   get:
- *     tags: [Util]
+ *     tags: [Utilidades]
  *     summary: Health check
  *     responses:
  *       200:
@@ -16,10 +16,10 @@ const schedulerService = require('../services/schedulerService');
  */
 router.get('/health', (req, res) => { res.json({ status: 'ok' }); });
 /**
- * @openapi
+ * @swagger
  * /version:
  *   get:
- *     tags: [Util]
+ *     tags: [Utilidades]
  *     summary: Obtener versión de la API
  *     responses:
  *       200:
@@ -64,10 +64,10 @@ router.get('/validar-rut', async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /util/sync:
  *   post:
- *     tags: [Util]
+ *     tags: [Utilidades]
  *     summary: Ejecutar sincronización manual de indicadores
  *     responses:
  *       200:
@@ -93,10 +93,10 @@ router.post('/sync', async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /util/sync/status:
  *   get:
- *     tags: [Util]
+ *     tags: [Utilidades]
  *     summary: Obtener estado del scheduler y estadísticas de datos
  *     responses:
  *       200:
@@ -122,10 +122,10 @@ router.get('/sync/status', async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /util/sync/init:
  *   post:
- *     tags: [Util]
+ *     tags: [Utilidades]
  *     summary: Ejecutar sincronización inicial con datos históricos
  *     responses:
  *       200:
@@ -150,10 +150,10 @@ router.post('/sync/init', async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /util/sync/manual:
  *   post:
- *     tags: [Util]
+ *     tags: [Utilidades]
  *     summary: Ejecutar sincronización manual de indicadores
  *     responses:
  *       200:
@@ -176,10 +176,10 @@ router.post('/sync/manual', async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /util/indicadores:
  *   get:
- *     tags: [Util]
+ *     tags: [Utilidades]
  *     summary: Obtener últimos valores de todos los indicadores
  *     responses:
  *       200:
@@ -219,10 +219,10 @@ router.get('/indicadores', async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /util/uf/historico:
  *   get:
- *     tags: [Util]
+ *     tags: [Utilidades]
  *     summary: Obtener histórico de UF
  *     parameters:
  *       - name: desde
@@ -275,10 +275,10 @@ router.get('/uf/historico', async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /util/utm/historico:
  *   get:
- *     tags: [Util]
+ *     tags: [Utilidades]
  *     summary: Obtener histórico de UTM
  *     parameters:
  *       - name: desde
@@ -357,3 +357,7 @@ module.exports = router;
 // GET: /util/sync/status
 // POST: /util/sync/init
 // POST: /util/sync/manual
+
+
+
+

@@ -1,4 +1,3 @@
-// ...existing code...
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -8,7 +7,7 @@ const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
 /**
- * @openapi
+ * @swagger
  * components:
  *   schemas:
  *     Torre:
@@ -52,7 +51,7 @@ const { requireCommunity } = require('../middleware/tenancy');
 // ============================================================================
 
 /**
- * @openapi
+ * @swagger
  * /torres/edificio/{edificioId}/listado:
  *   get:
  *     tags: [Torres]
@@ -120,7 +119,7 @@ router.get('/edificio/:edificioId/listado', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/edificio/{edificioId}/buscar:
  *   get:
  *     tags: [Torres]
@@ -206,7 +205,7 @@ router.get('/edificio/:edificioId/buscar', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/edificio/{edificioId}/estadisticas:
  *   get:
  *     tags: [Torres]
@@ -277,7 +276,7 @@ router.get('/edificio/:edificioId/estadisticas', authenticate, async (req, res) 
 // ============================================================================
 
 /**
- * @openapi
+ * @swagger
  * /torres/{id}/detalle:
  *   get:
  *     tags: [Torres]
@@ -394,7 +393,7 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/{id}/unidades:
  *   get:
  *     tags: [Torres]
@@ -489,7 +488,7 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/{id}/unidades/filtradas:
  *   get:
  *     tags: [Torres]
@@ -568,7 +567,7 @@ router.get('/:id/unidades/filtradas', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/{id}/estadisticas-por-piso:
  *   get:
  *     tags: [Torres]
@@ -637,7 +636,7 @@ router.get('/:id/estadisticas-por-piso', authenticate, async (req, res) => {
 // ============================================================================
 
 /**
- * @openapi
+ * @swagger
  * /torres/edificio/{edificioId}/validar-codigo:
  *   get:
  *     tags: [Torres]
@@ -690,7 +689,7 @@ router.get('/edificio/:edificioId/validar-codigo', authenticate, async (req, res
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/edificio/{edificioId}/siguiente-codigo:
  *   get:
  *     tags: [Torres]
@@ -736,7 +735,7 @@ router.get('/edificio/:edificioId/siguiente-codigo', authenticate, async (req, r
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/{id}/puede-eliminar:
  *   get:
  *     tags: [Torres]
@@ -809,7 +808,7 @@ router.get('/:id/puede-eliminar', authenticate, async (req, res) => {
 // ============================================================================
 
 /**
- * @openapi
+ * @swagger
  * /torres/reportes/completo:
  *   get:
  *     tags: [Torres]
@@ -918,7 +917,7 @@ router.get('/reportes/completo', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/reportes/ocupacion:
  *   get:
  *     tags: [Torres]
@@ -995,7 +994,7 @@ router.get('/reportes/ocupacion', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/buscar:
  *   get:
  *     tags: [Torres]
@@ -1075,7 +1074,7 @@ router.get('/buscar', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/edificio/{edificioId}/dropdown:
  *   get:
  *     tags: [Torres]
@@ -1133,7 +1132,7 @@ router.get('/edificio/:edificioId/dropdown', authenticate, async (req, res) => {
 // ============================================================================
 
 /**
- * @openapi
+ * @swagger
  * /torres/top-unidades:
  *   get:
  *     tags: [Torres]
@@ -1208,7 +1207,7 @@ router.get('/top-unidades', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/estadisticas-globales:
  *   get:
  *     tags: [Torres]
@@ -1279,7 +1278,7 @@ router.get('/estadisticas-globales', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/edificio/{edificioId}/distribucion:
  *   get:
  *     tags: [Torres]
@@ -1336,7 +1335,7 @@ router.get('/edificio/:edificioId/distribucion', authenticate, async (req, res) 
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/edificio/{edificioId}/comparativa-superficies:
  *   get:
  *     tags: [Torres]
@@ -1409,7 +1408,7 @@ router.get('/edificio/:edificioId/comparativa-superficies', authenticate, async 
 // ============================================================================
 
 /**
- * @openapi
+ * @swagger
  * /torres/comunidad/{comunidadId}:
  *   get:
  *     tags: [Torres]
@@ -1461,7 +1460,7 @@ router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/edificio/{edificioId}:
  *   get:
  *     tags: [Torres]
@@ -1497,7 +1496,7 @@ router.get('/edificio/:edificioId', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/edificio/{edificioId}:
  *   post:
  *     tags: [Torres]
@@ -1555,7 +1554,7 @@ router.post('/edificio/:edificioId', [authenticate, async (req,res,next)=>{ // s
 });
 
 /**
- * @openapi
+ * @swagger
  * /torres/{id}:
  *   get:
  *     tags: [Torres]
@@ -1580,7 +1579,7 @@ router.post('/edificio/:edificioId', [authenticate, async (req,res,next)=>{ // s
 router.get('/:id', authenticate, async (req, res) => { const id = req.params.id; const [rows] = await db.query('SELECT * FROM torre WHERE id = ? LIMIT 1', [id]); if (!rows.length) return res.status(404).json({ error: 'not found' }); res.json(rows[0]); });
 
 /**
- * @openapi
+ * @swagger
  * /torres/{id}:
  *   patch:
  *     tags: [Torres]
@@ -1618,7 +1617,7 @@ router.get('/:id', authenticate, async (req, res) => { const id = req.params.id;
 router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => { const id = req.params.id; const fields = ['nombre']; const updates = []; const values = []; fields.forEach(f => { if (req.body[f] !== undefined) { updates.push(`${f} = ?`); values.push(req.body[f]); } }); if (!updates.length) return res.status(400).json({ error: 'no fields' }); values.push(id); try { await db.query(`UPDATE torre SET ${updates.join(', ')} WHERE id = ?`, values); const [rows] = await db.query('SELECT * FROM torre WHERE id = ? LIMIT 1', [id]); res.json(rows[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
 
 /**
- * @openapi
+ * @swagger
  * /torres/{id}:
  *   delete:
  *     tags: [Torres]
@@ -1676,7 +1675,7 @@ module.exports = router;
 // ============================================================================
 
 /**
- * @openapi
+ * @swagger
  * /torres:
  *   post:
  *     tags: [Torres]
@@ -1802,3 +1801,7 @@ router.post('/', authenticate, async (req, res) => {
 // // REPORTES
 // GET: /torres/reportes/completo
 // GET: /torres/reportes/ocupacion
+
+
+
+

@@ -8,14 +8,14 @@ const paymentGatewayService = require('../services/paymentGatewayService');
 const logger = require('../logger');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Payment Gateway
  *     description: Integración con pasarelas de pago
  */
 
 /**
- * @openapi
+ * @swagger
  * /gateway/available:
  *   get:
  *     tags: [Payment Gateway]
@@ -43,7 +43,7 @@ router.get('/available', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /gateway/create-payment:
  *   post:
  *     tags: [Payment Gateway]
@@ -188,7 +188,7 @@ router.post('/create-payment', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /gateway/confirm-payment:
  *   post:
  *     tags: [Payment Gateway]
@@ -274,7 +274,7 @@ router.post('/confirm-payment', async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /gateway/transaction/{orderId}:
  *   get:
  *     tags: [Payment Gateway]
@@ -339,7 +339,7 @@ router.get('/transaction/:orderId', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /gateway/community/{communityId}/transactions:
  *   get:
  *     tags: [Payment Gateway]
@@ -439,7 +439,7 @@ router.get('/community/:communityId/transactions', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /gateway/webhook/webpay:
  *   post:
  *     tags: [Payment Gateway]
@@ -505,3 +505,7 @@ module.exports = router;
 
 // // WEBHOOKS
 // POST: /gateway/webhook/webpay
+
+
+
+

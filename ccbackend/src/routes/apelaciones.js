@@ -9,6 +9,7 @@ const MultasPermissions = require('../middleware/multasPermissions');
  * @swagger
  * /apelaciones:
  *   get:
+ *     tags: [Apelaciones]
  *     summary: Listar apelaciones
  *     description: Devuelve una lista paginada de apelaciones con filtros opcionales.
  *     parameters:
@@ -242,6 +243,7 @@ router.get('/:id',
  * @swagger
  * /apelaciones/{id}:
  *   get:
+ *     tags: [Apelaciones]
  *     summary: Obtener detalle de apelación
  *     description: Devuelve los detalles de una apelación específica.
  *     parameters:
@@ -314,6 +316,7 @@ router.get('/:id',
  * @swagger
  * /apelaciones:
  *   post:
+ *     tags: [Apelaciones]
  *     summary: Crear apelación
  *     description: Crea una nueva apelación para una multa específica.
  *     requestBody:
@@ -444,3 +447,7 @@ router.post('/',
 );
 
 module.exports = router;
+
+
+
+
