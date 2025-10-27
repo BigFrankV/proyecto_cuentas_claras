@@ -7,7 +7,7 @@ const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Proveedores
  *     description: Gestión de proveedores por comunidad
@@ -18,7 +18,7 @@ const { requireCommunity } = require('../middleware/tenancy');
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}:
  *   get:
  *     tags: [Proveedores]
@@ -145,7 +145,7 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}/estadisticas:
  *   get:
  *     tags: [Proveedores]
@@ -193,7 +193,7 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/{id}:
  *   get:
  *     tags: [Proveedores]
@@ -248,7 +248,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/{id}/historial-gastos:
  *   get:
  *     tags: [Proveedores]
@@ -291,7 +291,7 @@ router.get('/:id/historial-gastos', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/{id}/documentos:
  *   get:
  *     tags: [Proveedores]
@@ -337,7 +337,7 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}/top-volumen:
  *   get:
  *     tags: [Proveedores]
@@ -377,7 +377,7 @@ router.get('/comunidad/:comunidadId/top-volumen', authenticate, requireCommunity
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}/inactivos:
  *   get:
  *     tags: [Proveedores]
@@ -424,7 +424,7 @@ router.get('/comunidad/:comunidadId/inactivos', authenticate, requireCommunity('
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}/analisis-mensual:
  *   get:
  *     tags: [Proveedores]
@@ -470,7 +470,7 @@ router.get('/comunidad/:comunidadId/analisis-mensual', authenticate, requireComm
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}/por-categoria:
  *   get:
  *     tags: [Proveedores]
@@ -507,7 +507,7 @@ router.get('/comunidad/:comunidadId/por-categoria', authenticate, requireCommuni
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}/comparativa:
  *   get:
  *     tags: [Proveedores]
@@ -573,7 +573,7 @@ router.get('/comunidad/:comunidadId/comparativa', authenticate, requireCommunity
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}/dashboard:
  *   get:
  *     tags: [Proveedores]
@@ -608,7 +608,7 @@ router.get('/comunidad/:comunidadId/dashboard', authenticate, requireCommunity('
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}/top-mes:
  *   get:
  *     tags: [Proveedores]
@@ -647,7 +647,7 @@ router.get('/comunidad/:comunidadId/top-mes', authenticate, requireCommunity('co
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}/distribucion:
  *   get:
  *     tags: [Proveedores]
@@ -790,7 +790,7 @@ router.get('/', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}/validar-rut:
  *   post:
  *     tags: [Proveedores]
@@ -817,7 +817,7 @@ router.post('/comunidad/:comunidadId/validar-rut', authenticate, requireCommunit
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/{id}/validar-eliminacion:
  *   get:
  *     tags: [Proveedores]
@@ -855,7 +855,7 @@ router.get('/:id/validar-eliminacion', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}/export:
  *   get:
  *     tags: [Proveedores]
@@ -899,7 +899,7 @@ router.get('/comunidad/:comunidadId/export', authenticate, requireCommunity('com
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}/dropdown:
  *   get:
  *     tags: [Proveedores]
@@ -934,7 +934,7 @@ router.get('/comunidad/:comunidadId/dropdown', authenticate, requireCommunity('c
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/comunidad/{comunidadId}:
  *   post:
  *     tags: [Proveedores]
@@ -974,7 +974,7 @@ router.post('/comunidad/:comunidadId', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/{id}:
  *   patch:
  *     tags: [Proveedores]
@@ -1011,7 +1011,7 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req,
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/proveedores/{id}:
  *   delete:
  *     tags: [Proveedores]
@@ -1083,3 +1083,7 @@ module.exports = router;
 // POST: /proveedores/comunidad/:comunidadId
 // PATCH: /proveedores/:id
 // DELETE: /proveedores/:id
+
+
+
+

@@ -17,6 +17,7 @@ const TIPOS_CATEGORIA = ['operacional', 'extraordinario', 'fondo_reserva', 'mult
  * @swagger
  * /categorias-gasto/comunidad/{comunidadId}:
  *   get:
+ *     tags: [Categor�as de Gasto]
  *     summary: Listado básico de categorías de gasto
  *     description: Devuelve una lista completa de categorías de gasto para una comunidad específica, incluyendo información básica y estado.
  *     parameters:
@@ -199,6 +200,45 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
  *                 error:
  *                   type: string
  */
+
+/**
+ * @swagger
+ * /categorias-gasto/comunidad/{comunidadId}/filtrar:
+ *   get:
+ *     tags: [Categor�as de Gasto]
+ *     summary: Listado filtrado de categorías de gasto
+ *     description: Devuelve una lista filtrada de categorías de gasto para una comunidad específica
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la comunidad
+ *       - name: nombre_busqueda
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda en nombre
+ *       - name: tipo_filtro
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: Filtro por tipo
+ *       - name: activa_filtro
+ *         in: query
+ *         schema:
+ *           type: boolean
+ *         description: Filtro por estado activo
+ *     responses:
+ *       200:
+ *         description: Lista filtrada obtenida exitosamente
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
 router.get('/comunidad/:comunidadId/filtrar', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
     const comunidadId = Number(req.params.comunidadId);
@@ -393,10 +433,10 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/{id}/ultimos-gastos:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Últimos gastos asociados a la categoría
  */
 router.get('/:id/ultimos-gastos', authenticate, async (req, res) => {
@@ -979,10 +1019,10 @@ router.get('/comunidad/:comunidadId/estadisticas/generales', authenticate, requi
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/estadisticas/por-tipo:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Estadísticas por tipo de categoría
  */
 router.get('/comunidad/:comunidadId/estadisticas/por-tipo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1010,10 +1050,10 @@ router.get('/comunidad/:comunidadId/estadisticas/por-tipo', authenticate, requir
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/mas-utilizadas:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Categorías más utilizadas por cantidad de gastos
  */
 router.get('/comunidad/:comunidadId/mas-utilizadas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1056,10 +1096,10 @@ router.get('/comunidad/:comunidadId/mas-utilizadas', authenticate, requireCommun
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/mas-costosas:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Categorías más costosas por monto total
  */
 router.get('/comunidad/:comunidadId/mas-costosas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1103,10 +1143,10 @@ router.get('/comunidad/:comunidadId/mas-costosas', authenticate, requireCommunit
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/sin-uso:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Categorías sin uso en período
  */
 router.get('/comunidad/:comunidadId/sin-uso', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1142,10 +1182,10 @@ router.get('/comunidad/:comunidadId/sin-uso', authenticate, requireCommunity('co
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/{id}/existe:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Verificar si existe una categoría
  */
 router.get('/:id/existe', authenticate, async (req, res) => {
@@ -1170,10 +1210,10 @@ router.get('/:id/existe', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/validar-nombre:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Verificar si existe categoría con el mismo nombre
  */
 router.get('/comunidad/:comunidadId/validar-nombre', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1206,10 +1246,10 @@ router.get('/comunidad/:comunidadId/validar-nombre', authenticate, requireCommun
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/{id}/tiene-gastos:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Verificar si la categoría tiene gastos asociados
  */
 router.get('/:id/tiene-gastos', authenticate, async (req, res) => {
@@ -1227,10 +1267,10 @@ router.get('/:id/tiene-gastos', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/validar-tipo:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Verificar si el tipo de categoría es válido
  */
 router.get('/validar-tipo', authenticate, async (req, res) => {
@@ -1321,10 +1361,10 @@ router.get('/comunidad/:comunidadId/activas', authenticate, requireCommunity('co
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/tipos:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Lista de tipos de categoría disponibles en la comunidad
  */
 router.get('/comunidad/:comunidadId/tipos', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1356,10 +1396,10 @@ router.get('/comunidad/:comunidadId/tipos', authenticate, requireCommunity('comu
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/por-tipo/{tipo}:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Lista de categorías por tipo específico
  */
 router.get('/comunidad/:comunidadId/por-tipo/:tipo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1396,10 +1436,10 @@ router.get('/comunidad/:comunidadId/por-tipo/:tipo', authenticate, requireCommun
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/reporte/por-mes:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Reporte de uso de categorías por mes
  */
 router.get('/comunidad/:comunidadId/reporte/por-mes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1437,10 +1477,10 @@ router.get('/comunidad/:comunidadId/reporte/por-mes', authenticate, requireCommu
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/reporte/comparativo:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Análisis comparativo de categorías (último mes vs mes anterior)
  */
 router.get('/comunidad/:comunidadId/reporte/comparativo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1473,10 +1513,10 @@ router.get('/comunidad/:comunidadId/reporte/comparativo', authenticate, requireC
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/reporte/variabilidad:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Categorías con mayor variabilidad en gastos
  */
 router.get('/comunidad/:comunidadId/reporte/variabilidad', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1525,10 +1565,10 @@ router.get('/comunidad/:comunidadId/reporte/variabilidad', authenticate, require
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/exportar:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Exportación completa para Excel/CSV
  */
 router.get('/comunidad/:comunidadId/exportar', authenticate, requireCommunity('comunidadId'), authorize('admin', 'superadmin'), async (req, res) => {
@@ -1644,10 +1684,10 @@ router.get('/comunidad/:comunidadId/dashboard/resumen', authenticate, requireCom
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/dashboard/top-mes:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Top categorías por gasto en el último mes
  */
 router.get('/comunidad/:comunidadId/dashboard/top-mes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1679,10 +1719,10 @@ router.get('/comunidad/:comunidadId/dashboard/top-mes', authenticate, requireCom
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/dashboard/sin-uso-reciente:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Categorías activas sin uso reciente
  */
 router.get('/comunidad/:comunidadId/dashboard/sin-uso-reciente', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1715,10 +1755,10 @@ router.get('/comunidad/:comunidadId/dashboard/sin-uso-reciente', authenticate, r
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/dashboard/distribucion-tipo:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Distribución de gastos por tipo de categoría
  */
 router.get('/comunidad/:comunidadId/dashboard/distribucion-tipo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1997,3 +2037,7 @@ module.exports = router;
 // GET: /categorias-gasto/comunidad/:comunidadId/dashboard/top-mes
 // GET: /categorias-gasto/comunidad/:comunidadId/dashboard/sin-uso-reciente
 // GET: /categorias-gasto/comunidad/:comunidadId/dashboard/distribucion-tipo
+
+
+
+

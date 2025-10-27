@@ -7,6 +7,7 @@ const router = express.Router();
  * @swagger
  * /consumos/mensual:
  *   get:
+ *     tags: [Consumos]
  *     summary: Obtener tendencia de consumo mensual
  *     description: Devuelve los datos de consumo mensual para un medidor específico en un rango de períodos.
  *     parameters:
@@ -86,6 +87,7 @@ router.get('/mensual', async (req, res) => {
  * @swagger
  * /consumos/trimestral:
  *   get:
+ *     tags: [Consumos]
  *     summary: Obtener consumo por trimestre
  *     description: Devuelve los datos de consumo agrupados por trimestre para un medidor específico.
  *     parameters:
@@ -153,6 +155,7 @@ router.get('/trimestral', async (req, res) => {
  * @swagger
  * /consumos/semanal:
  *   get:
+ *     tags: [Consumos]
  *     summary: Obtener promedio de consumo por día de la semana
  *     description: Devuelve el promedio de consumo diario por día de la semana para un medidor específico.
  *     parameters:
@@ -216,6 +219,7 @@ router.get('/semanal', async (req, res) => {
  * @swagger
  * /consumos/estadisticas:
  *   get:
+ *     tags: [Consumos]
  *     summary: Obtener estadísticas de consumo
  *     description: Devuelve estadísticas totales de consumo, promedio y costo para un medidor específico en un rango de períodos.
  *     parameters:
@@ -288,6 +292,7 @@ router.get('/estadisticas', async (req, res) => {
  * @swagger
  * /consumos/detalle:
  *   get:
+ *     tags: [Consumos]
  *     summary: Obtener detalle de consumos
  *     description: Devuelve una lista detallada de consumos por período para un medidor específico.
  *     parameters:
@@ -364,3 +369,7 @@ router.get('/detalle', async (req, res) => {
 });
 
 module.exports = router;
+
+
+
+

@@ -1,4 +1,3 @@
-// ...existing code...
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -8,14 +7,14 @@ const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Edificios
  *     description: Gestión de edificios
  */
 
 /**
- * @openapi
+ * @swagger
  * /edificios:
  *   get:
  *     tags: [Edificios]
@@ -144,7 +143,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/stats:
  *   get:
  *     tags: [Edificios]
@@ -180,7 +179,7 @@ router.get('/stats', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/comunidades-opciones:
  *   get:
  *     tags: [Edificios]
@@ -211,7 +210,7 @@ router.get('/comunidades-opciones', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/servicios:
  *   get:
  *     tags: [Edificios]
@@ -242,7 +241,7 @@ router.get('/servicios', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/amenidades-disponibles:
  *   get:
  *     tags: [Edificios]
@@ -304,7 +303,7 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/buscar:
  *   get:
  *     tags: [Edificios]
@@ -377,7 +376,7 @@ router.get('/buscar', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}:
  *   get:
  *     tags: [Edificios]
@@ -446,7 +445,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}/torres:
  *   get:
  *     tags: [Edificios]
@@ -504,7 +503,7 @@ router.get('/:id/torres', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}/unidades:
  *   get:
  *     tags: [Edificios]
@@ -576,7 +575,7 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}/amenidades:
  *   get:
  *     tags: [Edificios]
@@ -619,7 +618,7 @@ router.get('/:id/amenidades', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios:
  *   post:
  *     tags: [Edificios]
@@ -732,7 +731,7 @@ router.post('/comunidad/:comunidadId', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}:
  *   patch:
  *     tags: [Edificios]
@@ -834,7 +833,7 @@ router.patch('/:id', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}:
  *   put:
  *     tags: [Edificios]
@@ -1001,7 +1000,7 @@ router.put('/:id', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}/check-dependencies:
  *   get:
  *     tags: [Edificios]
@@ -1060,7 +1059,7 @@ router.get('/:id/check-dependencies', authenticate, authorize('admin', 'superadm
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}:
  *   delete:
  *     tags: [Edificios]
@@ -1116,7 +1115,7 @@ router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}/torres:
  *   post:
  *     tags: [Edificios]
@@ -1213,7 +1212,7 @@ router.post('/:id/torres', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}/unidades:
  *   post:
  *     tags: [Edificios]
@@ -1337,7 +1336,7 @@ router.post('/:id/unidades', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}/filtros-opciones:
  *   get:
  *     tags: [Edificios]
@@ -1394,7 +1393,7 @@ router.get('/:id/filtros-opciones', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}/resumen:
  *   get:
  *     tags: [Edificios]
@@ -1473,7 +1472,7 @@ router.get('/:id/resumen', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /edificios/{id}/validar-codigo:
  *   get:
  *     tags: [Edificios]
@@ -1586,3 +1585,7 @@ module.exports = router;
 // GET: /edificios/:id/check-dependencies
 // GET: /edificios/:id/validar-codigo
 // GET: /edificios/:id/filtros-opciones
+
+
+
+

@@ -5,7 +5,7 @@ const { authenticate } = require('../middleware/auth');
 const { requireCommunity } = require('../middleware/tenancy');
 
 /**
- * @openapi
+ * @swagger
  * components:
  *   schemas:
  *     EmisionGastosComunes:
@@ -77,7 +77,7 @@ const { requireCommunity } = require('../middleware/tenancy');
 // ============================================================================
 
 /**
- * @openapi
+ * @swagger
  * /prorrateo/emisiones/{comunidadId}:
  *   get:
  *     tags: [Prorrateo]
@@ -130,7 +130,7 @@ router.get('/emisiones/:comunidadId', authenticate, requireCommunity('comunidadI
 });
 
 /**
- * @openapi
+ * @swagger
  * /prorrateo/emision/{emisionId}/detalles:
  *   get:
  *     tags: [Prorrateo]
@@ -196,7 +196,7 @@ router.get('/emision/:emisionId/detalles', authenticate, async (req, res) => {
 // ============================================================================
 
 /**
- * @openapi
+ * @swagger
  * /prorrateo/emision/{emisionId}/cuentas:
  *   get:
  *     tags: [Prorrateo]
@@ -261,7 +261,7 @@ router.get('/emision/:emisionId/cuentas', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /prorrateo/cuenta/{cuentaId}/detalles:
  *   get:
  *     tags: [Prorrateo]
@@ -333,7 +333,7 @@ router.get('/cuenta/:cuentaId/detalles', authenticate, async (req, res) => {
 // ============================================================================
 
 /**
- * @openapi
+ * @swagger
  * /prorrateo/emision/{emisionId}/pagos:
  *   get:
  *     tags: [Prorrateo]
@@ -417,7 +417,7 @@ router.get('/emision/:emisionId/pagos', authenticate, async (req, res) => {
 // ============================================================================
 
 /**
- * @openapi
+ * @swagger
  * /prorrateo/emision/{emisionId}/resumen:
  *   get:
  *     tags: [Prorrateo]
@@ -507,7 +507,7 @@ router.get('/emision/:emisionId/resumen', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /prorrateo/emision/{emisionId}/conceptos:
  *   get:
  *     tags: [Prorrateo]
@@ -565,7 +565,7 @@ router.get('/emision/:emisionId/conceptos', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /prorrateo/emision/{emisionId}/unidades:
  *   get:
  *     tags: [Prorrateo]
@@ -648,7 +648,7 @@ router.get('/emision/:emisionId/unidades', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /prorrateo/emision/{emisionId}/conceptos-detallados:
  *   get:
  *     tags: [Prorrateo]
@@ -731,3 +731,7 @@ router.get('/emision/:emisionId/conceptos-detallados', authenticate, async (req,
 });
 
 module.exports = router;
+
+
+
+

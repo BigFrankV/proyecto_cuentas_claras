@@ -9,11 +9,11 @@ const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 
 /**
- * @openapi
+ * @swagger
  * /auth/verify-2fa:
  *   post:
  *     tags: [Auth]
- *     summary: Verificar código 2FA
+ *     summary: Verificar c�digo 2FA
  *     requestBody:
  *       required: true
  *       content:
@@ -27,9 +27,9 @@ const qrcode = require('qrcode');
  *                 type: string
  *     responses:
  *       200:
- *         description: Token JWT válido
+ *         description: Token JWT v�lido
  *       401:
- *         description: Código 2FA inválido
+ *         description: C�digo 2FA inv�lido
  */
 router.post('/verify-2fa', [
   body('userId').isInt(),
@@ -56,7 +56,7 @@ router.post('/verify-2fa', [
     const user = rows[0];
 
     if (!user.totp_enabled || !user.totp_secret) {
-      return res.status(400).json({ error: '2FA no está habilitado para este usuario' });
+      return res.status(400).json({ error: '2FA no est� habilitado para este usuario' });
     }
 
     // Verificar el token
@@ -64,11 +64,11 @@ router.post('/verify-2fa', [
       secret: user.totp_secret,
       encoding: 'base32',
       token: token,
-      window: 2 // Permite 2 códigos anteriores/posteriores
+      window: 2 // Permite 2 c�digos anteriores/posteriores
     });
 
     if (!verified) {
-      return res.status(401).json({ error: 'Código 2FA inválido' });
+      return res.status(401).json({ error: 'C�digo 2FA inv�lido' });
     }
 
     // Generar token JWT completo
@@ -136,14 +136,14 @@ function buildUserQuery(identifier) {
 }
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Auth
- *     description: Autenticación y gestión de cuentas
+ *     description: Autenticaci�n y gesti�n de cuentas
  */
 
 /**
- * @openapi
+ * @swagger
  * /auth/register:
  *   post:
  *     tags: [Auth]
@@ -167,17 +167,17 @@ function buildUserQuery(identifier) {
  *               username:
  *                 type: string
  *                 minLength: 3
- *                 description: Nombre de usuario único
+ *                 description: Nombre de usuario �nico
  *                 example: "usuario123"
  *               password:
  *                 type: string
  *                 minLength: 6
- *                 description: Contraseña del usuario
+ *                 description: Contrase�a del usuario
  *                 example: "MiPassword123!"
  *               email:
  *                 type: string
  *                 format: email
- *                 description: Correo electrónico del usuario
+ *                 description: Correo electr�nico del usuario
  *                 example: "usuario@example.com"
  *               persona_id:
  *                 type: integer
@@ -185,11 +185,11 @@ function buildUserQuery(identifier) {
  *                 example: 1
  *               rut:
  *                 type: string
- *                 description: RUT sin dígito verificador (requerido para crear nueva persona)
+ *                 description: RUT sin d�gito verificador (requerido para crear nueva persona)
  *                 example: "12345678"
  *               dv:
  *                 type: string
- *                 description: Dígito verificador del RUT (opcional)
+ *                 description: D�gito verificador del RUT (opcional)
  *                 example: "9"
  *               nombres:
  *                 type: string
@@ -198,7 +198,7 @@ function buildUserQuery(identifier) {
  *               apellidos:
  *                 type: string
  *                 description: Apellidos de la persona (requerido para crear nueva persona)
- *                 example: "Pérez González"
+ *                 example: "P�rez Gonz�lez"
  *     responses:
  *       201:
  *         description: Usuario creado exitosamente
@@ -218,9 +218,9 @@ function buildUserQuery(identifier) {
  *                   description: ID de la persona asociada
  *                 token:
  *                   type: string
- *                   description: Token JWT para autenticación
+ *                   description: Token JWT para autenticaci�n
  *       400:
- *         description: Error de validación
+ *         description: Error de validaci�n
  *       409:
  *         description: El nombre de usuario, email o RUT ya existe
  */
@@ -286,24 +286,24 @@ router.post('/register', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /auth/login:
  *   post:
  *     tags: [Auth]
- *     summary: Iniciar sesión en el sistema
+ *     summary: Iniciar sesi�n en el sistema
  *     description: |
- *       Autentica un usuario y retorna un token JWT con información de roles y membresías.
+ *       Autentica un usuario y retorna un token JWT con informaci�n de roles y membres�as.
  *       
  *       **El token JWT incluye:**
- *       - Información básica del usuario (id, username, persona_id)
+ *       - Informaci�n b�sica del usuario (id, username, persona_id)
  *       - Lista de roles del usuario
- *       - Membresías por comunidad con nivel de acceso
- *       - Información de 2FA si está habilitado
+ *       - Membres�as por comunidad con nivel de acceso
+ *       - Informaci�n de 2FA si est� habilitado
  *       
  *       **Tipos de identificadores aceptados:**
  *       - Email: `usuario@example.com`
  *       - RUT chileno: `12345678-9`
- *       - DNI numérico: `12345678`
+ *       - DNI num�rico: `12345678`
  *       - Username: `usuario123`
  *     requestBody:
  *       required: true
@@ -321,7 +321,7 @@ router.post('/register', [
  *                 example: "pat.quintanilla@duocuc.cl"
  *               password:
  *                 type: string
- *                 description: Contraseña del usuario
+ *                 description: Contrase�a del usuario
  *                 example: "123456"
  *     responses:
  *       200:
@@ -335,10 +335,10 @@ router.post('/register', [
  *                   properties:
  *                     token:
  *                       type: string
- *                       description: Token JWT con roles y membresías
+ *                       description: Token JWT con roles y membres�as
  *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *                 - type: object
- *                   description: Se requiere verificación 2FA
+ *                   description: Se requiere verificaci�n 2FA
  *                   properties:
  *                     twoFactorRequired:
  *                       type: boolean
@@ -347,13 +347,13 @@ router.post('/register', [
  *                       type: string
  *                       description: Token temporal para completar 2FA
  *       401:
- *         description: Credenciales inválidas
+ *         description: Credenciales inv�lidas
  *       500:
  *         description: Error del servidor
  *     x-codeSamples:
  *       - lang: JavaScript
  *         source: |
- *           // Ejemplo de decodificación del token JWT
+ *           // Ejemplo de decodificaci�n del token JWT
  *           const token = response.token;
  *           const decoded = jwt.decode(token);
  *           console.log(decoded);
@@ -497,7 +497,7 @@ router.post('/2fa/enable', authenticate, [body('code').exists(), body('base32').
     const userId = req.user.sub;
     const verified = speakeasy.totp.verify({ secret: base32, encoding: 'base32', token: code, window: 1 });
     if (!verified) return res.status(400).json({ error: 'invalid code' });
-    // store secret encrypted (here stored plain for demo — in prod encrypt)
+    // store secret encrypted (here stored plain for demo � in prod encrypt)
     await db.query('UPDATE usuario SET totp_secret = ?, totp_enabled = 1 WHERE id = ?', [base32, userId]);
     res.json({ ok: true });
   } catch (err) {
@@ -575,7 +575,7 @@ router.post('/reset-password', [body('token').exists(), body('password').isLengt
 });
 
 /**
- * @openapi
+ * @swagger
  * /auth/change-password:
  *   post:
  *     tags: [Auth]
@@ -643,7 +643,7 @@ router.post('/change-password', authenticate, [
 });
 
 /**
- * @openapi
+ * @swagger
  * /auth/profile:
  *   patch:
  *     tags: [Auth]
@@ -730,7 +730,7 @@ router.patch('/profile', authenticate, [
 });
 
 /**
- * @openapi
+ * @swagger
  * /auth/me:
  *   get:
  *     tags: [Auth]
@@ -818,7 +818,7 @@ router.get('/me', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /auth/profile/persona:
  *   patch:
  *     tags: [Auth]
@@ -926,7 +926,7 @@ router.patch('/profile/persona', authenticate, [
 });
 
 /**
- * @openapi
+ * @swagger
  * /auth/sessions:
  *   get:
  *     tags: [Auth]
@@ -960,7 +960,7 @@ router.get('/sessions', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /auth/sessions/{sessionId}:
  *   delete:
  *     tags: [Auth]
@@ -990,7 +990,7 @@ router.delete('/sessions/:sessionId', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /auth/sessions:
  *   delete:
  *     tags: [Auth]
@@ -1013,7 +1013,7 @@ router.delete('/sessions', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /auth/preferences:
  *   get:
  *     tags: [Auth]
@@ -1065,7 +1065,7 @@ router.get('/preferences', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /auth/preferences:
  *   patch:
  *     tags: [Auth]
@@ -1135,14 +1135,14 @@ module.exports = router;
 
 
 // // =========================================
-// // ENDPOINTS DE AUTENTICACIÓN (AUTH)
+// // ENDPOINTS DE AUTENTICACI�N (AUTH)
 // // =========================================
 
 // // REGISTRO Y LOGIN
 // POST: /auth/register
 // POST: /auth/login
 
-// // GESTIÓN DE TOKEN
+// // GESTI�N DE TOKEN
 // POST: /auth/refresh
 // POST: /auth/logout
 
@@ -1153,7 +1153,7 @@ module.exports = router;
 // POST: /auth/2fa/enable
 // POST: /auth/2fa/disable
 
-// // RECUPERACIÓN DE CONTRASEÑA
+// // RECUPERACI�N DE CONTRASE�A
 // POST: /auth/forgot-password
 // POST: /auth/reset-password
 // POST: /auth/change-password
@@ -1171,3 +1171,7 @@ module.exports = router;
 // // PREFERENCIAS
 // GET: /auth/preferences
 // PATCH: /auth/preferences
+
+
+
+

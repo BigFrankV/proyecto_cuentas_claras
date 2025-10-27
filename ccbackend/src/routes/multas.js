@@ -3,9 +3,14 @@ const router = express.Router();
 const db = require('../db');
 const { body, validationResult, param, query } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
-const { authorize } = require('../middleware/authorize');
-const { requireCommunity } = require('../middleware/tenancy');
 const MultasPermissions = require('../middleware/multasPermissions');
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Multas
+ *     description: Gestión de multas, infracciones y apelaciones
+ */
 
 // ============================================
 // HELPER: Obtener comunidades del usuario
@@ -1066,7 +1071,7 @@ router.post('/:id/apelacion',
       });
     }
 
-    const { motivo, documentos_json } = req.body;
+    const { motivo } = req.body;
 
     try {
       const id = await resolveMultaId(idParam);
@@ -1373,3 +1378,7 @@ module.exports = router;
 // PATCH: /multas/:id
 // PATCH: /multas/:id/anular
 // DELETE: /multas/:id
+
+
+
+
