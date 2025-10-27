@@ -1,11 +1,12 @@
+import Head from 'next/head';
 import { useState, useEffect } from 'react';
+
 import Layout from '@/components/layout/Layout';
+import TwoFactorModal from '@/components/ui/TwoFactorModal';
+import profileService from '@/lib/profileService';
+import { getUserRole } from '@/lib/roles';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
-import Head from 'next/head';
-import profileService from '@/lib/profileService';
-import TwoFactorModal from '@/components/ui/TwoFactorModal';
-import { getUserRole, getRoleTagClass } from '@/lib/roles';
 import {
   UserExtended,
   ProfileFormData,
@@ -127,9 +128,9 @@ export default function Profile() {
           telefono?: string;
         } = {};
         
-        if (profileForm.firstName) personaData.nombres = profileForm.firstName;
-        if (profileForm.lastName) personaData.apellidos = profileForm.lastName;
-        if (profileForm.phone) personaData.telefono = profileForm.phone;
+        if (profileForm.firstName) {personaData.nombres = profileForm.firstName;}
+        if (profileForm.lastName) {personaData.apellidos = profileForm.lastName;}
+        if (profileForm.phone) {personaData.telefono = profileForm.phone;}
         
         const authService = (await import('@/lib/auth')).default;
         await authService.updatePersona(personaData);
@@ -204,7 +205,7 @@ export default function Profile() {
 
   // Activar 2FA
   const handleEnable2FA = async (code: string) => {
-    if (!totpSetup) return;
+    if (!totpSetup) {return;}
     
     setIsLoading(true);
     try {
@@ -268,7 +269,7 @@ export default function Profile() {
 
   // Cerrar todas las sesiones
   const handleCloseAllSessions = async () => {
-    if (!confirm('¿Estás seguro de que quieres cerrar todas las sesiones?')) return;
+    if (!confirm('¿Estás seguro de que quieres cerrar todas las sesiones?')) {return;}
     
     try {
       await profileService.closeAllSessions();
@@ -342,210 +343,267 @@ export default function Profile() {
 
       <Layout title='Mi Perfil'>
         <div className='container-fluid fade-in'>
-          {/* Breadcrumb */}
-          <div className='d-flex justify-content-between align-items-center mb-4'>
-            <h1 className='h3 mb-0'>Mi Perfil</h1>
-            <nav aria-label='breadcrumb'>
-              <ol className='breadcrumb mb-0'>
-                <li className='breadcrumb-item'>
-                  <a href='/dashboard'>Dashboard</a>
-                </li>
-                <li className='breadcrumb-item active' aria-current='page'>
-                  Mi Perfil
-                </li>
-              </ol>
-            </nav>
+          {/* Hero Section */}
+          <div className='profile-hero bg-gradient-primary text-white rounded-3 p-4 mb-4 shadow-sm'>
+            <div className='d-flex align-items-center justify-content-between'>
+              <div>
+                <h1 className='h2 mb-1 fw-bold'>Mi Perfil</h1>
+                <p className='mb-0 opacity-75'>Gestiona tu información personal y preferencias de cuenta</p>
+              </div>
+              <div className='d-none d-md-block'>
+                <span className='material-icons' style={{ fontSize: '4rem', opacity: '0.3' }}>account_circle</span>
+              </div>
+            </div>
           </div>
+
+          {/* Breadcrumb */}
+          <nav aria-label='breadcrumb' className='mb-4'>
+            <ol className='breadcrumb'>
+              <li className='breadcrumb-item'>
+                <a href='/dashboard' className='text-decoration-none'>
+                  <span className='material-icons me-1' style={{ fontSize: '16px' }}>dashboard</span>
+                  Dashboard
+                </a>
+              </li>
+              <li className='breadcrumb-item active' aria-current='page'>
+                <span className='material-icons me-1' style={{ fontSize: '16px' }}>person</span>
+                Mi Perfil
+              </li>
+            </ol>
+          </nav>
 
           {/* Mensaje de estado */}
           {message && (
-            <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`} role="alert">
-              <span className="material-icons me-2">
-                {message.type === 'success' ? 'check_circle' : 'error'}
-              </span>
-              {message.text}
-              <button
-                type="button"
-                className="btn-close"
-                onClick={() => setMessage(null)}
-                aria-label="Close"
-              ></button>
+            <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show shadow-sm border-0`} role="alert">
+              <div className='d-flex align-items-center'>
+                <span className="material-icons me-2" style={{ fontSize: '20px' }}>
+                  {message.type === 'success' ? 'check_circle' : 'error'}
+                </span>
+                <div className='flex-grow-1'>
+                  <strong>{message.type === 'success' ? '¡Éxito!' : 'Error'}</strong> {message.text}
+                </div>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setMessage(null)}
+                  aria-label="Close"
+                ></button>
+              </div>
             </div>
           )}
 
-          <div className='row'>
+          <div className='row g-4'>
             {/* Información Personal */}
-            <div className='col-md-4 mb-4'>
-              <div className='app-card h-100'>
-                <div className='card-body'>
+            <div className='col-lg-4 mb-4'>
+              <div className='app-card h-100 shadow-sm border-0 rounded-3 overflow-hidden'>
+                <div className='card-body p-4'>
                   <div className='text-center mb-4'>
                     <div
-                      className='avatar mx-auto mb-3'
+                      className='avatar mx-auto mb-3 d-flex align-items-center
+                        justify-content-center rounded-circle shadow'
                       style={{
-                        width: '100px',
-                        height: '100px',
-                        lineHeight: '100px',
-                        fontSize: '40px',
-                        backgroundColor: 'var(--color-accent)',
+                        width: '120px',
+                        height: '120px',
+                        background: 'linear-gradient(135deg, var(--color-accent), var(--color-primary))',
+                        color: 'white',
+                        fontSize: '48px',
+                        fontWeight: 'bold',
                       }}
                     >
                       {getUserInitials()}
                     </div>
-                    <h5 className='mb-1'>
+                    <h4 className='mb-2 fw-bold text-dark'>
                       {profileForm.firstName} {profileForm.lastName}
-                    </h5>
-                    <p className='meta mb-2'>{profileForm.email}</p>
-                    <span className={`tag ${getRoleTagClass(user)}`}>
+                    </h4>
+                    <p className='text-muted mb-3 small'>{profileForm.email}</p>
+                    <span className={`badge ${user?.is_superadmin ? 'bg-danger' : 'bg-primary'} fs-6 px-3 py-2 rounded-pill`}>
+                      <span className='material-icons me-1' style={{ fontSize: '16px' }}>badge</span>
                       {getUserRole(user)}
                     </span>
                   </div>
 
-                  <hr />
+                  <hr className='my-4' />
 
-                  <div className='mb-3'>
-                    <label className='form-label fw-bold small mb-1'>
-                      Teléfono
-                    </label>
-                    <p className='mb-0'>
-                      {profileForm.phone || 'No especificado'}
-                    </p>
-                  </div>
+                  <div className='profile-info'>
+                    <div className='d-flex align-items-center mb-3'>
+                      <div className='info-icon me-3'>
+                        <span className='material-icons text-primary' style={{ fontSize: '20px' }}>phone</span>
+                      </div>
+                      <div className='flex-grow-1'>
+                        <label className='form-label fw-semibold small mb-0 text-muted'>Teléfono</label>
+                        <p className='mb-0 fw-medium'>{profileForm.phone || 'No especificado'}</p>
+                      </div>
+                    </div>
 
-                  <div className='mb-3'>
-                    <label className='form-label fw-bold small mb-1'>
-                      Última conexión
-                    </label>
-                    <p className='mb-0'>
-                      {userProfile?.lastConnection 
-                        ? formatDate(userProfile.lastConnection)
-                        : 'Sesión actual'
-                      }
-                    </p>
-                  </div>
+                    <div className='d-flex align-items-center mb-3'>
+                      <div className='info-icon me-3'>
+                        <span className='material-icons text-success' style={{ fontSize: '20px' }}>access_time</span>
+                      </div>
+                      <div className='flex-grow-1'>
+                        <label className='form-label fw-semibold small mb-0 text-muted'>Última conexión</label>
+                        <p className='mb-0 fw-medium'>
+                          {userProfile?.lastConnection
+                            ? formatDate(userProfile.lastConnection)
+                            : 'Sesión actual'
+                          }
+                        </p>
+                      </div>
+                    </div>
 
-                  <div>
-                    <label className='form-label fw-bold small mb-1'>
-                      Comunidades que administra
-                    </label>
-                    <p className='mb-0'>
-                      {getCommunityBadges()}
-                    </p>
+                    <div className='d-flex align-items-start'>
+                      <div className='info-icon me-3 mt-1'>
+                        <span className='material-icons text-info' style={{ fontSize: '20px' }}>business</span>
+                      </div>
+                      <div className='flex-grow-1'>
+                        <label className='form-label fw-semibold small mb-2 text-muted'>Comunidades que administra</label>
+                        <div className='mb-0'>
+                          {getCommunityBadges()}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Editar Perfil */}
-            <div className='col-md-8 mb-4'>
-              <div className='app-card h-100'>
-                <div className='card-header d-flex justify-content-between align-items-center'>
-                  <h5 className='mb-0'>Editar Información de Perfil</h5>
+            <div className='col-lg-8 mb-4'>
+              <div className='app-card h-100 shadow-sm border-0 rounded-3 overflow-hidden'>
+                <div className='card-header bg-white border-bottom-0 py-4 px-4'>
+                  <div className='d-flex align-items-center'>
+                    <span className='material-icons text-primary me-3' style={{ fontSize: '28px' }}>edit</span>
+                    <div>
+                      <h4 className='mb-1 fw-bold text-dark'>Editar Información de Perfil</h4>
+                      <p className='mb-0 text-muted small'>Actualiza tus datos personales y credenciales</p>
+                    </div>
+                  </div>
                 </div>
-                <div className='card-body'>
+                <div className='card-body p-4'>
                   <form onSubmit={handleProfileSubmit}>
-                    <div className='row mb-3'>
-                      <div className='col-md-6 mb-3 mb-md-0'>
-                        <label className='form-label required'>Nombre</label>
-                        <input
-                          type='text'
-                          className='form-control'
-                          value={profileForm.firstName}
-                          onChange={(e) =>
-                            setProfileForm({ ...profileForm, firstName: e.target.value })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className='col-md-6'>
-                        <label className='form-label required'>Apellido</label>
-                        <input
-                          type='text'
-                          className='form-control'
-                          value={profileForm.lastName}
-                          onChange={(e) =>
-                            setProfileForm({ ...profileForm, lastName: e.target.value })
-                          }
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className='mb-3'>
-                      <label className='form-label required'>Email</label>
-                      <input
-                        type='email'
-                        className='form-control'
-                        value={profileForm.email}
-                        onChange={(e) =>
-                          setProfileForm({ ...profileForm, email: e.target.value })
-                        }
-                        required
-                      />
-                    </div>
-
-                    <div className='mb-3'>
-                      <label className='form-label'>Teléfono</label>
-                      <input
-                        type='tel'
-                        className='form-control'
-                        value={profileForm.phone}
-                        onChange={(e) =>
-                          setProfileForm({ ...profileForm, phone: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <hr />
-
-                    {/* Sección de cambio de contraseña */}
-                    <h6>Cambiar Contraseña</h6>
-
-                    <div className='mb-3'>
-                      <label className='form-label'>Contraseña Actual</label>
-                      <input
-                        type='password'
-                        className='form-control'
-                        value={passwordForm.currentPassword}
-                        onChange={(e) =>
-                          setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div className='row mb-3'>
-                      <div className='col-md-6 mb-3 mb-md-0'>
-                        <label className='form-label'>Nueva Contraseña</label>
-                        <input
-                          type='password'
-                          className='form-control'
-                          value={passwordForm.newPassword}
-                          onChange={(e) =>
-                            setPasswordForm({ ...passwordForm, newPassword: e.target.value })
-                          }
-                        />
-                        <div className='form-text'>
-                          Mínimo 8 caracteres, incluir números y símbolos
+                    {/* Información Personal */}
+                    <div className='mb-4'>
+                      <h5 className='fw-bold text-dark mb-3 d-flex align-items-center'>
+                        <span className='material-icons me-2 text-primary' style={{ fontSize: '20px' }}>person</span>
+                        Información Personal
+                      </h5>
+                      <div className='row g-3'>
+                        <div className='col-md-6'>
+                          <label className='form-label fw-semibold required'>Nombre</label>
+                          <input
+                            type='text'
+                            className='form-control form-control-lg'
+                            value={profileForm.firstName}
+                            onChange={(e) =>
+                              setProfileForm({ ...profileForm, firstName: e.target.value })
+                            }
+                            required
+                          />
+                        </div>
+                        <div className='col-md-6'>
+                          <label className='form-label fw-semibold required'>Apellido</label>
+                          <input
+                            type='text'
+                            className='form-control form-control-lg'
+                            value={profileForm.lastName}
+                            onChange={(e) =>
+                              setProfileForm({ ...profileForm, lastName: e.target.value })
+                            }
+                            required
+                          />
                         </div>
                       </div>
-                      <div className='col-md-6'>
-                        <label className='form-label'>
-                          Confirmar Nueva Contraseña
-                        </label>
-                        <input
-                          type='password'
-                          className='form-control'
-                          value={passwordForm.confirmPassword}
-                          onChange={(e) =>
-                            setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
-                          }
-                        />
+                    </div>
+
+                    {/* Información de Contacto */}
+                    <div className='mb-4'>
+                      <h5 className='fw-bold text-dark mb-3 d-flex align-items-center'>
+                        <span className='material-icons me-2 text-primary' style={{ fontSize: '20px' }}>contact_mail</span>
+                        Información de Contacto
+                      </h5>
+                      <div className='row g-3'>
+                        <div className='col-md-6'>
+                          <label className='form-label fw-semibold required'>Email</label>
+                          <input
+                            type='email'
+                            className='form-control form-control-lg'
+                            value={profileForm.email}
+                            onChange={(e) =>
+                              setProfileForm({ ...profileForm, email: e.target.value })
+                            }
+                            required
+                          />
+                        </div>
+                        <div className='col-md-6'>
+                          <label className='form-label fw-semibold'>Teléfono</label>
+                          <input
+                            type='tel'
+                            className='form-control form-control-lg'
+                            value={profileForm.phone}
+                            onChange={(e) =>
+                              setProfileForm({ ...profileForm, phone: e.target.value })
+                            }
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div className='d-flex justify-content-end mt-4'>
+                    <hr className='my-4' />
+
+                    {/* Cambio de Contraseña */}
+                    <div className='mb-4'>
+                      <h5 className='fw-bold text-dark mb-3 d-flex align-items-center'>
+                        <span className='material-icons me-2 text-warning' style={{ fontSize: '20px' }}>lock</span>
+                        Cambiar Contraseña
+                      </h5>
+
+                      <div className='row g-3'>
+                        <div className='col-md-6'>
+                          <label className='form-label fw-semibold'>Contraseña Actual</label>
+                          <input
+                            type='password'
+                            className='form-control form-control-lg'
+                            value={passwordForm.currentPassword}
+                            onChange={(e) =>
+                              setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className='col-md-6'>
+                        </div>
+                        <div className='col-md-6'>
+                          <label className='form-label fw-semibold'>Nueva Contraseña</label>
+                          <input
+                            type='password'
+                            className='form-control form-control-lg'
+                            value={passwordForm.newPassword}
+                            onChange={(e) =>
+                              setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+                            }
+                          />
+                          <div className='form-text'>
+                            Mínimo 8 caracteres, incluir números y símbolos
+                          </div>
+                        </div>
+                        <div className='col-md-6'>
+                          <label className='form-label fw-semibold'>
+                            Confirmar Nueva Contraseña
+                          </label>
+                          <input
+                            type='password'
+                            className='form-control form-control-lg'
+                            value={passwordForm.confirmPassword}
+                            onChange={(e) =>
+                              setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className='d-flex justify-content-end gap-2 pt-3 border-top'>
                       <button
                         type='button'
-                        className='btn btn-outline-secondary me-2'
+                        className='btn btn-outline-secondary px-4'
                         onClick={() => {
                           setProfileForm({
                             firstName: user?.persona?.nombres || userProfile?.firstName || user?.username?.split(' ')[0] || '',
@@ -556,21 +614,24 @@ export default function Profile() {
                           setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
                         }}
                       >
+                        <span className='material-icons me-2' style={{ fontSize: '16px' }}>refresh</span>
                         Cancelar
                       </button>
                       <button
                         type='button'
-                        className='btn btn-secondary me-2'
+                        className='btn btn-secondary px-4'
                         onClick={handlePasswordSubmit}
                         disabled={!passwordForm.currentPassword || !passwordForm.newPassword || isLoading}
                       >
+                        <span className='material-icons me-2' style={{ fontSize: '16px' }}>lock_reset</span>
                         {isLoading ? 'Cambiando...' : 'Cambiar Contraseña'}
                       </button>
                       <button
                         type='submit'
-                        className='btn btn-primary'
+                        className='btn btn-primary px-4'
                         disabled={isLoading}
                       >
+                        <span className='material-icons me-2' style={{ fontSize: '16px' }}>save</span>
                         {isLoading ? 'Guardando...' : 'Guardar Cambios'}
                       </button>
                     </div>
@@ -581,27 +642,38 @@ export default function Profile() {
 
             {/* Autenticación de Dos Factores */}
             <div className='col-md-6 mb-4'>
-              <div className='app-card'>
-                <div className='card-header d-flex justify-content-between align-items-center'>
-                  <h5 className='mb-0'>Autenticación de Dos Factores (2FA)</h5>
-                  <span className={`tag ${totp2FAEnabled ? 'tag--success' : 'tag--warning'}`}>
-                    {totp2FAEnabled ? 'Activado' : 'Desactivado'}
-                  </span>
+              <div className='app-card shadow-sm border-0 rounded-3 overflow-hidden h-100'>
+                <div className='card-header bg-white border-bottom-0 py-4 px-4'>
+                  <div className='d-flex align-items-center justify-content-between'>
+                    <div className='d-flex align-items-center'>
+                      <span className='material-icons text-info me-3' style={{ fontSize: '28px' }}>security</span>
+                      <div>
+                        <h5 className='mb-1 fw-bold text-dark'>Autenticación 2FA</h5>
+                        <p className='mb-0 text-muted small'>Seguridad adicional</p>
+                      </div>
+                    </div>
+                    <span className={`badge fs-6 px-3 py-2 rounded-pill ${
+                      totp2FAEnabled ? 'bg-success' : 'bg-warning text-dark'
+                    }`}>
+                      {totp2FAEnabled ? 'Activado' : 'Desactivado'}
+                    </span>
+                  </div>
                 </div>
-                <div className='card-body'>
-                  <p className='text-muted mb-3'>
-                    Agrega una capa extra de seguridad a tu cuenta usando Google Authenticator o una aplicación compatible.
+                <div className='card-body p-4'>
+                  <p className='text-muted mb-4'>
+                    Agrega una capa extra de seguridad a tu cuenta usando Google Authenticator
+                    o una aplicación compatible.
                   </p>
-                  
+
                   {!totp2FAEnabled ? (
-                    <div>
-                      <div className='d-flex align-items-center mb-3'>
-                        <span className='material-icons text-warning me-2'>security</span>
-                        <span>Tu cuenta no tiene 2FA activado</span>
+                    <div className='text-center py-3'>
+                      <div className='d-flex align-items-center justify-content-center mb-3 text-warning'>
+                        <span className='material-icons me-2' style={{ fontSize: '24px' }}>warning</span>
+                        <span className='fw-medium'>Tu cuenta no tiene 2FA activado</span>
                       </div>
                       <button
                         type='button'
-                        className='btn btn-success'
+                        className='btn btn-success btn-lg px-4 py-2'
                         onClick={handleSetup2FA}
                         disabled={isLoading}
                       >
@@ -610,14 +682,14 @@ export default function Profile() {
                       </button>
                     </div>
                   ) : (
-                    <div>
-                      <div className='d-flex align-items-center mb-3'>
-                        <span className='material-icons text-success me-2'>verified_user</span>
-                        <span>2FA está activado en tu cuenta</span>
+                    <div className='text-center py-3'>
+                      <div className='d-flex align-items-center justify-content-center mb-3 text-success'>
+                        <span className='material-icons me-2' style={{ fontSize: '24px' }}>verified_user</span>
+                        <span className='fw-medium'>2FA está activado en tu cuenta</span>
                       </div>
                       <button
                         type='button'
-                        className='btn btn-outline-danger'
+                        className='btn btn-outline-danger btn-lg px-4 py-2'
                         onClick={showDisable2FAModal}
                         disabled={isLoading}
                       >
@@ -632,69 +704,89 @@ export default function Profile() {
 
             {/* Preferencias */}
             <div className='col-md-6 mb-4'>
-              <div className='app-card'>
-                <div className='card-header d-flex justify-content-between align-items-center'>
-                  <h5 className='mb-0'>Preferencias</h5>
+              <div className='app-card shadow-sm border-0 rounded-3 overflow-hidden h-100'>
+                <div className='card-header bg-white border-bottom-0 py-4 px-4'>
+                  <div className='d-flex align-items-center'>
+                    <span className='material-icons text-secondary me-3' style={{ fontSize: '28px' }}>settings</span>
+                    <div>
+                      <h5 className='mb-1 fw-bold text-dark'>Preferencias</h5>
+                      <p className='mb-0 text-muted small'>Personaliza tu experiencia</p>
+                    </div>
+                  </div>
                 </div>
-                <div className='card-body'>
+                <div className='card-body p-4'>
                   <form onSubmit={handlePreferencesSubmit}>
-                    <div className='row'>
-                      <div className='col-12 mb-4'>
-                        <h6>Notificaciones</h6>
+                    {/* Notificaciones */}
+                    <div className='mb-4'>
+                      <h6 className='fw-bold text-dark mb-3 d-flex align-items-center'>
+                        <span className='material-icons me-2 text-primary' style={{ fontSize: '18px' }}>notifications</span>
+                        Notificaciones
+                      </h6>
 
-                        <div className='form-check form-switch mb-2'>
-                          <input
-                            className='form-check-input'
-                            type='checkbox'
-                            id='emailNoti'
-                            checked={preferences.emailNotifications}
-                            onChange={(e) =>
-                              setPreferences({ ...preferences, emailNotifications: e.target.checked })
-                            }
-                          />
-                          <label className='form-check-label' htmlFor='emailNoti'>
-                            Recibir notificaciones por email
-                          </label>
+                      <div className='row g-3'>
+                        <div className='col-12'>
+                          <div className='form-check form-switch d-flex align-items-center p-3 rounded-2 hover-bg-light border'>
+                            <input
+                              className='form-check-input me-3 flex-shrink-0'
+                              type='checkbox'
+                              id='emailNoti'
+                              checked={preferences.emailNotifications}
+                              onChange={(e) =>
+                                setPreferences({ ...preferences, emailNotifications: e.target.checked })
+                              }
+                            />
+                            <label className='form-check-label fw-medium mb-0 flex-grow-1' htmlFor='emailNoti'>
+                              Notificaciones por email
+                            </label>
+                          </div>
                         </div>
 
-                        <div className='form-check form-switch mb-2'>
-                          <input
-                            className='form-check-input'
-                            type='checkbox'
-                            id='paymentNoti'
-                            checked={preferences.paymentNotifications}
-                            onChange={(e) =>
-                              setPreferences({ ...preferences, paymentNotifications: e.target.checked })
-                            }
-                          />
-                          <label className='form-check-label' htmlFor='paymentNoti'>
-                            Notificaciones de pagos registrados
-                          </label>
+                        <div className='col-12'>
+                          <div className='form-check form-switch d-flex align-items-center p-3 rounded-2 hover-bg-light border'>
+                            <input
+                              className='form-check-input me-3 flex-shrink-0'
+                              type='checkbox'
+                              id='paymentNoti'
+                              checked={preferences.paymentNotifications}
+                              onChange={(e) =>
+                                setPreferences({ ...preferences, paymentNotifications: e.target.checked })
+                              }
+                            />
+                            <label className='form-check-label fw-medium mb-0 flex-grow-1' htmlFor='paymentNoti'>
+                              Alertas de pagos
+                            </label>
+                          </div>
                         </div>
 
-                        <div className='form-check form-switch mb-2'>
-                          <input
-                            className='form-check-input'
-                            type='checkbox'
-                            id='reportNoti'
-                            checked={preferences.weeklyReports}
-                            onChange={(e) =>
-                              setPreferences({ ...preferences, weeklyReports: e.target.checked })
-                            }
-                          />
-                          <label className='form-check-label' htmlFor='reportNoti'>
-                            Resúmenes semanales
-                          </label>
+                        <div className='col-12'>
+                          <div className='form-check form-switch d-flex align-items-center p-3 rounded-2 hover-bg-light border'>
+                            <input
+                              className='form-check-input me-3 flex-shrink-0'
+                              type='checkbox'
+                              id='reportNoti'
+                              checked={preferences.weeklyReports}
+                              onChange={(e) =>
+                                setPreferences({ ...preferences, weeklyReports: e.target.checked })
+                              }
+                            />
+                            <label className='form-check-label fw-medium mb-0 flex-grow-1' htmlFor='reportNoti'>
+                              Resúmenes semanales
+                            </label>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className='row mb-3'>
-                      <div className='col-12 mb-4'>
-                        <h6>Visualización</h6>
+                    {/* Visualización */}
+                    <div className='mb-4'>
+                      <h6 className='fw-bold text-dark mb-3 d-flex align-items-center'>
+                        <span className='material-icons me-2 text-info' style={{ fontSize: '18px' }}>visibility</span>
+                        Visualización
+                      </h6>
 
-                        <div className='mb-3'>
-                          <label className='form-label'>Zona horaria</label>
+                      <div className='row g-3'>
+                        <div className='col-12'>
+                          <label className='form-label fw-semibold small'>Zona horaria</label>
                           <select
                             className='form-select'
                             value={preferences.timezone}
@@ -709,8 +801,8 @@ export default function Profile() {
                           </select>
                         </div>
 
-                        <div className='mb-3'>
-                          <label className='form-label'>Formato de fecha</label>
+                        <div className='col-12'>
+                          <label className='form-label fw-semibold small'>Formato de fecha</label>
                           <select
                             className='form-select'
                             value={preferences.dateFormat}
@@ -726,13 +818,14 @@ export default function Profile() {
                       </div>
                     </div>
 
-                    <div className='d-flex justify-content-end mt-2'>
+                    <div className='d-flex justify-content-end pt-3 border-top'>
                       <button
                         type='submit'
-                        className='btn btn-primary'
+                        className='btn btn-primary px-4'
                         disabled={isLoading}
                       >
-                        {isLoading ? 'Guardando...' : 'Guardar Preferencias'}
+                        <span className='material-icons me-2' style={{ fontSize: '16px' }}>save</span>
+                        {isLoading ? 'Guardando...' : 'Guardar'}
                       </button>
                     </div>
                   </form>
@@ -742,55 +835,75 @@ export default function Profile() {
 
             {/* Sesiones Activas */}
             <div className='col-md-12'>
-              <div className='app-card'>
-                <div className='card-header d-flex justify-content-between align-items-center'>
-                  <h5 className='mb-0'>Sesiones Activas</h5>
-                  <button
-                    className='btn btn-sm btn-outline-danger'
-                    onClick={handleCloseAllSessions}
-                    disabled={isLoading}
-                  >
-                    Cerrar Todas las Sesiones
-                  </button>
+              <div className='app-card shadow-sm border-0 rounded-3 overflow-hidden'>
+                <div className='card-header bg-white border-bottom-0 py-4 px-4'>
+                  <div className='d-flex align-items-center justify-content-between'>
+                    <div className='d-flex align-items-center'>
+                      <span className='material-icons text-warning me-3' style={{ fontSize: '28px' }}>devices</span>
+                      <div>
+                        <h5 className='mb-1 fw-bold text-dark'>Sesiones Activas</h5>
+                        <p className='mb-0 text-muted small'>Dispositivos conectados a tu cuenta</p>
+                      </div>
+                    </div>
+                    <button
+                      className='btn btn-outline-danger px-3'
+                      onClick={handleCloseAllSessions}
+                      disabled={isLoading}
+                    >
+                      <span className='material-icons me-2' style={{ fontSize: '16px' }}>logout</span>
+                      Cerrar Todas
+                    </button>
+                  </div>
                 </div>
-                <div className='card-body'>
+                <div className='card-body p-0'>
                   <div className='table-responsive'>
-                    <table className='table'>
-                      <thead>
+                    <table className='table table-hover mb-0'>
+                      <thead className='table-light'>
                         <tr>
-                          <th>Dispositivo</th>
-                          <th>Ubicación</th>
-                          <th>IP</th>
-                          <th>Último Acceso</th>
-                          <th>Acciones</th>
+                          <th className='border-0 fw-semibold py-3 px-4'>Dispositivo</th>
+                          <th className='border-0 fw-semibold py-3 px-4'>Ubicación</th>
+                          <th className='border-0 fw-semibold py-3 px-4'>IP</th>
+                          <th className='border-0 fw-semibold py-3 px-4'>Último Acceso</th>
+                          <th className='border-0 fw-semibold py-3 px-4 text-end'>Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
                         {sessions.map((session) => (
-                          <tr key={session.id}>
-                            <td>
-                              <i className={`fa ${getDeviceIcon(session.device)} me-2`}></i>
-                              {session.device}
+                          <tr key={session.id} className='border-bottom border-light'>
+                            <td className='py-3 px-4'>
+                              <div className='d-flex align-items-center'>
+                                <i className={`fa ${getDeviceIcon(session.device)} me-3 text-muted`}
+                                  style={{ fontSize: '18px' }}></i>
+                                <span className='fw-medium'>{session.device}</span>
+                              </div>
                             </td>
-                            <td>{session.location}</td>
-                            <td>{session.ip}</td>
-                            <td>
+                            <td className='py-3 px-4'>
+                              <span className='text-muted'>{session.location}</span>
+                            </td>
+                            <td className='py-3 px-4'>
+                              <code className='bg-light px-2 py-1 rounded small'>{session.ip}</code>
+                            </td>
+                            <td className='py-3 px-4'>
                               {session.isCurrent ? (
-                                <span className='tag tag--success'>Actual</span>
+                                <span className='badge bg-success px-3 py-2 rounded-pill'>
+                                  <span className='material-icons me-1' style={{ fontSize: '14px' }}>radio_button_checked</span>
+                                  Actual
+                                </span>
                               ) : (
-                                formatDate(session.lastAccess)
+                                <span className='text-muted small'>{formatDate(session.lastAccess)}</span>
                               )}
                             </td>
-                            <td>
+                            <td className='py-3 px-4 text-end'>
                               {session.isCurrent ? (
-                                '-'
+                                <span className='text-muted small'>-</span>
                               ) : (
                                 <button
-                                  className='btn btn-sm btn-outline-danger'
+                                  className='btn btn-sm btn-outline-danger px-3'
                                   onClick={() => handleCloseSession(session.id)}
                                   disabled={isLoading}
+                                  title='Cerrar sesión'
                                 >
-                                  Cerrar
+                                  <span className='material-icons' style={{ fontSize: '16px' }}>logout</span>
                                 </button>
                               )}
                             </td>

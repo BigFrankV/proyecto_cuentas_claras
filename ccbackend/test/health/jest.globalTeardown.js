@@ -24,18 +24,18 @@ module.exports = async () => {
   try {
     // Intentar generar el reporte final
     // Nota: Como estamos en un contexto global separado, 
-    // necesitamos leer los resultados desde un archivo temporal
-    const tempResultsPath = path.join(__dirname, '..', '..', 'logs', 'temp-results.json');
+    // necesitamos leer los resultados desde un archivo global
+    const globalResultsPath = path.join(__dirname, '..', '..', 'logs', 'global-results.json');
     
-    if (fs.existsSync(tempResultsPath)) {
-      const resultsData = fs.readFileSync(tempResultsPath, 'utf8');
+    if (fs.existsSync(globalResultsPath)) {
+      const resultsData = fs.readFileSync(globalResultsPath, 'utf8');
       const results = JSON.parse(resultsData);
       
       // Generar reporte final
       generateFinalReport(results);
       
       // Limpiar archivo temporal
-      fs.unlinkSync(tempResultsPath);
+      fs.unlinkSync(globalResultsPath);
       
       console.log('');
       console.log('✅ Reporte generado exitosamente');
@@ -43,10 +43,17 @@ module.exports = async () => {
       console.log(`   📊 Detalles: logs/health-test-details-*.json`);
     } else {
       console.log('⚠️  No se encontraron resultados para generar reporte');
-      console.log(`   (Buscando: ${tempResultsPath})`);
+      console.log(`   (Buscando: ${globalResultsPath})`);
     }
   } catch (error) {
     console.error('❌ Error al generar reporte final:', error.message);
+  }
+  
+  // Limpiar recursos (cerrar conexiones DB, etc.)
+  try {
+    await require('./setup').cleanupTestSetup();
+  } catch (error) {
+    console.error('❌ Error en cleanup:', error.message);
   }
   
   console.log('');

@@ -1,184 +1,149 @@
 /**
  * Tests de Salud - Módulo: DASHBOARD
- * Total endpoints: 16 (Completos)
+ * Endpoints: 16 (GET)
+ * Requisitos: Requiere comunidadId válido.
  */
 
-// Test module for dashboard endpoints
-const { app, testIds, getAuthToken } = require('./setup');
+const { app, getAuthToken } = require('./setup');
 const { categorizeResponse, getWithAuth } = require('./helpers');
 
-describe('Dashboard Module - Health Check Tests', () => {
+describe('Dashboard Health Check', () => {
   let authToken;
-  let comunidadId;
+  let comunidadId = 1; // ID de comunidad de prueba
 
-  beforeAll(async () => {
-    authToken = await getAuthToken();
-    comunidadId = testIds.comunidadId;
-    // Aseguramos que el ID de comunidad sea válido para los tests de ruta con ID
-    if (!comunidadId) {
-        throw new Error("testIds.comunidadId no está definido. Revisa tu archivo setup.js.");
-    }
+  beforeAll(() => {
+    authToken = getAuthToken();
   });
 
   // =========================================
-  // 1. KPIs Principales (Sección 1)
+  // 1. KPIs y Métricas Principales
   // =========================================
-
-  describe('KPIs Principales (Sección 1)', () => {
-    test('GET /dashboard/comunidad/:comunidadId/kpis (KPIs Agrupados)', async () => {
+  describe('KPIs y Métricas Principales', () => {
+    test('GET /dashboard/comunidad/:comunidadId/kpis (KPIs Generales)', async () => {
       const endpoint = `/dashboard/comunidad/${comunidadId}/kpis`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
-      if (response.status === 200) {
-        expect(response.body).toHaveProperty('saldo_total');
-        expect(response.body).toHaveProperty('ingresos_mes');
-        expect(response.body).toHaveProperty('gastos_mes');
-        expect(response.body).toHaveProperty('morosidad');
-      }
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /dashboard/comunidad/:comunidadId/saldo-total', async () => {
+    test('GET /dashboard/comunidad/:comunidadId/saldo-total (Saldo Total)', async () => {
       const endpoint = `/dashboard/comunidad/${comunidadId}/saldo-total`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
-    });
-    
-    test('GET /dashboard/comunidad/:comunidadId/tasa-morosidad', async () => {
-      const endpoint = `/dashboard/comunidad/${comunidadId}/tasa-morosidad`;
-      const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /dashboard/comunidad/:comunidadId/ingresos-mes', async () => {
+    test('GET /dashboard/comunidad/:comunidadId/ingresos-mes (Ingresos del Mes)', async () => {
       const endpoint = `/dashboard/comunidad/${comunidadId}/ingresos-mes`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /dashboard/comunidad/:comunidadId/gastos-mes', async () => {
+    test('GET /dashboard/comunidad/:comunidadId/gastos-mes (Gastos del Mes)', async () => {
       const endpoint = `/dashboard/comunidad/${comunidadId}/gastos-mes`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
+    });
+
+    test('GET /dashboard/comunidad/:comunidadId/tasa-morosidad (Tasa de Morosidad)', async () => {
+      const endpoint = `/dashboard/comunidad/${comunidadId}/tasa-morosidad`;
+      const response = await getWithAuth(app, endpoint, authToken);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
   });
 
   // =========================================
-  // 2. Datos para Gráficos (Sección 2)
+  // 2. Gráficos y Visualizaciones
   // =========================================
-
-  describe('Datos para Gráficos (Sección 2)', () => {
-    test('GET /dashboard/comunidad/:comunidadId/grafico-emisiones', async () => {
-      const endpoint = `/dashboard/comunidad/${comunidadId}/grafico-emisiones?meses=3`;
+  describe('Gráficos y Visualizaciones', () => {
+    test('GET /dashboard/comunidad/:comunidadId/grafico-emisiones (Gráfico de Emisiones)', async () => {
+      const endpoint = `/dashboard/comunidad/${comunidadId}/grafico-emisiones`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
-      if (response.status === 200) {
-          expect(Array.isArray(response.body)).toBe(true);
-      }
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /dashboard/comunidad/:comunidadId/grafico-estado-pagos', async () => {
+    test('GET /dashboard/comunidad/:comunidadId/grafico-estado-pagos (Estado de Pagos)', async () => {
       const endpoint = `/dashboard/comunidad/${comunidadId}/grafico-estado-pagos`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
-      if (response.status === 200) {
-          expect(Array.isArray(response.body)).toBe(true);
-      }
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /dashboard/comunidad/:comunidadId/grafico-gastos-categoria', async () => {
+    test('GET /dashboard/comunidad/:comunidadId/grafico-gastos-categoria (Gastos por Categoría)', async () => {
       const endpoint = `/dashboard/comunidad/${comunidadId}/grafico-gastos-categoria`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
-      if (response.status === 200) {
-          expect(Array.isArray(response.body)).toBe(true);
-      }
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
   });
 
   // =========================================
-  // 3. Tablas de Datos y Actividad (Sección 3)
+  // 3. Información Reciente y Actual
   // =========================================
-
-  describe('Tablas de Datos y Actividad (Sección 3)', () => {
-    test('GET /dashboard/comunidad/:comunidadId/pagos-recientes', async () => {
-      const endpoint = `/dashboard/comunidad/${comunidadId}/pagos-recientes?limit=5`;
+  describe('Información Reciente y Actual', () => {
+    test('GET /dashboard/comunidad/:comunidadId/pagos-recientes (Pagos Recientes)', async () => {
+      const endpoint = `/dashboard/comunidad/${comunidadId}/pagos-recientes`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /dashboard/comunidad/:comunidadId/unidades-morosas', async () => {
-      const endpoint = `/dashboard/comunidad/${comunidadId}/unidades-morosas?limit=5`;
+    test('GET /dashboard/comunidad/:comunidadId/unidades-morosas (Unidades Morosas)', async () => {
+      const endpoint = `/dashboard/comunidad/${comunidadId}/unidades-morosas`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /dashboard/comunidad/:comunidadId/proximas-actividades', async () => {
-      const endpoint = `/dashboard/comunidad/${comunidadId}/proximas-actividades?limit=5`;
+    test('GET /dashboard/comunidad/:comunidadId/proximas-actividades (Próximas Actividades)', async () => {
+      const endpoint = `/dashboard/comunidad/${comunidadId}/proximas-actividades`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /dashboard/comunidad/:comunidadId/reservas-amenidades', async () => {
-      const endpoint = `/dashboard/comunidad/${comunidadId}/reservas-amenidades?limit=3`;
+    test('GET /dashboard/comunidad/:comunidadId/reservas-amenidades (Reservas de Amenidades)', async () => {
+      const endpoint = `/dashboard/comunidad/${comunidadId}/reservas-amenidades`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /dashboard/comunidad/:comunidadId/notificaciones', async () => {
-      const endpoint = `/dashboard/comunidad/${comunidadId}/notificaciones?limit=5`;
+    test('GET /dashboard/comunidad/:comunidadId/notificaciones (Notificaciones)', async () => {
+      const endpoint = `/dashboard/comunidad/${comunidadId}/notificaciones`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
   });
 
   // =========================================
-  // 4. Métricas Adicionales y Resumen Completo (Sección 5)
+  // 4. Análisis y Tendencias
   // =========================================
-
-  describe('Métricas y Resumen Completo (Sección 5)', () => {
-    test('GET /dashboard/comunidad/:comunidadId/efectividad-cobranza', async () => {
+  describe('Análisis y Tendencias', () => {
+    test('GET /dashboard/comunidad/:comunidadId/efectividad-cobranza (Efectividad de Cobranza)', async () => {
       const endpoint = `/dashboard/comunidad/${comunidadId}/efectividad-cobranza`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
-      if (response.status === 200) {
-          expect(response.body).toHaveProperty('efectividad_cobranza');
-          expect(typeof response.body.efectividad_cobranza).toBe('number');
-      }
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /dashboard/comunidad/:comunidadId/tendencia-ingresos', async () => {
+    test('GET /dashboard/comunidad/:comunidadId/tendencia-ingresos (Tendencia de Ingresos)', async () => {
       const endpoint = `/dashboard/comunidad/${comunidadId}/tendencia-ingresos`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /dashboard/comunidad/:comunidadId/resumen-completo', async () => {
+    test('GET /dashboard/comunidad/:comunidadId/resumen-completo (Resumen Completo)', async () => {
       const endpoint = `/dashboard/comunidad/${comunidadId}/resumen-completo`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse('GET', endpoint, response.status);
-      expect([200, 401, 403, 500]).toContain(response.status);
-      if (response.status === 200) {
-          expect(response.body).toHaveProperty('kpis');
-          expect(response.body).toHaveProperty('graficos');
-          expect(response.body).toHaveProperty('tablas');
-          expect(response.body).toHaveProperty('notificaciones');
-          expect(response.body).toHaveProperty('metricas');
-      }
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
   });
 });

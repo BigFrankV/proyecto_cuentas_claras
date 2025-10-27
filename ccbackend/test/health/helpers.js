@@ -21,7 +21,8 @@ const globalResults = {
 /**
  * Categoriza la respuesta de un endpoint
  */
-function categorizeResponse(method, endpoint, statusCode, responseBody = null, error = null) {
+function categorizeResponse(endpoint, statusCode, responseBody = null, error = null) {
+  const method = 'GET'; // Asumiendo GET para health checks
   const timestamp = new Date().toISOString();
   const result = { 
     method,
@@ -32,8 +33,42 @@ function categorizeResponse(method, endpoint, statusCode, responseBody = null, e
     error: error ? error.message : null
   };
   
-  // Guardar detalles completos
+  // Guardar detalles completos en memoria
   globalResults.details.push(result);
+  
+  // También guardar en archivo global para compartir entre procesos
+  const globalFile = path.join(__dirname, '../../logs/global-results.json');
+  let existing = { success: [], unauthorized: [], notFound: [], serverError: [], other: [], details: [] };
+  
+  // Asegurar que el directorio logs existe
+  const logsDir = path.dirname(globalFile);
+  if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+  }
+  
+  if (fs.existsSync(globalFile)) {
+    try {
+      existing = JSON.parse(fs.readFileSync(globalFile, 'utf8'));
+    } catch (e) {
+      // Ignorar y usar estructura por defecto
+    }
+  }
+  existing.details.push(result);
+  
+  // Categorizar
+  if (statusCode === 200 || statusCode === 201) {
+    existing.success.push(result);
+  } else if (statusCode === 401 || statusCode === 403) {
+    existing.unauthorized.push(result);
+  } else if (statusCode === 404) {
+    existing.notFound.push(result);
+  } else if (statusCode >= 500) {
+    existing.serverError.push(result);
+  } else {
+    existing.other.push(result);
+  }
+  
+  fs.writeFileSync(globalFile, JSON.stringify(existing, null, 2), 'utf8');
   
   // Log en consola con color
   const statusEmoji = statusCode === 200 || statusCode === 201 ? '✅' : 
@@ -42,19 +77,6 @@ function categorizeResponse(method, endpoint, statusCode, responseBody = null, e
                      statusCode >= 500 ? '❌' : '⚠️';
   
   console.log(`${statusEmoji} ${method} ${endpoint} → ${statusCode}`);
-  
-  // Categorizar
-  if (statusCode === 200 || statusCode === 201) {
-    globalResults.success.push(result);
-  } else if (statusCode === 401 || statusCode === 403) {
-    globalResults.unauthorized.push(result);
-  } else if (statusCode === 404) {
-    globalResults.notFound.push(result);
-  } else if (statusCode >= 500) {
-    globalResults.serverError.push(result);
-  } else {
-    globalResults.other.push(result);
-  }
 }
 
 /**

@@ -1260,3 +1260,77 @@ body {
     max-width: none !important;
   }
 }
+
+/* Estilos para la página de perfil */
+.profile-hero {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  box-shadow: var(--shadow-lg);
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%) !important;
+}
+
+/* Mejoras para las tarjetas del perfil */
+.app-card {
+  transition: var(--transition-base);
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.app-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* Estilos para la información del perfil */
+.profile-info .info-icon {
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: var(--border-radius);
+}
+
+/* Mejoras para los switches de preferencias */
+.form-check-input:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.hover-bg-light:hover {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+  transition: background-color 0.2s ease;
+}
+
+/* Estilos para la tabla de sesiones */
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Mejoras para los badges */
+.badge {
+  font-weight: 500;
+}
+
+/* Estilos para los botones con íconos */
+.btn .material-icons {
+  vertical-align: middle;
+}
+
+/* Animación de fade-in mejorada */
+.fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

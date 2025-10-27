@@ -1,223 +1,195 @@
 /**
- * Tests de Salud - Módulo: UTILIDADES (General e Indicadores Económicos)
- * Endpoints: 27 (GET)
+ * Tests de Salud - Módulo: UNIDADES
+ * Endpoints: 21 (GET)
+ * Requisitos: Requiere DUMMY_MEDIDOR_ID válido.
  */
 
-const { app, getAuthToken } = require('./setup');
+const { app, testIds, getAuthToken } = require('./setup');
 const { categorizeResponse, getWithAuth } = require('./helpers');
 
-describe('Utilidades Health Check', () => {
+describe('Unidades Health Check', () => {
   let authToken;
-  const dummyAno = '2024';
-  const dummyMes = '01';
-  
+  let medidorId;
+  let unidadId = 1; // ID de unidad de prueba
+  let cuentaId = 1; // ID de cuenta de prueba
+  let comunidadId = 1; // ID de comunidad de prueba
+  let edificioId = 1; // ID de edificio de prueba
+  let torreId = 1; // ID de torre de prueba
+
   beforeAll(() => {
     authToken = getAuthToken();
+    medidorId = testIds.medidorId;
   });
 
   // =========================================
-  // 1. Endpoints Generales de Utilidad (/util)
+  // 1. Información Básica de Unidades
   // =========================================
-  describe('Endpoints Generales (/util)', () => {
-    test('GET /util/health (Health Check General)', async () => {
-      const endpoint = `/util/health`;
+  describe('Información Básica de Unidades', () => {
+    test('GET /unidades/comunidad/:comunidadId (Unidades por Comunidad)', async () => {
+      const endpoint = `/unidades/comunidad/${comunidadId}`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /util/version', async () => {
-      const endpoint = `/util/version`;
+    test('GET /unidades/:id (Detalle de Unidad)', async () => {
+      const endpoint = `/unidades/${unidadId}`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /util/uf', async () => {
-      const endpoint = `/util/uf`;
+    test('GET /unidades/:id/tenencias (Tenencias de Unidad)', async () => {
+      const endpoint = `/unidades/${unidadId}/tenencias`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /util/utm', async () => {
-      const endpoint = `/util/utm`;
+    test('GET /unidades/:id/residentes (Residentes de Unidad)', async () => {
+      const endpoint = `/unidades/${unidadId}/residentes`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /util/sync/status', async () => {
-      const endpoint = `/util/sync/status`;
+    test('GET /unidades (Lista de Unidades)', async () => {
+      const endpoint = `/unidades`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
-    });
-
-    test('GET /util/indicadores', async () => {
-      const endpoint = `/util/indicadores`;
-      const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
-    });
-
-    test('GET /util/uf/historico', async () => {
-      const endpoint = `/util/uf/historico`;
-      const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
-    });
-
-    test('GET /util/utm/historico', async () => {
-      const endpoint = `/util/utm/historico`;
-      const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
-    });
-
-    test('GET /util/validar-rut', async () => {
-      const endpoint = `/util/validar-rut?rut=12345678-9`;
-      const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
   });
 
   // =========================================
-  // 2. Endpoints de Valor UTM (/valor-utm)
+  // 2. Información Financiera
   // =========================================
-  describe('Endpoints de Valor UTM (/valor-utm)', () => {
-    test('GET /valor-utm/actual', async () => {
-      const endpoint = `/valor-utm/actual`;
+  describe('Información Financiera', () => {
+    test('GET /unidades/:id/summary (Resumen Financiero)', async () => {
+      const endpoint = `/unidades/${unidadId}/summary`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /valor-utm/periodo/:mes/:ano', async () => {
-      const endpoint = `/valor-utm/periodo/${dummyMes}/${dummyAno}`;
+    test('GET /unidades/:id/cuentas (Cuentas de Unidad)', async () => {
+      const endpoint = `/unidades/${unidadId}/cuentas`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 404, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /valor-utm/rango', async () => {
-      const endpoint = `/valor-utm/rango`;
+    test('GET /unidades/cuentas/:cuentaId/detalle (Detalle de Cuenta)', async () => {
+      const endpoint = `/unidades/cuentas/${cuentaId}/detalle`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /valor-utm/historico/:ano', async () => {
-      const endpoint = `/valor-utm/historico/${dummyAno}`;
+    test('GET /unidades/:id/cuentas_full (Cuentas Completas)', async () => {
+      const endpoint = `/unidades/${unidadId}/cuentas_full`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 404, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /valor-utm/resumen-anual/:ano', async () => {
-      const endpoint = `/valor-utm/resumen-anual/${dummyAno}`;
+    test('GET /unidades/:id/pagos (Pagos de Unidad)', async () => {
+      const endpoint = `/unidades/${unidadId}/pagos`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 404, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /valor-utm/resumen-anos', async () => {
-      const endpoint = `/valor-utm/resumen-anos`;
+    test('GET /unidades/cuentas/:cuentaId/aplicaciones (Aplicaciones de Cuenta)', async () => {
+      const endpoint = `/unidades/cuentas/${cuentaId}/aplicaciones`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /valor-utm/variacion-mensual', async () => {
-      const endpoint = `/valor-utm/variacion-mensual`;
+    test('GET /unidades/:id/financiero (Información Financiera)', async () => {
+      const endpoint = `/unidades/${unidadId}/financiero`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
+    });
+  });
+
+  // =========================================
+  // 3. Medidores y Servicios
+  // =========================================
+  describe('Medidores y Servicios', () => {
+    test('GET /unidades/:id/medidores (Medidores de Unidad)', async () => {
+      const endpoint = `/unidades/${unidadId}/medidores`;
+      const response = await getWithAuth(app, endpoint, authToken);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /valor-utm/variacion-interanual/:ano', async () => {
-      const endpoint = `/valor-utm/variacion-interanual/${dummyAno}`;
+    test('GET /unidades/medidores/:medidorId/lecturas (Lecturas de Medidor)', async () => {
+      const endpoint = `/unidades/medidores/${medidorId}/lecturas`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 404, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
+    });
+  });
+
+  // =========================================
+  // 4. Gestión y Administración
+  // =========================================
+  describe('Gestión y Administración', () => {
+    test('GET /unidades/:id/tickets (Tickets de Unidad)', async () => {
+      const endpoint = `/unidades/${unidadId}/tickets`;
+      const response = await getWithAuth(app, endpoint, authToken);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /valor-utm/trimestral', async () => {
-      const endpoint = `/valor-utm/trimestral`;
+    test('GET /unidades/:id/multas (Multas de Unidad)', async () => {
+      const endpoint = `/unidades/${unidadId}/multas`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /valor-utm/semestral', async () => {
-      const endpoint = `/valor-utm/semestral`;
+    test('GET /unidades/:id/reservas (Reservas de Unidad)', async () => {
+      const endpoint = `/unidades/${unidadId}/reservas`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
+    });
+  });
+
+  // =========================================
+  // 5. Dropdowns y Listas
+  // =========================================
+  describe('Dropdowns y Listas', () => {
+    test('GET /unidades/dropdowns/comunidades (Lista de Comunidades)', async () => {
+      const endpoint = `/unidades/dropdowns/comunidades`;
+      const response = await getWithAuth(app, endpoint, authToken);
+      categorizeResponse(endpoint, response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /valor-utm/comparacion-anos', async () => {
-      const endpoint = `/valor-utm/comparacion-anos`;
+    test('GET /unidades/dropdowns/edificios (Lista de Edificios)', async () => {
+      const endpoint = `/unidades/dropdowns/edificios?comunidad_id=${comunidadId}`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /valor-utm/top-valores', async () => {
-      const endpoint = `/valor-utm/top-valores`;
+    test('GET /unidades/dropdowns/torres (Lista de Torres)', async () => {
+      const endpoint = `/unidades/dropdowns/torres?edificio_id=${edificioId}`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /valor-utm/estadisticas', async () => {
-      const endpoint = `/valor-utm/estadisticas`;
+    test('GET /unidades/dropdowns/unidades (Lista de Unidades)', async () => {
+      const endpoint = `/unidades/dropdowns/unidades?torre_id=${torreId}`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
-    });
-
-    test('GET /valor-utm/dashboard', async () => {
-      const endpoint = `/valor-utm/dashboard`;
-      const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
-    });
-
-    test('GET /valor-utm/grafico', async () => {
-      const endpoint = `/valor-utm/grafico`;
-      const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
-    });
-
-    test('GET /valor-utm/conversion/tabla', async () => {
-      const endpoint = `/valor-utm/conversion/tabla`;
-      const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
-    });
-
-    test('GET /valor-utm/conversion/pesos-a-utm', async () => {
-      const endpoint = `/valor-utm/conversion/pesos-a-utm`;
-      const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
-    });
-
-    test('GET /valor-utm/conversion/utm-a-pesos', async () => {
-      const endpoint = `/valor-utm/conversion/utm-a-pesos`;
-      const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
-    });
-
-    test('GET /valor-utm/disponibilidad', async () => {
-      const endpoint = `/valor-utm/disponibilidad`;
-      const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(endpoint, response.status);
-      expect([200, 500]).toContain(response.status);
+      expect([200, 401, 404, 500]).toContain(response.status);
     });
   });
 });
