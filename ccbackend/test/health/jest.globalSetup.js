@@ -19,6 +19,9 @@ module.exports = async () => {
   console.log('════════════════════════════════════════════════════════════════════════════════');
   console.log('');
   
+  // Inicializar configuración de tests (autenticación y IDs)
+  await require('./setup').initializeTestSetup();
+  
   // Guardar timestamp de inicio
   global.__TEST_START_TIME__ = Date.now();
 };

@@ -5,6 +5,112 @@ const { body, param, query, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const MultasPermissions = require('../middleware/multasPermissions');
 
+/**
+ * @swagger
+ * /apelaciones:
+ *   get:
+ *     summary: Listar apelaciones
+ *     description: Devuelve una lista paginada de apelaciones con filtros opcionales.
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Número de página (por defecto 1)
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 200
+ *         description: Número de elementos por página (por defecto 50)
+ *       - name: estado
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [pendiente, resuelta, rechazada]
+ *         description: Filtrar por estado de la apelación
+ *       - name: search
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda en motivo de apelación, número de multa o motivo de multa
+ *     responses:
+ *       200:
+ *         description: Lista de apelaciones
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       multa_id:
+ *                         type: integer
+ *                       estado:
+ *                         type: string
+ *                       motivo_apelacion:
+ *                         type: string
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                       multa_numero:
+ *                         type: string
+ *                       comunidad_id:
+ *                         type: integer
+ *                       multa_motivo:
+ *                         type: string
+ *                       apelante_nombre:
+ *                         type: string
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     pages:
+ *                       type: integer
+ *       403:
+ *         description: Sin permisos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ */
+
 // Helper: obtener comunidades del usuario (copiar lógica de multas.js)
 async function obtenerComunidadesUsuario(userId, personaId, isSuperAdmin) {
   try {
@@ -131,6 +237,161 @@ router.get('/:id',
     }
   }
 );
+
+/**
+ * @swagger
+ * /apelaciones/{id}:
+ *   get:
+ *     summary: Obtener detalle de apelación
+ *     description: Devuelve los detalles de una apelación específica.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la apelación
+ *     responses:
+ *       200:
+ *         description: Detalle de la apelación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     multa_id:
+ *                       type: integer
+ *                     estado:
+ *                       type: string
+ *                     motivo_apelacion:
+ *                       type: string
+ *                     documentos_json:
+ *                       type: string
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ *                     multa_numero:
+ *                       type: string
+ *                     comunidad_id:
+ *                       type: integer
+ *                     apelante_nombre:
+ *                       type: string
+ *       404:
+ *         description: Apelación no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+
+/**
+ * @swagger
+ * /apelaciones:
+ *   post:
+ *     summary: Crear apelación
+ *     description: Crea una nueva apelación para una multa específica.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - multa_id
+ *               - motivo
+ *             properties:
+ *               multa_id:
+ *                 type: integer
+ *                 description: ID de la multa a apelar
+ *               motivo:
+ *                 type: string
+ *                 minLength: 20
+ *                 description: Motivo de la apelación
+ *               documentos_json:
+ *                 type: object
+ *                 description: Documentos adicionales en formato JSON (opcional)
+ *     responses:
+ *       201:
+ *         description: Apelación creada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       description: ID de la nueva apelación
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Validación fallida o multa no apelable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       404:
+ *         description: Multa no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
 
 // POST /apelaciones - crear apelación (body: multa_id, motivo, documentos_json opt)
 router.post('/',

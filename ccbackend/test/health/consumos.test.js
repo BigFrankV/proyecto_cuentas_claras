@@ -1,41 +1,41 @@
 /**
- * Tests de Salud - Módulo: MEDIDORES
+ * Tests de Salud - Módulo: CONSUMOS
  * Endpoints: 5 (GET)
- * Requisitos: Requiere medidorId válido.
+ * Requisitos: Requiere DUMMY_MEDIDOR_ID válido.
  */
 
-const { app, getAuthToken } = require('./setup');
+const { app, testIds, getAuthToken } = require('./setup');
 const { categorizeResponse, getWithAuth } = require('./helpers');
 
-describe('Medidores Health Check', () => {
+describe('Consumos Health Check', () => {
   let authToken;
-  let medidorId = 1; // ID de medidor de prueba
-  let comunidadId = 1; // ID de comunidad de prueba
+  let medidorId;
 
   beforeAll(() => {
     authToken = getAuthToken();
+    medidorId = testIds.medidorId;
   });
 
   // =========================================
-  // 1. Gestión de Medidores
+  // 1. Tendencias y Análisis
   // =========================================
-  describe('Gestión de Medidores', () => {
-    test('GET /medidores/comunidad/:comunidadId (Medidores por Comunidad)', async () => {
-      const endpoint = `/medidores/comunidad/${comunidadId}`;
+  describe('Tendencias y Análisis', () => {
+    test('GET /consumos/mensual (Tendencia Mensual)', async () => {
+      const endpoint = `/consumos/mensual?medidor_id=${medidorId}&periodo_inicio=2024-01&periodo_fin=2024-12`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /medidores/:id (Detalle de Medidor)', async () => {
-      const endpoint = `/medidores/${medidorId}`;
+    test('GET /consumos/trimestral (Tendencia Trimestral)', async () => {
+      const endpoint = `/consumos/trimestral?medidor_id=${medidorId}&periodo_inicio=2024-01&periodo_fin=2024-12`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /medidores (Lista de Medidores)', async () => {
-      const endpoint = `/medidores`;
+    test('GET /consumos/semanal (Tendencia Semanal)', async () => {
+      const endpoint = `/consumos/semanal?medidor_id=${medidorId}&periodo_inicio=2024-01&periodo_fin=2024-12`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
@@ -43,18 +43,18 @@ describe('Medidores Health Check', () => {
   });
 
   // =========================================
-  // 2. Lecturas y Consumos
+  // 2. Estadísticas y Detalles
   // =========================================
-  describe('Lecturas y Consumos', () => {
-    test('GET /medidores/:id/lecturas (Lecturas de Medidor)', async () => {
-      const endpoint = `/medidores/${medidorId}/lecturas`;
+  describe('Estadísticas y Detalles', () => {
+    test('GET /consumos/estadisticas (Estadísticas Generales)', async () => {
+      const endpoint = `/consumos/estadisticas?medidor_id=${medidorId}&periodo_inicio=2024-01&periodo_fin=2024-12`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
 
-    test('GET /medidores/:id/consumos (Consumos de Medidor)', async () => {
-      const endpoint = `/medidores/${medidorId}/consumos`;
+    test('GET /consumos/detalle (Detalle por Período)', async () => {
+      const endpoint = `/consumos/detalle?medidor_id=${medidorId}&periodo_inicio=2024-01&periodo_fin=2024-12`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);

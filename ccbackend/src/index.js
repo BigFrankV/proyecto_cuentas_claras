@@ -35,6 +35,7 @@ const reportesRoutes = require('./routes/reportes');
 const notificacionesRoutes = require('./routes/notificaciones');
 const ticketsRoutes = require('./routes/tickets');
 const paymentGatewayRoutes = require('./routes/paymentGateway');
+const consumosRoutes = require('./routes/consumos');
 const sequelize = require('./sequelize');
 const logger = require('./logger');
 const { setupSwagger } = require('./swagger');
@@ -96,6 +97,8 @@ console.log('multasRoutes type:', typeof multasRoutes, 'is function?', typeof mu
 app.use('/multas', multasRoutes);
 console.log('conciliacionesRoutes type:', typeof conciliacionesRoutes, 'is function?', typeof conciliacionesRoutes === 'function');
 app.use('/conciliaciones', conciliacionesRoutes);
+console.log('consumosRoutes type:', typeof consumosRoutes, 'is function?', typeof consumosRoutes === 'function');
+app.use('/consumos', consumosRoutes);
 console.log('webhooksRoutes type:', typeof webhooksRoutes, 'is function?', typeof webhooksRoutes === 'function');
 app.use('/webhooks', webhooksRoutes);
 console.log('amenidadesRoutes type:', typeof amenidadesRoutes, 'is function?', typeof amenidadesRoutes === 'function');
