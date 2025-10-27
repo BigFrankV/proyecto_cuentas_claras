@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuentas Claras - Presentación</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.18);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .slide {
+            height: 100vh;
+            display: none;
+            padding: 2rem;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 1;
+        }
+
+        .slide-content {
+            max-width: 90vw;
+            margin: 0 auto;
+            width: 100%;
+            animation: slideIn 0.8s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .material-icons {
+            vertical-align: middle;
+            margin-right: 0.5rem;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+
+        .controls button {
+            background: var(--glass-bg);
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 0.7rem 1.2rem;
+            margin-left: 0.8rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .controls button:hover {
+            background: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .controls button .material-icons {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.47);
+            border-color: var(--accent-color);
+        }
+
+        .feature-card .material-icons {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+            transition: transform 0.3s ease;
+            display: block;
+        }
+
+        .feature-card:hover .material-icons {
+            transform: scale(1.2);
+        }
+
+        .feature-card h4 {
+            color: white;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .feature-card ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+
+        .feature-card ul li {
+            margin-bottom: 0.8rem;
+            position: relative;
+            padding-left: 1.5rem;
+            line-height: 1.4;
+        }
+
+        .feature-card ul li:before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: var(--accent-color);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 2rem;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--accent-color);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        h2:hover::after {
+            width: 100%;
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background-color: var(--accent-color);
+            transition: width 0.3s ease;
+            z-index: 1000;
+        }
+
+        .badge {
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            margin: 0.25rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .bg-glass-light {
+            background: rgba(255, 255, 255, 0.2) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .text-accent {
+            color: var(--accent-color);
+            font-size: 1.1rem;
+        }
+
+        .team-members {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .team-members .badge {
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .team-members .material-icons {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.5);
+            background: var(--glass-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+        }
+
+        .lead {
+            font-size: 1.25rem;
+            font-weight: 300;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .slide-content {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.75rem;
+            }
+
+            .feature-card {
+                margin-bottom: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="slide-number" id="slideNumber"></div>
+
+    <!-- Slide 1: Portada -->
+    <div class="slide active animate__animated animate__fadeIn" id="slide1">
+        <div class="slide-content text-center">
+            <img src="https://www.duoc.cl/wp-content/themes/wordpress-duoc-cl/images/logo-duoc.svg" alt="Duoc UC"
+                style="height: 80px; margin-bottom: 2rem;" class="animate__animated animate__fadeIn">
+            <div class="feature-card mb-4 animate__animated animate__fadeInUp animate__delay-1s">
+                <h1 class="display-2 mb-4">
+                    <span class="material-icons" style="font-size: 4rem;">account_balance</span>
+                    Cuentas Claras
+                </h1>
+                <h3 class="mb-4">Sistema de Gestión para Comunidades Residenciales</h3>
+                <p class="lead">Una solución integral para la administración moderna de edificios y condominios</p>
+                <div class="mt-4">
+                    <div class="team-members mt-4">
+                        <div class="badge bg-glass-light p-2 m-1">
+                            <span class="material-icons">person</span>
+                            Patricio Quintanilla
+                        </div>
+                        <div class="badge bg-glass-light p-2 m-1">
+                            <span class="material-icons">person</span>
+                            Matias Román
+                        </div>
+                        <div class="badge bg-glass-light p-2 m-1">
+                            <span class="material-icons">person</span>
+                            Frank Vogt
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: Contexto de Negocio -->
+    <div class="slide" id="slide2">
+        <div class="slide-content">
+            <h2 class="mb-4">
+                <span class="material-icons">business</span>
+                Contexto de Negocio
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <span class="material-icons">trending_up</span>
+                        <h4 class="fw-bold">Mercado en Crecimiento</h4>
+                        <p class="lead mb-0">Aumento constante de edificios y condominios en Chile requiere soluciones
+                            digitales eficientes.</p>
+                        <div class="mt-3">
+                            <span class="badge bg-info bg-opacity-25">+15% anual</span>
+                            <span class="badge bg-success bg-opacity-25">Sector en expansión</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <span class="material-icons">psychology</span>
+                        <h4 class="fw-bold">Problemática Actual</h4>
+                        <p class="lead mb-0">Gestión manual y descentralizada genera ineficiencias y errores en la
+                            administración.</p>
+                        <div class="mt-3">
+                            <span class="badge bg-warning bg-opacity-25">40% tiempo perdido</span>
+                            <span class="badge bg-danger bg-opacity-25">Alto margen de error</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Necesidades del Cliente -->
+    <div class="slide" id="slide3">
+        <div class="slide-content">
+            <h2 class="mb-4">
+                <span class="material-icons">people</span>
+                Necesidades del Cliente
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="material-icons">admin_panel_settings</span>
+                        <h4 class="fw-bold">Administradores</h4>
+                        <ul>
+                            <li>Control centralizado de la gestión</li>
+                            <li>Sistema integral de pagos</li>
+                            <li>Reportes en tiempo real</li>
+                            <li>Gestión de documentos</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="material-icons">person</span>
+                        <h4 class="fw-bold">Residentes</h4>
+                        <ul>
+                            <li>Acceso transparente a información</li>
+                            <li>Sistema de pagos en línea</li>
+                            <li>Comunicación directa y efectiva</li>
+                            <li>Historial de transacciones</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="material-icons">how_to_reg</span>
+                        <h4 class="fw-bold">Consejería</h4>
+                        <ul>
+                            <li>Registro de entrada y salida al edificio</li>
+                            <li>Verificación y control de visitantes</li>
+                            <li>Autorizaciones por unidad y por horario</li>
+                            <li>Integración con notificaciones y cámaras</li>
+                        </ul>
+                        <div class="mt-3">
+                            <span class="badge bg-info bg-opacity-25">Acceso Seguro</span>
+                            <span class="badge bg-success bg-opacity-25">Registro en Tiempo Real</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="material-icons">security</span>
+                        <h4 class="fw-bold">Comunidad</h4>
+                        <ul>
+                            <li>Transparencia en la gestión</li>
+                            <li>Eficiencia operacional</li>
+                            <li>Trazabilidad de operaciones</li>
+                            <li>Reducción de conflictos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Contexto Chile -->
+    <div class="slide" id="slide4">
+        <div class="slide-content">
+            <h2 class="mb-4">
+                <span class="material-icons">public</span>
+                Contexto: Chile
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <span class="material-icons">apartment</span>
+                        <h4 class="fw-bold">Mercado Inmobiliario</h4>
+                        <ul class="mb-3">
+                            <li>+70% de la población urbana vive en condominios</li>
+                            <li>Creciente demanda de soluciones digitales</li>
+                            <li>Marco legal específico (Ley de Copropiedad)</li>
+                        </ul>
+                        <div class="mt-3">
+                            <span class="badge bg-info bg-opacity-25">7.5M habitantes</span>
+                            <span class="badge bg-success bg-opacity-25">Mercado Creciente</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <span class="material-icons">trending_up</span>
+                        <h4 class="fw-bold">Oportunidad de Mercado</h4>
+                        <ul class="mb-3">
+                            <li>Alta adopción tecnológica en el país</li>
+                            <li>Necesidad urgente de modernización</li>
+                            <li>Mercado maduro para soluciones digitales</li>
+                        </ul>
+                        <div class="mt-3">
+                            <span class="badge bg-warning bg-opacity-25">85% penetración internet</span>
+                            <span class="badge bg-primary bg-opacity-25">Mercado $50M USD</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Detalle del Sistema -->
+    <div class="slide" id="slide5">
+        <div class="slide-content">
+            <h2 class="mb-4">
+                <span class="material-icons">settings</span>
+                Detalle del Sistema
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="material-icons">payments</span>
+                        <h4 class="fw-bold">Gastos Comunes</h4>
+                        <p class="mb-3">Gestión y seguimiento de pagos mensuales con histórico completo.</p>
+                        <div class="mt-auto">
+                            <span class="badge bg-primary bg-opacity-25">Automatizado</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="material-icons">gavel</span>
+                        <h4 class="fw-bold">Multas</h4>
+                        <p class="mb-3">Control y gestión de infracciones con sistema de notificaciones.</p>
+                        <div class="mt-auto">
+                            <span class="badge bg-warning bg-opacity-25">Transparente</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="material-icons">notifications</span>
+                        <h4 class="fw-bold">Notificaciones</h4>
+                        <p class="mb-3">Sistema integral de alertas y comunicaciones en tiempo real.</p>
+                        <div class="mt-auto">
+                            <span class="badge bg-success bg-opacity-25">Instantáneo</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="material-icons">dashboard</span>
+                        <h4 class="fw-bold">Reportes</h4>
+                        <p class="mb-3">Estadísticas y análisis detallados para toma de decisiones.</p>
+                        <div class="mt-auto">
+                            <span class="badge bg-info bg-opacity-25">Analítico</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Control de Acceso moved to its own slide to reduce clutter -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Slide 6: Control de Acceso (separada desde Detalle del Sistema) -->
+    <div class="slide" id="slide-control-acceso">
+        <div class="slide-content">
+            <h2 class="mb-4">
+                <span class="material-icons">meeting_room</span>
+                Control de Acceso — Módulo de Consejería
+            </h2>
+            <div class="feature-card">
+                <p class="mb-3">Registro detallado de entradas y salidas al edificio/condominio gestionado por el rol de
+                    Consejería.</p>
+                <h6 class="fw-bold">Campos capturados en el registro de entrada:</h6>
+                <ul>
+                    <li><strong>Nombre del visitante</strong> (o residente/empleado)</li>
+                    <li><strong>Unidad/Departamento</strong> visitado</li>
+                    <li><strong>Documento de identidad</strong> (RUT/Pasaporte)</li>
+                    <li><strong>Fecha y hora</strong> de entrada y salida</li>
+                    <li><strong>Propósito de la visita</strong></li>
+                    <li><strong>Placa del vehículo</strong> (si aplica)</li>
+                    <li><strong>Persona anfitriona</strong> / residente notificado</li>
+                    <li><strong>Observaciones</strong> / permisos especiales</li>
+                </ul>
+                <p class="mb-3">Opcional: integración con cámaras, control de puertas y notificaciones automáticas al
+                    anfitrión.</p>
+                <div class="mt-3">
+                    <span class="badge bg-danger bg-opacity-25">Seguridad</span>
+                    <span class="badge bg-success bg-opacity-25">Trazabilidad</span>
+                    <span class="badge bg-info bg-opacity-25">Integrable</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+
+    <!-- Slide 6: Arquitectura Actual -->
+    <div class="slide" id="slide6">
+        <div class="slide-content">
+            <h2 class="mb-4">
+                <span class="material-icons">architecture</span>
+                Arquitectura Actual
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <span class="material-icons">code</span>
+                        <h4 class="fw-bold">Backend</h4>
+                        <ul class="mb-3">
+                            <li>Django REST Framework</li>
+                            <li>SQLite Database</li>
+                            <li>Token Authentication</li>
+                            <li>API RESTful</li>
+                        </ul>
+                        <div class="mt-3">
+                            <span class="badge bg-info bg-opacity-25">Python 3.9+</span>
+                            <span class="badge bg-success bg-opacity-25">REST API</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <span class="material-icons">web</span>
+                        <h4 class="fw-bold">Frontend</h4>
+                        <ul class="mb-3">
+                            <li>React.js</li>
+                            <li>Bootstrap UI</li>
+                            <li>Material Icons</li>
+                            <li>Responsive Design</li>
+                        </ul>
+                        <div class="mt-3">
+                            <span class="badge bg-primary bg-opacity-25">React 18</span>
+                            <span class="badge bg-warning bg-opacity-25">Mobile First</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Arquitectura Propuesta -->
+    <div class="slide" id="slide7">
+        <div class="slide-content">
+            <h2 class="mb-4">
+                <span class="material-icons">upgrade</span>
+                Arquitectura Propuesta
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <span class="material-icons">storage</span>
+                        <h4 class="fw-bold">Base de Datos</h4>
+                        <ul class="mb-3">
+                            <li>Migración a PostgreSQL</li>
+                            <li>Replicación y Backups</li>
+                            <li>Alta disponibilidad</li>
+                        </ul>
+                        <div class="mt-3">
+                            <span class="badge bg-info bg-opacity-25">PostgreSQL 15</span>
+                            <span class="badge bg-success bg-opacity-25">HA Ready</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <span class="material-icons">cloud</span>
+                        <h4 class="fw-bold">Infraestructura</h4>
+                        <ul class="mb-3">
+                            <li>Containerización con Docker</li>
+                            <li>Orquestación con Kubernetes</li>
+                            <li>CI/CD Pipeline</li>
+                        </ul>
+                        <div class="mt-3">
+                            <span class="badge bg-primary bg-opacity-25">Docker</span>
+                            <span class="badge bg-warning bg-opacity-25">K8s</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <span class="material-icons">security</span>
+                        <h4 class="fw-bold">Seguridad</h4>
+                        <ul class="mb-3">
+                            <li>SSL/TLS</li>
+                            <li>JWT Authentication</li>
+                            <li>Rate Limiting</li>
+                        </ul>
+                        <div class="mt-3">
+                            <span class="badge bg-danger bg-opacity-25">Secure</span>
+                            <span class="badge bg-success bg-opacity-25">JWT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Mejoras Propuestas -->
+    <div class="slide" id="slide8">
+        <div class="slide-content">
+            <h2 class="mb-4">
+                <span class="material-icons">trending_up</span>
+                Mejoras Propuestas
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="material-icons">payment</span>
+                        <h4 class="fw-bold">Pagos</h4>
+                        <p class="mb-3">Integración con pasarelas de pago locales.</p>
+                        <div class="mt-auto">
+                            <span class="badge bg-success bg-opacity-25">Transbank</span>
+                            <span class="badge bg-info bg-opacity-25">WebPay</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="material-icons">description</span>
+                        <h4 class="fw-bold">Documentos</h4>
+                        <p class="mb-3">Gestión digital de documentos y firma electrónica.</p>
+                        <div class="mt-auto">
+                            <span class="badge bg-primary bg-opacity-25">E-Sign</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="material-icons">analytics</span>
+                        <h4 class="fw-bold">Analytics</h4>
+                        <p class="mb-3">Dashboard avanzado con BI y predicciones.</p>
+                        <div class="mt-auto">
+                            <span class="badge bg-warning bg-opacity-25">ML Ready</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-card">
+                        <span class="material-icons">phone_android</span>
+                        <h4 class="fw-bold">Mobile</h4>
+                        <p class="mb-3">Aplicación móvil nativa para iOS y Android.</p>
+                        <div class="mt-auto">
+                            <span class="badge bg-info bg-opacity-25">React Native</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Beneficios Docker -->
+    <div class="slide" id="slide9">
+        <div class="slide-content">
+            <h2 class="mb-4">
+                <span class="material-icons">apps</span>
+                Beneficios de Containerización
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <span class="material-icons">developer_board</span>
+                        <h4 class="fw-bold">Desarrollo</h4>
+                        <ul class="mb-3">
+                            <li>Entorno consistente y reproducible</li>
+                            <li>Onboarding simplificado de desarrolladores</li>
+                            <li>Integración continua automatizada</li>
+                            <li>Testing automatizado end-to-end</li>
+                        </ul>
+                        <div class="mt-3">
+                            <span class="badge bg-info bg-opacity-25">DevOps</span>
+                            <span class="badge bg-success bg-opacity-25">CI/CD</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <span class="material-icons">cloud_done</span>
+                        <h4 class="fw-bold">Producción</h4>
+                        <ul class="mb-3">
+                            <li>Despliegue simplificado y seguro</li>
+                            <li>Escalabilidad horizontal automática</li>
+                            <li>Recuperación ante fallos robusta</li>
+                            <li>Monitoreo centralizado en tiempo real</li>
+                        </ul>
+                        <div class="mt-3">
+                            <span class="badge bg-warning bg-opacity-25">Scalable</span>
+                            <span class="badge bg-danger bg-opacity-25">Reliable</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 10: Conclusión -->
+    <div class="slide" id="slide10">
+        <div class="slide-content text-center">
+            <h2 class="mb-4">
+                <span class="material-icons">stars</span>
+                Conclusión
+            </h2>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="feature-card">
+                        <span class="material-icons display-1 mb-4">verified</span>
+                        <h4 class="fw-bold mb-3">Cuentas Claras: La Solución Integral</h4>
+                        <p class="lead mb-4">
+                            Una plataforma moderna y escalable que resuelve las necesidades reales
+                            de las comunidades residenciales en Chile, preparada para crecer y
+                            adaptarse a futuras demandas.
+                        </p>
+                        <div class="mt-4">
+                            <span class="badge bg-primary bg-opacity-25">Innovación</span>
+                            <span class="badge bg-success bg-opacity-25">Eficiencia</span>
+                            <span class="badge bg-info bg-opacity-25">Transparencia</span>
+                            <span class="badge bg-warning bg-opacity-25">Escalabilidad</span>
+                        </div>
+                        <div class="mt-5 pt-3 border-top border-light">
+                            <img src="https://www.duoc.cl/wp-content/themes/wordpress-duoc-cl/images/logo-duoc.svg"
+                                alt="Duoc UC" style="height: 50px;" class="mb-3">
+                            <small class="text-light opacity-75">Innovación en Gestión Residencial</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="prevSlide()">
+            <span class="material-icons">arrow_back</span>
+        </button>
+        <button onclick="nextSlide()">
+            <span class="material-icons">arrow_forward</span>
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Dynamic slide handling: compute slides from DOM order
+        const slidesNodeList = document.querySelectorAll('.slide');
+        const slides = Array.from(slidesNodeList);
+        let totalSlides = slides.length;
+
+        // Determine initial slide: active class or hash
+        let currentSlide = slides.findIndex(s => s.classList.contains('active')) + 1;
+        if (currentSlide === 0) {
+            // If no active slide in markup, check hash
+            const hash = location.hash.replace('#', '');
+            if (hash.startsWith('slide')) {
+                const idx = slides.findIndex(s => s.id === hash);
+                if (idx !== -1) currentSlide = idx + 1;
+            }
+        }
+        if (currentSlide === 0) currentSlide = 1;
+
+        function updateProgressBar() {
+            totalSlides = slides.length; // refresh in case slides change
+            const progress = (currentSlide - 1) / Math.max(1, (totalSlides - 1)) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('slideNumber').textContent = `${currentSlide} / ${totalSlides}`;
+        }
+
+        function showSlide(n) {
+            // clamp
+            if (n < 1) n = 1;
+            if (n > slides.length) n = slides.length;
+            slides.forEach((slide, idx) => {
+                slide.classList.remove('active', 'animate__animated', 'animate__fadeIn');
+                if (idx === n - 1) {
+                    slide.classList.add('active', 'animate__animated', 'animate__fadeIn');
+                    // update hash without scrolling
+                    history.replaceState(null, '', `#${slide.id}`);
+                }
+            });
+            currentSlide = n;
+            updateProgressBar();
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+            } else {
+                // loop to first
+                currentSlide = 1;
+            }
+            showSlide(currentSlide);
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+            } else {
+                // loop to last
+                currentSlide = totalSlides;
+            }
+            showSlide(currentSlide);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        function adjustAspectRatio() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const ratio = 16 / 9;
+
+            if (width / height > ratio) {
+                document.body.style.fontSize = `${height / 50}px`;
+            } else {
+                document.body.style.fontSize = `${width / (50 * ratio)}px`;
+            }
+        }
+
+        window.addEventListener('resize', adjustAspectRatio);
+        adjustAspectRatio();
+        updateProgressBar();
+    </script>
+</body>
+
+</html>
