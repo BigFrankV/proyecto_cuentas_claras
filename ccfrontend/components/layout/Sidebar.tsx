@@ -118,68 +118,14 @@ export default function Sidebar() {
 
   // Función para determinar si una sección debe mostrarse según permisos
   const shouldShowSection = (sectionTitle: string) => {
-    if (isSuperUser()) return true; // Superuser ve todo
-
-    switch (sectionTitle) {
-      case 'Dashboard':
-        return true; // Todos pueden ver el dashboard
-      case 'Estructura':
-        return hasPermission(Permission.VIEW_COMMUNITIES);
-      case 'Residentes':
-        return hasPermission(Permission.VIEW_USERS);
-      case 'Finanzas':
-        return hasPermission(Permission.VIEW_FINANCES);
-      case 'Gastos':
-        return hasPermission(Permission.VIEW_FINANCES); // Gastos también son finanzas
-      case 'Servicios':
-        return hasPermission(Permission.VIEW_COMMUNITIES); // Servicios de comunidades
-      case 'Amenidades':
-        return hasPermission(Permission.VIEW_COMMUNITIES); // Amenidades de comunidades
-      case 'Sanciones':
-        return hasPermission(Permission.VIEW_USERS); // Sanciones a usuarios
-      case 'Comunicación':
-        return true; // Comunicación básica para todos
-      case 'Utilidades':
-        return hasPermission(Permission.VIEW_REPORTS); // Acceso a herramientas de utilidad
-      default:
-        return false;
-    }
+    // Mostrar todas las secciones para todos los roles
+    return true;
   };
-
+ 
   // Función para determinar si un item específico debe mostrarse
   const shouldShowItem = (href: string) => {
-    if (isSuperUser()) return true;
-
-    // Mapeo específico de rutas a permisos
-    const routePermissions: { [key: string]: Permission } = {
-      '/reportes': Permission.VIEW_REPORTS,
-      '/comunidades': Permission.VIEW_COMMUNITIES,
-      '/edificios': Permission.VIEW_COMMUNITIES,
-      '/torres': Permission.VIEW_COMMUNITIES,
-      '/unidades': Permission.VIEW_COMMUNITIES,
-      '/personas': Permission.VIEW_USERS,
-      '/membresias': Permission.VIEW_USERS,
-      '/emisiones': Permission.VIEW_FINANCES,
-      '/cargos': Permission.VIEW_FINANCES,
-      '/pagos': Permission.VIEW_FINANCES,
-      '/conciliaciones': Permission.VIEW_FINANCES,
-      '/gastos': Permission.VIEW_FINANCES,
-      '/categorias-gasto': Permission.VIEW_FINANCES,
-      '/centros-costo': Permission.VIEW_FINANCES,
-      '/proveedores': Permission.VIEW_FINANCES,
-      '/compras': Permission.VIEW_FINANCES,
-      '/medidores': Permission.VIEW_COMMUNITIES,
-      '/lecturas': Permission.VIEW_COMMUNITIES,
-      '/consumos': Permission.VIEW_COMMUNITIES,
-      '/tarifas': Permission.VIEW_COMMUNITIES,
-      '/multas': Permission.VIEW_USERS,
-      '/multas-nueva': Permission.VIEW_USERS,
-      '/apelaciones': Permission.VIEW_USERS,
-      '/apelaciones-nueva': Permission.VIEW_USERS,
-    };
-
-    const requiredPermission = routePermissions[href];
-    return !requiredPermission || hasPermission(requiredPermission);
+    // Mostrar todos los items para todos los roles
+    return true;
   };
 
   const isActive = (href: string) => {

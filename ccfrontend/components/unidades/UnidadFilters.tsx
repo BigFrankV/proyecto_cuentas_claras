@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import api from '../../lib/api';
+import { useAuth } from '../../lib/useAuth';
 
 interface UnidadFiltersProps {
   filters: {
@@ -32,12 +34,6 @@ interface Torre {
   edificioId: string;
 }
 
-const comunidades: Comunidad[] = [
-  { id: '1', nombre: 'Las Palmas' },
-  { id: '2', nombre: 'Edificio Central' },
-  { id: '3', nombre: 'Jardines del Este' }
-];
-
 const edificios: Edificio[] = [
   { id: '1', nombre: 'Torre Central', comunidadId: '2' },
   { id: '2', nombre: 'Edificio Norte', comunidadId: '1' },
@@ -58,6 +54,40 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
   viewMode,
   onViewModeChange
 }) => {
+  const { user } = useAuth();
+  const [comunidades, setComunidades] = useState<Comunidad[]>([]);
+  const [selectedComunidad, setSelectedComunidad] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user === undefined || user === null) return; // esperar auth
+    async function load() {
+      try {
+        const res = await api.get('/unidades/dropdowns/comunidades');
+        setComunidades(res.data || []);
+        // preselect si el token trae comunidad única
+        if (user?.comunidad_id) {
+          setSelectedComunidad(String(user.comunidad_id));
+          onFilterChange('comunidad', String(user.comunidad_id));
+        } else if (Array.isArray(user?.comunidades) && user.comunidades.length === 1) {
+          setSelectedComunidad(String(user.comunidades[0]));
+          onFilterChange('comunidad', String(user.comunidades[0]));
+        }
+      } catch (err: any) {
+        console.error('Error loading comunidades dropdown', err);
+        // fallback si backend devuelve 403: usar claims del token (si vienen)
+        if (err?.response?.status === 403 && Array.isArray(user?.comunidades) && user.comunidades.length) {
+          const fallback = user.comunidades.map((id: any) => ({ id: String(id), nombre: String(id) }));
+          setComunidades(fallback);
+          if (fallback.length === 1) {
+            setSelectedComunidad(fallback[0].id);
+            onFilterChange('comunidad', fallback[0].id);
+          }
+        }
+      }
+    }
+    load();
+  }, [user, onFilterChange]);
+
   // Filtrar edificios según comunidad seleccionada
   const availableEdificios = edificios.filter(edificio => 
     !filters.comunidad || edificio.comunidadId === filters.comunidad
@@ -67,6 +97,43 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
   const availableTorres = torres.filter(torre => 
     !filters.edificio || torre.edificioId === filters.edificio
   );
+
+  const isAdmin = user?.is_superadmin === true || (Array.isArray(user?.roles) && user.roles.includes('admin'));
+
+  // Si es superadmin, ocultar filtros de comunidad/edificio/torre
+  if (user?.is_superadmin) {
+    return (
+      <div className='p-3 mb-4' style={{ backgroundColor: '#f8f9fa', borderRadius: 'var(--radius)' }}>
+        {/* Mostrar solo búsqueda y vista */}
+        <div className='row g-3'>
+          <div className='col-md-4'>
+            <input
+              type='text'
+              className='form-control'
+              placeholder='Buscar por código o persona...'
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+          </div>
+          <div className='col-md-4'>
+            <select
+              className='form-select'
+              value={viewMode}
+              onChange={(e) => onViewModeChange(e.target.value as 'table' | 'cards')}
+            >
+              <option value='table'>Vista Tabla</option>
+              <option value='cards'>Vista Tarjetas</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no es admin/superadmin, ocultar filtros de comunidad/edificio/torre
+  if (!isAdmin) {
+    return null; // o mostrar solo búsqueda
+  }
 
   return (
     <div 
@@ -85,11 +152,15 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
             value={filters.comunidad}
             onChange={(e) => onFilterChange('comunidad', e.target.value)}
           >
-            <option value=''>Todas las comunidades</option>
-            {comunidades.map(comunidad => (
-              <option key={comunidad.id} value={comunidad.id}>{comunidad.nombre}</option>
-            ))}
-          </select>
+            {user?.is_superadmin ? (
+              <option value=''>Todas las comunidades</option>
+            ) : (
+              <option value='' disabled>Seleccione comunidad</option>
+            )}
+             {comunidades.map(comunidad => (
+               <option key={comunidad.id} value={comunidad.id}>{comunidad.nombre}</option>
+             ))}
+           </select>
         </div>
         <div className='col-md-3'>
           <label htmlFor='edificioFilter' className='form-label small'>Edificio</label>

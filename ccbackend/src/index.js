@@ -62,6 +62,7 @@ app.use('/comunidad', comunidadRoutes); // Alias singular
 console.log('edificioRoutes type:', typeof edificioRoutes, 'is function?', typeof edificioRoutes === 'function');
 app.use('/edificios', edificioRoutes);
 console.log('unidadRoutes type:', typeof unidadRoutes, 'is function?', typeof unidadRoutes === 'function');
+// Change the mount point from '/api/unidades' to '/unidades' to match frontend calls
 app.use('/unidades', unidadRoutes);
 console.log('personaRoutes type:', typeof personaRoutes, 'is function?', typeof personaRoutes === 'function');
 app.use('/personas', personaRoutes);
