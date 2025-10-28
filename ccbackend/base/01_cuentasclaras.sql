@@ -1248,6 +1248,42 @@ INSERT INTO `tarifa_consumo` (`id`, `comunidad_id`, `tipo`, `periodo_desde`, `pe
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `bitacora_auditoria`
+--
+
+CREATE TABLE `bitacora_auditoria` (
+  `id` bigint NOT NULL,
+  `comunidad_id` bigint NOT NULL,
+  `tipo` enum('system','user','security','maintenance','admin','financial') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `prioridad` enum('low','normal','high','critical') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'normal',
+  `titulo` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `descripcion` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+  `usuario` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `usuario_id` bigint DEFAULT NULL,
+  `fecha` datetime NOT NULL,
+  `tags` json DEFAULT NULL,
+  `adjuntos` json DEFAULT NULL,
+  `ip` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `ubicacion` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Sistema de auditoría y bitácora avanzada';
+
+--
+-- Dumping data for table `bitacora_auditoria`
+--
+
+INSERT INTO `bitacora_auditoria` (`id`, `comunidad_id`, `tipo`, `prioridad`, `titulo`, `descripcion`, `usuario`, `usuario_id`, `fecha`, `tags`, `adjuntos`, `ip`, `ubicacion`, `created_at`, `updated_at`) VALUES
+(1, 1, 'security', 'critical', 'Intento de acceso no autorizado', 'Se detectó un intento de acceso no autorizado al sistema desde una IP desconocida', 'Sistema de Seguridad', NULL, '2025-10-28 10:30:00', '[\"seguridad\", \"acceso\", \"alerta\"]', '[]', '192.168.1.100', 'Admin Panel', '2025-10-28 10:30:00', '2025-10-28 10:30:00'),
+(2, 1, 'user', 'normal', 'Usuario modificó configuración', 'El usuario admin modificó la configuración de notificaciones del sistema', 'Administrador', 1, '2025-10-28 09:15:00', '[\"configuración\", \"usuario\"]', '[]', '192.168.1.50', 'Configuración', '2025-10-28 09:15:00', '2025-10-28 09:15:00'),
+(3, 1, 'maintenance', 'high', 'Mantenimiento programado ejecutado', 'Se ejecutó el mantenimiento programado de base de datos y limpieza de logs', 'Sistema', NULL, '2025-10-28 08:00:00', '[\"mantenimiento\", \"base de datos\", \"logs\"]', '[{\"id\": \"log_001\", \"name\": \"maintenance_log.txt\", \"size\": 2048}]', NULL, 'Servidor Principal', '2025-10-28 08:00:00', '2025-10-28 08:00:00'),
+(4, 1, 'financial', 'normal', 'Pago procesado correctamente', 'Se procesó el pago de gastos comunes para la unidad 301', 'Sistema de Pagos', NULL, '2025-10-28 07:45:00', '[\"pago\", \"gastos comunes\", \"procesado\"]', '[{\"id\": \"recibo_001\", \"name\": \"recibo_pago_301.pdf\", \"size\": 15360}]', NULL, 'Módulo Financiero', '2025-10-28 07:45:00', '2025-10-28 07:45:00'),
+(5, 1, 'admin', 'low', 'Nuevo usuario registrado', 'Se registró un nuevo usuario en el sistema: María González', 'Administrador', 1, '2025-10-28 06:30:00', '[\"usuario\", \"registro\", \"nuevo\"]', '[]', '192.168.1.75', 'Panel de Usuarios', '2025-10-28 06:30:00', '2025-10-28 06:30:00'),
+(6, 1, 'system', 'normal', 'Backup automático completado', 'Se completó exitosamente el backup automático diario del sistema', 'Sistema', NULL, '2025-10-28 05:00:00', '[\"backup\", \"automático\", \"completado\"]', '[{\"id\": \"backup_001\", \"name\": \"backup_2025-10-28.tar.gz\", \"size\": 1048576}]', NULL, 'Servidor de Respaldo', '2025-10-28 05:00:00', '2025-10-28 05:00:00');
+
+-- --------------------------------------------------------
+
+--
 -- Stand-in structure for view `ticket`
 -- (See below for the actual view)
 --
@@ -1900,6 +1936,18 @@ ALTER TABLE `registro_conserjeria`
   ADD KEY `fk_regconser_usuario` (`usuario_id`);
 
 --
+-- Indexes for table `bitacora_auditoria`
+--
+ALTER TABLE `bitacora_auditoria`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_bitacora_auditoria_comunidad` (`comunidad_id`),
+  ADD KEY `fk_bitacora_auditoria_usuario` (`usuario_id`),
+  ADD KEY `ix_bitacora_tipo` (`tipo`),
+  ADD KEY `ix_bitacora_prioridad` (`prioridad`),
+  ADD KEY `ix_bitacora_fecha` (`fecha`),
+  ADD KEY `ix_bitacora_comunidad_fecha` (`comunidad_id`,`fecha`);
+
+--
 -- Indexes for table `reserva_amenidad`
 --
 ALTER TABLE `reserva_amenidad`
@@ -2295,6 +2343,13 @@ ALTER TABLE `proveedor`
 ALTER TABLE `registro_conserjeria`
   ADD CONSTRAINT `fk_bitacora_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
   ADD CONSTRAINT `fk_regconser_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `bitacora_auditoria`
+--
+ALTER TABLE `bitacora_auditoria`
+  ADD CONSTRAINT `fk_bitacora_auditoria_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
+  ADD CONSTRAINT `fk_bitacora_auditoria_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `reserva_amenidad`

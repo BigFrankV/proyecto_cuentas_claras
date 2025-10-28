@@ -850,8 +850,95 @@ CREATE INDEX idx_bitacora_comunidad_fecha ON registro_conserjeria(comunidad_id, 
 CREATE INDEX idx_bitacora_usuario_fecha ON registro_conserjeria(usuario_id, fecha_hora);
 CREATE INDEX idx_bitacora_evento ON registro_conserjeria(evento);
 
--- Índices para tabla auditoria
-CREATE INDEX idx_auditoria_created_at ON auditoria(created_at);
-CREATE INDEX idx_auditoria_usuario_fecha ON auditoria(usuario_id, created_at);
-CREATE INDEX idx_auditoria_tabla_accion ON auditoria(tabla, accion);
-CREATE INDEX idx_auditoria_ip ON auditoria(ip_address);
+-- =========================================
+-- CONSULTAS PARA NUEVA TABLA BITACORA_AUDITORIA
+-- Sistema avanzado de auditoría
+-- =========================================
+
+-- 1. LISTADO DE ACTIVIDADES DE AUDITORÍA CON FILTROS
+SELECT
+    JSON_OBJECT(
+        'id', ba.id,
+        'type', ba.tipo,
+        'priority', ba.prioridad,
+        'title', ba.titulo,
+        'description', COALESCE(ba.descripcion, ''),
+        'user', COALESCE(ba.usuario, 'Sistema'),
+        'date', ba.fecha,
+        'tags', COALESCE(ba.tags, JSON_ARRAY()),
+        'attachments', JSON_LENGTH(COALESCE(ba.adjuntos, '[]')),
+        'ip', ba.ip,
+        'location', ba.ubicacion
+    ) AS actividad
+FROM bitacora_auditoria ba
+WHERE ba.comunidad_id = 1
+ORDER BY ba.fecha DESC
+LIMIT 50;
+
+-- 2. ESTADÍSTICAS DE BITÁCORA DE AUDITORÍA
+SELECT
+    COUNT(*) as total,
+    COUNT(CASE WHEN DATE(fecha) = CURDATE() THEN 1 END) as today,
+    COUNT(CASE WHEN prioridad = 'high' THEN 1 END) as high,
+    COUNT(CASE WHEN prioridad = 'critical' THEN 1 END) as critical,
+    COUNT(CASE WHEN tipo = 'security' THEN 1 END) as security_events,
+    COUNT(CASE WHEN tipo = 'user' THEN 1 END) as user_actions,
+    COUNT(CASE WHEN tipo = 'system' THEN 1 END) as system_events
+FROM bitacora_auditoria
+WHERE comunidad_id = 1;
+
+-- 3. BÚSQUEDA AVANZADA EN BITÁCORA
+SELECT
+    ba.id,
+    ba.tipo,
+    ba.prioridad,
+    ba.titulo,
+    ba.descripcion,
+    ba.usuario,
+    ba.fecha,
+    ba.tags,
+    JSON_LENGTH(ba.adjuntos) as attachments,
+    ba.ip,
+    ba.ubicacion
+FROM bitacora_auditoria ba
+WHERE ba.comunidad_id = 1
+    AND (ba.titulo LIKE '%pago%' OR ba.descripcion LIKE '%pago%' OR JSON_SEARCH(ba.tags, 'one', 'pago') IS NOT NULL)
+    AND ba.tipo = 'financial'
+    AND ba.fecha >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+ORDER BY ba.fecha DESC;
+
+-- 4. ACTIVIDADES POR USUARIO
+SELECT
+    ba.usuario,
+    COUNT(*) as total_activities,
+    COUNT(CASE WHEN ba.tipo = 'security' THEN 1 END) as security_actions,
+    COUNT(CASE WHEN ba.prioridad = 'critical' THEN 1 END) as critical_actions,
+    MAX(ba.fecha) as last_activity
+FROM bitacora_auditoria ba
+WHERE ba.comunidad_id = 1
+GROUP BY ba.usuario
+ORDER BY total_activities DESC;
+
+-- 5. ACTIVIDADES RECIENTES (ÚLTIMAS 24 HORAS)
+SELECT
+    ba.tipo,
+    ba.prioridad,
+    ba.titulo,
+    ba.usuario,
+    ba.fecha,
+    ba.ip
+FROM bitacora_auditoria ba
+WHERE ba.comunidad_id = 1
+    AND ba.fecha >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+ORDER BY ba.fecha DESC;
+
+-- =========================================
+-- ÍNDICES OPTIMIZADOS PARA BITACORA_AUDITORIA
+-- =========================================
+
+CREATE INDEX idx_bitacora_auditoria_comunidad_fecha ON bitacora_auditoria(comunidad_id, fecha);
+CREATE INDEX idx_bitacora_auditoria_tipo ON bitacora_auditoria(tipo);
+CREATE INDEX idx_bitacora_auditoria_prioridad ON bitacora_auditoria(prioridad);
+CREATE INDEX idx_bitacora_auditoria_usuario ON bitacora_auditoria(usuario_id);
+CREATE INDEX idx_bitacora_auditoria_tags ON bitacora_auditoria(tags(255));
+CREATE INDEX idx_bitacora_auditoria_ip ON bitacora_auditoria(ip);

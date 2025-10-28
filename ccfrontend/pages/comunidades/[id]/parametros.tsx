@@ -137,7 +137,7 @@ export default function ParametrosCobranzaPage() {
           setComunidadNombre(comunidad.nombre);
           
           // Cargar parámetros existentes o usar defaults
-          const parametrosExistentes = await comunidadesService.getParametrosCobranza(Number(id));
+          const parametrosExistentes = await comunidadesService.getParametrosByComunidad(Number(id));
           if (parametrosExistentes) {
             setParametros(prev => ({ ...prev, ...parametrosExistentes }));
           }

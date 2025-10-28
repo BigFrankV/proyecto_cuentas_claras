@@ -1,6 +1,9 @@
+/* eslint-disable max-len */
 import dynamic from 'next/dynamic';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
+
+import { ProtectedRoute } from '@/lib/useAuth';
+
 
 const AmenidadesPage = dynamic(() => import('@/components/amenidades/AmenidadesPage'), { ssr: false });
 
