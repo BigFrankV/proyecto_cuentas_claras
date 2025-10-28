@@ -35,6 +35,53 @@ export interface ConsumoMedidor {
   unidad: string;
 }
 
+export interface DashboardKPIs {
+  saldoTotal: number;
+  saldoTotalChange: number;
+  ingresosMes: number;
+  ingresosMesChange: number;
+  gastosMes: number;
+  gastosMesChange: number;
+  tasaMorosidad: number;
+  tasaMorosidadChange: number;
+}
+
+export interface PagoReciente {
+  unidad: string;
+  monto: number;
+  fecha: string;
+  estado: string;
+}
+
+export interface UnidadMorosa {
+  unidad: string;
+  propietario: string;
+  meses: number;
+  deuda: number;
+}
+
+export interface ActividadProxima {
+  titulo: string;
+  descripcion: string;
+  fecha: string;
+}
+
+export interface ReservaAmenidad {
+  amenidad: string;
+  unidad: string;
+  usuario: string;
+  fecha: string;
+  estado: string;
+}
+
+export interface DashboardResumenCompleto {
+  kpis: DashboardKPIs;
+  pagosRecientes: PagoReciente[];
+  unidadesMorosas: UnidadMorosa[];
+  proximasActividades: ActividadProxima[];
+  reservasAmenidades: ReservaAmenidad[];
+}
+
 // Servicio para datos del dashboard
 export const dashboardService = {
   // Obtener estadísticas generales
@@ -51,12 +98,12 @@ export const dashboardService = {
       const totalGastos =
         gastos.data?.reduce(
           (sum: number, gasto: any) => sum + (gasto.monto || 0),
-          0
+          0,
         ) || 0;
       const totalCargos =
         cargos.data?.reduce(
           (sum: number, cargo: any) => sum + (cargo.monto || 0),
-          0
+          0,
         ) || 0;
       const pagosRecibidos =
         pagos.data?.filter((pago: any) => pago.estado === 'aplicado')?.length ||
@@ -94,7 +141,7 @@ export const dashboardService = {
 
   // Obtener gastos por categoría para gráfico de barras
   async getGastosPorCategoria(
-    comunidadId: number
+    comunidadId: number,
   ): Promise<GastoPorCategoria[]> {
     try {
       const [gastos, categorias] = await Promise.all([
@@ -128,7 +175,7 @@ export const dashboardService = {
           categoria,
           total,
           color: colores[index % colores.length] || '#8E8E8E',
-        })
+        }),
       );
     } catch (error) {
       console.error('Error fetching gastos por categoria:', error);
@@ -188,11 +235,11 @@ export const dashboardService = {
 
   // Obtener tendencias de emisiones para gráfico de líneas
   async getTendenciasEmisiones(
-    comunidadId: number
+    comunidadId: number,
   ): Promise<TendenciaEmision[]> {
     try {
       const response = await apiClient.get(
-        `/emisiones/comunidad/${comunidadId}`
+        `/emisiones/comunidad/${comunidadId}`,
       );
       const emisiones = response.data || [];
 
@@ -235,7 +282,7 @@ export const dashboardService = {
   async getConsumosMedidores(comunidadId: number): Promise<ConsumoMedidor[]> {
     try {
       const medidores = await apiClient.get(
-        `/medidores/comunidad/${comunidadId}`
+        `/medidores/comunidad/${comunidadId}`,
       );
 
       if (!medidores.data?.length) {
@@ -248,7 +295,7 @@ export const dashboardService = {
         .map(async (medidor: any) => {
           try {
             const consumos = await apiClient.get(
-              `/medidores/${medidor.id}/consumos`
+              `/medidores/${medidor.id}/consumos`,
             );
             const ultimoConsumo = consumos.data?.[0] || {};
 
@@ -272,6 +319,17 @@ export const dashboardService = {
     } catch (error) {
       console.error('Error fetching consumos medidores:', error);
       return [];
+    }
+  },
+
+  // Obtener resumen completo del dashboard
+  async getResumenCompleto(comunidadId: number): Promise<DashboardResumenCompleto> {
+    try {
+      const response = await apiClient.get(`/api/dashboard/comunidad/${comunidadId}/resumen-completo`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching dashboard resumen completo:', error);
+      throw error;
     }
   },
 };

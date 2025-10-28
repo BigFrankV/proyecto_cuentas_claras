@@ -1,5 +1,7 @@
-import apiClient from './api';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { jwtDecode } from 'jwt-decode';
+
+import apiClient from './api';
 
 // Tipos para la autenticación
 export interface LoginCredentials {
@@ -153,8 +155,10 @@ class AuthService {
       }
 
       // Guardar token y datos de usuario en localStorage
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('user_data', JSON.stringify(user));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('user_data', JSON.stringify(user));
+      }
 
       console.log('💾 Datos guardados en localStorage');
       return { token, user };
@@ -165,11 +169,11 @@ class AuthService {
         throw new Error(error.response.data.message);
       } else if (error.response?.status === 401) {
         throw new Error(
-          'Credenciales inválidas. Verifica tu usuario y contraseña.'
+          'Credenciales inválidas. Verifica tu usuario y contraseña.',
         );
       } else if (error.code === 'ECONNREFUSED') {
         throw new Error(
-          'No se pudo conectar con el servidor. Verifica que la API esté ejecutándose.'
+          'No se pudo conectar con el servidor. Verifica que la API esté ejecutándose.',
         );
       } else {
         throw new Error('Error de conexión. Por favor intenta nuevamente.');
@@ -229,8 +233,10 @@ class AuthService {
       }
 
       // Guardar token y datos de usuario en localStorage
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('user_data', JSON.stringify(user));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('user_data', JSON.stringify(user));
+      }
 
       console.log('💾 Datos 2FA guardados en localStorage');
 
@@ -260,8 +266,10 @@ class AuthService {
       const { token, user } = response.data;
 
       // Guardar token y datos de usuario en localStorage
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('user_data', JSON.stringify(user));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('user_data', JSON.stringify(user));
+      }
 
       return response.data;
     } catch (error: any) {
@@ -271,11 +279,11 @@ class AuthService {
         throw new Error(error.response.data.message);
       } else if (error.response?.status === 400) {
         throw new Error(
-          'Datos de registro inválidos. Verifica que el usuario tenga al menos 3 caracteres y la contraseña 6.'
+          'Datos de registro inválidos. Verifica que el usuario tenga al menos 3 caracteres y la contraseña 6.',
         );
       } else {
         throw new Error(
-          'Error al registrar usuario. Por favor intenta nuevamente.'
+          'Error al registrar usuario. Por favor intenta nuevamente.',
         );
       }
     }
@@ -290,8 +298,10 @@ class AuthService {
       console.warn('Error al hacer logout en servidor:', error);
     } finally {
       // Limpiar datos locales siempre
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
+      }
     }
   }
 
@@ -332,6 +342,10 @@ class AuthService {
 
   // Verificar si el usuario está logueado
   isAuthenticated(): boolean {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    
     const token = localStorage.getItem('auth_token');
     
     if (!token) {
@@ -364,11 +378,17 @@ class AuthService {
 
   // Obtener token actual
   getToken(): string | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
     return localStorage.getItem('auth_token');
   }
 
   // Obtener datos del usuario desde localStorage
   getUserData(): User | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
     const userData = localStorage.getItem('user_data');
     console.log('🔍 Datos raw del localStorage:', userData);
     try {
@@ -383,6 +403,10 @@ class AuthService {
 
   // Debug: Mostrar estado actual del localStorage
   debugAuthState(): void {
+    if (typeof window === 'undefined') {
+      console.log('🔍 DEBUG - No se puede acceder a localStorage en el servidor');
+      return;
+    }
     const token = localStorage.getItem('auth_token');
     const userData = localStorage.getItem('user_data');
     
@@ -478,13 +502,13 @@ class AuthService {
         notifications: {
           email_enabled: true,
           payment_notifications: true,
-          weekly_summaries: true
+          weekly_summaries: true,
         },
         display: {
           timezone: 'America/Santiago',
           date_format: 'DD/MM/YYYY',
-          language: 'es'
-        }
+          language: 'es',
+        },
       };
     }
   }

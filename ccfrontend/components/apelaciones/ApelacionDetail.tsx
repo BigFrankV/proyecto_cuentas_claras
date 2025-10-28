@@ -2,8 +2,8 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 
 import { resolveApelacion } from '@/lib/apelacionesService';
-import useAuth from '@/lib/useAuth';
-import usePermissions from '@/lib/usePermissions';
+import { useAuth } from '@/lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions';
 
 const ApelacionDetail = ({
   apelacion,
@@ -15,14 +15,14 @@ const ApelacionDetail = ({
   onUpdated?: Function;
 }) => {
   const { user, token } = useAuth();
-  const { can } = usePermissions();
+  const { hasPermission } = usePermissions();
   const [resolucion, setResolucion] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleResolve(accion: 'aceptar' | 'rechazar') {
     setLoading(true);
     try {
-      await resolveApelacion(apelacion.id, { accion, resolucion }, token);
+      await resolveApelacion(apelacion.id, { accion, resolucion });
       if (onResolved) {
         onResolved(apelacion.id);
       }
@@ -32,6 +32,12 @@ const ApelacionDetail = ({
     } finally {
       setLoading(false);
     }
+  }
+
+  function isManager() {
+    // Return a boolean indicating manager-level permissions.
+    // Adjust the permission string as needed for your app.
+    return hasPermission('apelaciones.manage' as any);
   }
 
   return (
@@ -70,7 +76,7 @@ const ApelacionDetail = ({
         </p>
       )}
       <div className='mt-3'>
-        {apelacion.estado === 'pendiente' && can('apelaciones.resolve') && (
+        {apelacion.estado === 'pendiente' && hasPermission('apelaciones.resolve' as any) && (
           <>
             <button
               className='btn btn-success me-2'

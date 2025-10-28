@@ -20,6 +20,11 @@ const customJestConfig = {
   },
   testEnvironment: 'jest-environment-jsdom',
 
+  // Enhanced logging configuration
+  verbose: true,
+  silent: false,
+  testTimeout: 10000,
+
   // Coverage configuration
   collectCoverageFrom: [
     'components/**/*.{js,jsx,ts,tsx}',

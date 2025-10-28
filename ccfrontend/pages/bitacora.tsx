@@ -1,9 +1,13 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { ActivityBadge, PriorityBadge, TimelineItem } from '@/components/bitacora';
+import { useState, useEffect, useCallback } from 'react';
+
+import { TimelineItem } from '@/components/bitacora';
+import Layout from '@/components/layout/Layout';
+import { useCurrentComunidad } from '@/hooks/useComunidad';
+import bitacoraService, { ActivityFilters } from '@/lib/api/bitacora';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 interface Activity {
   id: string;
@@ -31,194 +35,70 @@ export default function BitacoraListado() {
   const [filteredActivities, setFilteredActivities] = useState<Activity[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, today: 0, high: 0, critical: 0 });
   const [loading, setLoading] = useState(true);
+  const [, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(false);
-  
+
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedPriority, setSelectedPriority] = useState<string>('all');
   const [dateRange, setDateRange] = useState<string>('today');
 
-  // Mock data generation
-  const generateMockActivities = (): Activity[] => {
-    const mockActivities: Activity[] = [
-      {
-        id: '1',
-        type: 'security',
-        priority: 'critical',
-        title: 'Intento de acceso no autorizado',
-        description: 'Se detectó un intento de acceso no autorizado al sistema desde una IP desconocida',
-        user: 'Sistema de Seguridad',
-        date: new Date().toISOString(),
-        tags: ['seguridad', 'acceso', 'alerta'],
-        attachments: 2,
-        ip: '192.168.1.100',
-        location: 'Admin Panel'
-      },
-      {
-        id: '2',
-        type: 'user',
-        priority: 'normal',
-        title: 'Usuario modificó configuración',
-        description: 'El usuario admin modificó la configuración de notificaciones del sistema',
-        user: 'Administrador',
-        date: new Date(Date.now() - 3600000).toISOString(),
-        tags: ['configuración', 'usuario'],
-        attachments: 0,
-        ip: '192.168.1.50',
-        location: 'Configuración'
-      },
-      {
-        id: '3',
-        type: 'maintenance',
-        priority: 'high',
-        title: 'Mantenimiento programado ejecutado',
-        description: 'Se ejecutó el mantenimiento programado de base de datos y limpieza de logs',
-        user: 'Sistema',
-        date: new Date(Date.now() - 7200000).toISOString(),
-        tags: ['mantenimiento', 'base de datos', 'logs'],
-        attachments: 1,
-        location: 'Servidor Principal'
-      },
-      {
-        id: '4',
-        type: 'financial',
-        priority: 'normal',
-        title: 'Pago procesado correctamente',
-        description: 'Se procesó el pago de gastos comunes para la unidad 301',
-        user: 'Sistema de Pagos',
-        date: new Date(Date.now() - 10800000).toISOString(),
-        tags: ['pago', 'gastos comunes', 'procesado'],
-        attachments: 3,
-        location: 'Módulo Financiero'
-      },
-      {
-        id: '5',
-        type: 'admin',
-        priority: 'low',
-        title: 'Nuevo usuario registrado',
-        description: 'Se registró un nuevo usuario en el sistema: María González',
-        user: 'Administrador',
-        date: new Date(Date.now() - 14400000).toISOString(),
-        tags: ['usuario', 'registro', 'nuevo'],
-        attachments: 0,
-        ip: '192.168.1.75',
-        location: 'Panel de Usuarios'
-      },
-      {
-        id: '6',
-        type: 'system',
-        priority: 'normal',
-        title: 'Backup automático completado',
-        description: 'Se completó exitosamente el backup automático diario del sistema',
-        user: 'Sistema',
-        date: new Date(Date.now() - 18000000).toISOString(),
-        tags: ['backup', 'automático', 'completado'],
-        attachments: 1,
-        location: 'Servidor de Respaldo'
-      }
-    ];
+  const comunidadId = useCurrentComunidad();
 
-    return mockActivities;
-  };
-
-  useEffect(() => {
-    const mockData = generateMockActivities();
-    
-    setTimeout(() => {
-      setActivities(mockData);
-      setFilteredActivities(mockData);
-      
-      // Calculate stats
-      const today = new Date().toDateString();
-      const todayCount = mockData.filter(a => new Date(a.date).toDateString() === today).length;
-      const highCount = mockData.filter(a => a.priority === 'high').length;
-      const criticalCount = mockData.filter(a => a.priority === 'critical').length;
-      
-      setStats({
-        total: mockData.length,
-        today: todayCount,
-        high: highCount,
-        critical: criticalCount
-      });
-      
+  // Load data from API
+  const loadActivities = useCallback(async () => {
+    if (!comunidadId) {
+      setError('No se pudo determinar la comunidad actual');
       setLoading(false);
-    }, 800);
-  }, []);
+      return;
+    }
 
-  // Filter activities
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Prepare filters for backend
+      const backendFilters: ActivityFilters = {};
+      if (searchTerm) {
+        backendFilters.search = searchTerm;
+      }
+      if (selectedType && selectedType !== 'all') {
+        backendFilters.type = selectedType as Exclude<ActivityFilters['type'], undefined>;
+      }
+      if (selectedPriority && selectedPriority !== 'all') {
+        const priority = selectedPriority as Exclude<ActivityFilters['priority'], undefined>;
+        backendFilters.priority = priority;
+      }
+      if (dateRange && dateRange !== 'all') {
+        backendFilters.dateRange = dateRange as Exclude<ActivityFilters['dateRange'], undefined>;
+      }
+
+      // Load activities and stats in parallel
+      const [activitiesResponse, statsResponse] = await Promise.all([
+        bitacoraService.getActivities(comunidadId, backendFilters),
+        bitacoraService.getStats(comunidadId),
+      ]);
+
+      setActivities(activitiesResponse.activities);
+      setFilteredActivities(activitiesResponse.activities);
+      setStats(statsResponse);
+    } catch (_err) {
+      setError('Error al cargar las actividades');
+    } finally {
+      setLoading(false);
+    }
+  }, [comunidadId, searchTerm, selectedType, selectedPriority, dateRange]);
+
   useEffect(() => {
-    let filtered = activities;
+    loadActivities();
+  }, [loadActivities]);
 
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(activity =>
-        activity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        activity.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        activity.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        activity.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-
-    // Type filter
-    if (selectedType !== 'all') {
-      filtered = filtered.filter(activity => activity.type === selectedType);
-    }
-
-    // Priority filter
-    if (selectedPriority !== 'all') {
-      filtered = filtered.filter(activity => activity.priority === selectedPriority);
-    }
-
-    // Date filter
-    if (dateRange !== 'all') {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      filtered = filtered.filter(activity => {
-        const activityDate = new Date(activity.date);
-        
-        switch (dateRange) {
-          case 'today':
-            return activityDate >= today;
-          case 'week':
-            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-            return activityDate >= weekAgo;
-          case 'month':
-            const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-            return activityDate >= monthAgo;
-          default:
-            return true;
-        }
-      });
-    }
-
-    setFilteredActivities(filtered);
-  }, [activities, searchTerm, selectedType, selectedPriority, dateRange]);
+  // Filter activities (removed - now handled by backend)
+  // The filteredActivities state is now set directly from the API response
 
   const handleRefresh = () => {
-    setLoading(true);
-    const newActivities = generateMockActivities();
-    
-    // Simulate new activity
-    const newActivity: Activity = {
-      id: Date.now().toString(),
-      type: 'user',
-      priority: 'normal',
-      title: 'Actividad actualizada',
-      description: 'Nueva actividad generada automáticamente',
-      user: 'Sistema',
-      date: new Date().toISOString(),
-      tags: ['actualización', 'automático'],
-      attachments: 0,
-      location: 'Sistema'
-    };
-
-    setTimeout(() => {
-      const updatedActivities = [newActivity, ...newActivities];
-      setActivities(updatedActivities);
-      setLoading(false);
-    }, 1000);
+    loadActivities();
   };
 
   const toggleAutoRefresh = () => {
@@ -268,10 +148,15 @@ export default function BitacoraListado() {
               <p className='text-muted mb-0'>Registro completo de actividades del sistema</p>
             </div>
             <div className='d-flex gap-2'>
-              <div className={`real-time-indicator ${autoRefresh ? 'active' : ''}`} onClick={toggleAutoRefresh}>
+              <button
+                type='button'
+                className={`btn real-time-indicator ${autoRefresh ? 'active' : ''}`}
+                onClick={toggleAutoRefresh}
+                title={autoRefresh ? 'Desactivar actualización automática' : 'Activar actualización automática'}
+              >
                 <i className='material-icons'>radio_button_checked</i>
                 <span>{autoRefresh ? 'En vivo' : 'Manual'}</span>
-              </div>
+              </button>
               <button className='btn btn-outline-secondary' onClick={handleRefresh}>
                 <i className='material-icons me-2'>refresh</i>
                 Actualizar

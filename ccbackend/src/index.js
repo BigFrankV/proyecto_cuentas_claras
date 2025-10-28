@@ -41,6 +41,7 @@ const logger = require('./logger');
 const { setupSwagger } = require('./swagger');
 const apelacionesRouter = require('./routes/apelaciones');
 const comprasRouter = require('./routes/compras');
+const bitacoraRoutes = require('./routes/bitacora');
 
 const app = express();
 
@@ -124,6 +125,8 @@ console.log('apelacionesRouter type:', typeof apelacionesRouter, 'is function?',
 app.use('/apelaciones', apelacionesRouter);
 console.log('comprasRouter type:', typeof comprasRouter, 'is function?', typeof comprasRouter === 'function');
 app.use('/compras', comprasRouter);
+console.log('bitacoraRoutes type:', typeof bitacoraRoutes, 'is function?', typeof bitacoraRoutes === 'function');
+app.use('/bitacora', bitacoraRoutes);
 
 app.get('/healthz', (_, res) => res.json({ status: 'ok' }));
 

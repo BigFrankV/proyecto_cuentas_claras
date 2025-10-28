@@ -1,4 +1,10 @@
+import Head from 'next/head';
+import { useState, useEffect } from 'react';
+
 import Layout from '@/components/layout/Layout';
+import DashboardCharts from '@/components/ui/DashboardCharts';
+import { comunidadesService } from '@/lib/comunidadesService';
+import { dashboardService, DashboardResumenCompleto } from '@/lib/dashboardService';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
 import {
@@ -6,12 +12,62 @@ import {
   PermissionGuard,
   Permission,
 } from '@/lib/usePermissions';
-import Head from 'next/head';
-import DashboardCharts from '@/components/ui/DashboardCharts';
+
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { isSuperUser, currentRole } = usePermissions();
+  const { isSuperUser } = usePermissions();
+
+  // Estados para datos dinámicos
+  const [selectedComunidad, setSelectedComunidad] = useState<number | null>(null);
+  const [comunidades, setComunidades] = useState<any[]>([]);
+  const [notificacionesCount, setNotificacionesCount] = useState(0);
+  const [dashboardData, setDashboardData] = useState<DashboardResumenCompleto | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const comunidadesData = await comunidadesService.getMisMembresias();
+        setComunidades(comunidadesData);
+
+        // Inicializar con la primera comunidad si existe
+        if (comunidadesData.length > 0) {
+          const primeraComunidad = comunidadesData[0];
+          setSelectedComunidad(primeraComunidad.id);
+          await loadDashboardData(primeraComunidad.id);
+        }
+      } catch (err) {
+        console.error('Error loading initial data:', err);
+        setError('Error al cargar los datos iniciales');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []);
+
+  // Función para cargar datos del dashboard
+  const loadDashboardData = async (comunidadId: number) => {
+    try {
+      const data = await dashboardService.getResumenCompleto(comunidadId);
+      setDashboardData(data);
+    } catch (err) {
+      console.error('Error loading dashboard data:', err);
+      setError('Error al cargar los datos del dashboard');
+    }
+  };
+
+  // Función para cambiar de comunidad
+  const handleComunidadChange = async (comunidadId: number) => {
+    setSelectedComunidad(comunidadId);
+    setIsLoading(true);
+    await loadDashboardData(comunidadId);
+    setIsLoading(false);
+  };
 
   return (
     <ProtectedRoute>
@@ -48,7 +104,7 @@ export default function Dashboard() {
                     >
                       <span className='material-icons'>notifications</span>
                       <span className='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger'>
-                        3
+                        {notificacionesCount > 0 ? notificacionesCount : ''}
                       </span>
                     </button>
                     <div
@@ -149,27 +205,25 @@ export default function Dashboard() {
                   <span className='material-icons align-middle me-1'>
                     domain
                   </span>
-                  <span>Edificio Las Palmas</span>
+                  <span>
+                    {comunidades.find(c => c.id === selectedComunidad)?.nombre ||
+                      'Seleccionar Comunidad'}
+                  </span>
                 </button>
                 <ul
                   className='dropdown-menu'
                   aria-labelledby='comunidadDropdown'
                 >
-                  <li>
-                    <a className='dropdown-item active' href='#'>
-                      Edificio Las Palmas
-                    </a>
-                  </li>
-                  <li>
-                    <a className='dropdown-item' href='#'>
-                      Condominio Los Pinos
-                    </a>
-                  </li>
-                  <li>
-                    <a className='dropdown-item' href='#'>
-                      Edificio Central
-                    </a>
-                  </li>
+                  {comunidades.map((comunidad) => (
+                    <li key={comunidad.id}>
+                      <button
+                        className={`dropdown-item ${comunidad.id === selectedComunidad ? 'active' : ''}`}
+                        onClick={() => handleComunidadChange(comunidad.id)}
+                      >
+                        {comunidad.nombre}
+                      </button>
+                    </li>
+                  ))}
                   <li>
                     <hr className='dropdown-divider' />
                   </li>
@@ -249,15 +303,28 @@ export default function Dashboard() {
                     <span className='text-muted small d-block'>
                       Saldo Total
                     </span>
-                    <h4 className='mb-0'>$124,568,945</h4>
-                    <div className='small text-success'>
+                    <h4 className='mb-0'>
+                      ${dashboardData?.kpis?.saldoTotal?.toLocaleString() || '0'}
+                    </h4>
+                    <div
+                      className={`small ${
+                        (dashboardData?.kpis?.saldoTotalChange || 0) >= 0
+                          ? 'text-success'
+                          : 'text-danger'
+                      }`}
+                    >
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        arrow_upward
+                        {(dashboardData?.kpis?.saldoTotalChange || 0) >= 0
+                          ? 'arrow_upward'
+                          : 'arrow_downward'}
                       </span>
-                      <span>3.2% vs mes anterior</span>
+                      <span>
+                        {Math.abs(dashboardData?.kpis?.saldoTotalChange || 0)}%
+                        vs mes anterior
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -283,15 +350,28 @@ export default function Dashboard() {
                     <span className='text-muted small d-block'>
                       Ingresos del Mes
                     </span>
-                    <h4 className='mb-0'>$5,872,500</h4>
-                    <div className='small text-success'>
+                    <h4 className='mb-0'>
+                      ${dashboardData?.kpis?.ingresosMes?.toLocaleString() || '0'}
+                    </h4>
+                    <div
+                      className={`small ${
+                        (dashboardData?.kpis?.ingresosMesChange || 0) >= 0
+                          ? 'text-success'
+                          : 'text-danger'
+                      }`}
+                    >
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        arrow_upward
+                        {(dashboardData?.kpis?.ingresosMesChange || 0) >= 0
+                          ? 'arrow_upward'
+                          : 'arrow_downward'}
                       </span>
-                      <span>7.5% vs mes anterior</span>
+                      <span>
+                        {Math.abs(dashboardData?.kpis?.ingresosMesChange || 0)}%
+                        vs mes anterior
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -314,15 +394,28 @@ export default function Dashboard() {
                     <span className='text-muted small d-block'>
                       Gastos del Mes
                     </span>
-                    <h4 className='mb-0'>$3,845,790</h4>
-                    <div className='small text-danger'>
+                    <h4 className='mb-0'>
+                      ${dashboardData?.kpis?.gastosMes?.toLocaleString() || '0'}
+                    </h4>
+                    <div
+                      className={`small ${
+                        (dashboardData?.kpis?.gastosMesChange || 0) >= 0
+                          ? 'text-danger'
+                          : 'text-success'
+                      }`}
+                    >
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        arrow_upward
+                        {(dashboardData?.kpis?.gastosMesChange || 0) >= 0
+                          ? 'arrow_upward'
+                          : 'arrow_downward'}
                       </span>
-                      <span>2.1% vs mes anterior</span>
+                      <span>
+                        {Math.abs(dashboardData?.kpis?.gastosMesChange || 0)}%
+                        vs mes anterior
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -348,15 +441,28 @@ export default function Dashboard() {
                     <span className='text-muted small d-block'>
                       Tasa de Morosidad
                     </span>
-                    <h4 className='mb-0'>8.5%</h4>
-                    <div className='small text-success'>
+                    <h4 className='mb-0'>
+                      {dashboardData?.kpis?.tasaMorosidad || '0'}%
+                    </h4>
+                    <div
+                      className={`small ${
+                        (dashboardData?.kpis?.tasaMorosidadChange || 0) >= 0
+                          ? 'text-danger'
+                          : 'text-success'
+                      }`}
+                    >
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        arrow_downward
+                        {(dashboardData?.kpis?.tasaMorosidadChange || 0) >= 0
+                          ? 'arrow_upward'
+                          : 'arrow_downward'}
                       </span>
-                      <span>1.3% vs mes anterior</span>
+                      <span>
+                        {Math.abs(dashboardData?.kpis?.tasaMorosidadChange || 0)}%
+                        vs mes anterior
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -389,48 +495,32 @@ export default function Dashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>A-101</td>
-                        <td>$45,000</td>
-                        <td>12/09/2025</td>
-                        <td>
-                          <span className='badge bg-success'>Conciliado</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>B-202</td>
-                        <td>$50,000</td>
-                        <td>11/09/2025</td>
-                        <td>
-                          <span className='badge bg-success'>Conciliado</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>C-303</td>
-                        <td>$42,500</td>
-                        <td>10/09/2025</td>
-                        <td>
-                          <span className='badge bg-warning text-dark'>
-                            Pendiente
-                          </span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>A-102</td>
-                        <td>$45,000</td>
-                        <td>09/09/2025</td>
-                        <td>
-                          <span className='badge bg-success'>Conciliado</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>B-203</td>
-                        <td>$50,000</td>
-                        <td>08/09/2025</td>
-                        <td>
-                          <span className='badge bg-success'>Conciliado</span>
-                        </td>
-                      </tr>
+                      {dashboardData?.pagosRecientes?.map((pago, index) => (
+                        <tr key={index}>
+                          <td>{pago.unidad}</td>
+                          <td>${pago.monto.toLocaleString()}</td>
+                          <td>{new Date(pago.fecha).toLocaleDateString()}</td>
+                          <td>
+                            <span
+                              className={`badge ${
+                                pago.estado === 'Conciliado'
+                                  ? 'bg-success'
+                                  : pago.estado === 'Pendiente'
+                                    ? 'bg-warning text-dark'
+                                    : 'bg-secondary'
+                              }`}
+                            >
+                              {pago.estado}
+                            </span>
+                          </td>
+                        </tr>
+                      )) || (
+                        <tr>
+                          <td colSpan={4} className="text-center text-muted">
+                            No hay pagos recientes
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -458,58 +548,35 @@ export default function Dashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>C-303</td>
-                        <td>Juan Pérez</td>
-                        <td>
-                          <span className='badge bg-warning text-dark'>2</span>
-                        </td>
-                        <td>$90,000</td>
-                        <td>
-                          <button className='btn btn-sm btn-outline-primary'>
-                            Notificar
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>D-404</td>
-                        <td>María López</td>
-                        <td>
-                          <span className='badge bg-danger'>3</span>
-                        </td>
-                        <td>$135,000</td>
-                        <td>
-                          <button className='btn btn-sm btn-outline-primary'>
-                            Notificar
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>A-105</td>
-                        <td>Carlos González</td>
-                        <td>
-                          <span className='badge bg-warning text-dark'>1</span>
-                        </td>
-                        <td>$45,000</td>
-                        <td>
-                          <button className='btn btn-sm btn-outline-primary'>
-                            Notificar
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>B-206</td>
-                        <td>Ana Martínez</td>
-                        <td>
-                          <span className='badge bg-danger'>4</span>
-                        </td>
-                        <td>$180,000</td>
-                        <td>
-                          <button className='btn btn-sm btn-outline-primary'>
-                            Notificar
-                          </button>
-                        </td>
-                      </tr>
+                      {dashboardData?.unidadesMorosas?.map((unidad, index) => (
+                        <tr key={index}>
+                          <td>{unidad.unidad}</td>
+                          <td>{unidad.propietario}</td>
+                          <td>
+                            <span
+                              className={`badge ${
+                                unidad.meses >= 3
+                                  ? 'bg-danger'
+                                  : 'bg-warning text-dark'
+                              }`}
+                            >
+                              {unidad.meses}
+                            </span>
+                          </td>
+                          <td>${unidad.deuda.toLocaleString()}</td>
+                          <td>
+                            <button className='btn btn-sm btn-outline-primary'>
+                              Notificar
+                            </button>
+                          </td>
+                        </tr>
+                      )) || (
+                        <tr>
+                          <td colSpan={5} className="text-center text-muted">
+                            No hay unidades morosas
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -529,58 +596,27 @@ export default function Dashboard() {
                   </button>
                 </div>
                 <div className='list-group list-group-flush'>
-                  <div className='list-group-item'>
-                    <div className='d-flex w-100 justify-content-between align-items-center'>
-                      <div>
-                        <h6 className='mb-1'>Asamblea General</h6>
-                        <p className='mb-0 text-muted'>
-                          Presentación de presupuesto anual
-                        </p>
-                      </div>
-                      <div className='text-end'>
-                        <span className='badge bg-primary'>20/09/2025</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className='list-group-item'>
-                    <div className='d-flex w-100 justify-content-between align-items-center'>
-                      <div>
-                        <h6 className='mb-1'>Emisión Mensual</h6>
-                        <p className='mb-0 text-muted'>
-                          Generación de cargos de octubre
-                        </p>
-                      </div>
-                      <div className='text-end'>
-                        <span className='badge bg-primary'>30/09/2025</span>
+                  {dashboardData?.proximasActividades?.map((actividad, index) => (
+                    <div key={index} className='list-group-item'>
+                      <div className='d-flex w-100 justify-content-between align-items-center'>
+                        <div>
+                          <h6 className='mb-1'>{actividad.titulo}</h6>
+                          <p className='mb-0 text-muted'>
+                            {actividad.descripcion}
+                          </p>
+                        </div>
+                        <div className='text-end'>
+                          <span className='badge bg-primary'>
+                            {new Date(actividad.fecha).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className='list-group-item'>
-                    <div className='d-flex w-100 justify-content-between align-items-center'>
-                      <div>
-                        <h6 className='mb-1'>Mantención de Ascensores</h6>
-                        <p className='mb-0 text-muted'>
-                          Servicio técnico programado
-                        </p>
-                      </div>
-                      <div className='text-end'>
-                        <span className='badge bg-primary'>02/10/2025</span>
-                      </div>
+                  )) || (
+                    <div className='list-group-item text-center text-muted'>
+                      No hay actividades próximas
                     </div>
-                  </div>
-                  <div className='list-group-item'>
-                    <div className='d-flex w-100 justify-content-between align-items-center'>
-                      <div>
-                        <h6 className='mb-1'>Cierre Contable</h6>
-                        <p className='mb-0 text-muted'>
-                          Revisión de estado financiero mensual
-                        </p>
-                      </div>
-                      <div className='text-end'>
-                        <span className='badge bg-primary'>05/10/2025</span>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -598,89 +634,56 @@ export default function Dashboard() {
                   </a>
                 </div>
                 <div className='card-body p-0'>
-                  <div className='p-3 border-bottom'>
-                    <div className='d-flex justify-content-between align-items-center mb-3'>
-                      <div>
-                        <h6 className='mb-0'>Salón de Eventos</h6>
-                        <small className='text-muted'>
-                          18/09/2025, 18:00 - 22:00
-                        </small>
+                  {dashboardData?.reservasAmenidades?.map((reserva, index) => (
+                    <div
+                      key={index}
+                      className={`p-3 ${
+                        index < dashboardData.reservasAmenidades.length - 1
+                          ? 'border-bottom'
+                          : ''
+                      }`}
+                    >
+                      <div className='d-flex justify-content-between align-items-center mb-3'>
+                        <div>
+                          <h6 className='mb-0'>{reserva.amenidad}</h6>
+                          <small className='text-muted'>
+                            {new Date(reserva.fecha).toLocaleDateString()}
+                          </small>
+                        </div>
+                        <span
+                          className={`badge ${
+                            reserva.estado === 'Confirmada'
+                              ? 'bg-success'
+                              : reserva.estado === 'Pendiente'
+                                ? 'bg-warning text-dark'
+                                : 'bg-secondary'
+                          }`}
+                        >
+                          {reserva.estado}
+                        </span>
                       </div>
-                      <span className='badge bg-success'>Confirmada</span>
-                    </div>
-                    <div className='d-flex align-items-center text-muted'>
-                      <span
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        apartment
-                      </span>
-                      <span className='me-3'>A-103</span>
-                      <span
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        person
-                      </span>
-                      <span>María González</span>
-                    </div>
-                  </div>
-                  <div className='p-3 border-bottom'>
-                    <div className='d-flex justify-content-between align-items-center mb-3'>
-                      <div>
-                        <h6 className='mb-0'>Quincho</h6>
-                        <small className='text-muted'>
-                          20/09/2025, 12:00 - 18:00
-                        </small>
+                      <div className='d-flex align-items-center text-muted'>
+                        <span
+                          className='material-icons me-1'
+                          style={{ fontSize: '16px' }}
+                        >
+                          apartment
+                        </span>
+                        <span className='me-3'>{reserva.unidad}</span>
+                        <span
+                          className='material-icons me-1'
+                          style={{ fontSize: '16px' }}
+                        >
+                          person
+                        </span>
+                        <span>{reserva.usuario}</span>
                       </div>
-                      <span className='badge bg-warning text-dark'>
-                        Pendiente
-                      </span>
                     </div>
-                    <div className='d-flex align-items-center text-muted'>
-                      <span
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        apartment
-                      </span>
-                      <span className='me-3'>B-205</span>
-                      <span
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        person
-                      </span>
-                      <span>Carlos Ruiz</span>
+                  )) || (
+                    <div className='p-3 text-center text-muted'>
+                      No hay reservas próximas
                     </div>
-                  </div>
-                  <div className='p-3'>
-                    <div className='d-flex justify-content-between align-items-center mb-3'>
-                      <div>
-                        <h6 className='mb-0'>Piscina</h6>
-                        <small className='text-muted'>
-                          22/09/2025, 15:00 - 19:00
-                        </small>
-                      </div>
-                      <span className='badge bg-success'>Confirmada</span>
-                    </div>
-                    <div className='d-flex align-items-center text-muted'>
-                      <span
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        apartment
-                      </span>
-                      <span className='me-3'>C-301</span>
-                      <span
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        person
-                      </span>
-                      <span>Ana Morales</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>

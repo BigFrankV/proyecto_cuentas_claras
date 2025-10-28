@@ -53,37 +53,10 @@ export default function ComunidadesListado() {
     try {
       console.log('👤 Usuario actual:', user);
       console.log('👑 Es superadmin:', user?.is_superadmin);
-      console.log('🏢 Membresías:', user?.memberships);
 
-      let data: Comunidad[];
-
-      if (user?.is_superadmin) {
-        // 👑 SUPERADMIN: Ve TODAS las comunidades
-        console.log('👑 Cargando TODAS las comunidades (superadmin)');
-        data = await comunidadesService.getComunidades();
-      } else {
-        // 🏢 ADMIN DE COMUNIDAD: Solo ve sus comunidades asignadas
-        console.log('🏢 Cargando comunidades filtradas por membresías');
-        
-        if (user?.memberships && user.memberships.length > 0) {
-          // Obtener IDs de comunidades donde el usuario tiene membresía
-          const comunidadIds = user.memberships.map(m => m.comunidadId);
-          console.log('🔍 IDs de comunidades permitidas:', comunidadIds);
-          
-          // Obtener todas las comunidades y filtrar localmente
-          const todasComunidades = await comunidadesService.getComunidades();
-          data = todasComunidades.filter(comunidad => 
-            comunidadIds.includes(comunidad.id)
-          );
-          
-          console.log('✅ Comunidades filtradas:', data);
-        } else {
-          // Usuario sin membresías = sin comunidades
-          console.log('⚠️ Usuario sin membresías, sin comunidades');
-          data = [];
-        }
-      }
-
+      // El backend ya filtra las comunidades basado en permisos de usuario
+      // No necesitamos lógica diferente para superadmin vs usuarios normales
+      const data = await comunidadesService.getComunidades();
       setComunidades(data);
       console.log(`📊 Total comunidades cargadas: ${data.length}`);
     } catch (error: any) {
@@ -179,10 +152,7 @@ export default function ComunidadesListado() {
             <div>
               <h1 className='h3 mb-0'>Comunidades</h1>
               <p className='text-muted mb-0'>
-                {user?.is_superadmin 
-                  ? 'Gestión y administración de todas las comunidades' 
-                  : 'Gestión de mis comunidades asignadas'
-                }
+                Gestión y administración de comunidades
               </p>
             </div>
             

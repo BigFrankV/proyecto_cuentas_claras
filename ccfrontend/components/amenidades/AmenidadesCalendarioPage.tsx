@@ -1,11 +1,12 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { useState } from 'react';
-import Sidebar from '../layout/Sidebar';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react';
+
+import Sidebar from '../layout/Sidebar';
 
 // Dynamic import for FullCalendar to avoid SSR issues
 const FullCalendar = dynamic(() => import('@fullcalendar/react'), { ssr: false });
@@ -21,51 +22,8 @@ interface ReservationEvent {
 const AmenidadesCalendarioPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
-
-  // Sample events data
-  const events: ReservationEvent[] = [
-    {
-      id: '1',
-      title: 'Piscina - Juan Pérez',
-      start: '2025-09-30T10:00:00',
-      end: '2025-09-30T12:00:00',
-      className: 'reservation-event'
-    },
-    {
-      id: '2',
-      title: 'Gimnasio - María García',
-      start: '2025-09-30T14:00:00',
-      end: '2025-09-30T16:00:00',
-      className: 'reservation-event'
-    },
-    {
-      id: '3',
-      title: 'Salón - Evento Familiar',
-      start: '2025-10-01T18:00:00',
-      end: '2025-10-01T22:00:00',
-      className: 'reservation-event'
-    },
-    {
-      id: '4',
-      title: 'Mantenimiento - Piscina',
-      start: '2025-10-02',
-      end: '2025-10-03',
-      className: 'maintenance-event'
-    },
-    {
-      id: '5',
-      title: 'Cancha - Partido Amistoso',
-      start: '2025-10-03T16:00:00',
-      end: '2025-10-03T18:00:00',
-      className: 'reservation-event'
-    },
-    {
-      id: '6',
-      title: 'Piscina - No Disponible',
-      start: '2025-10-04',
-      className: 'unavailable-event'
-    }
-  ];
+  const [events, setEvents] = useState<ReservationEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleEventClick = (info: any) => {
     alert(`Reserva: ${info.event.title}\nFecha: ${info.event.start.toLocaleDateString()}`);
@@ -91,6 +49,24 @@ const AmenidadesCalendarioPage: React.FC = () => {
     setShowModal(false);
     // Reload calendar or update events
   };
+
+  // Cargar eventos de reservas
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        // Aquí iría la llamada a la API cuando esté disponible
+        // Por ahora, dejamos vacío hasta que se implemente el servicio
+        setEvents([]);
+      } catch (error) {
+        console.error('Error loading events:', error);
+        setEvents([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadEvents();
+  }, []);
 
   return (
     <div className="d-flex">
@@ -119,7 +95,7 @@ const AmenidadesCalendarioPage: React.FC = () => {
             headerToolbar={{
               left: 'prev,next today',
               center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+              right: 'dayGridMonth,timeGridWeek,timeGridDay',
             }}
             events={events}
             eventClick={handleEventClick}

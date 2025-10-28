@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 
 import { createApelacion } from '@/lib/apelacionesService';
@@ -12,6 +13,7 @@ export default function ApelacionForm({
   const [multaId, setMultaId] = useState('');
   const [motivo, setMotivo] = useState('');
   const [comunidadId, setComunidadId] = useState('');
+  const [documentosJson, setDocumentosJson] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,6 +29,13 @@ export default function ApelacionForm({
       const payload: any = { multa_id, motivo };
       if (comunidadId) {
         payload.comunidad_id = Number(comunidadId);
+      }
+      if (documentosJson.trim()) {
+        try {
+          payload.documentos_json = JSON.parse(documentosJson);
+        } catch {
+          return setError('JSON de documentos inválido');
+        }
       }
       const res = await createApelacion(payload, token);
       if (onCreated) {
@@ -70,6 +79,8 @@ export default function ApelacionForm({
         <label className='form-label'>Documentos (JSON opcional)</label>
         <textarea
           className='form-control'
+          value={documentosJson}
+          onChange={e => setDocumentosJson(e.target.value)}
           placeholder='[{"url":"...","name":"..."}]'
         />
         <small className='text-muted'>

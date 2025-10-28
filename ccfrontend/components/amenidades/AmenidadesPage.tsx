@@ -1,57 +1,100 @@
-import React, { useEffect, useRef } from 'react';
-import Sidebar from '@/components/layout/Sidebar';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Chart, registerables } from 'chart.js';
+import React, { useEffect, useRef, useState } from 'react';
+
+import Sidebar from '@/components/layout/Sidebar';
 
 
 Chart.register(...registerables);
 
-const sampleAmenities = [
-  { id: 1, name: 'Piscina Principal', type: 'Piscina', community: 'Torres del Sol', occupancy: 85, capacity: 50, nextReservation: '2025-09-16 10:00' },
-  { id: 2, name: 'Gimnasio Torre A', type: 'Gimnasio', community: 'Torres del Sol', occupancy: 92, capacity: 25, nextReservation: '2025-09-15 18:00' },
-  { id: 3, name: 'Salón de Eventos', type: 'Salón', community: 'Vista Hermosa', occupancy: 45, capacity: 100, nextReservation: '2025-09-18 19:00' },
-  { id: 4, name: 'Cancha de Tenis', type: 'Cancha', community: 'Parque Central', occupancy: 70, capacity: 4, nextReservation: '2025-09-20 09:00' },
-  { id: 5, name: 'Área de Juegos', type: 'Juegos', community: 'Vista Hermosa', occupancy: 60, capacity: 20, nextReservation: '2025-09-16 15:00' },
-  { id: 6, name: 'Quincho Familiar', type: 'Quincho', community: 'Alameda Norte', occupancy: 78, capacity: 15, nextReservation: '2025-09-15 12:00' },
-  { id: 7, name: 'Sala de Reuniones', type: 'Sala', community: 'Torres del Sol', occupancy: 55, capacity: 12, nextReservation: '2025-09-17 14:00' },
-  { id: 8, name: 'Piscina Infantil', type: 'Piscina', community: 'Parque Central', occupancy: 40, capacity: 15, nextReservation: '2025-09-16 11:00' },
-];
-
+// eslint-disable-next-line no-undef
 export default function AmenidadesPage(): JSX.Element {
   const amenityTypeRef = useRef<HTMLCanvasElement | null>(null);
   const trendRef = useRef<HTMLCanvasElement | null>(null);
+  const [amenities, setAmenities] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [amenityTypeData, setAmenityTypeData] = useState({
+    labels: [] as string[],
+    data: [] as number[],
+  });
+  const [trendData, setTrendData] = useState({
+    labels: [] as string[],
+    data: [] as number[],
+  });
 
   useEffect(() => {
-    if (amenityTypeRef.current) {
+    if (amenityTypeRef.current && amenityTypeData.data.length > 0) {
       const ctx = amenityTypeRef.current.getContext('2d');
       if (ctx) {
         const chart = Chart.getChart(amenityTypeRef.current as any);
-        if (chart) chart.destroy();
+        if (chart) {chart.destroy();}
         new Chart(ctx, {
           type: 'doughnut',
           data: {
-            labels: ['Piscinas', 'Gimnasios', 'Salones', 'Canchas', 'Otros'],
-            datasets: [{ data: [2, 1, 1, 1, 3], backgroundColor: ['#4FC3F7', '#FFB74D', '#CE93D8', '#A5D6A7', '#6c757d'] }]
+            labels: amenityTypeData.labels,
+            datasets: [{ data: amenityTypeData.data, backgroundColor: ['#4FC3F7', '#FFB74D', '#CE93D8', '#A5D6A7', '#6c757d'] }],
           },
-          options: { responsive: true, maintainAspectRatio: false }
+          options: { responsive: true, maintainAspectRatio: false },
         });
       }
     }
 
-    if (trendRef.current) {
+    if (trendRef.current && trendData.data.length > 0) {
       const ctx = trendRef.current.getContext('2d');
       if (ctx) {
         const chart = Chart.getChart(trendRef.current as any);
-        if (chart) chart.destroy();
+        if (chart) {chart.destroy();}
         new Chart(ctx, {
           type: 'line',
           data: {
-            labels: ['Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre'],
-            datasets: [{ data: [12, 18, 22, 25, 28, 30], borderColor: '#667eea', backgroundColor: 'rgba(102,126,234,0.15)', tension: 0.4 }]
+            labels: trendData.labels,
+            datasets: [{ data: trendData.data, borderColor: '#667eea', backgroundColor: 'rgba(102,126,234,0.15)', tension: 0.4 }],
           },
-          options: { responsive: true, maintainAspectRatio: false }
+          options: { responsive: true, maintainAspectRatio: false },
         });
       }
     }
+  }, [amenityTypeData, trendData]);
+
+  // Cargar datos de amenidades
+  useEffect(() => {
+    const loadAmenities = async () => {
+      try {
+        // TODO: Load amenities from API
+        // Example: const response = await fetchAmenities();
+        // setAmenities(response.data);
+
+        // For now, set empty arrays and update chart data accordingly
+        setAmenities([]);
+
+        // Update chart data based on amenities (empty for now)
+        setAmenityTypeData({
+          labels: [],
+          data: [],
+        });
+
+        setTrendData({
+          labels: [],
+          data: [],
+        });
+
+      } catch (error) {
+        console.error('Error loading amenities:', error);
+        setAmenities([]);
+        setAmenityTypeData({
+          labels: [],
+          data: [],
+        });
+        setTrendData({
+          labels: [],
+          data: [],
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAmenities();
   }, []);
 
   return (
@@ -128,7 +171,7 @@ export default function AmenidadesPage(): JSX.Element {
                         </tr>
                       </thead>
                       <tbody>
-                        {sampleAmenities.map(a => (
+                        {amenities.map((a: any) => (
                           <tr key={a.id}>
                             <td>{a.name}</td>
                             <td>{a.community}</td>
@@ -147,7 +190,7 @@ export default function AmenidadesPage(): JSX.Element {
                   </div>
                 </div>
                 <div className="card-footer d-flex justify-content-between align-items-center">
-                  <small className="text-muted">Mostrando {sampleAmenities.length} amenidades</small>
+                  <small className="text-muted">Mostrando {amenities.length} amenidades</small>
                   <nav>
                     <ul className="pagination mb-0">
                       <li className="page-item disabled"><a className="page-link" href="#">«</a></li>

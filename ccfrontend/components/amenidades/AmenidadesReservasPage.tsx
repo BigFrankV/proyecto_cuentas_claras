@@ -1,6 +1,8 @@
+/* eslint-disable @next/next/no-html-link-for-pages */
 'use client';
 
 import { useState, useEffect } from 'react';
+
 import Sidebar from '../layout/Sidebar';
 
 interface Reservation {
@@ -30,61 +32,22 @@ const AmenidadesReservasPage: React.FC = () => {
   const [numberOfPeople, setNumberOfPeople] = useState('');
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
+  const [reservations] = useState<Reservation[]>([]);
+  const [, setIsLoading] = useState(true);
 
-  // Mock data for reservations
-  const [reservations] = useState<Reservation[]>([
-    {
-      id: 1,
-      amenity: {
-        name: 'Piscina Principal',
-        icon: 'pool',
-        community: 'Torres del Sol'
-      },
-      date: '2025-09-29',
-      startTime: '10:00',
-      endTime: '12:00',
-      user: 'María González',
-      unit: 'Unidad 5A',
-      status: 'confirmed'
-    },
-    {
-      id: 2,
-      amenity: {
-        name: 'Gimnasio Torre A',
-        icon: 'fitness_center',
-        community: 'Torres del Sol'
-      },
-      date: '2025-09-30',
-      startTime: '18:00',
-      endTime: '19:30',
-      user: 'Carlos Rodríguez',
-      unit: 'Unidad 12B',
-      status: 'pending'
-    },
-    {
-      id: 3,
-      amenity: {
-        name: 'Salón de Eventos',
-        icon: 'celebration',
-        community: 'Vista Hermosa'
-      },
-      date: '2025-10-01',
-      startTime: '19:00',
-      endTime: '23:00',
-      user: 'Ana López',
-      unit: 'Unidad 8C',
-      status: 'confirmed'
-    }
-  ]);
+  useEffect(() => {
+    // TODO: Load reservations from API
+    // Example: fetchReservations().then(setReservations).finally(() => setIsLoading(false));
+    setIsLoading(false);
+  }, []);
 
-  // Mock data for summary cards
-  const summaryData = {
-    todayReservations: 12,
-    pendingConfirmations: 3,
-    nextHours: 8,
-    cancellations: 3,
-    attendanceRate: 95
-  };
+  const [summaryData] = useState({
+    todayReservations: 0,
+    pendingConfirmations: 0,
+    nextHours: 0,
+    cancellations: 0,
+    attendanceRate: 0,
+  });
 
   useEffect(() => {
     if (selectedAmenity && selectedDate) {
@@ -96,11 +59,11 @@ const AmenidadesReservasPage: React.FC = () => {
     const timeSlots = [
       '08:00', '09:00', '10:00', '11:00', '12:00',
       '13:00', '14:00', '15:00', '16:00', '17:00',
-      '18:00', '19:00', '20:00', '21:00', '22:00'
+      '18:00', '19:00', '20:00', '21:00', '22:00',
     ];
 
-    // Mock occupied slots
-    const occupiedSlots = ['10:00', '14:00', '18:00'];
+    // TODO: Load occupied slots from API
+    const occupiedSlots: string[] = [];
     setAvailableTimeSlots(timeSlots.filter(slot => !occupiedSlots.includes(slot)));
   };
 
@@ -129,7 +92,7 @@ const AmenidadesReservasPage: React.FC = () => {
       startTime,
       endTime,
       purpose,
-      numberOfPeople: numberOfPeople ? parseInt(numberOfPeople) : undefined
+      numberOfPeople: numberOfPeople ? parseInt(numberOfPeople) : undefined,
     };
 
     console.log('Creating reservation:', reservationData);
@@ -174,10 +137,10 @@ const AmenidadesReservasPage: React.FC = () => {
     const dateFromFilter = document.getElementById('dateFromFilter') as HTMLInputElement;
     const dateToFilter = document.getElementById('dateToFilter') as HTMLInputElement;
 
-    if (amenityFilter) amenityFilter.value = '';
-    if (statusFilter) statusFilter.value = '';
-    if (dateFromFilter) dateFromFilter.value = '';
-    if (dateToFilter) dateToFilter.value = '';
+    if (amenityFilter) {amenityFilter.value = '';}
+    if (statusFilter) {statusFilter.value = '';}
+    if (dateFromFilter) {dateFromFilter.value = '';}
+    if (dateToFilter) {dateToFilter.value = '';}
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -371,7 +334,7 @@ const AmenidadesReservasPage: React.FC = () => {
                       {new Date(reservation.date).toLocaleDateString('es-ES', {
                         day: '2-digit',
                         month: 'short',
-                        year: 'numeric'
+                        year: 'numeric',
                       })}
                     </div>
                     <div className="reservation-time">
