@@ -19,7 +19,12 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
-import { listGastos } from '@/lib/gastosService';
+import {
+  listGastos,
+  getCategorias,
+  getCentrosCosto,
+  getProveedores,
+} from '@/lib/gastosService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { usePermissions } from '@/lib/usePermissions';
 import { Expense, mapBackendToExpense } from '@/types/gastos';
@@ -201,6 +206,19 @@ export default function GastosListado() {
   const getActiveFiltersCount = () =>
     Object.values(filters).filter(value => value !== '').length;
 
+  // Nuevos estados para categorías, centros de costo y proveedores
+  const [categories, setCategories] = useState([]);
+  const [costCenters, setCostCenters] = useState([]);
+  const [providers, setProviders] = useState([]);
+
+  useEffect(() => {
+    if (resolvedComunidadId) {
+      getCategorias(resolvedComunidadId).then(setCategories);
+      getCentrosCosto(resolvedComunidadId).then(setCostCenters);
+      getProveedores(resolvedComunidadId).then(setProviders);
+    }
+  }, [resolvedComunidadId]);
+
   return (
     <ProtectedRoute>
       <Head>
@@ -327,12 +345,11 @@ export default function GastosListado() {
                       }
                     >
                       <option value=''>Todas las categorías</option>
-                      <option value='mantenimiento'>Mantenimiento</option>
-                      <option value='servicios'>Servicios</option>
-                      <option value='personal'>Personal</option>
-                      <option value='suministros'>Suministros</option>
-                      <option value='impuestos'>Impuestos</option>
-                      <option value='seguros'>Seguros</option>
+                      {categories.map(category => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
                     </Form.Select>
                   </Form.Group>
                 </div>

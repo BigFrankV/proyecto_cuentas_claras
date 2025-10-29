@@ -1,4 +1,4 @@
-import { GastoBackend, GastosListResponse } from '@/types/gastos';
+import { GastoBackend, GastosListResponse, CreateGastoPayload, UpdateGastoPayload } from '@/types/gastos';
 
 import apiClient from './api';
 
@@ -78,22 +78,54 @@ export async function listGastos(
   return p;
 }
 
-export async function getGasto(id: number) {
-  const url = `${ENDPOINT_BASE}/${id}`;
-  const cacheKey = makeCacheKey(url, {});
-  // comprobar cache simple para detalle
-  const cached = cacheStore.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.data.data[0] as GastoBackend;
-  }
-  const res = await apiClient.get(url);
-  const body = res.data;
-  const result = Array.isArray(body) ? { data: body } : body.data || body;
-  cacheStore.set(cacheKey, {
-    data: result,
-    expiresAt: Date.now() + CACHE_TTL_MS,
-  });
-  return result as unknown as GastoBackend;
+export async function getGastoById(id: number): Promise<GastoBackend> {
+  const res = await apiClient.get(`/gastos/${id}`);
+  return res.data;
 }
 
-export default { listGastos, getGasto };
+export async function createGasto(comunidadId: number | null, data: CreateGastoPayload): Promise<GastoBackend> {
+  const url = comunidadId ? `/gastos/comunidad/${comunidadId}` : '/gastos';
+  const res = await apiClient.post(url, data);
+  return res.data;
+}
+
+export async function updateGasto(id: number, data: UpdateGastoPayload): Promise<GastoBackend> {
+  const res = await apiClient.patch(`/gastos/${id}`, data);
+  return res.data;
+}
+
+export async function deleteGasto(id: number): Promise<void> {
+  await apiClient.delete(`/gastos/${id}`);
+}
+
+// Para listas desplegables
+export async function getCategorias(comunidadId: number | null): Promise<any[]> {
+  const url = comunidadId ? `/gastos/listas/categorias/${comunidadId}` : `/gastos/listas/categorias`;
+  const res = await apiClient.get(url);
+  return res.data;
+}
+
+export async function getCentrosCosto(comunidadId: number | null): Promise<any[]> {
+  const url = comunidadId ? `/gastos/listas/centros-costo/${comunidadId}` : `/gastos/listas/centros-costo`;
+  const res = await apiClient.get(url);
+  return res.data;
+}
+
+export async function getProveedores(comunidadId: number | null): Promise<any[]> {
+  const url = comunidadId ? `/gastos/listas/proveedores/${comunidadId}` : `/gastos/listas/proveedores`;
+  const res = await apiClient.get(url);
+  return res.data;
+}
+
+// Aprobaciones
+export async function getAprobaciones(gastoId: number): Promise<any[]> {
+  const res = await apiClient.get(`/gastos/${gastoId}/aprobaciones`);
+  return res.data;
+}
+
+export async function createAprobacion(gastoId: number, data: { accion: 'aprobar' | 'rechazar'; observaciones?: string }) {
+  const res = await apiClient.post(`/gastos/${gastoId}/aprobaciones`, data);
+  return res.data;
+}
+
+export default { listGastos, getGastoById, createGasto, updateGasto, deleteGasto, getCategorias, getCentrosCosto, getProveedores, getAprobaciones, createAprobacion };

@@ -95,23 +95,14 @@ export interface GastosListResponse {
 }
 
 export interface CreateGastoPayload {
+  categoria_id: number;
   fecha: string;
   monto: number;
+  centro_costo_id?: number;
+  documento_compra_id?: number;
   glosa?: string;
-  proveedor_id?: number;
-  centro_costo?: string;
-  categoria?: string;
-  documento_tipo?: string;
-  documento_numero?: string;
-  due_date?: string | null;
-  tags?: string[];
-  priority?: GastoPriority;
-  required_approvals?: number;
-  observations?: string;
-  is_recurring?: boolean;
-  recurring_period?: string | null;
-  payment_method?: string | null;
-  attachments_ids?: number[];
+  extraordinario?: boolean;
+  // Agrega otros campos si el backend los requiere
 }
 
 export interface UpdateGastoPayload extends Partial<CreateGastoPayload> {}

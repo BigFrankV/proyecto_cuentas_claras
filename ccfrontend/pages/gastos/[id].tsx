@@ -14,7 +14,9 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { getGastoById, getAprobaciones } from '@/lib/gastosService';
+import { mapBackendToExpense } from '@/types/gastos';
 
 interface Expense {
   id: number;
@@ -63,89 +65,31 @@ interface AttachmentFile {
 export default function GastoDetalle() {
   const router = useRouter();
   const { id } = router.query;
+  const { user, currentComunidadId } = useAuth();
 
   const [expense, setExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [approvalHistory, setApprovalHistory] = useState([]);
+
+  const comunidadId = currentComunidadId;
 
   useEffect(() => {
     if (id) {
       loadExpense();
+      getAprobaciones(Number(id)).then(setApprovalHistory);
     }
   }, [id]);
 
   const loadExpense = async () => {
     try {
       setLoading(true);
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Mock data - En producción esto vendría de una API
-      const mockExpense: Expense = {
-        id: parseInt(id as string),
-        description: 'Mantenimiento de ascensores - Revisión mensual',
-        category: 'mantenimiento',
-        provider: 'Elevadores Modernos S.A.',
-        amount: 850000,
-        date: '2024-03-15',
-        status: 'approved',
-        dueDate: '2024-03-30',
-        documentType: 'Factura',
-        documentNumber: 'F-2024-001',
-        hasAttachments: true,
-        createdBy: 'Patricia Contreras',
-        createdAt: '2024-03-15T10:30:00Z',
-        tags: ['urgente', 'mensual', 'mantenimiento'],
-        priority: 'high',
-        requiredApprovals: 2,
-        currentApprovals: 2,
-        costCenter: 'mantenimiento',
-        observations:
-          'Mantenimiento programado según contrato anual. Incluye revisión de sistemas de seguridad y ajustes mecánicos.',
-        isRecurring: true,
-        recurringPeriod: 'monthly',
-        paymentMethod: 'transferencia',
-        approvalHistory: [
-          {
-            id: 1,
-            approver: 'Carlos Muñoz',
-            action: 'approved',
-            date: '2024-03-15T11:00:00Z',
-            comments: 'Aprobado. Mantenimiento necesario según contrato.',
-          },
-          {
-            id: 2,
-            approver: 'María González',
-            action: 'approved',
-            date: '2024-03-15T14:30:00Z',
-            comments: 'Aprobado por gerencia. Proceder con el pago.',
-          },
-        ],
-        attachments: [
-          {
-            id: 1,
-            name: 'factura-F-2024-001.pdf',
-            type: 'application/pdf',
-            size: 245760,
-            url: '/api/files/factura-F-2024-001.pdf',
-            uploadedAt: '2024-03-15T10:35:00Z',
-          },
-          {
-            id: 2,
-            name: 'informe-tecnico.pdf',
-            type: 'application/pdf',
-            size: 512000,
-            url: '/api/files/informe-tecnico.pdf',
-            uploadedAt: '2024-03-15T10:36:00Z',
-          },
-        ],
-      };
-
-      setExpense(mockExpense);
-    } catch (error) {
-      console.error('Error loading expense:', error);
+      const data = await getGastoById(Number(id));
+      setExpense(mapBackendToExpense(data));
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -311,6 +255,66 @@ export default function GastoDetalle() {
       alert('Error al eliminar el gasto');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const mapToFormData = (gasto: any): any => ({
+    id: gasto.id,
+    description: gasto.glosa || '',
+    category: gasto.categoria || '',
+    provider: gasto.proveedor_nombre || '',
+    amount: gasto.monto?.toString() || '',
+    date: gasto.fecha || '',
+    dueDate: gasto.due_date || '',
+    documentType: gasto.documento_tipo || 'factura',
+    documentNumber: gasto.documento_numero || '',
+    isRecurring: gasto.is_recurring || false,
+    recurringPeriod: gasto.recurring_period || '',
+    costCenter: gasto.centro_costo || '',
+    tags: gasto.tags || [],
+    observations: gasto.observations || '',
+    priority: gasto.priority || 'medium',
+    requiredApprovals: gasto.required_approvals || 1,
+    attachments: [], // Manejar archivos por separado
+    existingAttachments:
+      gasto.attachments?.map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        type: a.type,
+        size: a.size,
+        url: a.url,
+        uploadedAt: a.uploadedAt,
+      })) || [],
+  });
+
+  const mapFormDataToPayload = (form: any): any => ({
+    categoria_id: parseInt(form.category), // Asumir que category es ID
+    fecha: form.date,
+    monto: parseFloat(form.amount.replace(/\./g, '').replace(',', '.')),
+    centro_costo_id: form.costCenter ? parseInt(form.costCenter) : undefined,
+    glosa: form.description,
+    // Agrega otros campos según backend
+  });
+
+  useEffect(() => {
+    if (id && comunidadId) {
+      getGastoById(Number(id)).then(data => setExpense(mapToFormData(data)));
+    }
+  }, [id, comunidadId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // if (!validateForm()) return;
+    setLoading(true);
+    try {
+      const payload = mapFormDataToPayload(expense);
+      await updateGasto(Number(id), payload);
+      router.push(`/gastos/${id}`);
+    } catch (err) {
+      console.error(err);
+      // Manejar error
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -611,7 +615,7 @@ export default function GastoDetalle() {
               )}
 
               {/* Historial de aprobaciones */}
-              {expense.approvalHistory.length > 0 && (
+              {approvalHistory.length > 0 && (
                 <Card className='detail-card mb-4'>
                   <Card.Body>
                     <div className='card-header-custom mb-4'>
@@ -622,52 +626,42 @@ export default function GastoDetalle() {
                     </div>
 
                     <div className='approval-timeline'>
-                      {expense.approvalHistory.map((approval, index) => (
+                      {approvalHistory.map((approval: any, index: number) => (
                         <div key={approval.id} className='approval-item'>
                           <div className='approval-icon'>
                             <span
                               className={`material-icons ${
-                                approval.action === 'approved'
+                                approval.accion === 'aprobar'
                                   ? 'text-success'
-                                  : approval.action === 'rejected'
-                                    ? 'text-danger'
-                                    : 'text-warning'
+                                  : 'text-danger'
                               }`}
                             >
-                              {approval.action === 'approved'
+                              {approval.accion === 'aprobar'
                                 ? 'check_circle'
-                                : approval.action === 'rejected'
-                                  ? 'cancel'
-                                  : 'help'}
+                                : 'cancel'}
                             </span>
                           </div>
                           <div className='approval-content'>
                             <div className='approval-header'>
                               <span className='approval-user'>
-                                {approval.approver}
+                                {approval.nombre_usuario}
                               </span>
                               <span
-                                className={`approval-action ${approval.action}`}
+                                className={`approval-action ${approval.accion}`}
                               >
-                                {approval.action === 'approved'
+                                {approval.accion === 'aprobar'
                                   ? 'Aprobó'
-                                  : approval.action === 'rejected'
-                                    ? 'Rechazó'
-                                    : 'Solicitó cambios'}
+                                  : 'Rechazó'}
                               </span>
                               <span className='approval-date'>
-                                {new Date(approval.date).toLocaleDateString(
-                                  'es-CL',
-                                )}{' '}
-                                a las{' '}
-                                {new Date(approval.date).toLocaleTimeString(
+                                {new Date(approval.created_at).toLocaleDateString(
                                   'es-CL',
                                 )}
                               </span>
                             </div>
-                            {approval.comments && (
+                            {approval.observaciones && (
                               <div className='approval-comments'>
-                                {approval.comments}
+                                {approval.observaciones}
                               </div>
                             )}
                           </div>

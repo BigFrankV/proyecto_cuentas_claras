@@ -12,13 +12,15 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions';
+import { getGastoById, updateGasto, getCategorias, getCentrosCosto, getProveedores } from '@/lib/gastosService';
 
 interface ExpenseFormData {
   id: number;
   description: string;
-  category: string;
-  provider: string;
+  category: number; // Cambiar a number
+  provider: number; // Cambiar a number
   amount: string;
   date: string;
   dueDate: string;
@@ -26,7 +28,7 @@ interface ExpenseFormData {
   documentNumber: string;
   isRecurring: boolean;
   recurringPeriod: string;
-  costCenter: string;
+  costCenter: number; // Cambiar a number
   tags: string[];
   observations: string;
   priority: 'low' | 'medium' | 'high';
@@ -48,12 +50,27 @@ export default function EditarGasto() {
   const router = useRouter();
   const { id } = router.query;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, currentComunidadId } = useAuth();
+  const { isSuperUser, currentRole } = usePermissions();
+  const comunidadId = currentComunidadId;
+
+  // Verificar permisos: Solo superadmin o admin puede editar
+  const canEdit = isSuperUser || currentRole === 'admin';
+  if (!canEdit) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <Alert variant='danger'>No tienes permisos para editar gastos.</Alert>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   const [formData, setFormData] = useState<ExpenseFormData>({
     id: 0,
     description: '',
-    category: '',
-    provider: '',
+    category: 0,
+    provider: 0,
     amount: '',
     date: '',
     dueDate: '',
@@ -61,7 +78,7 @@ export default function EditarGasto() {
     documentNumber: '',
     isRecurring: false,
     recurringPeriod: '',
-    costCenter: '',
+    costCenter: 0,
     tags: [],
     observations: '',
     priority: 'medium',
@@ -76,17 +93,9 @@ export default function EditarGasto() {
   const [dragActive, setDragActive] = useState(false);
   const [tagInput, setTagInput] = useState('');
 
-  const categories = [
-    { value: 'mantenimiento', label: 'Mantenimiento' },
-    { value: 'servicios', label: 'Servicios Básicos' },
-    { value: 'personal', label: 'Personal' },
-    { value: 'suministros', label: 'Suministros' },
-    { value: 'impuestos', label: 'Impuestos y Tasas' },
-    { value: 'seguros', label: 'Seguros' },
-    { value: 'legal', label: 'Legal y Notarial' },
-    { value: 'tecnologia', label: 'Tecnología' },
-    { value: 'otros', label: 'Otros' },
-  ];
+  const [categories, setCategories] = useState([]);
+  const [providers, setProviders] = useState([]);
+  const [costCenters, setCostCenters] = useState([]);
 
   const documentTypes = [
     { value: 'factura', label: 'Factura' },
@@ -101,78 +110,55 @@ export default function EditarGasto() {
     { value: 'otro', label: 'Otro' },
   ];
 
-  const costCenters = [
-    { value: 'administracion', label: 'Administración' },
-    { value: 'mantenimiento', label: 'Mantenimiento' },
-    { value: 'seguridad', label: 'Seguridad' },
-    { value: 'limpieza', label: 'Limpieza' },
-    { value: 'jardineria', label: 'Jardinería' },
-    { value: 'areas_comunes', label: 'Áreas Comunes' },
-    { value: 'servicios_basicos', label: 'Servicios Básicos' },
-    { value: 'emergencias', label: 'Emergencias' },
-  ];
-
   useEffect(() => {
-    if (id) {
-      loadExpense();
+    if (id && comunidadId) {
+      getGastoById(Number(id)).then(data => {
+        setFormData(mapToFormData(data));
+        setInitialLoading(false);
+      }).catch(() => setInitialLoading(false));
+      getCategorias(comunidadId).then(setCategories);
+      getCentrosCosto(comunidadId).then(setCostCenters);
+      getProveedores(comunidadId).then(setProviders);
     }
-  }, [id]);
+  }, [id, comunidadId]);
 
-  const loadExpense = async () => {
-    try {
-      setInitialLoading(true);
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  const mapToFormData = (gasto: any): ExpenseFormData => ({
+    id: gasto.id,
+    description: gasto.glosa || '',
+    category: gasto.categoria_id || 0, // Usar ID
+    provider: gasto.proveedor_id || 0,
+    amount: gasto.monto?.toString() || '',
+    date: gasto.fecha || '',
+    dueDate: gasto.due_date || '',
+    documentType: gasto.documento_tipo || 'factura',
+    documentNumber: gasto.documento_numero || '',
+    isRecurring: gasto.is_recurring || false,
+    recurringPeriod: gasto.recurring_period || '',
+    costCenter: gasto.centro_costo_id || 0,
+    tags: gasto.tags || [],
+    observations: gasto.observations || '',
+    priority: gasto.priority || 'medium',
+    requiredApprovals: gasto.required_approvals || 1,
+    attachments: [],
+    existingAttachments: gasto.attachments?.map((a: any) => ({
+      id: a.id,
+      name: a.name,
+      type: a.type,
+      size: a.size,
+      url: a.url,
+      uploadedAt: a.uploadedAt,
+    })) || [],
+  });
 
-      // Mock data - En producción esto vendría de una API
-      const mockExpense = {
-        id: parseInt(id as string),
-        description: 'Mantenimiento de ascensores - Revisión mensual',
-        category: 'mantenimiento',
-        provider: 'Elevadores Modernos S.A.',
-        amount: '850000',
-        date: '2024-03-15',
-        dueDate: '2024-03-30',
-        documentType: 'factura',
-        documentNumber: 'F-2024-001',
-        isRecurring: true,
-        recurringPeriod: 'monthly',
-        costCenter: 'mantenimiento',
-        tags: ['urgente', 'mensual', 'mantenimiento'],
-        observations:
-          'Mantenimiento programado según contrato anual. Incluye revisión de sistemas de seguridad y ajustes mecánicos.',
-        priority: 'high' as const,
-        requiredApprovals: 2,
-        attachments: [],
-        existingAttachments: [
-          {
-            id: 1,
-            name: 'factura-F-2024-001.pdf',
-            type: 'application/pdf',
-            size: 245760,
-            url: '/api/files/factura-F-2024-001.pdf',
-            uploadedAt: '2024-03-15T10:35:00Z',
-          },
-          {
-            id: 2,
-            name: 'informe-tecnico.pdf',
-            type: 'application/pdf',
-            size: 512000,
-            url: '/api/files/informe-tecnico.pdf',
-            uploadedAt: '2024-03-15T10:36:00Z',
-          },
-        ],
-      };
-
-      setFormData(mockExpense);
-    } catch (error) {
-      console.error('Error loading expense:', error);
-      alert('Error al cargar el gasto');
-      router.push('/gastos');
-    } finally {
-      setInitialLoading(false);
-    }
-  };
+  const mapFormDataToPayload = (data: ExpenseFormData) => ({
+    categoria_id: data.category,
+    fecha: data.date,
+    monto: parseFloat(data.amount.replace(/\./g, '').replace(',', '.')),
+    centro_costo_id: data.costCenter || undefined,
+    glosa: data.description,
+    documento_tipo: data.documentType,
+    documento_numero: data.documentNumber,
+  });
 
   const handleInputChange = (field: keyof ExpenseFormData, value: any) => {
     setFormData(prev => ({
@@ -289,13 +275,13 @@ export default function EditarGasto() {
       newErrors.category = 'La categoría es obligatoria';
     }
 
-    if (!formData.provider.trim()) {
+    if (!formData.provider) {
       newErrors.provider = 'El proveedor es obligatorio';
     }
 
     if (
       !formData.amount ||
-      parseFloat(formData.amount.replace(/\./g, '')) <= 0
+      parseFloat(formData.amount) <= 0
     ) {
       newErrors.amount = 'El monto debe ser mayor a 0';
     }
@@ -322,18 +308,12 @@ export default function EditarGasto() {
     setLoading(true);
 
     try {
-      // Simular delay de guardado
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Aquí iría la lógica para enviar los datos al servidor
-      console.log('Updated expense data:', formData);
-
-      // Mostrar mensaje de éxito y redirigir
-      alert('Gasto actualizado exitosamente');
-      router.push(`/gastos/${formData.id}`);
-    } catch (error) {
-      console.error('Error updating expense:', error);
-      alert('Error al actualizar el gasto');
+      const payload = mapFormDataToPayload(formData);
+      await updateGasto(Number(id), payload);
+      router.push(`/gastos/${id}`);
+    } catch (err) {
+      console.error(err);
+      setErrors({ general: 'Error al actualizar gasto' });
     } finally {
       setLoading(false);
     }

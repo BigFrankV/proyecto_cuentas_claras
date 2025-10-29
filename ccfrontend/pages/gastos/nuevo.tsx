@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Button,
   Card,
@@ -12,12 +12,19 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions';
+import {
+  createGasto,
+  getCategorias,
+  getCentrosCosto,
+  getProveedores,
+} from '@/lib/gastosService';
 
 interface ExpenseFormData {
   description: string;
-  category: string;
-  provider: string;
+  category: number; // Cambiar a number para IDs
+  provider: number; // Cambiar a number
   amount: string;
   date: string;
   dueDate: string;
@@ -25,7 +32,7 @@ interface ExpenseFormData {
   documentNumber: string;
   isRecurring: boolean;
   recurringPeriod: string;
-  costCenter: string;
+  costCenter: number; // Cambiar a number
   tags: string[];
   observations: string;
   priority: 'low' | 'medium' | 'high';
@@ -36,11 +43,31 @@ interface ExpenseFormData {
 export default function GastoNuevo() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, currentComunidadId } = useAuth();
+  const { isSuperUser, currentRole } = usePermissions();
+  const comunidadId = isSuperUser ? null : currentComunidadId;
+
+  // Verificar permisos: Solo superadmin, admin, contador pueden crear
+  const canCreate = isSuperUser || ['admin', 'contador'].includes(currentRole);
+  if (!canCreate) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <Alert variant='danger'>No tienes permisos para crear gastos.</Alert>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
+
+  // Cambiar alerta: Para superadmin, permitir crear sin comunidad
+  if (isSuperUser && !currentComunidadId) {
+    // No mostrar alerta; permitir crear global
+  }
 
   const [formData, setFormData] = useState<ExpenseFormData>({
     description: '',
-    category: '',
-    provider: '',
+    category: 0,
+    provider: 0,
     amount: '',
     date: new Date().toISOString().split('T')[0] || '',
     dueDate: '',
@@ -48,7 +75,7 @@ export default function GastoNuevo() {
     documentNumber: '',
     isRecurring: false,
     recurringPeriod: '',
-    costCenter: '',
+    costCenter: 0,
     tags: [],
     observations: '',
     priority: 'medium',
@@ -60,18 +87,9 @@ export default function GastoNuevo() {
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [tagInput, setTagInput] = useState('');
-
-  const categories = [
-    { value: 'mantenimiento', label: 'Mantenimiento' },
-    { value: 'servicios', label: 'Servicios Básicos' },
-    { value: 'personal', label: 'Personal' },
-    { value: 'suministros', label: 'Suministros' },
-    { value: 'impuestos', label: 'Impuestos y Tasas' },
-    { value: 'seguros', label: 'Seguros' },
-    { value: 'legal', label: 'Legal y Notarial' },
-    { value: 'tecnologia', label: 'Tecnología' },
-    { value: 'otros', label: 'Otros' },
-  ];
+  const [categories, setCategories] = useState([]);
+  const [costCenters, setCostCenters] = useState([]);
+  const [providers, setProviders] = useState([]);
 
   const documentTypes = [
     { value: 'factura', label: 'Factura' },
@@ -86,16 +104,34 @@ export default function GastoNuevo() {
     { value: 'otro', label: 'Otro' },
   ];
 
-  const costCenters = [
-    { value: 'administracion', label: 'Administración' },
-    { value: 'mantenimiento', label: 'Mantenimiento' },
-    { value: 'seguridad', label: 'Seguridad' },
-    { value: 'limpieza', label: 'Limpieza' },
-    { value: 'jardineria', label: 'Jardinería' },
-    { value: 'areas_comunes', label: 'Áreas Comunes' },
-    { value: 'servicios_basicos', label: 'Servicios Básicos' },
-    { value: 'emergencias', label: 'Emergencias' },
-  ];
+  useEffect(() => {
+    const idToUse = isSuperUser ? null : comunidadId;
+    console.log('DEBUG cargar listas: comunidadId:', comunidadId, 'isSuperUser:', isSuperUser, 'idToUse:', idToUse);
+
+    getCategorias(idToUse)
+      .then(data => {
+        console.log('API categorías ->', data);
+        const normalized = (data || []).map((c: any) => ({ id: c.id, nombre: c.nombre ?? c.name ?? c.label }));
+        setCategories(normalized.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+      })
+      .catch(err => console.error('ERROR getCategorias', err));
+
+    getCentrosCosto(idToUse)
+      .then(data => {
+        console.log('API centros costo ->', data);
+        const normalized = (data || []).map((c: any) => ({ id: c.id, nombre: c.nombre ?? c.name }));
+        setCostCenters(normalized.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+      })
+      .catch(err => console.error('ERROR getCentrosCosto', err));
+
+    getProveedores(idToUse)
+      .then(data => {
+        console.log('API proveedores ->', data);
+        const normalized = (data || []).map((p: any) => ({ id: p.id, nombre: p.nombre ?? p.razon_social ?? p.name }));
+        setProviders(normalized.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+      })
+      .catch(err => console.error('ERROR getProveedores', err));
+  }, [comunidadId, isSuperUser]);
 
   const handleInputChange = (field: keyof ExpenseFormData, value: any) => {
     setFormData(prev => ({
@@ -203,7 +239,7 @@ export default function GastoNuevo() {
       newErrors.category = 'La categoría es obligatoria';
     }
 
-    if (!formData.provider.trim()) {
+    if (!formData.provider) {
       newErrors.provider = 'El proveedor es obligatorio';
     }
 
@@ -223,28 +259,31 @@ export default function GastoNuevo() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const mapFormDataToPayload = (data: ExpenseFormData) => {
+    return {
+      categoria_id: data.category,
+      fecha: data.date,
+      monto: parseFloat(data.amount.replace(/\./g, '').replace(',', '.')),
+      glosa: data.description,
+      centro_costo_id: data.costCenter || undefined,
+      documento_tipo: data.documentType,
+      documento_numero: data.documentNumber,
+      extraordinario: false,
+      // Agrega otros campos según backend
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setLoading(true);
-
     try {
-      // Simular delay de guardado
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Aquí iría la lógica para enviar los datos al servidor
-      console.log('Expense data:', formData);
-
-      // Mostrar mensaje de éxito y redirigir
-      alert('Gasto creado exitosamente');
-      router.push('/gastos');
-    } catch (error) {
-      console.error('Error creating expense:', error);
-      alert('Error al crear el gasto');
+      const payload = mapFormDataToPayload(formData);
+      const newGasto = await createGasto(comunidadId, payload); // Pasará null para superadmin
+      router.push(`/gastos/${newGasto.id}`);
+    } catch (err) {
+      console.error('Error creando gasto:', err);
+      setErrors({ general: 'Error al crear gasto' });
     } finally {
       setLoading(false);
     }
@@ -332,14 +371,14 @@ export default function GastoNuevo() {
                           <Form.Select
                             value={formData.category}
                             onChange={e =>
-                              handleInputChange('category', e.target.value)
+                              handleInputChange('category', parseInt(e.target.value))
                             }
                             isInvalid={!!errors.category}
                           >
-                            <option value=''>Selecciona una categoría</option>
+                            <option value={0}>Selecciona una categoría</option>
                             {categories.map(cat => (
-                              <option key={cat.value} value={cat.value}>
-                                {cat.label}
+                              <option key={cat.id} value={cat.id}>
+                                {cat.nombre ?? String(cat.id)}
                               </option>
                             ))}
                           </Form.Select>
@@ -354,15 +393,20 @@ export default function GastoNuevo() {
                           <Form.Label className='required'>
                             Proveedor
                           </Form.Label>
-                          <Form.Control
-                            type='text'
-                            placeholder='Nombre del proveedor o empresa'
+                          <Form.Select
                             value={formData.provider}
                             onChange={e =>
-                              handleInputChange('provider', e.target.value)
+                              handleInputChange('provider', parseInt(e.target.value))
                             }
                             isInvalid={!!errors.provider}
-                          />
+                          >
+                            <option value={0}>Selecciona un proveedor</option>
+                            {providers.map(prov => (
+                              <option key={prov.id} value={prov.id}>
+                                {prov.nombre ?? prov.razon_social ?? String(prov.id)}
+                              </option>
+                            ))}
+                          </Form.Select>
                           <Form.Control.Feedback type='invalid'>
                             {errors.provider}
                           </Form.Control.Feedback>
@@ -395,15 +439,15 @@ export default function GastoNuevo() {
                           <Form.Select
                             value={formData.costCenter}
                             onChange={e =>
-                              handleInputChange('costCenter', e.target.value)
+                              handleInputChange('costCenter', parseInt(e.target.value))
                             }
                           >
-                            <option value=''>
+                            <option value={0}>
                               Selecciona un centro de costo
                             </option>
                             {costCenters.map(cc => (
-                              <option key={cc.value} value={cc.value}>
-                                {cc.label}
+                              <option key={cc.id} value={cc.id}>
+                                {cc.nombre ?? String(cc.id)}
                               </option>
                             ))}
                           </Form.Select>

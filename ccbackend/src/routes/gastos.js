@@ -1661,6 +1661,122 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
     res.status(500).json({ error: 'server error' });
   }
 });
+
+// ...existing code...
+
+// Mantener sólo este handler (versión corregida)
+router.get('/:id/aprobaciones', authenticate, async (req, res) => {
+  const gastoId = Number(req.params.id);
+  if (Number.isNaN(gastoId)) return res.status(400).json({ error: 'gasto id inválido' });
+
+  try {
+    const sql = `
+      SELECT
+        ga.*,
+        COALESCE(u.username,
+                 CONCAT(
+                   COALESCE(p.nombres, ''), ' ',
+                   COALESCE(p.apellido_paterno, ''), ' ',
+                   COALESCE(p.apellido_materno, '')
+                 ),
+                 u.email
+        ) AS nombre_usuario,
+        rs.nombre AS rol_nombre
+      FROM gasto_aprobacion ga
+      LEFT JOIN usuario u ON ga.usuario_id = u.id
+      LEFT JOIN persona p ON u.persona_id = p.id
+      LEFT JOIN rol_sistema rs ON ga.rol_id = rs.id
+      WHERE ga.gasto_id = ?
+      ORDER BY ga.created_at DESC
+    `;
+    const [rows] = await db.query(sql, [gastoId]);
+    return res.json(rows || []);
+  } catch (err) {
+    console.error('Error GET /gastos/:id/aprobaciones', {
+      gastoId,
+      message: err.message,
+      sqlMessage: err.sqlMessage || null,
+      stack: err.stack
+    });
+    return res.status(500).json({ error: 'Error interno al obtener aprobaciones' });
+  }
+});
+
+// ...existing code...
+
+/**
+ * @swagger
+ * /gastos:
+ *   post:
+ *     tags: [Gastos]
+ *     summary: Crear nuevo gasto global (superadmin)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - categoria_id
+ *               - fecha
+ *               - monto
+ *             properties:
+ *               comunidad_id:
+ *                 type: integer
+ *                 description: Opcional para superadmin; requerido para otros
+ *               categoria_id:
+ *                 type: integer
+ *               centro_costo_id:
+ *                 type: integer
+ *               documento_compra_id:
+ *                 type: integer
+ *               fecha:
+ *                 type: string
+ *                 format: date
+ *               monto:
+ *                 type: number
+ *               glosa:
+ *                 type: string
+ *               extraordinario:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Gasto creado
+ */
+router.post('/', [
+  authenticate,
+  authorize('superadmin'), // Solo superadmin
+  body('categoria_id').isInt(),
+  body('fecha').notEmpty(),
+  body('monto').isNumeric()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  const { comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario } = req.body;
+
+  // Si no se pasa comunidad_id, permitir crear sin comunidad (o asignar una por defecto)
+  const comunidadId = comunidad_id || null; // null si no se pasa
+
+  try {
+    const [result] = await db.query(
+      'INSERT INTO gasto (comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [comunidadId, categoria_id, centro_costo_id || null, documento_compra_id || null, fecha, monto, glosa || null, extraordinario ? 1 : 0]
+    );
+
+    const [row] = await db.query('SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1', [result.insertId]);
+    res.status(201).json(row[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+
+
+
 module.exports = router;
 // =========================================
 // ENDPOINTS DE GASTOS
