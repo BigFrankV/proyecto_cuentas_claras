@@ -14,11 +14,62 @@ const TIPOS_CATEGORIA = ['operacional', 'extraordinario', 'fondo_reserva', 'mult
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}:
  *   get:
- *     tags: [CategoriasGasto]
- *     summary: Listado básico de categorías de gasto con información completa
+ *     tags: [Categor�as de Gasto]
+ *     summary: Listado básico de categorías de gasto
+ *     description: Devuelve una lista completa de categorías de gasto para una comunidad específica, incluyendo información básica y estado.
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la comunidad
+ *     responses:
+ *       200:
+ *         description: Lista de categorías
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   comunidad_id:
+ *                     type: integer
+ *                   comunidad_nombre:
+ *                     type: string
+ *                   nombre:
+ *                     type: string
+ *                   tipo:
+ *                     type: string
+ *                     enum: [operacional, extraordinario, fondo_reserva, multas, consumo]
+ *                   cta_contable:
+ *                     type: string
+ *                   activa:
+ *                     type: integer
+ *                   status:
+ *                     type: string
+ *                     enum: [active, inactive]
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *                   updated_at:
+ *                     type: string
+ *                     format: date-time
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
@@ -51,12 +102,143 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/filtrar:
  *   get:
- *     tags: [CategoriasGasto]
  *     summary: Listado con filtros avanzados y paginación
+ *     description: Devuelve una lista paginada de categorías de gasto con filtros opcionales por nombre, tipo y estado de actividad.
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la comunidad
+ *       - name: nombre_busqueda
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda en el nombre de la categoría
+ *       - name: tipo_filtro
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [operacional, extraordinario, fondo_reserva, multas, consumo]
+ *         description: Filtrar por tipo de categoría
+ *       - name: activa_filtro
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           enum: [0, 1]
+ *         description: Filtrar por estado activo (0=inactiva, 1=activa, -1=todas)
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Número de elementos por página
+ *       - name: offset
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Desplazamiento para paginación
+ *     responses:
+ *       200:
+ *         description: Lista filtrada de categorías
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       nombre:
+ *                         type: string
+ *                       tipo:
+ *                         type: string
+ *                       cta_contable:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                       comunidad:
+ *                         type: string
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                       updated_at:
+ *                         type: string
+ *                         format: date-time
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     offset:
+ *                       type: integer
+ *                     pages:
+ *                       type: integer
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
+
+/**
+ * @swagger
+ * /categorias-gasto/comunidad/{comunidadId}/filtrar:
+ *   get:
+ *     tags: [Categor�as de Gasto]
+ *     summary: Listado filtrado de categorías de gasto
+ *     description: Devuelve una lista filtrada de categorías de gasto para una comunidad específica
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la comunidad
+ *       - name: nombre_busqueda
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda en nombre
+ *       - name: tipo_filtro
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: Filtro por tipo
+ *       - name: activa_filtro
+ *         in: query
+ *         schema:
+ *           type: boolean
+ *         description: Filtro por estado activo
+ *     responses:
+ *       200:
+ *         description: Lista filtrada obtenida exitosamente
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
 router.get('/comunidad/:comunidadId/filtrar', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
     const comunidadId = Number(req.params.comunidadId);
@@ -130,11 +312,79 @@ router.get('/comunidad/:comunidadId/filtrar', authenticate, requireCommunity('co
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/{id}/detalle:
  *   get:
- *     tags: [CategoriasGasto]
  *     summary: Detalle completo de una categoría con estadísticas
+ *     description: Devuelve información detallada de una categoría específica, incluyendo estadísticas de uso y gastos asociados.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la categoría
+ *       - name: comunidad_id
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: ID de la comunidad para filtrar (opcional)
+ *     responses:
+ *       200:
+ *         description: Detalle de la categoría
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 comunidad_id:
+ *                   type: integer
+ *                 comunidad_nombre:
+ *                   type: string
+ *                 nombre:
+ *                   type: string
+ *                 tipo:
+ *                   type: string
+ *                 cta_contable:
+ *                   type: string
+ *                 activa:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *                 gastos_asociados:
+ *                   type: integer
+ *                 total_gastado:
+ *                   type: number
+ *                 ultimo_uso:
+ *                   type: string
+ *                   format: date
+ *                 created_at:
+ *                   type: string
+ *                   format: date-time
+ *                 updated_at:
+ *                   type: string
+ *                   format: date-time
+ *       404:
+ *         description: Categoría no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.get('/:id/detalle', authenticate, async (req, res) => {
   try {
@@ -183,10 +433,10 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/{id}/ultimos-gastos:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Últimos gastos asociados a la categoría
  */
 router.get('/:id/ultimos-gastos', authenticate, async (req, res) => {
@@ -223,11 +473,89 @@ router.get('/:id/ultimos-gastos', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}:
  *   post:
- *     tags: [CategoriasGasto]
  *     summary: Crear nueva categoría de gasto
+ *     description: Crea una nueva categoría de gasto para la comunidad especificada.
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la comunidad
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nombre
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 description: Nombre de la categoría
+ *               tipo:
+ *                 type: string
+ *                 enum: [operacional, extraordinario, fondo_reserva, multas, consumo]
+ *                 default: operacional
+ *                 description: Tipo de categoría
+ *               cta_contable:
+ *                 type: string
+ *                 description: Cuenta contable asociada
+ *               activa:
+ *                 type: boolean
+ *                 default: true
+ *                 description: Estado activo de la categoría
+ *     responses:
+ *       201:
+ *         description: Categoría creada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 nombre:
+ *                   type: string
+ *                 tipo:
+ *                   type: string
+ *                 cta_contable:
+ *                   type: string
+ *                 activa:
+ *                   type: integer
+ *       400:
+ *         description: Datos de validación incorrectos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       409:
+ *         description: Ya existe una categoría con ese nombre
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.post(
   '/comunidad/:comunidadId',
@@ -274,11 +602,62 @@ router.post(
 );
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/{id}:
  *   get:
- *     tags: [CategoriasGasto]
  *     summary: Obtener una categoría específica
+ *     description: Devuelve los detalles de una categoría de gasto específica por ID.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la categoría
+ *     responses:
+ *       200:
+ *         description: Detalles de la categoría
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 comunidad_id:
+ *                   type: integer
+ *                 nombre:
+ *                   type: string
+ *                 tipo:
+ *                   type: string
+ *                 cta_contable:
+ *                   type: string
+ *                 activa:
+ *                   type: integer
+ *                 created_at:
+ *                   type: string
+ *                   format: date-time
+ *                 updated_at:
+ *                   type: string
+ *                   format: date-time
+ *       404:
+ *         description: Categoría no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.get('/:id', authenticate, async (req, res) => {
   try {
@@ -300,11 +679,86 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/{id}:
  *   patch:
- *     tags: [CategoriasGasto]
  *     summary: Actualizar categoría de gasto
+ *     description: Actualiza parcialmente una categoría de gasto existente.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la categoría
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 description: Nuevo nombre de la categoría
+ *               tipo:
+ *                 type: string
+ *                 enum: [operacional, extraordinario, fondo_reserva, multas, consumo]
+ *                 description: Nuevo tipo de categoría
+ *               cta_contable:
+ *                 type: string
+ *                 description: Nueva cuenta contable
+ *               activa:
+ *                 type: integer
+ *                 enum: [0, 1]
+ *                 description: Nuevo estado activo
+ *               comunidad_id:
+ *                 type: integer
+ *                 description: ID de la comunidad (opcional para filtrar)
+ *     responses:
+ *       200:
+ *         description: Categoría actualizada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 comunidad_id:
+ *                   type: integer
+ *                 nombre:
+ *                   type: string
+ *                 tipo:
+ *                   type: string
+ *                 cta_contable:
+ *                   type: string
+ *                 activa:
+ *                   type: integer
+ *                 created_at:
+ *                   type: string
+ *                   format: date-time
+ *                 updated_at:
+ *                   type: string
+ *                   format: date-time
+ *       400:
+ *         description: Datos inválidos o no hay campos para actualizar
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
   try {
@@ -362,11 +816,36 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req,
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/{id}:
  *   delete:
- *     tags: [CategoriasGasto]
  *     summary: Eliminar categoría de gasto
+ *     description: Elimina una categoría de gasto específica.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la categoría
+ *       - name: comunidad_id
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: ID de la comunidad para filtrar (opcional)
+ *     responses:
+ *       204:
+ *         description: Categoría eliminada exitosamente
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
   try {
@@ -390,11 +869,66 @@ router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/{id}/activar:
  *   patch:
- *     tags: [CategoriasGasto]
  *     summary: Activar/Desactivar categoría
+ *     description: Cambia el estado activo/inactivo de una categoría de gasto.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la categoría
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - activa
+ *             properties:
+ *               activa:
+ *                 type: boolean
+ *                 description: Estado activo deseado
+ *               comunidad_id:
+ *                 type: integer
+ *                 description: ID de la comunidad para filtrar (opcional)
+ *     responses:
+ *       200:
+ *         description: Estado de la categoría actualizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 nombre:
+ *                   type: string
+ *                 tipo:
+ *                   type: string
+ *                 cta_contable:
+ *                   type: string
+ *                 activa:
+ *                   type: integer
+ *                 created_at:
+ *                   type: string
+ *                   format: date-time
+ *                 updated_at:
+ *                   type: string
+ *                   format: date-time
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.patch('/:id/activar', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
   try {
@@ -424,11 +958,43 @@ router.patch('/:id/activar', authenticate, authorize('admin', 'superadmin'), asy
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/estadisticas/generales:
  *   get:
- *     tags: [CategoriasGasto]
  *     summary: Estadísticas generales de categorías
+ *     description: Devuelve estadísticas generales sobre las categorías de gasto de una comunidad.
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la comunidad
+ *     responses:
+ *       200:
+ *         description: Estadísticas generales
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total_categorias:
+ *                   type: integer
+ *                 categorias_activas:
+ *                   type: integer
+ *                 categorias_inactivas:
+ *                   type: integer
+ *                 tipos_distintos:
+ *                   type: integer
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.get('/comunidad/:comunidadId/estadisticas/generales', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
@@ -453,10 +1019,10 @@ router.get('/comunidad/:comunidadId/estadisticas/generales', authenticate, requi
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/estadisticas/por-tipo:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Estadísticas por tipo de categoría
  */
 router.get('/comunidad/:comunidadId/estadisticas/por-tipo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -484,10 +1050,10 @@ router.get('/comunidad/:comunidadId/estadisticas/por-tipo', authenticate, requir
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/mas-utilizadas:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Categorías más utilizadas por cantidad de gastos
  */
 router.get('/comunidad/:comunidadId/mas-utilizadas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -530,10 +1096,10 @@ router.get('/comunidad/:comunidadId/mas-utilizadas', authenticate, requireCommun
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/mas-costosas:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Categorías más costosas por monto total
  */
 router.get('/comunidad/:comunidadId/mas-costosas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -577,10 +1143,10 @@ router.get('/comunidad/:comunidadId/mas-costosas', authenticate, requireCommunit
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/sin-uso:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Categorías sin uso en período
  */
 router.get('/comunidad/:comunidadId/sin-uso', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -616,10 +1182,10 @@ router.get('/comunidad/:comunidadId/sin-uso', authenticate, requireCommunity('co
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/{id}/existe:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Verificar si existe una categoría
  */
 router.get('/:id/existe', authenticate, async (req, res) => {
@@ -644,10 +1210,10 @@ router.get('/:id/existe', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/validar-nombre:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Verificar si existe categoría con el mismo nombre
  */
 router.get('/comunidad/:comunidadId/validar-nombre', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -680,10 +1246,10 @@ router.get('/comunidad/:comunidadId/validar-nombre', authenticate, requireCommun
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/{id}/tiene-gastos:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Verificar si la categoría tiene gastos asociados
  */
 router.get('/:id/tiene-gastos', authenticate, async (req, res) => {
@@ -701,10 +1267,10 @@ router.get('/:id/tiene-gastos', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/validar-tipo:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Verificar si el tipo de categoría es válido
  */
 router.get('/validar-tipo', authenticate, async (req, res) => {
@@ -731,11 +1297,45 @@ router.get('/validar-tipo', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/activas:
  *   get:
- *     tags: [CategoriasGasto]
  *     summary: Lista de categorías activas para dropdowns
+ *     description: Devuelve una lista de categorías activas de una comunidad para usar en menús desplegables.
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la comunidad
+ *     responses:
+ *       200:
+ *         description: Lista de categorías activas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   nombre:
+ *                     type: string
+ *                   tipo:
+ *                     type: string
+ *                   cta_contable:
+ *                     type: string
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.get('/comunidad/:comunidadId/activas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
@@ -761,10 +1361,10 @@ router.get('/comunidad/:comunidadId/activas', authenticate, requireCommunity('co
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/tipos:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Lista de tipos de categoría disponibles en la comunidad
  */
 router.get('/comunidad/:comunidadId/tipos', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -796,10 +1396,10 @@ router.get('/comunidad/:comunidadId/tipos', authenticate, requireCommunity('comu
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/por-tipo/{tipo}:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Lista de categorías por tipo específico
  */
 router.get('/comunidad/:comunidadId/por-tipo/:tipo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -836,10 +1436,10 @@ router.get('/comunidad/:comunidadId/por-tipo/:tipo', authenticate, requireCommun
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/reporte/por-mes:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Reporte de uso de categorías por mes
  */
 router.get('/comunidad/:comunidadId/reporte/por-mes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -877,10 +1477,10 @@ router.get('/comunidad/:comunidadId/reporte/por-mes', authenticate, requireCommu
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/reporte/comparativo:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Análisis comparativo de categorías (último mes vs mes anterior)
  */
 router.get('/comunidad/:comunidadId/reporte/comparativo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -913,10 +1513,10 @@ router.get('/comunidad/:comunidadId/reporte/comparativo', authenticate, requireC
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/reporte/variabilidad:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Categorías con mayor variabilidad en gastos
  */
 router.get('/comunidad/:comunidadId/reporte/variabilidad', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -965,10 +1565,10 @@ router.get('/comunidad/:comunidadId/reporte/variabilidad', authenticate, require
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/exportar:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Exportación completa para Excel/CSV
  */
 router.get('/comunidad/:comunidadId/exportar', authenticate, requireCommunity('comunidadId'), authorize('admin', 'superadmin'), async (req, res) => {
@@ -1023,11 +1623,43 @@ router.get('/comunidad/:comunidadId/exportar', authenticate, requireCommunity('c
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/dashboard/resumen:
  *   get:
- *     tags: [CategoriasGasto]
  *     summary: Resumen de categorías para dashboard
+ *     description: Devuelve un resumen estadístico de las categorías de gasto para mostrar en el dashboard de la comunidad.
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la comunidad
+ *     responses:
+ *       200:
+ *         description: Resumen para dashboard
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total_categorias:
+ *                   type: integer
+ *                 categorias_activas:
+ *                   type: integer
+ *                 categorias_inactivas:
+ *                   type: integer
+ *                 tipos_categorias:
+ *                   type: integer
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.get('/comunidad/:comunidadId/dashboard/resumen', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
@@ -1052,10 +1684,10 @@ router.get('/comunidad/:comunidadId/dashboard/resumen', authenticate, requireCom
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/dashboard/top-mes:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Top categorías por gasto en el último mes
  */
 router.get('/comunidad/:comunidadId/dashboard/top-mes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1087,10 +1719,10 @@ router.get('/comunidad/:comunidadId/dashboard/top-mes', authenticate, requireCom
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/dashboard/sin-uso-reciente:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Categorías activas sin uso reciente
  */
 router.get('/comunidad/:comunidadId/dashboard/sin-uso-reciente', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1123,10 +1755,10 @@ router.get('/comunidad/:comunidadId/dashboard/sin-uso-reciente', authenticate, r
 });
 
 /**
- * @openapi
+ * @swagger
  * /categorias-gasto/comunidad/{comunidadId}/dashboard/distribucion-tipo:
  *   get:
- *     tags: [CategoriasGasto]
+ *     tags: [Categor�as de Gasto]
  *     summary: Distribución de gastos por tipo de categoría
  */
 router.get('/comunidad/:comunidadId/dashboard/distribucion-tipo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -1181,8 +1813,98 @@ router.get('/comunidad/:comunidadId/dashboard/distribucion-tipo', authenticate, 
 });
 
 /**
- * GET /categorias-gasto
- * Lista global de categorías (superadmin) o filtrada por comunidades asignadas (otros roles).
+ * @swagger
+ * /categorias-gasto:
+ *   get:
+ *     summary: Lista global de categorías de gasto
+ *     description: Devuelve una lista paginada de categorías de gasto. Para superadmin muestra todas, para otros roles filtra por comunidades asignadas.
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 100
+ *         description: Número de elementos por página
+ *       - name: nombre_busqueda
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda en el nombre
+ *       - name: tipo_filtro
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [operacional, extraordinario, fondo_reserva, multas, consumo]
+ *         description: Filtrar por tipo
+ *       - name: activa_filtro
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           enum: [-1, 0, 1]
+ *           default: -1
+ *         description: Filtrar por estado activo (-1=todas, 0=inactiva, 1=activa)
+ *     responses:
+ *       200:
+ *         description: Lista de categorías
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       nombre:
+ *                         type: string
+ *                       tipo:
+ *                         type: string
+ *                       cta_contable:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                       comunidad:
+ *                         type: string
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                       updated_at:
+ *                         type: string
+ *                         format: date-time
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     pages:
+ *                       type: integer
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conserje', 'contador', 'proveedor_servicio', 'residente', 'propietario', 'inquilino', 'tesorero', 'presidente_comite'), async (req, res) => {
   try {
@@ -1315,3 +2037,7 @@ module.exports = router;
 // GET: /categorias-gasto/comunidad/:comunidadId/dashboard/top-mes
 // GET: /categorias-gasto/comunidad/:comunidadId/dashboard/sin-uso-reciente
 // GET: /categorias-gasto/comunidad/:comunidadId/dashboard/distribucion-tipo
+
+
+
+

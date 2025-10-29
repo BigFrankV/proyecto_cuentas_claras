@@ -5,6 +5,13 @@ const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize'); // <-- añadir import
 
 /**
+ * @swagger
+ * tags:
+ *   - name: Medidores
+ *     description: Gestión de medidores, lecturas y consumos
+ */
+
+/**
  * Helper: verifica existencia y tenancy / permisos básicos
  * Retorna: { exists, allowed, comunidadId, activo }
  */
@@ -320,3 +327,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 module.exports = router;
+
+
+
+

@@ -10,6 +10,13 @@ const db = require('../db');
 const { authenticate } = require('../middleware/auth');
 const logger = require('../logger');
 
+/**
+ * @swagger
+ * tags:
+ *   - name: UTM
+ *     description: Valores UTM, conversiones y estadísticas económicas
+ */
+
 // ==========================================
 // 1. CONSULTAS BÁSICAS DE VALOR UTM
 // ==========================================
@@ -1045,3 +1052,7 @@ module.exports = router;
 
 // // 9. DISPONIBILIDAD DE DATOS
 // GET: /valor-utm/disponibilidad
+
+
+
+

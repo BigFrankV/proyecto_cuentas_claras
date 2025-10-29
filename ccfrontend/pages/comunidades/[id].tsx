@@ -16,6 +16,7 @@ export default function ComunidadDetallePage() {
   const [edificios, setEdificios] = useState<any[]>([]);
   const [residentes, setResidentes] = useState<any[]>([]);
   const [estadisticas, setEstadisticas] = useState<any>(null);
+  const [flujoCaja, setFlujoCaja] = useState<any[]>([]);
   const [documentos, setDocumentos] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<string>('resumen');
   const [isLoading, setIsLoading] = useState(true);
@@ -138,9 +139,15 @@ export default function ComunidadDetallePage() {
       const data = await comunidadesService.getEstadisticasByComunidad(Number(id));
       console.log('Estadísticas cargadas:', data);
       setEstadisticas(data);
+      
+      // También cargar flujo de caja para el gráfico
+      const flujoData = await comunidadesService.getFlujoCajaByComunidad(Number(id));
+      console.log('Flujo de caja cargado:', flujoData);
+      setFlujoCaja(flujoData);
     } catch (error) {
       console.error('Error loading estadisticas:', error);
       setEstadisticas(null);
+      setFlujoCaja([]);
     } finally {
       setLoadingData(prev => ({ ...prev, estadisticas: false }));
     }

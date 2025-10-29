@@ -51,8 +51,8 @@ async function initializeTestSetup() {
     const loginResponse = await request(app)
       .post('/auth/login')
       .send({
-        identifier: process.env.TEST_USER_EMAIL || 'admin@test.com',
-        password: process.env.TEST_USER_PASSWORD || 'admin123'
+        identifier: process.env.TEST_USER_EMAIL || 'pat.quintanilla@duocuc.cl',
+        password: process.env.TEST_USER_PASSWORD || '123456'
       });
 
     if (loginResponse.status === 200 && loginResponse.body.token) {
@@ -120,10 +120,7 @@ async function cleanupTestSetup() {
 /**
  * Obtiene el token de autenticación, inicializando si es necesario
  */
-async function getAuthToken() {
-  if (!authToken) {
-    await initializeTestSetup();
-  }
+function getAuthToken() {
   return authToken;
 }
 

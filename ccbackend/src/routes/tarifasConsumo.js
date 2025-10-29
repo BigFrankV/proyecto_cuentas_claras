@@ -7,7 +7,7 @@ const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Tarifas Consumo
  *     description: Gestión de tarifas de consumo (agua, gas, electricidad)
@@ -18,10 +18,10 @@ const { requireCommunity } = require('../middleware/tenancy');
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/comunidad/{comunidadId}:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Listar tarifas con filtros avanzados
  *     parameters:
  *       - name: comunidadId
@@ -108,10 +108,10 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/comunidad/{comunidadId}/por-tipo:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Listado de tarifas agrupadas por tipo
  */
 router.get('/comunidad/:comunidadId/por-tipo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
@@ -146,10 +146,10 @@ router.get('/comunidad/:comunidadId/por-tipo', authenticate, requireCommunity('c
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/{id}:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Vista detallada de una tarifa específica
  */
 router.get('/:id', authenticate, async (req, res) => {
@@ -197,10 +197,10 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/todas/con-estructura:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Todas las tarifas con estructura completa
  */
 router.get('/todas/con-estructura', authenticate, async (req, res) => {
@@ -237,10 +237,10 @@ router.get('/todas/con-estructura', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/estadisticas/generales:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Estadísticas generales de tarifas
  */
 router.get('/estadisticas/generales', authenticate, async (req, res) => {
@@ -269,10 +269,10 @@ router.get('/estadisticas/generales', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/estadisticas/por-servicio:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Estadísticas por tipo de servicio
  */
 router.get('/estadisticas/por-servicio', authenticate, async (req, res) => {
@@ -300,10 +300,10 @@ router.get('/estadisticas/por-servicio', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/estadisticas/precios:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Estadísticas de precios unitarios y cargos fijos
  */
 router.get('/estadisticas/precios', authenticate, async (req, res) => {
@@ -340,10 +340,10 @@ router.get('/estadisticas/precios', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/busqueda/avanzada:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Búsqueda avanzada de tarifas
  *     parameters:
  *       - name: busqueda
@@ -442,10 +442,10 @@ router.get('/busqueda/avanzada', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/busqueda/por-rango-precio:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Tarifas agrupadas por rango de precio
  */
 router.get('/busqueda/por-rango-precio', authenticate, async (req, res) => {
@@ -480,10 +480,10 @@ router.get('/busqueda/por-rango-precio', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/export/completo:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Exportación completa de tarifas para Excel/CSV
  */
 router.get('/export/completo', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
@@ -516,10 +516,10 @@ router.get('/export/completo', authenticate, authorize('admin', 'superadmin', 'c
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/export/por-servicio:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Exportación de precios por servicio y período
  */
 router.get('/export/por-servicio', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
@@ -550,10 +550,10 @@ router.get('/export/por-servicio', authenticate, authorize('admin', 'superadmin'
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/validacion/integridad:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Validar integridad de tarifas
  */
 router.get('/validacion/integridad', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
@@ -589,10 +589,10 @@ router.get('/validacion/integridad', authenticate, authorize('admin', 'superadmi
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/validacion/solapamiento:
  *   get:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Validar solapamiento de períodos por comunidad y tipo
  */
 router.get('/validacion/solapamiento', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
@@ -630,10 +630,10 @@ router.get('/validacion/solapamiento', authenticate, authorize('admin', 'superad
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/comunidad/{comunidadId}:
  *   post:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Crear nueva tarifa de consumo
  */
 router.post('/comunidad/:comunidadId', [
@@ -670,10 +670,10 @@ router.post('/comunidad/:comunidadId', [
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/{id}:
  *   patch:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Actualizar tarifa
  */
 router.patch('/:id', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
@@ -710,10 +710,10 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin', 'contador'),
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/tarifas-consumo/{id}:
  *   delete:
- *     tags: [Tarifas Consumo]
+ *     tags: [Tarifas de Consumo]
  *     summary: Eliminar tarifa
  */
 router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
@@ -765,3 +765,7 @@ module.exports = router;
 // POST: /tarifas-consumo/comunidad/:comunidadId
 // PATCH: /tarifas-consumo/:id
 // DELETE: /tarifas-consumo/:id
+
+
+
+

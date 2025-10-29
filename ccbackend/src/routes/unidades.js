@@ -1,4 +1,3 @@
-// ...existing code...
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -8,7 +7,7 @@ const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Unidades
  *     description: Gestión de unidades
@@ -71,7 +70,7 @@ router.get('/:id/residentes', authenticate, async (req, res) => { const unidadId
 // ----- Additional endpoints generated from queries_unidades.sql -----
 
 /**
- * @openapi
+ * @swagger
  * /unidades:
  *   get:
  *     tags: [Unidades]
@@ -198,7 +197,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /unidades/{id}/summary:
  *   get:
  *     tags: [Unidades]
@@ -259,7 +258,7 @@ router.get('/:id/summary', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /unidades/{id}/cuentas:
  *   get:
  *     tags: [Unidades]
@@ -288,7 +287,7 @@ router.get('/:id/cuentas', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /unidades/cuentas/{cuentaId}/detalle:
  *   get:
  *     tags: [Unidades]
@@ -317,7 +316,7 @@ router.get('/cuentas/:cuentaId/detalle', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /unidades/{id}/pagos:
  *   get:
  *     tags: [Unidades]
@@ -356,7 +355,7 @@ router.get('/:id/pagos', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /unidades/{id}/medidores:
  *   get:
  *     tags: [Unidades]
@@ -404,7 +403,7 @@ router.get('/:id/medidores', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /unidades/dropdowns/comunidades:
  *   get:
  *     tags: [Unidades]
@@ -474,7 +473,7 @@ router.get('/search', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /unidades/search:
  *   get:
  *     tags: [Unidades]
@@ -503,7 +502,7 @@ router.get('/report/saldos', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /unidades/report/saldos:
  *   get:
  *     tags: [Unidades]
@@ -527,7 +526,7 @@ router.get('/validate/bodega', authenticate, async (req, res) => { try { const {
 router.get('/validate/estacionamiento', authenticate, async (req, res) => { try { const { comunidad_id, nro_estacionamiento } = req.query; const [rows] = await db.query('SELECT id, codigo FROM unidad WHERE comunidad_id = ? AND nro_estacionamiento = ? LIMIT 1', [comunidad_id, nro_estacionamiento]); res.json(rows.length ? rows[0] : null); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
 
 /**
- * @openapi
+ * @swagger
  * /unidades/validate/bodega:
  *   get:
  *     tags: [Unidades]
@@ -549,7 +548,7 @@ router.get('/validate/estacionamiento', authenticate, async (req, res) => { try 
  */
 
 /**
- * @openapi
+ * @swagger
  * /unidades/validate/estacionamiento:
  *   get:
  *     tags: [Unidades]
@@ -574,7 +573,7 @@ module.exports = router;
 
 // ----------------- WRITE endpoints (CRUD extras) -----------------
 /**
- * @openapi
+ * @swagger
  * /unidades/tenencias/{tenenciaId}:
  *   patch:
  *     tags: [Unidades]
@@ -1333,3 +1332,7 @@ router.post('/cuentas/:cuentaId/detalle', [authenticate, authorize('admin','supe
 // GET: /unidades/dropdowns/edificios
 // GET: /unidades/dropdowns/torres
 // GET: /unidades/dropdowns/unidades
+
+
+
+

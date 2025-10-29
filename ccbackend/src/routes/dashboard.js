@@ -5,7 +5,7 @@ const { authenticate } = require('../middleware/auth');
 const { requireCommunity } = require('../middleware/tenancy');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Dashboard
  *     description: Métricas y datos para el dashboard principal
@@ -16,7 +16,7 @@ const { requireCommunity } = require('../middleware/tenancy');
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/kpis:
  *   get:
  *     tags: [Dashboard]
@@ -47,7 +47,7 @@ router.get('/comunidad/:comunidadId/kpis', authenticate, requireCommunity('comun
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/saldo-total:
  *   get:
  *     tags: [Dashboard]
@@ -65,7 +65,7 @@ router.get('/comunidad/:comunidadId/saldo-total', authenticate, requireCommunity
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/ingresos-mes:
  *   get:
  *     tags: [Dashboard]
@@ -83,7 +83,7 @@ router.get('/comunidad/:comunidadId/ingresos-mes', authenticate, requireCommunit
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/gastos-mes:
  *   get:
  *     tags: [Dashboard]
@@ -101,7 +101,7 @@ router.get('/comunidad/:comunidadId/gastos-mes', authenticate, requireCommunity(
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/tasa-morosidad:
  *   get:
  *     tags: [Dashboard]
@@ -123,7 +123,7 @@ router.get('/comunidad/:comunidadId/tasa-morosidad', authenticate, requireCommun
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/grafico-emisiones:
  *   get:
  *     tags: [Dashboard]
@@ -167,7 +167,7 @@ router.get('/comunidad/:comunidadId/grafico-emisiones', authenticate, requireCom
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/grafico-estado-pagos:
  *   get:
  *     tags: [Dashboard]
@@ -214,7 +214,7 @@ router.get('/comunidad/:comunidadId/grafico-estado-pagos', authenticate, require
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/grafico-gastos-categoria:
  *   get:
  *     tags: [Dashboard]
@@ -255,7 +255,7 @@ router.get('/comunidad/:comunidadId/grafico-gastos-categoria', authenticate, req
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/pagos-recientes:
  *   get:
  *     tags: [Dashboard]
@@ -306,7 +306,7 @@ router.get('/comunidad/:comunidadId/pagos-recientes', authenticate, requireCommu
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/unidades-morosas:
  *   get:
  *     tags: [Dashboard]
@@ -357,7 +357,7 @@ router.get('/comunidad/:comunidadId/unidades-morosas', authenticate, requireComm
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/proximas-actividades:
  *   get:
  *     tags: [Dashboard]
@@ -406,7 +406,7 @@ router.get('/comunidad/:comunidadId/proximas-actividades', authenticate, require
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/reservas-amenidades:
  *   get:
  *     tags: [Dashboard]
@@ -466,7 +466,7 @@ router.get('/comunidad/:comunidadId/reservas-amenidades', authenticate, requireC
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/notificaciones:
  *   get:
  *     tags: [Dashboard]
@@ -561,7 +561,7 @@ router.get('/comunidad/:comunidadId/notificaciones', authenticate, requireCommun
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/efectividad-cobranza:
  *   get:
  *     tags: [Dashboard]
@@ -597,7 +597,7 @@ router.get('/comunidad/:comunidadId/efectividad-cobranza', authenticate, require
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/tendencia-ingresos:
  *   get:
  *     tags: [Dashboard]
@@ -640,7 +640,7 @@ router.get('/comunidad/:comunidadId/tendencia-ingresos', authenticate, requireCo
 });
 
 /**
- * @openapi
+ * @swagger
  * /api/dashboard/comunidad/{comunidadId}/resumen-completo:
  *   get:
  *     tags: [Dashboard]
@@ -922,3 +922,7 @@ module.exports = router;
 // GET: /dashboard/comunidad/:comunidadId/efectividad-cobranza
 // GET: /dashboard/comunidad/:comunidadId/tendencia-ingresos
 // GET: /dashboard/comunidad/:comunidadId/resumen-completo
+
+
+
+

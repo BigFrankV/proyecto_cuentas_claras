@@ -1,0 +1,856 @@
+Endpoints Existentes en la API
+1. Para apelaciones.tsx (Listado Principal)
+Este componente se encarga de mostrar la lista de todas las apelaciones.
+
+Endpoint Recomendado: GET /apelaciones
+
+Justificación: Este endpoint es ideal. Tu documentación Swagger indica que soporta paginación (page, limit) y filtros clave como estado ("pendiente", "resuelta", "rechazada") y search, que son fundamentales para un listado de este tipo.
+
+2. Para apelaciones-nueva.tsx (Formulario de Creación)
+Este componente es la página para crear una "Nueva Apelación".
+
+Endpoint Recomendado: POST /apelaciones
+
+Justificación: Es el endpoint de creación. Según la API, espera un multa_id y un motivo en el body, que son los datos que este formulario debe recolectar y enviar.
+
+3. Para [id].tsx (Vista de Detalle)
+Este componente carga y muestra los detalles de una apelación específica usando getApelacion(Number(id)).
+
+Endpoint Recomendado: GET /apelaciones/{id}
+
+Justificación: Es el endpoint perfecto para obtener un recurso único. El id de la URL se usa para consultar la API y obtener la información detallada de esa apelación en particular.
+
+4. Para editar.tsx (Formulario de Edición)
+Este componente es más complejo: primero carga los datos de una apelación y luego permite enviarlos.
+
+Endpoint (Para Cargar Datos): GET /apelaciones/{id}
+
+Justificación: El componente usa getApelacion(Number(id)) en un useEffect para rellenar el formulario con los datos existentes (motivo y documentos_json).
+
+Endpoint (Para Guardar Datos): (Ver sección de faltantes).
+
+Endpoints Adicionales Recomendados (Faltantes en la API)
+Tu código de React espera poder realizar más acciones de las que tu swagger.json documenta actualmente.
+
+1. Endpoint para Actualizar (Editar)
+Endpoint Sugerido: PATCH /apelaciones/{id} (o PUT /apelaciones/{id})
+
+Justificación: Tu archivo editar.tsx tiene una función handleSubmit que llama a updateApelacion(Number(id), form, token). Esto es una actualización. Sin embargo, la API no define un método PATCH o PUT para /apelaciones/{id}. Necesitas agregar este endpoint para que el formulario de edición pueda guardar los cambios en el motivo o documentos_json.
+
+2. Endpoint para Listar Multas Apelables
+Endpoint Sugerido: GET /multas/mis-multas?apelable=true (o similar)
+
+Justificación: El formulario apelaciones-nueva.tsx necesita enviar un multa_id (requerido por el POST /apelaciones). El usuario no puede adivinar ese ID. La UI necesitará mostrar un listado o un selector con las multas que el usuario puede apelar. La sección Multas de tu API no tiene endpoints definidos, por lo que este sería crucial.
+
+3. Endpoints para Cambiar Estado (Administración)
+Endpoint Sugerido: PATCH /apelaciones/{id}/resolver
+
+Justificación: El listado filtra por estado ("resuelta", "rechazada"), y la vista de detalle [id].tsx menciona onResolved. Esto implica que un administrador debe poder cambiar el estado de una apelación de "pendiente" a "resuelta" o "rechazada", probablemente añadiendo un comentario de resolución. No deberías usar el PATCH genérico para esto, sino un endpoint de acción específico.
+
+4. Endpoint para Eliminar
+Endpoint Sugerido: DELETE /apelaciones/{id}
+
+Justificación: Para completar el CRUD (Crear, Leer, Actualizar, Borrar), faltaría la opción de eliminar. Esto permitiría a un usuario (si aún está "pendiente") o a un administrador borrar una apelación.
+
+
+==========================================================
+
+Este es uno de los módulos con mayor desajuste entre lo que el frontend (React) espera y lo que la API ofrece actualmente. El componente bitacora.tsx es un log de auditoría de sistema muy avanzado, mientras que la API solo define un log de conserjería.
+
+Aquí tienes el desglose:
+
+1. Para bitacora.tsx (Listado Principal)
+Este componente es una vista de log de auditoría compleja que espera cargar estadísticas, filtrar por múltiples criterios (tipo, prioridad, fecha, texto) y mostrar un timeline.
+
+Endpoints Existentes (No coincidentes)
+Endpoint Existente: GET /api/reportes/comunidad/{comunidadId}/bitacora-conserjeria
+
+Justificación / Problema: Este es el único endpoint de bitácora que encontré en tu Swagger. Sin embargo, el componente bitacora.tsx no es una bitácora de conserjería.
+
+Análisis del Desajuste:
+
+Tipos de Log: Tu UI filtra por tipos (system, user, security, maintenance, admin, financial). El endpoint de "conserjería" probablemente no maneje estos tipos de auditoría de sistema.
+
+Prioridades: Tu UI filtra por prioridad (low, normal, high, critical). El endpoint de conserjería no parece soportar esto.
+
+Estadísticas: Tu UI necesita Stats Cards (Total, Hoy, Prioridad Alta, Críticas). El endpoint actual no provee estas estadísticas.
+
+💡 Endpoints Sugeridos (Faltantes en la API)
+Para que el componente bitacora.tsx funcione como está diseñado, necesitarías los siguientes endpoints:
+
+GET /bitacora/comunidad/{comunidadId} (o /bitacora si es global)
+
+Propósito: Este sería el endpoint principal para obtener la lista de actividades (activities).
+
+Filtros Requeridos (Query Params): Para que los filtros de la UI funcionen, este endpoint debe aceptar:
+
+search (para el texto de búsqueda)
+
+type (para filtrar por system, user, security, etc.)
+
+priority (para filtrar por low, normal, high, etc.)
+
+dateRange (o fecha_desde / fecha_hasta)
+
+page y limit (para la paginación)
+
+GET /bitacora/stats/{comunidadId}
+
+Propósito: Para poblar las "Stats Cards".
+
+Respuesta Esperada: Un JSON con la estructura { total: number, today: number, high: number, critical: number }.
+
+GET /bitacora/export
+
+Propósito: El componente tiene botones para exportar a CSV, Excel y PDF.
+
+Funcionamiento: Debería aceptar los mismos filtros que el GET principal (search, type, priority, etc.) y devolver el archivo generado.
+
+2. Para nueva.tsx (Formulario de Creación)
+Este componente es un formulario para crear manualmente una nueva entrada en la bitácora.
+
+Endpoints Existentes
+(Ninguno)
+
+💡 Endpoints Sugeridos (Faltantes en la API)
+POST /bitacora/comunidad/{comunidadId} (o /bitacora)
+
+Propósito: Es el endpoint fundamental que falta. La función handleSubmit en nueva.tsx necesita llamar a este endpoint para guardar la nueva entrada.
+
+Body (Schema) Requerido: Debería aceptar un JSON con:
+
+type (string)
+
+priority (string)
+
+title (string)
+
+description (string)
+
+tags (array de strings)
+
+attachments (array de IDs de archivos, ver punto siguiente)
+
+POST /api/files/upload (¡Este ya existe!)
+
+Propósito: El formulario nueva.tsx tiene una sección avanzada para subir archivos (drag and drop).
+
+Recomendación: No necesitas un endpoint nuevo para esto. El flujo de guardado en handleSubmit debería ser:
+
+Si el usuario adjuntó archivos, subirlos primero usando POST /api/files/upload (que ya está en tu Swagger).
+
+Recoger los IDs de los archivos subidos.
+
+Llamar a tu nuevo endpoint POST /bitacora e incluir esos IDs en el campo attachments.
+
+==========================================================
+
+
+Este módulo está muy bien cubierto por tu API. Cada componente de React tiene un endpoint casi idéntico esperando en la documentación.
+
+Aquí tienes el análisis detallado:
+
+Endpoints Existentes en la API
+1. Para cargos.tsx y cargos-simple.tsx (Listado General)
+Estos componentes actúan como la página principal del módulo, cargando un listado general de cargos (probablemente para un administrador).
+
+Endpoint Recomendado: GET /cargos/comunidad/{comunidadId}
+
+Justificación: Este es el endpoint principal para obtener la lista de todas las cuentas de cobro de una comunidad. Tu API indica que soporta filtros clave que un listado así necesita: estado, unidad, periodo y paginación (page, limit).
+
+2. Para [unidad].tsx (Cargos por Unidad)
+Este componente renderiza la página CargosUnidadPage, diseñada para mostrar el historial de cargos de una sola unidad.tsx].
+
+Endpoint Recomendado: GET /cargos/unidad/{id}
+
+Justificación: Es la coincidencia perfecta. El componente llama a cargosApi.getByUnidad(parseInt(unidad)).tsx], y este endpoint en tu API se define como "Obtener historial de cuentas de cobro de una unidad".
+
+3. Para [id].tsx (Detalle de Cargo)
+Este componente muestra la vista detallada de un cargo específico.tsx].
+
+Endpoint Recomendado: GET /cargos/{id}
+
+Justificación: Es el endpoint estándar para obtener un único recurso. El componente llama a cargosApi.getById(parseInt(id)).tsx], que coincide directamente con este endpoint.
+
+4. Para nuevo.tsx (Formulario de Creación)
+Este componente es la página NuevoCargoPage, un formulario para crear un nuevo cargo.
+
+Endpoint Recomendado: POST /cargos
+
+Justificación: Es una coincidencia exacta. El formulario recolecta concept, type, amount, dueDate y unit. El requestBody del endpoint POST /cargos en tu API espera exactamente esos mismos campos.
+
+Endpoints Adicionales Recomendados (CRUD y Sugerencias)
+Tu API ya cubre la mayoría de las necesidades de estos componentes, pero aquí tienes algunas sugerencias para completar el módulo y enriquecer las vistas.
+
+1. Endpoints Faltantes para un CRUD Completo
+Aunque tus archivos React actuales no tienen una página de "Editar" (como sí la tenía Apelaciones) o un botón de "Eliminar", un módulo de cargos inevitablemente los necesitará.
+
+PATCH /cargos/{id} (Sugerido)
+
+Propósito: Para crear una futura página cargos/editar/[id].tsx. Permitiría modificar un cargo existente (ej. cambiar el monto, la fecha de vencimiento o la descripción) si aún está en estado "pendiente".
+
+DELETE /cargos/{id} (Sugerido)
+
+Propósito: Para permitir que un administrador elimine un cargo que fue creado por error.
+
+2. Endpoints Sugeridos para Enriquecer las Vistas
+Tu API ya tiene endpoints que harían tus vistas de detalle y listado mucho más potentes:
+
+Para [id].tsx (Detalle de Cargo):
+
+GET /cargos/{id}/detalle: Tu API lo define como "Obtener detalle de gastos que componen un cargo". Sería ideal llamarlo dentro de la página de detalle para mostrar al usuario por qué se le está cobrando ese monto.
+
+GET /cargos/{id}/pagos: La API indica que esto obtiene los "pagos aplicados a un cargo". Es fundamental para la página de detalle, para mostrar el historial de pagos y el saldo restante de ese cargo específico.
+
+Para cargos.tsx (Listado General / Dashboard):
+
+GET /cargos/comunidad/{comunidadId}/estadisticas: Provee un resumen de total_cargos, saldo_total, cargos_pagados, cargos_pendientes, etc.. Perfecto para mostrar "Stats Cards" en la parte superior del listado.
+
+GET /cargos/comunidad/{comunidadId}/vencidos: Un endpoint dedicado para obtener un reporte de morosidad. Es una función clave en cualquier sistema de administración.
+
+==========================================================
+
+
+Este módulo es un excelente ejemplo de coincidencia entre tu frontend de React y la API. Tu swagger.json tiene endpoints específicos para casi todas las acciones que tus componentes necesitan realizar.
+
+Endpoints Existentes en la API
+1. Para categorias-gasto.tsx (Listado Principal)
+Este componente es una página de gestión completa: lista, filtra, muestra estadísticas y maneja la eliminación.
+
+GET /categorias-gasto:
+
+Coincidencia: Perfecta. Es el endpoint global para el listado. La función loadCategories debe usar este endpoint. La API soporta los filtros que tu UI tiene (nombre_busqueda, tipo_filtro, activa_filtro), que coinciden con los filtros de búsqueda, comunidad y estado del componente.
+
+GET /categorias-gasto/comunidad/{comunidadId}/dashboard/resumen:
+
+Coincidencia: Perfecta. Tu UI muestra "Stats Cards" de "Total Categorías" y "Categorías Activas". Este endpoint devuelve exactamente esos datos: total_categorias y categorias_activas.
+
+DELETE /categorias-gasto/{id}:
+
+Coincidencia: Perfecta. El componente tiene una función handleDeleteCategory y un modal de confirmación confirmDelete. Este es el endpoint que debe llamarse para eliminar la categoría seleccionada.
+
+2. Para nueva.tsx (Formulario de Creación)
+Este componente es la página para crear una nueva categoría, vinculada desde el botón "Nueva Categoría".
+
+POST /categorias-gasto/comunidad/{comunidadId}:
+
+Coincidencia: Perfecta. Este es el endpoint de creación. El formulario nueva.tsx (aunque es un placeholder) deberá recolectar nombre, tipo, cta_contable y activa, que son los campos que espera el requestBody de este endpoint.
+
+Nota: El frontend necesitará obtener el {comunidadId} (probablemente del usuario logueado o un selector) para poder llamar a este endpoint.
+
+3. Para editar.tsx y [id].tsx (Formulario de Edición)
+Estos archivos implementan la página para editar una categoría existente.
+
+GET /categorias-gasto/{id}:
+
+Coincidencia: Perfecta. El componente usa categoriasGastoApi.getById(Number(id)) en un useEffect para cargar los datos de la categoría y rellenar el formulario. Esto coincide exactamente con este endpoint.
+
+PATCH /categorias-gasto/{id}:
+
+Coincidencia: Perfecta. La función handleSubmit del componente llama a categoriasGastoApi.update(categoria.id, updateData). Esto se asigna directamente al endpoint PATCH de la API, y el requestBody (nombre, tipo, cta_contable, activa) coincide con el objeto updateData que construye el código.
+
+Endpoints Adicionales Recomendados (Sugerencias)
+Tu API ya es muy completa para este módulo. Más que endpoints faltantes, te sugiero cómo usar otros endpoints que ya existen para hacer tu UI más robusta:
+
+GET /categorias-gasto/{id}/tiene-gastos (Sugerido para Validación):
+
+Propósito: Este endpoint de tu API verifica si una categoría ya tiene gastos asociados.
+
+Recomendación: En categorias-gasto.tsx, antes de activar el botón "Eliminar" o dentro de la función handleDeleteCategory, deberías llamar a este endpoint. Si devuelve true, puedes deshabilitar la eliminación o mostrar un mensaje de advertencia mucho más claro (ej. "Esta categoría no se puede eliminar porque ya está siendo usada en N gastos").
+
+GET /categorias-gasto/comunidad/{comunidadId}/activas (Sugerido para otros Módulos):
+
+Propósito: La API define este endpoint como "Lista de categorías activas para dropdowns".
+
+Recomendación: Aunque no se usa en este módulo, es el endpoint perfecto que deberás consumir en módulos como Gastos (cuando crees o edites un gasto) para poblar el selector de "Categoría".
+
+
+==========================================================
+
+
+Este es otro módulo donde tu API está muy bien preparada para las necesidades de tu frontend.
+
+Endpoints Existentes en la API
+1. Para centros-costo.tsx (Listado Principal)
+Este componente es la página principal que muestra estadísticas, filtros y un listado de todos los centros de costo.
+
+GET /centros-costo/comunidad/{comunidadId}/filtrar:
+
+Coincidencia: Perfecta. Es el endpoint ideal para la función loadCentros. La API lo describe como "Listado con filtros avanzados y estadísticas", y tu UI implementa CentroFilters (filtros de búsqueda y comunidad).
+
+GET /centros-costo/comunidad/{comunidadId}/dashboard/resumen:
+
+Coincidencia: Perfecta. El componente CentroStats espera datos como total, active, presupuestoTotal y ejecutado. Este endpoint, "Resumen de centros de costo para dashboard", es el indicado para proveer esas estadísticas.
+
+DELETE /centros-costo/{id}:
+
+Coincidencia: Perfecta. El componente tiene un modal de confirmación (showDeleteModal) y una función confirmDeleteCentro que llama a deleteCentro(selectedCentro.id). Esto coincide directamente con este endpoint de la API.
+
+2. Para nuevo.tsx (Formulario de Creación)
+Este componente es un formulario muy detallado para crear un nuevo centro de costo, con campos para presupuesto, responsabilidades, ícono y color.
+
+POST /centros-costo/comunidad/{comunidadId}:
+
+Coincidencia: Perfecta. La función handleSubmit (actualmente simulada) debe llamar a este endpoint. La API lo define como "Crear nuevo centro de costo" y el formulario recolecta todos los datos que el requestBody necesitaría (nombre, departamento, presupuesto, etc.).
+
+3. Para [id].tsx (Vista de Detalle)
+Este componente muestra la información detallada de un centro de costo, incluyendo su presupuesto, ejecución y una lista de "Gastos Recientes".tsx].
+
+GET /centros-costo/{id}/detalle:
+
+Coincidencia: Perfecta. Ideal para la función loadCostCenter.tsx]. La API lo define como "Detalle completo de un centro de costo con estadísticas", lo cual incluye la información de presupuesto y ejecución que la UI necesita.tsx].
+
+GET /centros-costo/{id}/gastos:
+
+Coincidencia: Perfecta. La función loadExpenses.tsx] necesita poblar la lista de "Gastos Recientes". Este endpoint, "Gastos asociados al centro de costo", está diseñado exactamente para eso.
+
+Endpoints Adicionales Recomendados (Sugerencias)
+Tu API ya cubre casi todo. Las siguientes son sugerencias para completar el flujo y mejorar la seguridad de las acciones.
+
+1. Endpoint para la Página de Edición
+PATCH /centros-costo/{id}:
+
+Propósito: Aunque no subiste el archivo editar.tsx para este módulo, tanto el listado (handleEditCenter) como el detalle (handleEdit).tsx] tienen botones de "Editar" que redirigen a la página de edición.
+
+Recomendación: Esa página de edición (ej. /centros-costo/editar/[id].tsx) deberá usar este endpoint, que ya existe en tu API, para guardar los cambios.
+
+2. Endpoint para Validación (Mejora de UX)
+GET /centros-costo/{id}/tiene-gastos:
+
+Propósito: Tu API ya tiene este endpoint que verifica si un centro de costo tiene gastos asociados.
+
+Recomendación: En centros-costo.tsx, antes de activar el botón "Eliminar" o dentro de la función handleDeleteCentro, deberías llamar a este endpoint. Si devuelve true, puedes mostrar una advertencia más clara o deshabilitar la eliminación para prevenir la pérdida de datos históricos.
+
+3. Endpoint para Selects/Dropdowns
+GET /centros-costo/comunidad/{comunidadId}/dropdown:
+
+Propósito: Endpoint existente en la API para obtener una "Lista de centros de costo para dropdowns".
+
+Recomendación: Este endpoint será fundamental cuando construyas el módulo de Gastos, ya que el formulario para crear un gasto necesitará poblar un selector de "Centro de Costo".
+
+
+==========================================================
+
+
+Este componente muestra un listado avanzado de compras con estadísticas, filtros y una tabla.
+
+Endpoint Recomendado (Existente): GET /compras
+
+Justificación: Este endpoint es una coincidencia perfecta para el listado. La función loadPurchases usa filtros como search, tipo_doc, fecha_desde y fecha_hasta, que son exactamente los parámetros que define este endpoint en tu Swagger.
+
+Endpoint Faltante (Sugerido): DELETE /compras/{id}
+
+Justificación: Tu UI tiene una función handleDeletePurchase y un modal de confirmación para eliminar una compra. Sin embargo, tu API no define un endpoint DELETE para la ruta /compras/{id}.
+
+Nota: La API sí tiene un DELETE /documentos-compra/{id}, pero esto parece ser para un concepto diferente. Necesitarás un endpoint DELETE que coincida con el GET /compras.
+
+2. Para nuevo.tsx (Formulario de Creación)
+Este es un formulario muy complejo para crear una nueva "Solicitud de Compra". Recolecta tipo, prioridad, proveedor, centro de costo, categoría, justificación y una lista de ítems de compra (descripción, cantidad, precio unitario, etc.).
+
+Endpoint Existente: (Ninguno coincide)
+
+Análisis del Desajuste: El único endpoint de creación relacionado es POST /documentos-compra/comunidad/{comunidadId}. Este endpoint espera un documento simple (folio, total, neto, iva), no una orden de compra compleja con múltiples ítems y un flujo de aprobación como la que tu formulario nuevo.tsx está creando.
+
+Endpoints Faltantes (Sugeridos):
+
+POST /compras/comunidad/{comunidadId} (CRÍTICO)
+
+Justificación: Este es el endpoint fundamental que falta. La función handleSubmit necesita un endpoint que acepte el objeto complejo de "Nueva Compra".
+
+Schema (Body) Requerido: Debería aceptar un JSON similar a lo que define el formulario: tipo, prioridad, proveedor_id, centro_costo_id, categoria_id, descripcion, fecha_requerida, moneda, justificacion, y un array de items: [...].
+
+GET /api/proveedores/comunidad/{comunidadId}/dropdown (Recomendado)
+
+Justificación: El formulario nuevo.tsx necesita cargar una lista de proveedores para el selector. Este endpoint de tu API está diseñado exactamente para eso ("Lista simple para selects/dropdowns").
+
+GET /centros-costo/comunidad/{comunidadId}/dropdown (Recomendado)
+
+Justificación: El formulario nuevo.tsx necesita cargar centros de costo. Este endpoint de tu API es perfecto para poblar ese selector.
+
+GET /categorias-gasto/comunidad/{comunidadId}/activas (Recomendado)
+
+Justificación: El formulario nuevo.tsx necesita cargar categorías de gasto. Este endpoint de tu API ("Lista de categorías activas para dropdowns") es el indicado.
+
+3. Para [id].tsx (Vista de Detalle)
+Este componente muestra un detalle completo de la compra, incluyendo ítems, proveedor, centro de costo y un historial. También tiene lógica para Aprobar, Rechazar y Editar la compra.tsx].
+
+Endpoint Existente (Parcial): GET /documentos-compra/{id}
+
+Justificación: El código llama a comprasApi.getById(Number(id)).tsx]. Este es el único endpoint de detalle (GET por ID) que existe en la API relacionado con compras.
+
+Análisis del Desajuste: La UI espera una gran cantidad de datos (ítems, historial, estado de aprobación).tsx] que un simple "documento de compra" (como una factura) podría no tener.
+
+Endpoints Faltantes (Sugeridos):
+
+GET /compras/{id}/detalle (Sugerido)
+
+Justificación: Sería ideal un endpoint que devuelva el objeto "Compra" completo, incluyendo la lista de ítems, el historial de aprobación y los detalles del proveedor/centro de costo, tal como la UI espera.tsx].
+
+PATCH /compras/{id} (Sugerido)
+
+Justificación: La UI tiene un botón "Editar".tsx]. La página de edición (que probablemente sea compras/editar/[id].tsx) necesitará un endpoint PATCH para guardar los cambios. La API tiene PATCH /documentos-compra/{id}, pero de nuevo, es probable que se necesite uno para el objeto "Compra" completo.
+
+POST /compras/{id}/aprobar (CRÍTICO)
+
+Justificación: La UI tiene un modal y una función handleApprove.tsx]. Esta es una acción de flujo de trabajo que requiere su propio endpoint para cambiar el estado de la compra.
+
+POST /compras/{id}/rechazar (CRÍTICO)
+
+Justificación: Similar al anterior, la función handleReject.tsx] necesita un endpoint para registrar el rechazo y el motivo.
+
+POST /compras/{id}/nota (Sugerido)
+
+Justificación: La UI tiene una función addNote que agrega eventos a un "Historial" (Timeline).tsx]. Se necesita un endpoint para registrar estas notas en la base de datos.
+
+
+==========================================================
+
+
+Este es el módulo núcleo de tu aplicación y tu swagger.json tiene una cobertura excelente para él. Cada acción que tus componentes de React intentan realizar tiene un endpoint lógico esperando en la API.
+
+Endpoints Existentes en la API
+1. Para comunidades.tsx (Listado Principal)
+Este componente muestra un listado de comunidades con filtros y dos modos de vista (tarjetas y tabla). La lógica clave aquí es que un superadmin ve todas las comunidades, mientras que un usuario normal ve solo sus comunidades.
+
+GET /comunidades:
+
+Coincidencia: Perfecta (para Superadmin). Este endpoint lista todas las comunidades con estadísticas. Es el que debe llamar la función loadComunidades cuando user.is_superadmin es true. Los filtros de la UI (busqueda) coinciden con los parámetros de la API (nombre, direccion).
+
+GET /comunidades/mis-membresias:
+
+Coincidencia: Recomendado (para Usuarios No-Admin). El código actual planea cargar todas las comunidades y filtrarlas localmente basado en user.memberships. Esto es ineficiente. Este endpoint de la API, "Obtener membresías del usuario actual", está diseñado precisamente para este caso de uso y es mucho más óptimo.
+
+DELETE /comunidades/{id}:
+
+Coincidencia: Perfecta. El componente implementa una función handleDelete que requiere confirmación. Este es el endpoint que debe llamar dicha función.
+
+2. Para nueva.tsx (Formulario de Creación y Edición)
+Este componente es un formulario multi-paso que sirve tanto para crear como para editar una comunidad, dependiendo de si id está presente en la URL.
+
+POST /comunidades:
+
+Coincidencia: Perfecta (para Creación). La función handleSubmit (cuando isEditing es false) debe llamar a este endpoint. El requestBody de la API (razon_social, rut, dv, direccion, email_contacto, telefono_contacto) coincide con los campos del formData del Paso 1 (nombre, rut, dv, direccion, email, telefono).
+
+GET /comunidades/{id}:
+
+Coincidencia: Perfecta (para Cargar Datos en Edición). Cuando isEditing es true, el useEffect llama a loadComunidadData. Esta función debe usar este endpoint para obtener los datos de la comunidad y rellenar el formulario.
+
+PATCH /comunidades/{id}:
+
+Coincidencia: Perfecta (para Guardar Edición). La función handleSubmit (cuando isEditing es true) debe llamar a este endpoint para guardar los cambios.
+
+3. Para [id].tsx (Vista de Detalle)
+Este es un componente de dashboard muy complejo con múltiples pestañas que cargan datos dinámicamente.tsx]. Tu API está perfectamente preparada para esto.
+
+GET /comunidades/{id}:
+
+Coincidencia: Perfecta (Carga Inicial). Se usa en la función loadComunidad.tsx] para obtener la información principal (nombre, dirección, KPIs del header como totalUnidades, saldoPendiente, morosidad).tsx].
+
+GET /comunidades/{id}/amenidades:
+
+Coincidencia: Perfecta (Pestaña "Resumen"). La función loadAmenidades.tsx] se llama para poblar la tarjeta de "Amenidades" dentro de la pestaña de resumen. Este endpoint es el indicado.
+
+GET /comunidades/{id}/edificios:
+
+Coincidencia: Perfecta (Pestaña "Estructura"). La función loadEdificios.tsx] se activa al hacer clic en la pestaña "Estructura" y debe usar este endpoint.
+
+GET /comunidades/{id}/residentes:
+
+Coincidencia: Perfecta (Pestaña "Residentes"). La función loadResidentes.tsx] se activa para la pestaña "Residentes" y coincide exactamente con este endpoint.
+
+GET /comunidades/{id}/estadisticas:
+
+Coincidencia: Perfecta (Pestaña "Finanzas"). La función loadEstadisticas.tsx] se usa para poblar los KPIs y el "Resumen del Mes" en la pestaña de finanzas.tsx, swagger.json].
+
+GET /comunidades/{id}/documentos:
+
+Coincidencia: Perfecta (Pestaña "Documentos"). La función loadDocumentos.tsx] se activa para la pestaña "Documentos" y este es el endpoint que debe consumir.
+
+Endpoints Adicionales y Sugerencias
+GET /comunidades/{id}/flujo-caja (Sugerido):
+
+Propósito: En la pestaña "Finanzas" de [id].tsx, tienes un placeholder para un gráfico de "Flujo de Caja - Últimos 6 Meses".tsx]. Tu API ya tiene el endpoint perfecto para esto. Deberías llamar a este endpoint junto con loadEstadisticas para poblar ese gráfico.
+
+GET /comunidades/{id}/parametros (Sugerido):
+
+Propósito: La vista de detalle [id].tsx tiene un botón de "Acciones" que linkea a "Parámetros de cobranza".tsx]. La página de destino (ej. comunidades/[id]/parametros) debe usar este endpoint de la API para cargar y guardar esa configuración.
+
+Mejora de Filtros (Sugerido):
+
+Propósito: Tu listado comunidades.tsx filtra por tipo y estado localmente.
+
+Recomendación: Sería más eficiente si el backend soportara estos filtros. Te sugiero modificar el endpoint GET /comunidades para que acepte ?tipo= y ?estado= como query parameters, permitiendo un filtrado más rápido del lado del servidor.
+
+
+==========================================================
+
+
+Endpoints Existentes en la API
+1. Para conciliaciones.tsx (Listado Principal)
+Este componente muestra el listado de todas las conciliaciones, filtros y tarjetas de estadísticas.
+
+GET /conciliaciones:
+
+Coincidencia: Perfecta. Es el endpoint principal para el listado. La función loadConciliaciones llama a conciliacionesApi.getAll(filters), que coincide directamente con este endpoint paginado.
+
+GET /conciliaciones/comunidad/{comunidadId}/estadisticas:
+
+Coincidencia: Recomendado. Tu UI calcula las estadísticas (total, conciliadas, pendientes) localmente en el frontend. Sería mucho más eficiente usar este endpoint de la API para obtener esas "Stats Cards" directamente desde el backend.
+
+GET /conciliaciones/comunidad/{comunidadId}/por-estado:
+
+Coincidencia: Alternativa. Es una alternativa al endpoint anterior si solo necesitas las estadísticas agrupadas por estado.
+
+2. Para nueva.tsx (Formulario de Creación)
+Este es un asistente complejo de 4 pasos para crear una nueva conciliación, subir un archivo, procesarlo y revisarlo.
+
+POST /conciliaciones/comunidad/{comunidadId}:
+
+Coincidencia: Perfecta. Este es el endpoint que se debe llamar en el Paso 1 (Configuración Inicial) o al final del proceso para "Guardar Borrador". Creará el registro principal de la conciliación.
+
+POST /api/files/upload (de la sección "Files"):
+
+Coincidencia: Perfecta. Este endpoint (que ya existe en tu API) es el que debe usarse en el Paso 2 (Carga de Archivos) para subir el estado bancario (Excel/CSV).
+
+PATCH /conciliaciones/{id}:
+
+Coincidencia: Perfecta. Este endpoint se usa para "Actualizar estado de conciliación". Es ideal para el botón final "Completar Conciliación", que cambiaría el estado de "pendiente" a "conciliado".
+
+3. Para [id].tsx (Vista de Detalle)
+Este componente muestra el resumen, estadísticas y la lista de transacciones de una conciliación específica.tsx].
+
+GET /conciliaciones/{id}:
+
+Coincidencia: Perfecta. Es el endpoint principal para "Obtener conciliación por ID con detalle completo". La UI carga los datos (mockConciliacion).tsx] y este endpoint provee exactamente esa información.
+
+GET /conciliaciones/comunidad/{comunidadId}/pendientes:
+
+Coincidencia: Recomendado. Este endpoint de la API lista "Movimientos bancarios pendientes de conciliación". Es perfecto para poblar la pestaña "Diferencias" en tu UI.tsx].
+
+💡 Endpoints Sugeridos (Faltantes en la API)
+Tu UI, especialmente en los pasos de revisión, implica una granularidad que la API actual no detalla.
+
+PATCH /conciliaciones/transaccion/{txId} (CRÍTICO)
+
+Propósito: Tu UI en nueva.tsx (Paso 4) y en [id].tsx (pestaña Transacciones).tsx] muestra una lista de transacciones individuales con su estado (matched, unmatched, manual).tsx, nueva.tsx].
+
+Justificación: Necesitarás un endpoint para que el usuario pueda cambiar manualmente el estado de una única transacción (ej. "marcar como conciliada", "asignar a..."). Los endpoints existentes .../{id}/conciliar y .../descartar parecen operar sobre toda la conciliación, no sobre una línea individual.
+
+PATCH /conciliaciones/{id}/notas (Sugerido)
+
+Propósito: La vista de detalle [id].tsx tiene un modal para "Editar Notas".tsx].
+
+Justificación: El endpoint PATCH /conciliaciones/{id} existente solo menciona "Actualizar estado". Sería bueno tener un endpoint específico para actualizar campos de texto como las notas, o confirmar que el PATCH genérico también las acepta.
+
+GET /bancos/cuentas (Sugerido)
+
+Propósito: El formulario nueva.tsx tiene una lista hardcodeada de bancos y cuentas (Banco de Chile, Santander, etc.).
+
+Justificación: Esto debería venir de la API para que sea dinámico. Un endpoint que devuelva las cuentas bancarias configuradas para la comunidad sería ideal.
+
+
+==========================================================
+
+
+Este es el módulo que presenta el mayor desajuste entre tu frontend de React y la API swagger.json. Tu frontend espera un sistema completo de Gestión Documental (DMS) con metadatos, categorías, niveles de acceso, versionamiento y comentarios.
+
+Tu API actual, en cambio, tiene dos secciones que no coinciden con esto:
+
+Files (📁): Es un servicio genérico para subir y descargar archivos (POST /api/files/upload, GET /api/files/{id}). No gestiona los metadatos (categoría, acceso, tags, etc.) que tu UI requiere.
+
+DocumentosCompra (📄): Está enfocado en facturas y documentos tributarios, no en la gestión de documentos generales como "Reglamentos" o "Actas".
+
+Básicamente, el backend tiene un "disco duro" (la API Files), pero el frontend espera una "aplicación" completa (un DMS) que aún no está definida en la API.
+
+Aquí está el desglose de lo que necesitarías:
+
+Endpoints Existentes (Para Usos Específicos)
+POST /api/files/upload
+
+Coincidencia: Perfecta. Este es el endpoint que debes usar en nueva.tsx y editar.tsx para subir el archivo binario (PDF, DOCX, etc.). La UI de drag-and-drop debe llamar a este endpoint primero.
+
+GET /comunidades/{id}/documentos
+
+Coincidencia: Parcial. Este es el único endpoint que parece estar destinado a listar documentos. El listado documentos.tsx podría usarlo.
+
+Problema: El swagger.json no define el response de este endpoint. No sabemos si devuelve la rica metadata (categoría, acceso, tags, versión) que la UI espera.
+
+GET /api/files/{id}
+
+Coincidencia: Perfecta (para descargar). En [id].tsx, el botón "Descargar".tsx] debe llamar a este endpoint. No sirve para cargar los detalles de la página, solo para obtener el archivo.
+
+DELETE /api/files/{id}
+
+Coincidencia: Perfecta (para eliminar). La función handleDelete en documentos.tsx debe llamar a este endpoint para eliminar el archivo.
+
+💡 Endpoints Sugeridos (Faltantes en la API)
+Para que tu frontend funcione como está diseñado, necesitarías crear una nueva sección en la API (ej. /documentos) que gestione toda la metadata. El flujo sería: 1) Subir archivo a /api/files/upload y obtener un fileId, 2) Guardar metadata en /documentos usando ese fileId.
+
+1. Para documentos.tsx (Listado)
+GET /documentos/comunidad/{comunidadId} (Sugerido)
+
+Justificación: Se necesita un endpoint de listado que devuelva el objeto completo de metadatos (nombre, categoría, acceso, tags, versión, fileId) que la UI de documentos.tsx espera para poder filtrar y mostrar. El GET /comunidades/{id}/documentos existente podría ser este, pero necesitaría confirmación de su response.
+
+2. Para nueva.tsx (Creación)
+POST /documentos (CRÍTICO)
+
+Justificación: Este es el endpoint más crítico que falta. Después de subir el archivo a POST /api/files/upload, la función handleSubmit de nueva.tsx necesita llamar a este endpoint para guardar toda la metadata recolectada en el formulario (nombre, descripción, categoría, acceso, tags, y el ID del archivo subido).
+
+3. Para [id].tsx (Detalle)
+GET /documentos/{id} (CRÍTICO)
+
+Justificación: El useEffect en [id].tsx.tsx] necesita un endpoint para obtener toda la metadata de un solo documento (nombre, descripción, tags, notas, etc.).tsx].
+
+GET /documentos/{id}/versions (CRÍTICO)
+
+Justificación: La pestaña "Versiones" en [id].tsx.tsx] necesita este endpoint para cargar el historial de versiones del documento.
+
+GET /documentos/{id}/comments (CRÍTICO)
+
+Justificación: La pestaña "Comentarios".tsx] necesita este endpoint para cargar los comentarios.
+
+POST /documentos/{id}/comments (CRÍTICO)
+
+Justificación: La función handleAddComment.tsx] necesita este endpoint para publicar un nuevo comentario.
+
+4. Para editar.tsx (Edición)
+GET /documentos/{id} (CRÍTICO)
+
+Justificación: El useEffect en editar.tsx necesita este endpoint para cargar los datos existentes en el formulario.
+
+PATCH /documentos/{id} (CRÍTICO)
+
+Justificación: La función handleSubmit (cuando no se sube un archivo nuevo) necesita este endpoint para guardar los cambios en la metadata (nombre, descripción, categoría, acceso).
+
+POST /documentos/{id}/versions (CRÍTICO)
+
+Justificación: La función handleSubmit (cuando sí se sube un archivo nuevo) necesita este endpoint para crear un nuevo registro de versión, asociando el nuevo fileId (obtenido de POST /api/files/upload) al documento.
+
+
+==========================================================
+
+Debo señalar que existe un desajuste conceptual importante aquí:
+
+Frontend (Tus archivos .tsx): Están diseñados como un sistema de Gestión Documental general (DMS). Permiten subir cualquier tipo de archivo (PDF, DOCX, etc.) y asociarle metadatos como categoría (legal, financiero), nivel de acceso, etiquetas, versiones y comentarios.tsx, documentos.tsx].
+
+Backend (API DocumentosCompra): Está específicamente diseñado para gestionar documentos estructurados de compra, como facturas o boletas. Espera campos específicos como proveedor_id, tipo_doc, folio, fecha_emision, total, neto, iva, etc.. No maneja la subida directa de archivos binarios ni la metadata general que tu frontend espera (categorías generales, acceso, versiones, comentarios).
+
+Tus componentes React actuales no se pueden conectar directamente a los endpoints DocumentosCompra tal como están. Sin embargo, puedo indicarte qué endpoints de DocumentosCompra usarías si adaptaras tu frontend para trabajar con este tipo de documentos estructurados:
+
+Endpoints Existentes en la API (DocumentosCompra)
+1. Para un Listado de Documentos de Compra (Adaptando documentos.tsx)
+Endpoint Recomendado: GET /documentos-compra/comunidad/{comunidadId}
+
+Justificación: Este endpoint lista los documentos de compra de una comunidad con paginación (page, limit).
+
+⚠️ Desajuste: Tu UI documentos.tsx tiene filtros mucho más avanzados (búsqueda por texto, categoría general, nivel de acceso, etiquetas) que este endpoint no soporta según el Swagger. Tampoco devuelve estadísticas ni maneja acciones masivas.
+
+2. Para Crear un Nuevo Documento de Compra (Adaptando nuevo.tsx)
+Endpoint Recomendado: POST /documentos-compra/comunidad/{comunidadId}
+
+Justificación: Es el endpoint para crear un nuevo registro de documento de compra.
+
+⚠️ Desajuste: Tu formulario nuevo.tsx está diseñado para subir un archivo y añadir metadata general. Este endpoint no acepta archivos, sino campos estructurados (proveedor_id, tipo_doc, folio, fecha_emision, neto, iva, total, glosa). Necesitarías un formulario completamente diferente.
+
+3. Para Ver el Detalle de un Documento de Compra (Adaptando [id].tsx)
+Endpoint Recomendado: GET /documentos-compra/{id}
+
+Justificación: Obtiene los detalles de un documento de compra específico.
+
+⚠️ Desajuste: Tu vista de detalle [id].tsx muestra metadata general, historial de versiones, comentarios y adjuntos.tsx]. Este endpoint probablemente devuelva solo los campos estructurados del documento de compra (folio, montos, proveedor), no versiones, comentarios, ni la metadata general.
+
+4. Para Editar un Documento de Compra (Adaptando editar.tsx)
+Endpoint Recomendado: PATCH /documentos-compra/{id}
+
+Justificación: Permite actualizar los campos de un documento de compra existente.
+
+⚠️ Desajuste: Tu formulario editar.tsx edita la metadata general y permite subir una nueva versión del archivo. Este endpoint actualiza campos estructurados (proveedor_id, tipo_doc, folio, etc.) y no maneja subida de archivos ni versionamiento.
+
+5. Para Eliminar un Documento de Compra (Adaptando documentos.tsx o [id].tsx)
+Endpoint Recomendado: DELETE /documentos-compra/{id}
+
+Coincidencia: Buena. Este endpoint elimina un registro de documento de compra. Podrías llamarlo desde la acción de eliminar en tu listado o vista de detalle.
+
+💡 Funcionalidades Faltantes en la API (DocumentosCompra) para Coincidir con el Frontend
+Si quisieras que la API DocumentosCompra soportara las funcionalidades de tu frontend actual (lo cual cambiaría su propósito de documentos estructurados a gestión documental general), necesitarías añadir endpoints similares a los que mencioné en la respuesta anterior sobre "Documentos":
+
+Endpoints para adjuntar archivos: Asociar los archivos subidos (usando POST /api/files/upload) con el registro del documento de compra.
+
+Endpoints para metadatos: Guardar y recuperar campos como categoría general, nivel de acceso, etiquetas.
+
+Endpoints para versionamiento: Gestionar el historial de versiones de los archivos adjuntos.
+
+Endpoints para comentarios: Guardar y recuperar comentarios asociados al documento.
+
+Filtros avanzados: Modificar el GET /documentos-compra/comunidad/{comunidadId} para soportar búsqueda por texto y filtros por metadatos.
+
+Endpoints de estadísticas: Para poblar las "Stats Cards".
+
+En resumen, los componentes que proporcionaste son para un sistema diferente al que la sección DocumentosCompra de tu API define actualmente.
+
+==========================================================
+
+
+Endpoints Existentes en la API
+1. Para edificios.tsx (Listado Principal)
+Este componente es la página principal para listar edificios, con filtros, estadísticas y vistas de tabla/tarjetas.
+
+GET /edificios:
+
+Coincidencia: Perfecta. Es el endpoint principal para la función fetchEdificios. Tu API indica que soporta filtros por search, comunidadId y estado, que coinciden con los filtros de búsqueda, estado y tipo que usa tu UI.
+
+GET /edificios/stats:
+
+Coincidencia: Perfecta. Tu UI calcula las estadísticas (totalEdificios, edificiosActivos, totalUnidades, ocupacion) localmente. Sería más eficiente usar este endpoint de la API para obtener esas "Stats Cards" directamente.
+
+DELETE /edificios/{id}:
+
+Coincidencia: Perfecta. El componente tiene una función handleDeleteEdificio. Este es el endpoint que debe llamar.
+
+2. Para nuevo.tsx (Formulario de Creación)
+Este componente es un formulario detallado para crear un nuevo edificio.
+
+POST /edificios:
+
+Coincidencia: Perfecta. La función handleSubmit llama a createEdificio(formData). Este es el endpoint correspondiente. El requestBody esperado en la API (nombre, direccion, comunidadId, etc.) coincide con los campos recolectados por el formulario.
+
+GET /edificios/comunidades-opciones:
+
+Coincidencia: Perfecta. El formulario necesita cargar la lista de comunidades para el selector. Este endpoint está diseñado para eso.
+
+3. Para editar.tsx (Formulario de Edición)
+Este componente carga los datos de un edificio y permite actualizarlos.
+
+GET /edificios/{id}:
+
+Coincidencia: Perfecta. La función loadData usa getEdificioById(id) para rellenar el formulario. Coincide exactamente con este endpoint.
+
+PATCH /edificios/{id}:
+
+Coincidencia: Perfecta. La función handleSubmit llama a updateEdificio(id, formData). Este es el endpoint para actualizaciones parciales.
+
+PUT /edificios/{id}:
+
+Coincidencia: Alternativa. Si la edición siempre envía todos los campos, podrías usar PUT en lugar de PATCH. Tu API define ambos.
+
+GET /edificios/comunidades-opciones:
+
+Coincidencia: Necesario. Al igual que en nuevo.tsx, este endpoint se necesita para poblar el selector de comunidades.
+
+4. Para [id].tsx (Vista de Detalle)
+Este es un componente complejo con pestañas para mostrar información detallada del edificio, sus torres, unidades y servicios.tsx].
+
+GET /edificios/{id}:
+
+Coincidencia: Perfecta (Carga Inicial y Pestaña Info). Se usa en loadEdificioData.tsx] para obtener los datos principales del edificio (nombre, dirección, estadísticas rápidas, detalles técnicos, contacto) que se muestran en el header y la pestaña "Información".tsx, swagger.json].
+
+GET /edificios/{id}/torres:
+
+Coincidencia: Perfecta (Pestaña Torres). La función fetchTorres.tsx] se llama para poblar la pestaña "Torres". Este es el endpoint exacto.
+
+GET /edificios/{id}/unidades:
+
+Coincidencia: Perfecta (Pestaña Unidades). La función fetchUnidades.tsx] se activa para la pestaña "Unidades" y debe usar este endpoint.
+
+DELETE /edificios/{id}:
+
+Coincidencia: Perfecta. El modal showDeleteModal y la función handleDeleteEdificio.tsx] deben llamar a este endpoint para eliminar.
+
+💡 Endpoints Sugeridos y Mejoras
+POST /edificios/{id}/torres (Faltante en Vista Detalle):
+
+Justificación: La pestaña "Torres" en [id].tsx tiene un botón "Nueva Torre".tsx]. Actualmente, tu API solo define POST /edificios/{id}/torres bajo el tag Edificios, pero sería bueno confirmarlo o añadirlo explícitamente si falta, para poder crear torres desde la vista de detalle del edificio.
+
+POST /edificios/{id}/unidades (Faltante en Vista Detalle):
+
+Justificación: Similar al anterior, la pestaña "Unidades" en [id].tsx tiene un botón "Nueva Unidad".tsx]. La API tiene POST /edificios/{id}/unidades, necesario para esta funcionalidad.
+
+GET /edificios/{id}/servicios o Campo en GET /edificios/{id}:
+
+Justificación: La pestaña "Servicios" en [id].tsx muestra los servicios y amenidades.tsx]. Actualmente, el GET /edificios/{id} principal no parece devolver explícitamente servicios y amenidades según el schema de swagger.json. Deberías:
+
+Opción A (Preferida): Modificar el response de GET /edificios/{id} para que incluya los arrays servicios y amenidades.
+
+Opción B: Crear un nuevo endpoint GET /edificios/{id}/servicios-amenidades para cargarlos por separado.
+
+Validación de Código (GET /edificios/{id}/validar-codigo):
+
+Propósito: Tu API ya tiene este endpoint útil.
+
+Recomendación: Podrías usarlo en los formularios nuevo.tsx y editar.tsx para verificar en tiempo real si el código ingresado ya existe, mejorando la experiencia del usuario antes de enviar el formulario.
+
+
+==========================================================
+
+
+Endpoints Existentes en la API
+1. Para los Elementos Generales de la UI
+Mensaje de Bienvenida:
+
+GET /auth/me: Para obtener el user.username.
+
+Selector de Comunidad:
+
+GET /comunidades o GET /comunidades/mis-membresias: Para poblar el dropdown de comunidades (actualmente "Edificio Las Palmas").
+
+Notificaciones:
+
+GET /api/notificaciones/comunidad/{comunidadId}/pendientes: Ideal para obtener el contador de notificaciones no leídas.
+
+GET /api/notificaciones/comunidad/{comunidadId}: Para poblar la lista desplegable de notificaciones.
+
+2. Para las Tarjetas de KPIs (Key Performance Indicators)
+Tu UI muestra: Saldo Total, Ingresos del Mes, Gastos del Mes y Tasa de Morosidad, incluyendo un % de cambio respecto al mes anterior.
+
+Opción A (Endpoint Consolidado - Recomendado):
+
+GET /api/dashboard/comunidad/{comunidadId}/kpis: La descripción "Obtener todos los KPIs principales del dashboard" sugiere que este endpoint podría devolver todos los valores necesarios en una sola llamada, posiblemente incluyendo la comparación con el mes anterior.
+
+Opción B (Endpoints Individuales): Si el endpoint consolidado no incluye todo o prefieres llamadas separadas:
+
+GET /api/dashboard/comunidad/{comunidadId}/saldo-total: Para el Saldo Total.
+
+GET /api/dashboard/comunidad/{comunidadId}/ingresos-mes: Para los Ingresos del Mes.
+
+GET /api/dashboard/comunidad/{comunidadId}/gastos-mes: Para los Gastos del Mes.
+
+GET /api/dashboard/comunidad/{comunidadId}/tasa-morosidad: Para la Tasa de Morosidad.
+
+Nota: Necesitarías verificar si estos endpoints individuales también devuelven la comparación porcentual con el mes anterior, o si tendrías que calcularla tú mismo (quizás llamando al endpoint del mes anterior también).
+
+3. Para los Gráficos (<DashboardCharts />)
+El componente DashboardCharts probablemente necesite datos de tendencias o distribuciones. Tu API ofrece varios endpoints específicos para gráficos:
+
+GET /api/dashboard/comunidad/{comunidadId}/grafico-emisiones: Tendencia de emisiones (últimos 6 meses).
+
+GET /api/dashboard/comunidad/{comunidadId}/grafico-estado-pagos: Distribución de estado de pagos.
+
+GET /api/dashboard/comunidad/{comunidadId}/grafico-gastos-categoria: Gastos por categoría (mes actual).
+
+GET /api/dashboard/comunidad/{comunidadId}/tendencia-ingresos: Tendencia de crecimiento de ingresos.
+
+4. Para las Tablas y Listas
+Pagos Recientes:
+
+GET /api/dashboard/comunidad/{comunidadId}/pagos-recientes: Coincidencia perfecta. Acepta un parámetro limit.
+
+Unidades con Morosidad:
+
+GET /api/dashboard/comunidad/{comunidadId}/unidades-morosas: Coincidencia perfecta. Acepta un parámetro limit.
+
+Próximas Actividades:
+
+GET /api/dashboard/comunidad/{comunidadId}/proximas-actividades: Coincidencia perfecta. Acepta un parámetro limit.
+
+Reservas de Amenidades:
+
+GET /api/dashboard/comunidad/{comunidadId}/reservas-amenidades: Coincidencia perfecta. Acepta un parámetro limit.
+
+⭐ Opción Óptima (Endpoint Único)
+GET /api/dashboard/comunidad/{comunidadId}/resumen-completo:
+
+Descripción: "Resumen completo del dashboard (todos los datos en una sola llamada)".
+
+Recomendación: Este es probablemente el endpoint más eficiente. Deberías investigar su respuesta para ver si incluye todos los datos necesarios (KPIs, datos para gráficos, listas recientes). Si es así, podrías cargar casi todo el dashboard con una sola llamada a la API, lo cual es ideal para el rendimiento.
+
+En resumen, la sección /api/dashboard/ de tu API está muy bien alineada con tu componente dashboard.tsx. Tienes endpoints específicos para casi cada sección, y un endpoint consolidado que podría ser la mejor opción.

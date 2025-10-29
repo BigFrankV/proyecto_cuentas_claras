@@ -1,4 +1,3 @@
-// ...existing code...
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -1822,3 +1821,7 @@ module.exports = router;
 // GET: /gastos/dashboard/resumen-mensual/:comunidadId
 // GET: /gastos/dashboard/top-categorias-mes/:comunidadId
 // GET: /gastos/dashboard/alertas-gastos-altos/:comunidadId
+
+
+
+

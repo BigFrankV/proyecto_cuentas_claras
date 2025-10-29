@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
-import Sidebar from '@/components/layout/Sidebar';
 import { Chart, registerables } from 'chart.js';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+
+import Sidebar from '@/components/layout/Sidebar';
 
 Chart.register(...registerables);
 
+// eslint-disable-next-line no-undef
 export default function ConsumosPage(): JSX.Element {
   const mainRef = useRef<HTMLCanvasElement | null>(null);
   const monthlyRef = useRef<HTMLCanvasElement | null>(null);
@@ -13,26 +15,140 @@ export default function ConsumosPage(): JSX.Element {
   const [weeklyChart, setWeeklyChart] = useState<Chart | null>(null);
   const [comparisonMode, setComparisonMode] = useState(false);
 
+  // Estados para datos de la API
+  interface MensualItem {
+    mes: string;
+    consumo_total_unidad: number;
+    precio_unitario: number;
+    cargo_fijo_mensual: number;
+    costo_mensual: number;
+  }
+  interface TrimestralItem {
+    trimestre: string;
+    consumo_total_trimestral: number;
+  }
+  interface SemanalItem {
+    dia_semana: number;
+    promedio_consumo_diario: number;
+  }
+  interface Estadisticas {
+    total_consumo_periodo: number;
+    promedio_consumo_mensual: number;
+    costo_total_periodo: number;
+  }
+  interface DetalleItem {
+    periodo: string;
+    consumo_calculado: number;
+    precio_unitario: number;
+    cargo_fijo: number;
+    costo: number;
+  }
+
+  const [mensualData, setMensualData] = useState<MensualItem[]>([]);
+  const [trimestralData, setTrimestralData] = useState<TrimestralItem[]>([]);
+  const [semanalData, setSemanalData] = useState<SemanalItem[]>([]);
+  const [estadisticas, setEstadisticas] = useState<Estadisticas>({
+    total_consumo_periodo: 0,
+    promedio_consumo_mensual: 0,
+    costo_total_periodo: 0,
+  });
+  const [detalleData, setDetalleData] = useState<DetalleItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [medidorId, setMedidorId] = useState(1);
+  const [periodoInicio, setPeriodoInicio] = useState('2024-01');
+  const [periodoFin, setPeriodoFin] = useState('2025-12');
+  const [periodoActual, setPeriodoActual] = useState<'month' | 'quarter' | 'year'>('month');
+
+  // Función para mapear mes YYYY-MM a abreviatura
+  const mapMesToLabel = (mes: string) => {
+    const parts = mes.split('-');
+    if (parts.length !== 2) {
+      return mes;
+    }
+    const year = parts[0];
+    const monthStr = parts[1];
+    if (!monthStr) {return mes;}
+    const month = parseInt(monthStr, 10);
+    const months = [
+      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+    ];
+    return `${months[month - 1] || 'Des'} ${year}`;
+  };
+
+  // Función para mapear día de semana numérico a nombre
+  const mapDiaSemana = (dia: number) => {
+    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    return dias[dia - 1] || 'Desconocido';
+  };
+
+  // Fetch data from API
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const baseUrl = 'http://localhost:3000/consumos';
+      const params = `medidor_id=${medidorId}&periodo_inicio=${periodoInicio}&periodo_fin=${periodoFin}`;
+      const [mensualRes, trimestralRes, semanalRes, estadisticasRes, detalleRes] = await Promise.all([
+        fetch(`${baseUrl}/mensual?${params}`),
+        fetch(`${baseUrl}/trimestral?${params}`),
+        fetch(`${baseUrl}/semanal?medidor_id=${medidorId}`),
+        fetch(`${baseUrl}/estadisticas?${params}`),
+        fetch(`${baseUrl}/detalle?${params}`),
+      ]);
+
+      const mensual: MensualItem[] = await mensualRes.json();
+      const trimestral: TrimestralItem[] = await trimestralRes.json();
+      const semanal: SemanalItem[] = await semanalRes.json();
+      const stats: Estadisticas = await estadisticasRes.json();
+      const detalle: DetalleItem[] = await detalleRes.json();
+
+      setMensualData(mensual);
+      setTrimestralData(trimestral);
+      setSemanalData(semanal);
+      setEstadisticas(stats);
+      setDetalleData(detalle);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [medidorId, periodoInicio, periodoFin]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   useEffect(() => {
     // Try to initialize flatpickr if available (optional)
-    // Initialize flatpickr if available globally (e.g. via CDN). We avoid importing the package
-    // because it's not included in dependencies by default in this project.
     try {
-      const w = window as any;
+      const w = window as unknown as { flatpickr?: unknown };
       if (typeof w.flatpickr === 'function') {
-        w.flatpickr('#dateRange', {
+        (w.flatpickr as any)('#dateRange', {
           mode: 'range',
           dateFormat: 'd/m/Y',
-          locale: w.flatpickr?.l10ns?.es || undefined,
+          locale: (w.flatpickr as any)?.l10ns?.es || undefined,
           defaultDate: ['01/01/2024', '15/09/2024'],
+          onChange: (selectedDates: Date[]) => {
+            if (selectedDates.length === 2 && selectedDates[0] && selectedDates[1]) {
+              const start = selectedDates[0];
+              const end = selectedDates[1];
+              const startStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
+              const endStr = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}`;
+              setPeriodoInicio(startStr);
+              setPeriodoFin(endStr);
+            }
+          },
         });
       }
-    } catch (err) {
+    } catch {
       // ignore if flatpickr is not present
     }
 
-    // initialize charts
-    initializeCharts();
+    // initialize charts after data is loaded
+    if (!loading) {
+      initializeCharts();
+    }
 
     return () => {
       // cleanup charts
@@ -41,25 +157,28 @@ export default function ConsumosPage(): JSX.Element {
       weeklyChart?.destroy();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loading, mensualData, trimestralData, semanalData]);
 
   function initializeCharts() {
     if (mainRef.current) {
-      // If an existing Chart is attached to this canvas, destroy it first to avoid reuse error
-      const existingMain = Chart.getChart(mainRef.current as any);
+      const existingMain = Chart.getChart(mainRef.current as unknown as HTMLCanvasElement);
       if (existingMain) {
         existingMain.destroy();
       }
       const ctx = mainRef.current.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        return;
+      }
+      const labels = mensualData.map((item) => mapMesToLabel(item.mes));
+      const data = mensualData.map((item) => item.consumo_total_unidad);
       const c = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep'],
+          labels,
           datasets: [
             {
               label: 'Consumo (kWh)',
-              data: [134, 145, 167, 156, 98, 145, 156, 142, 168, 189, 142, 125],
+              data,
               backgroundColor: 'rgba(253, 93, 20, 0.8)',
               borderColor: 'rgb(253, 93, 20)',
               borderWidth: 1,
@@ -81,17 +200,23 @@ export default function ConsumosPage(): JSX.Element {
     }
 
     if (monthlyRef.current) {
-      const existingMonthly = Chart.getChart(monthlyRef.current as any);
-      if (existingMonthly) existingMonthly.destroy();
+      const existingMonthly = Chart.getChart(monthlyRef.current as unknown as HTMLCanvasElement);
+      if (existingMonthly) {
+        existingMonthly.destroy();
+      }
       const ctx = monthlyRef.current.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        return;
+      }
+      const labels = trimestralData.map((item) => item.trimestre);
+      const data = trimestralData.map((item) => item.consumo_total_trimestral);
       const c = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+          labels,
           datasets: [
             {
-              data: [450, 466, 456, 475],
+              data,
               backgroundColor: ['#FFB74D', '#4FC3F7', '#CE93D8', '#A5D6A7'],
             },
           ],
@@ -102,18 +227,24 @@ export default function ConsumosPage(): JSX.Element {
     }
 
     if (weeklyRef.current) {
-      const existingWeekly = Chart.getChart(weeklyRef.current as any);
-      if (existingWeekly) existingWeekly.destroy();
+      const existingWeekly = Chart.getChart(weeklyRef.current as unknown as HTMLCanvasElement);
+      if (existingWeekly) {
+        existingWeekly.destroy();
+      }
       const ctx = weeklyRef.current.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        return;
+      }
+      const labels = semanalData.map((item) => mapDiaSemana(item.dia_semana));
+      const data = semanalData.map((item) => item.promedio_consumo_diario);
       const c = new Chart(ctx, {
         type: 'radar',
         data: {
-          labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+          labels,
           datasets: [
             {
               label: 'Promedio kWh/día',
-              data: [5.2, 5.8, 5.1, 5.9, 6.2, 4.8, 3.2],
+              data,
               borderColor: 'rgb(253, 93, 20)',
               backgroundColor: 'rgba(253, 93, 20, 0.2)',
               pointBackgroundColor: 'rgb(253, 93, 20)',
@@ -127,53 +258,52 @@ export default function ConsumosPage(): JSX.Element {
   }
 
   function changeChartType(type: 'bar' | 'line' | 'area') {
-    if (!mainChart) return;
+    if (!mainChart) {
+      return;
+    }
     const chart = mainChart;
     if (type === 'area' || type === 'line') {
-      // Chart.js types are strict — cast to any for runtime mutation
-      (chart as any).config.type = 'line';
-      // @ts-ignore
-      chart.data.datasets[0].fill = type === 'area';
+      (chart as unknown as { config: { type: string } }).config.type = 'line';
+      (chart.data.datasets[0] as unknown as { fill: boolean }).fill = type === 'area';
     } else {
-      (chart as any).config.type = 'bar';
-      // @ts-ignore
-      chart.data.datasets[0].fill = false;
+      (chart as unknown as { config: { type: string } }).config.type = 'bar';
+      (chart.data.datasets[0] as unknown as { fill: boolean }).fill = false;
     }
     chart.update();
   }
 
   function applyFilters(e?: React.MouseEvent) {
-    if (e) e.preventDefault();
-    // Simulate filter application
-    const btn = (e?.currentTarget as HTMLButtonElement) || null;
-    if (btn) {
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Aplicando...';
-      btn.setAttribute('disabled', 'true');
-      setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.removeAttribute('disabled');
-        if (mainChart) {
-          const newData = Array.from({ length: 12 }, () => Math.floor(Math.random() * 200) + 50);
-          // @ts-ignore
-          mainChart.data.datasets[0].data = newData;
-          mainChart.update();
-        }
-        // eslint-disable-next-line no-alert
-        alert('Filtros aplicados correctamente');
-      }, 1200);
-    } else {
-      if (mainChart) {
-        const newData = Array.from({ length: 12 }, () => Math.floor(Math.random() * 200) + 50);
-        // @ts-ignore
-        mainChart.data.datasets[0].data = newData;
-        mainChart.update();
-      }
+    if (e) {
+      e.preventDefault();
+    }
+    fetchData(); // Refetch data with current filters
+  }
+
+  function changePeriodo(periodo: 'month' | 'quarter' | 'year') {
+    setPeriodoActual(periodo);
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    if (periodo === 'month') {
+      const startMonth = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      const endMonth = startMonth;
+      setPeriodoInicio(startMonth);
+      setPeriodoFin(endMonth);
+    } else if (periodo === 'quarter') {
+      const quarter = Math.ceil(currentMonth / 3);
+      const startMonth = `${currentYear}-${String((quarter - 1) * 3 + 1).padStart(2, '0')}`;
+      const endMonth = `${currentYear}-${String(quarter * 3).padStart(2, '0')}`;
+      setPeriodoInicio(startMonth);
+      setPeriodoFin(endMonth);
+    } else if (periodo === 'year') {
+      setPeriodoInicio(`${currentYear}-01`);
+      setPeriodoFin(`${currentYear}-12`);
     }
   }
 
   function exportData(format: 'excel' | 'pdf' | 'csv') {
-    const formatNames: any = { excel: 'Excel', pdf: 'PDF', csv: 'CSV' };
+    const formatNames: Record<string, string> = { excel: 'Excel', pdf: 'PDF', csv: 'CSV' };
     // eslint-disable-next-line no-alert
     alert(`Exportando datos en formato ${formatNames[format]}...`);
     setTimeout(() => {
@@ -191,27 +321,18 @@ export default function ConsumosPage(): JSX.Element {
       if (mainChart) {
         mainChart.data.datasets.push({
           label: 'Período Anterior',
-          // @ts-ignore
           data: [145, 134, 178, 145, 123, 156, 167, 134, 156, 178, 156, 134],
           backgroundColor: 'rgba(108, 117, 125, 0.5)',
           borderColor: 'rgb(108, 117, 125)',
           borderWidth: 1,
-        } as any);
-        // @ts-ignore
-        mainChart.options.plugins = mainChart.options.plugins || {};
-        // @ts-ignore
-        mainChart.options.plugins.legend = { display: true };
+        });
+        (mainChart.options.plugins as unknown as { legend: { display: boolean } }).legend = { display: true };
         mainChart.update();
       }
     } else {
       if (mainChart) {
-        // remove comparison dataset
-        // @ts-ignore
         mainChart.data.datasets = mainChart.data.datasets.slice(0, 1);
-        // @ts-ignore
-        mainChart.options.plugins = mainChart.options.plugins || {};
-        // @ts-ignore
-        mainChart.options.plugins.legend = { display: false };
+        (mainChart.options.plugins as unknown as { legend: { display: boolean } }).legend = { display: false };
         mainChart.update();
       }
     }
@@ -237,7 +358,7 @@ export default function ConsumosPage(): JSX.Element {
                 <div className="d-flex align-items-center">
                   <a href="/medidores" className="btn btn-outline-secondary me-2">Volver a Medidores</a>
                   <div>
-                    <small className="text-muted">Medidor seleccionado: <strong>Medidor 001</strong></small>
+                    <small className="text-muted">Medidor seleccionado: <strong>Medidor {String(medidorId).padStart(3, '0')}</strong></small>
                   </div>
                 </div>
               </div>
@@ -270,9 +391,10 @@ export default function ConsumosPage(): JSX.Element {
                 <h5 className="mb-3"><span className="material-icons me-2">filter_list</span>Filtros</h5>
                 <div className="mb-3">
                   <label className="form-label">Medidor</label>
-                  <select id="meterSelect" className="form-select">
-                    <option value="all">Todos</option>
-                    <option value="001">Medidor 001</option>
+                  <select id="meterSelect" className="form-select" value={medidorId} onChange={(e) => setMedidorId(parseInt(e.target.value, 10))}>
+                    <option value={1}>Medidor 001</option>
+                    <option value={2}>Medidor 002</option>
+                    <option value={3}>Medidor 003</option>
                   </select>
                 </div>
                 <div className="mb-3">
@@ -285,9 +407,9 @@ export default function ConsumosPage(): JSX.Element {
                 <div className="mb-3">
                   <label className="form-label">Período</label>
                   <div className="period-selector">
-                    <button className="period-btn" data-period="month" onClick={(e) => { document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active')); (e.currentTarget as HTMLElement).classList.add('active'); }}>Mes</button>
-                    <button className="period-btn" data-period="quarter" onClick={(e) => { document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active')); (e.currentTarget as HTMLElement).classList.add('active'); }}>Trimestre</button>
-                    <button className="period-btn" data-period="year" onClick={(e) => { document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active')); (e.currentTarget as HTMLElement).classList.add('active'); }}>Año</button>
+                    <button className={`period-btn ${periodoActual === 'month' ? 'active' : ''}`} onClick={() => changePeriodo('month')}>Mes</button>
+                    <button className={`period-btn ${periodoActual === 'quarter' ? 'active' : ''}`} onClick={() => changePeriodo('quarter')}>Trimestre</button>
+                    <button className={`period-btn ${periodoActual === 'year' ? 'active' : ''}`} onClick={() => changePeriodo('year')}>Año</button>
                   </div>
                 </div>
                 <div className="d-grid">
@@ -297,19 +419,19 @@ export default function ConsumosPage(): JSX.Element {
 
               <div className="stats-grid mt-3">
                 <div className="stat-card">
-                  <div className="stat-value">1,847</div>
+                  <div className="stat-value">{estadisticas.total_consumo_periodo}</div>
                   <div className="stat-label">kWh Total</div>
                   <div className="stat-change positive">+4.2% vs mes anterior</div>
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-value">154</div>
+                  <div className="stat-value">{estadisticas.promedio_consumo_mensual}</div>
                   <div className="stat-label">kWh Promedio/Mes</div>
                   <div className="stat-change negative">-1.1% vs periodo</div>
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-value">$567,230</div>
+                  <div className="stat-value">${estadisticas.costo_total_periodo}</div>
                   <div className="stat-label">Costo Total</div>
                   <div className="stat-change positive">-2.5% vs periodo</div>
                 </div>
@@ -385,25 +507,20 @@ export default function ConsumosPage(): JSX.Element {
                         <th>Fecha</th>
                         <th>Medidor</th>
                         <th>Consumo</th>
-                        <th>Período</th>
+                        <th>Costo</th>
                         <th>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>01/09/2025</td>
-                        <td>Medidor 001</td>
-                        <td>34 m3</td>
-                        <td>Mensual</td>
-                        <td><button className="btn btn-sm btn-outline-secondary">Ver</button></td>
-                      </tr>
-                      <tr>
-                        <td>01/08/2025</td>
-                        <td>Medidor 001</td>
-                        <td>28 m3</td>
-                        <td>Mensual</td>
-                        <td><button className="btn btn-sm btn-outline-secondary">Ver</button></td>
-                      </tr>
+                      {detalleData.map((item, index) => (
+                        <tr key={index}>
+                          <td>{item.periodo}</td>
+                          <td>Medidor {medidorId}</td>
+                          <td>{item.consumo_calculado} m³</td>
+                          <td>${item.costo.toFixed(2)}</td>
+                          <td><button className="btn btn-sm btn-outline-secondary">Ver</button></td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>

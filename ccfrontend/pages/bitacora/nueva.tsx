@@ -4,6 +4,8 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import { ActivityTypeCard, PriorityOption, ActivityBadge, PriorityBadge, FileIcon } from '@/components/bitacora';
+import bitacoraService from '@/lib/api/bitacora';
+import { useCurrentComunidad } from '@/hooks/useComunidad';
 
 interface UploadedFile {
   id: string;
@@ -14,6 +16,7 @@ interface UploadedFile {
 
 export default function BitacoraNueva() {
   const router = useRouter();
+  const comunidadId = useCurrentComunidad();
   
   // Form state
   const [selectedType, setSelectedType] = useState<string>('');
@@ -25,6 +28,7 @@ export default function BitacoraNueva() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Auto-save draft
   useEffect(() => {
@@ -132,23 +136,51 @@ export default function BitacoraNueva() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedType || !selectedPriority || !title.trim()) {
-      alert('Por favor completa todos los campos obligatorios');
+      setError('Por favor completa todos los campos obligatorios');
+      return;
+    }
+
+    if (!comunidadId) {
+      setError('No se pudo determinar la comunidad actual');
       return;
     }
 
     setSaving(true);
+    setError(null);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const activityData: any = {
+        type: selectedType,
+        priority: selectedPriority,
+        title: title.trim(),
+      };
+
+      if (description.trim()) {
+        activityData.description = description.trim();
+      }
+
+      if (tags.length > 0) {
+        activityData.tags = tags;
+      }
+
+      if (uploadedFiles.length > 0) {
+        activityData.attachments = uploadedFiles;
+      }
+
+      await bitacoraService.createActivity(comunidadId, activityData);
+
       // Clear draft
       localStorage.removeItem('bitacora_draft');
-      
-      setSaving(false);
-      alert('Entrada de bitácora creada exitosamente');
+
+      // Redirect to bitacora list
       router.push('/bitacora');
-    }, 2000);
+    } catch {
+      setError('Error al crear la entrada de bitácora');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const activityTypes = [
@@ -199,6 +231,13 @@ export default function BitacoraNueva() {
               </button>
             </div>
           </div>
+
+          {error && (
+            <div className='alert alert-danger' role='alert'>
+              <i className='material-icons me-2'>error</i>
+              {error}
+            </div>
+          )}
 
           <div className='row'>
             <div className='col-lg-8'>

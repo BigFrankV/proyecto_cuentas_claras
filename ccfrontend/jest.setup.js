@@ -1,4 +1,7 @@
+/// <reference types="jest" />
+
 import '@testing-library/jest-dom';
+import jest from 'jest-mock';
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
@@ -15,6 +18,8 @@ global.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
 };
+
+/// <reference types="jest" />
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -57,7 +62,7 @@ jest.mock('chart.js', () => ({
 
 // Mock react-chartjs-2
 jest.mock('react-chartjs-2', () => ({
-  Doughnut: () => <div data-testid='doughnut-chart'>Doughnut Chart</div>,
-  Line: () => <div data-testid='line-chart'>Line Chart</div>,
-  Bar: () => <div data-testid='bar-chart'>Bar Chart</div>,
+  Doughnut: () => null,
+  Line: () => null,
+  Bar: () => null,
 }));

@@ -119,8 +119,13 @@ export async function getProveedores(comunidadId: number | null): Promise<any[]>
 
 // Aprobaciones
 export async function getAprobaciones(gastoId: number): Promise<any[]> {
-  const res = await apiClient.get(`/gastos/${gastoId}/aprobaciones`);
-  return res.data;
+  try {
+    const res = await apiClient.get(`/gastos/${gastoId}/aprobaciones`);
+    return res.data;
+  } catch (err: any) {
+    console.error('getAprobaciones error:', err?.response?.status, err?.response?.data || err.message);
+    return []; // tolerancia: devolver vacío para no romper la UI
+  }
 }
 
 export async function createAprobacion(gastoId: number, data: { accion: 'aprobar' | 'rechazar'; observaciones?: string }) {

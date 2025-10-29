@@ -6,14 +6,14 @@ const { authenticate } = require('../middleware/auth');
 const { authorize, allowSelfOrRoles } = require('../middleware/authorize');
 
 /**
- * @openapi
+ * @swagger
  * tags:
  *   - name: Personas
  *     description: Gestión de personas
  */
 
 /**
- * @openapi
+ * @swagger
  * /personas:
  *   get:
  *     tags: [Personas]
@@ -326,7 +326,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas:
  *   post:
  *     tags: [Personas]
@@ -368,7 +368,7 @@ router.post('/', [authenticate, authorize('admin','superadmin'), body('rut').not
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/{id}:
  *   get:
  *     tags: [Personas]
@@ -467,7 +467,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/{id}:
  *   patch:
  *     tags: [Personas]
@@ -508,7 +508,7 @@ router.patch('/:id', authenticate, allowSelfOrRoles('id', 'admin','superadmin'),
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/{id}:
  *   put:
  *     tags: [Personas]
@@ -564,7 +564,7 @@ router.put('/:id', [authenticate, allowSelfOrRoles('id', 'admin','superadmin'), 
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/{id}:
  *   delete:
  *     tags: [Personas]
@@ -594,7 +594,7 @@ router.delete('/:id', authenticate, allowSelfOrRoles('id', 'admin','superadmin')
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/estadisticas:
  *   get:
  *     tags: [Personas]
@@ -660,7 +660,7 @@ router.get('/estadisticas', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/{id}/unidades:
  *   get:
  *     tags: [Personas]
@@ -723,7 +723,7 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/{id}/pagos:
  *   get:
  *     tags: [Personas]
@@ -782,7 +782,7 @@ router.get('/:id/pagos', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/{id}/actividad:
  *   get:
  *     tags: [Personas]
@@ -840,7 +840,7 @@ router.get('/:id/actividad', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/{id}/documentos:
  *   get:
  *     tags: [Personas]
@@ -899,7 +899,7 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/{id}/notas:
  *   get:
  *     tags: [Personas]
@@ -965,7 +965,7 @@ router.get('/:id/notas', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/{id}/roles:
  *   get:
  *     tags: [Personas]
@@ -1010,7 +1010,7 @@ router.get('/:id/roles', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/{id}/resumen-financiero:
  *   get:
  *     tags: [Personas]
@@ -1056,7 +1056,7 @@ router.get('/:id/resumen-financiero', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/validar:
  *   get:
  *     tags: [Personas]
@@ -1117,7 +1117,7 @@ router.get('/validar', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /personas/unidades/autocompletar:
  *   get:
  *     tags: [Personas]
@@ -1217,3 +1217,7 @@ module.exports = router;
 // // UTILIDADES Y VALIDACIÓN
 // GET: /personas/validar
 // GET: /personas/unidades/autocompletar
+
+
+
+

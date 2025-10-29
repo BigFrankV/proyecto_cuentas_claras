@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router';
 import {
   useState,
   useEffect,
@@ -5,12 +6,13 @@ import {
   useContext,
   ReactNode,
 } from 'react';
-import { useRouter } from 'next/router';
-import authService, { User, AuthResponse } from './auth'; // ✅ CORREGIR IMPORT
+
+import authService, { User, AuthResponse } from './auth'; 
 
 // Tipos para el contexto de autenticación
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (identifier: string, password: string, totp_code?: string) => Promise<AuthResponse>; // ✅ AGREGAR totp_code
@@ -30,84 +32,101 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Verificar autenticación al cargar la app
   useEffect(() => {
+    const logout = async () => {
+      console.log('🚪 Iniciando proceso de logout...');
+      try {
+        await authService.logout();
+        console.log('✅ Logout exitoso en servidor');
+      } catch (error) {
+        console.error('❌ Error en logout del servidor:', error);
+      } finally {
+        console.log('🧹 Limpiando estado local...');
+        setUser(null);
+        console.log('🏠 Redirigiendo a página de inicio...');
+        router.push('/');
+      }
+    };
+
+    const checkAuthStatus = async () => {
+      console.log('🔍 Verificando estado de autenticación...');
+      
+      // Debug del estado actual
+      authService.debugAuthState();
+      
+      try {
+        // Primero verificar si tenemos un token válido
+        if (!authService.isAuthenticated()) {
+          console.log('❌ No hay token válido o está expirado');
+          setUser(null);
+          return;
+        }
+
+        console.log('✅ Token válido encontrado en localStorage');
+        
+        // Intentar obtener datos del usuario desde localStorage
+        const userData = authService.getUserData();
+        if (userData) {
+          console.log('✅ Datos de usuario encontrados en localStorage:', userData);
+          // ✅ NUEVO: Log de memberships para debug
+          if (userData.memberships) {
+            console.log('🏢 Membresías del usuario:', userData.memberships);
+          }
+          setUser(userData);
+          
+          // Verificar con el servidor para sincronizar datos
+          try {
+            const currentUser = await authService.getCurrentUser();
+            if (currentUser) {
+              console.log('✅ Usuario verificado con servidor:', currentUser);
+              // ✅ NUEVO: Log de memberships actualizadas
+              if (currentUser.memberships) {
+                console.log('🏢 Membresías actualizadas del servidor:', currentUser.memberships);
+              }
+              // Actualizar datos con información completa del servidor
+              const updatedUserData = { ...userData, ...currentUser };
+              setUser(updatedUserData);
+              // Actualizar localStorage con datos completos
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('user_data', JSON.stringify(updatedUserData));
+              }
+            } else {
+              console.log('⚠️ Servidor no reconoce el token, manteniendo datos locales');
+            }
+          } catch (serverError: any) {
+            console.log('⚠️ Error verificando con servidor:', serverError.message);
+            if (serverError.response?.status === 401) {
+              console.log('❌ Token inválido según servidor, limpiando sesión');
+              await logout();
+              return;
+            }
+            // Si es otro tipo de error, mantener datos locales
+            console.log('⚠️ Manteniendo sesión local por error de conectividad');
+          }
+        } else {
+          console.log('❌ No se encontraron datos de usuario en localStorage');
+          // Si hay token pero no datos de usuario, limpiar todo
+          await logout();
+        }
+      } catch (error) {
+        console.error('❌ Error verificando autenticación:', error);
+        // Si hay error, limpiar datos
+        await logout();
+      } finally {
+        setIsLoading(false);
+        console.log('🔍 Verificación de autenticación completada');
+      }
+    };
+
     checkAuthStatus();
   }, []);
 
-  const checkAuthStatus = async () => {
-    console.log('🔍 Verificando estado de autenticación...');
-    
-    // Debug del estado actual
-    authService.debugAuthState();
-    
-    try {
-      // Primero verificar si tenemos un token válido
-      if (!authService.isAuthenticated()) {
-        console.log('❌ No hay token válido o está expirado');
-        setUser(null);
-        return;
-      }
-
-      console.log('✅ Token válido encontrado en localStorage');
-      
-      // Intentar obtener datos del usuario desde localStorage
-      const userData = authService.getUserData();
-      if (userData) {
-        console.log('✅ Datos de usuario encontrados en localStorage:', userData);
-        // ✅ NUEVO: Log de memberships para debug
-        if (userData.memberships) {
-          console.log('🏢 Membresías del usuario:', userData.memberships);
-        }
-        setUser(userData);
-        
-        // Verificar con el servidor para sincronizar datos
-        try {
-          const currentUser = await authService.getCurrentUser();
-          if (currentUser) {
-            console.log('✅ Usuario verificado con servidor:', currentUser);
-            // ✅ NUEVO: Log de memberships actualizadas
-            if (currentUser.memberships) {
-              console.log('🏢 Membresías actualizadas del servidor:', currentUser.memberships);
-            }
-            // Actualizar datos con información completa del servidor
-            const updatedUserData = { ...userData, ...currentUser };
-            setUser(updatedUserData);
-            // Actualizar localStorage con datos completos
-            localStorage.setItem('user_data', JSON.stringify(updatedUserData));
-          } else {
-            console.log('⚠️ Servidor no reconoce el token, manteniendo datos locales');
-          }
-        } catch (serverError: any) {
-          console.log('⚠️ Error verificando con servidor:', serverError.message);
-          if (serverError.response?.status === 401) {
-            console.log('❌ Token inválido según servidor, limpiando sesión');
-            await logout();
-            return;
-          }
-          // Si es otro tipo de error, mantener datos locales
-          console.log('⚠️ Manteniendo sesión local por error de conectividad');
-        }
-      } else {
-        console.log('❌ No se encontraron datos de usuario en localStorage');
-        // Si hay token pero no datos de usuario, limpiar todo
-        await logout();
-      }
-    } catch (error) {
-      console.error('❌ Error verificando autenticación:', error);
-      // Si hay error, limpiar datos
-      await logout();
-    } finally {
-      setIsLoading(false);
-      console.log('🔍 Verificación de autenticación completada');
-    }
-  };
-
   // ✅ CORREGIR: Agregar soporte para totp_code opcional
-  const login = async (identifier: string, password: string, totp_code?: string) => {
+  const login = async (identifier: string, password: string) => {
     console.log('🔐 Iniciando login para:', identifier);
     try {
       const response = await authService.login({ 
         identifier, 
-        password 
+        password, 
       });
       
       console.log('✅ Login exitoso, datos recibidos:', response.user);
@@ -184,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthContextType = {
     user,
+    token: authService.getToken(),
     isLoading,
     isAuthenticated: !!user,
     login,
@@ -214,7 +234,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
       '🔒 ProtectedRoute - autenticado:',
       isAuthenticated,
       'cargando:',
-      isLoading
+      isLoading,
     );
     if (!isLoading && !isAuthenticated) {
       console.log('❌ No autenticado, redirigiendo a login...');
@@ -235,7 +255,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (!isAuthenticated) {
     console.log(
-      '❌ ProtectedRoute - Usuario no autenticado, no mostrando contenido'
+      '❌ ProtectedRoute - Usuario no autenticado, no mostrando contenido',
     );
     return null;
   }

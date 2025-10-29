@@ -1,14 +1,25 @@
-/**
- * Simple role-based authorization middleware
- * Usage: authorize('admin','superadmin')
- * Ahora usa el sistema de roles con niveles de acceso
- */
+const db = require('../db');
 function authorize(...allowed) {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     console.log('authorize debug:', { user: req.user, allowed, userRoles: req.user?.roles }); // <-- añadir
     if (!req.user) return res.status(401).json({ error: 'unauthorized' });
     // DEPRECADO pero mantener compatibilidad: Global superadmin bypass
     if (req.user.is_superadmin) return next();
+    
+    // Si is_superadmin no está en el token, verificar en DB (para compatibilidad con tokens antiguos)
+    if (req.user.id && req.user.is_superadmin === undefined) {
+      try {
+        const [rows] = await db.query('SELECT is_superadmin FROM usuario WHERE id = ?', [req.user.id]);
+        if (rows.length && rows[0].is_superadmin) {
+          req.user.is_superadmin = true; // Cache it
+          return next();
+        }
+      } catch (error) {
+        console.error('Error checking superadmin status:', error);
+        // Continue to role check
+      }
+    }
+    
     const userRoles = req.user.roles || [];
     const ok = allowed.some(r => userRoles.includes(r));
     if (!ok) return res.status(403).json({ error: 'forbidden' });

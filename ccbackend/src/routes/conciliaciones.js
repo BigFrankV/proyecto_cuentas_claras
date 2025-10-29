@@ -14,7 +14,7 @@ const ESTADOS_CONCILIACION = ['pendiente', 'conciliado', 'descartado'];
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones:
  *   get:
  *     tags: [Conciliaciones]
@@ -106,7 +106,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/{id}:
  *   get:
  *     tags: [Conciliaciones]
@@ -172,7 +172,7 @@ router.get('/:id', authenticate, async (req, res) => {
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}:
  *   get:
  *     tags: [Conciliaciones]
@@ -216,7 +216,7 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
 });
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}:
  *   post:
  *     tags: [Conciliaciones]
@@ -266,7 +266,7 @@ router.post(
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}/estadisticas:
  *   get:
  *     tags: [Conciliaciones]
@@ -301,7 +301,7 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
 });
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}/pendientes:
  *   get:
  *     tags: [Conciliaciones]
@@ -339,7 +339,7 @@ router.get('/comunidad/:comunidadId/pendientes', authenticate, requireCommunity(
 });
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}/por-estado:
  *   get:
  *     tags: [Conciliaciones]
@@ -381,7 +381,7 @@ router.get('/comunidad/:comunidadId/por-estado', authenticate, requireCommunity(
 });
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}/por-tipo:
  *   get:
  *     tags: [Conciliaciones]
@@ -418,7 +418,7 @@ router.get('/comunidad/:comunidadId/por-tipo', authenticate, requireCommunity('c
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}/con-diferencias:
  *   get:
  *     tags: [Conciliaciones]
@@ -458,7 +458,7 @@ router.get('/comunidad/:comunidadId/con-diferencias', authenticate, requireCommu
 });
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}/sin-pago:
  *   get:
  *     tags: [Conciliaciones]
@@ -505,7 +505,7 @@ router.get('/comunidad/:comunidadId/sin-pago', authenticate, requireCommunity('c
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}/historial-periodo:
  *   get:
  *     tags: [Conciliaciones]
@@ -544,7 +544,7 @@ router.get('/comunidad/:comunidadId/historial-periodo', authenticate, requireCom
 });
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}/saldos:
  *   get:
  *     tags: [Conciliaciones]
@@ -586,7 +586,7 @@ router.get('/comunidad/:comunidadId/saldos', authenticate, requireCommunity('com
 });
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}/analisis-precision:
  *   get:
  *     tags: [Conciliaciones]
@@ -626,7 +626,7 @@ router.get('/comunidad/:comunidadId/analisis-precision', authenticate, requireCo
 });
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}/resumen:
  *   get:
  *     tags: [Conciliaciones]
@@ -671,7 +671,7 @@ router.get('/comunidad/:comunidadId/resumen', authenticate, requireCommunity('co
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/comunidad/{comunidadId}/validar:
  *   get:
  *     tags: [Conciliaciones]
@@ -714,7 +714,7 @@ router.get('/comunidad/:comunidadId/validar', authenticate, requireCommunity('co
 // =========================================
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/{id}:
  *   patch:
  *     tags: [Conciliaciones]
@@ -771,7 +771,7 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin', 'contador'),
 });
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/{id}/conciliar:
  *   patch:
  *     tags: [Conciliaciones]
@@ -804,7 +804,7 @@ router.patch('/:id/conciliar', authenticate, authorize('admin', 'superadmin', 'c
 });
 
 /**
- * @openapi
+ * @swagger
  * /conciliaciones/{id}/descartar:
  *   patch:
  *     tags: [Conciliaciones]
@@ -881,3 +881,7 @@ module.exports = router;
 // PATCH: /conciliaciones/:id
 // PATCH: /conciliaciones/:id/conciliar
 // PATCH: /conciliaciones/:id/descartar
+
+
+
+
