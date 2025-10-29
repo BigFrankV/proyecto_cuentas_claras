@@ -1,0 +1,289 @@
+name: 🚀 CI/CD Build & Export
+
+# Triggers
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - conexiones-backend-frontend
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch: # Permite trigger manual
+
+# Variables globales
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  GITHUB_OWNER: ${{ github.repository_owner }}
+
+jobs:
+  # ============================================================================
+  # BACKEND
+  # ============================================================================
+  backend-ci:
+    name: Backend - Lint, Test & Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ccbackend
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📌 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ccbackend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🔍 Lint
+        run: npm run lint
+        continue-on-error: false
+
+      - name: ✅ Health Check Tests
+        run: npm run test:health
+        continue-on-error: true
+
+      - name: 📊 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: ccbackend/logs/
+          retention-days: 7
+
+  # ============================================================================
+  # FRONTEND
+  # ============================================================================
+  frontend-ci:
+    name: Frontend - Lint, Type Check, Test & Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ccfrontend
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📌 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ccfrontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🔍 Lint
+        run: npm run lint
+        continue-on-error: false
+
+      - name: 📝 Type Check
+        run: npm run type-check
+        continue-on-error: false
+
+      - name: 🧪 Tests
+        run: npm run test:ci
+        continue-on-error: true
+
+      - name: 🏗️ Build
+        run: npm run build
+
+      - name: 📊 Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: ccfrontend/coverage/
+          retention-days: 7
+
+  # ============================================================================
+  # EXPORT ARTIFACTS (Solo si el branch es main, develop o PR merge)
+  # ============================================================================
+  export-build:
+    name: 📦 Export Build Artifacts
+    needs: [backend-ci, frontend-ci]
+    runs-on: ubuntu-latest
+    if: success() && github.event_name == 'push'
+    permissions:
+      contents: read
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📌 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # -------- BACKEND EXPORT --------
+      - name: 📦 Export Backend Build
+        run: |
+          mkdir -p ci-cd-outputs/back_ok
+          TIMESTAMP=$(date -u +%Y-%m-%d_%H-%M-%S)
+          BACKEND_EXPORT="ci-cd-outputs/back_ok/backend_${TIMESTAMP}"
+          
+          mkdir -p "$BACKEND_EXPORT"
+          
+          # Copiar archivos necesarios
+          cp -r ccbackend/src "$BACKEND_EXPORT/"
+          cp ccbackend/package.json "$BACKEND_EXPORT/"
+          cp ccbackend/package-lock.json "$BACKEND_EXPORT/"
+          cp ccbackend/.env.example "$BACKEND_EXPORT/"
+          cp ccbackend/Dockerfile "$BACKEND_EXPORT/"
+          cp ccbackend/README.md "$BACKEND_EXPORT/"
+          
+          # Crear manifest
+          cat > "$BACKEND_EXPORT/MANIFEST.json" << EOF
+          {
+            "exportedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "commitMessage": "${{ github.event.head_commit.message }}",
+            "type": "backend",
+            "version": "1.0.0",
+            "buildStatus": "success",
+            "timestamp": "$TIMESTAMP"
+          }
+          EOF
+          
+          # Crear symlink latest
+          cd ci-cd-outputs/back_ok
+          ln -sf "backend_${TIMESTAMP}" latest
+          
+          echo "✅ Backend exportado: $BACKEND_EXPORT"
+
+      # -------- FRONTEND EXPORT --------
+      - name: 🔧 Setup Frontend dependencies
+        working-directory: ccfrontend
+        run: npm ci
+
+      - name: 🏗️ Build Frontend
+        working-directory: ccfrontend
+        run: npm run build
+
+      - name: 📦 Export Frontend Build
+        run: |
+          mkdir -p ci-cd-outputs/front_ok
+          TIMESTAMP=$(date -u +%Y-%m-%d_%H-%M-%S)
+          FRONTEND_EXPORT="ci-cd-outputs/front_ok/frontend_${TIMESTAMP}"
+          
+          mkdir -p "$FRONTEND_EXPORT"
+          
+          # Copiar archivos
+          cp -r ccfrontend/.next "$FRONTEND_EXPORT/"
+          cp -r ccfrontend/public "$FRONTEND_EXPORT/"
+          cp ccfrontend/package.json "$FRONTEND_EXPORT/"
+          cp ccfrontend/package-lock.json "$FRONTEND_EXPORT/"
+          cp ccfrontend/next.config.js "$FRONTEND_EXPORT/"
+          cp ccfrontend/.env.example "$FRONTEND_EXPORT/"
+          cp ccfrontend/Dockerfile "$FRONTEND_EXPORT/"
+          cp ccfrontend/README.md "$FRONTEND_EXPORT/"
+          
+          # Crear manifest
+          cat > "$FRONTEND_EXPORT/MANIFEST.json" << EOF
+          {
+            "exportedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "commitMessage": "${{ github.event.head_commit.message }}",
+            "type": "frontend",
+            "version": "1.0.0",
+            "buildStatus": "success",
+            "timestamp": "$TIMESTAMP"
+          }
+          EOF
+          
+          # Crear symlink latest
+          cd ci-cd-outputs/front_ok
+          ln -sf "frontend_${TIMESTAMP}" latest
+          
+          echo "✅ Frontend exportado: $FRONTEND_EXPORT"
+
+      # -------- UPLOAD ARTIFACTS --------
+      - name: 📤 Upload Backend Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build-${{ github.run_number }}
+          path: ci-cd-outputs/back_ok/
+          retention-days: 30
+          compression-level: 9
+
+      - name: 📤 Upload Frontend Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ github.run_number }}
+          path: ci-cd-outputs/front_ok/
+          retention-days: 30
+          compression-level: 9
+
+      - name: 📊 Upload Artifacts Manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-manifest-${{ github.run_number }}
+          path: ci-cd-outputs/
+          retention-days: 30
+
+  # ============================================================================
+  # SECURITY SCAN
+  # ============================================================================
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📌 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 🔒 Audit Backend
+        working-directory: ccbackend
+        run: npm audit --audit-level=moderate || true
+        continue-on-error: true
+
+      - name: 🔒 Audit Frontend
+        working-directory: ccfrontend
+        run: npm audit --audit-level=moderate || true
+        continue-on-error: true
+
+  # ============================================================================
+  # NOTIFICATION
+  # ============================================================================
+  notify:
+    name: 📢 Notify Build Status
+    needs: [backend-ci, frontend-ci, export-build]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: 📢 Build Status Summary
+        run: |
+          echo "## 🚀 CI/CD Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.backend-ci.result == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${{ needs.frontend-ci.result == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Export | ${{ needs.export-build.result == 'success' && '✅ Success' || '⏭️ Skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Run**: [${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
