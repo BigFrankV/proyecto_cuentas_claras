@@ -46,7 +46,7 @@ export default function CentroFilters({
             <option value=''>Todas las comunidades</option>
             {comunidades.map(c => (
               <option key={c.id} value={c.id}>
-                {c.razon_social}
+                {c.nombre}
               </option>
             ))}
           </Form.Select>

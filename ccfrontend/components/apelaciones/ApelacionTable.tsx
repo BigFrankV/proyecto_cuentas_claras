@@ -109,7 +109,7 @@ export default function ApelacionTable({
       setError(null);
       try {
         const params = { ...initialParams, page, perPage };
-        const res = await listApelaciones(params, token);
+        const res = await listApelaciones(params, token || undefined);
         setData(res.data || []);
         setTotal(
           res.meta && res.meta.total

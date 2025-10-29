@@ -24,7 +24,7 @@ apiClient.interceptors.request.use(
   },
   error => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Interceptor para manejar respuestas y errores
@@ -42,7 +42,7 @@ apiClient.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;
