@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import axios from 'axios';
 
+import apiClient from '@/lib/api';
 import {
   Conciliacion,
   ConciliacionDetalle,
@@ -19,7 +20,7 @@ import {
   ValidacionConciliacion,
 } from '@/types/conciliaciones';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 class ConciliacionesApi {
   private baseURL = `${API_BASE_URL}/conciliaciones`;
@@ -62,7 +63,7 @@ class ConciliacionesApi {
         params.append('offset', filtros.offset.toString());
       }
 
-      const response = await axios.get(`${this.baseURL}?${params.toString()}`);
+      const response = await apiClient.get(`${this.baseURL}?${params.toString()}`);
       return response.data;
     } catch {
       throw new Error('Error al obtener las conciliaciones');
@@ -74,7 +75,7 @@ class ConciliacionesApi {
    */
   async getById(id: number): Promise<ConciliacionDetalle> {
     try {
-      const response = await axios.get(`${this.baseURL}/${id}`);
+      const response = await apiClient.get(`${this.baseURL}/${id}`);
       return response.data;
     } catch {
       throw new Error('Error al obtener la conciliación');
@@ -120,7 +121,7 @@ class ConciliacionesApi {
       }
 
       const url = `${this.baseURL}/comunidad/${comunidadId}?${params.toString()}`;
-      const response = await axios.get(url);
+      const response = await apiClient.get(url);
       return response.data;
     } catch {
       throw new Error('Error al obtener las conciliaciones de la comunidad');
@@ -132,7 +133,7 @@ class ConciliacionesApi {
    */
   async create(comunidadId: number, data: ConciliacionFormData): Promise<ConciliacionDetalle> {
     try {
-      const response = await axios.post(`${this.baseURL}/comunidad/${comunidadId}`, data);
+      const response = await apiClient.post(`${this.baseURL}/comunidad/${comunidadId}`, data);
       return response.data;
     } catch {
       throw new Error('Error al crear la conciliación');
@@ -148,7 +149,7 @@ class ConciliacionesApi {
    */
   async getEstadisticas(comunidadId: number): Promise<EstadisticasConciliaciones> {
     try {
-      const response = await axios.get(`${this.baseURL}/comunidad/${comunidadId}/estadisticas`);
+      const response = await apiClient.get(`${this.baseURL}/comunidad/${comunidadId}/estadisticas`);
       return response.data;
     } catch {
       throw new Error('Error al obtener las estadísticas');
@@ -334,6 +335,58 @@ class ConciliacionesApi {
     } catch (error) {
       
       throw new Error('Error al descartar el movimiento');
+    }
+  }
+
+  /**
+   * Actualizar transacción individual
+   */
+  async updateTransaccion(
+    txId: number,
+    data: {
+      estado?: 'pendiente' | 'conciliado' | 'descartado',
+      pago_id?: number,
+      glosa?: string,
+      referencia?: string
+    },
+  ): Promise<{
+    id: number,
+    fecha_mov: string,
+    monto: number,
+    glosa: string,
+    referencia: string,
+    estado: string,
+    pago_id: number | null
+  }> {
+    try {
+      const response = await axios.patch(`${this.baseURL}/transaccion/${txId}`, data);
+      return response.data;
+    } catch (error) {
+      throw new Error('Error al actualizar la transacción');
+    }
+  }
+
+  /**
+   * Actualizar notas de conciliación
+   */
+  async updateNotas(id: number, notas: string): Promise<{ id: number, notas: string }> {
+    try {
+      const response = await axios.patch(`${this.baseURL}/${id}/notas`, { notas });
+      return response.data;
+    } catch (error) {
+      throw new Error('Error al actualizar las notas');
+    }
+  }
+
+  /**
+   * Obtener cuentas bancarias disponibles
+   */
+  async getCuentasBancarias(): Promise<Record<string, Array<{ value: string, label: string }>>> {
+    try {
+      const response = await axios.get(`${this.baseURL}/bancos/cuentas`);
+      return response.data;
+    } catch (error) {
+      throw new Error('Error al obtener las cuentas bancarias');
     }
   }
 }

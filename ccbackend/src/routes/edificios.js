@@ -1004,7 +1004,7 @@ router.put('/:id', [
  * /edificios/{id}/check-dependencies:
  *   get:
  *     tags: [Edificios]
- *     summary: Verificar dependencias antes de eliminar
+ *     summary: Verificar dependencias antes de eliminar edificio
  *     parameters:
  *       - in: path
  *         name: id
@@ -1014,44 +1014,44 @@ router.put('/:id', [
  *         description: ID del edificio
  *     responses:
  *       200:
- *         description: Información de dependencias
+ *         description: Información sobre dependencias
  */
-// GET /edificios/:id/check-dependencies - Verificar dependencias antes de eliminar
-router.get('/:id/check-dependencies', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
+// GET /edificios/:id/check-dependencies - Verificar dependencias
+router.get('/:id/check-dependencies', authenticate, async (req, res) => {
   try {
-    const id = req.params.id;
-    
-    // Verificar unidades
-    const [unidades] = await db.query(`
-      SELECT 
-        COUNT(*) AS total_unidades,
-        COUNT(CASE WHEN activa = 1 THEN 1 END) AS unidades_activas,
-        COUNT(CASE WHEN activa = 0 THEN 1 END) AS unidades_inactivas
-      FROM unidad 
-      WHERE edificio_id = ?
-    `, [id]);
-    
-    // Verificar torres
-    const [torres] = await db.query('SELECT COUNT(*) AS total_torres FROM torre WHERE edificio_id = ?', [id]);
-    
-    const dependencies = {
-      total_unidades: unidades[0].total_unidades,
-      unidades_activas: unidades[0].unidades_activas,
-      unidades_inactivas: unidades[0].unidades_inactivas,
-      total_torres: torres[0].total_torres,
-      can_delete: unidades[0].total_unidades === 0 && torres[0].total_torres === 0,
-      warnings: []
-    };
-    
-    if (unidades[0].unidades_activas > 0) {
-      dependencies.warnings.push(`El edificio tiene ${unidades[0].unidades_activas} unidades activas`);
+    const edificioId = req.params.id;
+
+    // Verificar que el edificio existe
+    const [edificio] = await db.query('SELECT id, nombre FROM edificio WHERE id = ?', [edificioId]);
+    if (!edificio.length) {
+      return res.status(404).json({ error: 'Edificio no encontrado' });
     }
-    
-    if (torres[0].total_torres > 0) {
-      dependencies.warnings.push(`El edificio tiene ${torres[0].total_torres} torres asociadas`);
-    }
-    
-    res.json(dependencies);
+
+    // Contar torres
+    const [torres] = await db.query('SELECT COUNT(*) as count FROM torre WHERE edificio_id = ?', [edificioId]);
+
+    // Contar unidades
+    const [unidades] = await db.query('SELECT COUNT(*) as count FROM unidad WHERE edificio_id = ?', [edificioId]);
+
+    // Contar unidades activas
+    const [unidadesActivas] = await db.query('SELECT COUNT(*) as count FROM unidad WHERE edificio_id = ? AND activa = 1', [edificioId]);
+
+    const hasDependencies = torres[0].count > 0 || unidades[0].count > 0;
+    const canDelete = !hasDependencies;
+
+    res.json({
+      edificio: edificio[0],
+      dependencies: {
+        torres: torres[0].count,
+        unidades: unidades[0].count,
+        unidades_activas: unidadesActivas[0].count
+      },
+      hasDependencies,
+      canDelete,
+      message: hasDependencies
+        ? `No se puede eliminar el edificio. Primero debe eliminar ${torres[0].count} torres y ${unidades[0].count} unidades.`
+        : 'El edificio puede ser eliminado sin problemas.'
+    });
   } catch (error) {
     console.error('Error checking dependencies:', error);
     res.status(500).json({ error: 'Error interno del servidor' });

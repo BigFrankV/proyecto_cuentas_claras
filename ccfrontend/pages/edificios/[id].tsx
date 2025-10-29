@@ -1,19 +1,18 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
-import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
+
+import Layout from '@/components/layout/Layout';
+import { useEdificios, useTorres, useUnidades } from '@/hooks/useEdificios';
+import { ProtectedRoute } from '@/lib/useAuth';
 import { 
   Edificio, 
-  Torre, 
-  Unidad,
   ESTADOS_EDIFICIO,
   TIPOS_EDIFICIO,
   SERVICIOS_DISPONIBLES,
-  AMENIDADES_DISPONIBLES 
+  AMENIDADES_DISPONIBLES, 
 } from '@/types/edificios';
-import { useEdificios, useTorres, useUnidades } from '@/hooks/useEdificios';
 
 export default function EdificioDetalle() {
   const router = useRouter();
@@ -23,7 +22,7 @@ export default function EdificioDetalle() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Hooks para APIs
-  const { getEdificioById, deleteEdificio, loading, error } = useEdificios();
+  const { getEdificioById, deleteEdificio, checkDependencies, loading, error } = useEdificios();
   const { torres, loading: torresLoading, fetchTorres } = useTorres(id as string);
   const { unidades, loading: unidadesLoading, fetchUnidades } = useUnidades(id as string);
 
@@ -107,15 +106,35 @@ export default function EdificioDetalle() {
       activo: 'bg-success',
       inactivo: 'bg-secondary',
       construccion: 'bg-warning',
-      mantenimiento: 'bg-info'
+      mantenimiento: 'bg-info',
     };
     return badges[estado as keyof typeof badges] || 'bg-secondary';
   };
 
   const handleDeleteEdificio = async () => {
-    if (!edificio?.id) return;
+    if (!edificio?.id) {return;}
     
     try {
+      // First check if the edificio has dependencies
+      const dependencies = await checkDependencies(edificio.id);
+      
+      // Check if there are any related records
+      const hasDependencies = dependencies.torres > 0 || dependencies.unidades > 0;
+      
+      if (hasDependencies) {
+        // Show warning about dependencies
+        const confirmDelete = window.confirm(
+          `El edificio "${edificio.nombre}" tiene ${dependencies.torres} torres y ${dependencies.unidades} unidades relacionadas.\n\n` +
+          'Eliminar este edificio también eliminará toda la información relacionada.\n\n' +
+          '¿Estás seguro de que deseas continuar?',
+        );
+        
+        if (!confirmDelete) {
+          setShowDeleteModal(false);
+          return;
+        }
+      }
+      
       await deleteEdificio(edificio.id);
       setShowDeleteModal(false);
       router.push('/edificios');
@@ -148,7 +167,7 @@ export default function EdificioDetalle() {
 
           {/* Header del edificio con imagen de fondo */}
           <div className='edificio-cover mb-4' style={{
-            backgroundImage: edificio.imagen ? `url(${edificio.imagen})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            backgroundImage: edificio.imagen ? `url(${edificio.imagen})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           }}>
             <div className='edificio-cover-overlay'>
               <div className='cover-actions'>
@@ -484,43 +503,43 @@ export default function EdificioDetalle() {
                                   <small className='text-muted'>unidades ocupadas</small>
                                 </div>
                               </div>
-                            <div className='row mt-2'>
-                              <div className='col-4'>
-                                <small className='text-muted d-block'>Pisos</small>
-                                <span className='fw-semibold'>{torre.pisos}</span>
-                              </div>
-                              <div className='col-4'>
-                                <small className='text-muted d-block'>Unidades/Piso</small>
-                                <span className='fw-semibold'>{torre.unidadesPorPiso}</span>
-                              </div>
-                              <div className='col-4'>
-                                <small className='text-muted d-block'>Ocupación</small>
-                                <span className='fw-semibold'>
-                                  {((torre.unidadesOcupadas / torre.totalUnidades) * 100).toFixed(0)}%
-                                </span>
+                              <div className='row mt-2'>
+                                <div className='col-4'>
+                                  <small className='text-muted d-block'>Pisos</small>
+                                  <span className='fw-semibold'>{torre.pisos}</span>
+                                </div>
+                                <div className='col-4'>
+                                  <small className='text-muted d-block'>Unidades/Piso</small>
+                                  <span className='fw-semibold'>{torre.unidadesPorPiso}</span>
+                                </div>
+                                <div className='col-4'>
+                                  <small className='text-muted d-block'>Ocupación</small>
+                                  <span className='fw-semibold'>
+                                    {((torre.unidadesOcupadas / torre.totalUnidades) * 100).toFixed(0)}%
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className='ms-3'>
-                            <div className='btn-group' role='group'>
-                              <button className='btn btn-sm btn-outline-primary'>
-                                <i className='material-icons'>visibility</i>
-                              </button>
-                              <button 
-                                className='btn btn-sm btn-outline-secondary'
-                                onClick={() => router.push(`/edificios/${id}/editar`)}
-                              >
-                                <i className='material-icons'>edit</i>
-                              </button>
-                              <button className='btn btn-sm btn-outline-danger'>
-                                <i className='material-icons'>delete</i>
-                              </button>
+                            <div className='ms-3'>
+                              <div className='btn-group' role='group'>
+                                <button className='btn btn-sm btn-outline-primary'>
+                                  <i className='material-icons'>visibility</i>
+                                </button>
+                                <button 
+                                  className='btn btn-sm btn-outline-secondary'
+                                  onClick={() => router.push(`/edificios/${id}/editar`)}
+                                >
+                                  <i className='material-icons'>edit</i>
+                                </button>
+                                <button className='btn btn-sm btn-outline-danger'>
+                                  <i className='material-icons'>delete</i>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
                   ) : (
                     <div className='text-center py-5'>
                       <i className='material-icons mb-3' style={{ fontSize: '64px', color: '#ddd' }}>

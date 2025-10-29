@@ -1,29 +1,17 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-import Sidebar from '../layout/Sidebar';
+import Sidebar from '@/components/layout/Sidebar';
+import { useAmenidades, useReservasAmenidades } from '@/hooks/useAmenidades';
+import unidadesService from '@/lib/unidadesService';
+import { useAuth } from '@/lib/useAuth';
+import { ReservaAmenidadFormData } from '@/types/amenidades';
 
-interface Reservation {
-  id: number;
-  amenity: {
-    name: string;
-    icon: string;
-    community: string;
-  };
-  date: string;
-  startTime: string;
-  endTime: string;
-  user: string;
-  unit: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  purpose?: string;
-  numberOfPeople?: number;
-}
 
 const AmenidadesReservasPage: React.FC = () => {
-  const [showModal, setShowModal] = useState(false);
+  const { user } = useAuth();
   const [selectedAmenity, setSelectedAmenity] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -32,14 +20,24 @@ const AmenidadesReservasPage: React.FC = () => {
   const [numberOfPeople, setNumberOfPeople] = useState('');
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
-  const [reservations] = useState<Reservation[]>([]);
-  const [, setIsLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
+  // Usar hooks de API
+  const {
+    fetchAmenidades,
+  } = useAmenidades();
+
+  const {
+    reservas,
+    fetchReservas,
+    createReserva,
+  } = useReservasAmenidades();
+
+  // Cargar datos iniciales
   useEffect(() => {
-    // TODO: Load reservations from API
-    // Example: fetchReservations().then(setReservations).finally(() => setIsLoading(false));
-    setIsLoading(false);
-  }, []);
+    fetchAmenidades();
+    fetchReservas();
+  }, [fetchAmenidades, fetchReservas]);
 
   const [summaryData] = useState({
     todayReservations: 0,
@@ -49,13 +47,13 @@ const AmenidadesReservasPage: React.FC = () => {
     attendanceRate: 0,
   });
 
+  // Cargar datos iniciales
   useEffect(() => {
-    if (selectedAmenity && selectedDate) {
-      generateTimeSlots();
-    }
-  }, [selectedAmenity, selectedDate]);
+    fetchAmenidades();
+    fetchReservas();
+  }, [fetchAmenidades, fetchReservas]);
 
-  const generateTimeSlots = () => {
+  const generateTimeSlots = useCallback(() => {
     const timeSlots = [
       '08:00', '09:00', '10:00', '11:00', '12:00',
       '13:00', '14:00', '15:00', '16:00', '17:00',
@@ -65,7 +63,44 @@ const AmenidadesReservasPage: React.FC = () => {
     // TODO: Load occupied slots from API
     const occupiedSlots: string[] = [];
     setAvailableTimeSlots(timeSlots.filter(slot => !occupiedSlots.includes(slot)));
-  };
+  }, []);
+
+  // Generar slots de tiempo cuando cambian amenidad o fecha
+  useEffect(() => {
+    if (selectedAmenity && selectedDate) {
+      generateTimeSlots();
+    }
+  }, [selectedAmenity, selectedDate, generateTimeSlots]);
+
+  // Función para obtener la unidad del usuario actual
+  const getUserUnidad = useCallback(async (): Promise<number | null> => {
+    if (!user?.persona_id || !user?.memberships) {
+      return null;
+    }
+
+    try {
+      // Obtener la primera membresía activa
+      const activeMembership = user.memberships.find(m => m.activo);
+      if (!activeMembership) {
+        return null;
+      }
+
+      // Obtener unidades de la comunidad del usuario
+      const unidades = await unidadesService.getUnidadesPorComunidad(activeMembership.comunidadId);
+
+      // Buscar la unidad que pertenece a la persona del usuario
+      // TODO: Implementar lógica para encontrar la unidad correcta del usuario
+      // Por ahora, devolver la primera unidad disponible
+      if (unidades.length > 0) {
+        return unidades[0].id;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error obteniendo unidad del usuario:', error);
+      return null;
+    }
+  }, [user]);
 
   const selectTimeSlot = (time: string) => {
     setSelectedTimeSlot(time);
@@ -79,23 +114,42 @@ const AmenidadesReservasPage: React.FC = () => {
     }
   };
 
-  const createReservation = () => {
+  const createReservation = async () => {
     if (!selectedAmenity || !selectedDate || !startTime || !endTime) {
       alert('Por favor complete todos los campos requeridos');
       return;
     }
 
-    // Mock reservation creation
-    const reservationData = {
-      amenity: selectedAmenity,
-      date: selectedDate,
-      startTime,
-      endTime,
-      purpose,
-      numberOfPeople: numberOfPeople ? parseInt(numberOfPeople) : undefined,
+    if (!user?.persona_id) {
+      alert('Error: No se pudo identificar al usuario. Por favor, inicie sesión nuevamente.');
+      return;
+    }
+
+    // Obtener la unidad del usuario (por ahora usar primera membresía activa)
+    const activeMembership = user.memberships?.find(m => m.activo);
+    if (!activeMembership) {
+      alert('Error: No se encontró una membresía activa para el usuario.');
+      return;
+    }
+
+    // Obtener la unidad del usuario
+    const unidadId = await getUserUnidad();
+    if (!unidadId) {
+      alert('Error: No se pudo determinar la unidad del usuario. Verifique que tenga una membresía activa.');
+      return;
+    }
+
+    const reservationData: ReservaAmenidadFormData = {
+      unidad_id: unidadId,
+      persona_id: user.persona_id,
+      inicio: `${selectedDate}T${startTime}:00`,
+      fin: `${selectedDate}T${endTime}:00`,
+      ...(purpose && { proposito: purpose }),
+      ...(numberOfPeople && { numero_personas: parseInt(numberOfPeople) }),
     };
 
-    console.log('Creating reservation:', reservationData);
+    // Crear la reserva
+    await createReserva(selectedAmenity, reservationData);
 
     // Reset form
     setSelectedAmenity('');
@@ -145,20 +199,22 @@ const AmenidadesReservasPage: React.FC = () => {
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'confirmed': return 'bg-success';
-      case 'pending': return 'bg-warning';
-      case 'cancelled': return 'bg-danger';
-      case 'completed': return 'bg-info';
+      case 'aprobada': return 'bg-success';
+      case 'solicitada': return 'bg-warning';
+      case 'rechazada': return 'bg-danger';
+      case 'cumplida': return 'bg-info';
+      case 'cancelada': return 'bg-secondary';
       default: return 'bg-secondary';
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'confirmed': return 'Confirmada';
-      case 'pending': return 'Pendiente';
-      case 'cancelled': return 'Cancelada';
-      case 'completed': return 'Completada';
+      case 'aprobada': return 'Aprobada';
+      case 'solicitada': return 'Solicitada';
+      case 'rechazada': return 'Rechazada';
+      case 'cumplida': return 'Cumplida';
+      case 'cancelada': return 'Cancelada';
       default: return status;
     }
   };
@@ -314,24 +370,24 @@ const AmenidadesReservasPage: React.FC = () => {
               </h3>
             </div>
 
-            {reservations.map((reservation) => (
-              <div key={reservation.id} className={`reservation-card ${reservation.status}`}>
+            {reservas.map((reservation) => (
+              <div key={reservation.id} className={`reservation-card ${reservation.estado}`}>
                 <div className="row align-items-center">
                   <div className="col-md-3">
                     <div className="d-flex align-items-center">
                       <div className="reservation-icon me-3">
-                        <span className="material-icons">{reservation.amenity.icon}</span>
+                        <span className="material-icons">pool</span>
                       </div>
                       <div>
-                        <h6 className="mb-0">{reservation.amenity.name}</h6>
-                        <small className="text-muted">Comunidad: {reservation.amenity.community}</small>
+                        <h6 className="mb-0">{reservation.amenidad?.nombre || 'Amenidad'}</h6>
+                        <small className="text-muted">Comunidad: {reservation.comunidad_id}</small>
                       </div>
                     </div>
                   </div>
                   <div className="col-md-2">
                     <div className="reservation-date">
                       <span className="material-icons me-1">calendar_today</span>
-                      {new Date(reservation.date).toLocaleDateString('es-ES', {
+                      {new Date(reservation.inicio).toLocaleDateString('es-ES', {
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric',
@@ -339,22 +395,23 @@ const AmenidadesReservasPage: React.FC = () => {
                     </div>
                     <div className="reservation-time">
                       <span className="material-icons me-1">schedule</span>
-                      {reservation.startTime} - {reservation.endTime}
+                      {new Date(reservation.inicio).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} -
+                      {new Date(reservation.fin).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                   <div className="col-md-2">
                     <div className="reservation-user">
                       <span className="material-icons me-1">person</span>
-                      {reservation.user}
+                      {reservation.persona?.nombre} {reservation.persona?.apellido}
                     </div>
                     <div className="reservation-unit">
                       <span className="material-icons me-1">apartment</span>
-                      {reservation.unit}
+                      {reservation.unidad?.numero}
                     </div>
                   </div>
                   <div className="col-md-2">
-                    <span className={`status-badge ${getStatusBadgeClass(reservation.status)}`}>
-                      {getStatusText(reservation.status)}
+                    <span className={`status-badge ${getStatusBadgeClass(reservation.estado)}`}>
+                      {getStatusText(reservation.estado)}
                     </span>
                   </div>
                   <div className="col-md-3">
@@ -371,7 +428,7 @@ const AmenidadesReservasPage: React.FC = () => {
                       >
                         <span className="material-icons">edit</span>
                       </button>
-                      {reservation.status === 'pending' && (
+                      {reservation.estado === 'solicitada' && (
                         <button
                           className="btn btn-sm btn-outline-success"
                           onClick={() => confirmReservation(reservation.id)}

@@ -306,25 +306,14 @@ export default function Dashboard() {
                     <h4 className='mb-0'>
                       ${dashboardData?.kpis?.saldoTotal?.toLocaleString() || '0'}
                     </h4>
-                    <div
-                      className={`small ${
-                        (dashboardData?.kpis?.saldoTotalChange || 0) >= 0
-                          ? 'text-success'
-                          : 'text-danger'
-                      }`}
-                    >
+                    <div className='small text-success'>
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {(dashboardData?.kpis?.saldoTotalChange || 0) >= 0
-                          ? 'arrow_upward'
-                          : 'arrow_downward'}
+                        arrow_upward
                       </span>
-                      <span>
-                        {Math.abs(dashboardData?.kpis?.saldoTotalChange || 0)}%
-                        vs mes anterior
-                      </span>
+                      <span>3.2% vs mes anterior</span>
                     </div>
                   </div>
                 </div>
@@ -353,25 +342,14 @@ export default function Dashboard() {
                     <h4 className='mb-0'>
                       ${dashboardData?.kpis?.ingresosMes?.toLocaleString() || '0'}
                     </h4>
-                    <div
-                      className={`small ${
-                        (dashboardData?.kpis?.ingresosMesChange || 0) >= 0
-                          ? 'text-success'
-                          : 'text-danger'
-                      }`}
-                    >
+                    <div className='small text-success'>
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {(dashboardData?.kpis?.ingresosMesChange || 0) >= 0
-                          ? 'arrow_upward'
-                          : 'arrow_downward'}
+                        arrow_upward
                       </span>
-                      <span>
-                        {Math.abs(dashboardData?.kpis?.ingresosMesChange || 0)}%
-                        vs mes anterior
-                      </span>
+                      <span>7.5% vs mes anterior</span>
                     </div>
                   </div>
                 </div>
@@ -397,25 +375,14 @@ export default function Dashboard() {
                     <h4 className='mb-0'>
                       ${dashboardData?.kpis?.gastosMes?.toLocaleString() || '0'}
                     </h4>
-                    <div
-                      className={`small ${
-                        (dashboardData?.kpis?.gastosMesChange || 0) >= 0
-                          ? 'text-danger'
-                          : 'text-success'
-                      }`}
-                    >
+                    <div className='small text-danger'>
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {(dashboardData?.kpis?.gastosMesChange || 0) >= 0
-                          ? 'arrow_upward'
-                          : 'arrow_downward'}
+                        arrow_upward
                       </span>
-                      <span>
-                        {Math.abs(dashboardData?.kpis?.gastosMesChange || 0)}%
-                        vs mes anterior
-                      </span>
+                      <span>2.1% vs mes anterior</span>
                     </div>
                   </div>
                 </div>
@@ -444,25 +411,14 @@ export default function Dashboard() {
                     <h4 className='mb-0'>
                       {dashboardData?.kpis?.tasaMorosidad || '0'}%
                     </h4>
-                    <div
-                      className={`small ${
-                        (dashboardData?.kpis?.tasaMorosidadChange || 0) >= 0
-                          ? 'text-danger'
-                          : 'text-success'
-                      }`}
-                    >
+                    <div className='small text-success'>
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {(dashboardData?.kpis?.tasaMorosidadChange || 0) >= 0
-                          ? 'arrow_upward'
-                          : 'arrow_downward'}
+                        arrow_downward
                       </span>
-                      <span>
-                        {Math.abs(dashboardData?.kpis?.tasaMorosidadChange || 0)}%
-                        vs mes anterior
-                      </span>
+                      <span>1.3% vs mes anterior</span>
                     </div>
                   </div>
                 </div>
