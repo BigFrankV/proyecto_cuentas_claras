@@ -60,6 +60,7 @@ export interface Expense {
   id: number;
   description: string;
   category: string;
+  categoryId?: number | null; // <-- permitir null para concordar con backend
   provider: string;
   amount: number;
   date: string;
@@ -88,8 +89,7 @@ export interface GastosListResponse {
   pagination?: {
     total?: number;
     limit?: number;
-    offset?: number;
-    page?: number;
+    offset?: number; 
     hasMore?: boolean;
   };
 }
@@ -122,14 +122,32 @@ export interface GastosFilters {
 
 /** Mapea GastoBackend -> Expense (UI) */
 export function mapBackendToExpense(g: GastoBackend): Expense {
+  const statusMap: Record<string, GastoStatus> = {
+    pendiente: 'pending',
+    aprobado: 'approved',
+    rechazado: 'rejected',
+    anulado: 'rejected',
+    pagado: 'paid',
+    completado: 'completed',
+    pending: 'pending',
+    approved: 'approved',
+    rejected: 'rejected',
+    paid: 'paid',
+    completed: 'completed'
+  };
+
+  const backendStatus = String((g as any).estado || g.status || '').toLowerCase();
+  const normalizedStatus = statusMap[backendStatus] || 'pending';
+
   return {
     id: g.id,
     description: g.glosa || g.documento_numero || `Gasto #${g.id}`,
-    category: (g.categoria as string) || 'otros',
+    category: (g.categoria_nombre as string) || (g.categoria as string) || 'otros',
+    categoryId: (g as any).categoria_id ?? (g as any).categoriaId ?? undefined, // <-- devolver undefined en vez de null si no existe
     provider: g.proveedor_nombre || g.creado_por || '',
     amount: Number(g.monto) || 0,
     date: g.fecha || g.created_at || '',
-    status: (g.status as GastoStatus) || 'pending',
+    status: normalizedStatus,
     dueDate: (g.due_date as string) || null,
     documentType: g.documento_tipo || null,
     documentNumber: g.documento_numero || null,
@@ -138,7 +156,7 @@ export function mapBackendToExpense(g: GastoBackend): Expense {
     createdAt: g.created_at || null,
     tags: g.tags || [],
     priority: (g.priority as GastoPriority) || 'medium',
-    requiredApprovals: g.required_approvals || 0,
+    requiredApprovals: (g as any).required_approals ?? (g as any).required_approvals ?? 0, // <-- corregir typo y fallback
     currentApprovals: g.current_approvals || 0,
     costCenter: g.centro_costo || null,
     observations: g.observations || null,

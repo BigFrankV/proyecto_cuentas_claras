@@ -45,10 +45,13 @@ export default function GastoNuevo() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, currentComunidadId } = useAuth();
   const { isSuperUser, currentRole } = usePermissions();
-  const comunidadId = isSuperUser ? null : currentComunidadId;
+  // Normalizar isSuper (puede ser función o boolean)
+  const isSuper = typeof isSuperUser === 'function' ? isSuperUser() : Boolean(isSuperUser);
+  // id que pasamos a los servicios: si no es super, usar el id de la comunidad (número)
+  const idToUse = isSuper ? null : (currentComunidadId ?? undefined);
 
   // Verificar permisos: Solo superadmin, admin, contador pueden crear
-  const canCreate = isSuperUser || ['admin', 'contador'].includes(currentRole);
+  const canCreate = isSuperUser || ['admin', 'contador'].includes(currentRole || '');
   if (!canCreate) {
     return (
       <ProtectedRoute>
@@ -105,33 +108,36 @@ export default function GastoNuevo() {
   ];
 
   useEffect(() => {
-    const idToUse = isSuperUser ? null : comunidadId;
-    console.log('DEBUG cargar listas: comunidadId:', comunidadId, 'isSuperUser:', isSuperUser, 'idToUse:', idToUse);
+    const loadLists = async () => {
+      console.log('[GASTO-NUEVO] idToUse:', idToUse, 'isSuperUser:', isSuperUser);
+      try {
+        console.log('[GASTO-NUEVO] -> llamando getCategorias...');
+        const cats = await getCategorias(idToUse);
+        const catsArray = Array.isArray(cats) ? cats : (cats?.data ?? []);
+        console.log('[GASTO-NUEVO] <- getCategorias normalized length:', catsArray.length);
+        setCategories((catsArray || []).map((c: any) => ({ id: c.id, nombre: c.nombre ?? c.name ?? String(c.id) })));
 
-    getCategorias(idToUse)
-      .then(data => {
-        console.log('API categorías ->', data);
-        const normalized = (data || []).map((c: any) => ({ id: c.id, nombre: c.nombre ?? c.name ?? c.label }));
-        setCategories(normalized.sort((a, b) => a.nombre.localeCompare(b.nombre)));
-      })
-      .catch(err => console.error('ERROR getCategorias', err));
+        console.log('[GASTO-NUEVO] -> llamando getCentrosCosto...');
+        const centros = await getCentrosCosto(idToUse);
+        const centrosArray = Array.isArray(centros) ? centros : (centros?.data ?? []);
+        console.log('[GASTO-NUEVO] <- getCentrosCosto normalized length:', centrosArray.length);
+        setCostCenters((centrosArray || []).map((c: any) => ({ id: c.id, nombre: c.nombre ?? String(c.id) })));
 
-    getCentrosCosto(idToUse)
-      .then(data => {
-        console.log('API centros costo ->', data);
-        const normalized = (data || []).map((c: any) => ({ id: c.id, nombre: c.nombre ?? c.name }));
-        setCostCenters(normalized.sort((a, b) => a.nombre.localeCompare(b.nombre)));
-      })
-      .catch(err => console.error('ERROR getCentrosCosto', err));
+        console.log('[GASTO-NUEVO] -> llamando getProveedores...');
+        const provs = await getProveedores(idToUse);
+        const provsArray = Array.isArray(provs) ? provs : (provs?.data ?? []);
+        console.log('[GASTO-NUEVO] <- getProveedores normalized length:', provsArray.length);
+        setProviders((provsArray || []).map((p: any) => ({ id: p.id, nombre: p.nombre ?? p.razon_social ?? String(p.id) })));
+      } catch (err) {
+        console.error('[GASTO-NUEVO] Error cargando listas para dropdowns:', err);
+        setCategories([]);
+        setCostCenters([]);
+        setProviders([]);
+      }
+    };
 
-    getProveedores(idToUse)
-      .then(data => {
-        console.log('API proveedores ->', data);
-        const normalized = (data || []).map((p: any) => ({ id: p.id, nombre: p.nombre ?? p.razon_social ?? p.name }));
-        setProviders(normalized.sort((a, b) => a.nombre.localeCompare(b.nombre)));
-      })
-      .catch(err => console.error('ERROR getProveedores', err));
-  }, [comunidadId, isSuperUser]);
+    loadLists();
+  }, [idToUse]);
 
   const handleInputChange = (field: keyof ExpenseFormData, value: any) => {
     setFormData(prev => ({
@@ -279,7 +285,10 @@ export default function GastoNuevo() {
     setLoading(true);
     try {
       const payload = mapFormDataToPayload(formData);
-      const newGasto = await createGasto(comunidadId, payload); // Pasará null para superadmin
+      console.log('[GASTO-NUEVO] creando gasto - comunidadId:', idToUse, 'payload:', payload);
+      // si idToUse es undefined o 0, forza usar currentComunidadId para evitar POST /gastos global accidental
+      const comunidadParaEnviar = idToUse ?? currentComunidadId;
+      const newGasto = await createGasto(comunidadParaEnviar ?? null, payload);
       router.push(`/gastos/${newGasto.id}`);
     } catch (err) {
       console.error('Error creando gasto:', err);

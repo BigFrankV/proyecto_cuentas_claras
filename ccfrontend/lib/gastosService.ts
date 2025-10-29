@@ -83,8 +83,9 @@ export async function getGastoById(id: number): Promise<GastoBackend> {
   return res.data;
 }
 
-export async function createGasto(comunidadId: number | null, data: CreateGastoPayload): Promise<GastoBackend> {
+export async function createGasto(comunidadId: number | null, data) {
   const url = comunidadId ? `/gastos/comunidad/${comunidadId}` : '/gastos';
+  console.log('[SERVICE] createGasto url:', url, 'data:', data);
   const res = await apiClient.post(url, data);
   return res.data;
 }
@@ -99,22 +100,46 @@ export async function deleteGasto(id: number): Promise<void> {
 }
 
 // Para listas desplegables
-export async function getCategorias(comunidadId: number | null): Promise<any[]> {
-  const url = comunidadId ? `/gastos/listas/categorias/${comunidadId}` : `/gastos/listas/categorias`;
-  const res = await apiClient.get(url);
-  return res.data;
+export async function getCategorias(comunidadId?: number | null) {
+  const url = comunidadId ? `/gastos/listas/categorias/${comunidadId}` : '/categorias-gasto';
+  console.log('[SERVICE] getCategorias url:', url);
+  try {
+    const res = await apiClient.get(url);
+    const payload = (res?.data && (res.data.data ?? res.data)) ?? [];
+    console.log('[SERVICE] getCategorias normalized length:', Array.isArray(payload) ? payload.length : 'not-array', 'raw:', res?.data);
+    return payload;
+  } catch (err: any) {
+    console.error('[SERVICE] getCategorias error:', err?.response?.status, err?.response?.data || err?.message);
+    throw err;
+  }
 }
 
-export async function getCentrosCosto(comunidadId: number | null): Promise<any[]> {
-  const url = comunidadId ? `/gastos/listas/centros-costo/${comunidadId}` : `/gastos/listas/centros-costo`;
-  const res = await apiClient.get(url);
-  return res.data;
+export async function getCentrosCosto(comunidadId?: number | null) {
+  const url = comunidadId ? `/centros-costo/comunidad/${comunidadId}/dropdown` : '/centros-costo';
+  console.log('[SERVICE] getCentrosCosto url:', url);
+  try {
+    const res = await apiClient.get(url);
+    const payload = (res?.data && (res.data.data ?? res.data)) ?? [];
+    console.log('[SERVICE] getCentrosCosto normalized length:', Array.isArray(payload) ? payload.length : 'not-array', 'raw:', res?.data);
+    return payload;
+  } catch (err: any) {
+    console.error('[SERVICE] getCentrosCosto error:', err?.response?.status, err?.response?.data || err?.message);
+    throw err;
+  }
 }
 
-export async function getProveedores(comunidadId: number | null): Promise<any[]> {
-  const url = comunidadId ? `/gastos/listas/proveedores/${comunidadId}` : `/gastos/listas/proveedores`;
-  const res = await apiClient.get(url);
-  return res.data;
+export async function getProveedores(comunidadId?: number | null) {
+  const url = comunidadId ? `/proveedores/comunidad/${comunidadId}/dropdown` : '/proveedores';
+  console.log('[SERVICE] getProveedores url:', url);
+  try {
+    const res = await apiClient.get(url);
+    const payload = (res?.data && (res.data.data ?? res.data)) ?? [];
+    console.log('[SERVICE] getProveedores normalized length:', Array.isArray(payload) ? payload.length : 'not-array', 'raw:', res?.data);
+    return payload;
+  } catch (err: any) {
+    console.error('[SERVICE] getProveedores error:', err?.response?.status, err?.response?.data || err?.message);
+    throw err;
+  }
 }
 
 // Aprobaciones

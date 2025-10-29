@@ -97,20 +97,6 @@ export default function GastosListado() {
       return;
     }
 
-    // Si no es superuser y no tenemos comunidad -> no llamar
-    if (
-      !isSuperUser &&
-      (typeof resolvedComunidadId === 'undefined' ||
-        resolvedComunidadId === null)
-    ) {
-      console.warn(
-        'GastosListado: comunidadId no resuelta, no se realizará la petición.',
-      );
-      setLoading(false);
-      setExpenses([]);
-      return;
-    }
-
     // Evitar carga inicial duplicada
     if (hasLoadedRef.current) {
       return;
@@ -185,10 +171,8 @@ export default function GastosListado() {
 
   const filteredExpenses = expenses.filter(expense => {
     return (
-      expense.description
-        .toLowerCase()
-        .includes(filters.search.toLowerCase()) &&
-      (filters.category === '' || expense.category === filters.category) &&
+      expense.description.toLowerCase().includes(filters.search.toLowerCase()) &&
+      (filters.category === '' || expense.categoryId === Number(filters.category)) &&
       (filters.status === '' || expense.status === filters.status) &&
       (filters.provider === '' ||
         expense.provider.toLowerCase().includes(filters.provider.toLowerCase()))
@@ -207,16 +191,51 @@ export default function GastosListado() {
     Object.values(filters).filter(value => value !== '').length;
 
   // Nuevos estados para categorías, centros de costo y proveedores
-  const [categories, setCategories] = useState([]);
-  const [costCenters, setCostCenters] = useState([]);
-  const [providers, setProviders] = useState([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [costCenters, setCostCenters] = useState<any[]>([]);
+  const [providers, setProviders] = useState<any[]>([]);
 
   useEffect(() => {
-    if (resolvedComunidadId) {
-      getCategorias(resolvedComunidadId).then(setCategories);
-      getCentrosCosto(resolvedComunidadId).then(setCostCenters);
-      getProveedores(resolvedComunidadId).then(setProviders);
-    }
+    // cargar listas siempre (global si resolvedComunidadId undefined)
+    const idToUse = resolvedComunidadId ?? undefined;
+    getCategorias(idToUse)
+      .then(data => {
+        const normalized = (data || []).map((c: any) => ({
+          id: c.id,
+          nombre: c.nombre ?? c.name ?? c.label,
+        }));
+        setCategories(normalized.sort((a: any, b: any) => String(a.nombre).localeCompare(String(b.nombre))));
+      })
+      .catch(err => {
+        console.error('Error getCategorias', err);
+        setCategories([]);
+      });
+
+    getCentrosCosto(idToUse)
+      .then(data => {
+        const normalized = (data || []).map((c: any) => ({
+          id: c.id,
+          nombre: c.nombre ?? c.name,
+        }));
+        setCostCenters(normalized);
+      })
+      .catch(err => {
+        console.error('Error getCentrosCosto', err);
+        setCostCenters([]);
+      });
+
+    getProveedores(idToUse)
+      .then(data => {
+        const normalized = (data || []).map((p: any) => ({
+          id: p.id,
+          nombre: p.nombre ?? p.razon_social ?? p.name,
+        }));
+        setProviders(normalized);
+      })
+      .catch(err => {
+        console.error('Error getProveedores', err);
+        setProviders([]);
+      });
   }, [resolvedComunidadId]);
 
   return (
@@ -347,7 +366,7 @@ export default function GastosListado() {
                       <option value=''>Todas las categorías</option>
                       {categories.map(category => (
                         <option key={category.id} value={category.id}>
-                          {category.name}
+                          {category.nombre ?? category.name ?? String(category.id)}
                         </option>
                       ))}
                     </Form.Select>
