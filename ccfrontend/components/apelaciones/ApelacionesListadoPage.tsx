@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
-import { usePermissions } from '@/lib/usePermissions'; // si existe, o importa permissionsUtils
+import { usePermissions, Permission } from '@/lib/usePermissions'; // si existe, o importa permissionsUtils
 
 import { useAuth } from '../../lib/useAuth';
 const sampleAppeals = [
@@ -72,11 +72,10 @@ const sampleAppeals = [
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 const ApelacionesListadoPage: React.FC = () => {
-  const { user, token, accessToken } = useAuth(); // adapta según lo que exporte tu hook
-  const authToken =
-    token || accessToken || user?.token || user?.access_token || null;
+  const { user, token } = useAuth(); // adapta según lo que exporte tu hook
+  const authToken = token;
   const router = useRouter();
-  const { canCreateMulta, hasPermission } = usePermissions(); // usar las funciones que exporta el hook
+  const { hasPermission } = usePermissions(); // usar las funciones que exporta el hook
   const [appeals, setAppeals] = useState<any[]>([]);
   const [selectedAppeals, setSelectedAppeals] = useState<string[]>([]);
   const [filter, setFilter] = useState('all');
@@ -192,8 +191,7 @@ const ApelacionesListadoPage: React.FC = () => {
   };
 
   // cuando muestres el botón de crear, usa la función de permisos correcta:
-  const canCreate =
-    typeof canCreateMulta === 'function' ? canCreateMulta(user) : false;
+  const canCreate = hasPermission(Permission.MANAGE_FINANCES);
 
   return (
     <Layout title='Lista de Apelaciones'>
@@ -212,7 +210,7 @@ const ApelacionesListadoPage: React.FC = () => {
                 Nueva Apelación
               </button>
             )}
-            <button className='btn btn-outline-secondary' onClick={load}>
+            <button className='btn btn-outline-secondary' onClick={() => load()}>
               {loading ? 'Cargando...' : 'Refrescar'}
             </button>
           </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -23,7 +24,7 @@ const AmenidadesCalendarioPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [events, setEvents] = useState<ReservationEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
 
   const handleEventClick = (info: any) => {
     alert(`Reserva: ${info.event.title}\nFecha: ${info.event.start.toLocaleDateString()}`);

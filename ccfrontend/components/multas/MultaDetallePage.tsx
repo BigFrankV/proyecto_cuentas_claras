@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 
 import multasService from '@/lib/multasService';
-import { Multa, HistorialItem } from '@/types/multas';
+import { Multa, MultaActividad } from '@/types/multas';
 
 interface MultaDetallePageProps {
   multa?: Multa | null;
-  historial?: HistorialItem[];
+  historial?: MultaActividad[];
 }
 
 // Helper seguro para formatear fechas
