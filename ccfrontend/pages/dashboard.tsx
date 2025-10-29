@@ -1,16 +1,19 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
+/* eslint-disable jsx-a11y/anchor-is-valid */
+/* eslint-disable max-len */
 import Head from 'next/head';
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import DashboardCharts from '@/components/ui/DashboardCharts';
-import { comunidadesService } from '@/lib/comunidadesService';
+import comunidadesService from '@/lib/comunidadesService';
 import { dashboardService, DashboardResumenCompleto } from '@/lib/dashboardService';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
 import {
   usePermissions,
-  PermissionGuard,
-  Permission,
 } from '@/lib/usePermissions';
 
 
@@ -21,23 +24,27 @@ export default function Dashboard() {
   // Estados para datos dinámicos
   const [selectedComunidad, setSelectedComunidad] = useState<number | null>(null);
   const [comunidades, setComunidades] = useState<any[]>([]);
-  const [notificacionesCount, setNotificacionesCount] = useState(0);
+  const [searchComunidad, setSearchComunidad] = useState('');
+  const [showComunidadDropdown, setShowComunidadDropdown] = useState(false);
+  const [notificacionesCount] = useState(0);
   const [dashboardData, setDashboardData] = useState<DashboardResumenCompleto | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setIsLoading] = useState(true);
+  const [, setError] = useState<string | null>(null);
 
   // Cargar datos iniciales
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const comunidadesData = await comunidadesService.getMisMembresias();
+        const comunidadesData = await comunidadesService.getComunidades();
         setComunidades(comunidadesData);
 
         // Inicializar con la primera comunidad si existe
         if (comunidadesData.length > 0) {
           const primeraComunidad = comunidadesData[0];
-          setSelectedComunidad(primeraComunidad.id);
-          await loadDashboardData(primeraComunidad.id);
+          if (primeraComunidad) {
+            setSelectedComunidad(primeraComunidad.id);
+            await loadDashboardData(primeraComunidad.id);
+          }
         }
       } catch (err) {
         console.error('Error loading initial data:', err);
@@ -194,48 +201,95 @@ export default function Dashboard() {
             </div>
 
             {/* Filtros */}
-            <div className='d-flex'>
-              <div className='dropdown me-2'>
-                <button
-                  className='btn btn-outline-secondary dropdown-toggle'
-                  type='button'
-                  id='comunidadDropdown'
-                  data-bs-toggle='dropdown'
-                >
-                  <span className='material-icons align-middle me-1'>
-                    domain
+            <div className='d-flex gap-2'>
+              <div className='position-relative' style={{ minWidth: '280px' }}>
+                <div className='input-group'>
+                  <span className='input-group-text bg-white border-end-0'>
+                    <span className='material-icons'>domain</span>
                   </span>
-                  <span>
-                    {comunidades.find(c => c.id === selectedComunidad)?.nombre ||
-                      'Seleccionar Comunidad'}
-                  </span>
-                </button>
-                <ul
-                  className='dropdown-menu'
-                  aria-labelledby='comunidadDropdown'
-                >
-                  {comunidades.map((comunidad) => (
-                    <li key={comunidad.id}>
-                      <button
-                        className={`dropdown-item ${comunidad.id === selectedComunidad ? 'active' : ''}`}
-                        onClick={() => handleComunidadChange(comunidad.id)}
-                      >
-                        {comunidad.nombre}
-                      </button>
-                    </li>
-                  ))}
-                  <li>
-                    <hr className='dropdown-divider' />
-                  </li>
-                  <li>
-                    <a
-                      className='dropdown-item text-primary'
-                      href='/comunidades/nueva'
-                    >
-                      + Nueva comunidad
-                    </a>
-                  </li>
-                </ul>
+                  <input
+                    type='text'
+                    className='form-control border-start-0'
+                    placeholder='Buscar comunidad...'
+                    value={
+                      showComunidadDropdown
+                        ? searchComunidad
+                        : comunidades.find(
+                          c => c.id === selectedComunidad,
+                        )?.nombre || 'Seleccionar Comunidad'
+                    }
+                    onChange={(e) => {
+                      setSearchComunidad(e.target.value);
+                      setShowComunidadDropdown(true);
+                    }}
+                    onFocus={() => setShowComunidadDropdown(true)}
+                    onBlur={() =>
+                      setTimeout(() => setShowComunidadDropdown(false), 200)
+                    }
+                  />
+                </div>
+
+                {/* Dropdown con resultados de búsqueda */}
+                {showComunidadDropdown && (
+                  <div
+                    className='position-absolute w-100 mt-1 bg-white border rounded shadow-sm'
+                    style={{ zIndex: 1000, maxHeight: '300px', overflowY: 'auto' }}
+                  >
+                    {comunidades
+                      .filter(
+                        c =>
+                          c.nombre
+                            .toLowerCase()
+                            .includes(searchComunidad.toLowerCase()),
+                      )
+                      .map(comunidad => (
+                        <button
+                          key={comunidad.id}
+                          className={`d-block w-100 text-start px-3 py-2 border-0 bg-white ${
+                            comunidad.id === selectedComunidad
+                              ? 'bg-light'
+                              : ''
+                          }`}
+                          style={{ cursor: 'pointer' }}
+                          onMouseDown={() => {
+                            handleComunidadChange(comunidad.id);
+                            setSearchComunidad('');
+                            setShowComunidadDropdown(false);
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f8f9fa';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              comunidad.id === selectedComunidad
+                                ? '#f8f9fa'
+                                : 'white';
+                          }}
+                        >
+                          <div className='d-flex align-items-center'>
+                            <span className='material-icons me-2 text-muted' style={{ fontSize: '18px' }}>
+                              apartment
+                            </span>
+                            <div>
+                              <div className='fw-500'>{comunidad.nombre}</div>
+                              <small className='text-muted'>
+                                {comunidad.direccion}
+                              </small>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    {comunidades.filter(c =>
+                      c.nombre
+                        .toLowerCase()
+                        .includes(searchComunidad.toLowerCase()),
+                    ).length === 0 && (
+                      <div className='px-3 py-2 text-muted text-center'>
+                        No se encontraron comunidades
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className='dropdown'>
@@ -306,25 +360,14 @@ export default function Dashboard() {
                     <h4 className='mb-0'>
                       ${dashboardData?.kpis?.saldoTotal?.toLocaleString() || '0'}
                     </h4>
-                    <div
-                      className={`small ${
-                        (dashboardData?.kpis?.saldoTotalChange || 0) >= 0
-                          ? 'text-success'
-                          : 'text-danger'
-                      }`}
-                    >
+                    <div className={`small ${(dashboardData?.kpis?.saldoTotalChange || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {(dashboardData?.kpis?.saldoTotalChange || 0) >= 0
-                          ? 'arrow_upward'
-                          : 'arrow_downward'}
+                        {(dashboardData?.kpis?.saldoTotalChange || 0) >= 0 ? 'arrow_upward' : 'arrow_downward'}
                       </span>
-                      <span>
-                        {Math.abs(dashboardData?.kpis?.saldoTotalChange || 0)}%
-                        vs mes anterior
-                      </span>
+                      <span>{Math.abs(dashboardData?.kpis?.saldoTotalChange || 0).toFixed(1)}% vs mes anterior</span>
                     </div>
                   </div>
                 </div>
@@ -353,25 +396,14 @@ export default function Dashboard() {
                     <h4 className='mb-0'>
                       ${dashboardData?.kpis?.ingresosMes?.toLocaleString() || '0'}
                     </h4>
-                    <div
-                      className={`small ${
-                        (dashboardData?.kpis?.ingresosMesChange || 0) >= 0
-                          ? 'text-success'
-                          : 'text-danger'
-                      }`}
-                    >
+                    <div className={`small ${(dashboardData?.kpis?.ingresosMesChange || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {(dashboardData?.kpis?.ingresosMesChange || 0) >= 0
-                          ? 'arrow_upward'
-                          : 'arrow_downward'}
+                        {(dashboardData?.kpis?.ingresosMesChange || 0) >= 0 ? 'arrow_upward' : 'arrow_downward'}
                       </span>
-                      <span>
-                        {Math.abs(dashboardData?.kpis?.ingresosMesChange || 0)}%
-                        vs mes anterior
-                      </span>
+                      <span>{Math.abs(dashboardData?.kpis?.ingresosMesChange || 0).toFixed(1)}% vs mes anterior</span>
                     </div>
                   </div>
                 </div>
@@ -397,25 +429,14 @@ export default function Dashboard() {
                     <h4 className='mb-0'>
                       ${dashboardData?.kpis?.gastosMes?.toLocaleString() || '0'}
                     </h4>
-                    <div
-                      className={`small ${
-                        (dashboardData?.kpis?.gastosMesChange || 0) >= 0
-                          ? 'text-danger'
-                          : 'text-success'
-                      }`}
-                    >
+                    <div className={`small ${(dashboardData?.kpis?.gastosMesChange || 0) >= 0 ? 'text-danger' : 'text-success'}`}>
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {(dashboardData?.kpis?.gastosMesChange || 0) >= 0
-                          ? 'arrow_upward'
-                          : 'arrow_downward'}
+                        {(dashboardData?.kpis?.gastosMesChange || 0) >= 0 ? 'arrow_upward' : 'arrow_downward'}
                       </span>
-                      <span>
-                        {Math.abs(dashboardData?.kpis?.gastosMesChange || 0)}%
-                        vs mes anterior
-                      </span>
+                      <span>{Math.abs(dashboardData?.kpis?.gastosMesChange || 0).toFixed(1)}% vs mes anterior</span>
                     </div>
                   </div>
                 </div>
@@ -444,25 +465,14 @@ export default function Dashboard() {
                     <h4 className='mb-0'>
                       {dashboardData?.kpis?.tasaMorosidad || '0'}%
                     </h4>
-                    <div
-                      className={`small ${
-                        (dashboardData?.kpis?.tasaMorosidadChange || 0) >= 0
-                          ? 'text-danger'
-                          : 'text-success'
-                      }`}
-                    >
+                    <div className={`small ${(dashboardData?.kpis?.tasaMorosidadChange || 0) <= 0 ? 'text-success' : 'text-danger'}`}>
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {(dashboardData?.kpis?.tasaMorosidadChange || 0) >= 0
-                          ? 'arrow_upward'
-                          : 'arrow_downward'}
+                        {(dashboardData?.kpis?.tasaMorosidadChange || 0) <= 0 ? 'arrow_downward' : 'arrow_upward'}
                       </span>
-                      <span>
-                        {Math.abs(dashboardData?.kpis?.tasaMorosidadChange || 0)}%
-                        vs mes anterior
-                      </span>
+                      <span>{Math.abs(dashboardData?.kpis?.tasaMorosidadChange || 0).toFixed(1)}% vs mes anterior</span>
                     </div>
                   </div>
                 </div>
@@ -471,7 +481,7 @@ export default function Dashboard() {
           </div>
 
           {/* Gráficos implementados con Chart.js */}
-          <DashboardCharts />
+          <DashboardCharts comunidadId={selectedComunidad || 0} />
 
           {/* Tablas de datos */}
           <div className='row g-4 mb-4'>
@@ -480,9 +490,12 @@ export default function Dashboard() {
               <div className='card app-card shadow-sm h-100'>
                 <div className='card-header bg-white d-flex justify-content-between align-items-center'>
                   <h5 className='card-title mb-0'>Pagos Recientes</h5>
-                  <a href='/pagos' className='btn btn-sm btn-outline-primary'>
+                  <Link
+                    href='/pagos'
+                    className='btn btn-sm btn-outline-primary'
+                  >
                     Ver todos
-                  </a>
+                  </Link>
                 </div>
                 <div className='table-responsive'>
                   <table className='table table-hover'>
@@ -626,12 +639,12 @@ export default function Dashboard() {
               <div className='card app-card shadow-sm h-100'>
                 <div className='card-header bg-white d-flex justify-content-between align-items-center'>
                   <h5 className='card-title mb-0'>Reservas de Amenidades</h5>
-                  <a
+                  <Link
                     href='/amenidades'
                     className='btn btn-sm btn-outline-primary'
                   >
                     Ver todas
-                  </a>
+                  </Link>
                 </div>
                 <div className='card-body p-0'>
                   {dashboardData?.reservasAmenidades?.map((reserva, index) => (

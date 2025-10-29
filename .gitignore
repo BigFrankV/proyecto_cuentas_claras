@@ -1,3 +1,31 @@
 # Node modules
 ccbackend/node_modules/
 ccfrontend/node_modules/
+
+# CI/CD Output (builds compilados)
+ci-cd-outputs/
+builds/
+dist/
+.next/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Button, Card, Row, Col, Form, Alert, Spinner, Table, Modal, ProgressBar } from 'react-bootstrap';
+import { Button, Card, Row, Col, Form, Alert, Spinner, Table, ProgressBar } from 'react-bootstrap';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
+import { conciliacionesApi } from '@/lib/api/conciliaciones';
 
 interface FormData {
   bank: string;
@@ -85,20 +86,39 @@ export default function NuevaConciliacion() {
     difference: 0
   });
 
-  // Bank accounts data
-  const bankAccounts = {
-    'banco-chile': [
-      { value: '12345678-9', label: 'Cuenta Corriente 12345678-9' },
-      { value: '87654321-0', label: 'Cuenta Corriente 87654321-0' }
-    ],
-    'banco-santander': [
-      { value: '11223344-5', label: 'Cuenta Corriente 11223344-5' },
-      { value: '99887766-3', label: 'Cuenta Vista 99887766-3' }
-    ],
-    'banco-estado': [
-      { value: '55667788-1', label: 'CuentaRUT 55667788-1' }
-    ]
-  };
+  const [bankAccounts, setBankAccounts] = useState<Record<string, Array<{ value: string, label: string }>>>({});
+  const [loadingBanks, setLoadingBanks] = useState(true);
+
+  // Load bank accounts on component mount
+  useEffect(() => {
+    const loadBankAccounts = async () => {
+      try {
+        setLoadingBanks(true);
+        const accounts = await conciliacionesApi.getCuentasBancarias();
+        setBankAccounts(accounts);
+      } catch (error) {
+        console.error('Error loading bank accounts:', error);
+        // Fallback to hardcoded data if API fails
+        setBankAccounts({
+          'banco-chile': [
+            { value: '12345678-9', label: 'Cuenta Corriente 12345678-9' },
+            { value: '87654321-0', label: 'Cuenta Corriente 87654321-0' }
+          ],
+          'banco-santander': [
+            { value: '11223344-5', label: 'Cuenta Corriente 11223344-5' },
+            { value: '99887766-3', label: 'Cuenta Vista 99887766-3' }
+          ],
+          'banco-estado': [
+            { value: '55667788-1', label: 'CuentaRUT 55667788-1' }
+          ]
+        });
+      } finally {
+        setLoadingBanks(false);
+      }
+    };
+
+    loadBankAccounts();
+  }, []);
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({

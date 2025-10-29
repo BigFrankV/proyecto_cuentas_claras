@@ -843,6 +843,133 @@ router.patch('/:id/descartar', authenticate, authorize('admin', 'superadmin', 'c
   }
 });
 
+/**
+ * @swagger
+ * /conciliaciones/transaccion/{txId}:
+ *   patch:
+ *     tags: [Conciliaciones]
+ *     summary: Actualizar estado de una transacción individual
+ */
+router.patch('/transaccion/:txId', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
+  try {
+    const { txId } = req.params;
+    const { estado, pago_id, glosa, referencia } = req.body;
+
+    const updates = [];
+    const values = [];
+
+    if (estado !== undefined) {
+      if (!ESTADOS_CONCILIACION.includes(estado)) {
+        return res.status(400).json({ error: 'Estado inválido' });
+      }
+      updates.push('estado = ?');
+      values.push(estado);
+    }
+
+    if (pago_id !== undefined) {
+      updates.push('pago_id = ?');
+      values.push(pago_id);
+    }
+
+    if (glosa !== undefined) {
+      updates.push('glosa = ?');
+      values.push(glosa);
+    }
+
+    if (referencia !== undefined) {
+      updates.push('referencia = ?');
+      values.push(referencia);
+    }
+
+    if (!updates.length) {
+      return res.status(400).json({ error: 'No hay campos para actualizar' });
+    }
+
+    updates.push('updated_at = CURRENT_TIMESTAMP');
+    values.push(txId);
+
+    await db.query(
+      `UPDATE conciliacion_bancaria SET ${updates.join(', ')} WHERE id = ?`,
+      values
+    );
+
+    const [rows] = await db.query(
+      'SELECT id, fecha_mov, monto, glosa, referencia, estado, pago_id FROM conciliacion_bancaria WHERE id = ?',
+      [txId]
+    );
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al actualizar transacción' });
+  }
+});
+
+/**
+ * @swagger
+ * /conciliaciones/{id}/notas:
+ *   patch:
+ *     tags: [Conciliaciones]
+ *     summary: Actualizar notas de una conciliación
+ */
+router.patch('/:id/notas', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notas } = req.body;
+
+    if (notas === undefined) {
+      return res.status(400).json({ error: 'Las notas son requeridas' });
+    }
+
+    // Por ahora usamos glosa como campo de notas hasta que se agregue columna notas
+    await db.query(
+      'UPDATE conciliacion_bancaria SET glosa = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [notas, id]
+    );
+
+    const [rows] = await db.query(
+      'SELECT id, glosa as notas FROM conciliacion_bancaria WHERE id = ?',
+      [id]
+    );
+
+    res.json({ id: rows[0].id, notas: rows[0].notas });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al actualizar notas' });
+  }
+});
+
+/**
+ * @swagger
+ * /bancos/cuentas:
+ *   get:
+ *     tags: [Bancos]
+ *     summary: Obtener cuentas bancarias disponibles
+ */
+router.get('/bancos/cuentas', authenticate, async (req, res) => {
+  try {
+    // Por ahora retornamos datos hardcodeados hasta que se implemente tabla bancos
+    const bankAccounts = {
+      'banco-chile': [
+        { value: '12345678-9', label: 'Cuenta Corriente 12345678-9' },
+        { value: '87654321-0', label: 'Cuenta Corriente 87654321-0' }
+      ],
+      'banco-santander': [
+        { value: '11223344-5', label: 'Cuenta Corriente 11223344-5' },
+        { value: '99887766-3', label: 'Cuenta Vista 99887766-3' }
+      ],
+      'banco-estado': [
+        { value: '55667788-1', label: 'CuentaRUT 55667788-1' }
+      ]
+    };
+
+    res.json(bankAccounts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener cuentas bancarias' });
+  }
+});
+
 module.exports = router;
 
 
@@ -881,6 +1008,16 @@ module.exports = router;
 // PATCH: /conciliaciones/:id
 // PATCH: /conciliaciones/:id/conciliar
 // PATCH: /conciliaciones/:id/descartar
+// PATCH: /conciliaciones/transaccion/:txId
+// PATCH: /conciliaciones/:id/notas
+
+// // 8. BANCOS Y CUENTAS
+// GET: /conciliaciones/bancos/cuentas
+// PATCH: /conciliaciones/transaccion/:txId
+// PATCH: /conciliaciones/:id/notas
+
+// // 8. BANCOS
+// GET: /bancos/cuentas
 
 
 
