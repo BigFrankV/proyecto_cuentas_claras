@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { Button, Alert, Spinner, Table, Modal, Form } from 'react-bootstrap';
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
+/* eslint-disable max-len */
+/* eslint-disable no-console */
 import Head from 'next/head';
+import { useRouter } from 'next/router';
+import React, { useState, useEffect } from 'react';
+import { Button, Alert, Spinner, Table, Modal, Form } from 'react-bootstrap';
+
+import Layout from '@/components/layout/Layout';
+import { conciliacionesApi } from '@/lib/api/conciliaciones';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 interface ConciliacionDetail {
   id: string;
@@ -45,6 +49,7 @@ export default function ConciliacionDetalle() {
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
+  const [notesText, setNotesText] = useState('');
   const [activeTab, setActiveTab] = useState('resumen');
 
   useEffect(() => {
@@ -79,7 +84,7 @@ export default function ConciliacionDetalle() {
               matched: true,
               matchStatus: 'matched',
               bookReference: 'REC-2024-001',
-              notes: 'Pago mensual gastos comunes'
+              notes: 'Pago mensual gastos comunes',
             },
             {
               id: 2,
@@ -91,7 +96,7 @@ export default function ConciliacionDetalle() {
               matched: true,
               matchStatus: 'matched',
               bookReference: 'PAG-2024-045',
-              notes: 'Mantención mensual ascensores'
+              notes: 'Mantención mensual ascensores',
             },
             {
               id: 3,
@@ -102,7 +107,7 @@ export default function ConciliacionDetalle() {
               type: 'credit',
               matched: true,
               matchStatus: 'matched',
-              bookReference: 'REC-2024-002'
+              bookReference: 'REC-2024-002',
             },
             {
               id: 4,
@@ -114,11 +119,12 @@ export default function ConciliacionDetalle() {
               matched: true,
               matchStatus: 'manual',
               bookReference: 'GAS-2024-012',
-              notes: 'Comisión por mantención de cuenta'
-            }
-          ]
+              notes: 'Comisión por mantención de cuenta',
+            },
+          ],
         };
         setConciliacion(mockConciliacion);
+        setNotesText(mockConciliacion.notes);
         setLoading(false);
       }, 1000);
     }
@@ -129,7 +135,7 @@ export default function ConciliacionDetalle() {
       'draft': { class: 'status-badge draft', text: 'Borrador', icon: 'edit' },
       'in-progress': { class: 'status-badge in-progress', text: 'En Proceso', icon: 'schedule' },
       'completed': { class: 'status-badge completed', text: 'Completada', icon: 'check_circle' },
-      'with-differences': { class: 'status-badge with-differences', text: 'Con Diferencias', icon: 'error' }
+      'with-differences': { class: 'status-badge with-differences', text: 'Con Diferencias', icon: 'error' },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
@@ -145,7 +151,7 @@ export default function ConciliacionDetalle() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP'
+      currency: 'CLP',
     }).format(amount);
   };
 
@@ -153,7 +159,7 @@ export default function ConciliacionDetalle() {
     const [year = '', month = '1'] = period.split('-');
     const monthNames = [
       'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
     ];
     
     const monthIndex = parseInt(month, 10) - 1;
@@ -162,11 +168,6 @@ export default function ConciliacionDetalle() {
     return `${monthName} ${year}`;
   };
 
-  const getDifferenceClass = (difference: number) => {
-    if (difference === 0) return 'text-success';
-    if (difference > 0) return 'text-primary';
-    return 'text-danger';
-  };
 
   const getProgressPercentage = (matched: number, total: number) => {
     return total > 0 ? Math.round((matched / total) * 100) : 0;
@@ -453,44 +454,44 @@ export default function ConciliacionDetalle() {
                             <th className="text-center">Acciones</th>
                           </tr>
                         </thead>
-                      <tbody>
-                        {conciliacion.transactions.map((transaction) => (
-                          <tr key={transaction.id}>
-                            <td>{new Date(transaction.date).toLocaleDateString('es-CL')}</td>
-                            <td>
-                              <div className="fw-medium">{transaction.description}</div>
-                            </td>
-                            <td>
-                              <small className="text-muted">{transaction.reference}</small>
-                            </td>
-                            <td>
-                              <span className={`fw-bold ${transaction.amount >= 0 ? 'text-success' : 'text-danger'}`}>
-                                {formatCurrency(transaction.amount)}
-                              </span>
-                            </td>
-                            <td>
-                              <span className={`match-status ${transaction.matchStatus}`}>
-                                <span className="material-icons">
-                                  {transaction.matchStatus === 'matched' ? 'check_circle' : 
-                                   transaction.matchStatus === 'manual' ? 'build' : 'error'}
+                        <tbody>
+                          {conciliacion.transactions.map((transaction) => (
+                            <tr key={transaction.id}>
+                              <td>{new Date(transaction.date).toLocaleDateString('es-CL')}</td>
+                              <td>
+                                <div className="fw-medium">{transaction.description}</div>
+                              </td>
+                              <td>
+                                <small className="text-muted">{transaction.reference}</small>
+                              </td>
+                              <td>
+                                <span className={`fw-bold ${transaction.amount >= 0 ? 'text-success' : 'text-danger'}`}>
+                                  {formatCurrency(transaction.amount)}
                                 </span>
-                                {transaction.matchStatus === 'matched' ? 'Coincidente' :
-                                 transaction.matchStatus === 'manual' ? 'Manual' : 'Sin Coincidencia'}
-                              </span>
-                            </td>
-                            <td>
-                              <small className="text-muted">{transaction.bookReference || '-'}</small>
-                            </td>
-                            <td>
-                              <small className="text-muted">{transaction.notes || '-'}</small>
-                            </td>
-                            <td className="text-center">
-                              <Button variant="outline-secondary" size="sm">
-                                <span className="material-icons">visibility</span>
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                              <td>
+                                <span className={`match-status ${transaction.matchStatus}`}>
+                                  <span className="material-icons">
+                                    {transaction.matchStatus === 'matched' ? 'check_circle' : 
+                                      transaction.matchStatus === 'manual' ? 'build' : 'error'}
+                                  </span>
+                                  {transaction.matchStatus === 'matched' ? 'Coincidente' :
+                                    transaction.matchStatus === 'manual' ? 'Manual' : 'Sin Coincidencia'}
+                                </span>
+                              </td>
+                              <td>
+                                <small className="text-muted">{transaction.bookReference || '-'}</small>
+                              </td>
+                              <td>
+                                <small className="text-muted">{transaction.notes || '-'}</small>
+                              </td>
+                              <td className="text-center">
+                                <Button variant="outline-secondary" size="sm">
+                                  <span className="material-icons">visibility</span>
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
                       </Table>
                     </div>
@@ -602,7 +603,9 @@ export default function ConciliacionDetalle() {
               <Form.Control
                 as="textarea"
                 rows={4}
-                defaultValue={conciliacion.notes}
+                value={notesText}
+                onChange={(e) => setNotesText(e.target.value)}
+                placeholder="Ingrese notas sobre la conciliación..."
               />
             </Form.Group>
           </Modal.Body>
@@ -610,7 +613,21 @@ export default function ConciliacionDetalle() {
             <Button variant="secondary" onClick={() => setShowNotesModal(false)}>
               Cancelar
             </Button>
-            <Button variant="primary">
+            <Button
+              variant="primary"
+              onClick={async () => {
+                try {
+                  if (conciliacion) {
+                    await conciliacionesApi.updateNotas(parseInt(conciliacion.id, 10), notesText);
+                    setConciliacion(prev => prev ? { ...prev, notes: notesText } : null);
+                    setShowNotesModal(false);
+                  }
+                } catch (error) {
+                  console.error('Error updating notes:', error);
+                  // TODO: Show error message to user
+                }
+              }}
+            >
               Guardar Notas
             </Button>
           </Modal.Footer>
