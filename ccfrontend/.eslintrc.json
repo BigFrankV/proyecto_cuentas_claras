@@ -6,7 +6,9 @@
     "prettier"
   ],
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
+  "plugins": [
+    "@typescript-eslint"
+  ],
   "rules": {
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
@@ -24,11 +26,20 @@
     "jsx-a11y/anchor-is-valid": [
       "error",
       {
-        "components": ["Link"],
-        "specialLink": ["hrefLeft", "hrefRight"],
-        "aspects": ["invalidHref", "preferButton"]
+        "components": [
+          "Link"
+        ],
+        "specialLink": [
+          "hrefLeft",
+          "hrefRight"
+        ],
+        "aspects": [
+          "invalidHref",
+          "preferButton"
+        ]
       }
-    ]
+    ],
+    "indent": "off"
   },
   "env": {
     "browser": true,
@@ -44,7 +55,10 @@
   },
   "overrides": [
     {
-      "files": ["**/__tests__/**/*", "**/*.test.*"],
+      "files": [
+        "**/__tests__/**/*",
+        "**/*.test.*"
+      ],
       "env": {
         "jest": true
       },
