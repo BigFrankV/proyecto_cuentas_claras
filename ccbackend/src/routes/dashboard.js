@@ -24,7 +24,11 @@ const { requireCommunity } = require('../middleware/tenancy');
  */
 router.get('/comunidad/:comunidadId/kpis', authenticate, requireCommunity('comunidadId'), async (req, res) => {
   try {
+    console.log('📊 [DASHBOARD] GET /dashboard/comunidad/{id}/kpis - Iniciando');
+    console.log('📊 [DASHBOARD] Usuario:', req.user.username);
+    
     const comunidadId = Number(req.params.comunidadId);
+    console.log('📊 [DASHBOARD] Comunidad ID:', comunidadId);
 
     // Ejecutar todas las consultas en paralelo
     const [saldoTotal, ingresosMes, gastosMes, morosidad] = await Promise.all([
@@ -33,6 +37,13 @@ router.get('/comunidad/:comunidadId/kpis', authenticate, requireCommunity('comun
       obtenerGastosMes(comunidadId),
       obtenerTasaMorosidad(comunidadId)
     ]);
+    
+    console.log('📊 [DASHBOARD] KPIs obtenidos:', {
+      saldoTotal,
+      ingresosMes,
+      gastosMes,
+      morosidad
+    });
 
     res.json({
       saldo_total: saldoTotal,
@@ -41,7 +52,7 @@ router.get('/comunidad/:comunidadId/kpis', authenticate, requireCommunity('comun
       morosidad: morosidad
     });
   } catch (error) {
-    console.error('Error al obtener KPIs:', error);
+    console.error('❌ [DASHBOARD] Error al obtener KPIs:', error);
     res.status(500).json({ error: 'Error al obtener KPIs' });
   }
 });

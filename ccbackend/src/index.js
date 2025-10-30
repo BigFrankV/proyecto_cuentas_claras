@@ -56,76 +56,42 @@ app.use(morgan('dev'));
 
 setupSwagger(app);
 
-console.log('authRoutes type:', typeof authRoutes, 'is function?', typeof authRoutes === 'function');
+// Register all routes
 app.use('/auth', authRoutes);
-console.log('comunidadRoutes type:', typeof comunidadRoutes, 'is function?', typeof comunidadRoutes === 'function');
 app.use('/comunidades', comunidadRoutes);
 app.use('/comunidad', comunidadRoutes); // Alias singular
-console.log('edificioRoutes type:', typeof edificioRoutes, 'is function?', typeof edificioRoutes === 'function');
 app.use('/edificios', edificioRoutes);
-console.log('unidadRoutes type:', typeof unidadRoutes, 'is function?', typeof unidadRoutes === 'function');
-// Change the mount point from '/api/unidades' to '/unidades' to match frontend calls
 app.use('/unidades', unidadRoutes);
-console.log('personaRoutes type:', typeof personaRoutes, 'is function?', typeof personaRoutes === 'function');
 app.use('/personas', personaRoutes);
-console.log('torresRoutes type:', typeof torresRoutes, 'is function?', typeof torresRoutes === 'function');
 app.use('/torres', torresRoutes);
-console.log('membresiasRoutes type:', typeof membresiasRoutes, 'is function?', typeof membresiasRoutes === 'function');
 app.use('/membresias', membresiasRoutes);
-console.log('categoriasGastoRoutes type:', typeof categoriasGastoRoutes, 'is function?', typeof categoriasGastoRoutes === 'function');
 app.use('/categorias-gasto', categoriasGastoRoutes);
-console.log('centrosCostoRoutes type:', typeof centrosCostoRoutes, 'is function?', typeof centrosCostoRoutes === 'function');
 app.use('/centros-costo', centrosCostoRoutes);
-console.log('proveedoresRoutes type:', typeof proveedoresRoutes, 'is function?', typeof proveedoresRoutes === 'function');
 app.use('/proveedores', proveedoresRoutes);
-console.log('documentosCompraRoutes type:', typeof documentosCompraRoutes, 'is function?', typeof documentosCompraRoutes === 'function');
 app.use('/documentos-compra', documentosCompraRoutes);
-console.log('gastosRoutes type:', typeof gastosRoutes, 'is function?', typeof gastosRoutes === 'function');
 app.use('/gastos', gastosRoutes);
-console.log('emisionesRoutes type:', typeof emisionesRoutes, 'is function?', typeof emisionesRoutes === 'function');
 app.use('/emisiones', emisionesRoutes);
-console.log('cargosRoutes type:', typeof cargosRoutes, 'is function?', typeof cargosRoutes === 'function');
 app.use('/cargos', cargosRoutes);
-console.log('pagosRoutes type:', typeof pagosRoutes, 'is function?', typeof pagosRoutes === 'function');
 app.use('/pagos', pagosRoutes);
-console.log('prorrateoRoutes type:', typeof prorrateoRoutes, 'is function?', typeof prorrateoRoutes === 'function');
 app.use('/prorrateo', prorrateoRoutes);
-console.log('medidoresRoutes type:', typeof medidoresRoutes, 'is function?', typeof medidoresRoutes === 'function');
 app.use('/medidores', medidoresRoutes);
-console.log('tarifasConsumoRoutes type:', typeof tarifasConsumoRoutes, 'is function?', typeof tarifasConsumoRoutes === 'function');
 app.use('/tarifas-consumo', tarifasConsumoRoutes);
-console.log('multasRoutes type:', typeof multasRoutes, 'is function?', typeof multasRoutes === 'function');
 app.use('/multas', multasRoutes);
-console.log('conciliacionesRoutes type:', typeof conciliacionesRoutes, 'is function?', typeof conciliacionesRoutes === 'function');
 app.use('/conciliaciones', conciliacionesRoutes);
-console.log('consumosRoutes type:', typeof consumosRoutes, 'is function?', typeof consumosRoutes === 'function');
 app.use('/consumos', consumosRoutes);
-console.log('webhooksRoutes type:', typeof webhooksRoutes, 'is function?', typeof webhooksRoutes === 'function');
 app.use('/webhooks', webhooksRoutes);
-console.log('amenidadesRoutes type:', typeof amenidadesRoutes, 'is function?', typeof amenidadesRoutes === 'function');
 app.use('/amenidades', amenidadesRoutes);
 app.use('/', soporteRoutes); // soporte exposes varios paths: tickets, notificaciones, documentos, bitacora, parametros
-console.log('utilRoutes type:', typeof utilRoutes, 'is function?', typeof utilRoutes === 'function');
 app.use('/util', utilRoutes);
-console.log('filesRoutes type:', typeof filesRoutes, 'is function?', typeof filesRoutes === 'function');
 app.use('/files', filesRoutes);
-console.log('valorUtmRoutes type:', typeof valorUtmRoutes, 'is function?', typeof valorUtmRoutes === 'function');
 app.use('/api/valor-utm', valorUtmRoutes);
-console.log('dashboardRoutes type:', typeof dashboardRoutes, 'is function?', typeof dashboardRoutes === 'function');
 app.use('/dashboard', dashboardRoutes);
-console.log('reportesRoutes type:', typeof reportesRoutes, 'is function?', typeof reportesRoutes === 'function');
 app.use('/reportes', reportesRoutes);
-console.log('notificacionesRoutes type:', typeof notificacionesRoutes, 'is function?', typeof notificacionesRoutes === 'function');
 app.use('/notificaciones', notificacionesRoutes);
-console.log('ticketsRoutes type:', typeof ticketsRoutes, 'is function?', typeof ticketsRoutes === 'function');
 app.use('/tickets', ticketsRoutes);
-console.log('paymentGatewayRoutes type:', typeof paymentGatewayRoutes, 'is function?', typeof paymentGatewayRoutes === 'function');
 app.use('/gateway', paymentGatewayRoutes);
-console.log('apelacionesRouter type:', typeof apelacionesRouter, 'is function?', typeof apelacionesRouter === 'function');
 app.use('/apelaciones', apelacionesRouter);
-console.log('comprasRouter type:', typeof comprasRouter, 'is function?', typeof comprasRouter === 'function');
 app.use('/compras', comprasRouter);
-console.log('bitacoraRoutes type:', typeof bitacoraRoutes, 'is function?', typeof bitacoraRoutes === 'function');
 app.use('/bitacora', bitacoraRoutes);
 
 app.get('/healthz', (_, res) => res.json({ status: 'ok' }));

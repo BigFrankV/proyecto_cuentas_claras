@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, no-console, react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useRef } from 'react';
 
 import multasService from '@/lib/multasService';
@@ -103,33 +104,34 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
   const appealFormRef = useRef<HTMLFormElement | null>(null);
   const [appealError, setAppealError] = useState<string | null>(null);
 
-  // Evitar render si no hay multa (la página Next debe manejar loading/no encontrado)
-  if (!multa) {
-    return null;
-  }
-
   // Fechas: usar created_at para "Fecha y Hora" (timestamp real),
-  // y usar `fecha` (DATE) como fecha de vencimiento si tu BD lo contiene.
-  const fechaCreada =
-    parseDateSafe(multa.created_at) ?? parseDateSafe(multa.fecha) ?? new Date();
-  // Si tienes fecha_vencimiento en BD úsala; si no, tomar `fecha` como vencimiento.
-  const fechaVencBD =
-    parseDateSafe(multa.fecha_vencimiento) ?? parseDateSafe(multa.fecha);
+  // y usar fecha_infraccion como fecha de referencia
+  const fechaCreada = multa
+    ? parseDateSafe(multa.created_at) ?? parseDateSafe(multa.fecha_infraccion) ?? new Date()
+    : new Date();
+  // Si tienes fecha_vencimiento en BD úsala; si no, calcular desde la infracción
+  const fechaVencBD = multa
+    ? parseDateSafe(multa.fecha_vencimiento) ?? parseDateSafe(multa.fecha_infraccion)
+    : null;
   const fechaVencimiento =
     fechaVencBD ?? new Date(fechaCreada.getTime() + 15 * 24 * 60 * 60 * 1000);
 
   useEffect(() => {
     // carga inicial ligera: historial (puede venir desde page, si no cargamos aquí)
-    if (!comms) {
-      (async () => {
-        try {
-          const res = await multasService.getHistorial(Number(multa.id));
-          setComms(Array.isArray(res) ? res : (res?.data ?? []));
-        } catch {
-          setComms([]);
-        }
-      })();
+    if (!multa) {
+      return;
     }
+    if (comms !== null) {
+      return; // Ya cargado
+    }
+    (async () => {
+      try {
+        const res: any = await multasService.getHistorial(Number(multa.id));
+        setComms(Array.isArray(res) ? res : (res?.data ?? []));
+      } catch {
+        setComms([]);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [multa?.id]);
 
@@ -142,11 +144,11 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
       setLoadingTab(true);
       try {
         if (activeTab === 'payments' && payments === null) {
-          const h =
+          const h: any =
             historial && historial.length
               ? historial
               : await multasService.getHistorial(Number(multa.id));
-          const histArr = Array.isArray(h) ? h : (h?.data ?? []);
+          const histArr: any = Array.isArray(h) ? h : (h?.data ?? []);
           if (!mounted) {
             return;
           }
@@ -158,11 +160,11 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
         }
 
         if (activeTab === 'communications' && comms === null) {
-          const h =
+          const h: any =
             historial && historial.length
               ? historial
               : await multasService.getHistorial(Number(multa.id));
-          const histArr = Array.isArray(h) ? h : (h?.data ?? []);
+          const histArr: any = Array.isArray(h) ? h : (h?.data ?? []);
           if (!mounted) {
             return;
           }
@@ -171,11 +173,11 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
 
         if (activeTab === 'evidence' && documents === null) {
           try {
-            const res = await multasService.getDocumentos(Number(multa.id));
+            const res: any = await multasService.getDocumentos(Number(multa.id));
             if (!mounted) {
               return;
             }
-            const docs = Array.isArray(res) ? res : (res?.data ?? []);
+            const docs: any = Array.isArray(res) ? res : (res?.data ?? []);
             setDocuments(docs);
           } catch {
             setDocuments([]);
@@ -184,19 +186,19 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
 
         if (activeTab === 'appeals' && appeals === null) {
           try {
-            const res = await multasService.getApelaciones(Number(multa.id));
+            const res: any = await multasService.getApelaciones(Number(multa.id));
             if (!mounted) {
               return;
             }
-            const ap = Array.isArray(res) ? res : (res?.data ?? []);
+            const ap: any = Array.isArray(res) ? res : (res?.data ?? []);
             setAppeals(ap);
           } catch {
             // fallback: buscar en historial acciones relacionadas con apelación
-            const h =
+            const h: any =
               historial && historial.length
                 ? historial
                 : await multasService.getHistorial(Number(multa.id));
-            const histArr = Array.isArray(h) ? h : (h?.data ?? []);
+            const histArr: any = Array.isArray(h) ? h : (h?.data ?? []);
             if (!mounted) {
               return;
             }
@@ -248,8 +250,8 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
       setLoadingTab(true);
       await multasService.registrarPago(Number(multa.id), payload);
       // refrescar historial/pagos
-      const hist = await multasService.getHistorial(Number(multa.id));
-      const histArr = Array.isArray(hist) ? hist : (hist?.data ?? []);
+      const hist: any = await multasService.getHistorial(Number(multa.id));
+      const histArr: any = Array.isArray(hist) ? hist : (hist?.data ?? []);
       setComms(histArr);
       setPayments(
         (histArr || []).filter((x: any) =>
@@ -307,8 +309,8 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
       }
 
       // Normalizar respuesta y refrescar lista
-      const res = await multasService.getApelaciones(Number(multa.id));
-      const ap = Array.isArray(res) ? res : (res?.data ?? []);
+      const res: any = await multasService.getApelaciones(Number(multa.id));
+      const ap: any = Array.isArray(res) ? res : (res?.data ?? []);
       setAppeals(ap);
       setActiveTab('appeals');
 
@@ -328,6 +330,11 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
       setLoadingTab(false);
     }
   };
+
+  // Evitar render si no hay multa (la página Next debe manejar loading/no encontrado)
+  if (!multa) {
+    return null;
+  }
 
   return (
     <div className='multadetalle-root'>
@@ -351,7 +358,7 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
                 </small>
               </div>
               <h2 className='h5 mb-0'>
-                Multa {multa.numero} — {multa.tipo_infraccion ?? multa.motivo}
+                Multa {multa.numero} — {multa.tipo_infraccion ?? 'Sin especificar'}
               </h2>
               <small className='text-muted'>
                 Emitida {formatDate(fechaCreada)} • Vence{' '}
@@ -472,7 +479,7 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
                   <div className='info-item'>
                     <span className='info-label'>Tipo de Infracción:</span>
                     <span className='info-value'>
-                      {multa.tipo_infraccion ?? multa.motivo}
+                      {multa.tipo_infraccion ?? 'Sin especificar'}
                     </span>
                   </div>
                 </div>
@@ -754,7 +761,7 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
               </div>
               <div className='info-item'>
                 <span className='info-label'>Última Multa:</span>
-                <span className='info-value'>{formatDate(multa.fecha)}</span>
+                <span className='info-value'>{formatDate(multa.fecha_infraccion)}</span>
               </div>
             </div>
 
@@ -906,7 +913,7 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
                     <input
                       type='date'
                       className='form-control'
-                      defaultValue={formatDateInput(multa.fecha)}
+                      defaultValue={formatDateInput(multa.fecha_infraccion)}
                     />
                   </div>
                   <div className='col-md-6 mb-3'>

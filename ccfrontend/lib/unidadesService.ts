@@ -15,7 +15,7 @@ class UnidadesService {
         data: (data || []).map(r => this.adaptUnidadFromBackend(r)),
         totalPaginas,
       };
-    } catch (err) {
+    } catch (err: any) {
       console.error('❌ Frontend: Error en getUnidades:', err.response?.status, err.message);
       throw err;
     }
@@ -269,7 +269,7 @@ class UnidadesService {
 
   // ===== ADAPTADORES =====
   private adaptUnidadFromBackend(raw: any): any {
-    if (!raw) return raw;
+    if (!raw) {return raw;}
     return {
       id: raw.id,
       numero: raw.numero || raw.codigo,

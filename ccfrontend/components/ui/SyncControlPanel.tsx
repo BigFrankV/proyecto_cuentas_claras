@@ -122,7 +122,7 @@ const SyncControlPanel: React.FC<SyncControlPanelProps> = ({
       }, 5000);
       return () => clearTimeout(timeout);
     }
-    return; // Explicitly return undefined for code paths without cleanup
+    return undefined;
   }, [message]);
 
   return (

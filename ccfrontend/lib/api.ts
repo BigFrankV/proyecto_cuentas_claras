@@ -17,12 +17,21 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   config => {
     const token = localStorage.getItem('auth_token');
+    console.log('🔐 [API Request] Ruta:', config.url);
+    console.log('🔐 [API Request] Token presente:', !!token);
+    console.log('🔐 [API Request] Base URL:', config.baseURL);
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔐 [API Request] Token agregado al header');
+    } else {
+      console.warn('🔐 [API Request] ⚠️ NO HAY TOKEN en localStorage');
     }
+    
     return config;
   },
   error => {
+    console.error('🔐 [API Request Error]:', error);
     return Promise.reject(error);
   },
 );
@@ -30,15 +39,34 @@ apiClient.interceptors.request.use(
 // Interceptor para manejar respuestas y errores
 apiClient.interceptors.response.use(
   response => {
+    console.log('✅ [API Response] Ruta:', response.config.url);
+    console.log('✅ [API Response] Status:', response.status);
+    console.log('✅ [API Response] Data:', response.data);
     return response;
   },
   error => {
-    // Si el token expiró, redirigir al login
+    console.error('❌ [API Error] Ruta:', error.config?.url);
+    console.error('❌ [API Error] Status:', error.response?.status);
+    console.error('❌ [API Error] Error message:', error.message);
+    console.error('❌ [API Error] Response data:', error.response?.data);
+    console.error('❌ [API Error] Code:', error.code);
+    
+    // Si el token expiró o no existe, limpiar y redirigir
     if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
+      console.error('❌ [API Error] 401 - No autorizado, limpiando sesión...');
+      
+      // Limpiar localStorage
       if (typeof window !== 'undefined') {
-        window.location.href = '/';
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
+        localStorage.removeItem('token');
+        
+        // Redirigir SOLO si no estamos ya en la página de login
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/' && currentPath !== '/login') {
+          console.error('❌ [API Error] Redirigiendo a login...');
+          window.location.href = '/';
+        }
       }
     }
     return Promise.reject(error);

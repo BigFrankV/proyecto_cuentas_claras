@@ -9,7 +9,7 @@ const { authorize } = require('../middleware/authorize');
  * @swagger
  * tags:
  *   - name: Comunidades
- *     description: Gestión de comunidades
+ *     description: Gestiï¿½n de comunidades
  */
 
 /**
@@ -17,9 +17,9 @@ const { authorize } = require('../middleware/authorize');
  * /comunidades:
  *   get:
  *     tags: [Comunidades]
- *     summary: Lista comunidades con estadísticas completas
+ *     summary: Lista comunidades con estadï¿½sticas completas
  *     description: |
- *       Retorna todas las comunidades con estadísticas. Si el usuario no es superadmin,
+ *       Retorna todas las comunidades con estadï¿½sticas. Si el usuario no es superadmin,
  *       solo retorna las comunidades asignadas.
  *       Basado en: CONSULTAS_SQL_COMUNIDADES.sql secciones 1.1 y 1.2
  *     security:
@@ -34,7 +34,7 @@ const { authorize } = require('../middleware/authorize');
  *         name: direccion
  *         schema:
  *           type: string
- *         description: Filtrar por dirección
+ *         description: Filtrar por direcciï¿½n
  *       - in: query
  *         name: rut
  *         schema:
@@ -42,14 +42,24 @@ const { authorize } = require('../middleware/authorize');
  *         description: Filtrar por RUT
  *     responses:
  *       200:
- *         description: Lista de comunidades con estadísticas
+ *         description: Lista de comunidades con estadï¿½sticas
  */
 router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conserje', 'contador', 'proveedor_servicio', 'residente', 'propietario', 'inquilino', 'tesorero', 'presidente_comite'), async (req, res) => {
   try {
+    console.log('ðŸ“Š [BACKEND] GET /comunidades - Iniciando');
+    console.log('ðŸ“Š [BACKEND] Usuario autenticado:', {
+      id: req.user.id,
+      username: req.user.username,
+      persona_id: req.user.persona_id,
+      is_superadmin: req.user.is_superadmin,
+    });
+    
     const userId = req.user.persona_id; // <-- cambiar a req.user.persona_id
     const { nombre, direccion, rut } = req.query;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 1.1
+    console.log('ðŸ“Š [BACKEND] ParÃ¡metros de query:', { nombre, direccion, rut });
+    
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciÃ³n 1.1
     let query = `
       SELECT 
           c.id,
@@ -59,7 +69,7 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
           c.email_contacto AS email,
           c.created_at AS fechaCreacion,
           c.updated_at AS fechaActualizacion,
-          -- Estadísticas
+          -- Estadï¿½sticas
           COALESCE(unidades.total, 0) AS totalUnidades,
           COALESCE(unidades.ocupadas, 0) AS unidadesOcupadas,
           COALESCE(residentes.total, 0) AS totalResidentes,
@@ -98,13 +108,13 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
     
     const params = [];
     
-    // Filtro por usuario (sección 1.2 del SQL) - Si no es superadmin
+    // Filtro por usuario (secciï¿½n 1.2 del SQL) - Si no es superadmin
     if (!req.user.is_superadmin) {
       query += ` AND c.id IN (SELECT urc.comunidad_id FROM usuario_miembro_comunidad urc WHERE urc.persona_id = ? AND urc.activo = 1 AND (urc.hasta IS NULL OR urc.hasta > CURDATE()))`; // <-- cambiar usuario_rol_comunidad a usuario_miembro_comunidad
       params.push(userId);
     }
     
-    // Filtros adicionales (sección 13.1 y 13.2 del SQL)
+    // Filtros adicionales (secciï¿½n 13.1 y 13.2 del SQL)
     if (nombre) {
       query += ` AND c.razon_social LIKE ?`;
       params.push(`%${nombre}%`);
@@ -122,10 +132,18 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
     
     query += ` ORDER BY c.razon_social`;
     
+    console.log('ðŸ“Š [BACKEND] Query preparada:', query.substring(0, 200) + '...');
+    console.log('ðŸ“Š [BACKEND] ParÃ¡metros SQL:', params);
+    
     const [rows] = await db.query(query, params);
+    
+    console.log('ðŸ“Š [BACKEND] Comunidades encontradas:', rows.length);
+    console.log('ðŸ“Š [BACKEND] Datos:', rows);
+    
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching communities:', err);
+    console.error('âŒ [BACKEND] Error fetching communities:', err);
+    console.error('âŒ [BACKEND] Stack:', err.stack);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -136,7 +154,7 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
  *   get:
  *     tags: [Comunidades]
  *     summary: Obtener detalle completo de una comunidad
- *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 2.1
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 2.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -147,7 +165,7 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
  *         required: true
  *     responses:
  *       200:
- *         description: Información completa de la comunidad
+ *         description: Informaciï¿½n completa de la comunidad
  *       404:
  *         description: Comunidad no encontrada
  */
@@ -155,7 +173,7 @@ router.get('/:id', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 2.1
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 2.1
     const query = `
       SELECT 
           c.id,
@@ -170,7 +188,7 @@ router.get('/:id', authenticate, async (req, res) => {
           c.updated_at AS fechaActualizacion,
           c.moneda,
           c.tz AS zonaHoraria,
-          -- Estadísticas
+          -- Estadï¿½sticas
           COALESCE(unidades.total, 0) AS totalUnidades,
           COALESCE(unidades.ocupadas, 0) AS unidadesOcupadas,
           COALESCE(residentes.total, 0) AS totalResidentes,
@@ -217,7 +235,7 @@ router.get('/:id', authenticate, async (req, res) => {
  *   get:
  *     tags: [Comunidades]
  *     summary: Obtener amenidades de una comunidad
- *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 3.1
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 3.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -234,14 +252,14 @@ router.get('/:id/amenidades', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 3.1
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 3.1
     const query = `
       SELECT 
           a.id,
           a.nombre,
           a.reglas AS descripcion,
           CASE 
-              WHEN a.requiere_aprobacion = 1 THEN 'Requiere Aprobación'
+              WHEN a.requiere_aprobacion = 1 THEN 'Requiere Aprobaciï¿½n'
               ELSE 'Disponible'
           END AS estado,
           a.requiere_aprobacion AS requiereReserva,
@@ -267,7 +285,7 @@ router.get('/:id/amenidades', authenticate, async (req, res) => {
  *   get:
  *     tags: [Comunidades]
  *     summary: Obtener edificios de una comunidad
- *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 4.1
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 4.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -284,7 +302,7 @@ router.get('/:id/edificios', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 4.1
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 4.1
     const query = `
       SELECT 
           e.id,
@@ -315,8 +333,8 @@ router.get('/:id/edificios', authenticate, async (req, res) => {
  *     tags: [Comunidades]
  *     summary: Obtener contactos de una comunidad
  *     description: |
- *       Retorna usuarios con acceso a la comunidad (administradores, comité, etc.)
- *       Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 5.1
+ *       Retorna usuarios con acceso a la comunidad (administradores, comitï¿½, etc.)
+ *       Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 5.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -333,7 +351,7 @@ router.get('/:id/contactos', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 5.1
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 5.1
     const query = `
       SELECT 
           p.id,
@@ -366,7 +384,7 @@ router.get('/:id/contactos', authenticate, async (req, res) => {
  *   get:
  *     tags: [Comunidades]
  *     summary: Obtener documentos de una comunidad
- *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 6.1
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 6.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -383,7 +401,7 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 6.1
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 6.1
     const query = `
       SELECT 
           dc.id,
@@ -415,7 +433,7 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
  *     description: |
  *       Retorna personas con titularidad activa en unidades de la comunidad.
  *       Incluye propietarios y arrendatarios vigentes.
- *       Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 7.1
+ *       Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 7.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -426,13 +444,13 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
  *         required: true
  *     responses:
  *       200:
- *         description: Lista de residentes con información de unidad
+ *         description: Lista de residentes con informaciï¿½n de unidad
  */
 router.get('/:id/residentes', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 7.1
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 7.1
     const query = `
       SELECT DISTINCT
           p.id,
@@ -464,7 +482,7 @@ router.get('/:id/residentes', authenticate, async (req, res) => {
   }
 });
 
-// Alias para compatibilidad con código legacy
+// Alias para compatibilidad con cï¿½digo legacy
 /**
  * @swagger
  * /comunidades/{id}/miembros:
@@ -560,8 +578,8 @@ router.get('/:id/miembros', authenticate, async (req, res) => {
  * /comunidades/{id}/parametros:
  *   get:
  *     tags: [Comunidades]
- *     summary: Obtener parámetros de cobranza de una comunidad
- *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 8.1
+ *     summary: Obtener parï¿½metros de cobranza de una comunidad
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 8.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -572,15 +590,15 @@ router.get('/:id/miembros', authenticate, async (req, res) => {
  *         required: true
  *     responses:
  *       200:
- *         description: Parámetros de cobranza
+ *         description: Parï¿½metros de cobranza
  *       404:
- *         description: No se encontraron parámetros
+ *         description: No se encontraron parï¿½metros
  */
 router.get('/:id/parametros', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 8.1
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 8.1
     const query = `
       SELECT 
           pc.id,
@@ -600,7 +618,7 @@ router.get('/:id/parametros', authenticate, async (req, res) => {
     const [rows] = await db.query(query, [id]);
     
     if (!rows.length) {
-      return res.status(404).json({ error: 'Parámetros no encontrados' });
+      return res.status(404).json({ error: 'Parï¿½metros no encontrados' });
     }
     
     res.json(rows[0]);
@@ -615,10 +633,10 @@ router.get('/:id/parametros', authenticate, async (req, res) => {
  * /comunidades/{id}/estadisticas:
  *   get:
  *     tags: [Comunidades]
- *     summary: Obtener estadísticas financieras de una comunidad
+ *     summary: Obtener estadï¿½sticas financieras de una comunidad
  *     description: |
  *       Retorna resumen de ingresos totales, pagados y pendientes.
- *       Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 9.1
+ *       Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 9.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -629,13 +647,13 @@ router.get('/:id/parametros', authenticate, async (req, res) => {
  *         required: true
  *     responses:
  *       200:
- *         description: Estadísticas financieras
+ *         description: Estadï¿½sticas financieras
  */
 router.get('/:id/estadisticas', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 9.1
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 9.1
     const query = `
       SELECT 
           COALESCE(SUM(ccu.monto_total), 0) AS totalIngresos,
@@ -661,10 +679,10 @@ router.get('/:id/estadisticas', authenticate, async (req, res) => {
  * /comunidades/{id}/flujo-caja:
  *   get:
  *     tags: [Comunidades]
- *     summary: Obtener flujo de caja de una comunidad (últimos 12 meses)
+ *     summary: Obtener flujo de caja de una comunidad (ï¿½ltimos 12 meses)
  *     description: |
  *       Retorna resumen mensual de cuentas de cobro por periodo.
- *       Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 10.1
+ *       Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 10.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -675,13 +693,13 @@ router.get('/:id/estadisticas', authenticate, async (req, res) => {
  *         required: true
  *     responses:
  *       200:
- *         description: Flujo de caja histórico
+ *         description: Flujo de caja histï¿½rico
  */
 router.get('/:id/flujo-caja', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 10.1
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 10.1
     const query = `
       SELECT 
           e.periodo,
@@ -712,7 +730,7 @@ router.get('/:id/flujo-caja', authenticate, async (req, res) => {
  *   post:
  *     tags: [Comunidades]
  *     summary: Crear nueva comunidad
- *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 11.1
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 11.1
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -725,16 +743,16 @@ router.get('/:id/flujo-caja', authenticate, async (req, res) => {
  *             properties:
  *               razon_social:
  *                 type: string
- *                 description: Nombre o razón social de la comunidad
+ *                 description: Nombre o razï¿½n social de la comunidad
  *               rut:
  *                 type: string
  *                 description: RUT de la comunidad
  *               dv:
  *                 type: string
- *                 description: Dígito verificador
+ *                 description: Dï¿½gito verificador
  *               giro:
  *                 type: string
- *                 description: Giro o descripción
+ *                 description: Giro o descripciï¿½n
  *               direccion:
  *                 type: string
  *               email_contacto:
@@ -745,14 +763,14 @@ router.get('/:id/flujo-caja', authenticate, async (req, res) => {
  *       201:
  *         description: Comunidad creada exitosamente
  *       400:
- *         description: Datos inválidos
+ *         description: Datos invï¿½lidos
  */
 router.post('/', [
   authenticate,
   authorize('admin', 'superadmin'),
-  body('razon_social').notEmpty().withMessage('Razón social es requerida'),
+  body('razon_social').notEmpty().withMessage('Razï¿½n social es requerida'),
   body('rut').notEmpty().withMessage('RUT es requerido'),
-  body('dv').notEmpty().withMessage('Dígito verificador es requerido')
+  body('dv').notEmpty().withMessage('Dï¿½gito verificador es requerido')
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -772,7 +790,7 @@ router.post('/', [
     
     const userId = req.user.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 11.1
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 11.1
     const query = `
       INSERT INTO comunidad (
           razon_social,
@@ -819,7 +837,7 @@ router.post('/', [
  *   patch:
  *     tags: [Comunidades]
  *     summary: Actualizar comunidad
- *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 11.2
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 11.2
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -892,7 +910,7 @@ router.patch('/:id', [
     values.push(userId);
     values.push(id);
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 11.2
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 11.2
     await db.query(
       `UPDATE comunidad SET ${updates.join(', ')} WHERE id = ?`,
       values
@@ -918,9 +936,9 @@ router.patch('/:id', [
  *     tags: [Comunidades]
  *     summary: Eliminar comunidad
  *     description: |
- *       Elimina físicamente una comunidad de la base de datos.
+ *       Elimina fï¿½sicamente una comunidad de la base de datos.
  *       Solo disponible para superadmin.
- *       Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 12.1
+ *       Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 12.1
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -942,7 +960,7 @@ router.delete('/:id', [
   try {
     const id = req.params.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 12.1
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 12.1
     await db.query('DELETE FROM comunidad WHERE id = ?', [id]);
     
     res.status(204).end();
@@ -958,7 +976,7 @@ router.delete('/:id', [
  *   get:
  *     tags: [Comunidades]
  *     summary: Verificar acceso de usuario a comunidad
- *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 14.3
+ *     description: Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 14.3
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -969,14 +987,14 @@ router.delete('/:id', [
  *         required: true
  *     responses:
  *       200:
- *         description: Resultado de verificación de acceso
+ *         description: Resultado de verificaciï¿½n de acceso
  */
 router.get('/verificar-acceso/:id', authenticate, async (req, res) => {
   try {
     const comunidadId = req.params.id;
     const userId = req.user.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 14.3
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 14.3
     const query = `
       SELECT COUNT(*) AS tiene_acceso
       FROM usuario_rol_comunidad urc
@@ -1002,21 +1020,21 @@ router.get('/verificar-acceso/:id', authenticate, async (req, res) => {
  * /comunidades/mis-membresias:
  *   get:
  *     tags: [Comunidades]
- *     summary: Obtener membresías del usuario actual
+ *     summary: Obtener membresï¿½as del usuario actual
  *     description: |
  *       Retorna todas las comunidades a las que el usuario tiene acceso con su rol.
- *       Basado en CONSULTAS_SQL_COMUNIDADES.sql sección 14.2
+ *       Basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 14.2
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Lista de membresías del usuario
+ *         description: Lista de membresï¿½as del usuario
  */
 router.get('/mis-membresias', authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
     
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 14.2
+    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secciï¿½n 14.2
     const query = `
       SELECT 
           urc.comunidad_id AS comunidadId,
@@ -1061,12 +1079,12 @@ module.exports = router;
 // PATCH: /comunidades/:id
 // DELETE: /comunidades/:id
 
-// // FINANZAS Y PARÁMETROS
+// // FINANZAS Y PARï¿½METROS
 // GET: /comunidades/:id/parametros
 // GET: /comunidades/:id/estadisticas
 // GET: /comunidades/:id/flujo-caja
 
-// // VALIDACIÓN
+// // VALIDACIï¿½N
 // GET: /comunidades/verificar-acceso/:id
 
 

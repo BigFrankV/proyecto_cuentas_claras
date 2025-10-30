@@ -24,11 +24,13 @@ export default function DashboardCharts({ comunidadId }: DashboardChartsProps) {
   const [medidoresData, setMedidoresData] = useState<ConsumoMedidor[]>([]);
 
   useEffect(() => {
-    const loadChartData = async () => {
-      if (!comunidadId) {
-        return;
-      }
+    if (!comunidadId || comunidadId === 0) {
+      return undefined;
+    }
 
+    let isMounted = true;
+
+    const loadChartData = async () => {
       try {
         setLoading(true);
 
@@ -40,18 +42,26 @@ export default function DashboardCharts({ comunidadId }: DashboardChartsProps) {
           dashboardService.getConsumosMedidores(comunidadId),
         ]);
 
-        setGastosData(gastos);
-        setPagosData(pagos);
-        setEmisionesData(emisiones);
-        setMedidoresData(medidores);
+        if (isMounted) {
+          setGastosData(gastos);
+          setPagosData(pagos);
+          setEmisionesData(emisiones);
+          setMedidoresData(medidores);
+        }
       } catch {
         // Error loading chart data
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadChartData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [comunidadId]);
 
   return (
