@@ -59,7 +59,12 @@ export default function CategoriasGastoListado() {
       console.log('API Response:', response); // <-- añadir
       console.log('Response data:', response.data); // <-- añadir
       setCategories(response.data);
-      setPagination(response.pagination);
+      setPagination({
+        total: response.pagination?.total || 0,
+        page: response.pagination?.offset ? Math.floor((response.pagination.offset || 0) / (response.pagination.limit || 10)) + 1 : 1,
+        limit: response.pagination?.limit || 10,
+        pages: response.pagination?.pages || 0,
+      });
       console.log('Categories set:', response.data); // <-- añadir
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -342,7 +347,7 @@ export default function CategoriasGastoListado() {
                         </td>
                         <td>{category.nombre}</td>{' '}
                         {/* Descripción como nombre por ahora */}
-                        <td>{category.comunidad}</td>
+                        <td>{category.comunidad_id}</td>
                         <td>{getStatusBadge(category.status)}</td>
                         <td className='text-end'>
                           <div className='d-flex gap-1 justify-content-end'>
@@ -383,7 +388,7 @@ export default function CategoriasGastoListado() {
                         <div
                           className='category-icon me-3'
                           style={{
-                            backgroundColor: category.color,
+                            backgroundColor: '#007bff',
                             width: '48px',
                             height: '48px',
                             borderRadius: '50%',
@@ -397,15 +402,15 @@ export default function CategoriasGastoListado() {
                             className='material-icons'
                             style={{ fontSize: '24px' }}
                           >
-                            {category.icon}
+                            category
                           </span>
                         </div>
                         <div className='flex-grow-1'>
                           <h6 className='data-card-title mb-0'>
-                            {category.name}
+                            {category.nombre}
                           </h6>
                           <small className='text-muted'>
-                            {category.community}
+                            {category.comunidad_id}
                           </small>
                         </div>
                       </div>

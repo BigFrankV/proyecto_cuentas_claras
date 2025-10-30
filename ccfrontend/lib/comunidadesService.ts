@@ -8,16 +8,43 @@ class ComunidadesService {
   // Métodos CRUD básicos
   async getComunidades(filtros?: ComunidadFiltros): Promise<Comunidad[]> {
     try {
+      console.log('📍 [ComunidadesService] getComunidades - Iniciando solicitud');
+      console.log('📍 [ComunidadesService] Filtros:', filtros);
+      
       const params = new URLSearchParams();
       
       if (filtros?.busqueda) {params.append('nombre', filtros.busqueda);}
       if (filtros?.direccion) {params.append('direccion', filtros.direccion);}
       if (filtros?.tipo) {params.append('rut', filtros.tipo);} // Si tipo es RUT
 
-      const response = await apiClient.get(`${this.baseUrl}${params.toString() ? `?${params.toString()}` : ''}`);
+      const url = `${this.baseUrl}${params.toString() ? `?${params.toString()}` : ''}`;
+      console.log('📍 [ComunidadesService] URL completa:', url);
+      
+      const token = localStorage.getItem('auth_token');
+      console.log('📍 [ComunidadesService] Token presente:', !!token);
+      
+      // ✅ NUEVA VERIFICACIÓN: Si no hay token, no intentar
+      if (!token) {
+        console.error('❌ [ComunidadesService] SIN TOKEN - No se puede acceder a comunidades');
+        throw new Error('No hay autenticación (token ausente)');
+      }
+      
+      const response = await apiClient.get(url);
+      console.log('📍 [ComunidadesService] Respuesta exitosa. Comunidades:', response.data.length);
+      
       return response.data.map((comunidad: any) => this.normalizeComunidad(comunidad));
-    } catch (error) {
-      console.error('Error fetching comunidades:', error);
+    } catch (error: any) {
+      console.error('❌ [ComunidadesService] Error fetching comunidades:', error.message);
+      console.error('❌ [ComunidadesService] Status:', error.response?.status);
+      console.error('❌ [ComunidadesService] Response:', error.response?.data);
+      
+      // ✅ NUEVA MANEJO: Si es 401, informar claramente
+      if (error.response?.status === 401) {
+        console.error('❌ [ComunidadesService] 401 - Sin autorización. Usuario debe hacer login.');
+        throw new Error('No autorizado. Por favor, haz login.');
+      }
+      
+      console.error('❌ [ComunidadesService] Full error:', error);
       throw error; // Propagar error para manejarlo en el componente
     }
   }

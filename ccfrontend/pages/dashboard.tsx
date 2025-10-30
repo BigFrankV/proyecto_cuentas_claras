@@ -31,31 +31,62 @@ export default function Dashboard() {
   const [, setIsLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales - SOLO si el usuario está autenticado
   useEffect(() => {
+    let isMounted = true;
+
     const loadInitialData = async () => {
       try {
+        console.log('📊 [Dashboard] loadInitialData - Iniciando');
+        console.log('📊 [Dashboard] Usuario actual:', user);
+        console.log('📊 [Dashboard] Token:', localStorage.getItem('auth_token'));
+        
+        // ✅ NUEVA VERIFICACIÓN: Si no hay usuario, no continuar
+        if (!user) {
+          console.log('❌ [Dashboard] Sin usuario autenticado, abortando carga de datos');
+          setIsLoading(false);
+          return;
+        }
+        
         const comunidadesData = await comunidadesService.getComunidades();
+        
+        if (!isMounted) {
+          console.log('📊 [Dashboard] Componente desmontado, abortando');
+          return;
+        }
+
+        console.log('📊 [Dashboard] Comunidades recibidas:', comunidadesData.length);
         setComunidades(comunidadesData);
 
         // Inicializar con la primera comunidad si existe
         if (comunidadesData.length > 0) {
           const primeraComunidad = comunidadesData[0];
           if (primeraComunidad) {
+            console.log('📊 [Dashboard] Estableciendo primera comunidad:', primeraComunidad.id);
             setSelectedComunidad(primeraComunidad.id);
-            await loadDashboardData(primeraComunidad.id);
           }
+        } else {
+          console.warn('📊 [Dashboard] ⚠️ No hay comunidades disponibles');
         }
       } catch (err) {
-        console.error('Error loading initial data:', err);
-        setError('Error al cargar los datos iniciales');
+        if (isMounted) {
+          console.error('❌ [Dashboard] Error loading initial data:', err);
+          setError('Error al cargar los datos iniciales');
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          console.log('📊 [Dashboard] loadInitialData - Completado');
+          setIsLoading(false);
+        }
       }
     };
 
     loadInitialData();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   // Función para cargar datos del dashboard
   const loadDashboardData = async (comunidadId: number) => {
@@ -67,6 +98,15 @@ export default function Dashboard() {
       setError('Error al cargar los datos del dashboard');
     }
   };
+
+  // Cargar datos del dashboard cuando cambia la comunidad seleccionada
+  useEffect(() => {
+    if (selectedComunidad && selectedComunidad > 0) {
+      setIsLoading(true);
+      loadDashboardData(selectedComunidad);
+      setIsLoading(false);
+    }
+  }, [selectedComunidad]);
 
   // Función para cambiar de comunidad
   const handleComunidadChange = async (comunidadId: number) => {

@@ -41,7 +41,7 @@ export function useGastosShared(
           typeof comunidadId === 'number' ? comunidadId : undefined,
           { limit: 100, offset: 0 },
         );
-        const items = resp.data || [];
+        const items = Array.isArray(resp.data) ? resp.data : (resp.data ? [resp.data] : []);
         sharedData = { timestamp: Date.now(), items };
         notify(items);
       } catch (err) {

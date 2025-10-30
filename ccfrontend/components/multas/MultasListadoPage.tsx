@@ -13,7 +13,7 @@ const MultasListadoPage: React.FC = () => {
 
   const router = useRouter();
   const { user } = useAuth();
-  const { canCreateMulta } = usePermissions();
+  const { canManageFinances } = usePermissions();
 
   console.log('👤 Usuario en MultasListadoPage:', user); // ✅ Agrega esto
 
@@ -79,20 +79,14 @@ const MultasListadoPage: React.FC = () => {
     try {
       if (action === 'delete') {
         await Promise.all(
-          selectedFines.map(id => multasService.deleteMulta(id)),
-        );
-        cargarMultas();
-      } else if (action === 'pay') {
-        // ✅ Agrega acción para marcar pagadas
-        await Promise.all(
-          selectedFines.map(id => multasService.marcarPagada(id)),
+          selectedFines.map(id => multasService.deleteMulta(Number(id))),
         );
         cargarMultas();
       } else if (action === 'cancel') {
         // ✅ Agrega acción para anular
         await Promise.all(
           selectedFines.map(id =>
-            multasService.anularMulta(id, 'Anulada masivamente'),
+            multasService.anularMulta(Number(id), 'Anulada masivamente'),
           ),
         );
         cargarMultas();
@@ -209,7 +203,7 @@ const MultasListadoPage: React.FC = () => {
                 <button className='btn btn-outline-secondary me-2'>
                   <i className='material-icons'>notifications</i>
                 </button>
-                {canCreateMulta && (
+                {canManageFinances && (
                   <Link href='/multas/nueva' className='btn btn-primary'>
                     <i className='material-icons me-2'>add</i>Nueva Multa
                   </Link>
