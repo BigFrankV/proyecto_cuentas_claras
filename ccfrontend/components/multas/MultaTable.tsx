@@ -1,18 +1,12 @@
 import React from 'react';
 
 import { useAuth } from '@/lib/useAuth';
-import {
-  canRegisterPayment,
-  canEditMulta,
-  canAnularMulta,
-  canApelarMulta,
-  canDeleteMulta,
-} from '@/lib/usePermissions';
+import { usePermissions, Permission } from '@/lib/usePermissions';
 
-import ActionsDropdown from '@/components/ActionsDropdown';
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function MultaTable({ multas, onAction }: any) {
   const { user } = useAuth();
+  const { hasPermission } = usePermissions();
 
   return (
     <table className='table multas-table'>
@@ -23,11 +17,12 @@ export default function MultaTable({ multas, onAction }: any) {
           const showRegister =
             !isPagada &&
             ['pendiente', 'vencido'].includes(String(m.estado).toLowerCase()) &&
-            canRegisterPayment(user, m.comunidad_id);
-          const showEdit = !isPagada && canEditMulta(user, m.comunidad_id);
-          const showAnular = canAnularMulta(user, m.comunidad_id); // según política, puede anular aunque esté pagada (ajusta si no)
-          const showApelar = !isPagada && canApelarMulta(user, m);
-          const showDelete = canDeleteMulta(user);
+            hasPermission(Permission.MANAGE_FINANCES, m.comunidad_id);
+          const showEdit = !isPagada && hasPermission(Permission.MANAGE_FINANCES, m.comunidad_id);
+          const showAnular = hasPermission(Permission.MANAGE_FINANCES, m.comunidad_id);
+          const showApelar = !isPagada && user; // Users can appeal if authenticated
+          const showDelete = hasPermission(Permission.MANAGE_FINANCES);
+
 
           return (
             <tr key={m.id}>
@@ -36,88 +31,65 @@ export default function MultaTable({ multas, onAction }: any) {
               <td>{m.persona_id}</td>
               <td>{m.estado}</td>
               <td>
-                <ActionsDropdown
-                  trigger={
-                    <span
-                      className={`btn btn-sm ${isPagada ? 'btn-outline-secondary disabled' : 'btn-outline-secondary'}`}
+                <div className='btn-group btn-group-sm' role='group'>
+                  <button
+                    type='button'
+                    className='btn btn-outline-secondary'
+                    onClick={() => onAction('view', m)}
+                  >
+                    Ver
+                  </button>
+
+                  {showRegister && (
+                    <button
+                      type='button'
+                      className='btn btn-outline-success'
+                      onClick={() => onAction('payment', m)}
                     >
-                      {isPagada ? 'Acciones • Pagada' : 'Acciones ▾'}
-                    </span>
-                  }
-                  menu={
-                    <ul style={{ margin: 0, padding: 8, listStyle: 'none' }}>
-                      <li>
-                        <button
-                          className='dropdown-item'
-                          onClick={() => onAction('view', m)}
-                        >
-                          Ver Detalle
-                        </button>
-                      </li>
+                      Pago
+                    </button>
+                  )}
 
-                      {showRegister && (
-                        <li>
-                          <button
-                            className='dropdown-item text-success'
-                            onClick={() => onAction('payment', m)}
-                          >
-                            Registrar Pago
-                          </button>
-                        </li>
-                      )}
+                  {showEdit && (
+                    <button
+                      type='button'
+                      className='btn btn-outline-primary'
+                      onClick={() => onAction('edit', m)}
+                    >
+                      Editar
+                    </button>
+                  )}
 
-                      {showEdit && (
-                        <li>
-                          <button
-                            className='dropdown-item'
-                            onClick={() => onAction('edit', m)}
-                          >
-                            Editar
-                          </button>
-                        </li>
-                      )}
+                  {showApelar && (
+                    <button
+                      type='button'
+                      className='btn btn-outline-info'
+                      onClick={() => onAction('appeal', m)}
+                    >
+                      Apelar
+                    </button>
+                  )}
 
-                      {showApelar && (
-                        <li>
-                          <button
-                            className='dropdown-item'
-                            onClick={() => onAction('appeal', m)}
-                          >
-                            Apelar
-                          </button>
-                        </li>
-                      )}
+                  {showAnular && (
+                    <button
+                      type='button'
+                      className='btn btn-outline-danger'
+                      onClick={() => onAction('anular', m)}
+                    >
+                      Anular
+                    </button>
+                  )}
 
-                      {showAnular && (
-                        <li>
-                          <button
-                            className='dropdown-item text-danger'
-                            onClick={() => onAction('anular', m)}
-                          >
-                            Anular Multa
-                          </button>
-                        </li>
-                      )}
-
-                      {showDelete && (
-                        <li>
-                          <hr />
-                        </li>
-                      )}
-
-                      {showDelete && (
-                        <li>
-                          <button
-                            className='dropdown-item text-danger'
-                            onClick={() => onAction('delete', m)}
-                          >
-                            Eliminar (superadmin)
-                          </button>
-                        </li>
-                      )}
-                    </ul>
-                  }
-                />
+                  {showDelete && (
+                    <button
+                      type='button'
+                      className='btn btn-outline-dark'
+                      onClick={() => onAction('delete', m)}
+                    >
+                      Eliminar
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           );

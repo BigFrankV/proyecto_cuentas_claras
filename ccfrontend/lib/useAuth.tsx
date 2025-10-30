@@ -32,7 +32,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Verificar autenticación al cargar la app
   useEffect(() => {
-    const logout = async () => {
+    let isMounted = true;
+
+    const clearSession = async () => {
       console.log('🚪 Iniciando proceso de logout...');
       try {
         await authService.logout();
@@ -40,10 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('❌ Error en logout del servidor:', error);
       } finally {
-        console.log('🧹 Limpiando estado local...');
-        setUser(null);
-        console.log('🏠 Redirigiendo a página de inicio...');
-        router.push('/');
+        if (isMounted) {
+          console.log('🧹 Limpiando estado local...');
+          setUser(null);
+          console.log('🏠 Redirigiendo a página de inicio...');
+          router.push('/');
+        }
       }
     };
 
@@ -57,7 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Primero verificar si tenemos un token válido
         if (!authService.isAuthenticated()) {
           console.log('❌ No hay token válido o está expirado');
-          setUser(null);
+          if (isMounted) {
+            setUser(null);
+          }
           return;
         }
 
@@ -71,12 +77,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (userData.memberships) {
             console.log('🏢 Membresías del usuario:', userData.memberships);
           }
-          setUser(userData);
+          if (isMounted) {
+            setUser(userData);
+          }
           
           // Verificar con el servidor para sincronizar datos
           try {
             const currentUser = await authService.getCurrentUser();
-            if (currentUser) {
+            if (currentUser && isMounted) {
               console.log('✅ Usuario verificado con servidor:', currentUser);
               // ✅ NUEVO: Log de memberships actualizadas
               if (currentUser.memberships) {
@@ -89,14 +97,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               if (typeof window !== 'undefined') {
                 localStorage.setItem('user_data', JSON.stringify(updatedUserData));
               }
-            } else {
+            } else if (!currentUser) {
               console.log('⚠️ Servidor no reconoce el token, manteniendo datos locales');
             }
           } catch (serverError: any) {
             console.log('⚠️ Error verificando con servidor:', serverError.message);
             if (serverError.response?.status === 401) {
               console.log('❌ Token inválido según servidor, limpiando sesión');
-              await logout();
+              await clearSession();
               return;
             }
             // Si es otro tipo de error, mantener datos locales
@@ -105,20 +113,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           console.log('❌ No se encontraron datos de usuario en localStorage');
           // Si hay token pero no datos de usuario, limpiar todo
-          await logout();
+          await clearSession();
         }
       } catch (error) {
         console.error('❌ Error verificando autenticación:', error);
         // Si hay error, limpiar datos
-        await logout();
+        await clearSession();
       } finally {
-        setIsLoading(false);
-        console.log('🔍 Verificación de autenticación completada');
+        if (isMounted) {
+          setIsLoading(false);
+          console.log('🔍 Verificación de autenticación completada');
+        }
       }
     };
 
     checkAuthStatus();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
 
   // ✅ CORREGIR: Agregar soporte para totp_code opcional
   const login = async (identifier: string, password: string) => {

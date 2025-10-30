@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 import api from '../../lib/api';
 import { useAuth } from '../../lib/useAuth';
 
@@ -37,13 +38,13 @@ interface Torre {
 const edificios: Edificio[] = [
   { id: '1', nombre: 'Torre Central', comunidadId: '2' },
   { id: '2', nombre: 'Edificio Norte', comunidadId: '1' },
-  { id: '3', nombre: 'Jardines del Este', comunidadId: '3' }
+  { id: '3', nombre: 'Jardines del Este', comunidadId: '3' },
 ];
 
 const torres: Torre[] = [
   { id: '1', nombre: 'Torre A', edificioId: '2' },
   { id: '2', nombre: 'Torre B', edificioId: '1' },
-  { id: '3', nombre: 'Torre C', edificioId: '3' }
+  { id: '3', nombre: 'Torre C', edificioId: '3' },
 ];
 
 const UnidadFilters: React.FC<UnidadFiltersProps> = ({
@@ -52,14 +53,14 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
   searchTerm,
   onSearchChange,
   viewMode,
-  onViewModeChange
+  onViewModeChange,
 }) => {
   const { user } = useAuth();
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [selectedComunidad, setSelectedComunidad] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user === undefined || user === null) return; // esperar auth
+    if (user === undefined || user === null) {return;} // esperar auth
     async function load() {
       try {
         const res = await api.get('/unidades/dropdowns/comunidades');
@@ -68,15 +69,12 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
         if (user?.comunidad_id) {
           setSelectedComunidad(String(user.comunidad_id));
           onFilterChange('comunidad', String(user.comunidad_id));
-        } else if (Array.isArray(user?.comunidades) && user.comunidades.length === 1) {
-          setSelectedComunidad(String(user.comunidades[0]));
-          onFilterChange('comunidad', String(user.comunidades[0]));
         }
       } catch (err: any) {
         console.error('Error loading comunidades dropdown', err);
-        // fallback si backend devuelve 403: usar claims del token (si vienen)
-        if (err?.response?.status === 403 && Array.isArray(user?.comunidades) && user.comunidades.length) {
-          const fallback = user.comunidades.map((id: any) => ({ id: String(id), nombre: String(id) }));
+        // fallback si backend devuelve 403: usar comunidad_id del user si existe
+        if (err?.response?.status === 403 && user?.comunidad_id) {
+          const fallback = [{ id: String(user.comunidad_id), nombre: String(user.comunidad_id) }];
           setComunidades(fallback);
           if (fallback.length === 1) {
             setSelectedComunidad(fallback[0].id);
@@ -90,12 +88,12 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
 
   // Filtrar edificios según comunidad seleccionada
   const availableEdificios = edificios.filter(edificio => 
-    !filters.comunidad || edificio.comunidadId === filters.comunidad
+    !filters.comunidad || edificio.comunidadId === filters.comunidad,
   );
 
   // Filtrar torres según edificio seleccionado
   const availableTorres = torres.filter(torre => 
-    !filters.edificio || torre.edificioId === filters.edificio
+    !filters.edificio || torre.edificioId === filters.edificio,
   );
 
   const isAdmin = user?.is_superadmin === true || (Array.isArray(user?.roles) && user.roles.includes('admin'));
@@ -140,7 +138,7 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
       className='p-3 mb-4'
       style={{ 
         backgroundColor: '#f8f9fa', 
-        borderRadius: 'var(--radius)'
+        borderRadius: 'var(--radius)',
       }}
     >
       <div className='row g-3'>
@@ -157,10 +155,10 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
             ) : (
               <option value='' disabled>Seleccione comunidad</option>
             )}
-             {comunidades.map(comunidad => (
-               <option key={comunidad.id} value={comunidad.id}>{comunidad.nombre}</option>
-             ))}
-           </select>
+            {comunidades.map(comunidad => (
+              <option key={comunidad.id} value={comunidad.id}>{comunidad.nombre}</option>
+            ))}
+          </select>
         </div>
         <div className='col-md-3'>
           <label htmlFor='edificioFilter' className='form-label small'>Edificio</label>
@@ -233,7 +231,7 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
                 left: '10px', 
                 transform: 'translateY(-50%)', 
                 color: '#6c757d',
-                fontSize: '20px'
+                fontSize: '20px',
               }}
             >
               search

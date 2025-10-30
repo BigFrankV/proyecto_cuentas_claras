@@ -1,5 +1,6 @@
 import React from 'react';
 import { Form, Row, Col, Button, InputGroup } from 'react-bootstrap';
+
 import type { Comunidad } from '@/types/comunidades';
 
 export interface ProviderFiltersProps {
@@ -33,7 +34,7 @@ export default function ProviderFilters({ search, status, comunidadId, comunidad
         <Col md={3} xs={6} className="d-flex gap-2">
           <Form.Select value={comunidadId ?? ''} onChange={e => onChange({ comunidadId: e.target.value ? Number(e.target.value) : null })}>
             <option value="">Todas las comunidades</option>
-            {comunidades.map(c => <option key={c.id} value={c.id}>{c.razon_social}</option>)}
+            {comunidades.map(c => <option key={c.id} value={c.id}>{c.nombre || c.id}</option>)}
           </Form.Select>
           <Button variant="outline-secondary" onClick={() => { onClear?.(); onChange({ search: '', status: '', comunidadId: null }); }}>Limpiar</Button>
         </Col>

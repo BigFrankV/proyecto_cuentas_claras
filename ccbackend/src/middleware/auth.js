@@ -11,14 +11,34 @@ function generateTempToken(payload, expiresIn = '5m') {
 }
 
 function authenticate(req, res, next) {
+  console.log('🔐 [AUTH Middleware] Verificando token');
+  console.log('🔐 [AUTH Middleware] Headers:', {
+    authorization: req.headers.authorization ? 'presente' : 'NO PRESENTE',
+    'content-type': req.headers['content-type'],
+  });
+  
   const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Missing token' });
+  if (!auth || !auth.startsWith('Bearer ')) {
+    console.error('❌ [AUTH Middleware] Token no presente o formato inválido');
+    return res.status(401).json({ error: 'Missing token' });
+  }
+  
   const token = auth.slice(7);
+  console.log('🔐 [AUTH Middleware] Token extraído:', token.substring(0, 20) + '...');
+  
   try {
     const data = jwt.verify(token, secret);
+    console.log('🔐 [AUTH Middleware] Token validado exitosamente');
+    console.log('🔐 [AUTH Middleware] Usuario:', {
+      id: data.id,
+      username: data.username,
+      persona_id: data.persona_id,
+      is_superadmin: data.is_superadmin,
+    });
     req.user = data;
     next();
   } catch (err) {
+    console.error('❌ [AUTH Middleware] Error validando token:', err.message);
     return res.status(401).json({ error: 'Invalid token' });
   }
 }
