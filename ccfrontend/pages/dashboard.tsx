@@ -33,9 +33,15 @@ export default function Dashboard() {
 
   // Cargar datos iniciales
   useEffect(() => {
+    let isMounted = true;
+
     const loadInitialData = async () => {
       try {
         const comunidadesData = await comunidadesService.getComunidades();
+        if (!isMounted) {
+          return;
+        }
+
         setComunidades(comunidadesData);
 
         // Inicializar con la primera comunidad si existe
@@ -43,18 +49,25 @@ export default function Dashboard() {
           const primeraComunidad = comunidadesData[0];
           if (primeraComunidad) {
             setSelectedComunidad(primeraComunidad.id);
-            await loadDashboardData(primeraComunidad.id);
           }
         }
       } catch (err) {
-        console.error('Error loading initial data:', err);
-        setError('Error al cargar los datos iniciales');
+        if (isMounted) {
+          console.error('Error loading initial data:', err);
+          setError('Error al cargar los datos iniciales');
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Función para cargar datos del dashboard
@@ -67,6 +80,15 @@ export default function Dashboard() {
       setError('Error al cargar los datos del dashboard');
     }
   };
+
+  // Cargar datos del dashboard cuando cambia la comunidad seleccionada
+  useEffect(() => {
+    if (selectedComunidad && selectedComunidad > 0) {
+      setIsLoading(true);
+      loadDashboardData(selectedComunidad);
+      setIsLoading(false);
+    }
+  }, [selectedComunidad]);
 
   // Función para cambiar de comunidad
   const handleComunidadChange = async (comunidadId: number) => {
