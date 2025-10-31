@@ -1,4 +1,4 @@
-import { GastoBackend, GastosListResponse } from '@/types/gastos';
+import { GastoBackend, GastosListResponse, CreateGastoPayload, UpdateGastoPayload } from '@/types/gastos';
 
 import apiClient from './api';
 
@@ -78,22 +78,88 @@ export async function listGastos(
   return p;
 }
 
-export async function getGasto(id: number) {
-  const url = `${ENDPOINT_BASE}/${id}`;
-  const cacheKey = makeCacheKey(url, {});
-  // comprobar cache simple para detalle
-  const cached = cacheStore.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.data.data[0] as GastoBackend;
-  }
-  const res = await apiClient.get(url);
-  const body = res.data;
-  const result = Array.isArray(body) ? { data: body } : body.data || body;
-  cacheStore.set(cacheKey, {
-    data: result,
-    expiresAt: Date.now() + CACHE_TTL_MS,
-  });
-  return result as unknown as GastoBackend;
+export async function getGastoById(id: number): Promise<GastoBackend> {
+  const res = await apiClient.get(`/gastos/${id}`);
+  return res.data;
 }
 
-export default { listGastos, getGasto };
+export async function createGasto(comunidadId: number | null, data) {
+  const url = comunidadId ? `/gastos/comunidad/${comunidadId}` : '/gastos';
+  console.log('[SERVICE] createGasto url:', url, 'data:', data);
+  const res = await apiClient.post(url, data);
+  return res.data;
+}
+
+export async function updateGasto(id: number, data: UpdateGastoPayload): Promise<GastoBackend> {
+  const res = await apiClient.patch(`/gastos/${id}`, data);
+  return res.data;
+}
+
+export async function deleteGasto(id: number): Promise<void> {
+  await apiClient.delete(`/gastos/${id}`);
+}
+
+// Para listas desplegables
+export async function getCategorias(comunidadId?: number | null) {
+  const url = comunidadId ? `/gastos/listas/categorias/${comunidadId}` : '/categorias-gasto';
+  console.log('[SERVICE] getCategorias url:', url);
+  try {
+    const res = await apiClient.get(url);
+    const payload = (res?.data && (res.data.data ?? res.data)) ?? [];
+    console.log('[SERVICE] getCategorias normalized length:', Array.isArray(payload) ? payload.length : 'not-array', 'raw:', res?.data);
+    return payload;
+  } catch (err: any) {
+    console.error('[SERVICE] getCategorias error:', err?.response?.status, err?.response?.data || err?.message);
+    throw err;
+  }
+}
+
+export async function getCentrosCosto(comunidadId?: number | null) {
+  const url = comunidadId ? `/centros-costo/comunidad/${comunidadId}/dropdown` : '/centros-costo';
+  console.log('[SERVICE] getCentrosCosto url:', url);
+  try {
+    const res = await apiClient.get(url);
+    const payload = (res?.data && (res.data.data ?? res.data)) ?? [];
+    console.log('[SERVICE] getCentrosCosto normalized length:', Array.isArray(payload) ? payload.length : 'not-array', 'raw:', res?.data);
+    return payload;
+  } catch (err: any) {
+    console.error('[SERVICE] getCentrosCosto error:', err?.response?.status, err?.response?.data || err?.message);
+    throw err;
+  }
+}
+
+export async function getProveedores(comunidadId?: number | null) {
+  const url = comunidadId ? `/proveedores/comunidad/${comunidadId}/dropdown` : '/proveedores';
+  console.log('[SERVICE] getProveedores url:', url);
+  try {
+    const res = await apiClient.get(url);
+    const payload = (res?.data && (res.data.data ?? res.data)) ?? [];
+    console.log('[SERVICE] getProveedores normalized length:', Array.isArray(payload) ? payload.length : 'not-array', 'raw:', res?.data);
+    return payload;
+  } catch (err: any) {
+    console.error('[SERVICE] getProveedores error:', err?.response?.status, err?.response?.data || err?.message);
+    throw err;
+  }
+}
+
+// Aprobaciones
+export async function getAprobaciones(gastoId: number): Promise<any[]> {
+  try {
+    const res = await apiClient.get(`/gastos/${gastoId}/aprobaciones`);
+    return res.data;
+  } catch (err: any) {
+    console.error('getAprobaciones error:', err?.response?.status, err?.response?.data || err.message);
+    return []; // tolerancia: devolver vacío para no romper la UI
+  }
+}
+
+export async function createAprobacion(gastoId: number, data: { accion: 'aprobar' | 'rechazar'; observaciones?: string }) {
+  const res = await apiClient.post(`/gastos/${gastoId}/aprobaciones`, data);
+  return res.data;
+}
+
+export async function getComunidades() {
+  return apiClient.get('/comunidades');
+}
+
+export default { listGastos, getGastoById, createGasto, updateGasto, deleteGasto, getCategorias, getCentrosCosto, getProveedores, getAprobaciones, createAprobacion, getComunidades };
