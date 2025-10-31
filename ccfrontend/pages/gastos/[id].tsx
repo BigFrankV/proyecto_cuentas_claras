@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
+
 import {
   Button,
   Card,
@@ -15,7 +16,7 @@ import {
 
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { getGastoById, getAprobaciones } from '@/lib/gastosService';
+import { getGastoById, getAprobaciones, createAprobacion } from '@/lib/gastosService';
 import { mapBackendToExpense } from '@/types/gastos';
 
 interface Expense {
@@ -65,7 +66,8 @@ interface AttachmentFile {
 export default function GastoDetalle() {
   const router = useRouter();
   const { id } = router.query;
-  const { user, currentComunidadId } = useAuth();
+  const { user } = useAuth();
+  const currentComunidadId = user?.comunidad_id;
 
   const [expense, setExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
@@ -197,21 +199,17 @@ export default function GastoDetalle() {
   const handleApproveExpense = async () => {
     setActionLoading(true);
     try {
-      // Simular API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (expense) {
-        setExpense({
-          ...expense,
-          status: 'approved',
-          currentApprovals: expense.currentApprovals + 1,
-        });
-      }
-
+      await createAprobacion(Number(id), { accion: 'aprobar', observaciones: 'Aprobado' });
+      // Recargar aprobaciones
+      const nuevasAprobaciones = await getAprobaciones(Number(id));
+      setApprovalHistory(nuevasAprobaciones);
+      // Recargar gasto para actualizar estado/aprobaciones
+      const data = await getGastoById(Number(id));
+      setExpense(mapBackendToExpense(data));
       setShowApprovalModal(false);
       alert('Gasto aprobado exitosamente');
-    } catch (error) {
-      console.error('Error approving expense:', error);
+    } catch (err) {
+      console.error('Error al aprobar:', err);
       alert('Error al aprobar el gasto');
     } finally {
       setActionLoading(false);
@@ -221,20 +219,17 @@ export default function GastoDetalle() {
   const handleRejectExpense = async () => {
     setActionLoading(true);
     try {
-      // Simular API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (expense) {
-        setExpense({
-          ...expense,
-          status: 'rejected',
-        });
-      }
-
+      await createAprobacion(Number(id), { accion: 'rechazar', observaciones: 'Rechazado' });
+      // Recargar aprobaciones
+      const nuevasAprobaciones = await getAprobaciones(Number(id));
+      setApprovalHistory(nuevasAprobaciones);
+      // Recargar gasto para actualizar estado/aprobaciones
+      const data = await getGastoById(Number(id));
+      setExpense(mapBackendToExpense(data));
       setShowApprovalModal(false);
       alert('Gasto rechazado');
-    } catch (error) {
-      console.error('Error rejecting expense:', error);
+    } catch (err) {
+      console.error('Error al rechazar:', err);
       alert('Error al rechazar el gasto');
     } finally {
       setActionLoading(false);
@@ -258,33 +253,32 @@ export default function GastoDetalle() {
     }
   };
 
-  const mapToFormData = (gasto: any): any => ({
+  const mapToFormData = (gasto: any): ExpenseFormData => ({
     id: gasto.id,
     description: gasto.glosa || '',
-    category: gasto.categoria || '',
-    provider: gasto.proveedor_nombre || '',
+    category: gasto.categoria_id || 0, // Dinámico
+    provider: gasto.proveedor_id || 0, // Dinámico
     amount: gasto.monto?.toString() || '',
     date: gasto.fecha || '',
-    dueDate: gasto.due_date || '',
+    dueDate: gasto.fecha_vencimiento || '',
     documentType: gasto.documento_tipo || 'factura',
     documentNumber: gasto.documento_numero || '',
-    isRecurring: gasto.is_recurring || false,
-    recurringPeriod: gasto.recurring_period || '',
-    costCenter: gasto.centro_costo || '',
-    tags: gasto.tags || [],
-    observations: gasto.observations || '',
-    priority: gasto.priority || 'medium',
-    requiredApprovals: gasto.required_approvals || 1,
-    attachments: [], // Manejar archivos por separado
-    existingAttachments:
-      gasto.attachments?.map((a: any) => ({
-        id: a.id,
-        name: a.name,
-        type: a.type,
-        size: a.size,
-        url: a.url,
-        uploadedAt: a.uploadedAt,
-      })) || [],
+    isRecurring: gasto.extraordinario === 0, // Dinámico
+    recurringPeriod: gasto.recurring_period || '', // Dinámico
+    costCenter: gasto.centro_costo_id || 0, // Dinámico
+    tags: gasto.tags || [], // Dinámico
+    observations: gasto.observaciones || '',
+    priority: gasto.priority || 'medium', // Dinámico
+    requiredApprovals: gasto.required_aprobaciones || 1,
+    attachments: [],
+    existingAttachments: gasto.attachments?.map((a: any) => ({
+      id: a.id,
+      name: a.name,
+      type: a.type,
+      size: a.size,
+      url: a.url,
+      uploadedAt: a.uploadedAt,
+    })) || [],
   });
 
   const mapFormDataToPayload = (form: any): any => ({
@@ -431,7 +425,7 @@ export default function GastoDetalle() {
 
                 <Button
                   variant='outline-primary'
-                  onClick={() => router.push(`/gastos/${expense.id}/editar`)}
+                  onClick={() => router.push(`/gastos/editar/${expense.id}`)}
                 >
                   <span className='material-icons me-2'>edit</span>
                   Editar
@@ -743,7 +737,7 @@ export default function GastoDetalle() {
                       <Button
                         variant='outline-primary'
                         onClick={() =>
-                          router.push(`/gastos/${expense.id}/editar`)
+                          router.push(`/gastos/editar/${expense.id}`)
                         }
                       >
                         <span className='material-icons me-2'>edit</span>

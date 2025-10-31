@@ -71,10 +71,8 @@ export default function GastosListado() {
 
     try {
       setLoading(true);
-      const resp = await listGastos(resolvedComunidadId, {
-        limit: 100,
-        offset: 0,
-      });
+      const resp = await listGastos(resolvedComunidadId, { limit: 100, offset: 0 });
+      console.log('Respuesta del backend:', resp.data); // Verifica si 'estado' es correcto
       const items = resp.data || [];
       const mapped: Expense[] = (Array.isArray(items) ? items : []).map(
         mapBackendToExpense,
@@ -555,7 +553,7 @@ export default function GastosListado() {
                               size='sm'
                               className='action-button'
                               onClick={() =>
-                                router.push(`/gastos/${expense.id}/editar`)
+                                router.push(`/gastos/editar/${expense.id}`)
                               }
                             >
                               <span className='material-icons'>edit</span>
@@ -684,7 +682,7 @@ export default function GastosListado() {
                             size='sm'
                             onClick={e => {
                               e.stopPropagation();
-                              router.push(`/gastos/${expense.id}/editar`);
+                              router.push(`/gastos/editar/${expense.id}`);
                             }}
                           >
                             <span className='material-icons'>edit</span>

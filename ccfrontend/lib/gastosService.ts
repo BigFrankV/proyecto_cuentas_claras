@@ -158,4 +158,8 @@ export async function createAprobacion(gastoId: number, data: { accion: 'aprobar
   return res.data;
 }
 
-export default { listGastos, getGastoById, createGasto, updateGasto, deleteGasto, getCategorias, getCentrosCosto, getProveedores, getAprobaciones, createAprobacion };
+export async function getComunidades() {
+  return apiClient.get('/comunidades');
+}
+
+export default { listGastos, getGastoById, createGasto, updateGasto, deleteGasto, getCategorias, getCentrosCosto, getProveedores, getAprobaciones, createAprobacion, getComunidades };

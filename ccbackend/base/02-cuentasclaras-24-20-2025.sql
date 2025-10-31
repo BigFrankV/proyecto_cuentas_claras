@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: db
--- Tiempo de generación: 24-10-2025 a las 01:16:04
+-- Tiempo de generación: 31-10-2025 a las 02:51:38
 -- Versión del servidor: 8.0.43
 -- Versión de PHP: 8.3.26
 
@@ -141,13 +141,13 @@ INSERT INTO `auditoria` (`id`, `usuario_id`, `accion`, `tabla`, `registro_id`, `
 --
 DROP VIEW IF EXISTS `bitacora_conserjeria`;
 CREATE TABLE `bitacora_conserjeria` (
-`comunidad_id` bigint
-,`created_at` datetime
-,`detalle` varchar(1000)
-,`evento` varchar(150)
+`id` bigint
+,`comunidad_id` bigint
 ,`fecha_hora` datetime
-,`id` bigint
 ,`usuario_id` bigint
+,`evento` varchar(150)
+,`detalle` varchar(1000)
+,`created_at` datetime
 );
 
 -- --------------------------------------------------------
@@ -158,15 +158,15 @@ CREATE TABLE `bitacora_conserjeria` (
 --
 DROP VIEW IF EXISTS `cargo_financiero_unidad`;
 CREATE TABLE `cargo_financiero_unidad` (
-`comunidad_id` bigint
-,`created_at` datetime
+`id` bigint
 ,`emision_id` bigint
-,`estado` enum('pendiente','pagado','vencido','parcial')
-,`id` bigint
-,`interes_acumulado` decimal(12,2)
+,`comunidad_id` bigint
+,`unidad_id` bigint
 ,`monto_total` decimal(12,2)
 ,`saldo` decimal(12,2)
-,`unidad_id` bigint
+,`estado` enum('pendiente','pagado','vencido','parcial')
+,`interes_acumulado` decimal(12,2)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -392,15 +392,15 @@ INSERT INTO `cuenta_cobro_unidad` (`id`, `emision_id`, `comunidad_id`, `unidad_i
 --
 DROP VIEW IF EXISTS `detalle_cargo_unidad`;
 CREATE TABLE `detalle_cargo_unidad` (
-`cargo_unidad_id` bigint
+`id` bigint
+,`cargo_unidad_id` bigint
 ,`categoria_id` bigint
-,`created_at` datetime
 ,`glosa` varchar(250)
-,`id` bigint
-,`iva_incluido` tinyint(1)
 ,`monto` decimal(12,2)
 ,`origen` enum('gasto','multa','consumo','ajuste')
 ,`origen_id` bigint
+,`iva_incluido` tinyint(1)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -643,13 +643,13 @@ INSERT INTO `emision_gastos_comunes` (`id`, `comunidad_id`, `periodo`, `fecha_ve
 --
 DROP VIEW IF EXISTS `emision_gasto_comun`;
 CREATE TABLE `emision_gasto_comun` (
-`comunidad_id` bigint
-,`created_at` datetime
-,`estado` enum('borrador','emitido','cerrado','anulado')
-,`fecha_vencimiento` date
-,`id` bigint
-,`observaciones` varchar(500)
+`id` bigint
+,`comunidad_id` bigint
 ,`periodo` char(7)
+,`fecha_vencimiento` date
+,`estado` enum('borrador','emitido','cerrado','anulado')
+,`observaciones` varchar(500)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -661,14 +661,14 @@ CREATE TABLE `emision_gasto_comun` (
 --
 DROP VIEW IF EXISTS `emision_gasto_detalle`;
 CREATE TABLE `emision_gasto_detalle` (
-`categoria_id` bigint
-,`created_at` datetime
+`id` bigint
 ,`emision_id` bigint
 ,`gasto_id` bigint
-,`id` bigint
-,`metadata_json` longtext
+,`categoria_id` bigint
 ,`monto` decimal(12,2)
 ,`regla_prorrateo` enum('coeficiente','partes_iguales','consumo','fijo_por_unidad')
+,`metadata_json` longtext
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -682,7 +682,7 @@ DROP TABLE IF EXISTS `gasto`;
 CREATE TABLE `gasto` (
   `id` bigint NOT NULL,
   `numero` varchar(20) NOT NULL,
-  `comunidad_id` bigint NOT NULL,
+  `comunidad_id` bigint DEFAULT NULL,
   `categoria_id` bigint NOT NULL,
   `centro_costo_id` bigint DEFAULT NULL,
   `documento_compra_id` bigint DEFAULT NULL,
@@ -711,11 +711,15 @@ INSERT INTO `gasto` (`id`, `numero`, `comunidad_id`, `categoria_id`, `centro_cos
 (3, '', 3, 3, 3, 3, '2025-09-03', 89250.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto Extraordinario Jardinería', 1, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
 (4, '', 4, 4, 4, 4, '2025-09-04', 35700.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto Multa (no aplica a unidad)', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
 (5, '', 5, 5, 5, 5, '2025-09-05', 107100.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Consumo Común de Agua Caliente', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(6, '', 6, 6, 6, 6, '2025-09-06', 142800.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto Fijo Contabilidad', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(7, '', 7, 7, 7, 7, '2025-09-07', 95200.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Reparación de Motor de Ascensor', 1, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(8, '', 8, 8, 8, 8, '2025-09-08', 47600.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Compra de Materiales de Mantención', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(6, '', 6, 6, 6, 6, '2025-09-06', 142800.00, 'aprobado', 1, 1, 1, 1, NULL, NULL, 'Gasto Fijo Contabilidad', 0, '2025-10-10 18:07:51', '2025-10-31 01:20:51'),
+(7, '', 7, 7, 7, 7, '2025-09-07', 95200.00, 'aprobado', 1, 1, 1, 1, NULL, NULL, 'Reparación de Motor de Ascensor', 1, '2025-10-10 18:07:51', '2025-10-31 00:51:36'),
+(8, '', 8, 8, 8, 8, '2025-09-08', 47600.00, 'aprobado', 1, 1, 2, 2, NULL, NULL, 'Compra de Materiales de Mantención', 0, '2025-10-10 18:07:51', '2025-10-31 02:29:44'),
 (9, '', 9, 9, 9, 9, '2025-09-09', 178500.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Gasto de Administración', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
-(10, '', 10, 10, 10, 10, '2025-09-10', 71400.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Consumo Electricidad Común', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51');
+(10, '', 10, 10, 10, 10, '2025-09-10', 71400.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'Consumo Electricidad Común', 0, '2025-10-10 18:07:51', '2025-10-10 18:07:51'),
+(11, 'GG1761868729601', NULL, 5, 4, NULL, '2025-10-30', 15000.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'test', 0, '2025-10-30 23:58:49', '2025-10-30 23:58:49'),
+(12, 'G1761869562713-1', 1, 5, 4, NULL, '2025-10-31', 150000.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'test edit', 0, '2025-10-31 00:12:42', '2025-10-31 02:47:27'),
+(13, 'G1761870009643-2', 2, 8, 8, NULL, '2025-10-31', 485022.00, 'aprobado', 1, 1, 1, 1, NULL, NULL, 'test', 0, '2025-10-31 00:20:09', '2025-10-31 00:48:01'),
+(14, 'G1761870270191-5', 5, 5, 5, NULL, '2025-10-31', 15620.00, 'aprobado', 1, 1, 1, 1, NULL, NULL, 'admin', 0, '2025-10-31 00:24:30', '2025-10-31 02:30:23');
 
 -- --------------------------------------------------------
 
@@ -733,6 +737,17 @@ CREATE TABLE `gasto_aprobacion` (
   `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Volcado de datos para la tabla `gasto_aprobacion`
+--
+
+INSERT INTO `gasto_aprobacion` (`id`, `gasto_id`, `usuario_id`, `rol_id`, `accion`, `observaciones`, `created_at`) VALUES
+(2, 13, 1, 1, 'aprobar', 'Aprobado', '2025-10-31 00:48:01'),
+(4, 7, 1, 1, 'aprobar', 'Aprobado', '2025-10-31 00:51:36'),
+(5, 6, 1, 1, 'aprobar', 'Aprobado', '2025-10-31 01:20:51'),
+(6, 8, 1, 1, 'aprobar', 'Aprobado', '2025-10-31 02:29:44'),
+(7, 14, 1, 1, 'aprobar', 'Aprobado', '2025-10-31 02:30:22');
 
 -- --------------------------------------------------------
 
@@ -843,6 +858,7 @@ CREATE TABLE `multa` (
   `comunidad_id` bigint NOT NULL,
   `unidad_id` bigint NOT NULL,
   `persona_id` bigint DEFAULT NULL,
+  `tipo_infraccion_id` bigint DEFAULT NULL,
   `motivo` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `descripcion` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `monto` decimal(12,2) NOT NULL,
@@ -866,17 +882,23 @@ CREATE TABLE `multa` (
 -- Volcado de datos para la tabla `multa`
 --
 
-INSERT INTO `multa` (`id`, `numero`, `comunidad_id`, `unidad_id`, `persona_id`, `motivo`, `descripcion`, `monto`, `estado`, `prioridad`, `creada_por`, `aprobada_por`, `fecha_aprobacion`, `fecha`, `fecha_vencimiento`, `fecha_pago`, `created_at`, `updated_at`, `anulado_por`, `motivo_anulacion`, `fecha_anulacion`, `pagado_por`) VALUES
-(1, 'M-2025-0001', 1, 1, 1, 'Mascota sin correa', 'Infracción por mascota sin correa en áreas comunes.', 5000.00, 'pagado', 'media', 1, NULL, NULL, '2025-11-20', NULL, '2025-09-01 00:00:00', '2025-09-25 20:00:00', '2025-10-16 04:17:35', 1, NULL, '2025-10-01 00:45:06', NULL),
-(2, 'M-2025-0002', 2, 3, 3, 'Ruido excesivo', 'Ruido excesivo generado por fiestas nocturnas.', 15000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-02', NULL, '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-17 01:29:55', NULL, NULL, NULL, 1),
-(3, 'M-2025-0003', 3, 4, 4, 'Bloqueo de acceso', 'Bloqueo de acceso vehicular sin autorización.', 10000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-03', NULL, '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-16 05:14:42', NULL, NULL, NULL, NULL),
-(4, 'M-2025-0004', 4, 5, 5, 'Fumar en áreas comunes', 'Fumar en áreas comunes del edificio.', 20000.00, 'apelada', 'media', 1, NULL, NULL, '2025-09-04', NULL, '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-17 01:06:55', 1, 'Error en la emisión', '2025-10-14 14:00:00', NULL),
-(5, 'M-2025-0005', 5, 6, 6, 'Daño a propiedad común', 'Daño a propiedad común (pintura en pared).', 30000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-05', NULL, '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-16 05:07:33', NULL, NULL, NULL, NULL),
-(6, 'M-2025-0006', 6, 7, 7, 'Mascota peligrosa sin bozal', 'Mascota peligrosa sin bozal en espacios públicos.', 12000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-06', NULL, '2025-10-16 11:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 1),
-(7, 'M-2025-0007', 7, 8, 8, 'Uso no autorizado de ascensor', 'Uso no autorizado del ascensor de servicio.', 8000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-07', NULL, NULL, '2025-10-10 18:10:15', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL),
-(8, 'M-2025-0008', 8, 9, 9, 'Dejar basura en pasillo', 'Dejar basura en pasillo común.', 6000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-08', NULL, '2025-10-17 12:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 1),
-(9, 'M-2025-0009', 9, 10, 10, 'Instalación de antena sin permiso', 'Instalación de antena sin permiso administrativo.', 25000.00, 'apelada', 'media', 1, NULL, NULL, '2025-09-09', NULL, NULL, '2025-10-10 18:10:15', '2025-10-16 05:38:29', NULL, NULL, NULL, NULL),
-(10, 'M-2025-0010', 10, 10, 10, 'Fiesta hasta tarde', 'Fiesta hasta tarde generando molestias.', 18000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-10', NULL, '2025-10-18 13:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 1);
+INSERT INTO `multa` (`id`, `numero`, `comunidad_id`, `unidad_id`, `persona_id`, `tipo_infraccion_id`, `motivo`, `descripcion`, `monto`, `estado`, `prioridad`, `creada_por`, `aprobada_por`, `fecha_aprobacion`, `fecha`, `fecha_vencimiento`, `fecha_pago`, `created_at`, `updated_at`, `anulado_por`, `motivo_anulacion`, `fecha_anulacion`, `pagado_por`) VALUES
+(1, 'M-2025-0001', 1, 1, 1, NULL, 'Mascota sin correa', 'Infracción por mascota sin correa en áreas comunes.', 5000.00, 'pagado', 'media', 1, NULL, NULL, '2025-11-20', NULL, '2025-09-01 00:00:00', '2025-09-25 20:00:00', '2025-10-16 04:17:35', 1, NULL, '2025-10-01 00:45:06', NULL),
+(2, 'M-2025-0011', 2, 3, 3, NULL, 'Ruido excesivo', 'Ruido excesivo generado por fiestas nocturnas.', 15000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-02', NULL, '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-24 02:38:34', NULL, NULL, NULL, 1),
+(3, 'M-2025-0013', 3, 4, 4, NULL, 'Bloqueo de acceso', 'Bloqueo de acceso vehicular sin autorización.', 10000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-03', NULL, '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-24 02:56:59', NULL, NULL, NULL, NULL),
+(4, 'M-2025-0004', 4, 5, 5, NULL, 'Fumar en áreas comunes', 'Fumar en áreas comunes del edificio.', 20000.00, 'apelada', 'media', 1, NULL, NULL, '2025-09-04', NULL, '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-17 01:06:55', 1, 'Error en la emisión', '2025-10-14 14:00:00', NULL),
+(5, 'M-2025-0005', 5, 6, 6, NULL, 'Daño a propiedad común', 'Daño a propiedad común (pintura en pared).', 30000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-05', NULL, '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-16 05:07:33', NULL, NULL, NULL, NULL),
+(6, 'M-2025-0006', 6, 7, 7, NULL, 'Mascota peligrosa sin bozal', 'Mascota peligrosa sin bozal en espacios públicos.', 12000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-06', NULL, '2025-10-16 11:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 1),
+(7, 'M-2025-0007', 7, 8, 8, NULL, 'Uso no autorizado de ascensor', 'Uso no autorizado del ascensor de servicio.', 8000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-07', NULL, NULL, '2025-10-10 18:10:15', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL),
+(8, 'M-2025-0008', 8, 9, 9, NULL, 'Dejar basura en pasillo', 'Dejar basura en pasillo común.', 6000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-08', NULL, '2025-10-17 12:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 1),
+(9, 'M-2025-0009', 9, 10, 10, NULL, 'Instalación de antena sin permiso', 'Instalación de antena sin permiso administrativo.', 25000.00, 'apelada', 'media', 1, NULL, NULL, '2025-09-09', NULL, NULL, '2025-10-10 18:10:15', '2025-10-16 05:38:29', NULL, NULL, NULL, NULL),
+(10, 'M-2025-0010', 10, 10, 10, NULL, 'Fiesta hasta tarde', 'Fiesta hasta tarde generando molestias.', 18000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-10', NULL, '2025-10-18 13:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 1),
+(14, 'M-2025-0002', 1, 2, NULL, 3, 'Mascotas sin control', 'ewsax', 25000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-10-23', NULL, NULL, '2025-10-24 02:38:38', '2025-10-24 02:38:38', NULL, NULL, NULL, NULL),
+(15, 'M-2025-0012', 2, 3, NULL, 3, 'Mascotas sin control', 'asdd', 25000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-10-23', NULL, NULL, '2025-10-24 02:39:17', '2025-10-24 02:39:17', NULL, NULL, NULL, NULL),
+(21, 'M-2025-0003', 1, 2, NULL, 4, 'Falta de limpieza', 'tyuo', 20000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-10-24', NULL, NULL, '2025-10-24 02:57:04', '2025-10-24 02:57:04', NULL, NULL, NULL, NULL),
+(125, 'M-2025-0014', 4, 5, NULL, 4, 'Falta de limpieza', 'TEST', 20000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-10-24', NULL, NULL, '2025-10-24 16:30:25', '2025-10-24 16:30:25', NULL, NULL, NULL, NULL),
+(132, 'M-2025-0015', 8, 9, NULL, 4, 'Falta de limpieza', 'YUIO', 20000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-10-24', NULL, NULL, '2025-10-24 16:31:07', '2025-10-24 16:31:07', NULL, NULL, NULL, NULL),
+(136, 'M-2025-0016', 2, 3, NULL, 1, 'Ruido excesivo', 'mykel', 50000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-10-26', NULL, NULL, '2025-10-26 12:40:34', '2025-10-26 12:40:34', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1362,17 +1384,17 @@ INSERT INTO `tarifa_consumo` (`id`, `comunidad_id`, `tipo`, `periodo_desde`, `pe
 --
 DROP VIEW IF EXISTS `ticket`;
 CREATE TABLE `ticket` (
-`asignado_a` bigint
-,`attachments_json` longtext
-,`categoria` varchar(120)
+`id` bigint
 ,`comunidad_id` bigint
-,`created_at` datetime
+,`unidad_id` bigint
+,`categoria` varchar(120)
+,`titulo` varchar(200)
 ,`descripcion` varchar(1000)
 ,`estado` enum('abierto','en_progreso','resuelto','cerrado')
-,`id` bigint
 ,`prioridad` enum('baja','media','alta')
-,`titulo` varchar(200)
-,`unidad_id` bigint
+,`asignado_a` bigint
+,`attachments_json` longtext
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -1413,6 +1435,36 @@ INSERT INTO `ticket_soporte` (`id`, `comunidad_id`, `unidad_id`, `categoria`, `t
 (8, 8, 9, 'Infraestructura', 'Grieta en muro exterior', 'Grieta visible en bloque 1.', 'abierto', 'alta', NULL, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21'),
 (9, 9, 10, 'Ascensor', 'Ruidos extraños', 'Ascensor hace ruidos al frenar.', 'en_progreso', 'alta', 3, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21'),
 (10, 10, 10, 'Electricidad', 'Cortocircuito', 'Olor a quemado cerca de la sala eléctrica.', 'cerrado', 'alta', 4, NULL, '2025-10-10 18:10:21', '2025-10-10 18:10:21');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `tipo_infraccion`
+--
+
+DROP TABLE IF EXISTS `tipo_infraccion`;
+CREATE TABLE `tipo_infraccion` (
+  `id` bigint NOT NULL,
+  `comunidad_id` bigint DEFAULT NULL,
+  `clave` varchar(50) NOT NULL,
+  `nombre` varchar(120) NOT NULL,
+  `descripcion` varchar(500) DEFAULT NULL,
+  `monto_default` decimal(12,2) DEFAULT NULL,
+  `prioridad_default` enum('baja','media','alta','critica') NOT NULL DEFAULT 'media',
+  `icono` varchar(100) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Volcado de datos para la tabla `tipo_infraccion`
+--
+
+INSERT INTO `tipo_infraccion` (`id`, `comunidad_id`, `clave`, `nombre`, `descripcion`, `monto_default`, `prioridad_default`, `icono`, `activo`, `created_at`) VALUES
+(1, 1, 'ruido', 'Ruido excesivo', 'Violación de normas de ruido', 50000.00, 'media', 'volume-up', 1, '2025-10-24 01:27:49'),
+(2, 2, 'estacionamiento', 'Estacionamiento indebido', 'Vehículo mal estacionado', 35000.00, 'media', 'parking', 1, '2025-10-24 01:27:49'),
+(3, 3, 'mascotas', 'Mascotas sin control', 'Mascotas sin correa o supervisión', 25000.00, 'baja', 'paw', 1, '2025-10-24 01:27:49'),
+(4, 5, 'limpieza', 'Falta de limpieza', 'Áreas comunes sucias', 20000.00, 'baja', 'broom', 1, '2025-10-24 01:27:49');
 
 -- --------------------------------------------------------
 
@@ -1458,15 +1510,15 @@ INSERT INTO `titulares_unidad` (`id`, `comunidad_id`, `unidad_id`, `persona_id`,
 --
 DROP VIEW IF EXISTS `titularidad_unidad`;
 CREATE TABLE `titularidad_unidad` (
-`comunidad_id` bigint
-,`created_at` datetime
+`id` bigint
+,`comunidad_id` bigint
+,`unidad_id` bigint
+,`persona_id` bigint
+,`tipo` enum('propietario','arrendatario')
 ,`desde` date
 ,`hasta` date
-,`id` bigint
-,`persona_id` bigint
 ,`porcentaje` decimal(5,2)
-,`tipo` enum('propietario','arrendatario')
-,`unidad_id` bigint
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -1530,7 +1582,10 @@ INSERT INTO `uf_valor` (`fecha`, `valor`) VALUES
 ('2025-10-09', 36565.7888),
 ('2025-10-10', 36570.1221),
 ('2025-10-14', 39511.0800),
-('2025-10-15', 39516.1700);
+('2025-10-15', 39516.1700),
+('2025-10-24', 39562.0000),
+('2025-10-25', 39567.0900),
+('2025-10-26', 39572.1900);
 
 -- --------------------------------------------------------
 
@@ -1566,7 +1621,7 @@ INSERT INTO `unidad` (`id`, `comunidad_id`, `edificio_id`, `torre_id`, `codigo`,
 (4, 3, 3, 4, 'D402', 0.025000, 85.00, NULL, NULL, 'E402', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
 (5, 4, 4, 5, 'Casa A', 0.030000, 120.00, NULL, NULL, 'CPA', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
 (6, 5, 5, 6, 'D501', 0.012000, 55.00, NULL, NULL, 'E501', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
-(7, 6, 6, 7, 'D1001', 0.040000, 150.90, NULL, NULL, 'EL1', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
+(7, 6, 6, 7, 'D1002', 0.040000, 150.90, NULL, NULL, 'EL1', 1, '2025-10-10 18:07:39', '2025-10-24 16:22:20'),
 (8, 7, 7, 8, 'D1502', 0.022000, 78.10, NULL, NULL, 'E152', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
 (9, 8, 8, 9, 'D105', 0.017000, 63.40, NULL, NULL, 'E105', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39'),
 (10, 10, 10, 10, 'D202', 0.019000, 70.30, NULL, NULL, 'E202', 1, '2025-10-10 18:07:39', '2025-10-10 18:07:39');
@@ -1647,14 +1702,14 @@ INSERT INTO `usuario` (`id`, `persona_id`, `username`, `hash_password`, `email`,
 --
 DROP VIEW IF EXISTS `usuario_miembro_comunidad`;
 CREATE TABLE `usuario_miembro_comunidad` (
-`activo` tinyint(1)
+`id` bigint
 ,`comunidad_id` bigint
-,`created_at` datetime
-,`desde` date
-,`hasta` date
-,`id` bigint
 ,`persona_id` bigint
 ,`rol` varchar(50)
+,`desde` date
+,`hasta` date
+,`activo` tinyint(1)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -1728,20 +1783,20 @@ INSERT INTO `utm_valor` (`fecha`, `valor`) VALUES
 --
 DROP VIEW IF EXISTS `vista_compras`;
 CREATE TABLE `vista_compras` (
-`comunidad_id` bigint
+`id` bigint
+,`comunidad_id` bigint
 ,`comunidad_nombre` varchar(200)
-,`created_at` datetime
-,`exento` decimal(12,2)
-,`fecha_emision` date
-,`folio` varchar(50)
-,`glosa` varchar(250)
-,`id` bigint
-,`iva` decimal(12,2)
-,`neto` decimal(12,2)
 ,`proveedor_id` bigint
 ,`proveedor_nombre` varchar(200)
 ,`tipo_doc` enum('factura','boleta','nota_credito')
+,`folio` varchar(50)
+,`fecha_emision` date
+,`neto` decimal(12,2)
+,`iva` decimal(12,2)
+,`exento` decimal(12,2)
 ,`total` decimal(12,2)
+,`glosa` varchar(250)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -1753,16 +1808,16 @@ CREATE TABLE `vista_compras` (
 --
 DROP VIEW IF EXISTS `vista_consumos`;
 CREATE TABLE `vista_consumos` (
-`comunidad_id` bigint
-,`comunidad_nombre` varchar(200)
-,`consumo` decimal(13,3)
-,`fecha_fin_periodo` date
-,`fecha_inicio_periodo` date
-,`lecturas_en_periodo` bigint
+`medidor_id` bigint
 ,`medidor_codigo` varchar(50)
-,`medidor_id` bigint
 ,`medidor_tipo` enum('agua','gas','electricidad')
+,`comunidad_id` bigint
+,`comunidad_nombre` varchar(200)
 ,`periodo` char(7)
+,`fecha_inicio_periodo` date
+,`fecha_fin_periodo` date
+,`consumo` decimal(13,3)
+,`lecturas_en_periodo` bigint
 );
 
 -- --------------------------------------------------------
@@ -1773,27 +1828,27 @@ CREATE TABLE `vista_consumos` (
 --
 DROP VIEW IF EXISTS `vista_medidores`;
 CREATE TABLE `vista_medidores` (
-`activo` tinyint(1)
+`id` bigint
 ,`comunidad_id` bigint
 ,`comunidad_nombre` varchar(200)
-,`created_at` datetime
-,`created_by` bigint
-,`es_compartido` tinyint(1)
-,`estado` enum('activo','inactivo','mantenimiento')
-,`fecha_ultima_lectura` date
-,`id` bigint
-,`marca` varchar(100)
-,`medidor_codigo` varchar(50)
-,`modelo` varchar(100)
-,`serial_number` varchar(100)
-,`tipo` enum('agua','gas','electricidad')
-,`total_lecturas` bigint
-,`ubicacion` json
-,`ultima_lectura` decimal(12,3)
-,`unidad_codigo` varchar(50)
 ,`unidad_id` bigint
 ,`unidad_torre_id` bigint
+,`unidad_codigo` varchar(50)
+,`tipo` enum('agua','gas','electricidad')
+,`medidor_codigo` varchar(50)
+,`serial_number` varchar(100)
+,`es_compartido` tinyint(1)
+,`marca` varchar(100)
+,`modelo` varchar(100)
+,`estado` enum('activo','inactivo','mantenimiento')
+,`ubicacion` json
+,`activo` tinyint(1)
+,`created_by` bigint
+,`created_at` datetime
 ,`updated_at` datetime
+,`ultima_lectura` decimal(12,3)
+,`fecha_ultima_lectura` date
+,`total_lecturas` bigint
 );
 
 -- --------------------------------------------------------
@@ -2022,7 +2077,8 @@ ALTER TABLE `multa`
   ADD KEY `fk_multa_creada_por` (`creada_por`),
   ADD KEY `fk_multa_aprobada_por` (`aprobada_por`),
   ADD KEY `fk_multa_anulado_por` (`anulado_por`),
-  ADD KEY `fk_multa_pagado_por` (`pagado_por`);
+  ADD KEY `fk_multa_pagado_por` (`pagado_por`),
+  ADD KEY `fk_multa_tipo_infraccion` (`tipo_infraccion_id`);
 
 --
 -- Indices de la tabla `multa_apelacion`
@@ -2145,6 +2201,15 @@ ALTER TABLE `ticket_soporte`
   ADD KEY `fk_solsoporte_asignado` (`asignado_a`);
 
 --
+-- Indices de la tabla `tipo_infraccion`
+--
+ALTER TABLE `tipo_infraccion`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `clave` (`clave`),
+  ADD UNIQUE KEY `uq_tipo_comunidad_clave` (`comunidad_id`,`clave`),
+  ADD KEY `idx_tipo_comunidad` (`comunidad_id`);
+
+--
 -- Indices de la tabla `titulares_unidad`
 --
 ALTER TABLE `titulares_unidad`
@@ -2222,10 +2287,22 @@ ALTER TABLE `webhook_pago`
 --
 
 --
+-- AUTO_INCREMENT de la tabla `gasto`
+--
+ALTER TABLE `gasto`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT de la tabla `gasto_aprobacion`
+--
+ALTER TABLE `gasto_aprobacion`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
 -- AUTO_INCREMENT de la tabla `multa`
 --
 ALTER TABLE `multa`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=137;
 
 --
 -- AUTO_INCREMENT de la tabla `multa_apelacion`
@@ -2238,6 +2315,12 @@ ALTER TABLE `multa_apelacion`
 --
 ALTER TABLE `multa_historial`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+
+--
+-- AUTO_INCREMENT de la tabla `tipo_infraccion`
+--
+ALTER TABLE `tipo_infraccion`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 -- --------------------------------------------------------
 
@@ -2416,8 +2499,7 @@ ALTER TABLE `detalle_cuenta_unidad`
 --
 ALTER TABLE `detalle_emision_gastos`
   ADD CONSTRAINT `fk_emidet_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categoria_gasto` (`id`),
-  ADD CONSTRAINT `fk_emidet_emision` FOREIGN KEY (`emision_id`) REFERENCES `emision_gastos_comunes` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_emidet_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `fk_emidet_emision` FOREIGN KEY (`emision_id`) REFERENCES `emision_gastos_comunes` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `documento_compra`
@@ -2467,7 +2549,7 @@ ALTER TABLE `gasto`
 -- Filtros para la tabla `gasto_aprobacion`
 --
 ALTER TABLE `gasto_aprobacion`
-  ADD CONSTRAINT `fk_aprobacion_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_aprobacion_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`),
   ADD CONSTRAINT `fk_aprobacion_rol` FOREIGN KEY (`rol_id`) REFERENCES `rol_sistema` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_aprobacion_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -2475,7 +2557,7 @@ ALTER TABLE `gasto_aprobacion`
 -- Filtros para la tabla `historial_gasto`
 --
 ALTER TABLE `historial_gasto`
-  ADD CONSTRAINT `fk_historial_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_historial_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`),
   ADD CONSTRAINT `fk_historial_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
@@ -2501,6 +2583,7 @@ ALTER TABLE `multa`
   ADD CONSTRAINT `fk_multa_creada_por` FOREIGN KEY (`creada_por`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_multa_pagado_por` FOREIGN KEY (`pagado_por`) REFERENCES `usuario` (`id`),
   ADD CONSTRAINT `fk_multa_persona` FOREIGN KEY (`persona_id`) REFERENCES `persona` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_multa_tipo_infraccion` FOREIGN KEY (`tipo_infraccion_id`) REFERENCES `tipo_infraccion` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_multa_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`);
 
 --
@@ -2588,6 +2671,12 @@ ALTER TABLE `ticket_soporte`
   ADD CONSTRAINT `fk_solsoporte_asignado` FOREIGN KEY (`asignado_a`) REFERENCES `usuario` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_ticket_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
   ADD CONSTRAINT `fk_ticket_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `tipo_infraccion`
+--
+ALTER TABLE `tipo_infraccion`
+  ADD CONSTRAINT `fk_tipo_infraccion_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `titulares_unidad`

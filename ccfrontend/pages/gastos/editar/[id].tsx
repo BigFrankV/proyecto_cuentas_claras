@@ -50,7 +50,8 @@ export default function EditarGasto() {
   const router = useRouter();
   const { id } = router.query;
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user, currentComunidadId } = useAuth();
+  const { user } = useAuth();
+  const currentComunidadId = user?.comunidad_id;
   const { isSuperUser, currentRole } = usePermissions();
   const comunidadId = currentComunidadId;
 
@@ -87,6 +88,8 @@ export default function EditarGasto() {
     existingAttachments: [],
   });
 
+  const [initialFormData, setInitialFormData] = useState<ExpenseFormData | null>(null);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -111,16 +114,20 @@ export default function EditarGasto() {
   ];
 
   useEffect(() => {
-    if (id && comunidadId) {
+    if (id) {
       getGastoById(Number(id)).then(data => {
-        setFormData(mapToFormData(data));
+        const mappedData = mapToFormData(data);
+        setFormData(mappedData);
+        setInitialFormData(mappedData); // Guarda iniciales
         setInitialLoading(false);
       }).catch(() => setInitialLoading(false));
-      getCategorias(comunidadId).then(setCategories);
-      getCentrosCosto(comunidadId).then(setCostCenters);
-      getProveedores(comunidadId).then(setProviders);
+
+      // Cargar listas con comunidadId opcional
+      getCategorias(comunidadId || undefined).then(setCategories);
+      getCentrosCosto(comunidadId || undefined).then(setCostCenters);
+      getProveedores(comunidadId || undefined).then(setProviders);
     }
-  }, [id, comunidadId]);
+  }, [id, comunidadId]);  // Mantener dependencias
 
   const mapToFormData = (gasto: any): ExpenseFormData => ({
     id: gasto.id,
@@ -150,15 +157,26 @@ export default function EditarGasto() {
     })) || [],
   });
 
-  const mapFormDataToPayload = (data: ExpenseFormData) => ({
-    categoria_id: data.category,
-    fecha: data.date,
-    monto: parseFloat(data.amount.replace(/\./g, '').replace(',', '.')),
-    centro_costo_id: data.costCenter || undefined,
-    glosa: data.description,
-    documento_tipo: data.documentType,
-    documento_numero: data.documentNumber,
-  });
+  const mapFormDataToPayload = (data: ExpenseFormData, initial: ExpenseFormData | null) => {
+    const payload: any = {};
+
+    // Compara y agrega solo si cambió
+    if (data.category !== initial?.category) payload.categoria_id = data.category;
+    if (data.date !== initial?.date) payload.fecha = data.date;
+    if (data.amount !== initial?.amount) payload.monto = parseFloat(data.amount.replace(/\./g, '').replace(',', '.'));
+    if (data.description !== initial?.description) payload.glosa = data.description;
+    if (data.costCenter !== initial?.costCenter) payload.centro_costo_id = data.costCenter || undefined;
+    if (data.documentType !== initial?.documentType) payload.documento_tipo = data.documentType;
+    if (data.documentNumber !== initial?.documentNumber) payload.documento_numero = data.documentNumber;
+    if (data.isRecurring !== initial?.isRecurring) payload.extraordinario = data.isRecurring;
+    if (data.recurringPeriod !== initial?.recurringPeriod) payload.recurring_period = data.recurringPeriod;
+    if (JSON.stringify(data.tags) !== JSON.stringify(initial?.tags)) payload.tags = data.tags;
+    if (data.observations !== initial?.observations) payload.observations = data.observations;
+    if (data.priority !== initial?.priority) payload.priority = data.priority;
+    if (data.requiredApprovals !== initial?.requiredApprovals) payload.required_approvals = data.requiredApprovals;
+
+    return payload;
+  };
 
   const handleInputChange = (field: keyof ExpenseFormData, value: any) => {
     setFormData(prev => ({
@@ -265,50 +283,23 @@ export default function EditarGasto() {
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
 
-    if (!formData.description.trim()) {
-      newErrors.description = 'La descripción es obligatoria';
-    }
 
-    if (!formData.category) {
-      newErrors.category = 'La categoría es obligatoria';
-    }
-
-    if (!formData.provider) {
-      newErrors.provider = 'El proveedor es obligatorio';
-    }
-
-    if (
-      !formData.amount ||
-      parseFloat(formData.amount) <= 0
-    ) {
-      newErrors.amount = 'El monto debe ser mayor a 0';
-    }
-
-    if (!formData.date) {
-      newErrors.date = 'La fecha es obligatoria';
-    }
-
-    if (!formData.documentNumber.trim()) {
-      newErrors.documentNumber = 'El número de documento es obligatorio';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors({});
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setLoading(true);
-
     try {
-      const payload = mapFormDataToPayload(formData);
+      const payload = mapFormDataToPayload(formData, initialFormData);
+      if (Object.keys(payload).length === 0) {
+        alert('No hay cambios para guardar');
+        setLoading(false);
+        return;
+      }
       await updateGasto(Number(id), payload);
       router.push(`/gastos/${id}`);
     } catch (err) {
@@ -442,8 +433,8 @@ export default function EditarGasto() {
                           >
                             <option value=''>Selecciona una categoría</option>
                             {categories.map(cat => (
-                              <option key={cat.value} value={cat.value}>
-                                {cat.label}
+                              <option key={cat.id} value={cat.id}>
+                                {cat.nombre}
                               </option>
                             ))}
                           </Form.Select>
@@ -455,21 +446,18 @@ export default function EditarGasto() {
 
                       <Col md={6} className='mb-3'>
                         <Form.Group>
-                          <Form.Label className='required'>
-                            Proveedor
-                          </Form.Label>
-                          <Form.Control
-                            type='text'
-                            placeholder='Nombre del proveedor o empresa'
+                          <Form.Label>Proveedor</Form.Label>
+                          <Form.Select
                             value={formData.provider}
-                            onChange={e =>
-                              handleInputChange('provider', e.target.value)
-                            }
-                            isInvalid={!!errors.provider}
-                          />
-                          <Form.Control.Feedback type='invalid'>
-                            {errors.provider}
-                          </Form.Control.Feedback>
+                            onChange={e => handleInputChange('provider', parseInt(e.target.value))}
+                          >
+                            <option value={0}>Selecciona un proveedor</option>
+                            {providers.map(prov => (
+                              <option key={prov.id} value={prov.id}>
+                                {prov.razon_social}
+                              </option>
+                            ))}
+                          </Form.Select>
                         </Form.Group>
                       </Col>
 
@@ -506,8 +494,8 @@ export default function EditarGasto() {
                               Selecciona un centro de costo
                             </option>
                             {costCenters.map(cc => (
-                              <option key={cc.value} value={cc.value}>
-                                {cc.label}
+                              <option key={cc.id} value={cc.id}>
+                                {cc.nombre}
                               </option>
                             ))}
                           </Form.Select>

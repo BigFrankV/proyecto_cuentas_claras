@@ -140,6 +140,9 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
         dc.folio AS documento_numero,
         CASE WHEN COUNT(a.id) > 0 THEN 1 ELSE 0 END AS tiene_adjuntos,
         g.extraordinario,
+        g.comunidad_id,
+        g.estado,
+        COALESCE(ga_count.total_aprobaciones, 0) AS current_approvals,
         g.created_at
       FROM gasto g
       INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
@@ -147,7 +150,14 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
       LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
       LEFT JOIN proveedor p ON dc.proveedor_id = p.id
       LEFT JOIN archivos a ON a.entity_type = 'gasto' AND a.entity_id = g.id AND a.is_active = 1
-      WHERE g.comunidad_id = ?
+      LEFT JOIN (
+        SELECT gasto_id, COUNT(*) AS total_aprobaciones
+        FROM gasto_aprobacion
+        WHERE accion = 'aprobar'
+        GROUP BY gasto_id
+      ) ga_count ON g.id = ga_count.gasto_id
+      WHERE 1=1
+        ${whereComunidad}
         ${whereFecha}
         ${whereMonto}
         AND (cat.nombre LIKE CONCAT('%', ?, '%') OR ? = '')
@@ -293,7 +303,7 @@ router.get('/comunidad/:comunidadId/count', authenticate, requireCommunity('comu
  */
 router.post('/comunidad/:comunidadId', [
   authenticate,
-  requireCommunity('comunidadId', ['admin', 'contador']),
+  requireCommunity('comunidadId', ['superadmin', 'contador', 'admin_comunidad']),
   body('categoria_id').isInt(),
   body('fecha').notEmpty(),
   body('monto').isNumeric()
@@ -304,10 +314,13 @@ router.post('/comunidad/:comunidadId', [
   const comunidadId = Number(req.params.comunidadId);
   const { categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario } = req.body;
 
+  // Generar numero único (ej. 'G-' + timestamp + comunidadId para mayor unicidad)
+  const numero = `G${Date.now()}-${comunidadId}`;
+
   try {
     const [result] = await db.query(
-      'INSERT INTO gasto (comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario) VALUES (?,?,?,?,?,?,?,?)',
-      [comunidadId, categoria_id, centro_costo_id || null, documento_compra_id || null, fecha, monto, glosa || null, extraordinario ? 1 : 0]
+      'INSERT INTO gasto (numero, comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [numero, comunidadId, categoria_id, centro_costo_id || null, documento_compra_id || null, fecha, monto, glosa || null, extraordinario ? 1 : 0]
     );
 
     const [row] = await db.query('SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1', [result.insertId]);
@@ -374,10 +387,12 @@ router.get('/:id', authenticate, async (req, res) => {
         p.email AS proveedor_email,
         p.telefono AS proveedor_telefono,
         p.direccion AS proveedor_direccion,
+        g.estado, 
+        g.aprobaciones_count AS current_approvals,
         g.created_at,
         g.updated_at
       FROM gasto g
-      INNER JOIN comunidad c ON g.comunidad_id = c.id
+      LEFT JOIN comunidad c ON g.comunidad_id = c.id
       INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
       LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
       LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
@@ -1383,7 +1398,7 @@ router.get('/exportar/:comunidadId', authenticate, requireCommunity('comunidadId
         DATE_FORMAT(g.created_at, '%d/%m/%Y %H:%i:%s') AS 'Fecha Creación',
         DATE_FORMAT(g.updated_at, '%d/%m/%Y %H:%i:%s') AS 'Fecha Actualización'
       FROM gasto g
-      INNER JOIN comunidad c ON g.comunidad_id = c.id
+      LEFT JOIN comunidad c ON g.comunidad_id = c.id
       INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
       LEFT JOIN centro_costo cc ON g.centro_costo_id = cc.id
       LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
@@ -1633,6 +1648,8 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
         CASE WHEN COUNT(a.id) > 0 THEN 1 ELSE 0 END AS tiene_adjuntos,
         g.extraordinario,
         g.comunidad_id,
+        g.estado,
+        COALESCE(ga_count.total_aprobaciones, 0) AS current_approvals,
         g.created_at
       FROM gasto g
       INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
@@ -1640,6 +1657,12 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
       LEFT JOIN documento_compra dc ON g.documento_compra_id = dc.id
       LEFT JOIN proveedor p ON dc.proveedor_id = p.id
       LEFT JOIN archivos a ON a.entity_type = 'gasto' AND a.entity_id = g.id AND a.is_active = 1
+      LEFT JOIN (
+        SELECT gasto_id, COUNT(*) AS total_aprobaciones
+        FROM gasto_aprobacion
+        WHERE accion = 'aprobar'
+        GROUP BY gasto_id
+      ) ga_count ON g.id = ga_count.gasto_id
       WHERE 1=1
         ${whereComunidad}
         ${whereFecha}
@@ -1661,8 +1684,6 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
   }
 });
 
-// ...existing code...
-
 // Mantener sólo este handler (versión corregida)
 router.get('/:id/aprobaciones', authenticate, async (req, res) => {
   const gastoId = Number(req.params.id);
@@ -1673,13 +1694,12 @@ router.get('/:id/aprobaciones', authenticate, async (req, res) => {
       SELECT
         ga.*,
         COALESCE(u.username,
-                 CONCAT(
-                   COALESCE(p.nombres, ''), ' ',
-                   COALESCE(p.apellido_paterno, ''), ' ',
-                   COALESCE(p.apellido_materno, '')
-                 ),
-                 u.email
-        ) AS nombre_usuario,
+         CONCAT(
+           COALESCE(p.nombres, ''), ' ',
+           COALESCE(p.apellidos, '')
+         ),
+         u.email
+) AS nombre_usuario,
         rs.nombre AS rol_nombre
       FROM gasto_aprobacion ga
       LEFT JOIN usuario u ON ga.usuario_id = u.id
@@ -1700,8 +1720,6 @@ router.get('/:id/aprobaciones', authenticate, async (req, res) => {
     return res.status(500).json({ error: 'Error interno al obtener aprobaciones' });
   }
 });
-
-// ...existing code...
 
 /**
  * @swagger
@@ -1755,14 +1773,15 @@ router.post('/', [
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
   const { comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario } = req.body;
+  const comunidadId = comunidad_id || null;
 
-  // Si no se pasa comunidad_id, permitir crear sin comunidad (o asignar una por defecto)
-  const comunidadId = comunidad_id || null; // null si no se pasa
+  // Generar numero único (si comunidadId es null, usar 'GLOBAL')
+  const numero = `GG${Date.now()}`;
 
   try {
     const [result] = await db.query(
-      'INSERT INTO gasto (comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [comunidadId, categoria_id, centro_costo_id || null, documento_compra_id || null, fecha, monto, glosa || null, extraordinario ? 1 : 0]
+      'INSERT INTO gasto (numero, comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [numero, comunidadId, categoria_id, centro_costo_id || null, documento_compra_id || null, fecha, monto, glosa || null, extraordinario ? 1 : 0]
     );
 
     const [row] = await db.query('SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1', [result.insertId]);
@@ -1773,8 +1792,94 @@ router.post('/', [
   }
 });
 
+/**
+ * @swagger
+ * /gastos/{id}/aprobaciones:
+ *   post:
+ *     tags: [Gastos]
+ *     summary: Crear aprobación para un gasto
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - accion
+ *             properties:
+ *               accion:
+ *                 type: string
+ *                 enum: [aprobar, rechazar]
+ *               observaciones:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Aprobación creada
+ */
+router.post('/:id/aprobaciones', [
+  authenticate,
+  authorize('admin', 'admin_comunidad', 'contador', 'tesorero', 'presidente_comite'), // Roles que pueden aprobar
+  body('accion').isIn(['aprobar', 'rechazar']),
+  body('observaciones').optional().isString()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
+  const gastoId = Number(req.params.id);
+  const { accion, observaciones } = req.body;
+  const usuarioId = req.user.persona_id; // 5 (referencia persona.id)
 
+  // Obtener rol_id del rol del usuario en la comunidad del gasto
+  const rolNombre = req.user.memberships.find(m => m.comunidadId === gasto.comunidad_id)?.rol || req.user.roles[0];
+  const [[rolRow]] = await db.query('SELECT id FROM rol_sistema WHERE nombre = ?', [rolNombre]);
+  const rolId = rolRow?.id || 1; // Fallback a 1 si no encuentra
+
+  if (Number.isNaN(gastoId)) return res.status(400).json({ error: 'gasto id inválido' });
+
+  try {
+    // Verificar que el gasto existe y pertenece a una comunidad accesible
+    const [[gasto]] = await db.query('SELECT id, comunidad_id FROM gasto WHERE id = ?', [gastoId]);
+    if (!gasto) return res.status(404).json({ error: 'gasto no encontrado' });
+
+    // Verificar permisos por comunidad (opcional, si no lo hace authorize)
+    // ... (agregar lógica si es necesario)
+
+    // Verificar que no haya aprobación previa del mismo usuario/rol
+    const [[existing]] = await db.query(
+      'SELECT id FROM gasto_aprobacion WHERE gasto_id = ? AND usuario_id = ? AND rol_id = ?',
+      [gastoId, usuarioId, rolId]
+    );
+    if (existing) return res.status(400).json({ error: 'ya has aprobado/rechazado este gasto' });
+
+    // Insertar aprobación
+    const [result] = await db.query(
+      'INSERT INTO gasto_aprobacion (gasto_id, usuario_id, rol_id, accion, observaciones) VALUES (?, ?, ?, ?, ?)',
+      [gastoId, usuarioId, rolId, accion, observaciones || null]
+    );
+
+    // Incrementar aprobaciones_count
+    await db.query('UPDATE gasto SET aprobaciones_count = aprobaciones_count + 1 WHERE id = ?', [gastoId]);
+
+    // Verificar si alcanza el límite y actualizar estado
+    const [[gastoData]] = await db.query('SELECT required_aprobaciones, aprobaciones_count FROM gasto WHERE id = ?', [gastoId]);
+    if (gastoData.aprobaciones_count >= gastoData.required_aprobaciones) {
+      await db.query('UPDATE gasto SET estado = "aprobado", aprobado_por = ? WHERE id = ?', [usuarioId, gastoId]);
+    }
+
+    res.status(201).json({ id: result.insertId, message: 'aprobación registrada' });
+  } catch (err) {
+    console.error('Error POST /gastos/:id/aprobaciones', err);
+    res.status(500).json({ error: 'error interno al crear aprobación' });
+  }
+});
 
 module.exports = router;
 // =========================================
