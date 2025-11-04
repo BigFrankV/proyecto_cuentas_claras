@@ -1,4 +1,5 @@
 # 🏗️ DIAGRAMA ENTIDAD-RELACIÓN COMPLETO
+
 ## Sistema Cuentas Claras - Base de Datos
 
 > **Nota:** Este diagrama usa sintaxis Mermaid. Se renderiza automáticamente en GitHub, VS Code (con extensión), y otras plataformas compatibles.
@@ -12,7 +13,7 @@ erDiagram
     %% ============================================
     %% MÓDULO: IDENTIDAD Y AUTENTICACIÓN
     %% ============================================
-    
+
     persona {
         bigint id PK
         varchar rut UK
@@ -25,7 +26,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     usuario {
         bigint id PK
         bigint persona_id FK "NOT NULL"
@@ -39,7 +40,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     rol {
         int id PK
         varchar codigo UK
@@ -49,7 +50,7 @@ erDiagram
         tinyint es_rol_sistema
         datetime created_at
     }
-    
+
     usuario_comunidad_rol {
         bigint id PK
         bigint usuario_id FK
@@ -61,7 +62,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     sesion_usuario {
         varchar id PK
         bigint usuario_id FK
@@ -71,7 +72,7 @@ erDiagram
         timestamp last_activity
         timestamp created_at
     }
-    
+
     auditoria {
         bigint id PK
         bigint usuario_id FK
@@ -83,11 +84,11 @@ erDiagram
         varchar ip_address
         timestamp created_at
     }
-    
+
     %% ============================================
     %% MÓDULO: ESTRUCTURA DE COMUNIDADES
     %% ============================================
-    
+
     comunidad {
         bigint id PK
         varchar razon_social
@@ -105,7 +106,7 @@ erDiagram
         bigint created_by
         bigint updated_by
     }
-    
+
     edificio {
         bigint id PK
         bigint comunidad_id FK
@@ -115,7 +116,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     torre {
         bigint id PK
         bigint edificio_id FK
@@ -124,7 +125,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     unidad {
         bigint id PK
         bigint comunidad_id FK
@@ -140,7 +141,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     titulares_unidad {
         bigint id PK
         bigint comunidad_id FK
@@ -153,11 +154,11 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     %% ============================================
     %% MÓDULO: GESTIÓN FINANCIERA
     %% ============================================
-    
+
     categoria_gasto {
         bigint id PK
         bigint comunidad_id FK
@@ -168,7 +169,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     centro_costo {
         bigint id PK
         bigint comunidad_id FK
@@ -177,7 +178,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     proveedor {
         bigint id PK
         bigint comunidad_id FK
@@ -192,7 +193,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     documento_compra {
         bigint id PK
         bigint comunidad_id FK
@@ -208,7 +209,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     gasto {
         bigint id PK
         bigint comunidad_id FK
@@ -222,7 +223,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     emision_gastos_comunes {
         bigint id PK
         bigint comunidad_id FK
@@ -233,7 +234,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     detalle_emision {
         bigint id PK
         bigint emision_id FK
@@ -245,7 +246,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     cuenta_cobro_unidad {
         bigint id PK
         bigint emision_id FK
@@ -258,7 +259,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     detalle_cuenta_unidad {
         bigint id PK
         bigint cuenta_cobro_unidad_id FK
@@ -271,7 +272,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     pago {
         bigint id PK
         bigint comunidad_id FK
@@ -286,7 +287,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     pago_aplicacion {
         bigint id PK
         bigint pago_id FK
@@ -296,7 +297,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     multa {
         bigint id PK
         bigint comunidad_id FK
@@ -311,11 +312,11 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     %% ============================================
     %% MÓDULO: CONFIGURACIÓN Y PARÁMETROS
     %% ============================================
-    
+
     parametros_cobranza {
         bigint id PK
         bigint comunidad_id FK "UK"
@@ -328,7 +329,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     configuracion_interes {
         bigint id PK
         bigint comunidad_id FK
@@ -339,11 +340,11 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     %% ============================================
     %% MÓDULO: MEDIDORES Y CONSUMOS
     %% ============================================
-    
+
     medidor {
         bigint id PK
         bigint comunidad_id FK
@@ -354,7 +355,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     lectura_medidor {
         bigint id PK
         bigint medidor_id FK
@@ -364,7 +365,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     tarifa_consumo {
         bigint id PK
         bigint comunidad_id FK
@@ -376,11 +377,11 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     %% ============================================
     %% MÓDULO: AMENIDADES Y RESERVAS
     %% ============================================
-    
+
     amenidad {
         bigint id PK
         bigint comunidad_id FK
@@ -392,7 +393,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     reserva_amenidad {
         bigint id PK
         bigint comunidad_id FK
@@ -405,11 +406,11 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     %% ============================================
     %% MÓDULO: SOPORTE Y COMUNICACIÓN
     %% ============================================
-    
+
     solicitud_soporte {
         bigint id PK
         bigint comunidad_id FK
@@ -424,7 +425,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     notificacion {
         bigint id PK
         bigint comunidad_id FK
@@ -437,7 +438,7 @@ erDiagram
         bigint objeto_id
         datetime fecha_creacion
     }
-    
+
     registro_conserjeria {
         bigint id PK
         bigint comunidad_id FK
@@ -447,7 +448,7 @@ erDiagram
         varchar detalle
         datetime created_at
     }
-    
+
     documento {
         bigint id PK
         bigint comunidad_id FK
@@ -459,11 +460,11 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     %% ============================================
     %% MÓDULO: CONCILIACIÓN Y WEBHOOKS
     %% ============================================
-    
+
     conciliacion_bancaria {
         bigint id PK
         bigint comunidad_id FK
@@ -477,7 +478,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     webhook_pago {
         bigint id PK
         bigint comunidad_id FK
@@ -487,21 +488,21 @@ erDiagram
         tinyint procesado
         bigint pago_id FK
     }
-    
+
     %% ============================================
     %% MÓDULO: VALORES DE REFERENCIA
     %% ============================================
-    
+
     uf_valor {
         date fecha PK
         decimal valor
     }
-    
+
     utm_valor {
         date fecha PK
         decimal valor
     }
-    
+
     user_preferences {
         int id PK
         int user_id UK
@@ -509,22 +510,22 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     %% ============================================
     %% RELACIONES - IDENTIDAD Y AUTENTICACIÓN
     %% ============================================
-    
+
     persona ||--o{ usuario : "tiene credenciales"
     usuario ||--o{ usuario_comunidad_rol : "tiene roles en"
     comunidad ||--o{ usuario_comunidad_rol : "tiene usuarios"
     rol ||--o{ usuario_comunidad_rol : "define permisos"
     usuario ||--o{ sesion_usuario : "tiene sesiones"
     usuario ||--o{ auditoria : "realiza acciones"
-    
+
     %% ============================================
     %% RELACIONES - ESTRUCTURA COMUNIDADES
     %% ============================================
-    
+
     comunidad ||--o{ edificio : "contiene"
     edificio ||--o{ torre : "contiene"
     comunidad ||--o{ unidad : "administra"
@@ -533,11 +534,11 @@ erDiagram
     unidad ||--o{ titulares_unidad : "tiene propietarios/arrendatarios"
     persona ||--o{ titulares_unidad : "es titular de"
     comunidad ||--o{ titulares_unidad : "registra tenencias"
-    
+
     %% ============================================
     %% RELACIONES - GESTIÓN FINANCIERA
     %% ============================================
-    
+
     comunidad ||--o{ categoria_gasto : "define categorías"
     comunidad ||--o{ centro_costo : "define centros de costo"
     comunidad ||--o{ proveedor : "tiene proveedores"
@@ -547,58 +548,58 @@ erDiagram
     categoria_gasto ||--o{ gasto : "categoriza"
     centro_costo ||--o{ gasto : "imputa a"
     documento_compra ||--o{ gasto : "respalda"
-    
+
     comunidad ||--o{ emision_gastos_comunes : "emite mensualmente"
     emision_gastos_comunes ||--o{ detalle_emision : "desglosa en"
     gasto ||--o{ detalle_emision : "se incluye en"
     categoria_gasto ||--o{ detalle_emision : "categoriza"
-    
+
     emision_gastos_comunes ||--o{ cuenta_cobro_unidad : "genera cuentas por"
     unidad ||--o{ cuenta_cobro_unidad : "recibe cuenta"
     comunidad ||--o{ cuenta_cobro_unidad : "administra"
     cuenta_cobro_unidad ||--o{ detalle_cuenta_unidad : "detalla items"
     categoria_gasto ||--o{ detalle_cuenta_unidad : "categoriza"
-    
+
     comunidad ||--o{ pago : "recibe pagos"
     unidad ||--o{ pago : "paga"
     persona ||--o{ pago : "realiza"
     pago ||--o{ pago_aplicacion : "se aplica a"
     cuenta_cobro_unidad ||--o{ pago_aplicacion : "recibe aplicación"
-    
+
     comunidad ||--o{ multa : "aplica multas"
     unidad ||--o{ multa : "es multada"
     persona ||--o{ multa : "recibe multa"
-    
+
     %% ============================================
     %% RELACIONES - CONFIGURACIÓN
     %% ============================================
-    
+
     comunidad ||--|| parametros_cobranza : "configura parámetros"
     comunidad ||--o{ configuracion_interes : "define tasas"
-    
+
     %% ============================================
     %% RELACIONES - MEDIDORES Y CONSUMOS
     %% ============================================
-    
+
     comunidad ||--o{ medidor : "instala medidores"
     unidad ||--o{ medidor : "tiene medidor"
     medidor ||--o{ lectura_medidor : "registra lecturas"
     comunidad ||--o{ tarifa_consumo : "define tarifas"
-    
+
     %% ============================================
     %% RELACIONES - AMENIDADES
     %% ============================================
-    
+
     comunidad ||--o{ amenidad : "ofrece amenidades"
     amenidad ||--o{ reserva_amenidad : "es reservada"
     unidad ||--o{ reserva_amenidad : "reserva"
     persona ||--o{ reserva_amenidad : "solicita"
     comunidad ||--o{ reserva_amenidad : "administra"
-    
+
     %% ============================================
     %% RELACIONES - SOPORTE Y COMUNICACIÓN
     %% ============================================
-    
+
     comunidad ||--o{ solicitud_soporte : "gestiona tickets"
     unidad ||--o{ solicitud_soporte : "reporta"
     comunidad ||--o{ notificacion : "envía notificaciones"
@@ -606,11 +607,11 @@ erDiagram
     comunidad ||--o{ registro_conserjeria : "mantiene bitácora"
     usuario ||--o{ registro_conserjeria : "registra eventos"
     comunidad ||--o{ documento : "publica documentos"
-    
+
     %% ============================================
     %% RELACIONES - CONCILIACIÓN
     %% ============================================
-    
+
     comunidad ||--o{ conciliacion_bancaria : "concilia movimientos"
     pago ||--o| conciliacion_bancaria : "se concilia con"
     comunidad ||--o{ webhook_pago : "recibe webhooks"
@@ -631,7 +632,7 @@ erDiagram
     rol ||--o{ usuario_comunidad_rol : "1:N"
     usuario ||--o{ sesion_usuario : "1:N"
     usuario ||--o{ auditoria : "1:N"
-    
+
     persona {
         bigint id PK
         varchar rut UK
@@ -641,7 +642,7 @@ erDiagram
         varchar email
         varchar telefono
     }
-    
+
     usuario {
         bigint id PK
         bigint persona_id FK "RESTRICT"
@@ -649,7 +650,7 @@ erDiagram
         varchar hash_password
         tinyint totp_enabled
     }
-    
+
     rol {
         int id PK
         varchar codigo UK
@@ -657,7 +658,7 @@ erDiagram
         int nivel_acceso
         tinyint es_rol_sistema
     }
-    
+
     usuario_comunidad_rol {
         bigint id PK
         bigint usuario_id FK
@@ -670,6 +671,7 @@ erDiagram
 ```
 
 **Reglas de negocio:**
+
 - ✅ Un usuario **DEBE** tener una persona asociada (RESTRICT)
 - ✅ Un usuario puede tener múltiples roles en múltiples comunidades
 - ✅ Un rol puede ser de sistema (superadmin) o de comunidad (admin, conserje, etc.)
@@ -688,7 +690,7 @@ erDiagram
     torre ||--o{ unidad : "1:N opcional"
     unidad ||--o{ titulares_unidad : "1:N"
     persona ||--o{ titulares_unidad : "1:N"
-    
+
     comunidad {
         bigint id PK
         varchar rut UK
@@ -696,21 +698,21 @@ erDiagram
         varchar razon_social
         json politica_mora_json
     }
-    
+
     edificio {
         bigint id PK
         bigint comunidad_id FK
         varchar nombre
         varchar codigo
     }
-    
+
     torre {
         bigint id PK
         bigint edificio_id FK
         varchar nombre
         varchar codigo
     }
-    
+
     unidad {
         bigint id PK
         bigint comunidad_id FK
@@ -719,7 +721,7 @@ erDiagram
         varchar codigo UK
         decimal alicuota
     }
-    
+
     titulares_unidad {
         bigint id PK
         bigint comunidad_id FK
@@ -733,6 +735,7 @@ erDiagram
 ```
 
 **Jerarquía:**
+
 ```
 Comunidad
 ├── Edificio (opcional)
@@ -753,7 +756,7 @@ erDiagram
     categoria_gasto ||--o{ detalle_emision : "categoriza"
     emision_gastos_comunes ||--o{ cuenta_cobro_unidad : "genera"
     cuenta_cobro_unidad ||--o{ detalle_cuenta_unidad : "detalla"
-    
+
     emision_gastos_comunes {
         bigint id PK
         bigint comunidad_id FK
@@ -761,7 +764,7 @@ erDiagram
         date fecha_vencimiento
         enum estado
     }
-    
+
     detalle_emision {
         bigint id PK
         bigint emision_id FK "CASCADE"
@@ -770,7 +773,7 @@ erDiagram
         decimal monto
         enum regla_prorrateo
     }
-    
+
     cuenta_cobro_unidad {
         bigint id PK
         bigint emision_id FK
@@ -779,7 +782,7 @@ erDiagram
         decimal saldo
         enum estado
     }
-    
+
     detalle_cuenta_unidad {
         bigint id PK
         bigint cuenta_cobro_unidad_id FK "CASCADE"
@@ -790,6 +793,7 @@ erDiagram
 ```
 
 **Flujo:**
+
 ```
 1. Comunidad → Emision Mensual (YYYY-MM)
 2. Emision → Detalle Emision (gastos del mes)
@@ -809,7 +813,7 @@ erDiagram
     persona ||--o{ pago : "paga"
     pago ||--o| webhook_pago : "genera desde"
     pago ||--o| conciliacion_bancaria : "concilia"
-    
+
     pago {
         bigint id PK
         bigint comunidad_id FK
@@ -820,7 +824,7 @@ erDiagram
         enum medio
         enum estado
     }
-    
+
     pago_aplicacion {
         bigint id PK
         bigint pago_id FK "CASCADE"
@@ -828,7 +832,7 @@ erDiagram
         decimal monto
         int prioridad
     }
-    
+
     webhook_pago {
         bigint id PK
         bigint comunidad_id FK
@@ -836,7 +840,7 @@ erDiagram
         json payload_json
         tinyint procesado
     }
-    
+
     conciliacion_bancaria {
         bigint id PK
         bigint comunidad_id FK
@@ -847,6 +851,7 @@ erDiagram
 ```
 
 **Flujo de pago:**
+
 ```
 1. Webhook/Manual → Pago (registro inicial)
 2. Pago → Pago_Aplicacion (aplicar a cuentas)
@@ -864,7 +869,7 @@ erDiagram
     unidad ||--o{ medidor : "tiene"
     medidor ||--o{ lectura_medidor : "registra"
     comunidad ||--o{ tarifa_consumo : "define"
-    
+
     medidor {
         bigint id PK
         bigint comunidad_id FK
@@ -873,7 +878,7 @@ erDiagram
         varchar codigo UK
         tinyint es_compartido
     }
-    
+
     lectura_medidor {
         bigint id PK
         bigint medidor_id FK "CASCADE"
@@ -881,7 +886,7 @@ erDiagram
         decimal lectura
         char periodo UK "YYYY-MM"
     }
-    
+
     tarifa_consumo {
         bigint id PK
         bigint comunidad_id FK
@@ -894,6 +899,7 @@ erDiagram
 ```
 
 **Cálculo de consumo:**
+
 ```
 Consumo = Lectura_Actual - Lectura_Anterior
 Monto = (Consumo × Precio_Por_Unidad) + Cargo_Fijo
@@ -903,16 +909,16 @@ Monto = (Consumo × Precio_Por_Unidad) + Cargo_Fijo
 
 ## 📋 RESUMEN DE CARDINALIDADES
 
-| Relación | Tipo | DELETE | Descripción |
-|----------|------|--------|-------------|
-| persona → usuario | 1:N | RESTRICT | Persona no se puede eliminar si tiene usuario |
-| usuario → usuario_comunidad_rol | 1:N | CASCADE | Al eliminar usuario, se eliminan sus roles |
-| comunidad → unidad | 1:N | CASCADE | Al eliminar comunidad, se eliminan unidades |
-| emision → cuenta_cobro | 1:N | CASCADE | Al eliminar emisión, se eliminan cuentas |
-| cuenta_cobro → detalle_cuenta | 1:N | CASCADE | Al eliminar cuenta, se eliminan detalles |
-| pago → pago_aplicacion | 1:N | CASCADE | Al eliminar pago, se eliminan aplicaciones |
-| medidor → lectura_medidor | 1:N | CASCADE | Al eliminar medidor, se eliminan lecturas |
-| gasto → detalle_emision | 1:N | SET NULL | Al eliminar gasto, referencia queda NULL |
+| Relación                        | Tipo | DELETE   | Descripción                                   |
+| ------------------------------- | ---- | -------- | --------------------------------------------- |
+| persona → usuario               | 1:N  | RESTRICT | Persona no se puede eliminar si tiene usuario |
+| usuario → usuario_comunidad_rol | 1:N  | CASCADE  | Al eliminar usuario, se eliminan sus roles    |
+| comunidad → unidad              | 1:N  | CASCADE  | Al eliminar comunidad, se eliminan unidades   |
+| emision → cuenta_cobro          | 1:N  | CASCADE  | Al eliminar emisión, se eliminan cuentas      |
+| cuenta_cobro → detalle_cuenta   | 1:N  | CASCADE  | Al eliminar cuenta, se eliminan detalles      |
+| pago → pago_aplicacion          | 1:N  | CASCADE  | Al eliminar pago, se eliminan aplicaciones    |
+| medidor → lectura_medidor       | 1:N  | CASCADE  | Al eliminar medidor, se eliminan lecturas     |
+| gasto → detalle_emision         | 1:N  | SET NULL | Al eliminar gasto, referencia queda NULL      |
 
 ---
 
@@ -941,6 +947,7 @@ ix_auditoria_usuario_fecha (usuario_id, created_at)
 ## 🔐 POLÍTICAS DE INTEGRIDAD
 
 ### Eliminación en Cascada (CASCADE)
+
 ```
 ✅ detalle_cuenta_unidad → cuenta_cobro_unidad
 ✅ detalle_emision → emision_gastos_comunes
@@ -950,6 +957,7 @@ ix_auditoria_usuario_fecha (usuario_id, created_at)
 ```
 
 ### Set NULL (mantener histórico)
+
 ```
 ✅ auditoria → usuario
 ✅ gasto → documento_compra
@@ -959,6 +967,7 @@ ix_auditoria_usuario_fecha (usuario_id, created_at)
 ```
 
 ### Restrict (integridad crítica)
+
 ```
 ✅ usuario → persona
 ✅ cuenta_cobro_unidad → unidad
@@ -991,4 +1000,3 @@ ix_auditoria_usuario_fecha (usuario_id, created_at)
 **Fecha de generación:** Octubre 2025  
 **Versión de esquema:** 2.0 (post-migración)  
 **Motor:** MySQL 8.0.43 / MariaDB 10.2+
-

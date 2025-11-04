@@ -6,11 +6,20 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "lint": "eslint . --ext .js",
+    "lint": "eslint . --ext .js && echo 'ESLint: Todo está correcto - No se encontraron errores'",
+    "lint:fix": "eslint . --ext .js --fix",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "jest --runInBand",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "test:health": "jest --runInBand test/health/",
-    "test:health:verbose": "jest --runInBand --verbose test/health/"
+    "test:health:verbose": "jest --runInBand --verbose test/health/",
+    "test:ci": "jest --runInBand --coverage --watchAll=false",
+    "clean": "rm -rf coverage && rm -rf .nyc_output",
+    "docker:build": "docker build -t cuentasclaras-api .",
+    "docker:run": "docker run -p 3000:3000 cuentasclaras-api",
+    "prepare": "husky install"
   },
   "engines": {
     "node": ">=18"

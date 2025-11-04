@@ -10,7 +10,7 @@ const { categorizeResponse, getWithAuth } = require('./helpers');
 describe('Proveedores Health Check', () => {
   let authToken;
   let comunidadId;
-  let proveedorId; 
+  let proveedorId;
 
   beforeAll(() => {
     authToken = getAuthToken();
@@ -28,7 +28,7 @@ describe('Proveedores Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /proveedores/:id (Detalle de Proveedor)', async () => {
       const endpoint = `/proveedores/${proveedorId}`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -42,7 +42,7 @@ describe('Proveedores Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /proveedores/:id/documentos', async () => {
       const endpoint = `/proveedores/${proveedorId}/documentos`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -61,35 +61,35 @@ describe('Proveedores Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /proveedores/comunidad/:comunidadId/top-volumen', async () => {
       const endpoint = `/proveedores/comunidad/${comunidadId}/top-volumen`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /proveedores/comunidad/:comunidadId/inactivos', async () => {
       const endpoint = `/proveedores/comunidad/${comunidadId}/inactivos`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /proveedores/comunidad/:comunidadId/analisis-mensual', async () => {
       const endpoint = `/proveedores/comunidad/${comunidadId}/analisis-mensual`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /proveedores/comunidad/:comunidadId/por-categoria', async () => {
       const endpoint = `/proveedores/comunidad/${comunidadId}/por-categoria`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /proveedores/comunidad/:comunidadId/comparativa', async () => {
       const endpoint = `/proveedores/comunidad/${comunidadId}/comparativa`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -97,7 +97,7 @@ describe('Proveedores Health Check', () => {
       expect([200, 401, 403, 500]).toContain(response.status);
     });
   });
-  
+
   // =========================================
   // 3. Dashboard y Utilidades
   // =========================================
@@ -108,21 +108,21 @@ describe('Proveedores Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /proveedores/comunidad/:comunidadId/top-mes', async () => {
       const endpoint = `/proveedores/comunidad/${comunidadId}/top-mes`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /proveedores/comunidad/:comunidadId/distribucion', async () => {
       const endpoint = `/proveedores/comunidad/${comunidadId}/distribucion`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /proveedores/:id/validar-eliminacion', async () => {
       const endpoint = `/proveedores/${proveedorId}/validar-eliminacion`;
       const response = await getWithAuth(app, endpoint, authToken);

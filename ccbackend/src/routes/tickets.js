@@ -73,12 +73,26 @@ const { requireCommunity } = require('../middleware/tenancy');
  *           type: integer
  *           default: 0
  */
-router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { estado, prioridad, categoria, asignado_a, fecha_desde, fecha_hasta, ordenar_por, limit = 100, offset = 0 } = req.query;
+router.get(
+  '/comunidad/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const {
+        estado,
+        prioridad,
+        categoria,
+        asignado_a,
+        fecha_desde,
+        fecha_hasta,
+        ordenar_por,
+        limit = 100,
+        offset = 0,
+      } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         ts.id,
         ts.id AS numero,
@@ -118,41 +132,41 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
       WHERE ts.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (estado) {
-      query += ` AND ts.estado = ?`;
-      params.push(estado);
-    }
+      if (estado) {
+        query += ` AND ts.estado = ?`;
+        params.push(estado);
+      }
 
-    if (prioridad) {
-      query += ` AND ts.prioridad = ?`;
-      params.push(prioridad);
-    }
+      if (prioridad) {
+        query += ` AND ts.prioridad = ?`;
+        params.push(prioridad);
+      }
 
-    if (categoria) {
-      query += ` AND ts.categoria = ?`;
-      params.push(categoria);
-    }
+      if (categoria) {
+        query += ` AND ts.categoria = ?`;
+        params.push(categoria);
+      }
 
-    if (asignado_a) {
-      query += ` AND ts.asignado_a = ?`;
-      params.push(Number(asignado_a));
-    }
+      if (asignado_a) {
+        query += ` AND ts.asignado_a = ?`;
+        params.push(Number(asignado_a));
+      }
 
-    if (fecha_desde) {
-      query += ` AND ts.created_at >= ?`;
-      params.push(fecha_desde);
-    }
+      if (fecha_desde) {
+        query += ` AND ts.created_at >= ?`;
+        params.push(fecha_desde);
+      }
 
-    if (fecha_hasta) {
-      query += ` AND ts.created_at <= ?`;
-      params.push(fecha_hasta);
-    }
+      if (fecha_hasta) {
+        query += ` AND ts.created_at <= ?`;
+        params.push(fecha_hasta);
+      }
 
-    // Ordenamiento
-    if (ordenar_por === 'urgencia') {
-      query += `
+      // Ordenamiento
+      if (ordenar_por === 'urgencia') {
+        query += `
         ORDER BY
           CASE
             WHEN ts.estado IN ('resuelto', 'cerrado') THEN 999
@@ -163,21 +177,22 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
           END ASC,
           ts.created_at DESC
       `;
-    } else {
-      query += ` ORDER BY ts.created_at DESC, ts.id DESC`;
+      } else {
+        query += ` ORDER BY ts.created_at DESC, ts.id DESC`;
+      }
+
+      query += ` LIMIT ? OFFSET ?`;
+      params.push(Number(limit), Number(offset));
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al listar tickets:', error);
+      res.status(500).json({ error: 'Error al listar tickets' });
     }
-
-    query += ` LIMIT ? OFFSET ?`;
-    params.push(Number(limit), Number(offset));
-
-    const [rows] = await db.query(query, params);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al listar tickets:', error);
-    res.status(500).json({ error: 'Error al listar tickets' });
   }
-});
+);
 
 /**
  * @swagger
@@ -186,11 +201,15 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
  *     tags: [Tickets]
  *     summary: Estadísticas de tickets por comunidad
  */
-router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/estadisticas',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         c.razon_social AS comunidad,
         COUNT(ts.id) AS total_tickets,
@@ -207,14 +226,15 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
       GROUP BY c.id, c.razon_social
     `;
 
-    const [[stats]] = await db.query(query, [comunidadId]);
+      const [[stats]] = await db.query(query, [comunidadId]);
 
-    res.json(stats || {});
-  } catch (error) {
-    console.error('Error al obtener estadísticas:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas' });
+      res.json(stats || {});
+    } catch (error) {
+      console.error('Error al obtener estadísticas:', error);
+      res.status(500).json({ error: 'Error al obtener estadísticas' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -223,11 +243,15 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
  *     tags: [Tickets]
  *     summary: Tickets próximos a vencer (3 días)
  */
-router.get('/comunidad/:comunidadId/proximos-vencer', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/proximos-vencer',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         ts.id,
         ts.id AS numero,
@@ -256,14 +280,17 @@ router.get('/comunidad/:comunidadId/proximos-vencer', authenticate, requireCommu
       ORDER BY ts.updated_at ASC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener tickets próximos a vencer:', error);
-    res.status(500).json({ error: 'Error al obtener tickets próximos a vencer' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener tickets próximos a vencer:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener tickets próximos a vencer' });
+    }
   }
-});
+);
 
 // =========================================
 // 2. VISTAS DETALLADAS
@@ -541,7 +568,7 @@ router.get('/:id', authenticate, async (req, res) => {
     const [timeline] = await db.query(timelineQuery, [id]);
 
     // Procesar timeline para formato legible
-    const processedTimeline = timeline.map(activity => {
+    const processedTimeline = timeline.map((activity) => {
       let descripcion = '';
       let tipo = '';
 
@@ -582,13 +609,13 @@ router.get('/:id', authenticate, async (req, res) => {
         fecha: activity.fecha,
         usuario: {
           nombre: activity.usuario_nombre,
-          email: activity.usuario_email
-        }
+          email: activity.usuario_email,
+        },
       };
     });
 
     // Agregar evento de creación si no está en auditoria
-    if (!processedTimeline.some(t => t.descripcion === 'Ticket creado')) {
+    if (!processedTimeline.some((t) => t.descripcion === 'Ticket creado')) {
       processedTimeline.unshift({
         id: 'creation',
         tipo: 'add_circle',
@@ -596,8 +623,8 @@ router.get('/:id', authenticate, async (req, res) => {
         fecha: ticket.fecha_creacion,
         usuario: {
           nombre: ticket.solicitante_nombre || 'Sistema',
-          email: ticket.solicitante_email || ''
-        }
+          email: ticket.solicitante_email || '',
+        },
       });
     }
 
@@ -605,37 +632,40 @@ router.get('/:id', authenticate, async (req, res) => {
     const comentarios = [
       {
         id: 1,
-        contenido: 'Gracias por reportar este problema. Voy a revisar el ascensor inmediatamente.',
+        contenido:
+          'Gracias por reportar este problema. Voy a revisar el ascensor inmediatamente.',
         fecha: new Date(ticket.fecha_creacion.getTime() + 30 * 60 * 1000), // 30 min después
         usuario: {
           nombre: 'Carlos Técnico',
           email: 'carlos@mantenimiento.com',
-          iniciales: 'CT'
+          iniciales: 'CT',
         },
-        interno: false
+        interno: false,
       },
       {
         id: 2,
-        contenido: 'He revisado el ascensor y efectivamente hay un problema con el motor. He solicitado las piezas de repuesto y deberían llegar mañana por la mañana.',
+        contenido:
+          'He revisado el ascensor y efectivamente hay un problema con el motor. He solicitado las piezas de repuesto y deberían llegar mañana por la mañana.',
         fecha: new Date(ticket.fecha_creacion.getTime() + 2 * 60 * 60 * 1000), // 2 horas después
         usuario: {
           nombre: 'Carlos Técnico',
           email: 'carlos@mantenimiento.com',
-          iniciales: 'CT'
+          iniciales: 'CT',
         },
-        interno: false
+        interno: false,
       },
       {
         id: 3,
-        contenido: 'Nota interna: Contactar proveedor para acelerar entrega de piezas.',
+        contenido:
+          'Nota interna: Contactar proveedor para acelerar entrega de piezas.',
         fecha: new Date(ticket.fecha_creacion.getTime() + 2.5 * 60 * 60 * 1000), // 2.5 horas después
         usuario: {
           nombre: 'Admin Sistema',
           email: '',
-          iniciales: 'AS'
+          iniciales: 'AS',
         },
-        interno: true
-      }
+        interno: true,
+      },
     ];
 
     // Etiquetas basadas en categoria y prioridad
@@ -651,29 +681,35 @@ router.get('/:id', authenticate, async (req, res) => {
       solicitante: {
         nombre: ticket.solicitante_nombre,
         email: ticket.solicitante_email,
-        unidad: ticket.unidad_codigo
+        unidad: ticket.unidad_codigo,
       },
-      asignado: ticket.asignado_id ? {
-        nombre: ticket.asignado_nombre,
-        email: ticket.asignado_email,
-        iniciales: ticket.asignado_nombre.split(' ').map(n => n[0]).join('').toUpperCase()
-      } : null,
+      asignado: ticket.asignado_id
+        ? {
+            nombre: ticket.asignado_nombre,
+            email: ticket.asignado_email,
+            iniciales: ticket.asignado_nombre
+              .split(' ')
+              .map((n) => n[0])
+              .join('')
+              .toUpperCase(),
+          }
+        : null,
       comentarios,
       timeline: processedTimeline,
-      adjuntos: attachments.map(att => ({
+      adjuntos: attachments.map((att) => ({
         id: att.id,
         nombre: att.original_name,
         tamano: `${(att.file_size / 1024 / 1024).toFixed(2)} MB`,
         tipo: att.mimetype.startsWith('image/') ? 'image' : 'description',
         url: att.file_path,
         subido_por: att.uploaded_by_name,
-        fecha_subida: att.uploaded_at
+        fecha_subida: att.uploaded_at,
       })),
       estadisticas: {
         num_comentarios: comentarios.length,
         num_adjuntos: attachments.length,
-        num_historial: processedTimeline.length
-      }
+        num_historial: processedTimeline.length,
+      },
     };
 
     res.json(response);
@@ -848,7 +884,9 @@ router.get('/estadisticas/por-prioridad', authenticate, async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error('Error al obtener estadísticas por prioridad:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas por prioridad' });
+    res
+      .status(500)
+      .json({ error: 'Error al obtener estadísticas por prioridad' });
   }
 });
 
@@ -885,7 +923,9 @@ router.get('/estadisticas/por-categoria', authenticate, async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error('Error al obtener estadísticas por categoría:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas por categoría' });
+    res
+      .status(500)
+      .json({ error: 'Error al obtener estadísticas por categoría' });
   }
 });
 
@@ -940,7 +980,19 @@ router.get('/estadisticas/mensuales', authenticate, async (req, res) => {
  */
 router.get('/busqueda/avanzada', authenticate, async (req, res) => {
   try {
-    const { busqueda, comunidad_id, estado, prioridad, categoria, asignado_a, fecha_desde, fecha_hasta, dias_vencimiento, limit = 100, offset = 0 } = req.query;
+    const {
+      busqueda,
+      comunidad_id,
+      estado,
+      prioridad,
+      categoria,
+      asignado_a,
+      fecha_desde,
+      fecha_hasta,
+      dias_vencimiento,
+      limit = 100,
+      offset = 0,
+    } = req.query;
 
     let query = `
       SELECT
@@ -979,7 +1031,13 @@ router.get('/busqueda/avanzada', authenticate, async (req, res) => {
     if (busqueda) {
       query += ` AND (ts.id LIKE ? OR ts.titulo LIKE ? OR ts.descripcion LIKE ? OR pu.nombres LIKE ? OR pa.nombres LIKE ?)`;
       const searchPattern = `%${busqueda}%`;
-      params.push(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
+      params.push(
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern
+      );
     }
 
     if (comunidad_id) {
@@ -1106,9 +1164,13 @@ router.get('/por-asignado/estadisticas', authenticate, async (req, res) => {
  *     tags: [Tickets]
  *     summary: Exportación completa de tickets para Excel/CSV
  */
-router.get('/export/completo', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/export/completo',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         ts.id AS 'ID',
         ts.id AS 'Número',
@@ -1140,14 +1202,15 @@ router.get('/export/completo', authenticate, authorize('admin', 'superadmin'), a
       ORDER BY ts.created_at DESC
     `;
 
-    const [rows] = await db.query(query);
+      const [rows] = await db.query(query);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al exportar tickets:', error);
-    res.status(500).json({ error: 'Error al exportar tickets' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al exportar tickets:', error);
+      res.status(500).json({ error: 'Error al exportar tickets' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1156,9 +1219,13 @@ router.get('/export/completo', authenticate, authorize('admin', 'superadmin'), a
  *     tags: [Tickets]
  *     summary: Exportación de tickets abiertos
  */
-router.get('/export/abiertos', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/export/abiertos',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         ts.id AS 'Ticket',
         ts.titulo AS 'Asunto',
@@ -1195,14 +1262,15 @@ router.get('/export/abiertos', authenticate, authorize('admin', 'superadmin'), a
         ts.created_at ASC
     `;
 
-    const [rows] = await db.query(query);
+      const [rows] = await db.query(query);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al exportar tickets abiertos:', error);
-    res.status(500).json({ error: 'Error al exportar tickets abiertos' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al exportar tickets abiertos:', error);
+      res.status(500).json({ error: 'Error al exportar tickets abiertos' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1211,9 +1279,13 @@ router.get('/export/abiertos', authenticate, authorize('admin', 'superadmin'), a
  *     tags: [Tickets]
  *     summary: Exportación de estadísticas de resolución
  */
-router.get('/export/estadisticas-resolucion', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/export/estadisticas-resolucion',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         YEAR(ts.created_at) AS 'Año',
         MONTH(ts.created_at) AS 'Mes',
@@ -1235,14 +1307,15 @@ router.get('/export/estadisticas-resolucion', authenticate, authorize('admin', '
       ORDER BY 1 DESC, 2 DESC
     `;
 
-    const [rows] = await db.query(query);
+      const [rows] = await db.query(query);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al exportar estadísticas:', error);
-    res.status(500).json({ error: 'Error al exportar estadísticas' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al exportar estadísticas:', error);
+      res.status(500).json({ error: 'Error al exportar estadísticas' });
+    }
   }
-});
+);
 
 // =========================================
 // 6. VALIDACIONES
@@ -1255,9 +1328,13 @@ router.get('/export/estadisticas-resolucion', authenticate, authorize('admin', '
  *     tags: [Tickets]
  *     summary: Validar integridad de tickets
  */
-router.get('/validacion/integridad', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/validacion/integridad',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         'Tickets sin comunidad' AS validacion,
         COUNT(*) AS cantidad
@@ -1291,14 +1368,15 @@ router.get('/validacion/integridad', authenticate, authorize('admin', 'superadmi
       WHERE estado IN ('abierto', 'en_progreso') AND updated_at < CURDATE()
     `;
 
-    const [rows] = await db.query(query);
+      const [rows] = await db.query(query);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al validar integridad:', error);
-    res.status(500).json({ error: 'Error al validar integridad' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al validar integridad:', error);
+      res.status(500).json({ error: 'Error al validar integridad' });
+    }
   }
-});
+);
 
 // =========================================
 // 7. CRUD BÁSICO
@@ -1311,37 +1389,59 @@ router.get('/validacion/integridad', authenticate, authorize('admin', 'superadmi
  *     tags: [Tickets]
  *     summary: Crear nuevo ticket
  */
-router.post('/comunidad/:comunidadId', [
-  authenticate,
-  requireCommunity('comunidadId'),
-  body('titulo').notEmpty(),
-  body('descripcion').notEmpty(),
-  body('prioridad').isIn(['alta', 'media', 'baja']),
-  body('categoria').notEmpty()
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+router.post(
+  '/comunidad/:comunidadId',
+  [
+    authenticate,
+    requireCommunity('comunidadId'),
+    body('titulo').notEmpty(),
+    body('descripcion').notEmpty(),
+    body('prioridad').isIn(['alta', 'media', 'baja']),
+    body('categoria').notEmpty(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { titulo, descripcion, prioridad, categoria, unidad_id, asignado_a } = req.body;
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const {
+        titulo,
+        descripcion,
+        prioridad,
+        categoria,
+        unidad_id,
+        asignado_a,
+      } = req.body;
 
-    const [result] = await db.query(
-      `INSERT INTO ticket_soporte (comunidad_id, titulo, descripcion, estado, prioridad, categoria, unidad_id, asignado_a)
+      const [result] = await db.query(
+        `INSERT INTO ticket_soporte (comunidad_id, titulo, descripcion, estado, prioridad, categoria, unidad_id, asignado_a)
        VALUES (?, ?, ?, 'abierto', ?, ?, ?, ?)`,
-      [comunidadId, titulo, descripcion, prioridad, categoria, unidad_id || null, asignado_a || null]
-    );
+        [
+          comunidadId,
+          titulo,
+          descripcion,
+          prioridad,
+          categoria,
+          unidad_id || null,
+          asignado_a || null,
+        ]
+      );
 
-    const [row] = await db.query('SELECT * FROM ticket_soporte WHERE id = ? LIMIT 1', [result.insertId]);
+      const [row] = await db.query(
+        'SELECT * FROM ticket_soporte WHERE id = ? LIMIT 1',
+        [result.insertId]
+      );
 
-    res.status(201).json(row[0]);
-  } catch (error) {
-    console.error('Error al crear ticket:', error);
-    res.status(500).json({ error: 'Error al crear ticket' });
+      res.status(201).json(row[0]);
+    } catch (error) {
+      console.error('Error al crear ticket:', error);
+      res.status(500).json({ error: 'Error al crear ticket' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1353,11 +1453,18 @@ router.post('/comunidad/:comunidadId', [
 router.patch('/:id', authenticate, async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const fields = ['titulo', 'descripcion', 'estado', 'prioridad', 'categoria', 'asignado_a'];
+    const fields = [
+      'titulo',
+      'descripcion',
+      'estado',
+      'prioridad',
+      'categoria',
+      'asignado_a',
+    ];
     const updates = [];
     const values = [];
 
-    fields.forEach(f => {
+    fields.forEach((f) => {
       if (req.body[f] !== undefined) {
         updates.push(`${f} = ?`);
         values.push(req.body[f]);
@@ -1369,9 +1476,15 @@ router.patch('/:id', authenticate, async (req, res) => {
     }
 
     values.push(id);
-    await db.query(`UPDATE ticket_soporte SET ${updates.join(', ')} WHERE id = ?`, values);
+    await db.query(
+      `UPDATE ticket_soporte SET ${updates.join(', ')} WHERE id = ?`,
+      values
+    );
 
-    const [rows] = await db.query('SELECT * FROM ticket_soporte WHERE id = ? LIMIT 1', [id]);
+    const [rows] = await db.query(
+      'SELECT * FROM ticket_soporte WHERE id = ? LIMIT 1',
+      [id]
+    );
 
     res.json(rows[0]);
   } catch (error) {
@@ -1387,21 +1500,25 @@ router.patch('/:id', authenticate, async (req, res) => {
  *     tags: [Tickets]
  *     summary: Eliminar ticket
  */
-router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('superadmin', 'admin'),
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
 
-    await db.query('DELETE FROM ticket_soporte WHERE id = ?', [id]);
+      await db.query('DELETE FROM ticket_soporte WHERE id = ?', [id]);
 
-    res.status(204).end();
-  } catch (error) {
-    console.error('Error al eliminar ticket:', error);
-    res.status(500).json({ error: 'Error al eliminar ticket' });
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error al eliminar ticket:', error);
+      res.status(500).json({ error: 'Error al eliminar ticket' });
+    }
   }
-});
+);
 
 module.exports = router;
-
 
 // =========================================
 // ENDPOINTS DE TICKETS
@@ -1439,7 +1556,3 @@ module.exports = router;
 // POST: /tickets/comunidad/:comunidadId
 // PATCH: /tickets/:id
 // DELETE: /tickets/:id
-
-
-
-

@@ -5,10 +5,13 @@ Este archivo describe el orden y las recomendaciones para insertar datos en la b
 ---
 
 ## ✅ Orden recomendado de carga de datos (`INSERT`)
-> ⚠️ **Importante**: Las *vistas* (`VIEW`) no deben recibir inserts directamente.
+
+> ⚠️ **Importante**: Las _vistas_ (`VIEW`) no deben recibir inserts directamente.
 
 ### 🔹 1. Tablas base sin dependencias externas
+
 Estas tablas pueden cargarse primero sin depender de otras:
+
 ```sql
 pais
 region
@@ -24,6 +27,7 @@ utm_valor
 ---
 
 ### 🔹 2. Tablas de personas y usuarios
+
 ```sql
 persona
 usuario
@@ -33,6 +37,7 @@ user_preferences
 ---
 
 ### 🔹 3. Tablas relacionadas con comunidades y estructuras
+
 ```sql
 comunidad
 edificio_torre
@@ -45,6 +50,7 @@ membresia_comunidad
 ---
 
 ### 🔹 4. Tablas de configuración y categorías
+
 ```sql
 categoria_gasto
 centro_costo
@@ -55,6 +61,7 @@ parametros_cobranza
 ---
 
 ### 🔹 5. Tablas operativas de gastos y emisión
+
 ```sql
 gasto
 emision_gasto_comun
@@ -65,6 +72,7 @@ emision_gasto_detalle
 ---
 
 ### 🔹 6. Cargos y cobros
+
 ```sql
 cargo_unidad
 cargo_unidad_detalle
@@ -76,6 +84,7 @@ multa
 ---
 
 ### 🔹 7. Pagos
+
 ```sql
 pago
 pago_aplicacion
@@ -86,6 +95,7 @@ conciliacion_bancaria
 ---
 
 ### 🔹 8. Medidores y consumo
+
 ```sql
 medidor
 lectura_medidor
@@ -95,6 +105,7 @@ tarifa_consumo
 ---
 
 ### 🔹 9. Soporte y gestión interna
+
 ```sql
 solicitud_soporte
 ticket
@@ -106,6 +117,7 @@ auditoria
 ---
 
 ### 🔹 10. Reservas y amenities
+
 ```sql
 amenidad
 reserva_amenidad
@@ -114,6 +126,7 @@ reserva_amenidad
 ---
 
 ### 🔹 11. Documentos
+
 ```sql
 documento
 ```
@@ -121,7 +134,9 @@ documento
 ---
 
 ## 🧩 Vistas (solo consulta)
+
 Estas vistas son de solo lectura y **no deben recibir datos mediante INSERT, UPDATE o DELETE**:
+
 ```sql
 bitacora_conserjeria
 Viewcargo_unidad
@@ -139,11 +154,13 @@ Viewticket
 
 - Cargar los datos por bloques siguiendo el orden indicado.
 - Para cargas masivas, se recomienda desactivar temporalmente la validación de claves foráneas:
+
 ```sql
 SET FOREIGN_KEY_CHECKS = 0;
 -- realizar inserts aquí
 SET FOREIGN_KEY_CHECKS = 1;
 ```
+
 - Verificar que los IDs utilizados en relaciones foráneas existan antes de insertar.
 - Los datos de prueba deben ser coherentes, especialmente para pruebas funcionales o demostraciones.
 

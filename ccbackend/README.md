@@ -3,6 +3,7 @@
 Este repositorio contiene una API mínima en Node.js / Express para la gestión de comunidades, edificios, unidades, personas, emisiones, cargos y pagos.
 
 Contenido del README
+
 - Resumen técnico
 - Requisitos
 - Instalación y ejecución
@@ -16,6 +17,7 @@ Contenido del README
 - Seguridad y recomendaciones operativas
 
 Resumen técnico
+
 - Lenguaje: Node.js (11+ compatible; probar con Node 14+)
 - Framework: Express
 - Base de datos: MySQL (InnoDB)
@@ -23,10 +25,12 @@ Resumen técnico
 - Autorización: RBAC por membresías + flag global `is_superadmin` (middleware en `src/middleware/authorize.js`)
 
 Requisitos
+
 - Node.js 14+ instalado
 - MySQL 8+ y la base de datos `cuentasclaras` creada
 
 Instalación y ejecución
+
 1. Instalar dependencias
 
 ```powershell
@@ -42,6 +46,7 @@ npm start
 ```
 
 Variables de entorno (recomendadas)
+
 - DB_HOST=localhost
 - DB_PORT=3306
 - DB_USER=root
@@ -51,13 +56,15 @@ Variables de entorno (recomendadas)
 - PORT=3000
 
 Base de datos y esquema
+
 - El esquema de tablas está en `base/schema.sql`.
 - Si necesitas un superadministrador app-level, hay un helper en `base/create_superadmin.sql` que:
-	- crea una comunidad demo y persona demo
-	- añade la columna `is_superadmin` a `usuario` (si no existe)
-	- muestra ejemplos para insertar/actualizar un `usuario` con `is_superadmin = 1`
+  - crea una comunidad demo y persona demo
+  - añade la columna `is_superadmin` a `usuario` (si no existe)
+  - muestra ejemplos para insertar/actualizar un `usuario` con `is_superadmin = 1`
 
 Notas sobre superadmin
+
 - `is_superadmin` es un flag a nivel de aplicación en la tabla `usuario`.
 - Un usuario con `is_superadmin = 1` obtiene un bypass en las comprobaciones de rol (permiso global).
 - Tokens emitidos incluirán `is_superadmin` en su payload; el middleware lo respeta.
@@ -70,24 +77,26 @@ UPDATE usuario SET is_superadmin = 1 WHERE username = 'superadmin';
 ```
 
 Autenticación y tokens
+
 - Registro: POST /auth/register
-	- Request: { username, password, email?, persona_id? }
-	- Respuesta: { id, username, token }
-	- Nota: la API ignora cualquier intento de establecer `is_superadmin` durante registro público.
+
+  - Request: { username, password, email?, persona_id? }
+  - Respuesta: { id, username, token }
+  - Nota: la API ignora cualquier intento de establecer `is_superadmin` durante registro público.
 
 - Login: POST /auth/login
-	- Request: { username, password }
-	- Respuesta: { token }
-	- JWT payload de ejemplo:
+  - Request: { username, password }
+  - Respuesta: { token }
+  - JWT payload de ejemplo:
 
 ```json
 {
-	"sub": 123,
-	"username": "user",
-	"persona_id": 45,
-	"roles": ["admin"],
-	"comunidad_id": 2,
-	"is_superadmin": true
+  "sub": 123,
+  "username": "user",
+  "persona_id": 45,
+  "roles": ["admin"],
+  "comunidad_id": 2,
+  "is_superadmin": true
 }
 ```
 
@@ -98,38 +107,45 @@ Authorization: Bearer <JWT>
 ```
 
 Endpoints principales (resumen organizado)
+
 - Auth
-	- POST /auth/register
-	- POST /auth/login
-	- POST /auth/refresh
-	- GET  /auth/me
+
+  - POST /auth/register
+  - POST /auth/login
+  - POST /auth/refresh
+  - GET /auth/me
 
 - Comunidades
-	- GET  /comunidades
-	- POST /comunidades
-	- GET  /comunidades/:id
-	- PATCH /comunidades/:id
-	- DELETE /comunidades/:id
+
+  - GET /comunidades
+  - POST /comunidades
+  - GET /comunidades/:id
+  - PATCH /comunidades/:id
+  - DELETE /comunidades/:id
 
 - Edificios / Torres / Unidades
-	- CRUD en `/edificios`, `/torres`, `/unidades` y rutas anidadas por comunidad/edificio
+
+  - CRUD en `/edificios`, `/torres`, `/unidades` y rutas anidadas por comunidad/edificio
 
 - Personas / Usuarios / Membresías
-	- CRUD /personas
-	- POST /auth/register (usuario)
-	- Rutas para `membresias` en `/comunidades/:comunidadId/membresias`
+
+  - CRUD /personas
+  - POST /auth/register (usuario)
+  - Rutas para `membresias` en `/comunidades/:comunidadId/membresias`
 
 - Emisiones / Cargos / Pagos
-	- Rutas para crear emision de gasto común, previsualizar prorrateo y generar cargos
-	- Rutas para crear y aplicar pagos
+
+  - Rutas para crear emision de gasto común, previsualizar prorrateo y generar cargos
+  - Rutas para crear y aplicar pagos
 
 - Util y Soporte
-	- GET /healthz
-	- Rutas de soporte/tickets
+  - GET /healthz
+  - Rutas de soporte/tickets
 
 Para documentación completa con ejemplos de request/response y esquemas, usar la UI de Swagger si está habilitada (ruta típica: `/docs`).
 
 Ejemplos rápidos (PowerShell / curl)
+
 - Login (PowerShell):
 
 ```powershell
@@ -144,17 +160,20 @@ curl -H "Authorization: Bearer <TOKEN>" http://localhost:3000/comunidades
 ```
 
 Postman
+
 - Hay colecciones en `postman/`:
-	- `postman/edificio-api.postman_collection.json` — colección principal con scripts para capturar token y ids de recursos.
-	- `postman/users-seeds.postman_collection.json` — cargas/seed para crear personas/usuarios.
+  - `postman/edificio-api.postman_collection.json` — colección principal con scripts para capturar token y ids de recursos.
+  - `postman/users-seeds.postman_collection.json` — cargas/seed para crear personas/usuarios.
 - Las requests incluyen test scripts que guardan variables en el environment: `token`, `personaId`, `comunidadId`, `unidadId`, etc.
 
 Swagger / OpenAPI
+
 - Muchos endpoints están documentados con JSDoc `@openapi` en los routers. Si el servidor incluye swagger-ui, acceder a la ruta `/api-docs` para ver toda la especificación interactiva.
 
 Testing y desarrollo
 
 ### Tests Automatizados
+
 La API cuenta con un **test de salud completo** que verifica automáticamente todos los endpoints:
 
 ```bash
@@ -163,26 +182,30 @@ npm test -- test/endpoints.health.test.js
 ```
 
 **Cobertura del Test:**
+
 - ✅ **73 endpoints** probados automáticamente
 - ✅ **30 módulos** cubiertos al 100%
 - ✅ **0 errores críticos** de servidor
 - 📊 Reporte detallado de disponibilidad y autenticación
 
 **Documentación de Tests:**
+
 - `test/README_ENDPOINTS_HEALTH.md` - Guía completa del test
 - `test/RESUMEN_EJECUTIVO.md` - Resumen de resultados
 - `test/INDICE_ENDPOINTS.md` - Lista de todos los endpoints
 - `test/RESULTADOS_TEST_HEALTH_COMPLETO.md` - Análisis detallado
 
 ### Desarrollo
+
 - Para desarrollo rápido usar `nodemon` (instalar global o como dependencia dev) y ejecutar `nodemon src/index.js`.
 
-
 Docker + phpMyAdmin
+
 - Si levantás los servicios con `docker compose up -d`, phpMyAdmin estará disponible en http://localhost:8080 por defecto (puedes cambiar el puerto en `.env` con `PHPMYADMIN_PORT`).
 - Acceso: usa las credenciales definidas en `.env` (por ejemplo `api_admin` / `apipassword`) o `root` y `DB_ROOT_PASSWORD`.
 
 Seguridad y recomendaciones operativas
+
 - JWT TTL: en producción reducir tiempo de expiración y usar refresh tokens.
 - Revocación de tokens: implementar blacklist o mecanismo de sessions si necesitas revocar inmediatamente privilegios.
 - Protege la operación de promoción/democión a superadmin: sólo ejecutar desde consola DBA o un endpoint fuertemente protegido y auditado.
@@ -190,11 +213,13 @@ Seguridad y recomendaciones operativas
 - Habilita HTTPS y almacena `JWT_SECRET` y credenciales DB fuera del repositorio (secret manager, variables de entorno en servidor).
 
 Próximos pasos recomendados
+
 - Añadir endpoint admin para promover/demover usuarios con registro en tabla de auditoría.
 - Implementar pruebas automáticas para flujos críticos (generación de cargos, aplicación de pagos, permisos).
 - Completar reglas de prorrateo por consumo (medidores + tarifas) y agregar validaciones/ejemplos en Swagger.
 
 Contacto y mantenimiento
+
 - Código fuente: carpeta `src/` con rutas en `src/routes/` y middleware en `src/middleware/`.
 - Esquemas y helpers SQL: `base/schema.sql`, `base/create_superadmin.sql`.
 

@@ -44,7 +44,7 @@ router.get('/', authenticate, async (req, res) => {
       tarifa_min,
       tarifa_max,
       limit = 50,
-      offset = 0
+      offset = 0,
     } = req.query;
 
     let query = `
@@ -111,7 +111,7 @@ router.get('/', authenticate, async (req, res) => {
     const [rows] = await db.query(query, params);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener amenidades:', err);
     res.status(500).json({ error: 'Error al obtener amenidades' });
   }
 });
@@ -142,7 +142,7 @@ router.get('/por-comunidad', authenticate, async (req, res) => {
     const [rows] = await db.query(query);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener estadísticas de amenidades:', err);
     res.status(500).json({ error: 'Error al obtener estadísticas' });
   }
 });
@@ -182,7 +182,7 @@ router.get('/disponibles', authenticate, async (req, res) => {
     const [rows] = await db.query(query);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener amenidades disponibles:', err);
     res.status(500).json({ error: 'Error al obtener amenidades disponibles' });
   }
 });
@@ -250,14 +250,14 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
     `;
 
     const [rows] = await db.query(query, [id]);
-    
+
     if (!rows.length) {
       return res.status(404).json({ error: 'Amenidad no encontrada' });
     }
 
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener detalle de amenidad:', err);
     res.status(500).json({ error: 'Error al obtener detalle de amenidad' });
   }
 });
@@ -307,7 +307,7 @@ router.get('/completas', authenticate, async (req, res) => {
     const [rows] = await db.query(query);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener información completa de amenidades:', err);
     res.status(500).json({ error: 'Error al obtener información completa' });
   }
 });
@@ -343,7 +343,10 @@ router.get('/estadisticas/generales', authenticate, async (req, res) => {
     const [rows] = await db.query(query);
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error(
+      'Error al obtener estadísticas generales de amenidades:',
+      err
+    );
     res.status(500).json({ error: 'Error al obtener estadísticas generales' });
   }
 });
@@ -375,8 +378,13 @@ router.get('/estadisticas/comunidad', authenticate, async (req, res) => {
     const [rows] = await db.query(query);
     res.json(rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener estadísticas por comunidad' });
+    console.error(
+      'Error al obtener estadísticas de amenidades por comunidad:',
+      err
+    );
+    res
+      .status(500)
+      .json({ error: 'Error al obtener estadísticas por comunidad' });
   }
 });
 
@@ -412,7 +420,7 @@ router.get('/estadisticas/tipo', authenticate, async (req, res) => {
     const [rows] = await db.query(query);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener estadísticas de amenidades por tipo:', err);
     res.status(500).json({ error: 'Error al obtener estadísticas por tipo' });
   }
 });
@@ -439,7 +447,7 @@ router.get('/buscar', authenticate, async (req, res) => {
       tarifa_max,
       tipo_amenidad,
       limit = 50,
-      offset = 0
+      offset = 0,
     } = req.query;
 
     let query = `
@@ -486,14 +494,17 @@ router.get('/buscar', authenticate, async (req, res) => {
     }
     if (tipo_amenidad) {
       const tipoConditions = {
-        'piscina': "LOWER(a.nombre) LIKE '%piscina%'",
-        'gimnasio': "(LOWER(a.nombre) LIKE '%gimnasio%' OR LOWER(a.nombre) LIKE '%gym%')",
-        'quincho': "(LOWER(a.nombre) LIKE '%quincho%' OR LOWER(a.nombre) LIKE '%parrilla%')",
-        'salon': "(LOWER(a.nombre) LIKE '%salón%' OR LOWER(a.nombre) LIKE '%sala%')",
-        'terraza': "LOWER(a.nombre) LIKE '%terraza%'",
-        'lavanderia': "LOWER(a.nombre) LIKE '%lavandería%'"
+        piscina: "LOWER(a.nombre) LIKE '%piscina%'",
+        gimnasio:
+          "(LOWER(a.nombre) LIKE '%gimnasio%' OR LOWER(a.nombre) LIKE '%gym%')",
+        quincho:
+          "(LOWER(a.nombre) LIKE '%quincho%' OR LOWER(a.nombre) LIKE '%parrilla%')",
+        salon:
+          "(LOWER(a.nombre) LIKE '%salón%' OR LOWER(a.nombre) LIKE '%sala%')",
+        terraza: "LOWER(a.nombre) LIKE '%terraza%'",
+        lavanderia: "LOWER(a.nombre) LIKE '%lavandería%'",
       };
-      
+
       if (tipoConditions[tipo_amenidad]) {
         query += ` AND ${tipoConditions[tipo_amenidad]}`;
       }
@@ -505,7 +516,7 @@ router.get('/buscar', authenticate, async (req, res) => {
     const [rows] = await db.query(query, params);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error en búsqueda avanzada de amenidades:', err);
     res.status(500).json({ error: 'Error en búsqueda avanzada' });
   }
 });
@@ -539,7 +550,7 @@ router.get('/por-capacidad', authenticate, async (req, res) => {
     const [rows] = await db.query(query);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al agrupar amenidades por capacidad:', err);
     res.status(500).json({ error: 'Error al agrupar por capacidad' });
   }
 });
@@ -574,7 +585,7 @@ router.get('/por-tarifa', authenticate, async (req, res) => {
     const [rows] = await db.query(query);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al agrupar amenidades por tarifa:', err);
     res.status(500).json({ error: 'Error al agrupar por tarifa' });
   }
 });
@@ -590,9 +601,13 @@ router.get('/por-tarifa', authenticate, async (req, res) => {
  *     tags: [Amenidades]
  *     summary: Exportación completa para Excel/CSV
  */
-router.get('/exportar/completo', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/exportar/completo',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         a.id AS 'ID',
         a.nombre AS 'Nombre Amenidad',
@@ -609,13 +624,14 @@ router.get('/exportar/completo', authenticate, authorize('admin', 'superadmin'),
       ORDER BY c.razon_social, a.nombre
     `;
 
-    const [rows] = await db.query(query);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al exportar datos' });
+      const [rows] = await db.query(query);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al exportar datos de amenidades:', err);
+      res.status(500).json({ error: 'Error al exportar datos' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -624,9 +640,13 @@ router.get('/exportar/completo', authenticate, authorize('admin', 'superadmin'),
  *     tags: [Amenidades]
  *     summary: Exportación con estadísticas de uso
  */
-router.get('/exportar/estadisticas', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/exportar/estadisticas',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         c.razon_social AS 'Comunidad',
         a.nombre AS 'Amenidad',
@@ -659,13 +679,14 @@ router.get('/exportar/estadisticas', authenticate, authorize('admin', 'superadmi
       ORDER BY c.razon_social, a.nombre
     `;
 
-    const [rows] = await db.query(query);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al exportar estadísticas' });
+      const [rows] = await db.query(query);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al exportar estadísticas de amenidades:', err);
+      res.status(500).json({ error: 'Error al exportar estadísticas' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -692,7 +713,7 @@ router.get('/exportar/reglas', authenticate, async (req, res) => {
     const [rows] = await db.query(query);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al exportar reglas de amenidades:', err);
     res.status(500).json({ error: 'Error al exportar reglas' });
   }
 });
@@ -708,9 +729,13 @@ router.get('/exportar/reglas', authenticate, async (req, res) => {
  *     tags: [Amenidades]
  *     summary: Validar integridad de datos de amenidades
  */
-router.get('/validar/integridad', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/validar/integridad',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         'Amenidades sin comunidad' AS validacion,
         COUNT(*) AS cantidad
@@ -743,13 +768,14 @@ router.get('/validar/integridad', authenticate, authorize('admin', 'superadmin')
       WHERE NOT EXISTS (SELECT 1 FROM amenidad a WHERE a.comunidad_id = c.id)
     `;
 
-    const [rows] = await db.query(query);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al validar integridad' });
+      const [rows] = await db.query(query);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al validar integridad de amenidades:', err);
+      res.status(500).json({ error: 'Error al validar integridad' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -758,9 +784,13 @@ router.get('/validar/integridad', authenticate, authorize('admin', 'superadmin')
  *     tags: [Amenidades]
  *     summary: Validar nombres duplicados en misma comunidad
  */
-router.get('/validar/duplicados', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/validar/duplicados',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         c.razon_social AS comunidad,
         a.nombre,
@@ -772,13 +802,14 @@ router.get('/validar/duplicados', authenticate, authorize('admin', 'superadmin')
       ORDER BY c.razon_social, a.nombre
     `;
 
-    const [rows] = await db.query(query);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al validar duplicados' });
+      const [rows] = await db.query(query);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al validar duplicados de amenidades:', err);
+      res.status(500).json({ error: 'Error al validar duplicados' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -787,9 +818,13 @@ router.get('/validar/duplicados', authenticate, authorize('admin', 'superadmin')
  *     tags: [Amenidades]
  *     summary: Validar rangos de capacidad y tarifa razonables
  */
-router.get('/validar/anomalias', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/validar/anomalias',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         'Capacidades extremas' AS validacion,
         COUNT(*) AS cantidad_anomalias,
@@ -805,13 +840,14 @@ router.get('/validar/anomalias', authenticate, authorize('admin', 'superadmin'),
       WHERE a.tarifa > 100000 OR (a.tarifa > 0 AND a.tarifa < 100)
     `;
 
-    const [rows] = await db.query(query);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al validar anomalías' });
+      const [rows] = await db.query(query);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al validar anomalías de amenidades:', err);
+      res.status(500).json({ error: 'Error al validar anomalías' });
+    }
   }
-});
+);
 
 // =========================================
 // 7. CRUD BÁSICO POR COMUNIDAD
@@ -824,19 +860,24 @@ router.get('/validar/anomalias', authenticate, authorize('admin', 'superadmin'),
  *     tags: [Amenidades]
  *     summary: Listar amenidades de una comunidad
  */
-router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const [rows] = await db.query(
-      'SELECT id, nombre, reglas, capacidad, requiere_aprobacion, tarifa, created_at, updated_at FROM amenidad WHERE comunidad_id = ? ORDER BY nombre',
-      [comunidadId]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener amenidades' });
+router.get(
+  '/comunidad/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const [rows] = await db.query(
+        'SELECT id, nombre, reglas, capacidad, requiere_aprobacion, tarifa, created_at, updated_at FROM amenidad WHERE comunidad_id = ? ORDER BY nombre',
+        [comunidadId]
+      );
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener amenidades de comunidad:', err);
+      res.status(500).json({ error: 'Error al obtener amenidades' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -852,7 +893,7 @@ router.post(
     requireCommunity('comunidadId', ['admin']),
     body('nombre').notEmpty().withMessage('Nombre es requerido'),
     body('capacidad').optional().isInt({ min: 0 }),
-    body('tarifa').optional().isNumeric({ min: 0 })
+    body('tarifa').optional().isNumeric({ min: 0 }),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -862,17 +903,27 @@ router.post(
 
     try {
       const comunidadId = Number(req.params.comunidadId);
-      const { nombre, reglas, capacidad, requiere_aprobacion, tarifa } = req.body;
+      const { nombre, reglas, capacidad, requiere_aprobacion, tarifa } =
+        req.body;
 
       const [result] = await db.query(
         'INSERT INTO amenidad (comunidad_id, nombre, reglas, capacidad, requiere_aprobacion, tarifa) VALUES (?,?,?,?,?,?)',
-        [comunidadId, nombre, reglas || null, capacidad || null, requiere_aprobacion ? 1 : 0, tarifa || null]
+        [
+          comunidadId,
+          nombre,
+          reglas || null,
+          capacidad || null,
+          requiere_aprobacion ? 1 : 0,
+          tarifa || null,
+        ]
       );
 
-      const [row] = await db.query('SELECT * FROM amenidad WHERE id = ?', [result.insertId]);
+      const [row] = await db.query('SELECT * FROM amenidad WHERE id = ?', [
+        result.insertId,
+      ]);
       res.status(201).json(row[0]);
     } catch (err) {
-      console.error(err);
+      console.error('Error al crear amenidad:', err);
       res.status(500).json({ error: 'Error al crear amenidad' });
     }
   }
@@ -889,14 +940,14 @@ router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await db.query('SELECT * FROM amenidad WHERE id = ?', [id]);
-    
+
     if (!rows.length) {
       return res.status(404).json({ error: 'Amenidad no encontrada' });
     }
-    
+
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener amenidad:', err);
     res.status(500).json({ error: 'Error al obtener amenidad' });
   }
 });
@@ -908,34 +959,50 @@ router.get('/:id', authenticate, async (req, res) => {
  *     tags: [Amenidades]
  *     summary: Actualizar amenidad
  */
-router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const fields = ['nombre', 'reglas', 'capacidad', 'requiere_aprobacion', 'tarifa'];
-    const updates = [];
-    const values = [];
+router.patch(
+  '/:id',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const fields = [
+        'nombre',
+        'reglas',
+        'capacidad',
+        'requiere_aprobacion',
+        'tarifa',
+      ];
+      const updates = [];
+      const values = [];
 
-    fields.forEach(field => {
-      if (req.body[field] !== undefined) {
-        updates.push(`${field} = ?`);
-        values.push(req.body[field]);
+      fields.forEach((field) => {
+        if (req.body[field] !== undefined) {
+          updates.push(`${field} = ?`);
+          values.push(req.body[field]);
+        }
+      });
+
+      if (!updates.length) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
       }
-    });
 
-    if (!updates.length) {
-      return res.status(400).json({ error: 'No hay campos para actualizar' });
+      values.push(id);
+      await db.query(
+        `UPDATE amenidad SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+
+      const [rows] = await db.query('SELECT * FROM amenidad WHERE id = ?', [
+        id,
+      ]);
+      res.json(rows[0]);
+    } catch (err) {
+      console.error('Error al actualizar amenidad:', err);
+      res.status(500).json({ error: 'Error al actualizar amenidad' });
     }
-
-    values.push(id);
-    await db.query(`UPDATE amenidad SET ${updates.join(', ')} WHERE id = ?`, values);
-
-    const [rows] = await db.query('SELECT * FROM amenidad WHERE id = ?', [id]);
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al actualizar amenidad' });
   }
-});
+);
 
 /**
  * @swagger
@@ -944,16 +1011,21 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req,
  *     tags: [Amenidades]
  *     summary: Eliminar amenidad
  */
-router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    await db.query('DELETE FROM amenidad WHERE id = ?', [id]);
-    res.status(204).end();
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al eliminar amenidad' });
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('superadmin', 'admin'),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      await db.query('DELETE FROM amenidad WHERE id = ?', [id]);
+      res.status(204).end();
+    } catch (err) {
+      console.error('Error al eliminar amenidad:', err);
+      res.status(500).json({ error: 'Error al eliminar amenidad' });
+    }
   }
-});
+);
 
 // =========================================
 // 8. RESERVAS DE AMENIDADES
@@ -1005,7 +1077,7 @@ router.post(
     body('unidad_id').isInt(),
     body('persona_id').isInt(),
     body('inicio').notEmpty(),
-    body('fin').notEmpty()
+    body('fin').notEmpty(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -1029,7 +1101,7 @@ router.post(
         'SELECT id, inicio, fin, estado FROM reserva_amenidad WHERE id = ?',
         [result.insertId]
       );
-      
+
       res.status(201).json(row[0]);
     } catch (err) {
       console.error(err);
@@ -1082,7 +1154,3 @@ module.exports = router;
 // // 8. RESERVAS DE AMENIDADES
 // GET: /amenidades/:id/reservas
 // POST: /amenidades/:id/reservas
-
-
-
-

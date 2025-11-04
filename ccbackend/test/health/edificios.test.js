@@ -10,12 +10,12 @@ const { categorizeResponse, getWithAuth } = require('./helpers');
 describe('Edificios Health Check', () => {
   let authToken;
   let comunidadId;
-  let edificioId; 
+  let edificioId;
 
   beforeAll(() => {
     authToken = getAuthToken();
     comunidadId = testIds.comunidadId;
-    edificioId = testIds.edificioId; 
+    edificioId = testIds.edificioId;
   });
 
   // =========================================
@@ -28,7 +28,7 @@ describe('Edificios Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /edificios/comunidad/:comunidadId (Listado por Comunidad)', async () => {
       const endpoint = `/edificios/comunidad/${comunidadId}`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -61,7 +61,7 @@ describe('Edificios Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /edificios/comunidades-opciones', async () => {
       const endpoint = `/edificios/comunidades-opciones`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -75,7 +75,7 @@ describe('Edificios Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /edificios/amenidades-disponibles', async () => {
       const endpoint = `/edificios/amenidades-disponibles`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -108,7 +108,7 @@ describe('Edificios Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /edificios/:id/amenidades', async () => {
       const endpoint = `/edificios/${edificioId}/amenidades`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -129,7 +129,7 @@ describe('Edificios Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /edificios/:id/validar-codigo (Falla sin código)', async () => {
       const endpoint = `/edificios/${edificioId}/validar-codigo`;
       const response = await getWithAuth(app, endpoint, authToken);

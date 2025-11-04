@@ -1,23 +1,24 @@
 # 📋 Guía de Migración del Backend
 
 ## 🎯 Objetivo
+
 Esta guía detalla los cambios necesarios en el código del backend después de ejecutar el script `migracion_estructura_mejorada.sql`.
 
 ---
 
 ## 📊 Mapeo de Cambios en Tablas
 
-| Tabla Antigua | Tabla Nueva | Tipo de Cambio |
-|--------------|-------------|----------------|
-| `cargo_unidad` | `cuenta_cobro_unidad` | RENOMBRADA |
-| `cargo_unidad_detalle` | `detalle_cuenta_unidad` | RENOMBRADA + columna `cargo_unidad_id` → `cuenta_cobro_unidad_id` |
-| `emision_gasto_comun` | `emision_gastos_comunes` | RENOMBRADA |
-| `emision_gasto_detalle` | `detalle_emision` | RENOMBRADA |
-| `tenencia_unidad` | `titulares_unidad` | RENOMBRADA |
-| `ticket` | `solicitud_soporte` | RENOMBRADA |
-| `bitacora_conserjeria` | `registro_conserjeria` | RENOMBRADA |
-| `membresia_comunidad` | `usuario_comunidad_rol` | REEMPLAZADA (estructura diferente) |
-| N/A | `rol` | NUEVA TABLA |
+| Tabla Antigua           | Tabla Nueva              | Tipo de Cambio                                                    |
+| ----------------------- | ------------------------ | ----------------------------------------------------------------- |
+| `cargo_unidad`          | `cuenta_cobro_unidad`    | RENOMBRADA                                                        |
+| `cargo_unidad_detalle`  | `detalle_cuenta_unidad`  | RENOMBRADA + columna `cargo_unidad_id` → `cuenta_cobro_unidad_id` |
+| `emision_gasto_comun`   | `emision_gastos_comunes` | RENOMBRADA                                                        |
+| `emision_gasto_detalle` | `detalle_emision`        | RENOMBRADA                                                        |
+| `tenencia_unidad`       | `titulares_unidad`       | RENOMBRADA                                                        |
+| `ticket`                | `solicitud_soporte`      | RENOMBRADA                                                        |
+| `bitacora_conserjeria`  | `registro_conserjeria`   | RENOMBRADA                                                        |
+| `membresia_comunidad`   | `usuario_comunidad_rol`  | REEMPLAZADA (estructura diferente)                                |
+| N/A                     | `rol`                    | NUEVA TABLA                                                       |
 
 ---
 
@@ -38,6 +39,7 @@ const detailQuery = `SELECT * FROM detalle_cuenta_unidad WHERE cuenta_cobro_unid
 ```
 
 **Rutas HTTP a actualizar:**
+
 - `/api/cargos` → `/api/cuentas-cobro` (opcional, para mayor claridad)
 
 ---
@@ -97,6 +99,7 @@ const query = `SELECT * FROM solicitud_soporte WHERE comunidad_id = ?`;
 ```
 
 **Rutas HTTP a actualizar:**
+
 - `/api/tickets` → `/api/solicitudes-soporte` o `/api/soporte`
 
 ---
@@ -171,51 +174,67 @@ router.get('/:comunidadId/usuarios', tenancy, async (req, res) => {
 
 ```javascript
 // POST /api/membresias/:comunidadId/usuarios/:usuarioId/roles
-router.post('/:comunidadId/usuarios/:usuarioId/roles', tenancy, authorize(['admin', 'superadmin']), async (req, res) => {
-  const { comunidadId, usuarioId } = req.params;
-  const { rol_id, desde, hasta } = req.body;
-  
-  try {
-    const [result] = await db.query(`
+router.post(
+  '/:comunidadId/usuarios/:usuarioId/roles',
+  tenancy,
+  authorize(['admin', 'superadmin']),
+  async (req, res) => {
+    const { comunidadId, usuarioId } = req.params;
+    const { rol_id, desde, hasta } = req.body;
+
+    try {
+      const [result] = await db.query(
+        `
       INSERT INTO usuario_comunidad_rol 
         (usuario_id, comunidad_id, rol_id, desde, hasta, activo)
       VALUES (?, ?, ?, ?, ?, 1)
-    `, [usuarioId, comunidadId, rol_id, desde || new Date(), hasta || null]);
-    
-    res.status(201).json({ 
-      message: 'Rol asignado exitosamente',
-      id: result.insertId 
-    });
-  } catch (error) {
-    logger.error('Error asignando rol:', error);
-    res.status(500).json({ error: 'Error al asignar rol' });
+    `,
+        [usuarioId, comunidadId, rol_id, desde || new Date(), hasta || null]
+      );
+
+      res.status(201).json({
+        message: 'Rol asignado exitosamente',
+        id: result.insertId,
+      });
+    } catch (error) {
+      logger.error('Error asignando rol:', error);
+      res.status(500).json({ error: 'Error al asignar rol' });
+    }
   }
-});
+);
 ```
 
 #### **5.4. Remover rol de usuario**
 
 ```javascript
 // DELETE /api/membresias/:comunidadId/usuarios/:usuarioId/roles/:rolId
-router.delete('/:comunidadId/usuarios/:usuarioId/roles/:rolId', tenancy, authorize(['admin', 'superadmin']), async (req, res) => {
-  const { comunidadId, usuarioId, rolId } = req.params;
-  
-  try {
-    await db.query(`
+router.delete(
+  '/:comunidadId/usuarios/:usuarioId/roles/:rolId',
+  tenancy,
+  authorize(['admin', 'superadmin']),
+  async (req, res) => {
+    const { comunidadId, usuarioId, rolId } = req.params;
+
+    try {
+      await db.query(
+        `
       UPDATE usuario_comunidad_rol
       SET activo = 0, hasta = CURDATE()
       WHERE usuario_id = ? 
         AND comunidad_id = ? 
         AND rol_id = ?
         AND activo = 1
-    `, [usuarioId, comunidadId, rolId]);
-    
-    res.json({ message: 'Rol removido exitosamente' });
-  } catch (error) {
-    logger.error('Error removiendo rol:', error);
-    res.status(500).json({ error: 'Error al remover rol' });
+    `,
+        [usuarioId, comunidadId, rolId]
+      );
+
+      res.json({ message: 'Rol removido exitosamente' });
+    } catch (error) {
+      logger.error('Error removiendo rol:', error);
+      res.status(500).json({ error: 'Error al remover rol' });
+    }
   }
-});
+);
 ```
 
 ---
@@ -269,34 +288,41 @@ const updateCuentaQuery = `
 ```javascript
 // ANTES:
 async function checkUserRole(userId, comunidadId) {
-  const [rows] = await db.query(`
+  const [rows] = await db.query(
+    `
     SELECT rol 
     FROM membresia_comunidad 
     WHERE persona_id = (SELECT persona_id FROM usuario WHERE id = ?)
       AND comunidad_id = ?
       AND activo = 1
-  `, [userId, comunidadId]);
-  
+  `,
+    [userId, comunidadId]
+  );
+
   return rows.length > 0 ? rows[0].rol : null;
 }
 
 // DESPUÉS:
 async function checkUserRoles(userId, comunidadId) {
-  const [rows] = await db.query(`
+  const [rows] = await db.query(
+    `
     SELECT r.codigo, r.nivel_acceso
     FROM usuario_comunidad_rol ucr
     INNER JOIN rol r ON r.id = ucr.rol_id
     WHERE ucr.usuario_id = ?
       AND ucr.comunidad_id = ?
       AND ucr.activo = 1
-  `, [userId, comunidadId]);
-  
+  `,
+    [userId, comunidadId]
+  );
+
   return rows; // Retorna array de roles
 }
 
 // Verificar si usuario tiene rol de superadmin (acceso a todas las comunidades)
 async function isSuperAdmin(userId) {
-  const [rows] = await db.query(`
+  const [rows] = await db.query(
+    `
     SELECT 1
     FROM usuario_comunidad_rol ucr
     INNER JOIN rol r ON r.id = ucr.rol_id
@@ -304,8 +330,10 @@ async function isSuperAdmin(userId) {
       AND r.codigo = 'superadmin'
       AND ucr.activo = 1
     LIMIT 1
-  `, [userId]);
-  
+  `,
+    [userId]
+  );
+
   return rows.length > 0;
 }
 ```
@@ -323,24 +351,29 @@ function authorize(allowedRoles = []) {
     try {
       const userId = req.user.id;
       const comunidadId = req.comunidadId || req.params.comunidadId;
-      
-      const [rows] = await db.query(`
+
+      const [rows] = await db.query(
+        `
         SELECT m.rol
         FROM membresia_comunidad m
         WHERE m.persona_id = (SELECT persona_id FROM usuario WHERE id = ?)
           AND m.comunidad_id = ?
           AND m.activo = 1
-      `, [userId, comunidadId]);
-      
+      `,
+        [userId, comunidadId]
+      );
+
       if (rows.length === 0) {
-        return res.status(403).json({ error: 'No tiene acceso a esta comunidad' });
+        return res
+          .status(403)
+          .json({ error: 'No tiene acceso a esta comunidad' });
       }
-      
+
       const userRole = rows[0].rol;
       if (!allowedRoles.includes(userRole)) {
         return res.status(403).json({ error: 'No tiene permisos suficientes' });
       }
-      
+
       req.userRole = userRole;
       next();
     } catch (error) {
@@ -356,9 +389,10 @@ function authorize(allowedRoles = []) {
     try {
       const userId = req.user.id;
       const comunidadId = req.comunidadId || req.params.comunidadId;
-      
+
       // Verificar si es superadmin (tiene acceso a todo)
-      const [superadminRows] = await db.query(`
+      const [superadminRows] = await db.query(
+        `
         SELECT 1
         FROM usuario_comunidad_rol ucr
         INNER JOIN rol r ON r.id = ucr.rol_id
@@ -366,41 +400,50 @@ function authorize(allowedRoles = []) {
           AND r.codigo = 'superadmin'
           AND ucr.activo = 1
         LIMIT 1
-      `, [userId]);
-      
+      `,
+        [userId]
+      );
+
       if (superadminRows.length > 0) {
         req.userRoles = ['superadmin'];
         req.isSuperAdmin = true;
         return next();
       }
-      
+
       // Verificar roles en la comunidad específica
-      const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
         SELECT r.codigo, r.nivel_acceso
         FROM usuario_comunidad_rol ucr
         INNER JOIN rol r ON r.id = ucr.rol_id
         WHERE ucr.usuario_id = ?
           AND ucr.comunidad_id = ?
           AND ucr.activo = 1
-      `, [userId, comunidadId]);
-      
+      `,
+        [userId, comunidadId]
+      );
+
       if (rows.length === 0) {
-        return res.status(403).json({ error: 'No tiene acceso a esta comunidad' });
+        return res
+          .status(403)
+          .json({ error: 'No tiene acceso a esta comunidad' });
       }
-      
-      const userRoles = rows.map(r => r.codigo);
-      const hasPermission = allowedRoles.some(role => userRoles.includes(role));
-      
+
+      const userRoles = rows.map((r) => r.codigo);
+      const hasPermission = allowedRoles.some((role) =>
+        userRoles.includes(role)
+      );
+
       if (!hasPermission) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           error: 'No tiene permisos suficientes',
           required: allowedRoles,
-          current: userRoles
+          current: userRoles,
         });
       }
-      
+
       req.userRoles = userRoles;
-      req.userMaxLevel = Math.max(...rows.map(r => r.nivel_acceso));
+      req.userMaxLevel = Math.max(...rows.map((r) => r.nivel_acceso));
       next();
     } catch (error) {
       logger.error('Error en autorización:', error);
@@ -422,14 +465,17 @@ module.exports = authorize;
 // ANTES:
 router.post('/login', async (req, res) => {
   // ... validación de credenciales ...
-  
-  const [membresias] = await db.query(`
+
+  const [membresias] = await db.query(
+    `
     SELECT m.comunidad_id, c.nombre as comunidad_nombre, m.rol
     FROM membresia_comunidad m
     INNER JOIN comunidad c ON c.id = m.comunidad_id
     WHERE m.persona_id = ? AND m.activo = 1
-  `, [user.persona_id]);
-  
+  `,
+    [user.persona_id]
+  );
+
   res.json({
     token,
     user: {
@@ -437,16 +483,17 @@ router.post('/login', async (req, res) => {
       username: user.username,
       email: user.email,
       is_superadmin: user.is_superadmin,
-      comunidades: membresias
-    }
+      comunidades: membresias,
+    },
   });
 });
 
 // DESPUÉS:
 router.post('/login', async (req, res) => {
   // ... validación de credenciales ...
-  
-  const [roles] = await db.query(`
+
+  const [roles] = await db.query(
+    `
     SELECT 
       ucr.comunidad_id, 
       c.nombre as comunidad_nombre,
@@ -458,11 +505,13 @@ router.post('/login', async (req, res) => {
     INNER JOIN rol r ON r.id = ucr.rol_id
     WHERE ucr.usuario_id = ? AND ucr.activo = 1
     GROUP BY ucr.comunidad_id, c.nombre
-  `, [user.id]);
-  
+  `,
+    [user.id]
+  );
+
   // Verificar si es superadmin
-  const isSuperAdmin = roles.some(r => r.roles.includes('superadmin'));
-  
+  const isSuperAdmin = roles.some((r) => r.roles.includes('superadmin'));
+
   res.json({
     token,
     user: {
@@ -470,14 +519,14 @@ router.post('/login', async (req, res) => {
       username: user.username,
       email: user.email,
       is_superadmin: isSuperAdmin,
-      comunidades: roles.map(r => ({
+      comunidades: roles.map((r) => ({
         comunidad_id: r.comunidad_id,
         comunidad_nombre: r.comunidad_nombre,
         roles: r.roles.split(','),
         roles_nombres: r.roles_nombres,
-        nivel_acceso: r.nivel_acceso_maximo
-      }))
-    }
+        nivel_acceso: r.nivel_acceso_maximo,
+      })),
+    },
   });
 });
 ```
@@ -552,6 +601,7 @@ Puedes usar estos patrones para buscar y reemplazar en todo el proyecto:
 ## 📞 Soporte
 
 Si encuentras problemas durante la migración:
+
 1. Revisa los logs de la base de datos
 2. Verifica las consultas de verificación al final del script SQL
 3. Usa las vistas de compatibilidad temporalmente

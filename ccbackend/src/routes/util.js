@@ -14,7 +14,9 @@ const schedulerService = require('../services/schedulerService');
  *       200:
  *         description: OK
  */
-router.get('/health', (req, res) => { res.json({ status: 'ok' }); });
+router.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
 /**
  * @swagger
  * /version:
@@ -25,17 +27,25 @@ router.get('/health', (req, res) => { res.json({ status: 'ok' }); });
  *       200:
  *         description: Version
  */
-router.get('/version', (req, res) => { res.json({ version: process.env.npm_package_version || '0.0.0' }); });
+router.get('/version', (req, res) => {
+  res.json({ version: process.env.npm_package_version || '0.0.0' });
+});
 
 // GET /util/uf?fecha=YYYY-MM-DD
 router.get('/uf', async (req, res) => {
   const fecha = req.query.fecha;
   if (!fecha) return res.status(400).json({ error: 'fecha required' });
   try {
-    const [rows] = await db.query('SELECT fecha, valor FROM uf_valor WHERE fecha = ? LIMIT 1', [fecha]);
+    const [rows] = await db.query(
+      'SELECT fecha, valor FROM uf_valor WHERE fecha = ? LIMIT 1',
+      [fecha]
+    );
     if (!rows.length) return res.status(404).json({ error: 'not found' });
     res.json(rows[0]);
-  } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
 });
 
 // GET /util/utm?fecha=YYYY-MM
@@ -43,10 +53,16 @@ router.get('/utm', async (req, res) => {
   const fecha = req.query.fecha;
   if (!fecha) return res.status(400).json({ error: 'fecha required' });
   try {
-    const [rows] = await db.query("SELECT fecha, valor FROM utm_valor WHERE DATE_FORMAT(fecha, '%Y-%m') = ? LIMIT 1", [fecha]);
+    const [rows] = await db.query(
+      "SELECT fecha, valor FROM utm_valor WHERE DATE_FORMAT(fecha, '%Y-%m') = ? LIMIT 1",
+      [fecha]
+    );
     if (!rows.length) return res.status(404).json({ error: 'not found' });
     res.json(rows[0]);
-  } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
 });
 
 // GET /util/validar-rut?rut=XXXXXXXX-D
@@ -54,12 +70,17 @@ router.get('/validar-rut', async (req, res) => {
   const rut = req.query.rut;
   if (!rut) return res.status(400).json({ error: 'rut required' });
   // normalize
-  const parts = rut.replace(/\./g,'').split('-');
+  const parts = rut.replace(/\./g, '').split('-');
   if (parts.length !== 2) return res.json({ valid: false });
-  const num = parts[0]; const dv = parts[1].toLowerCase();
+  const num = parts[0];
+  const dv = parts[1].toLowerCase();
   // compute dv
-  let M=0,S=1; for (let i=num.length-1;i>=0;i--){ S=(S+Number(num[i])*(9-M++%6))%11; }
-  const dvCalc = S?String(S-1):'k';
+  let M = 0,
+    S = 1;
+  for (let i = num.length - 1; i >= 0; i--) {
+    S = (S + Number(num[i]) * (9 - (M++ % 6))) % 11;
+  }
+  const dvCalc = S ? String(S - 1) : 'k';
   res.json({ valid: dv === dvCalc, dv: dvCalc });
 });
 
@@ -81,13 +102,13 @@ router.post('/sync', async (req, res) => {
     res.json({
       success: true,
       message: 'Sincronización completada exitosamente',
-      data: result
+      data: result,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error en sincronización',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -106,17 +127,17 @@ router.get('/sync/status', async (req, res) => {
   try {
     const schedulerStatus = schedulerService.getStatus();
     const dataStats = await schedulerService.getDataStats();
-    
+
     res.json({
       success: true,
       scheduler: schedulerStatus,
-      data: dataStats
+      data: dataStats,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error obteniendo estado',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -138,13 +159,13 @@ router.post('/sync/init', async (req, res) => {
     await indicadoresService.sincronizacionInicial();
     res.json({
       success: true,
-      message: 'Sincronización inicial completada exitosamente'
+      message: 'Sincronización inicial completada exitosamente',
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error en sincronización inicial',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -164,13 +185,13 @@ router.post('/sync/manual', async (req, res) => {
     await indicadoresService.sincronizacionInicial();
     res.json({
       success: true,
-      message: 'Sincronización manual completada exitosamente'
+      message: 'Sincronización manual completada exitosamente',
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error en sincronización manual',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -187,8 +208,12 @@ router.post('/sync/manual', async (req, res) => {
  */
 router.get('/indicadores', async (req, res) => {
   try {
-    const [ufRows] = await db.query('SELECT * FROM uf_valor ORDER BY fecha DESC LIMIT 1');
-    const [utmRows] = await db.query('SELECT * FROM utm_valor ORDER BY fecha DESC LIMIT 1');
+    const [ufRows] = await db.query(
+      'SELECT * FROM uf_valor ORDER BY fecha DESC LIMIT 1'
+    );
+    const [utmRows] = await db.query(
+      'SELECT * FROM utm_valor ORDER BY fecha DESC LIMIT 1'
+    );
     const [otrosRows] = await db.query(`
       SELECT codigo, nombre, fecha, valor, unidad_medida 
       FROM otros_indicadores 
@@ -198,22 +223,22 @@ router.get('/indicadores', async (req, res) => {
         GROUP BY codigo
       )
     `);
-    
+
     const response = {
       success: true,
       data: {
         uf: ufRows[0] || null,
         utm: utmRows[0] || null,
-        otros: otrosRows || []
-      }
+        otros: otrosRows || [],
+      },
     };
-    
+
     res.json(response);
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error obteniendo indicadores',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -246,7 +271,7 @@ router.get('/uf/historico', async (req, res) => {
     const { desde, hasta } = req.query;
     let query = 'SELECT fecha, valor FROM uf_valor';
     const params = [];
-    
+
     if (desde && hasta) {
       query += ' WHERE fecha BETWEEN ? AND ?';
       params.push(desde, hasta);
@@ -257,19 +282,19 @@ router.get('/uf/historico', async (req, res) => {
       query += ' WHERE fecha <= ?';
       params.push(hasta);
     }
-    
+
     query += ' ORDER BY fecha DESC';
-    
+
     const [rows] = await db.query(query, params);
     res.json({
       success: true,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error obteniendo histórico de UF',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -302,7 +327,7 @@ router.get('/utm/historico', async (req, res) => {
     const { desde, hasta } = req.query;
     let query = 'SELECT fecha, valor FROM utm_valor';
     const params = [];
-    
+
     if (desde && hasta) {
       query += ' WHERE fecha BETWEEN ? AND ?';
       params.push(desde, hasta);
@@ -313,19 +338,19 @@ router.get('/utm/historico', async (req, res) => {
       query += ' WHERE fecha <= ?';
       params.push(hasta);
     }
-    
+
     query += ' ORDER BY fecha DESC';
-    
+
     const [rows] = await db.query(query, params);
     res.json({
       success: true,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error obteniendo histórico de UTM',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -357,7 +382,3 @@ module.exports = router;
 // GET: /util/sync/status
 // POST: /util/sync/init
 // POST: /util/sync/manual
-
-
-
-

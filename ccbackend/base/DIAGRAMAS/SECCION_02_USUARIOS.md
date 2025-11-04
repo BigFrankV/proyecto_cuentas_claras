@@ -16,7 +16,7 @@ erDiagram
     usuario ||--o{ sesion_usuario : "tiene sesiones (0..N)"
     usuario ||--o{ auditoria : "realiza acciones (0..N)"
     usuario ||--o{ registro_conserjeria : "registra eventos (0..N)"
-    
+
     persona {
         bigint id PK "AUTO_INCREMENT"
         varchar rut UK "NOT NULL - 12 dígitos"
@@ -29,7 +29,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     usuario {
         bigint id PK
         bigint persona_id FK "NOT NULL - RESTRICT"
@@ -43,7 +43,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     rol {
         int id PK
         varchar codigo UK "NOT NULL - Código único"
@@ -53,7 +53,7 @@ erDiagram
         tinyint es_rol_sistema "0=comunidad 1=sistema"
         datetime created_at
     }
-    
+
     usuario_comunidad_rol {
         bigint id PK
         bigint usuario_id FK "NOT NULL"
@@ -65,7 +65,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     sesion_usuario {
         varchar id PK "128 chars - Session ID"
         bigint usuario_id FK "NOT NULL - CASCADE"
@@ -75,7 +75,7 @@ erDiagram
         timestamp last_activity "Última actividad"
         timestamp created_at
     }
-    
+
     auditoria {
         bigint id PK
         bigint usuario_id FK "NULL - SET NULL"
@@ -104,6 +104,7 @@ Usuario_Comunidad_Rol (permisos por comunidad)
 ```
 
 **Principios:**
+
 - ✅ Una persona **puede** tener 0 o más usuarios (ej: admin + residente)
 - ✅ Una persona **puede** ser titular de múltiples unidades
 - ✅ Un usuario **debe** tener una persona asociada (ON DELETE RESTRICT)
@@ -114,15 +115,15 @@ Usuario_Comunidad_Rol (permisos por comunidad)
 
 ### **R2: Sistema de Roles (7 roles disponibles)**
 
-| Código | Nombre | Nivel | Tipo | Permisos |
-|--------|--------|-------|------|----------|
-| `superadmin` | Super Administrador | 100 | Sistema | Acceso total, gestiona todas las comunidades |
-| `admin` | Administrador de Comunidad | 80 | Comunidad | Administración completa de su comunidad |
-| `comite` | Miembro del Comité | 70 | Comunidad | Aprobar gastos, ver finanzas, gestionar documentos |
-| `contador` | Contador | 60 | Comunidad | Ver finanzas, generar reportes, auditoría |
-| `conserje` | Conserje | 40 | Comunidad | Bitácora, reservas, multas, solicitudes |
-| `propietario` | Propietario | 30 | Comunidad | Ver su cuenta, pagar, reservar, tickets |
-| `residente` | Residente/Arrendatario | 20 | Comunidad | Ver información, pagar, reservar (limitado) |
+| Código        | Nombre                     | Nivel | Tipo      | Permisos                                           |
+| ------------- | -------------------------- | ----- | --------- | -------------------------------------------------- |
+| `superadmin`  | Super Administrador        | 100   | Sistema   | Acceso total, gestiona todas las comunidades       |
+| `admin`       | Administrador de Comunidad | 80    | Comunidad | Administración completa de su comunidad            |
+| `comite`      | Miembro del Comité         | 70    | Comunidad | Aprobar gastos, ver finanzas, gestionar documentos |
+| `contador`    | Contador                   | 60    | Comunidad | Ver finanzas, generar reportes, auditoría          |
+| `conserje`    | Conserje                   | 40    | Comunidad | Bitácora, reservas, multas, solicitudes            |
+| `propietario` | Propietario                | 30    | Comunidad | Ver su cuenta, pagar, reservar, tickets            |
+| `residente`   | Residente/Arrendatario     | 20    | Comunidad | Ver información, pagar, reservar (limitado)        |
 
 ---
 
@@ -143,13 +144,14 @@ UNIQUE (usuario_id, comunidad_id, rol_id, activo)
 ```
 
 **Ejemplo:**
+
 ```sql
 -- Juan Pérez tiene:
 -- - Rol 'admin' en Comunidad A (activo=1)
 -- - Rol 'propietario' en Comunidad B (activo=1)
 -- - Rol 'contador' en Comunidad C (activo=0, hasta='2025-06-30')
 
-SELECT 
+SELECT
   u.username,
   c.razon_social,
   r.nombre as rol,
@@ -185,6 +187,7 @@ ORDER BY ucr.activo DESC, c.razon_social;
 ```
 
 **Estructura de hash_password:**
+
 ```
 $2y$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012
 │  │  │                                                        │
@@ -225,22 +228,23 @@ WHERE last_activity < NOW() - INTERVAL 24 HOUR;
 
 **Eventos auditables:**
 
-| Acción | Tabla | Ejemplo |
-|--------|-------|---------|
-| `LOGIN` | `usuario` | Usuario inicia sesión |
-| `LOGOUT` | `usuario` | Usuario cierra sesión |
-| `INSERT` | `gasto` | Nuevo gasto creado |
-| `UPDATE` | `cuenta_cobro_unidad` | Estado de cuenta modificado |
-| `DELETE` | `pago` | Pago eliminado (reversado) |
-| `APPROVE` | `emision_gastos_comunes` | Emisión aprobada |
-| `REJECT` | `solicitud_soporte` | Ticket rechazado |
+| Acción    | Tabla                    | Ejemplo                     |
+| --------- | ------------------------ | --------------------------- |
+| `LOGIN`   | `usuario`                | Usuario inicia sesión       |
+| `LOGOUT`  | `usuario`                | Usuario cierra sesión       |
+| `INSERT`  | `gasto`                  | Nuevo gasto creado          |
+| `UPDATE`  | `cuenta_cobro_unidad`    | Estado de cuenta modificado |
+| `DELETE`  | `pago`                   | Pago eliminado (reversado)  |
+| `APPROVE` | `emision_gastos_comunes` | Emisión aprobada            |
+| `REJECT`  | `solicitud_soporte`      | Ticket rechazado            |
 
 **Registro de auditoría:**
+
 ```sql
 INSERT INTO auditoria (
-  usuario_id, 
-  accion, 
-  tabla, 
+  usuario_id,
+  accion,
+  tabla,
   registro_id,
   valores_anteriores,
   valores_nuevos,
@@ -307,7 +311,7 @@ UPDATE usuario SET is_superadmin = 1 WHERE id = @usuario_id;
 
 -- Asignar rol superadmin en todas las comunidades existentes
 INSERT INTO usuario_comunidad_rol (usuario_id, comunidad_id, rol_id, desde, activo)
-SELECT 
+SELECT
   @usuario_id,
   c.id,
   @rol_superadmin,
@@ -316,7 +320,7 @@ SELECT
 FROM comunidad c
 WHERE NOT EXISTS (
   SELECT 1 FROM usuario_comunidad_rol ucr
-  WHERE ucr.usuario_id = @usuario_id 
+  WHERE ucr.usuario_id = @usuario_id
     AND ucr.comunidad_id = c.id
     AND ucr.rol_id = @rol_superadmin
 );
@@ -404,7 +408,7 @@ VALUES (123, 'UPDATE', 'gasto', 789, @old_values, @new_values, '192.168.1.100');
 ### **Q1: Verificar Permisos de Usuario en Comunidad**
 
 ```sql
-SELECT 
+SELECT
   u.username,
   p.nombres,
   p.apellidos,
@@ -415,7 +419,7 @@ SELECT
   ucr.desde,
   ucr.hasta,
   ucr.activo,
-  CASE 
+  CASE
     WHEN ucr.activo = 1 THEN 'ACTIVO'
     WHEN ucr.hasta < CURDATE() THEN 'EXPIRADO'
     ELSE 'INACTIVO'
@@ -436,7 +440,7 @@ ORDER BY r.nivel_acceso DESC;
 
 ```sql
 -- Usuarios que tienen más de 1 rol activo en cualquier comunidad
-SELECT 
+SELECT
   u.username,
   p.nombres || ' ' || p.apellidos as nombre_completo,
   COUNT(DISTINCT ucr.comunidad_id) as comunidades,
@@ -457,14 +461,14 @@ ORDER BY roles_totales DESC;
 
 ```sql
 -- Sesiones activas en las últimas 24 horas
-SELECT 
+SELECT
   s.id as session_id,
   u.username,
   p.nombres || ' ' || p.apellidos as usuario,
   s.ip_address,
   s.last_activity,
   TIMESTAMPDIFF(MINUTE, s.last_activity, NOW()) as minutos_inactivo,
-  CASE 
+  CASE
     WHEN s.last_activity > NOW() - INTERVAL 15 MINUTE THEN 'ONLINE'
     WHEN s.last_activity > NOW() - INTERVAL 1 HOUR THEN 'AUSENTE'
     ELSE 'INACTIVO'
@@ -482,15 +486,15 @@ ORDER BY s.last_activity DESC;
 
 ```sql
 -- Últimas 50 acciones de un usuario
-SELECT 
+SELECT
   a.created_at,
   a.accion,
   a.tabla,
   a.registro_id,
   a.ip_address,
-  CASE 
-    WHEN a.valores_anteriores IS NOT NULL THEN 
-      CONCAT('Cambió: ', 
+  CASE
+    WHEN a.valores_anteriores IS NOT NULL THEN
+      CONCAT('Cambió: ',
         JSON_UNQUOTE(JSON_EXTRACT(a.valores_anteriores, '$.estado')),
         ' → ',
         JSON_UNQUOTE(JSON_EXTRACT(a.valores_nuevos, '$.estado'))
@@ -508,7 +512,7 @@ LIMIT 50;
 ### **Q5: Usuarios por Rol en Comunidad**
 
 ```sql
-SELECT 
+SELECT
   r.nombre as rol,
   r.nivel_acceso,
   COUNT(*) as cantidad_usuarios,
@@ -543,7 +547,7 @@ BEGIN
   DECLARE i INT;
   DECLARE digito_calculado CHAR(1);
   DECLARE resto INT;
-  
+
   -- Calcular dígito verificador
   SET i = LENGTH(rut);
   WHILE i > 0 DO
@@ -551,14 +555,14 @@ BEGIN
     SET multiplicador = IF(multiplicador = 7, 2, multiplicador + 1);
     SET i = i - 1;
   END WHILE;
-  
+
   SET resto = 11 - (suma MOD 11);
   SET digito_calculado = CASE
     WHEN resto = 11 THEN '0'
     WHEN resto = 10 THEN 'K'
     ELSE CAST(resto AS CHAR)
   END;
-  
+
   RETURN UPPER(dv) = digito_calculado;
 END$$
 DELIMITER ;
@@ -570,7 +574,7 @@ BEFORE INSERT ON persona
 FOR EACH ROW
 BEGIN
   IF validar_rut_chileno(NEW.rut, NEW.dv) = 0 THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'RUT inválido';
   END IF;
 END$$
@@ -589,13 +593,13 @@ BEFORE INSERT ON usuario
 FOR EACH ROW
 BEGIN
   DECLARE cuenta INT;
-  
+
   SELECT COUNT(*) INTO cuenta
   FROM usuario
   WHERE persona_id = NEW.persona_id;
-  
+
   IF cuenta >= 1 THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Esta persona ya tiene un usuario creado';
   END IF;
 END$$
@@ -613,10 +617,10 @@ BEFORE DELETE ON usuario
 FOR EACH ROW
 BEGIN
   IF EXISTS (
-    SELECT 1 FROM usuario_comunidad_rol 
+    SELECT 1 FROM usuario_comunidad_rol
     WHERE usuario_id = OLD.id AND activo = 1
   ) THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'No se puede eliminar usuario con roles activos';
   END IF;
 END$$
@@ -640,13 +644,13 @@ async function checkPermission(userId, comunidadId, requiredLevel) {
       AND ucr.activo = 1
       AND (ucr.hasta IS NULL OR ucr.hasta >= CURDATE())
   `;
-  
+
   const result = await db.query(query, [userId, comunidadId]);
-  
+
   if (!result[0] || result[0].max_nivel < requiredLevel) {
     throw new Error('Acceso denegado: permisos insuficientes');
   }
-  
+
   return true;
 }
 
@@ -654,10 +658,10 @@ async function checkPermission(userId, comunidadId, requiredLevel) {
 app.delete('/api/comunidades/:id/gastos/:gastoId', async (req, res) => {
   const userId = req.session.userId;
   const comunidadId = req.params.id;
-  
+
   // Solo admin (80) o superior puede eliminar gastos
   await checkPermission(userId, comunidadId, 80);
-  
+
   // ... eliminar gasto
 });
 ```

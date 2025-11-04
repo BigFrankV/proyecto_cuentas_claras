@@ -12,10 +12,10 @@ const { authorize } = require('../middleware/authorize');
  *   - name: Membresias
  *     description: |
  *       Gestión de membresías y roles de usuarios en comunidades.
- *       
+ *
  *       **Sistema de Roles (v2.0):**
  *       El sistema utiliza una tabla `usuario_comunidad_rol` que asigna roles jerárquicos a usuarios por comunidad.
- *       
+ *
  *       **Roles disponibles:**
  *       1. `superadmin` - Super Administrador (nivel 1)
  *       2. `admin` - Administrador (nivel 2)
@@ -24,9 +24,9 @@ const { authorize } = require('../middleware/authorize');
  *       5. `conserje` - Conserje (nivel 5)
  *       6. `propietario` - Propietario (nivel 6)
  *       7. `residente` - Residente (nivel 7)
- *       
+ *
  *       **Nota:** Nivel de acceso menor = mayor privilegio
- * 
+ *
  * /comunidad/{comunidadId}:
  *   get:
  *     tags: [Membresias]
@@ -60,8 +60,15 @@ const { authorize } = require('../middleware/authorize');
 
 // List membresias
 router.get('/', authenticate, async (req, res) => {
-  const { comunidad_id, usuario_id, rol_id, activo, limit = 20, offset = 0 } = req.query;
-  
+  const {
+    comunidad_id,
+    usuario_id,
+    rol_id,
+    activo,
+    limit = 20,
+    offset = 0,
+  } = req.query;
+
   let query = `
     SELECT 
       urc.id,
@@ -146,8 +153,8 @@ router.get('/', authenticate, async (req, res) => {
     meta: {
       total,
       page: Math.floor(offset / limit) + 1,
-      pageSize: parseInt(limit)
-    }
+      pageSize: parseInt(limit),
+    },
   });
 });
 
@@ -159,11 +166,11 @@ router.get('/', authenticate, async (req, res) => {
  *     summary: Crear nueva membresía
  *     description: |
  *       Asigna un rol a un usuario en una comunidad específica.
- *       
+ *
  *       **⚠️ Breaking Change (v2.0):**
  *       - Ahora requiere `usuario_id` (antes `persona_id`)
  *       - Ahora requiere `rol_id` numérico (antes `rol` como string)
- *       
+ *
  *       **Solo administradores pueden crear membresías.**
  *     security:
  *       - bearerAuth: []
@@ -227,31 +234,47 @@ router.get('/', authenticate, async (req, res) => {
  */
 
 // Create membresia (admin of comunidad or superadmin)
-router.post('/', [
-  authenticate, 
-  authorize('admin','superadmin'), 
-  body('usuario_id').isInt(), 
-  body('comunidad_id').isInt(),
-  body('rol_id').isInt()
-], async (req, res) => {
-  const errors = validationResult(req); 
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  
-  const { usuario_id, comunidad_id, rol_id, activo, desde, hasta } = req.body;
-  
-  // Verificar que el rol existe
-  const [rolRows] = await db.query('SELECT id, codigo FROM rol_sistema WHERE id = ? LIMIT 1', [rol_id]);
-  if (!rolRows.length) return res.status(400).json({ error: 'invalid rol_id' });
-  
-  const desdeVal = desde || new Date().toISOString().slice(0,10); // YYYY-MM-DD
-  
-  try {
-    const [result] = await db.query(
-      'INSERT INTO usuario_rol_comunidad (comunidad_id, usuario_id, rol_id, desde, hasta, activo) VALUES (?,?,?,?,?,?)', 
-      [comunidad_id, usuario_id, rol_id, desdeVal, hasta || null, typeof activo === 'undefined' ? 1 : (activo ? 1 : 0)]
+router.post(
+  '/',
+  [
+    authenticate,
+    authorize('admin', 'superadmin'),
+    body('usuario_id').isInt(),
+    body('comunidad_id').isInt(),
+    body('rol_id').isInt(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+
+    const { usuario_id, comunidad_id, rol_id, activo, desde, hasta } = req.body;
+
+    // Verificar que el rol existe
+    const [rolRows] = await db.query(
+      'SELECT id, codigo FROM rol_sistema WHERE id = ? LIMIT 1',
+      [rol_id]
     );
-    
-    const [row] = await db.query(`
+    if (!rolRows.length)
+      return res.status(400).json({ error: 'invalid rol_id' });
+
+    const desdeVal = desde || new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+    try {
+      const [result] = await db.query(
+        'INSERT INTO usuario_rol_comunidad (comunidad_id, usuario_id, rol_id, desde, hasta, activo) VALUES (?,?,?,?,?,?)',
+        [
+          comunidad_id,
+          usuario_id,
+          rol_id,
+          desdeVal,
+          hasta || null,
+          typeof activo === 'undefined' ? 1 : activo ? 1 : 0,
+        ]
+      );
+
+      const [row] = await db.query(
+        `
       SELECT 
         ucr.id, 
         ucr.usuario_id,
@@ -266,14 +289,17 @@ router.post('/', [
       INNER JOIN usuario u ON u.id = ucr.usuario_id
       WHERE ucr.id = ? 
       LIMIT 1
-    `, [result.insertId]);
-    
-    res.status(201).json(row[0]);
-  } catch (err) {
-    console.error(err); 
-    res.status(500).json({ error: 'server error' });
+    `,
+        [result.insertId]
+      );
+
+      res.status(201).json(row[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -331,25 +357,34 @@ router.post('/', [
  */
 
 // Patch membresia (admin/superadmin)
-router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => {
-  const id = req.params.id; 
-  const allowedFields = ['rol_id', 'activo', 'hasta']; 
-  const updates = []; 
-  const values = [];
-  
-  allowedFields.forEach(f => { 
-    if (req.body[f] !== undefined) { 
-      updates.push(`${f} = ?`); 
-      values.push(req.body[f]); 
-    } 
-  }); 
-  
-  if (!updates.length) return res.status(400).json({ error: 'no fields to update' }); 
-  values.push(id);
-  
-  try { 
-    await db.query(`UPDATE usuario_rol_comunidad SET ${updates.join(', ')} WHERE id = ?`, values); 
-    const [rows] = await db.query(`
+router.patch(
+  '/:id',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    const id = req.params.id;
+    const allowedFields = ['rol_id', 'activo', 'hasta'];
+    const updates = [];
+    const values = [];
+
+    allowedFields.forEach((f) => {
+      if (req.body[f] !== undefined) {
+        updates.push(`${f} = ?`);
+        values.push(req.body[f]);
+      }
+    });
+
+    if (!updates.length)
+      return res.status(400).json({ error: 'no fields to update' });
+    values.push(id);
+
+    try {
+      await db.query(
+        `UPDATE usuario_rol_comunidad SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+      const [rows] = await db.query(
+        `
       SELECT 
         ucr.id, 
         ucr.usuario_id,
@@ -362,13 +397,16 @@ router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, 
       INNER JOIN usuario u ON u.id = ucr.usuario_id
       WHERE ucr.id = ? 
       LIMIT 1
-    `, [id]); 
-    res.json(rows[0]); 
-  } catch (err) { 
-    console.error(err); 
-    res.status(500).json({ error: 'server error' }); 
+    `,
+        [id]
+      );
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -379,7 +417,7 @@ router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, 
  *     description: |
  *       Elimina permanentemente una membresía de un usuario en una comunidad.
  *       Solo administradores o superadministradores pueden usar este endpoint.
- *       
+ *
  *       ⚠️ **PRECAUCIÓN**: Esta acción no puede deshacerse. El usuario perderá todo acceso a la comunidad.
  *     security:
  *       - bearerAuth: []
@@ -401,16 +439,21 @@ router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, 
  *         description: Error del servidor
  */
 
-router.delete('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => { 
-  const id = req.params.id; 
-  try { 
-    await db.query('DELETE FROM usuario_rol_comunidad WHERE id = ?', [id]); 
-    res.status(204).end(); 
-  } catch (err) { 
-    console.error(err); 
-    res.status(500).json({ error: 'server error' }); 
-  } 
-});
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    const id = req.params.id;
+    try {
+      await db.query('DELETE FROM usuario_rol_comunidad WHERE id = ?', [id]);
+      res.status(204).end();
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
+  }
+);
 
 /**
  * @swagger
@@ -440,7 +483,8 @@ router.delete('/:id', authenticate, authorize('admin','superadmin'), async (req,
 // Get membresia by id
 router.get('/:id', authenticate, async (req, res) => {
   const id = req.params.id;
-  const [rows] = await db.query(`
+  const [rows] = await db.query(
+    `
     SELECT 
       urc.id,
       urc.usuario_id,
@@ -468,8 +512,11 @@ router.get('/:id', authenticate, async (req, res) => {
     JOIN comunidad c ON urc.comunidad_id = c.id
     JOIN rol_sistema rs ON urc.rol_id = rs.id
     WHERE urc.id = ?
-  `, [id]);
-  if (rows.length === 0) return res.status(404).json({ error: 'Membresía no encontrada' });
+  `,
+    [id]
+  );
+  if (rows.length === 0)
+    return res.status(404).json({ error: 'Membresía no encontrada' });
   res.json(rows[0]);
 });
 
@@ -503,7 +550,9 @@ router.get('/:id', authenticate, async (req, res) => {
 
 // Get catalogos planes
 router.get('/catalogos/planes', authenticate, async (req, res) => {
-  const [rows] = await db.query('SELECT id, codigo, nombre, nivel_acceso FROM rol_sistema ORDER BY nivel_acceso');
+  const [rows] = await db.query(
+    'SELECT id, codigo, nombre, nivel_acceso FROM rol_sistema ORDER BY nivel_acceso'
+  );
   res.json(rows);
 });
 
@@ -599,7 +648,6 @@ router.get('/catalogos/estados', authenticate, async (req, res) => {
 
 module.exports = router;
 
-
 // =========================================
 // ENDPOINTS DE MEMBRESIAS
 // =========================================
@@ -616,7 +664,3 @@ module.exports = router;
 // // CATÁLOGOS
 // GET: /membresias/catalogos/planes
 // GET: /membresias/catalogos/estados
-
-
-
-

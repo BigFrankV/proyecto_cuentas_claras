@@ -10,8 +10,8 @@ const { categorizeResponse, getWithAuth } = require('./helpers');
 describe('Torres Health Check', () => {
   let authToken;
   let comunidadId;
-  let edificioId; 
-  let torreId; 
+  let edificioId;
+  let torreId;
 
   beforeAll(() => {
     authToken = getAuthToken();
@@ -37,7 +37,7 @@ describe('Torres Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /torres/buscar (Búsqueda General)', async () => {
       const endpoint = `/torres/buscar`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -51,28 +51,28 @@ describe('Torres Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /torres/:id/unidades', async () => {
       const endpoint = `/torres/${torreId}/unidades`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /torres/:id/unidades/filtradas', async () => {
       const endpoint = `/torres/${torreId}/unidades/filtradas`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /torres/edificio/:edificioId/dropdown', async () => {
       const endpoint = `/torres/edificio/${edificioId}/dropdown`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /torres/comunidad/:comunidadId', async () => {
       const endpoint = `/torres/comunidad/${comunidadId}`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -112,21 +112,21 @@ describe('Torres Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /torres/estadisticas-globales', async () => {
       const endpoint = `/torres/estadisticas-globales`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /torres/edificio/:edificioId/distribucion', async () => {
       const endpoint = `/torres/edificio/${edificioId}/distribucion`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /torres/edificio/:edificioId/comparativa-superficies', async () => {
       const endpoint = `/torres/edificio/${edificioId}/comparativa-superficies`;
       const response = await getWithAuth(app, endpoint, authToken);

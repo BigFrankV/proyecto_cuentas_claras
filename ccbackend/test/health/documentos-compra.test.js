@@ -16,9 +16,11 @@ describe('DocumentosCompra Module - Health Check Tests', () => {
     authToken = await getAuthToken();
     comunidadId = testIds.comunidadId;
     documentoId = testIds.documentoCompraId;
-    
+
     if (!comunidadId || !documentoId) {
-        console.warn("ADVERTENCIA: DocumentosCompra necesita testIds.comunidadId y testIds.documentoCompraId.");
+      console.warn(
+        'ADVERTENCIA: DocumentosCompra necesita testIds.comunidadId y testIds.documentoCompraId.'
+      );
     }
   });
 

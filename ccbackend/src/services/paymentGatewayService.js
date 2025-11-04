@@ -13,21 +13,26 @@ class PaymentGatewayService {
     // Configuración de Webpay Plus (Transbank)
     this.webpayConfig = {
       commerceCode: process.env.WEBPAY_COMMERCE_CODE || '597055555532',
-      apiKey: process.env.WEBPAY_API_KEY || '579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C',
-      environment: process.env.NODE_ENV === 'production' ? Environment.Production : Environment.Integration
+      apiKey:
+        process.env.WEBPAY_API_KEY ||
+        '579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C',
+      environment:
+        process.env.NODE_ENV === 'production'
+          ? Environment.Production
+          : Environment.Integration,
     };
 
     // Configuración de Khipu
     this.khipuConfig = {
       receiverId: process.env.KHIPU_RECEIVER_ID,
       secret: process.env.KHIPU_SECRET,
-      baseUrl: 'https://khipu.com/api/2.0'
+      baseUrl: 'https://khipu.com/api/2.0',
     };
 
     // Configuración de Mercado Pago
     this.mercadoPagoConfig = {
       accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
-      baseUrl: 'https://api.mercadopago.com'
+      baseUrl: 'https://api.mercadopago.com',
     };
 
     // URLs de retorno
@@ -35,7 +40,7 @@ class PaymentGatewayService {
     this.returnUrls = {
       success: `${this.baseUrl}/pagos/exito`,
       failure: `${this.baseUrl}/pagos/error`,
-      pending: `${this.baseUrl}/pagos/pendiente`
+      pending: `${this.baseUrl}/pagos/pendiente`,
     };
   }
 
@@ -46,14 +51,17 @@ class PaymentGatewayService {
    */
   async createWebpayTransaction(orderData) {
     try {
-      const { amount, orderId, sessionId, communityId, unitId, description } = orderData;
+      const { amount, orderId, sessionId, communityId, unitId, description } =
+        orderData;
 
       // Configurar Webpay
-      const tx = new WebpayPlus.Transaction(new Options(
-        this.webpayConfig.commerceCode,
-        this.webpayConfig.apiKey,
-        this.webpayConfig.environment
-      ));
+      const tx = new WebpayPlus.Transaction(
+        new Options(
+          this.webpayConfig.commerceCode,
+          this.webpayConfig.apiKey,
+          this.webpayConfig.environment
+        )
+      );
 
       // Crear transacción
       const response = await tx.create(
@@ -73,16 +81,15 @@ class PaymentGatewayService {
         gatewayTransactionId: response.token,
         status: 'pending',
         description,
-        gatewayResponse: JSON.stringify(response)
+        gatewayResponse: JSON.stringify(response),
       });
 
       return {
         success: true,
         transactionId: response.token,
         paymentUrl: response.url,
-        gateway: 'webpay'
+        gateway: 'webpay',
       };
-
     } catch (error) {
       logger.error('Error creating Webpay transaction:', error);
       throw new Error('No se pudo crear la transacción con Webpay');
@@ -94,11 +101,13 @@ class PaymentGatewayService {
    */
   async confirmWebpayTransaction(token) {
     try {
-      const tx = new WebpayPlus.Transaction(new Options(
-        this.webpayConfig.commerceCode,
-        this.webpayConfig.apiKey,
-        this.webpayConfig.environment
-      ));
+      const tx = new WebpayPlus.Transaction(
+        new Options(
+          this.webpayConfig.commerceCode,
+          this.webpayConfig.apiKey,
+          this.webpayConfig.environment
+        )
+      );
 
       const response = await tx.commit(token);
 
@@ -115,9 +124,8 @@ class PaymentGatewayService {
         authorizationCode: response.authorization_code,
         amount: response.amount,
         gateway: 'webpay',
-        response
+        response,
       };
-
     } catch (error) {
       logger.error('Error confirming Webpay transaction:', error);
       throw new Error('Error al confirmar transacción con Webpay');
@@ -131,7 +139,8 @@ class PaymentGatewayService {
    */
   async createKhipuPayment(orderData) {
     try {
-      const { amount, orderId, communityId, unitId, description, payerEmail } = orderData;
+      const { amount, orderId, communityId, unitId, description, payerEmail } =
+        orderData;
 
       const payload = {
         receiver_id: this.khipuConfig.receiverId,
@@ -142,7 +151,7 @@ class PaymentGatewayService {
         return_url: `${this.returnUrls.success}?orderId=${orderId}`,
         cancel_url: `${this.returnUrls.failure}?orderId=${orderId}`,
         notify_url: `${process.env.BACKEND_URL}/webhooks/pagos/khipu`,
-        payer_email: payerEmail
+        payer_email: payerEmail,
       };
 
       const response = await axios.post(
@@ -150,9 +159,9 @@ class PaymentGatewayService {
         payload,
         {
           headers: {
-            'Authorization': `Bearer ${this.khipuConfig.secret}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
+            Authorization: `Bearer ${this.khipuConfig.secret}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
         }
       );
 
@@ -166,16 +175,15 @@ class PaymentGatewayService {
         gatewayTransactionId: response.data.payment_id,
         status: 'pending',
         description,
-        gatewayResponse: JSON.stringify(response.data)
+        gatewayResponse: JSON.stringify(response.data),
       });
 
       return {
         success: true,
         transactionId: response.data.payment_id,
         paymentUrl: response.data.payment_url,
-        gateway: 'khipu'
+        gateway: 'khipu',
       };
-
     } catch (error) {
       logger.error('Error creating Khipu payment:', error);
       throw new Error('No se pudo crear el pago con Khipu');
@@ -189,26 +197,29 @@ class PaymentGatewayService {
    */
   async createMercadoPagoPreference(orderData) {
     try {
-      const { amount, orderId, communityId, unitId, description, payerEmail } = orderData;
+      const { amount, orderId, communityId, unitId, description, payerEmail } =
+        orderData;
 
       const preference = {
-        items: [{
-          title: description || `Pago Cuentas Claras - Orden ${orderId}`,
-          quantity: 1,
-          unit_price: amount,
-          currency_id: 'CLP'
-        }],
+        items: [
+          {
+            title: description || `Pago Cuentas Claras - Orden ${orderId}`,
+            quantity: 1,
+            unit_price: amount,
+            currency_id: 'CLP',
+          },
+        ],
         external_reference: orderId,
         back_urls: {
           success: `${this.returnUrls.success}?orderId=${orderId}`,
           failure: `${this.returnUrls.failure}?orderId=${orderId}`,
-          pending: `${this.returnUrls.pending}?orderId=${orderId}`
+          pending: `${this.returnUrls.pending}?orderId=${orderId}`,
         },
         auto_return: 'approved',
         notification_url: `${process.env.BACKEND_URL}/webhooks/pagos/mercadopago`,
         payer: {
-          email: payerEmail
-        }
+          email: payerEmail,
+        },
       };
 
       const response = await axios.post(
@@ -216,9 +227,9 @@ class PaymentGatewayService {
         preference,
         {
           headers: {
-            'Authorization': `Bearer ${this.mercadoPagoConfig.accessToken}`,
-            'Content-Type': 'application/json'
-          }
+            Authorization: `Bearer ${this.mercadoPagoConfig.accessToken}`,
+            'Content-Type': 'application/json',
+          },
         }
       );
 
@@ -232,16 +243,15 @@ class PaymentGatewayService {
         gatewayTransactionId: response.data.id,
         status: 'pending',
         description,
-        gatewayResponse: JSON.stringify(response.data)
+        gatewayResponse: JSON.stringify(response.data),
       });
 
       return {
         success: true,
         transactionId: response.data.id,
         paymentUrl: response.data.init_point,
-        gateway: 'mercadopago'
+        gateway: 'mercadopago',
       };
-
     } catch (error) {
       logger.error('Error creating MercadoPago preference:', error);
       throw new Error('No se pudo crear la preferencia con Mercado Pago');
@@ -263,7 +273,7 @@ class PaymentGatewayService {
       gatewayTransactionId,
       status,
       description,
-      gatewayResponse
+      gatewayResponse,
     } = transactionData;
 
     try {
@@ -272,8 +282,17 @@ class PaymentGatewayService {
          (order_id, comunidad_id, unidad_id, amount, gateway, gateway_transaction_id, 
           status, description, gateway_response, created_at) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [orderId, communityId, unitId, amount, gateway, gatewayTransactionId, 
-         status, description, gatewayResponse]
+        [
+          orderId,
+          communityId,
+          unitId,
+          amount,
+          gateway,
+          gatewayTransactionId,
+          status,
+          description,
+          gatewayResponse,
+        ]
       );
 
       return result.insertId;
@@ -299,7 +318,6 @@ class PaymentGatewayService {
       if (status === 'approved') {
         await this.createPaymentRecord(gatewayTransactionId);
       }
-
     } catch (error) {
       logger.error('Error updating transaction status:', error);
       throw new Error('Error al actualizar estado de transacción');
@@ -335,10 +353,9 @@ class PaymentGatewayService {
           transaction.amount,
           transaction.gateway,
           gatewayTransactionId,
-          gatewayTransactionId
+          gatewayTransactionId,
         ]
       );
-
     } catch (error) {
       logger.error('Error creating payment record:', error);
       throw new Error('Error al crear registro de pago');
@@ -399,7 +416,7 @@ class PaymentGatewayService {
         name: 'Webpay Plus',
         description: 'Pago con tarjetas de crédito y débito',
         logo: '/images/webpay-logo.png',
-        fees: 'Comisión según tarjeta'
+        fees: 'Comisión según tarjeta',
       });
     }
 
@@ -409,7 +426,7 @@ class PaymentGatewayService {
         name: 'Khipu',
         description: 'Transferencia bancaria simplificada',
         logo: '/images/khipu-logo.png',
-        fees: 'Comisión fija por transacción'
+        fees: 'Comisión fija por transacción',
       });
     }
 
@@ -419,7 +436,7 @@ class PaymentGatewayService {
         name: 'Mercado Pago',
         description: 'Múltiples medios de pago',
         logo: '/images/mercadopago-logo.png',
-        fees: 'Comisión variable según medio'
+        fees: 'Comisión variable según medio',
       });
     }
 

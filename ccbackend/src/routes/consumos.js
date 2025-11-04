@@ -75,7 +75,11 @@ router.get('/mensual', async (req, res) => {
         AND vc.periodo BETWEEN ? AND ?
       ORDER BY mes;
     `;
-    const [rows] = await pool.execute(query, [medidor_id, periodo_inicio, periodo_fin]);
+    const [rows] = await pool.execute(query, [
+      medidor_id,
+      periodo_inicio,
+      periodo_fin,
+    ]);
     res.json(rows);
   } catch (error) {
     console.error('Error en /mensual:', error);
@@ -143,7 +147,11 @@ router.get('/trimestral', async (req, res) => {
       GROUP BY trimestre
       ORDER BY trimestre;
     `;
-    const [rows] = await pool.execute(query, [medidor_id, periodo_inicio, periodo_fin]);
+    const [rows] = await pool.execute(query, [
+      medidor_id,
+      periodo_inicio,
+      periodo_fin,
+    ]);
     res.json(rows);
   } catch (error) {
     console.error('Error en /trimestral:', error);
@@ -280,7 +288,11 @@ router.get('/estadisticas', async (req, res) => {
         vc.medidor_id = ?
         AND vc.periodo BETWEEN ? AND ?;
     `;
-    const [rows] = await pool.execute(query, [medidor_id, periodo_inicio, periodo_fin]);
+    const [rows] = await pool.execute(query, [
+      medidor_id,
+      periodo_inicio,
+      periodo_fin,
+    ]);
     res.json(rows[0] || {});
   } catch (error) {
     console.error('Error en /estadisticas:', error);
@@ -360,7 +372,11 @@ router.get('/detalle', async (req, res) => {
         AND vc.periodo BETWEEN ? AND ?
       ORDER BY vc.periodo DESC;
     `;
-    const [rows] = await pool.execute(query, [medidor_id, periodo_inicio, periodo_fin]);
+    const [rows] = await pool.execute(query, [
+      medidor_id,
+      periodo_inicio,
+      periodo_fin,
+    ]);
     res.json(rows);
   } catch (error) {
     console.error('Error en /detalle:', error);
@@ -369,7 +385,3 @@ router.get('/detalle', async (req, res) => {
 });
 
 module.exports = router;
-
-
-
-

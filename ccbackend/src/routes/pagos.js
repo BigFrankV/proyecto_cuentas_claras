@@ -11,7 +11,7 @@ const { requireCommunity } = require('../middleware/tenancy');
  * tags:
  *   - name: Pagos
  *     description: Gestión de pagos, aplicaciones a cuentas de cobro y reversos
- * 
+ *
  * components:
  *   schemas:
  *     Payment:
@@ -78,7 +78,7 @@ const { requireCommunity } = require('../middleware/tenancy');
  *           type: string
  *           format: date-time
  *           description: Fecha de última actualización
- * 
+ *
  *     PaymentCreate:
  *       type: object
  *       required:
@@ -116,7 +116,7 @@ const { requireCommunity } = require('../middleware/tenancy');
  *           type: string
  *           description: Número de comprobante
  *           example: "COMP-001"
- * 
+ *
  *     PaymentApplication:
  *       type: object
  *       required:
@@ -150,7 +150,7 @@ const { requireCommunity } = require('../middleware/tenancy');
  *             monto: 75000.00
  *           - cuenta_cobro_unidad_id: 235
  *             monto: 50000.00
- * 
+ *
  *     PaymentStats:
  *       type: object
  *       properties:
@@ -195,7 +195,7 @@ const { requireCommunity } = require('../middleware/tenancy');
  *           format: float
  *           description: Monto aprobado total
  *           example: 18000000.00
- * 
+ *
  *     PaginatedPayments:
  *       type: object
  *       properties:
@@ -222,7 +222,7 @@ const { requireCommunity } = require('../middleware/tenancy');
  *               type: boolean
  *               description: Hay más registros
  *               example: true
- * 
+ *
  *     ErrorResponse:
  *       type: object
  *       properties:
@@ -339,12 +339,24 @@ const { requireCommunity } = require('../middleware/tenancy');
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { estado, medio, fecha_desde, fecha_hasta, search, limit = 20, offset = 0 } = req.query;
+router.get(
+  '/comunidad/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const {
+        estado,
+        medio,
+        fecha_desde,
+        fecha_hasta,
+        search,
+        limit = 20,
+        offset = 0,
+      } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         p.id,
         CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) AS order_id,
@@ -379,76 +391,77 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
       WHERE p.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (estado) {
-      query += ` AND p.estado = ?`;
-      params.push(estado);
-    }
-
-    if (medio) {
-      query += ` AND p.medio = ?`;
-      params.push(medio);
-    }
-
-    if (fecha_desde) {
-      query += ` AND p.fecha >= ?`;
-      params.push(fecha_desde);
-    }
-
-    if (fecha_hasta) {
-      query += ` AND p.fecha <= ?`;
-      params.push(fecha_hasta);
-    }
-
-    if (search) {
-      query += ` AND (p.referencia LIKE ? OR CONCAT(pers.nombres, ' ', pers.apellidos) LIKE ? OR u.codigo LIKE ?)`;
-      const searchPattern = `%${search}%`;
-      params.push(searchPattern, searchPattern, searchPattern);
-    }
-
-    query += ` ORDER BY p.fecha DESC, p.created_at DESC LIMIT ? OFFSET ?`;
-    params.push(Number(limit), Number(offset));
-
-    const [rows] = await db.query(query, params);
-
-    // Contar total
-    let countQuery = `SELECT COUNT(*) AS total FROM pago p WHERE p.comunidad_id = ?`;
-    const countParams = [comunidadId];
-
-    if (estado) {
-      countQuery += ` AND p.estado = ?`;
-      countParams.push(estado);
-    }
-    if (medio) {
-      countQuery += ` AND p.medio = ?`;
-      countParams.push(medio);
-    }
-    if (fecha_desde) {
-      countQuery += ` AND p.fecha >= ?`;
-      countParams.push(fecha_desde);
-    }
-    if (fecha_hasta) {
-      countQuery += ` AND p.fecha <= ?`;
-      countParams.push(fecha_hasta);
-    }
-
-    const [[{ total }]] = await db.query(countQuery, countParams);
-
-    res.json({
-      data: rows,
-      pagination: {
-        total,
-        limit: Number(limit),
-        offset: Number(offset),
-        hasMore: (Number(offset) + rows.length) < total
+      if (estado) {
+        query += ` AND p.estado = ?`;
+        params.push(estado);
       }
-    });
-  } catch (error) {
-    console.error('Error al listar pagos:', error);
-    res.status(500).json({ error: 'Error al listar pagos' });
+
+      if (medio) {
+        query += ` AND p.medio = ?`;
+        params.push(medio);
+      }
+
+      if (fecha_desde) {
+        query += ` AND p.fecha >= ?`;
+        params.push(fecha_desde);
+      }
+
+      if (fecha_hasta) {
+        query += ` AND p.fecha <= ?`;
+        params.push(fecha_hasta);
+      }
+
+      if (search) {
+        query += ` AND (p.referencia LIKE ? OR CONCAT(pers.nombres, ' ', pers.apellidos) LIKE ? OR u.codigo LIKE ?)`;
+        const searchPattern = `%${search}%`;
+        params.push(searchPattern, searchPattern, searchPattern);
+      }
+
+      query += ` ORDER BY p.fecha DESC, p.created_at DESC LIMIT ? OFFSET ?`;
+      params.push(Number(limit), Number(offset));
+
+      const [rows] = await db.query(query, params);
+
+      // Contar total
+      let countQuery = `SELECT COUNT(*) AS total FROM pago p WHERE p.comunidad_id = ?`;
+      const countParams = [comunidadId];
+
+      if (estado) {
+        countQuery += ` AND p.estado = ?`;
+        countParams.push(estado);
+      }
+      if (medio) {
+        countQuery += ` AND p.medio = ?`;
+        countParams.push(medio);
+      }
+      if (fecha_desde) {
+        countQuery += ` AND p.fecha >= ?`;
+        countParams.push(fecha_desde);
+      }
+      if (fecha_hasta) {
+        countQuery += ` AND p.fecha <= ?`;
+        countParams.push(fecha_hasta);
+      }
+
+      const [[{ total }]] = await db.query(countQuery, countParams);
+
+      res.json({
+        data: rows,
+        pagination: {
+          total,
+          limit: Number(limit),
+          offset: Number(offset),
+          hasMore: Number(offset) + rows.length < total,
+        },
+      });
+    } catch (error) {
+      console.error('Error al listar pagos:', error);
+      res.status(500).json({ error: 'Error al listar pagos' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -575,11 +588,15 @@ router.get('/:id', authenticate, async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/estadisticas',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         COUNT(*) AS total_payments,
         COUNT(CASE WHEN p.estado = 'aplicado' THEN 1 END) AS approved_payments,
@@ -594,14 +611,15 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
       WHERE p.comunidad_id = ?
     `;
 
-    const [[stats]] = await db.query(query, [comunidadId]);
+      const [[stats]] = await db.query(query, [comunidadId]);
 
-    res.json(stats);
-  } catch (error) {
-    console.error('Error al obtener estadísticas de pagos:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas' });
+      res.json(stats);
+    } catch (error) {
+      console.error('Error al obtener estadísticas de pagos:', error);
+      res.status(500).json({ error: 'Error al obtener estadísticas' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -649,11 +667,15 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
  *       500:
  *         description: Error del servidor
  */
-router.get('/comunidad/:comunidadId/estadisticas/estado', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/estadisticas/estado',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         CASE
           WHEN p.estado = 'pendiente' THEN 'pending'
@@ -676,14 +698,17 @@ router.get('/comunidad/:comunidadId/estadisticas/estado', authenticate, requireC
         END
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener estadísticas por estado:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas por estado' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener estadísticas por estado:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener estadísticas por estado' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -728,11 +753,15 @@ router.get('/comunidad/:comunidadId/estadisticas/estado', authenticate, requireC
  *       500:
  *         description: Error del servidor
  */
-router.get('/comunidad/:comunidadId/estadisticas/metodo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/estadisticas/metodo',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         CASE
           WHEN p.medio = 'transferencia' THEN 'bank_transfer'
@@ -751,14 +780,17 @@ router.get('/comunidad/:comunidadId/estadisticas/metodo', authenticate, requireC
       ORDER BY total_amount DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener estadísticas por método:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas por método' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener estadísticas por método:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener estadísticas por método' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -818,11 +850,15 @@ router.get('/comunidad/:comunidadId/estadisticas/metodo', authenticate, requireC
  *       500:
  *         description: Error del servidor
  */
-router.get('/comunidad/:comunidadId/estadisticas/periodo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/estadisticas/periodo',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         YEAR(p.fecha) AS year,
         MONTH(p.fecha) AS month,
@@ -839,14 +875,17 @@ router.get('/comunidad/:comunidadId/estadisticas/periodo', authenticate, require
       ORDER BY year DESC, month DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener estadísticas por período:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas por período' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener estadísticas por período:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener estadísticas por período' });
+    }
   }
-});
+);
 
 // =========================================
 // 3. PAGOS PENDIENTES Y APLICACIONES
@@ -911,11 +950,15 @@ router.get('/comunidad/:comunidadId/estadisticas/periodo', authenticate, require
  *       500:
  *         description: Error del servidor
  */
-router.get('/comunidad/:comunidadId/pendientes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/pendientes',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         p.id,
         CONCAT('PAY-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) AS order_id,
@@ -937,14 +980,15 @@ router.get('/comunidad/:comunidadId/pendientes', authenticate, requireCommunity(
       ORDER BY p.fecha DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener pagos pendientes:', error);
-    res.status(500).json({ error: 'Error al obtener pagos pendientes' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener pagos pendientes:', error);
+      res.status(500).json({ error: 'Error al obtener pagos pendientes' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1216,11 +1260,15 @@ router.get('/unidad/:unidadId/historial', authenticate, async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.get('/comunidad/:comunidadId/por-residente', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/por-residente',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         pers.id AS resident_id,
         CONCAT(pers.nombres, ' ', pers.apellidos) AS resident_name,
@@ -1245,14 +1293,15 @@ router.get('/comunidad/:comunidadId/por-residente', authenticate, requireCommuni
       ORDER BY total_paid DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener pagos por residente:', error);
-    res.status(500).json({ error: 'Error al obtener pagos por residente' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener pagos por residente:', error);
+      res.status(500).json({ error: 'Error al obtener pagos por residente' });
+    }
   }
-});
+);
 
 // =========================================
 // 5. CONCILIACIÓN BANCARIA
@@ -1326,11 +1375,15 @@ router.get('/comunidad/:comunidadId/por-residente', authenticate, requireCommuni
  *       500:
  *         description: Error del servidor
  */
-router.get('/comunidad/:comunidadId/conciliacion', authenticate, requireCommunity('comunidadId', ['admin', 'superadmin']), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/conciliacion',
+  authenticate,
+  requireCommunity('comunidadId', ['admin', 'superadmin']),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         cb.id,
         DATE_FORMAT(cb.fecha_mov, '%Y-%m-%d') AS movement_date,
@@ -1353,14 +1406,15 @@ router.get('/comunidad/:comunidadId/conciliacion', authenticate, requireCommunit
       ORDER BY cb.fecha_mov DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener conciliación bancaria:', error);
-    res.status(500).json({ error: 'Error al obtener conciliación bancaria' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener conciliación bancaria:', error);
+      res.status(500).json({ error: 'Error al obtener conciliación bancaria' });
+    }
   }
-});
+);
 
 // =========================================
 // 6. WEBHOOKS
@@ -1420,11 +1474,15 @@ router.get('/comunidad/:comunidadId/conciliacion', authenticate, requireCommunit
  *       500:
  *         description: Error del servidor
  */
-router.get('/:id/webhooks', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const pagoId = Number(req.params.id);
+router.get(
+  '/:id/webhooks',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const pagoId = Number(req.params.id);
 
-    const query = `
+      const query = `
       SELECT
         wp.id,
         wp.proveedor AS evento,
@@ -1437,14 +1495,15 @@ router.get('/:id/webhooks', authenticate, authorize('admin', 'superadmin'), asyn
       ORDER BY wp.fecha_recepcion DESC
     `;
 
-    const [rows] = await db.query(query, [pagoId]);
+      const [rows] = await db.query(query, [pagoId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener webhooks:', error);
-    res.status(500).json({ error: 'Error al obtener webhooks' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener webhooks:', error);
+      res.status(500).json({ error: 'Error al obtener webhooks' });
+    }
   }
-});
+);
 
 // =========================================
 // 7. VALIDACIONES
@@ -1507,11 +1566,15 @@ router.get('/:id/webhooks', authenticate, authorize('admin', 'superadmin'), asyn
  *       500:
  *         description: Error del servidor
  */
-router.get('/comunidad/:comunidadId/validar', authenticate, requireCommunity('comunidadId', ['admin', 'superadmin']), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/validar',
+  authenticate,
+  requireCommunity('comunidadId', ['admin', 'superadmin']),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         p.id,
         CASE
@@ -1534,14 +1597,15 @@ router.get('/comunidad/:comunidadId/validar', authenticate, requireCommunity('co
       ORDER BY p.id
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al validar pagos:', error);
-    res.status(500).json({ error: 'Error al validar pagos' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al validar pagos:', error);
+      res.status(500).json({ error: 'Error al validar pagos' });
+    }
   }
-});
+);
 
 // =========================================
 // 8. CRUD BÁSICO
@@ -1627,34 +1691,58 @@ router.get('/comunidad/:comunidadId/validar', authenticate, requireCommunity('co
  *       500:
  *         description: Error del servidor
  */
-router.post('/comunidad/:comunidadId', [
-  authenticate,
-  requireCommunity('comunidadId'),
-  body('monto').isNumeric(),
-  body('fecha').notEmpty()
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+router.post(
+  '/comunidad/:comunidadId',
+  [
+    authenticate,
+    requireCommunity('comunidadId'),
+    body('monto').isNumeric(),
+    body('fecha').notEmpty(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const {
+        unidad_id,
+        persona_id,
+        fecha,
+        monto,
+        medio,
+        referencia,
+        comprobante_num,
+      } = req.body;
+
+      const [result] = await db.query(
+        'INSERT INTO pago (comunidad_id, unidad_id, persona_id, fecha, monto, medio, referencia, comprobante_num) VALUES (?,?,?,?,?,?,?,?)',
+        [
+          comunidadId,
+          unidad_id || null,
+          persona_id || null,
+          fecha,
+          monto,
+          medio || null,
+          referencia || null,
+          comprobante_num || null,
+        ]
+      );
+
+      const [row] = await db.query(
+        'SELECT id, fecha, monto, medio, estado FROM pago WHERE id = ? LIMIT 1',
+        [result.insertId]
+      );
+
+      res.status(201).json(row[0]);
+    } catch (error) {
+      console.error('Error al crear pago:', error);
+      res.status(500).json({ error: 'Error al crear pago' });
+    }
   }
-
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { unidad_id, persona_id, fecha, monto, medio, referencia, comprobante_num } = req.body;
-
-    const [result] = await db.query(
-      'INSERT INTO pago (comunidad_id, unidad_id, persona_id, fecha, monto, medio, referencia, comprobante_num) VALUES (?,?,?,?,?,?,?,?)',
-      [comunidadId, unidad_id || null, persona_id || null, fecha, monto, medio || null, referencia || null, comprobante_num || null]
-    );
-
-    const [row] = await db.query('SELECT id, fecha, monto, medio, estado FROM pago WHERE id = ? LIMIT 1', [result.insertId]);
-
-    res.status(201).json(row[0]);
-  } catch (error) {
-    console.error('Error al crear pago:', error);
-    res.status(500).json({ error: 'Error al crear pago' });
-  }
-});
+);
 
 /**
  * @swagger
@@ -1746,97 +1834,135 @@ router.post('/comunidad/:comunidadId', [
  *       500:
  *         description: Error del servidor
  */
-router.post('/:id/aplicar', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  const pagoId = Number(req.params.id);
-  const assignments = req.body.assignments || [];
+router.post(
+  '/:id/aplicar',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    const pagoId = Number(req.params.id);
+    const assignments = req.body.assignments || [];
 
-  if (!Array.isArray(assignments) || !assignments.length) {
-    return res.status(400).json({ error: 'Se requiere array de assignments' });
-  }
-
-  const conn = await db.getConnection();
-
-  try {
-    await conn.beginTransaction();
-
-    const [pRows] = await conn.query('SELECT comunidad_id, monto, estado FROM pago WHERE id = ? LIMIT 1', [pagoId]);
-
-    if (!pRows.length) {
-      await conn.rollback();
-      return res.status(404).json({ error: 'Pago no encontrado' });
+    if (!Array.isArray(assignments) || !assignments.length) {
+      return res
+        .status(400)
+        .json({ error: 'Se requiere array de assignments' });
     }
 
-    const pago = pRows[0];
+    const conn = await db.getConnection();
 
-    if (pago.estado === 'reversado') {
-      await conn.rollback();
-      return res.status(400).json({ error: 'Pago reversado no puede ser aplicado' });
-    }
-
-    for (const a of assignments) {
-      const cuentaId = a.cuenta_cobro_unidad_id || a.cargo_unidad_id;
-
-      if (!cuentaId || (typeof a.monto !== 'number' && typeof a.monto !== 'string')) {
-        await conn.rollback();
-        return res.status(400).json({ error: 'Formato de assignment inválido' });
-      }
-
-      const monto = Number(a.monto);
-
-      if (monto <= 0) {
-        await conn.rollback();
-        return res.status(400).json({ error: 'El monto debe ser mayor a 0' });
-      }
-
-      const [cRows] = await conn.query('SELECT saldo FROM cuenta_cobro_unidad WHERE id = ? LIMIT 1 FOR UPDATE', [cuentaId]);
-
-      if (!cRows.length) {
-        await conn.rollback();
-        return res.status(404).json({ error: `Cuenta ${cuentaId} no encontrada` });
-      }
-
-      const cargoSaldo = Number(cRows[0].saldo || 0);
-
-      if (monto > cargoSaldo) {
-        await conn.rollback();
-        return res.status(400).json({ error: `El monto excede el saldo de la cuenta ${cuentaId}` });
-      }
-
-      await conn.query('INSERT INTO pago_aplicacion (pago_id, cargo_unidad_id, monto) VALUES (?,?,?)', [pagoId, cuentaId, monto]);
-      await conn.query('UPDATE cuenta_cobro_unidad SET saldo = saldo - ? WHERE id = ?', [monto, cuentaId]);
-    }
-
-    const [paRows] = await conn.query('SELECT SUM(monto) as total FROM pago_aplicacion WHERE pago_id = ?', [pagoId]);
-    const applied = Number((paRows[0] && paRows[0].total) || 0);
-
-    let newEstado = 'pendiente';
-    if (applied >= Number(pago.monto)) {
-      newEstado = 'aplicado';
-    } else if (applied > 0) {
-      newEstado = 'aplicado';
-    }
-
-    await conn.query('UPDATE pago SET estado = ? WHERE id = ?', [newEstado, pagoId]);
-
-    await conn.commit();
-
-    res.json({ ok: true, pago_id: pagoId, assigned: applied });
-  } catch (error) {
-    console.error('Error al aplicar pago:', error);
     try {
-      await conn.rollback();
-    } catch (e) {
-      console.error('Error al hacer rollback:', e);
-    }
-    res.status(500).json({ error: 'Error al aplicar pago' });
-  } finally {
-    try {
-      conn.release();
-    } catch (e) {
-      console.error('Error al liberar conexión:', e);
+      await conn.beginTransaction();
+
+      const [pRows] = await conn.query(
+        'SELECT comunidad_id, monto, estado FROM pago WHERE id = ? LIMIT 1',
+        [pagoId]
+      );
+
+      if (!pRows.length) {
+        await conn.rollback();
+        return res.status(404).json({ error: 'Pago no encontrado' });
+      }
+
+      const pago = pRows[0];
+
+      if (pago.estado === 'reversado') {
+        await conn.rollback();
+        return res
+          .status(400)
+          .json({ error: 'Pago reversado no puede ser aplicado' });
+      }
+
+      for (const a of assignments) {
+        const cuentaId = a.cuenta_cobro_unidad_id || a.cargo_unidad_id;
+
+        if (
+          !cuentaId ||
+          (typeof a.monto !== 'number' && typeof a.monto !== 'string')
+        ) {
+          await conn.rollback();
+          return res
+            .status(400)
+            .json({ error: 'Formato de assignment inválido' });
+        }
+
+        const monto = Number(a.monto);
+
+        if (monto <= 0) {
+          await conn.rollback();
+          return res.status(400).json({ error: 'El monto debe ser mayor a 0' });
+        }
+
+        const [cRows] = await conn.query(
+          'SELECT saldo FROM cuenta_cobro_unidad WHERE id = ? LIMIT 1 FOR UPDATE',
+          [cuentaId]
+        );
+
+        if (!cRows.length) {
+          await conn.rollback();
+          return res
+            .status(404)
+            .json({ error: `Cuenta ${cuentaId} no encontrada` });
+        }
+
+        const cargoSaldo = Number(cRows[0].saldo || 0);
+
+        if (monto > cargoSaldo) {
+          await conn.rollback();
+          return res
+            .status(400)
+            .json({
+              error: `El monto excede el saldo de la cuenta ${cuentaId}`,
+            });
+        }
+
+        await conn.query(
+          'INSERT INTO pago_aplicacion (pago_id, cargo_unidad_id, monto) VALUES (?,?,?)',
+          [pagoId, cuentaId, monto]
+        );
+        await conn.query(
+          'UPDATE cuenta_cobro_unidad SET saldo = saldo - ? WHERE id = ?',
+          [monto, cuentaId]
+        );
+      }
+
+      const [paRows] = await conn.query(
+        'SELECT SUM(monto) as total FROM pago_aplicacion WHERE pago_id = ?',
+        [pagoId]
+      );
+      const applied = Number((paRows[0] && paRows[0].total) || 0);
+
+      let newEstado = 'pendiente';
+      if (applied >= Number(pago.monto)) {
+        newEstado = 'aplicado';
+      } else if (applied > 0) {
+        newEstado = 'aplicado';
+      }
+
+      await conn.query('UPDATE pago SET estado = ? WHERE id = ?', [
+        newEstado,
+        pagoId,
+      ]);
+
+      await conn.commit();
+
+      res.json({ ok: true, pago_id: pagoId, assigned: applied });
+    } catch (error) {
+      console.error('Error al aplicar pago:', error);
+      try {
+        await conn.rollback();
+      } catch (e) {
+        console.error('Error al hacer rollback:', e);
+      }
+      res.status(500).json({ error: 'Error al aplicar pago' });
+    } finally {
+      try {
+        conn.release();
+      } catch (e) {
+        console.error('Error al liberar conexión:', e);
+      }
     }
   }
-});
+);
 
 /**
  * @swagger
@@ -1895,54 +2021,77 @@ router.post('/:id/aplicar', authenticate, authorize('admin', 'superadmin'), asyn
  *       500:
  *         description: Error del servidor
  */
-router.post('/:id/reversar', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  const pagoId = Number(req.params.id);
-  const conn = await db.getConnection();
+router.post(
+  '/:id/reversar',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    const pagoId = Number(req.params.id);
+    const conn = await db.getConnection();
 
-  try {
-    await conn.beginTransaction();
-
-    const [pRows] = await conn.query('SELECT estado FROM pago WHERE id = ? LIMIT 1', [pagoId]);
-
-    if (!pRows.length) {
-      await conn.rollback();
-      return res.status(404).json({ error: 'Pago no encontrado' });
-    }
-
-    if (pRows[0].estado === 'reversado') {
-      await conn.rollback();
-      return res.status(400).json({ error: 'Pago ya está reversado' });
-    }
-
-    // Revertir aplicaciones
-    const [aplicaciones] = await conn.query('SELECT cargo_unidad_id, monto FROM pago_aplicacion WHERE pago_id = ?', [pagoId]);
-
-    for (const ap of aplicaciones) {
-      await conn.query('UPDATE cuenta_cobro_unidad SET saldo = saldo + ? WHERE id = ?', [ap.monto, ap.cargo_unidad_id]);
-    }
-
-    await conn.query('DELETE FROM pago_aplicacion WHERE pago_id = ?', [pagoId]);
-    await conn.query('UPDATE pago SET estado = ? WHERE id = ?', ['reversado', pagoId]);
-
-    await conn.commit();
-
-    res.json({ ok: true, pago_id: pagoId, message: 'Pago reversado exitosamente' });
-  } catch (error) {
-    console.error('Error al reversar pago:', error);
     try {
-      await conn.rollback();
-    } catch (e) {
-      console.error('Error al hacer rollback:', e);
-    }
-    res.status(500).json({ error: 'Error al reversar pago' });
-  } finally {
-    try {
-      conn.release();
-    } catch (e) {
-      console.error('Error al liberar conexión:', e);
+      await conn.beginTransaction();
+
+      const [pRows] = await conn.query(
+        'SELECT estado FROM pago WHERE id = ? LIMIT 1',
+        [pagoId]
+      );
+
+      if (!pRows.length) {
+        await conn.rollback();
+        return res.status(404).json({ error: 'Pago no encontrado' });
+      }
+
+      if (pRows[0].estado === 'reversado') {
+        await conn.rollback();
+        return res.status(400).json({ error: 'Pago ya está reversado' });
+      }
+
+      // Revertir aplicaciones
+      const [aplicaciones] = await conn.query(
+        'SELECT cargo_unidad_id, monto FROM pago_aplicacion WHERE pago_id = ?',
+        [pagoId]
+      );
+
+      for (const ap of aplicaciones) {
+        await conn.query(
+          'UPDATE cuenta_cobro_unidad SET saldo = saldo + ? WHERE id = ?',
+          [ap.monto, ap.cargo_unidad_id]
+        );
+      }
+
+      await conn.query('DELETE FROM pago_aplicacion WHERE pago_id = ?', [
+        pagoId,
+      ]);
+      await conn.query('UPDATE pago SET estado = ? WHERE id = ?', [
+        'reversado',
+        pagoId,
+      ]);
+
+      await conn.commit();
+
+      res.json({
+        ok: true,
+        pago_id: pagoId,
+        message: 'Pago reversado exitosamente',
+      });
+    } catch (error) {
+      console.error('Error al reversar pago:', error);
+      try {
+        await conn.rollback();
+      } catch (e) {
+        console.error('Error al hacer rollback:', e);
+      }
+      res.status(500).json({ error: 'Error al reversar pago' });
+    } finally {
+      try {
+        conn.release();
+      } catch (e) {
+        console.error('Error al liberar conexión:', e);
+      }
     }
   }
-});
+);
 
 module.exports = router;
 
@@ -1981,7 +2130,3 @@ module.exports = router;
 // POST: /pagos/comunidad/:comunidadId
 // POST: /pagos/:id/aplicar
 // POST: /pagos/:id/reversar
-
-
-
-

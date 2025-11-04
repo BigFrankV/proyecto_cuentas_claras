@@ -82,53 +82,65 @@ const { requireCommunity } = require('../middleware/tenancy');
  *       200:
  *         description: Lista de gastos
  */
-router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const {
-    page = 1,
-    limit = 100,
-    categoria = '',
-    proveedor = '',
-    fecha_desde = '',
-    fecha_hasta = '',
-    monto_min = 0,
-    monto_max = 0,
-    categoria_id = 0,
-    centro_costo_id = 0,
-    extraordinario = -1
-  } = req.query;
+router.get(
+  '/comunidad/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const {
+      page = 1,
+      limit = 100,
+      categoria = '',
+      proveedor = '',
+      fecha_desde = '',
+      fecha_hasta = '',
+      monto_min = 0,
+      monto_max = 0,
+      categoria_id = 0,
+      centro_costo_id = 0,
+      extraordinario = -1,
+    } = req.query;
 
-  const offset = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
-  try {
-    // Construir cláusulas WHERE dinámicas
-    let whereFecha = '';
-    let whereMonto = '';
-    const params = [comunidadId];
+    try {
+      // Construir cláusulas WHERE dinámicas
+      let whereComunidad = 'AND g.comunidad_id = ?';
+      let whereFecha = '';
+      let whereMonto = '';
+      const params = [comunidadId];
 
-    // Solo agregar filtro de fecha si ambos valores están presentes
-    if (fecha_desde && fecha_hasta) {
-      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_desde, fecha_hasta);
-    }
+      // Solo agregar filtro de fecha si ambos valores están presentes
+      if (fecha_desde && fecha_hasta) {
+        whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_desde, fecha_hasta);
+      }
 
-    // Solo agregar filtro de monto si ambos valores son mayores a 0
-    if (monto_min > 0 && monto_max > 0) {
-      whereMonto = 'AND g.monto BETWEEN ? AND ?';
-      params.push(Number(monto_min), Number(monto_max));
-    }
+      // Solo agregar filtro de monto si ambos valores son mayores a 0
+      if (monto_min > 0 && monto_max > 0) {
+        whereMonto = 'AND g.monto BETWEEN ? AND ?';
+        params.push(Number(monto_min), Number(monto_max));
+      }
 
-    // Agregar resto de parámetros
-    params.push(
-      categoria, categoria,
-      proveedor, proveedor,
-      categoria_id, categoria_id,
-      centro_costo_id, centro_costo_id,
-      extraordinario, extraordinario,
-      Number(limit), Number(offset)
-    );
+      // Agregar resto de parámetros
+      params.push(
+        categoria,
+        categoria,
+        proveedor,
+        proveedor,
+        categoria_id,
+        categoria_id,
+        centro_costo_id,
+        centro_costo_id,
+        extraordinario,
+        extraordinario,
+        Number(limit),
+        Number(offset)
+      );
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT
         g.id,
         g.fecha,
@@ -168,14 +180,17 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
       GROUP BY g.id
       ORDER BY g.fecha DESC, g.created_at DESC
       LIMIT ? OFFSET ?
-    `, params);
+    `,
+        params
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -195,45 +210,55 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
  *       200:
  *         description: Total de gastos
  */
-router.get('/comunidad/:comunidadId/count', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const {
-    categoria = '',
-    proveedor = '',
-    fecha_desde = '',
-    fecha_hasta = '',
-    monto_min = 0,
-    monto_max = 0,
-    categoria_id = 0,
-    centro_costo_id = 0,
-    extraordinario = -1
-  } = req.query;
+router.get(
+  '/comunidad/:comunidadId/count',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const {
+      categoria = '',
+      proveedor = '',
+      fecha_desde = '',
+      fecha_hasta = '',
+      monto_min = 0,
+      monto_max = 0,
+      categoria_id = 0,
+      centro_costo_id = 0,
+      extraordinario = -1,
+    } = req.query;
 
-  try {
-    // Construir cláusulas WHERE dinámicas
-    let whereFecha = '';
-    let whereMonto = '';
-    const params = [comunidadId];
+    try {
+      // Construir cláusulas WHERE dinámicas
+      let whereFecha = '';
+      let whereMonto = '';
+      const params = [comunidadId];
 
-    if (fecha_desde && fecha_hasta) {
-      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_desde, fecha_hasta);
-    }
+      if (fecha_desde && fecha_hasta) {
+        whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_desde, fecha_hasta);
+      }
 
-    if (monto_min > 0 && monto_max > 0) {
-      whereMonto = 'AND g.monto BETWEEN ? AND ?';
-      params.push(Number(monto_min), Number(monto_max));
-    }
+      if (monto_min > 0 && monto_max > 0) {
+        whereMonto = 'AND g.monto BETWEEN ? AND ?';
+        params.push(Number(monto_min), Number(monto_max));
+      }
 
-    params.push(
-      categoria, categoria,
-      proveedor, proveedor,
-      categoria_id, categoria_id,
-      centro_costo_id, centro_costo_id,
-      extraordinario, extraordinario
-    );
+      params.push(
+        categoria,
+        categoria,
+        proveedor,
+        proveedor,
+        categoria_id,
+        categoria_id,
+        centro_costo_id,
+        centro_costo_id,
+        extraordinario,
+        extraordinario
+      );
 
-    const [[row]] = await db.query(`
+      const [[row]] = await db.query(
+        `
       SELECT COUNT(DISTINCT g.id) AS total
       FROM gasto g
       INNER JOIN categoria_gasto cat ON g.categoria_id = cat.id
@@ -248,14 +273,17 @@ router.get('/comunidad/:comunidadId/count', authenticate, requireCommunity('comu
         AND (g.categoria_id = ? OR ? = 0)
         AND (g.centro_costo_id = ? OR ? = 0)
         AND (g.extraordinario = ? OR ? = -1)
-    `, params);
+    `,
+        params
+      );
 
-    res.json({ total: row.total });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json({ total: row.total });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -301,35 +329,65 @@ router.get('/comunidad/:comunidadId/count', authenticate, requireCommunity('comu
  *       201:
  *         description: Gasto creado
  */
-router.post('/comunidad/:comunidadId', [
-  authenticate,
-  requireCommunity('comunidadId', ['superadmin', 'contador', 'admin_comunidad']),
-  body('categoria_id').isInt(),
-  body('fecha').notEmpty(),
-  body('monto').isNumeric()
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+router.post(
+  '/comunidad/:comunidadId',
+  [
+    authenticate,
+    requireCommunity('comunidadId', [
+      'superadmin',
+      'contador',
+      'admin_comunidad',
+    ]),
+    body('categoria_id').isInt(),
+    body('fecha').notEmpty(),
+    body('monto').isNumeric(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
 
-  const comunidadId = Number(req.params.comunidadId);
-  const { categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario } = req.body;
+    const comunidadId = Number(req.params.comunidadId);
+    const {
+      categoria_id,
+      centro_costo_id,
+      documento_compra_id,
+      fecha,
+      monto,
+      glosa,
+      extraordinario,
+    } = req.body;
 
-  // Generar numero único (ej. 'G-' + timestamp + comunidadId para mayor unicidad)
-  const numero = `G${Date.now()}-${comunidadId}`;
+    // Generar numero único (ej. 'G-' + timestamp + comunidadId para mayor unicidad)
+    const numero = `G${Date.now()}-${comunidadId}`;
 
-  try {
-    const [result] = await db.query(
-      'INSERT INTO gasto (numero, comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [numero, comunidadId, categoria_id, centro_costo_id || null, documento_compra_id || null, fecha, monto, glosa || null, extraordinario ? 1 : 0]
-    );
+    try {
+      const [result] = await db.query(
+        'INSERT INTO gasto (numero, comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          numero,
+          comunidadId,
+          categoria_id,
+          centro_costo_id || null,
+          documento_compra_id || null,
+          fecha,
+          monto,
+          glosa || null,
+          extraordinario ? 1 : 0,
+        ]
+      );
 
-    const [row] = await db.query('SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1', [result.insertId]);
-    res.status(201).json(row[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      const [row] = await db.query(
+        'SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1',
+        [result.insertId]
+      );
+      res.status(201).json(row[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -355,7 +413,8 @@ router.get('/:id', authenticate, async (req, res) => {
   const id = req.params.id;
 
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         g.id,
         g.comunidad_id,
@@ -399,7 +458,9 @@ router.get('/:id', authenticate, async (req, res) => {
       LEFT JOIN proveedor p ON dc.proveedor_id = p.id
       WHERE g.id = ?
       LIMIT 1
-    `, [id]);
+    `,
+      [id]
+    );
 
     if (!rows.length) return res.status(404).json({ error: 'not found' });
     res.json(rows[0]);
@@ -431,7 +492,8 @@ router.get('/:id/archivos', authenticate, async (req, res) => {
   const id = req.params.id;
 
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         a.id,
         a.original_name,
@@ -451,7 +513,9 @@ router.get('/:id/archivos', authenticate, async (req, res) => {
         AND a.entity_id = ?
         AND a.is_active = 1
       ORDER BY a.uploaded_at DESC
-    `, [id]);
+    `,
+      [id]
+    );
 
     res.json(rows);
   } catch (err) {
@@ -478,32 +542,51 @@ router.get('/:id/archivos', authenticate, async (req, res) => {
  *       200:
  *         description: Gasto actualizado
  */
-router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  const id = req.params.id;
-  const fields = ['categoria_id', 'centro_costo_id', 'documento_compra_id', 'fecha', 'monto', 'glosa', 'extraordinario'];
-  const updates = [];
-  const values = [];
+router.patch(
+  '/:id',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    const id = req.params.id;
+    const fields = [
+      'categoria_id',
+      'centro_costo_id',
+      'documento_compra_id',
+      'fecha',
+      'monto',
+      'glosa',
+      'extraordinario',
+    ];
+    const updates = [];
+    const values = [];
 
-  fields.forEach(f => {
-    if (req.body[f] !== undefined) {
-      updates.push(`${f} = ?`);
-      values.push(req.body[f]);
+    fields.forEach((f) => {
+      if (req.body[f] !== undefined) {
+        updates.push(`${f} = ?`);
+        values.push(req.body[f]);
+      }
+    });
+
+    if (!updates.length) return res.status(400).json({ error: 'no fields' });
+
+    values.push(id);
+
+    try {
+      await db.query(
+        `UPDATE gasto SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+      const [rows] = await db.query(
+        'SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1',
+        [id]
+      );
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
     }
-  });
-
-  if (!updates.length) return res.status(400).json({ error: 'no fields' });
-
-  values.push(id);
-
-  try {
-    await db.query(`UPDATE gasto SET ${updates.join(', ')} WHERE id = ?`, values);
-    const [rows] = await db.query('SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1', [id]);
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
   }
-});
+);
 
 /**
  * @swagger
@@ -523,17 +606,22 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req,
  *       204:
  *         description: Eliminado
  */
-router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
-  const id = req.params.id;
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('superadmin', 'admin'),
+  async (req, res) => {
+    const id = req.params.id;
 
-  try {
-    await db.query('DELETE FROM gasto WHERE id = ?', [id]);
-    res.status(204).end();
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+    try {
+      await db.query('DELETE FROM gasto WHERE id = ?', [id]);
+      res.status(204).end();
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // ==================== ESTADÍSTICAS ====================
 
@@ -563,20 +651,25 @@ router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req
  *       200:
  *         description: Estadísticas generales
  */
-router.get('/estadisticas/general/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+router.get(
+  '/estadisticas/general/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const { fecha_desde = '', fecha_hasta = '' } = req.query;
 
-  try {
-    let whereFecha = '';
-    const params = [comunidadId];
+    try {
+      let whereFecha = '';
+      const params = [comunidadId];
 
-    if (fecha_desde && fecha_hasta) {
-      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_desde, fecha_hasta);
-    }
+      if (fecha_desde && fecha_hasta) {
+        whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_desde, fecha_hasta);
+      }
 
-    const [[row]] = await db.query(`
+      const [[row]] = await db.query(
+        `
       SELECT
         COUNT(*) AS total_gastos,
         SUM(monto) AS total_monto,
@@ -588,14 +681,17 @@ router.get('/estadisticas/general/:comunidadId', authenticate, requireCommunity(
       FROM gasto
       WHERE comunidad_id = ?
         ${whereFecha}
-    `, params);
+    `,
+        params
+      );
 
-    res.json(row);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(row);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -615,20 +711,25 @@ router.get('/estadisticas/general/:comunidadId', authenticate, requireCommunity(
  *       200:
  *         description: Gastos por categoría
  */
-router.get('/estadisticas/por-categoria/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+router.get(
+  '/estadisticas/por-categoria/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const { fecha_desde = '', fecha_hasta = '' } = req.query;
 
-  try {
-    let whereFecha = '';
-    const params = [comunidadId];
+    try {
+      let whereFecha = '';
+      const params = [comunidadId];
 
-    if (fecha_desde && fecha_hasta) {
-      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_desde, fecha_hasta);
-    }
+      if (fecha_desde && fecha_hasta) {
+        whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_desde, fecha_hasta);
+      }
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT
         cat.nombre AS categoria,
         cat.tipo,
@@ -643,14 +744,17 @@ router.get('/estadisticas/por-categoria/:comunidadId', authenticate, requireComm
         ${whereFecha}
       GROUP BY cat.id, cat.nombre, cat.tipo
       ORDER BY total_monto DESC
-    `, params);
+    `,
+        params
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -670,20 +774,25 @@ router.get('/estadisticas/por-categoria/:comunidadId', authenticate, requireComm
  *       200:
  *         description: Gastos por centro de costo
  */
-router.get('/estadisticas/por-centro-costo/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+router.get(
+  '/estadisticas/por-centro-costo/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const { fecha_desde = '', fecha_hasta = '' } = req.query;
 
-  try {
-    let whereFecha = '';
-    const params = [comunidadId];
+    try {
+      let whereFecha = '';
+      const params = [comunidadId];
 
-    if (fecha_desde && fecha_hasta) {
-      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_desde, fecha_hasta);
-    }
+      if (fecha_desde && fecha_hasta) {
+        whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_desde, fecha_hasta);
+      }
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT
         cc.nombre AS centro_costo,
         cc.codigo,
@@ -696,14 +805,17 @@ router.get('/estadisticas/por-centro-costo/:comunidadId', authenticate, requireC
         ${whereFecha}
       GROUP BY cc.id, cc.nombre, cc.codigo
       ORDER BY total_monto DESC
-    `, params);
+    `,
+        params
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -723,20 +835,25 @@ router.get('/estadisticas/por-centro-costo/:comunidadId', authenticate, requireC
  *       200:
  *         description: Gastos por proveedor
  */
-router.get('/estadisticas/por-proveedor/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+router.get(
+  '/estadisticas/por-proveedor/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const { fecha_desde = '', fecha_hasta = '' } = req.query;
 
-  try {
-    let whereFecha = '';
-    const params = [comunidadId];
+    try {
+      let whereFecha = '';
+      const params = [comunidadId];
 
-    if (fecha_desde && fecha_hasta) {
-      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_desde, fecha_hasta);
-    }
+      if (fecha_desde && fecha_hasta) {
+        whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_desde, fecha_hasta);
+      }
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT
         p.razon_social AS proveedor,
         p.rut,
@@ -751,14 +868,17 @@ router.get('/estadisticas/por-proveedor/:comunidadId', authenticate, requireComm
         ${whereFecha}
       GROUP BY p.id, p.razon_social, p.rut
       ORDER BY total_monto DESC
-    `, params);
+    `,
+        params
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -778,11 +898,16 @@ router.get('/estadisticas/por-proveedor/:comunidadId', authenticate, requireComm
  *       200:
  *         description: Gastos mensuales
  */
-router.get('/estadisticas/mensuales/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/estadisticas/mensuales/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
 
-  try {
-    const [rows] = await db.query(`
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         DATE_FORMAT(fecha, '%Y-%m') AS mes,
         COUNT(*) AS cantidad_gastos,
@@ -793,14 +918,17 @@ router.get('/estadisticas/mensuales/:comunidadId', authenticate, requireCommunit
         AND fecha >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
       GROUP BY DATE_FORMAT(fecha, '%Y-%m')
       ORDER BY mes DESC
-    `, [comunidadId]);
+    `,
+        [comunidadId]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -820,20 +948,25 @@ router.get('/estadisticas/mensuales/:comunidadId', authenticate, requireCommunit
  *       200:
  *         description: Comparación de gastos
  */
-router.get('/estadisticas/extraordinarios-vs-operativos/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+router.get(
+  '/estadisticas/extraordinarios-vs-operativos/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const { fecha_desde = '', fecha_hasta = '' } = req.query;
 
-  try {
-    let whereFecha = '';
-    const params = [comunidadId, comunidadId];
+    try {
+      let whereFecha = '';
+      const params = [comunidadId, comunidadId];
 
-    if (fecha_desde && fecha_hasta) {
-      whereFecha = 'AND fecha BETWEEN ? AND ?';
-      params.push(fecha_desde, fecha_hasta);
-    }
+      if (fecha_desde && fecha_hasta) {
+        whereFecha = 'AND fecha BETWEEN ? AND ?';
+        params.push(fecha_desde, fecha_hasta);
+      }
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT
         CASE
           WHEN extraordinario = 1 THEN 'Extraordinarios'
@@ -847,14 +980,17 @@ router.get('/estadisticas/extraordinarios-vs-operativos/:comunidadId', authentic
       WHERE comunidad_id = ?
         ${whereFecha}
       GROUP BY extraordinario
-    `, params);
+    `,
+        params
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // ==================== VALIDACIONES ====================
 
@@ -886,7 +1022,10 @@ router.get('/validar/existe/:id', authenticate, async (req, res) => {
   const { comunidad_id } = req.query;
 
   try {
-    const [[row]] = await db.query('SELECT COUNT(*) > 0 AS existe FROM gasto WHERE id = ? AND comunidad_id = ?', [id, comunidad_id]);
+    const [[row]] = await db.query(
+      'SELECT COUNT(*) > 0 AS existe FROM gasto WHERE id = ? AND comunidad_id = ?',
+      [id, comunidad_id]
+    );
     res.json(row);
   } catch (err) {
     console.error(err);
@@ -917,7 +1056,10 @@ router.get('/validar/categoria/:id', authenticate, async (req, res) => {
   const { comunidad_id } = req.query;
 
   try {
-    const [[row]] = await db.query('SELECT COUNT(*) > 0 AS existe FROM categoria_gasto WHERE id = ? AND comunidad_id = ? AND activa = 1', [id, comunidad_id]);
+    const [[row]] = await db.query(
+      'SELECT COUNT(*) > 0 AS existe FROM categoria_gasto WHERE id = ? AND comunidad_id = ? AND activa = 1',
+      [id, comunidad_id]
+    );
     res.json(row);
   } catch (err) {
     console.error(err);
@@ -961,7 +1103,8 @@ router.get('/validar/duplicado', authenticate, async (req, res) => {
   const { comunidad_id, folio, fecha, gasto_id = 0 } = req.query;
 
   try {
-    const [[row]] = await db.query(`
+    const [[row]] = await db.query(
+      `
       SELECT COUNT(*) > 0 AS existe_duplicado
       FROM gasto g
       INNER JOIN documento_compra dc ON g.documento_compra_id = dc.id
@@ -969,7 +1112,9 @@ router.get('/validar/duplicado', authenticate, async (req, res) => {
         AND dc.folio = ?
         AND g.fecha = ?
         AND g.id != ?
-    `, [comunidad_id, folio, fecha, gasto_id]);
+    `,
+      [comunidad_id, folio, fecha, gasto_id]
+    );
 
     res.json(row);
   } catch (err) {
@@ -998,11 +1143,16 @@ router.get('/validar/duplicado', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de categorías
  */
-router.get('/listas/categorias/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/listas/categorias/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
 
-  try {
-    const [rows] = await db.query(`
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         id,
         nombre,
@@ -1011,14 +1161,17 @@ router.get('/listas/categorias/:comunidadId', authenticate, requireCommunity('co
       FROM categoria_gasto
       WHERE comunidad_id = ? AND activa = 1
       ORDER BY nombre
-    `, [comunidadId]);
+    `,
+        [comunidadId]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1038,11 +1191,16 @@ router.get('/listas/categorias/:comunidadId', authenticate, requireCommunity('co
  *       200:
  *         description: Lista de centros de costo
  */
-router.get('/listas/centros-costo/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/listas/centros-costo/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
 
-  try {
-    const [rows] = await db.query(`
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         id,
         nombre,
@@ -1050,14 +1208,17 @@ router.get('/listas/centros-costo/:comunidadId', authenticate, requireCommunity(
       FROM centro_costo
       WHERE comunidad_id = ?
       ORDER BY nombre
-    `, [comunidadId]);
+    `,
+        [comunidadId]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1077,11 +1238,16 @@ router.get('/listas/centros-costo/:comunidadId', authenticate, requireCommunity(
  *       200:
  *         description: Lista de proveedores
  */
-router.get('/listas/proveedores/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/listas/proveedores/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
 
-  try {
-    const [rows] = await db.query(`
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         id,
         razon_social,
@@ -1090,14 +1256,17 @@ router.get('/listas/proveedores/:comunidadId', authenticate, requireCommunity('c
       FROM proveedor
       WHERE comunidad_id = ? AND activo = 1
       ORDER BY razon_social
-    `, [comunidadId]);
+    `,
+        [comunidadId]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1117,11 +1286,16 @@ router.get('/listas/proveedores/:comunidadId', authenticate, requireCommunity('c
  *       200:
  *         description: Lista de documentos disponibles
  */
-router.get('/listas/documentos-disponibles/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/listas/documentos-disponibles/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
 
-  try {
-    const [rows] = await db.query(`
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         dc.id,
         dc.tipo_doc,
@@ -1139,14 +1313,17 @@ router.get('/listas/documentos-disponibles/:comunidadId', authenticate, requireC
             AND comunidad_id = ?
         )
       ORDER BY dc.fecha_emision DESC
-    `, [comunidadId, comunidadId]);
+    `,
+        [comunidadId, comunidadId]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // ==================== REPORTES AVANZADOS ====================
 
@@ -1168,16 +1345,23 @@ router.get('/listas/documentos-disponibles/:comunidadId', authenticate, requireC
  *       200:
  *         description: Reporte con comparativo
  */
-router.get('/reportes/periodo-comparativo/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+router.get(
+  '/reportes/periodo-comparativo/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const { fecha_desde = '', fecha_hasta = '' } = req.query;
 
-  if (!fecha_desde || !fecha_hasta) {
-    return res.status(400).json({ error: 'fecha_desde y fecha_hasta son requeridos' });
-  }
+    if (!fecha_desde || !fecha_hasta) {
+      return res
+        .status(400)
+        .json({ error: 'fecha_desde y fecha_hasta son requeridos' });
+    }
 
-  try {
-    const [rows] = await db.query(`
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         YEAR(fecha) AS anio,
         MONTH(fecha) AS mes,
@@ -1196,14 +1380,17 @@ router.get('/reportes/periodo-comparativo/:comunidadId', authenticate, requireCo
         AND fecha BETWEEN ? AND ?
       GROUP BY YEAR(fecha), MONTH(fecha)
       ORDER BY anio DESC, mes DESC
-    `, [comunidadId, fecha_desde, fecha_hasta]);
+    `,
+        [comunidadId, fecha_desde, fecha_hasta]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1233,22 +1420,32 @@ router.get('/reportes/periodo-comparativo/:comunidadId', authenticate, requireCo
  *       200:
  *         description: Top proveedores
  */
-router.get('/reportes/top-proveedores/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const { fecha_desde = '', fecha_hasta = '', min_compras = 1, limit = 10 } = req.query;
+router.get(
+  '/reportes/top-proveedores/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const {
+      fecha_desde = '',
+      fecha_hasta = '',
+      min_compras = 1,
+      limit = 10,
+    } = req.query;
 
-  try {
-    let whereFecha = '';
-    const params = [comunidadId];
+    try {
+      let whereFecha = '';
+      const params = [comunidadId];
 
-    if (fecha_desde && fecha_hasta) {
-      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_desde, fecha_hasta);
-    }
+      if (fecha_desde && fecha_hasta) {
+        whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_desde, fecha_hasta);
+      }
 
-    params.push(min_compras, Number(limit));
+      params.push(min_compras, Number(limit));
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT
         p.razon_social AS proveedor,
         p.rut,
@@ -1267,14 +1464,17 @@ router.get('/reportes/top-proveedores/:comunidadId', authenticate, requireCommun
       HAVING COUNT(g.id) >= ?
       ORDER BY total_comprado DESC
       LIMIT ?
-    `, params);
+    `,
+        params
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1294,20 +1494,25 @@ router.get('/reportes/top-proveedores/:comunidadId', authenticate, requireCommun
  *       200:
  *         description: Gastos por día de semana
  */
-router.get('/reportes/por-dia-semana/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+router.get(
+  '/reportes/por-dia-semana/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const { fecha_desde = '', fecha_hasta = '' } = req.query;
 
-  try {
-    let whereFecha = '';
-    const params = [comunidadId];
+    try {
+      let whereFecha = '';
+      const params = [comunidadId];
 
-    if (fecha_desde && fecha_hasta) {
-      whereFecha = 'AND fecha BETWEEN ? AND ?';
-      params.push(fecha_desde, fecha_hasta);
-    }
+      if (fecha_desde && fecha_hasta) {
+        whereFecha = 'AND fecha BETWEEN ? AND ?';
+        params.push(fecha_desde, fecha_hasta);
+      }
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT
         DAYOFWEEK(fecha) AS dia_semana_num,
         CASE DAYOFWEEK(fecha)
@@ -1336,14 +1541,17 @@ router.get('/reportes/por-dia-semana/:comunidadId', authenticate, requireCommuni
           WHEN 7 THEN 'Sábado'
         END
       ORDER BY dia_semana_num
-    `, params);
+    `,
+        params
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // ==================== EXPORTACIÓN ====================
 
@@ -1365,20 +1573,25 @@ router.get('/reportes/por-dia-semana/:comunidadId', authenticate, requireCommuni
  *       200:
  *         description: Datos para exportación
  */
-router.get('/exportar/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const { fecha_desde = '', fecha_hasta = '' } = req.query;
+router.get(
+  '/exportar/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const { fecha_desde = '', fecha_hasta = '' } = req.query;
 
-  try {
-    let whereFecha = '';
-    const params = [comunidadId];
+    try {
+      let whereFecha = '';
+      const params = [comunidadId];
 
-    if (fecha_desde && fecha_hasta) {
-      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_desde, fecha_hasta);
-    }
+      if (fecha_desde && fecha_hasta) {
+        whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_desde, fecha_hasta);
+      }
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT
         g.id AS 'ID Gasto',
         c.razon_social AS 'Comunidad',
@@ -1408,14 +1621,17 @@ router.get('/exportar/:comunidadId', authenticate, requireCommunity('comunidadId
         ${whereFecha}
       GROUP BY g.id
       ORDER BY g.fecha DESC, g.id DESC
-    `, params);
+    `,
+        params
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // ==================== DASHBOARD ====================
 
@@ -1442,12 +1658,17 @@ router.get('/exportar/:comunidadId', authenticate, requireCommunity('comunidadId
  *       200:
  *         description: Resumen mensual
  */
-router.get('/dashboard/resumen-mensual/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const { meses = 6 } = req.query;
+router.get(
+  '/dashboard/resumen-mensual/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const { meses = 6 } = req.query;
 
-  try {
-    const [rows] = await db.query(`
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         DATE_FORMAT(fecha, '%Y-%m') AS periodo,
         COUNT(*) AS total_gastos,
@@ -1460,14 +1681,17 @@ router.get('/dashboard/resumen-mensual/:comunidadId', authenticate, requireCommu
         AND fecha >= DATE_SUB(CURRENT_DATE, INTERVAL ? MONTH)
       GROUP BY DATE_FORMAT(fecha, '%Y-%m')
       ORDER BY periodo DESC
-    `, [comunidadId, Number(meses)]);
+    `,
+        [comunidadId, Number(meses)]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1487,11 +1711,16 @@ router.get('/dashboard/resumen-mensual/:comunidadId', authenticate, requireCommu
  *       200:
  *         description: Top categorías
  */
-router.get('/dashboard/top-categorias-mes/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/dashboard/top-categorias-mes/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
 
-  try {
-    const [rows] = await db.query(`
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         cat.nombre AS categoria,
         COUNT(g.id) AS cantidad,
@@ -1504,14 +1733,17 @@ router.get('/dashboard/top-categorias-mes/:comunidadId', authenticate, requireCo
       GROUP BY cat.id, cat.nombre
       ORDER BY total DESC
       LIMIT 5
-    `, [comunidadId]);
+    `,
+        [comunidadId]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1536,16 +1768,21 @@ router.get('/dashboard/top-categorias-mes/:comunidadId', authenticate, requireCo
  *       200:
  *         description: Lista de gastos altos
  */
-router.get('/dashboard/alertas-gastos-altos/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const { monto_minimo } = req.query;
+router.get(
+  '/dashboard/alertas-gastos-altos/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const { monto_minimo } = req.query;
 
-  if (!monto_minimo) {
-    return res.status(400).json({ error: 'monto_minimo required' });
-  }
+    if (!monto_minimo) {
+      return res.status(400).json({ error: 'monto_minimo required' });
+    }
 
-  try {
-    const [rows] = await db.query(`
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         g.id,
         g.fecha,
@@ -1561,81 +1798,106 @@ router.get('/dashboard/alertas-gastos-altos/:comunidadId', authenticate, require
         AND g.fecha >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
         AND g.monto > ?
       ORDER BY g.monto DESC
-    `, [comunidadId, monto_minimo]);
+    `,
+        [comunidadId, monto_minimo]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * GET /gastos
  * Lista gastos en modo global (superadmin) o filtrado por comunidades asignadas (otros roles).
  * Acepta mismos filtros que /comunidad/:comunidadId
  */
-router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conserje', 'contador', 'proveedor_servicio', 'residente', 'propietario', 'inquilino', 'tesorero', 'presidente_comite'), async (req, res) => {
-  const {
-    page = 1,
-    limit = 100,
-    categoria = '',
-    proveedor = '',
-    fecha_desde = '',
-    fecha_hasta = '',
-    monto_min = 0,
-    monto_max = 0,
-    categoria_id = 0,
-    centro_costo_id = 0,
-    extraordinario = -1,
-    comunidad_id = 0 // opcional: filtrar por comunidad si se pasa
-  } = req.query;
+router.get(
+  '/',
+  authenticate,
+  authorize(
+    'superadmin',
+    'admin_comunidad',
+    'conserje',
+    'contador',
+    'proveedor_servicio',
+    'residente',
+    'propietario',
+    'inquilino',
+    'tesorero',
+    'presidente_comite'
+  ),
+  async (req, res) => {
+    const {
+      page = 1,
+      limit = 100,
+      categoria = '',
+      proveedor = '',
+      fecha_desde = '',
+      fecha_hasta = '',
+      monto_min = 0,
+      monto_max = 0,
+      categoria_id = 0,
+      centro_costo_id = 0,
+      extraordinario = -1,
+      comunidad_id = 0, // opcional: filtrar por comunidad si se pasa
+    } = req.query;
 
-  const offset = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
-  try {
-    // Construir cláusulas WHERE dinámicas
-    let whereFecha = '';
-    let whereMonto = '';
-    let whereComunidad = '';
-    const params = [];
+    try {
+      // Construir cláusulas WHERE dinámicas
+      let whereFecha = '';
+      let whereMonto = '';
+      let whereComunidad = '';
+      const params = [];
 
-    if (fecha_desde && fecha_hasta) {
-      whereFecha = 'AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_desde, fecha_hasta);
-    }
-
-    if (monto_min > 0 && monto_max > 0) {
-      whereMonto = 'AND g.monto BETWEEN ? AND ?';
-      params.push(Number(monto_min), Number(monto_max));
-    }
-
-    // Si es superadmin, ve todo; si no, filtra por comunidades asignadas
-    if (req.user.is_superadmin) {
-      if (comunidad_id && Number(comunidad_id) > 0) {
-        whereComunidad = 'AND g.comunidad_id = ?';
-        params.push(Number(comunidad_id));
+      if (fecha_desde && fecha_hasta) {
+        whereFecha = 'AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_desde, fecha_hasta);
       }
-    } else {
-      // Filtrar por comunidades asignadas
-      whereComunidad = `AND g.comunidad_id IN (
+
+      if (monto_min > 0 && monto_max > 0) {
+        whereMonto = 'AND g.monto BETWEEN ? AND ?';
+        params.push(Number(monto_min), Number(monto_max));
+      }
+
+      // Si es superadmin, ve todo; si no, filtra por comunidades asignadas
+      if (req.user.is_superadmin) {
+        if (comunidad_id && Number(comunidad_id) > 0) {
+          whereComunidad = 'AND g.comunidad_id = ?';
+          params.push(Number(comunidad_id));
+        }
+      } else {
+        // Filtrar por comunidades asignadas
+        whereComunidad = `AND g.comunidad_id IN (
         SELECT umc.comunidad_id
         FROM usuario_miembro_comunidad umc
         WHERE umc.persona_id = ? AND umc.activo = 1 AND (umc.hasta IS NULL OR umc.hasta > CURDATE())
       )`;
-      params.push(req.user.persona_id);
-    }
+        params.push(req.user.persona_id);
+      }
 
-    params.push(
-      categoria, categoria,
-      proveedor, proveedor,
-      categoria_id, categoria_id,
-      centro_costo_id, centro_costo_id,
-      extraordinario, extraordinario,
-      Number(limit), Number(offset)
-    );
+      params.push(
+        categoria,
+        categoria,
+        proveedor,
+        proveedor,
+        categoria_id,
+        categoria_id,
+        centro_costo_id,
+        centro_costo_id,
+        extraordinario,
+        extraordinario,
+        Number(limit),
+        Number(offset)
+      );
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT
         g.id,
         g.fecha,
@@ -1675,19 +1937,23 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
       GROUP BY g.id
       ORDER BY g.fecha DESC, g.created_at DESC
       LIMIT ? OFFSET ?
-    `, params);
+    `,
+        params
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // Mantener sólo este handler (versión corregida)
 router.get('/:id/aprobaciones', authenticate, async (req, res) => {
   const gastoId = Number(req.params.id);
-  if (Number.isNaN(gastoId)) return res.status(400).json({ error: 'gasto id inválido' });
+  if (Number.isNaN(gastoId))
+    return res.status(400).json({ error: 'gasto id inválido' });
 
   try {
     const sql = `
@@ -1715,9 +1981,11 @@ router.get('/:id/aprobaciones', authenticate, async (req, res) => {
       gastoId,
       message: err.message,
       sqlMessage: err.sqlMessage || null,
-      stack: err.stack
+      stack: err.stack,
     });
-    return res.status(500).json({ error: 'Error interno al obtener aprobaciones' });
+    return res
+      .status(500)
+      .json({ error: 'Error interno al obtener aprobaciones' });
   }
 });
 
@@ -1762,35 +2030,62 @@ router.get('/:id/aprobaciones', authenticate, async (req, res) => {
  *       201:
  *         description: Gasto creado
  */
-router.post('/', [
-  authenticate,
-  authorize('superadmin'), // Solo superadmin
-  body('categoria_id').isInt(),
-  body('fecha').notEmpty(),
-  body('monto').isNumeric()
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+router.post(
+  '/',
+  [
+    authenticate,
+    authorize('superadmin'), // Solo superadmin
+    body('categoria_id').isInt(),
+    body('fecha').notEmpty(),
+    body('monto').isNumeric(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
 
-  const { comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario } = req.body;
-  const comunidadId = comunidad_id || null;
+    const {
+      comunidad_id,
+      categoria_id,
+      centro_costo_id,
+      documento_compra_id,
+      fecha,
+      monto,
+      glosa,
+      extraordinario,
+    } = req.body;
+    const comunidadId = comunidad_id || null;
 
-  // Generar numero único (si comunidadId es null, usar 'GLOBAL')
-  const numero = `GG${Date.now()}`;
+    // Generar numero único (si comunidadId es null, usar 'GLOBAL')
+    const numero = `GG${Date.now()}`;
 
-  try {
-    const [result] = await db.query(
-      'INSERT INTO gasto (numero, comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [numero, comunidadId, categoria_id, centro_costo_id || null, documento_compra_id || null, fecha, monto, glosa || null, extraordinario ? 1 : 0]
-    );
+    try {
+      const [result] = await db.query(
+        'INSERT INTO gasto (numero, comunidad_id, categoria_id, centro_costo_id, documento_compra_id, fecha, monto, glosa, extraordinario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          numero,
+          comunidadId,
+          categoria_id,
+          centro_costo_id || null,
+          documento_compra_id || null,
+          fecha,
+          monto,
+          glosa || null,
+          extraordinario ? 1 : 0,
+        ]
+      );
 
-    const [row] = await db.query('SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1', [result.insertId]);
-    res.status(201).json(row[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      const [row] = await db.query(
+        'SELECT id, categoria_id, fecha, monto FROM gasto WHERE id = ? LIMIT 1',
+        [result.insertId]
+      );
+      res.status(201).json(row[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1824,62 +2119,96 @@ router.post('/', [
  *       201:
  *         description: Aprobación creada
  */
-router.post('/:id/aprobaciones', [
-  authenticate,
-  authorize('admin', 'admin_comunidad', 'contador', 'tesorero', 'presidente_comite'), // Roles que pueden aprobar
-  body('accion').isIn(['aprobar', 'rechazar']),
-  body('observaciones').optional().isString()
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+router.post(
+  '/:id/aprobaciones',
+  [
+    authenticate,
+    authorize(
+      'admin',
+      'admin_comunidad',
+      'contador',
+      'tesorero',
+      'presidente_comite'
+    ), // Roles que pueden aprobar
+    body('accion').isIn(['aprobar', 'rechazar']),
+    body('observaciones').optional().isString(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
 
-  const gastoId = Number(req.params.id);
-  const { accion, observaciones } = req.body;
-  const usuarioId = req.user.persona_id; // 5 (referencia persona.id)
+    const gastoId = Number(req.params.id);
+    const { accion, observaciones } = req.body;
+    const usuarioId = req.user.persona_id; // 5 (referencia persona.id)
 
-  // Obtener rol_id del rol del usuario en la comunidad del gasto
-  const rolNombre = req.user.memberships.find(m => m.comunidadId === gasto.comunidad_id)?.rol || req.user.roles[0];
-  const [[rolRow]] = await db.query('SELECT id FROM rol_sistema WHERE nombre = ?', [rolNombre]);
-  const rolId = rolRow?.id || 1; // Fallback a 1 si no encuentra
+    if (Number.isNaN(gastoId))
+      return res.status(400).json({ error: 'gasto id inválido' });
 
-  if (Number.isNaN(gastoId)) return res.status(400).json({ error: 'gasto id inválido' });
+    try {
+      // Verificar que el gasto existe y pertenece a una comunidad accesible
+      const [[gasto]] = await db.query(
+        'SELECT id, comunidad_id FROM gasto WHERE id = ?',
+        [gastoId]
+      );
+      if (!gasto) return res.status(404).json({ error: 'gasto no encontrado' });
 
-  try {
-    // Verificar que el gasto existe y pertenece a una comunidad accesible
-    const [[gasto]] = await db.query('SELECT id, comunidad_id FROM gasto WHERE id = ?', [gastoId]);
-    if (!gasto) return res.status(404).json({ error: 'gasto no encontrado' });
+      // Obtener rol_id del rol del usuario en la comunidad del gasto
+      const rolNombre =
+        req.user.memberships.find((m) => m.comunidadId === gasto.comunidad_id)
+          ?.rol || req.user.roles[0];
+      const [[rolRow]] = await db.query(
+        'SELECT id FROM rol_sistema WHERE nombre = ?',
+        [rolNombre]
+      );
+      const rolId = rolRow?.id || 1; // Fallback a 1 si no encuentra
 
-    // Verificar permisos por comunidad (opcional, si no lo hace authorize)
-    // ... (agregar lógica si es necesario)
+      // Verificar permisos por comunidad (opcional, si no lo hace authorize)
+      // ... (agregar lógica si es necesario)
 
-    // Verificar que no haya aprobación previa del mismo usuario/rol
-    const [[existing]] = await db.query(
-      'SELECT id FROM gasto_aprobacion WHERE gasto_id = ? AND usuario_id = ? AND rol_id = ?',
-      [gastoId, usuarioId, rolId]
-    );
-    if (existing) return res.status(400).json({ error: 'ya has aprobado/rechazado este gasto' });
+      // Verificar que no haya aprobación previa del mismo usuario/rol
+      const [[existing]] = await db.query(
+        'SELECT id FROM gasto_aprobacion WHERE gasto_id = ? AND usuario_id = ? AND rol_id = ?',
+        [gastoId, usuarioId, rolId]
+      );
+      if (existing)
+        return res
+          .status(400)
+          .json({ error: 'ya has aprobado/rechazado este gasto' });
 
-    // Insertar aprobación
-    const [result] = await db.query(
-      'INSERT INTO gasto_aprobacion (gasto_id, usuario_id, rol_id, accion, observaciones) VALUES (?, ?, ?, ?, ?)',
-      [gastoId, usuarioId, rolId, accion, observaciones || null]
-    );
+      // Insertar aprobación
+      const [result] = await db.query(
+        'INSERT INTO gasto_aprobacion (gasto_id, usuario_id, rol_id, accion, observaciones) VALUES (?, ?, ?, ?, ?)',
+        [gastoId, usuarioId, rolId, accion, observaciones || null]
+      );
 
-    // Incrementar aprobaciones_count
-    await db.query('UPDATE gasto SET aprobaciones_count = aprobaciones_count + 1 WHERE id = ?', [gastoId]);
+      // Incrementar aprobaciones_count
+      await db.query(
+        'UPDATE gasto SET aprobaciones_count = aprobaciones_count + 1 WHERE id = ?',
+        [gastoId]
+      );
 
-    // Verificar si alcanza el límite y actualizar estado
-    const [[gastoData]] = await db.query('SELECT required_aprobaciones, aprobaciones_count FROM gasto WHERE id = ?', [gastoId]);
-    if (gastoData.aprobaciones_count >= gastoData.required_aprobaciones) {
-      await db.query('UPDATE gasto SET estado = "aprobado", aprobado_por = ? WHERE id = ?', [usuarioId, gastoId]);
+      // Verificar si alcanza el límite y actualizar estado
+      const [[gastoData]] = await db.query(
+        'SELECT required_aprobaciones, aprobaciones_count FROM gasto WHERE id = ?',
+        [gastoId]
+      );
+      if (gastoData.aprobaciones_count >= gastoData.required_aprobaciones) {
+        await db.query(
+          'UPDATE gasto SET estado = "aprobado", aprobado_por = ? WHERE id = ?',
+          [usuarioId, gastoId]
+        );
+      }
+
+      res
+        .status(201)
+        .json({ id: result.insertId, message: 'aprobación registrada' });
+    } catch (err) {
+      console.error('Error POST /gastos/:id/aprobaciones', err);
+      res.status(500).json({ error: 'error interno al crear aprobación' });
     }
-
-    res.status(201).json({ id: result.insertId, message: 'aprobación registrada' });
-  } catch (err) {
-    console.error('Error POST /gastos/:id/aprobaciones', err);
-    res.status(500).json({ error: 'error interno al crear aprobación' });
   }
-});
+);
 
 module.exports = router;
 // =========================================
@@ -1926,7 +2255,3 @@ module.exports = router;
 // GET: /gastos/dashboard/resumen-mensual/:comunidadId
 // GET: /gastos/dashboard/top-categorias-mes/:comunidadId
 // GET: /gastos/dashboard/alertas-gastos-altos/:comunidadId
-
-
-
-

@@ -9,13 +9,13 @@ const { categorizeResponse, getWithAuth } = require('./helpers');
 describe('Cargos Health Check', () => {
   let authToken;
   let comunidadId;
-  let cargoId; 
+  let cargoId;
   let unidadId; // Añadido para prueba de unidad
 
   beforeAll(() => {
     authToken = getAuthToken();
     comunidadId = testIds.comunidadId;
-    cargoId = testIds.cargoId; 
+    cargoId = testIds.cargoId;
     unidadId = testIds.unidadId;
   });
 
@@ -36,21 +36,21 @@ describe('Cargos Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /cargos/:id/detalle (Detalle de Partidas)', async () => {
       const endpoint = `/cargos/${cargoId}/detalle`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /cargos/:id/pagos (Pagos Aplicados)', async () => {
       const endpoint = `/cargos/${cargoId}/pagos`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /cargos/:id/historial-pagos (Historial Completo de Pagos)', async () => {
       const endpoint = `/cargos/${cargoId}/historial-pagos`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -70,7 +70,7 @@ describe('Cargos Health Check', () => {
       expect([200, 401, 404, 500]).toContain(response.status);
     });
   });
-  
+
   // =========================================
   // 3. Estadísticas y Reportes
   // =========================================
@@ -89,42 +89,42 @@ describe('Cargos Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /cargos/comunidad/:comunidadId/vencidos', async () => {
       const endpoint = `/cargos/comunidad/${comunidadId}/vencidos`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /cargos/comunidad/:comunidadId/con-interes', async () => {
       const endpoint = `/cargos/comunidad/${comunidadId}/con-interes`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /cargos/comunidad/:comunidadId/por-estado', async () => {
       const endpoint = `/cargos/comunidad/${comunidadId}/por-estado`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /cargos/comunidad/:comunidadId/resumen-pagos', async () => {
       const endpoint = `/cargos/comunidad/${comunidadId}/resumen-pagos`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /cargos/comunidad/:comunidadId/por-categoria', async () => {
       const endpoint = `/cargos/comunidad/${comunidadId}/por-categoria`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /cargos/comunidad/:comunidadId/validacion', async () => {
       const endpoint = `/cargos/comunidad/${comunidadId}/validacion`;
       const response = await getWithAuth(app, endpoint, authToken);

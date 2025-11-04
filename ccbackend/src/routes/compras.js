@@ -88,7 +88,14 @@ const { authenticate } = require('../middleware/auth');
 
 router.get('/', authenticate, async (req, res) => {
   try {
-    const { page = 1, limit = 20, search = '', tipo_doc, fecha_desde, fecha_hasta } = req.query;
+    const {
+      page = 1,
+      limit = 20,
+      search = '',
+      tipo_doc,
+      fecha_desde,
+      fecha_hasta,
+    } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
     const params = [];
     let where = ' WHERE 1=1 ';
@@ -116,11 +123,21 @@ router.get('/', authenticate, async (req, res) => {
          WHERE persona_id = ? AND activo = 1 AND (hasta IS NULL OR hasta > CURDATE())`,
         [req.user.persona_id]
       );
-      const comunidadIds = comRows.map(r => r.comunidad_id);
+      const comunidadIds = comRows.map((r) => r.comunidad_id);
       if (!comunidadIds.length) {
-        return res.json({ data: [], pagination: { total: 0, page: Number(page), limit: Number(limit), pages: 0 } });
+        return res.json({
+          data: [],
+          pagination: {
+            total: 0,
+            page: Number(page),
+            limit: Number(limit),
+            pages: 0,
+          },
+        });
       }
-      where += ` AND vc.comunidad_id IN (${comunidadIds.map(() => '?').join(',')})`;
+      where += ` AND vc.comunidad_id IN (${comunidadIds
+        .map(() => '?')
+        .join(',')})`;
       params.push(...comunidadIds);
     } else if (req.query.comunidad_id) {
       where += ' AND vc.comunidad_id = ?';
@@ -142,7 +159,15 @@ router.get('/', authenticate, async (req, res) => {
     const [countRes] = await db.query(countQuery, countParams);
     const total = countRes[0]?.total ?? rows.length;
 
-    res.json({ data: rows, pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / limit) } });
+    res.json({
+      data: rows,
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (err) {
     console.error('Error GET /compras:', err);
     res.status(500).json({ error: 'Error al listar compras' });
@@ -150,7 +175,3 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 module.exports = router;
-
-
-
-

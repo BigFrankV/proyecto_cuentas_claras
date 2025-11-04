@@ -10,12 +10,12 @@ const { categorizeResponse, getWithAuth } = require('./helpers');
 describe('Tarifas Consumo Health Check', () => {
   let authToken;
   let comunidadId;
-  let tarifaId; 
+  let tarifaId;
 
   beforeAll(() => {
     authToken = getAuthToken();
     comunidadId = testIds.comunidadId;
-    tarifaId = testIds.tarifaId; 
+    tarifaId = testIds.tarifaId;
   });
 
   // =========================================
@@ -56,7 +56,7 @@ describe('Tarifas Consumo Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /tarifas-consumo/busqueda/por-rango-precio', async () => {
       const endpoint = `/tarifas-consumo/busqueda/por-rango-precio`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -75,14 +75,14 @@ describe('Tarifas Consumo Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /tarifas-consumo/estadisticas/por-servicio', async () => {
       const endpoint = `/tarifas-consumo/estadisticas/por-servicio`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /tarifas-consumo/estadisticas/precios', async () => {
       const endpoint = `/tarifas-consumo/estadisticas/precios`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -96,7 +96,7 @@ describe('Tarifas Consumo Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /tarifas-consumo/export/por-servicio', async () => {
       const endpoint = `/tarifas-consumo/export/por-servicio`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -115,7 +115,7 @@ describe('Tarifas Consumo Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /tarifas-consumo/validacion/solapamiento', async () => {
       const endpoint = `/tarifas-consumo/validacion/solapamiento`;
       const response = await getWithAuth(app, endpoint, authToken);
