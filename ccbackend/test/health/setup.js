@@ -35,7 +35,7 @@ const testIds = {
   tarifaConsumoId: 1,
   documentoCompraId: 1,
   conciliacionId: 1,
-  reservaId: 1
+  reservaId: 1,
 };
 
 // Token de autenticación
@@ -52,7 +52,7 @@ async function initializeTestSetup() {
       .post('/auth/login')
       .send({
         identifier: process.env.TEST_USER_EMAIL || 'pat.quintanilla@duocuc.cl',
-        password: process.env.TEST_USER_PASSWORD || '123456'
+        password: process.env.TEST_USER_PASSWORD || '123456',
       });
 
     if (loginResponse.status === 200 && loginResponse.body.token) {
@@ -86,7 +86,7 @@ async function initializeTestSetup() {
       { key: 'emisionId', table: 'emision_gastos_comunes' },
       { key: 'cargoId', table: 'cuenta_cobro_unidad' },
       { key: 'medidorId', table: 'medidor' },
-      { key: 'multaId', table: 'multa' }
+      { key: 'multaId', table: 'multa' },
     ];
 
     for (const query of queries) {
@@ -98,7 +98,9 @@ async function initializeTestSetup() {
 
     console.log('✅ IDs de test obtenidos de la base de datos');
   } catch (error) {
-    console.log('⚠️  No se pudieron obtener IDs de test, usando valores por defecto');
+    console.log(
+      '⚠️  No se pudieron obtener IDs de test, usando valores por defecto'
+    );
   }
 }
 
@@ -109,7 +111,7 @@ async function cleanupTestSetup() {
   // Guardar resultados temporales para el reporte final
   const { saveResultsToTemp } = require('./helpers');
   saveResultsToTemp();
-  
+
   try {
     await db.end();
   } catch (error) {
@@ -130,5 +132,5 @@ module.exports = {
   testIds,
   getAuthToken,
   initializeTestSetup,
-  cleanupTestSetup
+  cleanupTestSetup,
 };

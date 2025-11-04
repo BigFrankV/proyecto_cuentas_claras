@@ -22,40 +22,47 @@ const { requireCommunity } = require('../middleware/tenancy');
  *     tags: [Dashboard]
  *     summary: Obtener todos los KPIs principales del dashboard
  */
-router.get('/comunidad/:comunidadId/kpis', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    console.log('📊 [DASHBOARD] GET /dashboard/comunidad/{id}/kpis - Iniciando');
-    console.log('📊 [DASHBOARD] Usuario:', req.user.username);
-    
-    const comunidadId = Number(req.params.comunidadId);
-    console.log('📊 [DASHBOARD] Comunidad ID:', comunidadId);
+router.get(
+  '/comunidad/:comunidadId/kpis',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      console.log('[DASHBOARD] GET /dashboard/comunidad/{id}/kpis - Iniciando');
+      console.log('[DASHBOARD] Usuario:', req.user.username);
 
-    // Ejecutar todas las consultas en paralelo
-    const [saldoTotal, ingresosMes, gastosMes, morosidad] = await Promise.all([
-      obtenerSaldoTotal(comunidadId),
-      obtenerIngresosMes(comunidadId),
-      obtenerGastosMes(comunidadId),
-      obtenerTasaMorosidad(comunidadId)
-    ]);
-    
-    console.log('📊 [DASHBOARD] KPIs obtenidos:', {
-      saldoTotal,
-      ingresosMes,
-      gastosMes,
-      morosidad
-    });
+      const comunidadId = Number(req.params.comunidadId);
+      console.log('[DASHBOARD] Comunidad ID:', comunidadId);
 
-    res.json({
-      saldo_total: saldoTotal,
-      ingresos_mes: ingresosMes,
-      gastos_mes: gastosMes,
-      morosidad: morosidad
-    });
-  } catch (error) {
-    console.error('❌ [DASHBOARD] Error al obtener KPIs:', error);
-    res.status(500).json({ error: 'Error al obtener KPIs' });
+      // Ejecutar todas las consultas en paralelo
+      const [saldoTotal, ingresosMes, gastosMes, morosidad] = await Promise.all(
+        [
+          obtenerSaldoTotal(comunidadId),
+          obtenerIngresosMes(comunidadId),
+          obtenerGastosMes(comunidadId),
+          obtenerTasaMorosidad(comunidadId),
+        ]
+      );
+
+      console.log('[DASHBOARD] KPIs obtenidos:', {
+        saldoTotal,
+        ingresosMes,
+        gastosMes,
+        morosidad,
+      });
+
+      res.json({
+        saldo_total: saldoTotal,
+        ingresos_mes: ingresosMes,
+        gastos_mes: gastosMes,
+        morosidad: morosidad,
+      });
+    } catch (error) {
+      console.error('[DASHBOARD] Error al obtener KPIs:', error);
+      res.status(500).json({ error: 'Error al obtener KPIs' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -64,16 +71,21 @@ router.get('/comunidad/:comunidadId/kpis', authenticate, requireCommunity('comun
  *     tags: [Dashboard]
  *     summary: KPI - Saldo total de la comunidad
  */
-router.get('/comunidad/:comunidadId/saldo-total', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const result = await obtenerSaldoTotal(comunidadId);
-    res.json(result);
-  } catch (error) {
-    console.error('Error al obtener saldo total:', error);
-    res.status(500).json({ error: 'Error al obtener saldo total' });
+router.get(
+  '/comunidad/:comunidadId/saldo-total',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const result = await obtenerSaldoTotal(comunidadId);
+      res.json(result);
+    } catch (error) {
+      console.error('Error al obtener saldo total:', error);
+      res.status(500).json({ error: 'Error al obtener saldo total' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -82,16 +94,21 @@ router.get('/comunidad/:comunidadId/saldo-total', authenticate, requireCommunity
  *     tags: [Dashboard]
  *     summary: KPI - Ingresos del mes actual
  */
-router.get('/comunidad/:comunidadId/ingresos-mes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const result = await obtenerIngresosMes(comunidadId);
-    res.json(result);
-  } catch (error) {
-    console.error('Error al obtener ingresos del mes:', error);
-    res.status(500).json({ error: 'Error al obtener ingresos del mes' });
+router.get(
+  '/comunidad/:comunidadId/ingresos-mes',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const result = await obtenerIngresosMes(comunidadId);
+      res.json(result);
+    } catch (error) {
+      console.error('Error al obtener ingresos del mes:', error);
+      res.status(500).json({ error: 'Error al obtener ingresos del mes' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -100,16 +117,21 @@ router.get('/comunidad/:comunidadId/ingresos-mes', authenticate, requireCommunit
  *     tags: [Dashboard]
  *     summary: KPI - Gastos del mes actual
  */
-router.get('/comunidad/:comunidadId/gastos-mes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const result = await obtenerGastosMes(comunidadId);
-    res.json(result);
-  } catch (error) {
-    console.error('Error al obtener gastos del mes:', error);
-    res.status(500).json({ error: 'Error al obtener gastos del mes' });
+router.get(
+  '/comunidad/:comunidadId/gastos-mes',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const result = await obtenerGastosMes(comunidadId);
+      res.json(result);
+    } catch (error) {
+      console.error('Error al obtener gastos del mes:', error);
+      res.status(500).json({ error: 'Error al obtener gastos del mes' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -118,16 +140,21 @@ router.get('/comunidad/:comunidadId/gastos-mes', authenticate, requireCommunity(
  *     tags: [Dashboard]
  *     summary: KPI - Tasa de morosidad
  */
-router.get('/comunidad/:comunidadId/tasa-morosidad', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const result = await obtenerTasaMorosidad(comunidadId);
-    res.json(result);
-  } catch (error) {
-    console.error('Error al obtener tasa de morosidad:', error);
-    res.status(500).json({ error: 'Error al obtener tasa de morosidad' });
+router.get(
+  '/comunidad/:comunidadId/tasa-morosidad',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const result = await obtenerTasaMorosidad(comunidadId);
+      res.json(result);
+    } catch (error) {
+      console.error('Error al obtener tasa de morosidad:', error);
+      res.status(500).json({ error: 'Error al obtener tasa de morosidad' });
+    }
   }
-});
+);
 
 // =========================================
 // 2. DATOS PARA GRÁFICOS
@@ -146,12 +173,16 @@ router.get('/comunidad/:comunidadId/tasa-morosidad', authenticate, requireCommun
  *           type: integer
  *           default: 6
  */
-router.get('/comunidad/:comunidadId/grafico-emisiones', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { meses = 6 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/grafico-emisiones',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { meses = 6 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         egc.periodo AS periodo,
         YEAR(STR_TO_DATE(CONCAT(egc.periodo, '-01'), '%Y-%m-%d')) AS anio,
@@ -168,14 +199,15 @@ router.get('/comunidad/:comunidadId/grafico-emisiones', authenticate, requireCom
       ORDER BY egc.periodo
     `;
 
-    const [rows] = await db.query(query, [comunidadId, Number(meses)]);
+      const [rows] = await db.query(query, [comunidadId, Number(meses)]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener gráfico de emisiones:', error);
-    res.status(500).json({ error: 'Error al obtener gráfico de emisiones' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener gráfico de emisiones:', error);
+      res.status(500).json({ error: 'Error al obtener gráfico de emisiones' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -184,11 +216,15 @@ router.get('/comunidad/:comunidadId/grafico-emisiones', authenticate, requireCom
  *     tags: [Dashboard]
  *     summary: Distribución de estado de pagos
  */
-router.get('/comunidad/:comunidadId/grafico-estado-pagos', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/grafico-estado-pagos',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         CASE
           WHEN ccu.saldo = 0 THEN 'Pagos al Día'
@@ -215,14 +251,17 @@ router.get('/comunidad/:comunidadId/grafico-estado-pagos', authenticate, require
         END
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener gráfico de estado de pagos:', error);
-    res.status(500).json({ error: 'Error al obtener gráfico de estado de pagos' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener gráfico de estado de pagos:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener gráfico de estado de pagos' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -231,11 +270,15 @@ router.get('/comunidad/:comunidadId/grafico-estado-pagos', authenticate, require
  *     tags: [Dashboard]
  *     summary: Gastos por categoría (mes actual)
  */
-router.get('/comunidad/:comunidadId/grafico-gastos-categoria', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/grafico-gastos-categoria',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         cg.nombre AS categoria,
         cg.tipo AS tipo_categoria,
@@ -252,14 +295,17 @@ router.get('/comunidad/:comunidadId/grafico-gastos-categoria', authenticate, req
       ORDER BY total_gastos DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener gráfico de gastos por categoría:', error);
-    res.status(500).json({ error: 'Error al obtener gráfico de gastos por categoría' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener gráfico de gastos por categoría:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener gráfico de gastos por categoría' });
+    }
   }
-});
+);
 
 // =========================================
 // 3. TABLAS DE DATOS
@@ -278,12 +324,16 @@ router.get('/comunidad/:comunidadId/grafico-gastos-categoria', authenticate, req
  *           type: integer
  *           default: 10
  */
-router.get('/comunidad/:comunidadId/pagos-recientes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { limit = 10 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/pagos-recientes',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { limit = 10 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         p.id,
         u.codigo AS unidad,
@@ -307,14 +357,15 @@ router.get('/comunidad/:comunidadId/pagos-recientes', authenticate, requireCommu
       LIMIT ?
     `;
 
-    const [rows] = await db.query(query, [comunidadId, Number(limit)]);
+      const [rows] = await db.query(query, [comunidadId, Number(limit)]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener pagos recientes:', error);
-    res.status(500).json({ error: 'Error al obtener pagos recientes' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener pagos recientes:', error);
+      res.status(500).json({ error: 'Error al obtener pagos recientes' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -329,12 +380,16 @@ router.get('/comunidad/:comunidadId/pagos-recientes', authenticate, requireCommu
  *           type: integer
  *           default: 10
  */
-router.get('/comunidad/:comunidadId/unidades-morosas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { limit = 10 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/unidades-morosas',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { limit = 10 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         u.id AS unidad_id,
         u.codigo AS codigo_unidad,
@@ -358,14 +413,15 @@ router.get('/comunidad/:comunidadId/unidades-morosas', authenticate, requireComm
       LIMIT ?
     `;
 
-    const [rows] = await db.query(query, [comunidadId, Number(limit)]);
+      const [rows] = await db.query(query, [comunidadId, Number(limit)]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener unidades morosas:', error);
-    res.status(500).json({ error: 'Error al obtener unidades morosas' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener unidades morosas:', error);
+      res.status(500).json({ error: 'Error al obtener unidades morosas' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -380,12 +436,16 @@ router.get('/comunidad/:comunidadId/unidades-morosas', authenticate, requireComm
  *           type: integer
  *           default: 8
  */
-router.get('/comunidad/:comunidadId/proximas-actividades', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { limit = 8 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/proximas-actividades',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { limit = 8 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         'emision' AS tipo_actividad,
         CONCAT('Emisión de Gastos - ', egc.periodo) AS titulo,
@@ -407,14 +467,15 @@ router.get('/comunidad/:comunidadId/proximas-actividades', authenticate, require
       LIMIT ?
     `;
 
-    const [rows] = await db.query(query, [comunidadId, Number(limit)]);
+      const [rows] = await db.query(query, [comunidadId, Number(limit)]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener próximas actividades:', error);
-    res.status(500).json({ error: 'Error al obtener próximas actividades' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener próximas actividades:', error);
+      res.status(500).json({ error: 'Error al obtener próximas actividades' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -429,12 +490,16 @@ router.get('/comunidad/:comunidadId/proximas-actividades', authenticate, require
  *           type: integer
  *           default: 6
  */
-router.get('/comunidad/:comunidadId/reservas-amenidades', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { limit = 6 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/reservas-amenidades',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { limit = 6 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         ra.id,
         a.nombre AS amenidad,
@@ -463,14 +528,17 @@ router.get('/comunidad/:comunidadId/reservas-amenidades', authenticate, requireC
       LIMIT ?
     `;
 
-    const [rows] = await db.query(query, [comunidadId, Number(limit)]);
+      const [rows] = await db.query(query, [comunidadId, Number(limit)]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener reservas de amenidades:', error);
-    res.status(500).json({ error: 'Error al obtener reservas de amenidades' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener reservas de amenidades:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener reservas de amenidades' });
+    }
   }
-});
+);
 
 // =========================================
 // 4. NOTIFICACIONES
@@ -489,12 +557,16 @@ router.get('/comunidad/:comunidadId/reservas-amenidades', authenticate, requireC
  *           type: integer
  *           default: 10
  */
-router.get('/comunidad/:comunidadId/notificaciones', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { limit = 10 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/notificaciones',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { limit = 10 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         'pago_vencido' AS tipo_notificacion,
         CONCAT('Pago vencido - Unidad ', u.codigo) AS titulo,
@@ -558,14 +630,21 @@ router.get('/comunidad/:comunidadId/notificaciones', authenticate, requireCommun
       LIMIT ?
     `;
 
-    const [rows] = await db.query(query, [comunidadId, comunidadId, comunidadId, comunidadId, Number(limit)]);
+      const [rows] = await db.query(query, [
+        comunidadId,
+        comunidadId,
+        comunidadId,
+        comunidadId,
+        Number(limit),
+      ]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener notificaciones:', error);
-    res.status(500).json({ error: 'Error al obtener notificaciones' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener notificaciones:', error);
+      res.status(500).json({ error: 'Error al obtener notificaciones' });
+    }
   }
-});
+);
 
 // =========================================
 // 5. MÉTRICAS ADICIONALES
@@ -578,11 +657,15 @@ router.get('/comunidad/:comunidadId/notificaciones', authenticate, requireCommun
  *     tags: [Dashboard]
  *     summary: Métrica de efectividad de cobranza (mes actual)
  */
-router.get('/comunidad/:comunidadId/efectividad-cobranza', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/efectividad-cobranza',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         ROUND(
           (SUM(CASE WHEN ccu.saldo = 0 THEN 1 ELSE 0 END) * 100.0) / NULLIF(COUNT(*), 0), 2
@@ -598,14 +681,17 @@ router.get('/comunidad/:comunidadId/efectividad-cobranza', authenticate, require
         AND egc.periodo = DATE_FORMAT(CURRENT_DATE, '%Y-%m')
     `;
 
-    const [[result]] = await db.query(query, [comunidadId]);
+      const [[result]] = await db.query(query, [comunidadId]);
 
-    res.json(result || {});
-  } catch (error) {
-    console.error('Error al obtener efectividad de cobranza:', error);
-    res.status(500).json({ error: 'Error al obtener efectividad de cobranza' });
+      res.json(result || {});
+    } catch (error) {
+      console.error('Error al obtener efectividad de cobranza:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener efectividad de cobranza' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -614,11 +700,15 @@ router.get('/comunidad/:comunidadId/efectividad-cobranza', authenticate, require
  *     tags: [Dashboard]
  *     summary: Tendencia de crecimiento de ingresos
  */
-router.get('/comunidad/:comunidadId/tendencia-ingresos', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/tendencia-ingresos',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         t.periodo_actual,
         t.ingresos_actual,
@@ -641,14 +731,15 @@ router.get('/comunidad/:comunidadId/tendencia-ingresos', authenticate, requireCo
       ) AS t
     `;
 
-    const [[result]] = await db.query(query, [comunidadId]);
+      const [[result]] = await db.query(query, [comunidadId]);
 
-    res.json(result || {});
-  } catch (error) {
-    console.error('Error al obtener tendencia de ingresos:', error);
-    res.status(500).json({ error: 'Error al obtener tendencia de ingresos' });
+      res.json(result || {});
+    } catch (error) {
+      console.error('Error al obtener tendencia de ingresos:', error);
+      res.status(500).json({ error: 'Error al obtener tendencia de ingresos' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -657,38 +748,46 @@ router.get('/comunidad/:comunidadId/tendencia-ingresos', authenticate, requireCo
  *     tags: [Dashboard]
  *     summary: Resumen completo del dashboard (todos los datos en una sola llamada)
  */
-router.get('/comunidad/:comunidadId/resumen-completo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/resumen-completo',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    // Ejecutar todas las consultas en paralelo para mayor eficiencia
-    const [
-      saldoTotal,
-      ingresosMes,
-      gastosMes,
-      morosidad,
-      [emisiones],
-      [estadoPagos],
-      [gastosCategoria],
-      [pagosRecientes],
-      [unidadesMorosas],
-      [proximasActividades],
-      [notificaciones],
-      [[efectividad]]
-    ] = await Promise.all([
-      obtenerSaldoTotal(comunidadId),
-      obtenerIngresosMes(comunidadId),
-      obtenerGastosMes(comunidadId),
-      obtenerTasaMorosidad(comunidadId),
-      db.query(`
+      // Ejecutar todas las consultas en paralelo para mayor eficiencia
+      const [
+        saldoTotal,
+        ingresosMes,
+        gastosMes,
+        morosidad,
+        [emisiones],
+        [estadoPagos],
+        [gastosCategoria],
+        [pagosRecientes],
+        [unidadesMorosas],
+        [proximasActividades],
+        [notificaciones],
+        [[efectividad]],
+      ] = await Promise.all([
+        obtenerSaldoTotal(comunidadId),
+        obtenerIngresosMes(comunidadId),
+        obtenerGastosMes(comunidadId),
+        obtenerTasaMorosidad(comunidadId),
+        db.query(
+          `
         SELECT egc.periodo, SUM(ccu.monto_total) AS monto_total_emisiones, COUNT(DISTINCT ccu.unidad_id) AS cantidad_unidades
         FROM emision_gastos_comunes egc
         JOIN cuenta_cobro_unidad ccu ON egc.id = ccu.emision_id
         WHERE egc.comunidad_id = ? AND egc.estado IN ('emitido', 'cerrado')
           AND egc.periodo >= DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH), '%Y-%m')
         GROUP BY egc.periodo ORDER BY egc.periodo
-      `, [comunidadId]),
-      db.query(`
+      `,
+          [comunidadId]
+        ),
+        db.query(
+          `
         SELECT
           CASE WHEN ccu.saldo = 0 THEN 'Pagos al Día'
                WHEN ccu.saldo > 0 AND egc.fecha_vencimiento >= CURRENT_DATE THEN 'Pendiente'
@@ -701,21 +800,30 @@ router.get('/comunidad/:comunidadId/resumen-completo', authenticate, requireComm
         JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
         WHERE ccu.comunidad_id = ? AND egc.estado IN ('emitido', 'cerrado')
         GROUP BY categoria_pago
-      `, [comunidadId]),
-      db.query(`
+      `,
+          [comunidadId]
+        ),
+        db.query(
+          `
         SELECT cg.nombre AS categoria, SUM(g.monto) AS total_gastos, COUNT(g.id) AS cantidad_gastos
         FROM gasto g JOIN categoria_gasto cg ON g.categoria_id = cg.id
         WHERE g.comunidad_id = ? AND g.estado = 'aprobado'
           AND YEAR(g.fecha) = YEAR(CURRENT_DATE) AND MONTH(g.fecha) = MONTH(CURRENT_DATE)
         GROUP BY cg.id, cg.nombre ORDER BY total_gastos DESC LIMIT 10
-      `, [comunidadId]),
-      db.query(`
+      `,
+          [comunidadId]
+        ),
+        db.query(
+          `
         SELECT p.id, u.codigo AS unidad, p.monto, DATE_FORMAT(p.fecha, '%d/%m/%Y') AS fecha_pago, p.estado
         FROM pago p JOIN unidad u ON p.unidad_id = u.id
         WHERE p.comunidad_id = ?
         ORDER BY p.fecha DESC LIMIT 10
-      `, [comunidadId]),
-      db.query(`
+      `,
+          [comunidadId]
+        ),
+        db.query(
+          `
         SELECT u.codigo AS codigo_unidad, SUM(ccu.saldo) AS deuda_total, COUNT(DISTINCT ccu.emision_id) AS meses_morosos
         FROM cuenta_cobro_unidad ccu
         JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
@@ -723,57 +831,69 @@ router.get('/comunidad/:comunidadId/resumen-completo', authenticate, requireComm
         WHERE ccu.comunidad_id = ? AND egc.estado IN ('emitido', 'cerrado')
           AND ccu.saldo > 0 AND egc.fecha_vencimiento < CURRENT_DATE
         GROUP BY u.id, u.codigo ORDER BY deuda_total DESC LIMIT 10
-      `, [comunidadId]),
-      db.query(`
+      `,
+          [comunidadId]
+        ),
+        db.query(
+          `
         SELECT CONCAT('Emisión de Gastos - ', egc.periodo) AS titulo,
                DATE_FORMAT(egc.fecha_vencimiento, '%d/%m/%Y') AS fecha_formateada,
                DATEDIFF(egc.fecha_vencimiento, CURRENT_DATE) AS dias_restantes
         FROM emision_gastos_comunes egc
         WHERE egc.comunidad_id = ? AND egc.fecha_vencimiento >= CURRENT_DATE AND egc.estado = 'emitido'
         ORDER BY egc.fecha_vencimiento ASC LIMIT 5
-      `, [comunidadId]),
-      db.query(`
+      `,
+          [comunidadId]
+        ),
+        db.query(
+          `
         SELECT 'pago_registrado' AS tipo_notificacion, CONCAT('Nuevo pago - Unidad ', u.codigo) AS titulo,
                DATE_FORMAT(p.created_at, '%d/%m/%Y %H:%i') AS fecha_notificacion, 'success' AS severidad
         FROM pago p JOIN unidad u ON p.unidad_id = u.id
         WHERE p.comunidad_id = ? AND p.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
         ORDER BY p.created_at DESC LIMIT 5
-      `, [comunidadId]),
-      db.query(`
+      `,
+          [comunidadId]
+        ),
+        db.query(
+          `
         SELECT COUNT(CASE WHEN ccu.saldo = 0 THEN 1 END) AS unidades_al_dia, COUNT(*) AS total_unidades
         FROM cuenta_cobro_unidad ccu JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
         WHERE ccu.comunidad_id = ? AND egc.estado IN ('emitido', 'cerrado')
           AND egc.periodo = DATE_FORMAT(CURRENT_DATE, '%Y-%m')
-      `, [comunidadId])
-    ]);
+      `,
+          [comunidadId]
+        ),
+      ]);
 
-    res.json({
-      kpis: {
-        saldo_total: saldoTotal,
-        ingresos_mes: ingresosMes,
-        gastos_mes: gastosMes,
-        morosidad: morosidad
-      },
-      graficos: {
-        emisiones: emisiones,
-        estado_pagos: estadoPagos,
-        gastos_categoria: gastosCategoria
-      },
-      tablas: {
-        pagos_recientes: pagosRecientes,
-        unidades_morosas: unidadesMorosas,
-        proximas_actividades: proximasActividades
-      },
-      notificaciones: notificaciones,
-      metricas: {
-        efectividad_cobranza: efectividad
-      }
-    });
-  } catch (error) {
-    console.error('Error al obtener resumen completo:', error);
-    res.status(500).json({ error: 'Error al obtener resumen completo' });
+      res.json({
+        kpis: {
+          saldo_total: saldoTotal,
+          ingresos_mes: ingresosMes,
+          gastos_mes: gastosMes,
+          morosidad: morosidad,
+        },
+        graficos: {
+          emisiones: emisiones,
+          estado_pagos: estadoPagos,
+          gastos_categoria: gastosCategoria,
+        },
+        tablas: {
+          pagos_recientes: pagosRecientes,
+          unidades_morosas: unidadesMorosas,
+          proximas_actividades: proximasActividades,
+        },
+        notificaciones: notificaciones,
+        metricas: {
+          efectividad_cobranza: efectividad,
+        },
+      });
+    } catch (error) {
+      console.error('Error al obtener resumen completo:', error);
+      res.status(500).json({ error: 'Error al obtener resumen completo' });
+    }
   }
-});
+);
 
 // =========================================
 // FUNCIONES AUXILIARES
@@ -898,11 +1018,16 @@ async function obtenerTasaMorosidad(comunidadId) {
   `;
 
   const [[result]] = await db.query(query, [comunidadId]);
-  return result || { tasa_morosidad_actual: 0, tasa_morosidad_anterior: 0, variacion_porcentual: 0 };
+  return (
+    result || {
+      tasa_morosidad_actual: 0,
+      tasa_morosidad_anterior: 0,
+      variacion_porcentual: 0,
+    }
+  );
 }
 
 module.exports = router;
-
 
 // =========================================
 // ENDPOINTS DE DASHBOARD
@@ -933,7 +1058,3 @@ module.exports = router;
 // GET: /dashboard/comunidad/:comunidadId/efectividad-cobranza
 // GET: /dashboard/comunidad/:comunidadId/tendencia-ingresos
 // GET: /dashboard/comunidad/:comunidadId/resumen-completo
-
-
-
-

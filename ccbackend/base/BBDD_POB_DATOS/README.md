@@ -95,7 +95,7 @@ Los archivos `*.bak` son versiones antiguas que **NO se ejecutan**. Se mantienen
 ## 💡 Buenas Prácticas
 
 1. **Mantén `01_cuentasclaras.sql` actualizado** - Este es tu "source of truth"
-2. **Usa nombres con prefijo numérico** (01_, 02_) para controlar el orden
+2. **Usa nombres con prefijo numérico** (01*, 02*) para controlar el orden
 3. **Documenta cambios grandes** en commits descriptivos
 4. **Coordina con el equipo** antes de cambios de esquema mayores
 5. **Prueba en limpio** antes de pushear: haz reset y verifica que todo funciona
@@ -103,6 +103,7 @@ Los archivos `*.bak` son versiones antiguas que **NO se ejecutan**. Se mantienen
 ## 🆘 Solución de Problemas
 
 ### "La BD no se inicializó"
+
 ```bash
 # Verificar que el volumen está vacío
 docker volume ls
@@ -113,11 +114,13 @@ docker logs cuentasclaras_db
 ```
 
 ### "Tengo errores de sintaxis SQL"
+
 - Verifica que el archivo esté en UTF-8
 - Asegura compatibilidad con MySQL 8.0
 - Prueba importar manualmente en phpMyAdmin primero
 
 ### "Otro dev tiene diferente estructura"
+
 - Asegurarse de que ambos tienen la última versión de `01_cuentasclaras.sql`
 - Ambos hacen reset completo
 - Si persiste, comparar volúmenes: uno puede tener BD antigua
@@ -125,6 +128,7 @@ docker logs cuentasclaras_db
 ---
 
 **TL;DR:** Cualquier cambio en estos archivos SQL requiere que los devs ejecuten:
+
 ```bash
 docker-compose down -v && docker-compose up -d
 ```

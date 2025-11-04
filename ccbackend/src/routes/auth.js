@@ -3,7 +3,11 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
-const { generateToken, generateTempToken, authenticate } = require('../middleware/auth');
+const {
+  generateToken,
+  generateTempToken,
+  authenticate,
+} = require('../middleware/auth');
 const crypto = require('crypto');
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
@@ -31,74 +35,80 @@ const qrcode = require('qrcode');
  *       401:
  *         description: C�digo 2FA inv�lido
  */
-router.post('/verify-2fa', [
-  body('userId').isInt(),
-  body('token').isString().isLength({ min: 6, max: 6 })
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+router.post(
+  '/verify-2fa',
+  [
+    body('userId').isInt(),
+    body('token').isString().isLength({ min: 6, max: 6 }),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { userId, token } = req.body;
+
+      // Obtener el secret 2FA del usuario
+      const [rows] = await db.query(
+        'SELECT totp_secret, totp_enabled FROM usuario WHERE id = ?',
+        [userId]
+      );
+
+      if (!rows.length) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      const user = rows[0];
+
+      if (!user.totp_enabled || !user.totp_secret) {
+        return res
+          .status(400)
+          .json({ error: '2FA no est� habilitado para este usuario' });
+      }
+
+      // Verificar el token
+      const verified = speakeasy.totp.verify({
+        secret: user.totp_secret,
+        encoding: 'base32',
+        token: token,
+        window: 2, // Permite 2 c�digos anteriores/posteriores
+      });
+
+      if (!verified) {
+        return res.status(401).json({ error: 'C�digo 2FA inv�lido' });
+      }
+
+      // Generar token JWT completo
+      const jwtToken = generateToken({ id: userId });
+
+      res.json({
+        message: '2FA verificado exitosamente',
+        token: jwtToken,
+        userId: userId,
+      });
+    } catch (error) {
+      console.error('Error verifying 2FA:', error);
+      res.status(500).json({ error: 'Error al verificar 2FA' });
+    }
   }
-
-  try {
-    const { userId, token } = req.body;
-
-    // Obtener el secret 2FA del usuario
-    const [rows] = await db.query(
-      'SELECT totp_secret, totp_enabled FROM usuario WHERE id = ?',
-      [userId]
-    );
-
-    if (!rows.length) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-
-    const user = rows[0];
-
-    if (!user.totp_enabled || !user.totp_secret) {
-      return res.status(400).json({ error: '2FA no est� habilitado para este usuario' });
-    }
-
-    // Verificar el token
-    const verified = speakeasy.totp.verify({
-      secret: user.totp_secret,
-      encoding: 'base32',
-      token: token,
-      window: 2 // Permite 2 c�digos anteriores/posteriores
-    });
-
-    if (!verified) {
-      return res.status(401).json({ error: 'C�digo 2FA inv�lido' });
-    }
-
-    // Generar token JWT completo
-    const jwtToken = generateToken({ id: userId });
-
-    res.json({
-      message: '2FA verificado exitosamente',
-      token: jwtToken,
-      userId: userId
-    });
-
-  } catch (error) {
-    console.error('Error verifying 2FA:', error);
-    res.status(500).json({ error: 'Error al verificar 2FA' });
-  }
-});
+);
 
 // Helper function to determine identification type and build query
 function buildUserQuery(identifier) {
   // Remove spaces and convert to uppercase for RUT comparison
   const cleanIdentifier = identifier.replace(/\s+/g, '').toUpperCase();
-  
+
   // Check if it's an email
   if (cleanIdentifier.includes('@')) {
     return {
-      query: 'SELECT u.id, u.persona_id, u.hash_password, u.is_superadmin, u.username FROM usuario u WHERE u.email = ? LIMIT 1',
-      param: identifier.toLowerCase()
+      query:
+        'SELECT u.id, u.persona_id, u.hash_password, u.is_superadmin, u.username FROM usuario u WHERE u.email = ? LIMIT 1',
+      param: identifier.toLowerCase(),
     };
   }
-  
+
   // Check if it's a Chilean RUT (format: 12345678-9 or 123456789)
   const rutPattern = /^(\d{1,8})-?([0-9K])$/i;
   const rutMatch = cleanIdentifier.match(rutPattern);
@@ -110,10 +120,10 @@ function buildUserQuery(identifier) {
               FROM usuario u 
               JOIN persona p ON u.persona_id = p.id 
               WHERE p.rut = ? AND p.dv = ? LIMIT 1`,
-      param: [rutNumber, dv]
+      param: [rutNumber, dv],
     };
   }
-  
+
   // Check if it's a numeric DNI (Argentina, other countries)
   const dniPattern = /^\d{7,9}$/;
   if (dniPattern.test(cleanIdentifier)) {
@@ -124,14 +134,15 @@ function buildUserQuery(identifier) {
               FROM usuario u 
               JOIN persona p ON u.persona_id = p.id 
               WHERE p.rut = ? LIMIT 1`,
-      param: cleanIdentifier
+      param: cleanIdentifier,
     };
   }
-  
+
   // Default: treat as username
   return {
-    query: 'SELECT id, persona_id, hash_password, is_superadmin, username FROM usuario WHERE username = ? LIMIT 1',
-    param: identifier
+    query:
+      'SELECT id, persona_id, hash_password, is_superadmin, username FROM usuario WHERE username = ? LIMIT 1',
+    param: identifier,
   };
 }
 
@@ -149,8 +160,8 @@ function buildUserQuery(identifier) {
  *     tags: [Auth]
  *     summary: Registrar un nuevo usuario
  *     description: |
- *       Crea una nueva cuenta de usuario en el sistema. 
- *       
+ *       Crea una nueva cuenta de usuario en el sistema.
+ *
  *       **Opciones de registro:**
  *       1. Con persona_id existente: proporciona solo username, password, email y persona_id
  *       2. Crear nueva persona: proporciona username, password, email, nombres, apellidos, rut, dv (opcional)
@@ -224,66 +235,96 @@ function buildUserQuery(identifier) {
  *       409:
  *         description: El nombre de usuario, email o RUT ya existe
  */
-router.post('/register', [
-  body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('email').optional().isEmail().withMessage('Invalid email format')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  
-  const { username, password, email, persona_id, rut, dv, nombres, apellidos } = req.body;
-  
-  try {
-    // Verificar si el username ya existe
-    const [existsUser] = await db.query('SELECT id FROM usuario WHERE username = ? LIMIT 1', [username]);
-    if (existsUser.length) return res.status(409).json({ error: 'username exists' });
-    
-    // Verificar si el email ya existe
-    if (email) {
-      const [existsEmail] = await db.query('SELECT id FROM usuario WHERE email = ? LIMIT 1', [email]);
-      if (existsEmail.length) return res.status(409).json({ error: 'email exists' });
-    }
-    
-    let finalPersonaId = persona_id;
-    
-    // Si no se proporciona persona_id, crear una nueva persona
-    if (!finalPersonaId && rut && nombres && apellidos) {
-      // Verificar si el RUT ya existe
-      const [existsRut] = await db.query('SELECT id FROM persona WHERE rut = ? LIMIT 1', [rut]);
-      if (existsRut.length) {
-        return res.status(409).json({ error: 'RUT already exists' });
-      }
-      
-      // Crear nueva persona
-      const [personaResult] = await db.query(
-        'INSERT INTO persona (rut, dv, nombres, apellidos, email, telefono) VALUES (?,?,?,?,?,?)',
-        [rut, dv || null, nombres, apellidos, email || null, null]
+router.post(
+  '/register',
+  [
+    body('username')
+      .isLength({ min: 3 })
+      .withMessage('Username must be at least 3 characters'),
+    body('password')
+      .isLength({ min: 6 })
+      .withMessage('Password must be at least 6 characters'),
+    body('email').optional().isEmail().withMessage('Invalid email format'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+
+    const {
+      username,
+      password,
+      email,
+      persona_id,
+      rut,
+      dv,
+      nombres,
+      apellidos,
+    } = req.body;
+
+    try {
+      // Verificar si el username ya existe
+      const [existsUser] = await db.query(
+        'SELECT id FROM usuario WHERE username = ? LIMIT 1',
+        [username]
       );
-      finalPersonaId = personaResult.insertId;
-    } else if (!finalPersonaId) {
-      // Si no hay persona_id ni datos para crear persona, error
-      return res.status(400).json({ 
-        error: 'Missing required fields: provide either persona_id or (rut, nombres, apellidos)' 
-      });
+      if (existsUser.length)
+        return res.status(409).json({ error: 'username exists' });
+
+      // Verificar si el email ya existe
+      if (email) {
+        const [existsEmail] = await db.query(
+          'SELECT id FROM usuario WHERE email = ? LIMIT 1',
+          [email]
+        );
+        if (existsEmail.length)
+          return res.status(409).json({ error: 'email exists' });
+      }
+
+      let finalPersonaId = persona_id;
+
+      // Si no se proporciona persona_id, crear una nueva persona
+      if (!finalPersonaId && rut && nombres && apellidos) {
+        // Verificar si el RUT ya existe
+        const [existsRut] = await db.query(
+          'SELECT id FROM persona WHERE rut = ? LIMIT 1',
+          [rut]
+        );
+        if (existsRut.length) {
+          return res.status(409).json({ error: 'RUT already exists' });
+        }
+
+        // Crear nueva persona
+        const [personaResult] = await db.query(
+          'INSERT INTO persona (rut, dv, nombres, apellidos, email, telefono) VALUES (?,?,?,?,?,?)',
+          [rut, dv || null, nombres, apellidos, email || null, null]
+        );
+        finalPersonaId = personaResult.insertId;
+      } else if (!finalPersonaId) {
+        // Si no hay persona_id ni datos para crear persona, error
+        return res.status(400).json({
+          error:
+            'Missing required fields: provide either persona_id or (rut, nombres, apellidos)',
+        });
+      }
+
+      // Crear usuario
+      const hash = await bcrypt.hash(password, 10);
+      const [result] = await db.query(
+        'INSERT INTO usuario (persona_id, username, hash_password, email) VALUES (?,?,?,?)',
+        [finalPersonaId, username, hash, email || null]
+      );
+
+      const id = result.insertId;
+      const token = generateToken({ sub: id, username });
+
+      res.status(201).json({ id, username, persona_id: finalPersonaId, token });
+    } catch (err) {
+      console.error('Register error:', err);
+      res.status(500).json({ error: 'server error', details: err.message });
     }
-    
-    // Crear usuario
-    const hash = await bcrypt.hash(password, 10);
-    const [result] = await db.query(
-      'INSERT INTO usuario (persona_id, username, hash_password, email) VALUES (?,?,?,?)',
-      [finalPersonaId, username, hash, email || null]
-    );
-    
-    const id = result.insertId;
-    const token = generateToken({ sub: id, username });
-    
-    res.status(201).json({ id, username, persona_id: finalPersonaId, token });
-  } catch (err) {
-    console.error('Register error:', err);
-    res.status(500).json({ error: 'server error', details: err.message });
   }
-});
+);
 
 /**
  * @swagger
@@ -293,13 +334,13 @@ router.post('/register', [
  *     summary: Iniciar sesi�n en el sistema
  *     description: |
  *       Autentica un usuario y retorna un token JWT con informaci�n de roles y membres�as.
- *       
+ *
  *       **El token JWT incluye:**
  *       - Informaci�n b�sica del usuario (id, username, persona_id)
  *       - Lista de roles del usuario
  *       - Membres�as por comunidad con nivel de acceso
  *       - Informaci�n de 2FA si est� habilitado
- *       
+ *
  *       **Tipos de identificadores aceptados:**
  *       - Email: `usuario@example.com`
  *       - RUT chileno: `12345678-9`
@@ -369,117 +410,174 @@ router.post('/register', [
  *           //   ]
  *           // }
  */
-router.post('/login', [
-  body('identifier').exists().withMessage('Identifier (email, RUT, DNI or username) is required'),
-  body('password').exists().withMessage('Password is required')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  
-  const { identifier, password } = req.body;
-  
-  try {
-    // Build query based on identifier type
-    const { query, param } = buildUserQuery(identifier);
-    const params = Array.isArray(param) ? param : [param];
-    
-    const [rows] = await db.query(query, params);
-    if (!rows.length) return res.status(401).json({ error: 'invalid credentials' });
-    
-    const user = rows[0];
-    const ok = await bcrypt.compare(password, user.hash_password);
-    if (!ok) return res.status(401).json({ error: 'invalid credentials' });
-    
-    // Fetch roles from usuario_rol_comunidad (nueva estructura)
-    const [membresias] = await db.query(`
+router.post(
+  '/login',
+  [
+    body('identifier')
+      .exists()
+      .withMessage('Identifier (email, RUT, DNI or username) is required'),
+    body('password').exists().withMessage('Password is required'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+
+    const { identifier, password } = req.body;
+
+    try {
+      // Build query based on identifier type
+      const { query, param } = buildUserQuery(identifier);
+      const params = Array.isArray(param) ? param : [param];
+
+      const [rows] = await db.query(query, params);
+      if (!rows.length)
+        return res.status(401).json({ error: 'invalid credentials' });
+
+      const user = rows[0];
+      const ok = await bcrypt.compare(password, user.hash_password);
+      if (!ok) return res.status(401).json({ error: 'invalid credentials' });
+
+      // Fetch roles from usuario_rol_comunidad (nueva estructura)
+      const [membresias] = await db.query(
+        `
       SELECT ucr.comunidad_id, r.codigo as rol, r.nivel_acceso 
       FROM usuario_rol_comunidad ucr
       INNER JOIN rol_sistema r ON r.id = ucr.rol_id
       WHERE ucr.usuario_id = ? AND ucr.activo = 1
-    `, [user.id]);
-    // Normalizar roles (lowercase) y eliminar duplicados
-    const roles = Array.from(new Set(membresias.map(m => String(m.rol || '').toLowerCase())));
-    const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
-    const memberships = membresias.map(m => ({ 
-      comunidadId: m.comunidad_id, 
-      rol: String(m.rol || '').toLowerCase(),
-      nivel_acceso: m.nivel_acceso 
-    }));
-    
-    // Check if user has TOTP enabled
-    const [userRow] = await db.query('SELECT totp_secret, totp_enabled FROM usuario WHERE id = ? LIMIT 1', [user.id]);
-    const totp_info = userRow[0] || { totp_secret: null, totp_enabled: 0 };
-    
-    if (totp_info.totp_enabled) {
-      const tempPayload = { sub: user.id, username: user.username, persona_id: user.persona_id, twoFactor: true };
-      const tempToken = generateTempToken(tempPayload, '5m');
-      return res.json({ twoFactorRequired: true, tempToken });
-    }
+    `,
+        [user.id]
+      );
+      // Normalizar roles (lowercase) y eliminar duplicados
+      const roles = Array.from(
+        new Set(membresias.map((m) => String(m.rol || '').toLowerCase()))
+      );
+      const comunidad_id = membresias.length
+        ? membresias[0].comunidad_id
+        : null;
+      const memberships = membresias.map((m) => ({
+        comunidadId: m.comunidad_id,
+        rol: String(m.rol || '').toLowerCase(),
+        nivel_acceso: m.nivel_acceso,
+      }));
 
-    const payload = { 
-      sub: user.id, 
-      username: user.username, 
-      persona_id: user.persona_id, 
-      roles, 
-      comunidad_id, 
-      is_superadmin: !!user.is_superadmin,
-      memberships
-    };
-    const token = generateToken(payload);
-    res.json({ token });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'server error' });
+      // Check if user has TOTP enabled
+      const [userRow] = await db.query(
+        'SELECT totp_secret, totp_enabled FROM usuario WHERE id = ? LIMIT 1',
+        [user.id]
+      );
+      const totp_info = userRow[0] || { totp_secret: null, totp_enabled: 0 };
+
+      if (totp_info.totp_enabled) {
+        const tempPayload = {
+          sub: user.id,
+          username: user.username,
+          persona_id: user.persona_id,
+          twoFactor: true,
+        };
+        const tempToken = generateTempToken(tempPayload, '5m');
+        return res.json({ twoFactorRequired: true, tempToken });
+      }
+
+      const payload = {
+        sub: user.id,
+        username: user.username,
+        persona_id: user.persona_id,
+        roles,
+        comunidad_id,
+        is_superadmin: !!user.is_superadmin,
+        memberships,
+      };
+      const token = generateToken(payload);
+      res.json({ token });
+    } catch (err) {
+      console.error('Login error:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // Verify TOTP using tempToken produced by /auth/login
-router.post('/2fa/verify', [body('tempToken').exists(), body('code').exists()], async (req, res) => {
-  const { tempToken, code } = req.body;
-  const jwt = require('jsonwebtoken');
-  const secret = process.env.JWT_SECRET || 'change_me';
-  try {
-    const data = jwt.verify(tempToken, secret);
-    if (!data || !data.twoFactor) return res.status(400).json({ error: 'invalid temp token' });
-    const userId = data.sub;
-    const [rows] = await db.query('SELECT id, persona_id, username, totp_secret FROM usuario WHERE id = ? LIMIT 1', [userId]);
-    if (!rows.length) return res.status(404).json({ error: 'user not found' });
-    const user = rows[0];
-    // verify code
-    const verified = speakeasy.totp.verify({ secret: user.totp_secret, encoding: 'base32', token: code, window: 1 });
-    if (!verified) return res.status(401).json({ error: 'invalid code' });
-    // create final token
-    const [membresias] = await db.query(`
+router.post(
+  '/2fa/verify',
+  [body('tempToken').exists(), body('code').exists()],
+  async (req, res) => {
+    const { tempToken, code } = req.body;
+    const jwt = require('jsonwebtoken');
+    const secret = process.env.JWT_SECRET || 'change_me';
+    try {
+      const data = jwt.verify(tempToken, secret);
+      if (!data || !data.twoFactor)
+        return res.status(400).json({ error: 'invalid temp token' });
+      const userId = data.sub;
+      const [rows] = await db.query(
+        'SELECT id, persona_id, username, totp_secret FROM usuario WHERE id = ? LIMIT 1',
+        [userId]
+      );
+      if (!rows.length)
+        return res.status(404).json({ error: 'user not found' });
+      const user = rows[0];
+      // verify code
+      const verified = speakeasy.totp.verify({
+        secret: user.totp_secret,
+        encoding: 'base32',
+        token: code,
+        window: 1,
+      });
+      if (!verified) return res.status(401).json({ error: 'invalid code' });
+      // create final token
+      const [membresias] = await db.query(
+        `
       SELECT ucr.comunidad_id, r.codigo as rol, r.nivel_acceso 
       FROM usuario_rol_comunidad ucr
       INNER JOIN rol_sistema r ON r.id = ucr.rol_id
       WHERE ucr.usuario_id = ? AND ucr.activo = 1
-    `, [user.id]);
-    // Normalizar roles (lowercase) y eliminar duplicados
-    const roles = Array.from(new Set(membresias.map(m => String(m.rol || '').toLowerCase())));
-    const comunidad_id = membresias.length ? membresias[0].comunidad_id : null;
-    const memberships = membresias.map(m => ({ 
-      comunidadId: m.comunidad_id, 
-      rol: String(m.rol || '').toLowerCase(),
-      nivel_acceso: m.nivel_acceso 
-    }));
-    const payload = { sub: user.id, username: user.username, persona_id: user.persona_id, roles, comunidad_id, memberships, is_superadmin: !!user.is_superadmin };
-    const token = generateToken(payload);
-    res.json({ token });
-  } catch (err) {
-    console.error(err);
-    return res.status(401).json({ error: 'invalid or expired temp token' });
+    `,
+        [user.id]
+      );
+      // Normalizar roles (lowercase) y eliminar duplicados
+      const roles = Array.from(
+        new Set(membresias.map((m) => String(m.rol || '').toLowerCase()))
+      );
+      const comunidad_id = membresias.length
+        ? membresias[0].comunidad_id
+        : null;
+      const memberships = membresias.map((m) => ({
+        comunidadId: m.comunidad_id,
+        rol: String(m.rol || '').toLowerCase(),
+        nivel_acceso: m.nivel_acceso,
+      }));
+      const payload = {
+        sub: user.id,
+        username: user.username,
+        persona_id: user.persona_id,
+        roles,
+        comunidad_id,
+        memberships,
+        is_superadmin: !!user.is_superadmin,
+      };
+      const token = generateToken(payload);
+      res.json({ token });
+    } catch (err) {
+      console.error(err);
+      return res.status(401).json({ error: 'invalid or expired temp token' });
+    }
   }
-});
+);
 
 // Protected: generate TOTP secret and otpauth URL for QR
 router.get('/2fa/setup', authenticate, async (req, res) => {
   try {
     const userId = req.user.sub;
-    const [rows] = await db.query('SELECT id, username, email FROM usuario WHERE id = ? LIMIT 1', [userId]);
+    const [rows] = await db.query(
+      'SELECT id, username, email FROM usuario WHERE id = ? LIMIT 1',
+      [userId]
+    );
     if (!rows.length) return res.status(404).json({ error: 'user not found' });
     const user = rows[0];
-    const secret = speakeasy.generateSecret({ name: `CuentasClaras:${user.email || user.username}` });
+    const secret = speakeasy.generateSecret({
+      name: `CuentasClaras:${user.email || user.username}`,
+    });
     const otpauth = secret.otpauth_url;
     const qrData = await qrcode.toDataURL(otpauth);
     // return secret.base32 and qr
@@ -491,43 +589,79 @@ router.get('/2fa/setup', authenticate, async (req, res) => {
 });
 
 // Protected: enable 2FA after verifying a code from user's authenticator app
-router.post('/2fa/enable', authenticate, [body('code').exists(), body('base32').exists()], async (req, res) => {
-  const { code, base32 } = req.body;
-  try {
-    const userId = req.user.sub;
-    const verified = speakeasy.totp.verify({ secret: base32, encoding: 'base32', token: code, window: 1 });
-    if (!verified) return res.status(400).json({ error: 'invalid code' });
-    // store secret encrypted (here stored plain for demo � in prod encrypt)
-    await db.query('UPDATE usuario SET totp_secret = ?, totp_enabled = 1 WHERE id = ?', [base32, userId]);
-    res.json({ ok: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.post(
+  '/2fa/enable',
+  authenticate,
+  [body('code').exists(), body('base32').exists()],
+  async (req, res) => {
+    const { code, base32 } = req.body;
+    try {
+      const userId = req.user.sub;
+      const verified = speakeasy.totp.verify({
+        secret: base32,
+        encoding: 'base32',
+        token: code,
+        window: 1,
+      });
+      if (!verified) return res.status(400).json({ error: 'invalid code' });
+      // store secret encrypted (here stored plain for demo � in prod encrypt)
+      await db.query(
+        'UPDATE usuario SET totp_secret = ?, totp_enabled = 1 WHERE id = ?',
+        [base32, userId]
+      );
+      res.json({ ok: true });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // Protected: disable 2FA
-router.post('/2fa/disable', authenticate, [body('code').exists()], async (req, res) => {
-  const { code } = req.body;
-  try {
-    const userId = req.user.sub;
-    const [rows] = await db.query('SELECT totp_secret FROM usuario WHERE id = ? LIMIT 1', [userId]);
-    if (!rows.length) return res.status(404).json({ error: 'user not found' });
-    const secret = rows[0].totp_secret;
-    const verified = speakeasy.totp.verify({ secret, encoding: 'base32', token: code, window: 1 });
-    if (!verified) return res.status(400).json({ error: 'invalid code' });
-    await db.query('UPDATE usuario SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?', [userId]);
-    res.json({ ok: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.post(
+  '/2fa/disable',
+  authenticate,
+  [body('code').exists()],
+  async (req, res) => {
+    const { code } = req.body;
+    try {
+      const userId = req.user.sub;
+      const [rows] = await db.query(
+        'SELECT totp_secret FROM usuario WHERE id = ? LIMIT 1',
+        [userId]
+      );
+      if (!rows.length)
+        return res.status(404).json({ error: 'user not found' });
+      const secret = rows[0].totp_secret;
+      const verified = speakeasy.totp.verify({
+        secret,
+        encoding: 'base32',
+        token: code,
+        window: 1,
+      });
+      if (!verified) return res.status(400).json({ error: 'invalid code' });
+      await db.query(
+        'UPDATE usuario SET totp_secret = NULL, totp_enabled = 0 WHERE id = ?',
+        [userId]
+      );
+      res.json({ ok: true });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // Refresh: issue a new token for a valid current token
 router.post('/refresh', authenticate, async (req, res) => {
   try {
-    const payload = { sub: req.user.sub, username: req.user.username, persona_id: req.user.persona_id, roles: req.user.roles || [], is_superadmin: !!req.user.is_superadmin };
+    const payload = {
+      sub: req.user.sub,
+      username: req.user.username,
+      persona_id: req.user.persona_id,
+      roles: req.user.roles || [],
+      is_superadmin: !!req.user.is_superadmin,
+    };
     const token = generateToken(payload);
     res.json({ token });
   } catch (err) {
@@ -545,10 +679,14 @@ router.post('/logout', authenticate, async (req, res) => {
 // Forgot password - generate a reset token and (theoretically) email it
 router.post('/forgot-password', [body('email').isEmail()], async (req, res) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  if (!errors.isEmpty())
+    return res.status(400).json({ errors: errors.array() });
   const { email } = req.body;
   try {
-    const [rows] = await db.query('SELECT id, username FROM usuario WHERE email = ? LIMIT 1', [email]);
+    const [rows] = await db.query(
+      'SELECT id, username FROM usuario WHERE email = ? LIMIT 1',
+      [email]
+    );
     if (!rows.length) return res.status(200).json({ ok: true }); // don't reveal
     const token = crypto.randomBytes(24).toString('hex');
     // store token in a simple table reset_tokens if exists; here we just return it for demo
@@ -561,18 +699,23 @@ router.post('/forgot-password', [body('email').isEmail()], async (req, res) => {
 });
 
 // Reset password - accepts token and new password
-router.post('/reset-password', [body('token').exists(), body('password').isLength({ min: 6 })], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  try {
-    // For demo we don't persist tokens; in production validate token and map to user
-    // Here we return success to keep flow consistent
-    res.json({ ok: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.post(
+  '/reset-password',
+  [body('token').exists(), body('password').isLength({ min: 6 })],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    try {
+      // For demo we don't persist tokens; in production validate token and map to user
+      // Here we return success to keep flow consistent
+      res.json({ ok: true });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -606,41 +749,61 @@ router.post('/reset-password', [body('token').exists(), body('password').isLengt
  *       500:
  *         description: Server error
  */
-router.post('/change-password', authenticate, [
-  body('currentPassword').exists().withMessage('Current password is required'),
-  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  
-  const { currentPassword, newPassword } = req.body;
-  const userId = req.user.sub;
-  
-  try {
-    // Get current user data
-    const [rows] = await db.query('SELECT id, hash_password FROM usuario WHERE id = ? LIMIT 1', [userId]);
-    if (!rows.length) return res.status(404).json({ error: 'User not found' });
-    
-    const user = rows[0];
-    
-    // Verify current password
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.hash_password);
-    if (!isCurrentPasswordValid) {
-      return res.status(400).json({ error: 'Current password is incorrect' });
+router.post(
+  '/change-password',
+  authenticate,
+  [
+    body('currentPassword')
+      .exists()
+      .withMessage('Current password is required'),
+    body('newPassword')
+      .isLength({ min: 6 })
+      .withMessage('New password must be at least 6 characters'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.sub;
+
+    try {
+      // Get current user data
+      const [rows] = await db.query(
+        'SELECT id, hash_password FROM usuario WHERE id = ? LIMIT 1',
+        [userId]
+      );
+      if (!rows.length)
+        return res.status(404).json({ error: 'User not found' });
+
+      const user = rows[0];
+
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.hash_password
+      );
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ error: 'Current password is incorrect' });
+      }
+
+      // Hash new password
+      const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password in database
+      await db.query('UPDATE usuario SET hash_password = ? WHERE id = ?', [
+        newHashedPassword,
+        userId,
+      ]);
+
+      res.json({ message: 'Password changed successfully' });
+    } catch (err) {
+      console.error('Change password error:', err);
+      res.status(500).json({ error: 'Server error' });
     }
-    
-    // Hash new password
-    const newHashedPassword = await bcrypt.hash(newPassword, 10);
-    
-    // Update password in database
-    await db.query('UPDATE usuario SET hash_password = ? WHERE id = ?', [newHashedPassword, userId]);
-    
-    res.json({ message: 'Password changed successfully' });
-  } catch (err) {
-    console.error('Change password error:', err);
-    res.status(500).json({ error: 'Server error' });
   }
-});
+);
 
 /**
  * @swagger
@@ -672,62 +835,87 @@ router.post('/change-password', authenticate, [
  *       500:
  *         description: Server error
  */
-router.patch('/profile', authenticate, [
-  body('username').optional().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
-  body('email').optional().isEmail().withMessage('Invalid email format')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  
-  const userId = req.user.sub;
-  const { username, email } = req.body;
-  
-  // Check if at least one field is provided
-  if (!username && !email) {
-    return res.status(400).json({ error: 'At least one field (username or email) must be provided' });
-  }
-  
-  try {
-    const updates = [];
-    const values = [];
-    
-    // Check for username availability if provided
-    if (username) {
-      const [existingUsername] = await db.query('SELECT id FROM usuario WHERE username = ? AND id != ? LIMIT 1', [username, userId]);
-      if (existingUsername.length > 0) {
-        return res.status(400).json({ error: 'Username already exists' });
-      }
-      updates.push('username = ?');
-      values.push(username);
+router.patch(
+  '/profile',
+  authenticate,
+  [
+    body('username')
+      .optional()
+      .isLength({ min: 3 })
+      .withMessage('Username must be at least 3 characters'),
+    body('email').optional().isEmail().withMessage('Invalid email format'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+
+    const userId = req.user.sub;
+    const { username, email } = req.body;
+
+    // Check if at least one field is provided
+    if (!username && !email) {
+      return res
+        .status(400)
+        .json({
+          error: 'At least one field (username or email) must be provided',
+        });
     }
-    
-    // Check for email availability if provided
-    if (email) {
-      const [existingEmail] = await db.query('SELECT id FROM usuario WHERE email = ? AND id != ? LIMIT 1', [email, userId]);
-      if (existingEmail.length > 0) {
-        return res.status(400).json({ error: 'Email already exists' });
+
+    try {
+      const updates = [];
+      const values = [];
+
+      // Check for username availability if provided
+      if (username) {
+        const [existingUsername] = await db.query(
+          'SELECT id FROM usuario WHERE username = ? AND id != ? LIMIT 1',
+          [username, userId]
+        );
+        if (existingUsername.length > 0) {
+          return res.status(400).json({ error: 'Username already exists' });
+        }
+        updates.push('username = ?');
+        values.push(username);
       }
-      updates.push('email = ?');
-      values.push(email);
+
+      // Check for email availability if provided
+      if (email) {
+        const [existingEmail] = await db.query(
+          'SELECT id FROM usuario WHERE email = ? AND id != ? LIMIT 1',
+          [email, userId]
+        );
+        if (existingEmail.length > 0) {
+          return res.status(400).json({ error: 'Email already exists' });
+        }
+        updates.push('email = ?');
+        values.push(email);
+      }
+
+      values.push(userId);
+
+      // Update user profile
+      await db.query(
+        `UPDATE usuario SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+
+      // Get updated user data
+      const [updatedUser] = await db.query(
+        'SELECT id, username, email, persona_id, is_superadmin FROM usuario WHERE id = ? LIMIT 1',
+        [userId]
+      );
+
+      res.json({
+        message: 'Profile updated successfully',
+        user: updatedUser[0],
+      });
+    } catch (err) {
+      console.error('Update profile error:', err);
+      res.status(500).json({ error: 'Server error' });
     }
-    
-    values.push(userId);
-    
-    // Update user profile
-    await db.query(`UPDATE usuario SET ${updates.join(', ')} WHERE id = ?`, values);
-    
-    // Get updated user data
-    const [updatedUser] = await db.query('SELECT id, username, email, persona_id, is_superadmin FROM usuario WHERE id = ? LIMIT 1', [userId]);
-    
-    res.json({ 
-      message: 'Profile updated successfully',
-      user: updatedUser[0]
-    });
-  } catch (err) {
-    console.error('Update profile error:', err);
-    res.status(500).json({ error: 'Server error' });
   }
-});
+);
 
 /**
  * @swagger
@@ -744,7 +932,8 @@ router.patch('/profile', authenticate, [
 router.get('/me', authenticate, async (req, res) => {
   try {
     // Join usuario with persona to get complete profile data
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         u.id, 
         u.username, 
@@ -764,21 +953,23 @@ router.get('/me', authenticate, async (req, res) => {
       FROM usuario u 
       LEFT JOIN persona p ON u.persona_id = p.id 
       WHERE u.id = ? LIMIT 1
-    `, [req.user.sub]);
-    
+    `,
+      [req.user.sub]
+    );
+
     if (!rows.length) return res.status(404).json({ error: 'not found' });
-    
+
     const user = rows[0];
-    
+
     // Include is_superadmin as boolean in the response
     user.is_superadmin = !!user.is_superadmin;
-    
+
     // Include totp_enabled status (true if totp_secret exists)
     user.totp_enabled = !!(user.totp_secret && user.totp_secret.trim() !== '');
-    
+
     // Remove totp_secret from response for security
     delete user.totp_secret;
-    
+
     // Structure the response to separate user and person data
     const response = {
       // User data
@@ -790,26 +981,31 @@ router.get('/me', authenticate, async (req, res) => {
       created_at: user.created_at,
       is_superadmin: user.is_superadmin,
       totp_enabled: user.totp_enabled,
-      
+
       // Person data (if exists)
-      persona: user.persona_id ? {
-        rut: user.rut,
-        dv: user.dv,
-        nombres: user.nombres,
-        apellidos: user.apellidos,
-        email: user.persona_email,
-        telefono: user.telefono,
-        direccion: user.direccion
-      } : null
+      persona: user.persona_id
+        ? {
+            rut: user.rut,
+            dv: user.dv,
+            nombres: user.nombres,
+            apellidos: user.apellidos,
+            email: user.persona_email,
+            telefono: user.telefono,
+            direccion: user.direccion,
+          }
+        : null,
     };
-    
+
     const [membresias] = await db.query(
       'SELECT comunidad_id AS comunidadId, rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1',
       [user.persona_id]
     );
-    const memberships = (membresias || []).map(m => ({ comunidadId: m.comunidadId, rol: String(m.rol || '').toLowerCase() }));
+    const memberships = (membresias || []).map((m) => ({
+      comunidadId: m.comunidadId,
+      rol: String(m.rol || '').toLowerCase(),
+    }));
     // roles globales derivados de memberships
-    const roles = Array.from(new Set(memberships.map(m => m.rol)));
+    const roles = Array.from(new Set(memberships.map((m) => m.rol)));
     return res.json({ ...response, roles, memberships });
   } catch (err) {
     console.error(err);
@@ -858,72 +1054,100 @@ router.get('/me', authenticate, async (req, res) => {
  *       500:
  *         description: Server error
  */
-router.patch('/profile/persona', authenticate, [
-  body('nombres').optional().isLength({ min: 1 }).withMessage('Names cannot be empty'),
-  body('apellidos').optional().isLength({ min: 1 }).withMessage('Last names cannot be empty'),
-  body('telefono').optional().isLength({ min: 1 }).withMessage('Phone cannot be empty'),
-  body('email').optional().isEmail().withMessage('Invalid email format')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  
-  const userId = req.user.sub;
-  const { nombres, apellidos, telefono, direccion, email } = req.body;
-  
-  try {
-    // Get user's persona_id
-    const [userRows] = await db.query('SELECT persona_id FROM usuario WHERE id = ? LIMIT 1', [userId]);
-    if (!userRows.length) return res.status(404).json({ error: 'User not found' });
-    
-    const personaId = userRows[0].persona_id;
-    if (!personaId) return res.status(400).json({ error: 'No persona linked to this user' });
-    
-    // Build update query
-    const updates = [];
-    const values = [];
-    
-    if (nombres !== undefined) {
-      updates.push('nombres = ?');
-      values.push(nombres);
+router.patch(
+  '/profile/persona',
+  authenticate,
+  [
+    body('nombres')
+      .optional()
+      .isLength({ min: 1 })
+      .withMessage('Names cannot be empty'),
+    body('apellidos')
+      .optional()
+      .isLength({ min: 1 })
+      .withMessage('Last names cannot be empty'),
+    body('telefono')
+      .optional()
+      .isLength({ min: 1 })
+      .withMessage('Phone cannot be empty'),
+    body('email').optional().isEmail().withMessage('Invalid email format'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+
+    const userId = req.user.sub;
+    const { nombres, apellidos, telefono, direccion, email } = req.body;
+
+    try {
+      // Get user's persona_id
+      const [userRows] = await db.query(
+        'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
+        [userId]
+      );
+      if (!userRows.length)
+        return res.status(404).json({ error: 'User not found' });
+
+      const personaId = userRows[0].persona_id;
+      if (!personaId)
+        return res
+          .status(400)
+          .json({ error: 'No persona linked to this user' });
+
+      // Build update query
+      const updates = [];
+      const values = [];
+
+      if (nombres !== undefined) {
+        updates.push('nombres = ?');
+        values.push(nombres);
+      }
+      if (apellidos !== undefined) {
+        updates.push('apellidos = ?');
+        values.push(apellidos);
+      }
+      if (telefono !== undefined) {
+        updates.push('telefono = ?');
+        values.push(telefono);
+      }
+      if (direccion !== undefined) {
+        updates.push('direccion = ?');
+        values.push(direccion);
+      }
+      if (email !== undefined) {
+        updates.push('email = ?');
+        values.push(email);
+      }
+
+      if (updates.length === 0) {
+        return res.status(400).json({ error: 'No fields to update' });
+      }
+
+      values.push(personaId);
+
+      // Update persona data
+      await db.query(
+        `UPDATE persona SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+
+      // Get updated persona data
+      const [updatedPersona] = await db.query(
+        'SELECT rut, dv, nombres, apellidos, email, telefono, direccion FROM persona WHERE id = ? LIMIT 1',
+        [personaId]
+      );
+
+      res.json({
+        message: 'Persona information updated successfully',
+        persona: updatedPersona[0],
+      });
+    } catch (err) {
+      console.error('Update persona error:', err);
+      res.status(500).json({ error: 'Server error' });
     }
-    if (apellidos !== undefined) {
-      updates.push('apellidos = ?');
-      values.push(apellidos);
-    }
-    if (telefono !== undefined) {
-      updates.push('telefono = ?');
-      values.push(telefono);
-    }
-    if (direccion !== undefined) {
-      updates.push('direccion = ?');
-      values.push(direccion);
-    }
-    if (email !== undefined) {
-      updates.push('email = ?');
-      values.push(email);
-    }
-    
-    if (updates.length === 0) {
-      return res.status(400).json({ error: 'No fields to update' });
-    }
-    
-    values.push(personaId);
-    
-    // Update persona data
-    await db.query(`UPDATE persona SET ${updates.join(', ')} WHERE id = ?`, values);
-    
-    // Get updated persona data
-    const [updatedPersona] = await db.query('SELECT rut, dv, nombres, apellidos, email, telefono, direccion FROM persona WHERE id = ? LIMIT 1', [personaId]);
-    
-    res.json({ 
-      message: 'Persona information updated successfully',
-      persona: updatedPersona[0]
-    });
-  } catch (err) {
-    console.error('Update persona error:', err);
-    res.status(500).json({ error: 'Server error' });
   }
-});
+);
 
 /**
  * @swagger
@@ -947,11 +1171,11 @@ router.get('/sessions', authenticate, async (req, res) => {
       location: 'Unknown Location', // You could use IP geolocation
       ip: req.ip || req.connection.remoteAddress || 'Unknown IP',
       lastAccess: new Date().toISOString(),
-      isCurrent: true
+      isCurrent: true,
     };
-    
+
     res.json({
-      sessions: [currentSession]
+      sessions: [currentSession],
     });
   } catch (err) {
     console.error(err);
@@ -979,7 +1203,6 @@ router.get('/sessions', authenticate, async (req, res) => {
  */
 router.delete('/sessions/:sessionId', authenticate, async (req, res) => {
   try {
-    
     // For now, just return success
     // In a real implementation, you would revoke the specific session token
     res.json({ message: 'Session closed successfully' });
@@ -1029,34 +1252,37 @@ router.delete('/sessions', authenticate, async (req, res) => {
 router.get('/preferences', authenticate, async (req, res) => {
   try {
     const userId = req.user.sub;
-    
+
     // Get user preferences from database
-    const [rows] = await db.query('SELECT preferences FROM user_preferences WHERE user_id = ? LIMIT 1', [userId]);
-    
+    const [rows] = await db.query(
+      'SELECT preferences FROM user_preferences WHERE user_id = ? LIMIT 1',
+      [userId]
+    );
+
     if (rows.length > 0) {
       return res.json(rows[0].preferences);
     }
-    
+
     // If no preferences found, return and create default preferences
     const defaultPreferences = {
       notifications: {
         email_enabled: true,
         payment_notifications: true,
-        weekly_summaries: true
+        weekly_summaries: true,
       },
       display: {
         timezone: 'America/Santiago',
         date_format: 'DD/MM/YYYY',
-        language: 'es'
-      }
+        language: 'es',
+      },
     };
-    
+
     // Create default preferences for user
     await db.query(
       'INSERT INTO user_preferences (user_id, preferences) VALUES (?, ?)',
       [userId, JSON.stringify(defaultPreferences)]
     );
-    
+
     res.json(defaultPreferences);
   } catch (err) {
     console.error('Get preferences error:', err);
@@ -1109,21 +1335,21 @@ router.patch('/preferences', authenticate, async (req, res) => {
   try {
     const userId = req.user.sub;
     const preferences = req.body;
-    
+
     // Validate preferences structure
     if (typeof preferences !== 'object') {
       return res.status(400).json({ error: 'Invalid preferences format' });
     }
-    
+
     // Save preferences to database
     await db.query(
       'INSERT INTO user_preferences (user_id, preferences) VALUES (?, ?) ON DUPLICATE KEY UPDATE preferences = ?',
       [userId, JSON.stringify(preferences), JSON.stringify(preferences)]
     );
-    
-    res.json({ 
+
+    res.json({
       message: 'Preferences updated successfully',
-      preferences: preferences
+      preferences: preferences,
     });
   } catch (err) {
     console.error('Update preferences error:', err);
@@ -1132,7 +1358,6 @@ router.patch('/preferences', authenticate, async (req, res) => {
 });
 
 module.exports = router;
-
 
 // // =========================================
 // // ENDPOINTS DE AUTENTICACI�N (AUTH)
@@ -1171,7 +1396,3 @@ module.exports = router;
 // // PREFERENCIAS
 // GET: /auth/preferences
 // PATCH: /auth/preferences
-
-
-
-

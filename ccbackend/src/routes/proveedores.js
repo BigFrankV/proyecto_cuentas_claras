@@ -61,12 +61,24 @@ const { requireCommunity } = require('../middleware/tenancy');
  *           type: integer
  *           default: 0
  */
-router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { activo, search, giro, rut, sort, limit = 100, offset = 0 } = req.query;
+router.get(
+  '/comunidad/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const {
+        activo,
+        search,
+        giro,
+        rut,
+        sort,
+        limit = 100,
+        offset = 0,
+      } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         p.id,
         p.comunidad_id,
@@ -95,54 +107,55 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
       WHERE p.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (activo !== undefined) {
-      query += ` AND p.activo = ?`;
-      params.push(activo === 'true' || activo === '1' ? 1 : 0);
+      if (activo !== undefined) {
+        query += ` AND p.activo = ?`;
+        params.push(activo === 'true' || activo === '1' ? 1 : 0);
+      }
+
+      if (search) {
+        query += ` AND p.razon_social LIKE ?`;
+        params.push(`%${search}%`);
+      }
+
+      if (giro) {
+        query += ` AND p.giro LIKE ?`;
+        params.push(`%${giro}%`);
+      }
+
+      if (rut) {
+        query += ` AND p.rut LIKE ?`;
+        params.push(`%${rut}%`);
+      }
+
+      query += ` GROUP BY p.id, c.razon_social`;
+
+      // Ordenamiento
+      if (sort === 'activo') {
+        query += ` ORDER BY p.activo DESC, p.razon_social ASC`;
+      } else if (sort === 'nombre') {
+        query += ` ORDER BY p.razon_social ASC`;
+      } else if (sort === 'total_gastado') {
+        query += ` ORDER BY COALESCE(SUM(g.monto), 0) DESC`;
+      } else if (sort === 'ultimo_gasto') {
+        query += ` ORDER BY MAX(g.fecha) DESC`;
+      } else {
+        query += ` ORDER BY p.activo DESC, p.razon_social ASC`;
+      }
+
+      query += ` LIMIT ? OFFSET ?`;
+      params.push(Number(limit), Number(offset));
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al listar proveedores:', error);
+      res.status(500).json({ error: 'Error al listar proveedores' });
     }
-
-    if (search) {
-      query += ` AND p.razon_social LIKE ?`;
-      params.push(`%${search}%`);
-    }
-
-    if (giro) {
-      query += ` AND p.giro LIKE ?`;
-      params.push(`%${giro}%`);
-    }
-
-    if (rut) {
-      query += ` AND p.rut LIKE ?`;
-      params.push(`%${rut}%`);
-    }
-
-    query += ` GROUP BY p.id, c.razon_social`;
-
-    // Ordenamiento
-    if (sort === 'activo') {
-      query += ` ORDER BY p.activo DESC, p.razon_social ASC`;
-    } else if (sort === 'nombre') {
-      query += ` ORDER BY p.razon_social ASC`;
-    } else if (sort === 'total_gastado') {
-      query += ` ORDER BY COALESCE(SUM(g.monto), 0) DESC`;
-    } else if (sort === 'ultimo_gasto') {
-      query += ` ORDER BY MAX(g.fecha) DESC`;
-    } else {
-      query += ` ORDER BY p.activo DESC, p.razon_social ASC`;
-    }
-
-    query += ` LIMIT ? OFFSET ?`;
-    params.push(Number(limit), Number(offset));
-
-    const [rows] = await db.query(query, params);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al listar proveedores:', error);
-    res.status(500).json({ error: 'Error al listar proveedores' });
   }
-});
+);
 
 /**
  * @swagger
@@ -151,11 +164,15 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
  *     tags: [Proveedores]
  *     summary: Estadísticas generales de proveedores
  */
-router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/estadisticas',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         COUNT(p.id) AS total_proveedores,
         SUM(CASE WHEN p.activo = 1 THEN 1 ELSE 0 END) AS proveedores_activos,
@@ -179,14 +196,15 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
       WHERE p.comunidad_id = ?
     `;
 
-    const [[stats]] = await db.query(query, [comunidadId, comunidadId]);
+      const [[stats]] = await db.query(query, [comunidadId, comunidadId]);
 
-    res.json(stats);
-  } catch (error) {
-    console.error('Error al obtener estadísticas:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas' });
+      res.json(stats);
+    } catch (error) {
+      console.error('Error al obtener estadísticas:', error);
+      res.status(500).json({ error: 'Error al obtener estadísticas' });
+    }
   }
-});
+);
 
 // =========================================
 // 2. DETALLE COMPLETO
@@ -343,11 +361,15 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
  *     tags: [Proveedores]
  *     summary: Top 10 proveedores por volumen de gasto
  */
-router.get('/comunidad/:comunidadId/top-volumen', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/top-volumen',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         p.id,
         p.razon_social AS nombre,
@@ -367,14 +389,15 @@ router.get('/comunidad/:comunidadId/top-volumen', authenticate, requireCommunity
       LIMIT 10
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener top proveedores:', error);
-    res.status(500).json({ error: 'Error al obtener top proveedores' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener top proveedores:', error);
+      res.status(500).json({ error: 'Error al obtener top proveedores' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -389,12 +412,16 @@ router.get('/comunidad/:comunidadId/top-volumen', authenticate, requireCommunity
  *           type: integer
  *           default: 90
  */
-router.get('/comunidad/:comunidadId/inactivos', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { dias = 90 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/inactivos',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { dias = 90 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         p.id,
         p.razon_social AS nombre,
@@ -414,14 +441,15 @@ router.get('/comunidad/:comunidadId/inactivos', authenticate, requireCommunity('
       ORDER BY DATEDIFF(CURDATE(), MAX(g.fecha)) DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId, Number(dias)]);
+      const [rows] = await db.query(query, [comunidadId, Number(dias)]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener proveedores inactivos:', error);
-    res.status(500).json({ error: 'Error al obtener proveedores inactivos' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener proveedores inactivos:', error);
+      res.status(500).json({ error: 'Error al obtener proveedores inactivos' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -436,12 +464,16 @@ router.get('/comunidad/:comunidadId/inactivos', authenticate, requireCommunity('
  *           type: integer
  *           default: 12
  */
-router.get('/comunidad/:comunidadId/analisis-mensual', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { meses = 12 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/analisis-mensual',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { meses = 12 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         p.id,
         p.razon_social AS nombre,
@@ -460,14 +492,15 @@ router.get('/comunidad/:comunidadId/analisis-mensual', authenticate, requireComm
       ORDER BY p.razon_social, anio DESC, mes DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId, Number(meses)]);
+      const [rows] = await db.query(query, [comunidadId, Number(meses)]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener análisis mensual:', error);
-    res.status(500).json({ error: 'Error al obtener análisis mensual' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener análisis mensual:', error);
+      res.status(500).json({ error: 'Error al obtener análisis mensual' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -476,11 +509,15 @@ router.get('/comunidad/:comunidadId/analisis-mensual', authenticate, requireComm
  *     tags: [Proveedores]
  *     summary: Proveedores agrupados por categoría de gasto
  */
-router.get('/comunidad/:comunidadId/por-categoria', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/por-categoria',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         cat.nombre AS categoria,
         cat.tipo AS tipo_categoria,
@@ -497,14 +534,17 @@ router.get('/comunidad/:comunidadId/por-categoria', authenticate, requireCommuni
       ORDER BY COALESCE(SUM(g.monto), 0) DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener proveedores por categoría:', error);
-    res.status(500).json({ error: 'Error al obtener proveedores por categoría' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener proveedores por categoría:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener proveedores por categoría' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -519,12 +559,16 @@ router.get('/comunidad/:comunidadId/por-categoria', authenticate, requireCommuni
  *           type: integer
  *           default: 3
  */
-router.get('/comunidad/:comunidadId/comparativa', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { meses = 3 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/comparativa',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { meses = 3 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         p.id,
         p.razon_social AS nombre,
@@ -549,24 +593,31 @@ router.get('/comunidad/:comunidadId/comparativa', authenticate, requireCommunity
       ORDER BY monto_periodo_actual DESC
     `;
 
-    const mesesNum = Number(meses);
-    const [rows] = await db.query(query, [
-      mesesNum, mesesNum,
-      mesesNum * 2, mesesNum,
-      mesesNum * 2, mesesNum,
-      mesesNum * 2, mesesNum,
-      mesesNum,
-      mesesNum * 2, mesesNum,
-      mesesNum * 2, mesesNum,
-      comunidadId
-    ]);
+      const mesesNum = Number(meses);
+      const [rows] = await db.query(query, [
+        mesesNum,
+        mesesNum,
+        mesesNum * 2,
+        mesesNum,
+        mesesNum * 2,
+        mesesNum,
+        mesesNum * 2,
+        mesesNum,
+        mesesNum,
+        mesesNum * 2,
+        mesesNum,
+        mesesNum * 2,
+        mesesNum,
+        comunidadId,
+      ]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener comparativa:', error);
-    res.status(500).json({ error: 'Error al obtener comparativa' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener comparativa:', error);
+      res.status(500).json({ error: 'Error al obtener comparativa' });
+    }
   }
-});
+);
 
 // =========================================
 // 4. DASHBOARD Y MÉTRICAS
@@ -579,11 +630,15 @@ router.get('/comunidad/:comunidadId/comparativa', authenticate, requireCommunity
  *     tags: [Proveedores]
  *     summary: Resumen general para dashboard
  */
-router.get('/comunidad/:comunidadId/dashboard', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/dashboard',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         COUNT(CASE WHEN p.activo = 1 THEN 1 END) AS proveedores_activos,
         COUNT(CASE WHEN p.activo = 0 THEN 1 END) AS proveedores_inactivos,
@@ -598,14 +653,15 @@ router.get('/comunidad/:comunidadId/dashboard', authenticate, requireCommunity('
       WHERE p.comunidad_id = ?
     `;
 
-    const [[dashboard]] = await db.query(query, [comunidadId]);
+      const [[dashboard]] = await db.query(query, [comunidadId]);
 
-    res.json(dashboard);
-  } catch (error) {
-    console.error('Error al obtener dashboard:', error);
-    res.status(500).json({ error: 'Error al obtener dashboard' });
+      res.json(dashboard);
+    } catch (error) {
+      console.error('Error al obtener dashboard:', error);
+      res.status(500).json({ error: 'Error al obtener dashboard' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -614,11 +670,15 @@ router.get('/comunidad/:comunidadId/dashboard', authenticate, requireCommunity('
  *     tags: [Proveedores]
  *     summary: Top 5 proveedores del mes
  */
-router.get('/comunidad/:comunidadId/top-mes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/top-mes',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         p.id,
         p.razon_social AS nombre,
@@ -637,14 +697,15 @@ router.get('/comunidad/:comunidadId/top-mes', authenticate, requireCommunity('co
       LIMIT 5
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener top del mes:', error);
-    res.status(500).json({ error: 'Error al obtener top del mes' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener top del mes:', error);
+      res.status(500).json({ error: 'Error al obtener top del mes' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -659,12 +720,16 @@ router.get('/comunidad/:comunidadId/top-mes', authenticate, requireCommunity('co
  *           type: integer
  *           default: 6
  */
-router.get('/comunidad/:comunidadId/distribucion', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { meses = 6 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/distribucion',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { meses = 6 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         p.razon_social AS nombre,
         COALESCE(SUM(g.monto), 0) AS total_monto,
@@ -685,15 +750,21 @@ router.get('/comunidad/:comunidadId/distribucion', authenticate, requireCommunit
       LIMIT 10
     `;
 
-    const mesesNum = Number(meses);
-    const [rows] = await db.query(query, [comunidadId, mesesNum, comunidadId, mesesNum]);
+      const mesesNum = Number(meses);
+      const [rows] = await db.query(query, [
+        comunidadId,
+        mesesNum,
+        comunidadId,
+        mesesNum,
+      ]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener distribución:', error);
-    res.status(500).json({ error: 'Error al obtener distribución' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener distribución:', error);
+      res.status(500).json({ error: 'Error al obtener distribución' });
+    }
   }
-});
+);
 
 /**
  * GET /proveedores
@@ -729,17 +800,24 @@ router.get('/', authenticate, async (req, res) => {
         [req.user.persona_id]
       );
 
-      const comunidadIds = comRows.map(r => r.comunidad_id);
+      const comunidadIds = comRows.map((r) => r.comunidad_id);
       if (comunidadIds.length === 0) {
         // usuario sin comunidades -> no puede ver proveedores
         return res.json({
           data: [],
-          pagination: { total: 0, page: Number(page), limit: Number(limit), pages: 0 }
+          pagination: {
+            total: 0,
+            page: Number(page),
+            limit: Number(limit),
+            pages: 0,
+          },
         });
       }
 
       // anexar cláusula IN con placeholders
-      where += ` AND p.comunidad_id IN (${comunidadIds.map(() => '?').join(',')})`;
+      where += ` AND p.comunidad_id IN (${comunidadIds
+        .map(() => '?')
+        .join(',')})`;
       params.push(...comunidadIds);
     }
 
@@ -777,7 +855,12 @@ router.get('/', authenticate, async (req, res) => {
 
     res.json({
       data: rows,
-      pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / limit) }
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (err) {
     console.error('Error GET /proveedores:', err);
@@ -796,25 +879,30 @@ router.get('/', authenticate, async (req, res) => {
  *     tags: [Proveedores]
  *     summary: Validar que el RUT no esté duplicado
  */
-router.post('/comunidad/:comunidadId/validar-rut', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { rut, dv, id = 0 } = req.body;
+router.post(
+  '/comunidad/:comunidadId/validar-rut',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { rut, dv, id = 0 } = req.body;
 
-    const query = `
+      const query = `
       SELECT COUNT(*) AS existe_rut
       FROM proveedor
       WHERE comunidad_id = ? AND rut = ? AND dv = ? AND id != ?
     `;
 
-    const [[result]] = await db.query(query, [comunidadId, rut, dv, id]);
+      const [[result]] = await db.query(query, [comunidadId, rut, dv, id]);
 
-    res.json({ existe: result.existe_rut > 0 });
-  } catch (error) {
-    console.error('Error al validar RUT:', error);
-    res.status(500).json({ error: 'Error al validar RUT' });
+      res.json({ existe: result.existe_rut > 0 });
+    } catch (error) {
+      console.error('Error al validar RUT:', error);
+      res.status(500).json({ error: 'Error al validar RUT' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -840,9 +928,10 @@ router.get('/:id/validar-eliminacion', authenticate, async (req, res) => {
     const [[result]] = await db.query(query, [proveedorId]);
 
     res.json({
-      puede_eliminar: result.documentos_asociados === 0 && result.gastos_asociados === 0,
+      puede_eliminar:
+        result.documentos_asociados === 0 && result.gastos_asociados === 0,
       documentos_asociados: result.documentos_asociados,
-      gastos_asociados: result.gastos_asociados
+      gastos_asociados: result.gastos_asociados,
     });
   } catch (error) {
     console.error('Error al validar eliminación:', error);
@@ -861,11 +950,15 @@ router.get('/:id/validar-eliminacion', authenticate, async (req, res) => {
  *     tags: [Proveedores]
  *     summary: Exportar proveedores con todos sus datos
  */
-router.get('/comunidad/:comunidadId/export', authenticate, requireCommunity('comunidadId', ['admin', 'superadmin']), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/export',
+  authenticate,
+  requireCommunity('comunidadId', ['admin', 'superadmin']),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         p.id,
         CONCAT(p.rut, '-', p.dv) AS rut_completo,
@@ -889,14 +982,15 @@ router.get('/comunidad/:comunidadId/export', authenticate, requireCommunity('com
       ORDER BY p.razon_social
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al exportar proveedores:', error);
-    res.status(500).json({ error: 'Error al exportar proveedores' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al exportar proveedores:', error);
+      res.status(500).json({ error: 'Error al exportar proveedores' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -905,11 +999,15 @@ router.get('/comunidad/:comunidadId/export', authenticate, requireCommunity('com
  *     tags: [Proveedores]
  *     summary: Lista simple para selects/dropdowns
  */
-router.get('/comunidad/:comunidadId/dropdown', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/dropdown',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         id,
         CONCAT(razon_social, ' (', rut, '-', dv, ')') AS nombre_completo,
@@ -920,14 +1018,15 @@ router.get('/comunidad/:comunidadId/dropdown', authenticate, requireCommunity('c
       ORDER BY razon_social
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener lista de proveedores:', error);
-    res.status(500).json({ error: 'Error al obtener lista de proveedores' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener lista de proveedores:', error);
+      res.status(500).json({ error: 'Error al obtener lista de proveedores' });
+    }
   }
-});
+);
 
 // =========================================
 // 7. CRUD BÁSICO
@@ -940,38 +1039,55 @@ router.get('/comunidad/:comunidadId/dropdown', authenticate, requireCommunity('c
  *     tags: [Proveedores]
  *     summary: Crear nuevo proveedor
  */
-router.post('/comunidad/:comunidadId', [
-  authenticate,
-  requireCommunity('comunidadId', ['admin', 'superadmin']),
-  body('rut').notEmpty(),
-  body('dv').notEmpty(),
-  body('razon_social').notEmpty()
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { rut, dv, razon_social, giro, email, telefono, direccion } = req.body;
-
-    const [result] = await db.query(
-      'INSERT INTO proveedor (comunidad_id, rut, dv, razon_social, giro, email, telefono, direccion) VALUES (?,?,?,?,?,?,?,?)',
-      [comunidadId, rut, dv, razon_social, giro || null, email || null, telefono || null, direccion || null]
-    );
-
-    const [row] = await db.query('SELECT id, rut, dv, razon_social FROM proveedor WHERE id = ? LIMIT 1', [result.insertId]);
-
-    res.status(201).json(row[0]);
-  } catch (error) {
-    console.error('Error al crear proveedor:', error);
-    if (error && error.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ error: 'Proveedor ya existe' });
+router.post(
+  '/comunidad/:comunidadId',
+  [
+    authenticate,
+    requireCommunity('comunidadId', ['admin', 'superadmin']),
+    body('rut').notEmpty(),
+    body('dv').notEmpty(),
+    body('razon_social').notEmpty(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
-    res.status(500).json({ error: 'Error al crear proveedor' });
+
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { rut, dv, razon_social, giro, email, telefono, direccion } =
+        req.body;
+
+      const [result] = await db.query(
+        'INSERT INTO proveedor (comunidad_id, rut, dv, razon_social, giro, email, telefono, direccion) VALUES (?,?,?,?,?,?,?,?)',
+        [
+          comunidadId,
+          rut,
+          dv,
+          razon_social,
+          giro || null,
+          email || null,
+          telefono || null,
+          direccion || null,
+        ]
+      );
+
+      const [row] = await db.query(
+        'SELECT id, rut, dv, razon_social FROM proveedor WHERE id = ? LIMIT 1',
+        [result.insertId]
+      );
+
+      res.status(201).json(row[0]);
+    } catch (error) {
+      console.error('Error al crear proveedor:', error);
+      if (error && error.code === 'ER_DUP_ENTRY') {
+        return res.status(409).json({ error: 'Proveedor ya existe' });
+      }
+      res.status(500).json({ error: 'Error al crear proveedor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -980,35 +1096,55 @@ router.post('/comunidad/:comunidadId', [
  *     tags: [Proveedores]
  *     summary: Actualizar proveedor
  */
-router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const fields = ['rut', 'dv', 'razon_social', 'giro', 'email', 'telefono', 'direccion', 'activo'];
-    const updates = [];
-    const values = [];
+router.patch(
+  '/:id',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const fields = [
+        'rut',
+        'dv',
+        'razon_social',
+        'giro',
+        'email',
+        'telefono',
+        'direccion',
+        'activo',
+      ];
+      const updates = [];
+      const values = [];
 
-    fields.forEach(f => {
-      if (req.body[f] !== undefined) {
-        updates.push(`${f} = ?`);
-        values.push(req.body[f]);
+      fields.forEach((f) => {
+        if (req.body[f] !== undefined) {
+          updates.push(`${f} = ?`);
+          values.push(req.body[f]);
+        }
+      });
+
+      if (!updates.length) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
       }
-    });
 
-    if (!updates.length) {
-      return res.status(400).json({ error: 'No hay campos para actualizar' });
+      values.push(id);
+      await db.query(
+        `UPDATE proveedor SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+
+      const [rows] = await db.query(
+        'SELECT id, rut, dv, razon_social, activo FROM proveedor WHERE id = ? LIMIT 1',
+        [id]
+      );
+
+      res.json(rows[0]);
+    } catch (error) {
+      console.error('Error al actualizar proveedor:', error);
+      res.status(500).json({ error: 'Error al actualizar proveedor' });
     }
-
-    values.push(id);
-    await db.query(`UPDATE proveedor SET ${updates.join(', ')} WHERE id = ?`, values);
-
-    const [rows] = await db.query('SELECT id, rut, dv, razon_social, activo FROM proveedor WHERE id = ? LIMIT 1', [id]);
-
-    res.json(rows[0]);
-  } catch (error) {
-    console.error('Error al actualizar proveedor:', error);
-    res.status(500).json({ error: 'Error al actualizar proveedor' });
   }
-});
+);
 
 /**
  * @swagger
@@ -1017,34 +1153,39 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req,
  *     tags: [Proveedores]
  *     summary: Eliminar proveedor (solo si no tiene dependencias)
  */
-router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('superadmin', 'admin'),
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
 
-    // Verificar si tiene documentos asociados
-    const [[check]] = await db.query(
-      'SELECT COUNT(*) AS count FROM documento_compra WHERE proveedor_id = ?',
-      [id]
-    );
+      // Verificar si tiene documentos asociados
+      const [[check]] = await db.query(
+        'SELECT COUNT(*) AS count FROM documento_compra WHERE proveedor_id = ?',
+        [id]
+      );
 
-    if (check.count > 0) {
-      return res.status(400).json({ 
-        error: 'No se puede eliminar el proveedor porque tiene documentos asociados',
-        documentos_asociados: check.count
-      });
+      if (check.count > 0) {
+        return res.status(400).json({
+          error:
+            'No se puede eliminar el proveedor porque tiene documentos asociados',
+          documentos_asociados: check.count,
+        });
+      }
+
+      await db.query('DELETE FROM proveedor WHERE id = ?', [id]);
+
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error al eliminar proveedor:', error);
+      res.status(500).json({ error: 'Error al eliminar proveedor' });
     }
-
-    await db.query('DELETE FROM proveedor WHERE id = ?', [id]);
-
-    res.status(204).end();
-  } catch (error) {
-    console.error('Error al eliminar proveedor:', error);
-    res.status(500).json({ error: 'Error al eliminar proveedor' });
   }
-});
+);
 
 module.exports = router;
-
 
 // =========================================
 // ENDPOINTS DE PROVEEDORES
@@ -1083,7 +1224,3 @@ module.exports = router;
 // POST: /proveedores/comunidad/:comunidadId
 // PATCH: /proveedores/:id
 // DELETE: /proveedores/:id
-
-
-
-

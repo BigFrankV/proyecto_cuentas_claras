@@ -7,6 +7,7 @@ Se han generado los siguientes archivos en el directorio `base/`:
 ### 📄 Scripts SQL
 
 1. **`crear_vistas.sql`** (Completo)
+
    - Script con configuración avanzada
    - Incluye DEFINERs y SQL SECURITY
    - Documentación detallada de cada vista
@@ -14,6 +15,7 @@ Se han generado los siguientes archivos en el directorio `base/`:
    - **Vistas:** 8
 
 2. **`crear_vistas_simple.sql`** ⭐ (Recomendado)
+
    - Script simplificado sin DEFINERs
    - Compatible con cualquier usuario
    - Sintaxis clara y simple
@@ -28,6 +30,7 @@ Se han generado los siguientes archivos en el directorio `base/`:
 ### 🔧 Scripts de Automatización
 
 4. **`crear_vistas.bat`**
+
    - Script batch para Windows (CMD)
    - Menú interactivo
    - Soporta MySQL local y Docker
@@ -42,6 +45,7 @@ Se han generado los siguientes archivos en el directorio `base/`:
 ### 📖 Documentación
 
 6. **`README_VISTAS.md`**
+
    - Documentación completa
    - Instrucciones de uso
    - Troubleshooting
@@ -55,16 +59,16 @@ Se han generado los siguientes archivos en el directorio `base/`:
 
 Total: **8 vistas**
 
-| # | Vista | Propósito |
-|---|-------|-----------|
-| 1 | `bitacora_conserjeria` | Eventos de conserjería |
-| 2 | `cargo_financiero_unidad` | Cargos por unidad |
-| 3 | `detalle_cargo_unidad` | Detalles de cargos |
-| 4 | `emision_gasto_comun` | Emisiones de gastos |
-| 5 | `emision_gasto_detalle` | Detalles de emisiones |
-| 6 | `ticket` | Tickets de soporte |
-| 7 | `titularidad_unidad` | Titularidad de unidades |
-| 8 | `usuario_miembro_comunidad` | Usuarios con roles |
+| #   | Vista                       | Propósito               |
+| --- | --------------------------- | ----------------------- |
+| 1   | `bitacora_conserjeria`      | Eventos de conserjería  |
+| 2   | `cargo_financiero_unidad`   | Cargos por unidad       |
+| 3   | `detalle_cargo_unidad`      | Detalles de cargos      |
+| 4   | `emision_gasto_comun`       | Emisiones de gastos     |
+| 5   | `emision_gasto_detalle`     | Detalles de emisiones   |
+| 6   | `ticket`                    | Tickets de soporte      |
+| 7   | `titularidad_unidad`        | Titularidad de unidades |
+| 8   | `usuario_miembro_comunidad` | Usuarios con roles      |
 
 ## 🚀 Uso Rápido
 
@@ -77,18 +81,21 @@ Total: **8 vistas**
 ### Línea de Comandos
 
 #### MySQL Local
+
 ```cmd
 cd base
 mysql -u cuentasclaras -p cuentasclaras < crear_vistas_simple.sql
 ```
 
 #### Docker
+
 ```cmd
 cd base
 docker exec -i nombre_contenedor mysql -u cuentasclaras -pcuentasclaras cuentasclaras < crear_vistas_simple.sql
 ```
 
 ### Verificar
+
 ```cmd
 mysql -u cuentasclaras -p cuentasclaras < verificar_vistas.sql
 ```
@@ -109,6 +116,7 @@ base/
 ## ⚡ Casos de Uso
 
 ### Caso 1: Primera vez
+
 ```bash
 # 1. Importar esquema completo
 mysql -u cuentasclaras -p cuentasclaras < cuentasclaras.sql
@@ -121,12 +129,14 @@ mysql -u cuentasclaras -p cuentasclaras < verificar_vistas.sql
 ```
 
 ### Caso 2: Recrear vistas
+
 ```bash
 # Solo ejecutar el script (elimina y recrea automáticamente)
 mysql -u cuentasclaras -p cuentasclaras < crear_vistas_simple.sql
 ```
 
 ### Caso 3: Troubleshooting
+
 ```bash
 # 1. Verificar qué vistas existen
 mysql -u cuentasclaras -p -e "SHOW FULL TABLES WHERE Table_type = 'VIEW';" cuentasclaras
@@ -141,6 +151,7 @@ mysql -u cuentasclaras -p cuentasclaras < verificar_vistas.sql
 ## 🔐 Permisos Necesarios
 
 El usuario de MySQL necesita:
+
 - `CREATE VIEW` en la base de datos `cuentasclaras`
 - `SELECT` en las tablas base
 - `DROP` (para eliminar vistas existentes)
@@ -154,16 +165,21 @@ FLUSH PRIVILEGES;
 ## 🐛 Solución de Problemas
 
 ### Problema: "Access denied"
+
 **Solución:** Usar `crear_vistas_simple.sql` y verificar permisos
 
 ### Problema: "Table doesn't exist"
+
 **Solución:** Importar primero el esquema: `cuentasclaras.sql`
 
 ### Problema: "View already exists"
+
 **Solución:** Los scripts incluyen `DROP VIEW IF EXISTS`, no debería pasar
 
 ### Problema: En Docker no funciona
-**Solución:** 
+
+**Solución:**
+
 ```bash
 # Verificar que el contenedor está corriendo
 docker ps

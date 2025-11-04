@@ -309,14 +309,15 @@ COMUNIDAD
 ## Comparación: Gestión de Roles
 
 ### ANTES ❌
+
 ```sql
 -- Un rol por persona en comunidad
-INSERT INTO membresia_comunidad 
+INSERT INTO membresia_comunidad
   (persona_id, comunidad_id, rol)
 VALUES (1, 1, 'propietario');
 
 -- Para agregar segundo rol: Nueva fila
-INSERT INTO membresia_comunidad 
+INSERT INTO membresia_comunidad
   (persona_id, comunidad_id, rol)
 VALUES (1, 1, 'comite');
 
@@ -326,11 +327,12 @@ VALUES (1, 1, 'comite');
 ```
 
 ### DESPUÉS ✅
+
 ```sql
 -- Múltiples roles por usuario
-INSERT INTO usuario_comunidad_rol 
+INSERT INTO usuario_comunidad_rol
   (usuario_id, comunidad_id, rol_id, desde)
-VALUES 
+VALUES
   (1, 1, (SELECT id FROM rol WHERE codigo='propietario'), '2024-01-01'),
   (1, 1, (SELECT id FROM rol WHERE codigo='comite'), '2025-01-01');
 

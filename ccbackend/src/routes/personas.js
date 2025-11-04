@@ -61,7 +61,7 @@ const { authorize, allowSelfOrRoles } = require('../middleware/authorize');
  */
 router.get('/', authenticate, async (req, res) => {
   const { rut, search, tipo, estado, limit = 500, offset = 0 } = req.query;
-  
+
   try {
     // ✅ Superadmin ve TODAS las personas
     if (req.user.is_superadmin) {
@@ -169,14 +169,14 @@ router.get('/', authenticate, async (req, res) => {
       params.push(parseInt(limit), parseInt(offset));
 
       const [rows] = await db.query(query, params);
-      const personas = rows.map(row => {
+      const personas = rows.map((row) => {
         const persona = { ...row };
         if (row.usuario_id) {
           persona.usuario = {
             id: row.usuario_id,
             username: row.username,
             estado: row.usuario_estado,
-            nivel_acceso: row.nivel_acceso
+            nivel_acceso: row.nivel_acceso,
           };
         }
         delete persona.usuario_id;
@@ -302,14 +302,14 @@ router.get('/', authenticate, async (req, res) => {
     params.push(parseInt(limit), parseInt(offset));
 
     const [rows] = await db.query(query, params);
-    const personas = rows.map(row => {
+    const personas = rows.map((row) => {
       const persona = { ...row };
       if (row.usuario_id) {
         persona.usuario = {
           id: row.usuario_id,
           username: row.username,
           estado: row.usuario_estado,
-          nivel_acceso: row.nivel_acceso
+          nivel_acceso: row.nivel_acceso,
         };
       }
       delete persona.usuario_id;
@@ -320,7 +320,7 @@ router.get('/', authenticate, async (req, res) => {
     });
     res.json(personas);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener personas:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -353,19 +353,46 @@ router.get('/', authenticate, async (req, res) => {
  *       201:
  *         description: Created
  */
-router.post('/', [authenticate, authorize('admin','superadmin'), body('rut').notEmpty(), body('dv').notEmpty(), body('nombres').notEmpty(), body('apellidos').notEmpty()], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const { rut,dv,nombres,apellidos,email,telefono,direccion } = req.body;
-  try {
-    const [result] = await db.query('INSERT INTO persona (rut,dv,nombres,apellidos,email,telefono,direccion) VALUES (?,?,?,?,?,?,?)', [rut,dv,nombres,apellidos,email||null,telefono||null,direccion||null]);
-    const [row] = await db.query('SELECT id, rut, dv, nombres, apellidos FROM persona WHERE id = ? LIMIT 1', [result.insertId]);
-    res.status(201).json(row[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.post(
+  '/',
+  [
+    authenticate,
+    authorize('admin', 'superadmin'),
+    body('rut').notEmpty(),
+    body('dv').notEmpty(),
+    body('nombres').notEmpty(),
+    body('apellidos').notEmpty(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    const { rut, dv, nombres, apellidos, email, telefono, direccion } =
+      req.body;
+    try {
+      const [result] = await db.query(
+        'INSERT INTO persona (rut,dv,nombres,apellidos,email,telefono,direccion) VALUES (?,?,?,?,?,?,?)',
+        [
+          rut,
+          dv,
+          nombres,
+          apellidos,
+          email || null,
+          telefono || null,
+          direccion || null,
+        ]
+      );
+      const [row] = await db.query(
+        'SELECT id, rut, dv, nombres, apellidos FROM persona WHERE id = ? LIMIT 1',
+        [result.insertId]
+      );
+      res.status(201).json(row[0]);
+    } catch (err) {
+      console.error('Error al crear persona:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -388,7 +415,8 @@ router.post('/', [authenticate, authorize('admin','superadmin'), body('rut').not
 router.get('/:id', authenticate, async (req, res) => {
   const id = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         p.id,
         p.rut,
@@ -456,12 +484,14 @@ router.get('/:id', authenticate, async (req, res) => {
       LEFT JOIN usuario u ON u.persona_id = p.id
       WHERE p.id = ?
       LIMIT 1
-    `, [id]);
-    
+    `,
+      [id]
+    );
+
     if (!rows.length) return res.status(404).json({ error: 'not found' });
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener persona:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -489,23 +519,47 @@ router.get('/:id', authenticate, async (req, res) => {
  *       200:
  *         description: Updated
  */
-router.patch('/:id', authenticate, allowSelfOrRoles('id', 'admin','superadmin'), async (req, res) => {
-  const id = req.params.id;
-  const fields = ['rut','dv','nombres','apellidos','email','telefono','direccion'];
-  const updates = [];
-  const values = [];
-  fields.forEach(f => { if (req.body[f] !== undefined) { updates.push(`${f} = ?`); values.push(req.body[f]); } });
-  if (!updates.length) return res.status(400).json({ error: 'no fields' });
-  values.push(id);
-  try {
-    await db.query(`UPDATE persona SET ${updates.join(', ')} WHERE id = ?`, values);
-    const [rows] = await db.query('SELECT id, rut, dv, nombres, apellidos FROM persona WHERE id = ? LIMIT 1', [id]);
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.patch(
+  '/:id',
+  authenticate,
+  allowSelfOrRoles('id', 'admin', 'superadmin'),
+  async (req, res) => {
+    const id = req.params.id;
+    const fields = [
+      'rut',
+      'dv',
+      'nombres',
+      'apellidos',
+      'email',
+      'telefono',
+      'direccion',
+    ];
+    const updates = [];
+    const values = [];
+    fields.forEach((f) => {
+      if (req.body[f] !== undefined) {
+        updates.push(`${f} = ?`);
+        values.push(req.body[f]);
+      }
+    });
+    if (!updates.length) return res.status(400).json({ error: 'no fields' });
+    values.push(id);
+    try {
+      await db.query(
+        `UPDATE persona SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+      const [rows] = await db.query(
+        'SELECT id, rut, dv, nombres, apellidos FROM persona WHERE id = ? LIMIT 1',
+        [id]
+      );
+      res.json(rows[0]);
+    } catch (err) {
+      console.error('Error al actualizar persona:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -547,21 +601,49 @@ router.patch('/:id', authenticate, allowSelfOrRoles('id', 'admin','superadmin'),
  *       200:
  *         description: Replaced
  */
-router.put('/:id', [authenticate, allowSelfOrRoles('id', 'admin','superadmin'), body('rut').notEmpty(), body('dv').notEmpty(), body('nombres').notEmpty(), body('apellidos').notEmpty()], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const id = req.params.id;
-  const { rut, dv, nombres, apellidos, email, telefono, direccion } = req.body;
-  try {
-    await db.query('UPDATE persona SET rut = ?, dv = ?, nombres = ?, apellidos = ?, email = ?, telefono = ?, direccion = ? WHERE id = ?', [rut, dv, nombres, apellidos, email || null, telefono || null, direccion || null, id]);
-    const [rows] = await db.query('SELECT id, rut, dv, nombres, apellidos FROM persona WHERE id = ? LIMIT 1', [id]);
-    if (!rows.length) return res.status(404).json({ error: 'not found' });
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.put(
+  '/:id',
+  [
+    authenticate,
+    allowSelfOrRoles('id', 'admin', 'superadmin'),
+    body('rut').notEmpty(),
+    body('dv').notEmpty(),
+    body('nombres').notEmpty(),
+    body('apellidos').notEmpty(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    const id = req.params.id;
+    const { rut, dv, nombres, apellidos, email, telefono, direccion } =
+      req.body;
+    try {
+      await db.query(
+        'UPDATE persona SET rut = ?, dv = ?, nombres = ?, apellidos = ?, email = ?, telefono = ?, direccion = ? WHERE id = ?',
+        [
+          rut,
+          dv,
+          nombres,
+          apellidos,
+          email || null,
+          telefono || null,
+          direccion || null,
+          id,
+        ]
+      );
+      const [rows] = await db.query(
+        'SELECT id, rut, dv, nombres, apellidos FROM persona WHERE id = ? LIMIT 1',
+        [id]
+      );
+      if (!rows.length) return res.status(404).json({ error: 'not found' });
+      res.json(rows[0]);
+    } catch (err) {
+      console.error('Error al reemplazar persona:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -581,17 +663,22 @@ router.put('/:id', [authenticate, allowSelfOrRoles('id', 'admin','superadmin'), 
  *       204:
  *         description: No Content
  */
-router.delete('/:id', authenticate, allowSelfOrRoles('id', 'admin','superadmin'), async (req, res) => {
-  const id = req.params.id;
-  try {
-    // only admins or self (allowSelfOrRoles applied) reach here
-    await db.query('DELETE FROM persona WHERE id = ?', [id]);
-    res.status(204).end();
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.delete(
+  '/:id',
+  authenticate,
+  allowSelfOrRoles('id', 'admin', 'superadmin'),
+  async (req, res) => {
+    const id = req.params.id;
+    try {
+      // only admins or self (allowSelfOrRoles applied) reach here
+      await db.query('DELETE FROM persona WHERE id = ?', [id]);
+      res.status(204).end();
+    } catch (err) {
+      console.error('Error al eliminar persona:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -651,10 +738,10 @@ router.get('/estadisticas', authenticate, async (req, res) => {
       FROM persona p
       LEFT JOIN usuario u ON u.persona_id = p.id
     `);
-    
+
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener estadísticas de personas:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -680,7 +767,8 @@ router.get('/estadisticas', authenticate, async (req, res) => {
 router.get('/:id/unidades', authenticate, async (req, res) => {
   const id = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         u.id,
         u.codigo AS nombre,
@@ -713,11 +801,13 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
       WHERE tu.persona_id = ?
         AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
       ORDER BY tu.desde DESC
-    `, [id]);
-    
+    `,
+      [id]
+    );
+
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener unidades de persona:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -743,7 +833,8 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
 router.get('/:id/pagos', authenticate, async (req, res) => {
   const id = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         p.id,
         DATE(p.fecha) AS fecha,
@@ -772,11 +863,13 @@ router.get('/:id/pagos', authenticate, async (req, res) => {
       )
       GROUP BY p.id, p.fecha, p.monto, p.medio, p.referencia, p.estado, p.comprobante_num, u.codigo, c.razon_social, eg.periodo
       ORDER BY p.fecha DESC
-    `, [id]);
-    
+    `,
+      [id]
+    );
+
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener pagos de persona:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -802,7 +895,8 @@ router.get('/:id/pagos', authenticate, async (req, res) => {
 router.get('/:id/actividad', authenticate, async (req, res) => {
   const id = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         DATE(a.created_at) AS fecha,
         TIME(a.created_at) AS hora,
@@ -830,11 +924,13 @@ router.get('/:id/actividad', authenticate, async (req, res) => {
       WHERE a.usuario_id = (SELECT id FROM usuario WHERE persona_id = ?)
       ORDER BY a.created_at DESC
       LIMIT 100
-    `, [id]);
-    
+    `,
+      [id]
+    );
+
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener actividad de persona:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -860,7 +956,8 @@ router.get('/:id/actividad', authenticate, async (req, res) => {
 router.get('/:id/documentos', authenticate, async (req, res) => {
   const id = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         a.id,
         a.original_name AS nombre,
@@ -889,11 +986,13 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
         AND a.entity_id = ?
         AND a.is_active = 1
       ORDER BY a.uploaded_at DESC
-    `, [id]);
-    
+    `,
+      [id]
+    );
+
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener documentos de persona:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -920,7 +1019,8 @@ router.get('/:id/notas', authenticate, async (req, res) => {
   const id = req.params.id;
   try {
     // Combinar ambas opciones: registro_conserjeria y auditoria
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT * FROM (
         SELECT
           rc.id,
@@ -955,11 +1055,13 @@ router.get('/:id/notas', authenticate, async (req, res) => {
         WHERE a.tabla = 'persona' AND a.registro_id = ?
       ) combined_notes
       ORDER BY orden_fecha DESC
-    `, [id]);
-    
+    `,
+      [id]
+    );
+
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener notas de persona:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -985,7 +1087,8 @@ router.get('/:id/notas', authenticate, async (req, res) => {
 router.get('/:id/roles', authenticate, async (req, res) => {
   const id = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         ucr.id,
         c.razon_social AS comunidad_nombre,
@@ -1000,11 +1103,13 @@ router.get('/:id/roles', authenticate, async (req, res) => {
       JOIN rol_sistema r ON r.id = ucr.rol_id
       WHERE ucr.usuario_id = (SELECT id FROM usuario WHERE persona_id = ?)
       ORDER BY ucr.activo DESC, r.nivel_acceso DESC, ucr.desde DESC
-    `, [id]);
-    
+    `,
+      [id]
+    );
+
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener roles de persona:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -1030,7 +1135,8 @@ router.get('/:id/roles', authenticate, async (req, res) => {
 router.get('/:id/resumen-financiero', authenticate, async (req, res) => {
   const id = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         c.razon_social AS comunidad,
         COUNT(DISTINCT u.id) AS unidades,
@@ -1046,11 +1152,13 @@ router.get('/:id/resumen-financiero', authenticate, async (req, res) => {
         AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
       GROUP BY c.id, c.razon_social
       ORDER BY c.razon_social
-    `, [id]);
-    
+    `,
+      [id]
+    );
+
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener resumen financiero de persona:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -1087,31 +1195,34 @@ router.get('/:id/resumen-financiero', authenticate, async (req, res) => {
 router.get('/validar', authenticate, async (req, res) => {
   const { field, value, exclude } = req.query;
   const excludeId = exclude || 0;
-  
+
   try {
     let query, params;
-    
+
     switch (field) {
       case 'rut':
-        query = 'SELECT COUNT(*) as existe FROM persona WHERE rut = ? AND id != ?';
+        query =
+          'SELECT COUNT(*) as existe FROM persona WHERE rut = ? AND id != ?';
         params = [value, excludeId];
         break;
       case 'username':
-        query = 'SELECT COUNT(*) as existe FROM usuario WHERE username = ? AND persona_id != ?';
+        query =
+          'SELECT COUNT(*) as existe FROM usuario WHERE username = ? AND persona_id != ?';
         params = [value, excludeId];
         break;
       case 'email':
-        query = 'SELECT COUNT(*) as existe FROM persona WHERE email = ? AND id != ?';
+        query =
+          'SELECT COUNT(*) as existe FROM persona WHERE email = ? AND id != ?';
         params = [value, excludeId];
         break;
       default:
         return res.status(400).json({ error: 'invalid field' });
     }
-    
+
     const [rows] = await db.query(query, params);
     res.json({ exists: rows[0].existe > 0 });
   } catch (err) {
-    console.error(err);
+    console.error('Error al validar campos de persona:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -1136,10 +1247,10 @@ router.get('/validar', authenticate, async (req, res) => {
  */
 router.get('/unidades/autocompletar', authenticate, async (req, res) => {
   const { search } = req.query;
-  
+
   try {
     let query, params;
-    
+
     if (search) {
       query = `
         SELECT
@@ -1179,11 +1290,11 @@ router.get('/unidades/autocompletar', authenticate, async (req, res) => {
       `;
       params = [];
     }
-    
+
     const [rows] = await db.query(query, params);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error al buscar unidades:', err);
     res.status(500).json({ error: 'server error' });
   }
 });
@@ -1217,7 +1328,3 @@ module.exports = router;
 // // UTILIDADES Y VALIDACIÓN
 // GET: /personas/validar
 // GET: /personas/unidades/autocompletar
-
-
-
-

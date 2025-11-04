@@ -52,57 +52,61 @@ if (process.env.NODE_ENV !== 'test') {
  *                 type: string
  *                 description: Descripción del archivo
  */
-router.post('/upload', validateUploadContext, upload.array('files', 10), async (req, res) => {
-  try {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'No se subieron archivos'
-      });
-    }
-
-    const uploadedFiles = [];
-
-    for (const file of req.files) {
-      try {
-        const fileInfo = getFileInfo(file, req);
-        const fileId = await FileService.saveFileRecord(fileInfo);
-        
-        uploadedFiles.push({
-          id: fileId,
-          originalName: file.originalname,
-          filename: file.filename,
-          size: file.size,
-          mimetype: file.mimetype,
-          category: fileInfo.category,
-          url: `/api/files/${fileId}`
+router.post(
+  '/upload',
+  validateUploadContext,
+  upload.array('files', 10),
+  async (req, res) => {
+    try {
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'No se subieron archivos',
         });
-      } catch (error) {
-        console.error('Error procesando archivo:', error);
-        // Limpiar archivo físico si falló el guardado
+      }
+
+      const uploadedFiles = [];
+
+      for (const file of req.files) {
         try {
-          await fs.unlink(file.path);
-        } catch (unlinkError) {
-          console.error('Error eliminando archivo fallido:', unlinkError);
+          const fileInfo = getFileInfo(file, req);
+          const fileId = await FileService.saveFileRecord(fileInfo);
+
+          uploadedFiles.push({
+            id: fileId,
+            originalName: file.originalname,
+            filename: file.filename,
+            size: file.size,
+            mimetype: file.mimetype,
+            category: fileInfo.category,
+            url: `/api/files/${fileId}`,
+          });
+        } catch (error) {
+          console.error('Error procesando archivo:', error);
+          // Limpiar archivo físico si falló el guardado
+          try {
+            await fs.unlink(file.path);
+          } catch (unlinkError) {
+            console.error('Error eliminando archivo fallido:', unlinkError);
+          }
         }
       }
+
+      res.json({
+        success: true,
+        message: `${uploadedFiles.length} archivo(s) subido(s) correctamente`,
+        files: uploadedFiles,
+      });
+    } catch (error) {
+      console.error('Error en upload:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: error.message,
+      });
     }
-
-    res.json({
-      success: true,
-      message: `${uploadedFiles.length} archivo(s) subido(s) correctamente`,
-      files: uploadedFiles
-    });
-
-  } catch (error) {
-    console.error('Error en upload:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor',
-      error: error.message
-    });
   }
-});
+);
 
 /**
  * @swagger
@@ -126,11 +130,11 @@ router.get('/:id', async (req, res) => {
     const comunidadId = req.user.comunidadId;
 
     const file = await FileService.getFileById(fileId, comunidadId);
-    
+
     if (!file) {
       return res.status(404).json({
         success: false,
-        message: 'Archivo no encontrado'
+        message: 'Archivo no encontrado',
       });
     }
 
@@ -140,23 +144,25 @@ router.get('/:id', async (req, res) => {
     } catch (error) {
       return res.status(404).json({
         success: false,
-        message: 'Archivo no encontrado en el sistema de archivos'
+        message: 'Archivo no encontrado en el sistema de archivos',
       });
     }
 
     // Configurar headers para la descarga
-    res.setHeader('Content-Disposition', `attachment; filename="${file.original_name}"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${file.original_name}"`
+    );
     res.setHeader('Content-Type', file.mimetype);
-    
+
     // Enviar archivo
     res.sendFile(path.resolve(file.file_path));
-
   } catch (error) {
     console.error('Error descargando archivo:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -199,24 +205,25 @@ router.get('/', async (req, res) => {
     );
 
     // Agregar URL de descarga a cada archivo
-    const filesWithUrls = files.map(file => ({
+    const filesWithUrls = files.map((file) => ({
       ...file,
       url: `/api/files/${file.id}`,
       downloadUrl: `/api/files/${file.id}`,
-      previewUrl: file.mimetype.startsWith('image/') ? `/api/files/${file.id}` : null
+      previewUrl: file.mimetype.startsWith('image/')
+        ? `/api/files/${file.id}`
+        : null,
     }));
 
     res.json({
       success: true,
-      files: filesWithUrls
+      files: filesWithUrls,
     });
-
   } catch (error) {
     console.error('Error listando archivos:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -244,11 +251,11 @@ router.delete('/:id', async (req, res) => {
     const userId = req.user.id;
 
     const file = await FileService.getFileById(fileId, comunidadId);
-    
+
     if (!file) {
       return res.status(404).json({
         success: false,
-        message: 'Archivo no encontrado'
+        message: 'Archivo no encontrado',
       });
     }
 
@@ -256,15 +263,14 @@ router.delete('/:id', async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Archivo eliminado correctamente'
+      message: 'Archivo eliminado correctamente',
     });
-
   } catch (error) {
     console.error('Error eliminando archivo:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -287,16 +293,15 @@ router.get('/stats', async (req, res) => {
       success: true,
       stats: {
         ...stats,
-        totalSizeMB: Math.round(stats.total_size / (1024 * 1024) * 100) / 100
-      }
+        totalSizeMB: Math.round((stats.total_size / (1024 * 1024)) * 100) / 100,
+      },
     });
-
   } catch (error) {
     console.error('Error obteniendo estadísticas:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -313,12 +318,12 @@ router.get('/stats', async (req, res) => {
 router.post('/cleanup', async (req, res) => {
   try {
     const comunidadId = req.user.comunidadId;
-    
+
     // Solo administradores pueden ejecutar limpieza
     if (req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        message: 'No tienes permisos para ejecutar esta acción'
+        message: 'No tienes permisos para ejecutar esta acción',
       });
     }
 
@@ -326,21 +331,19 @@ router.post('/cleanup', async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Limpieza de archivos completada'
+      message: 'Limpieza de archivos completada',
     });
-
   } catch (error) {
     console.error('Error en limpieza:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
-      error: error.message
+      error: error.message,
     });
   }
 });
 
 module.exports = router;
-
 
 // =========================================
 // ENDPOINTS DE ARCHIVOS (FILES)
@@ -357,7 +360,3 @@ module.exports = router;
 // // UTILIDADES Y ESTADÍSTICAS
 // GET: /files/stats
 // POST: /files/cleanup
-
-
-
-

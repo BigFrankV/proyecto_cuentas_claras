@@ -88,22 +88,22 @@ const options = {
       `,
       contact: {
         name: 'Soporte Técnico',
-        email: 'soporte@cuentasclaras.com'
+        email: 'soporte@cuentasclaras.com',
       },
       license: {
         name: 'MIT',
-        url: 'https://opensource.org/licenses/MIT'
-      }
+        url: 'https://opensource.org/licenses/MIT',
+      },
     },
     servers: [
       {
         url: 'http://localhost:3000',
-        description: 'Servidor de Desarrollo'
+        description: 'Servidor de Desarrollo',
       },
       {
         url: 'https://api.cuentasclaras.com',
-        description: 'Servidor de Producción'
-      }
+        description: 'Servidor de Producción',
+      },
     ],
     components: {
       securitySchemes: {
@@ -111,8 +111,8 @@ const options = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
-          description: 'Ingrese el token JWT en el formato: Bearer {token}'
-        }
+          description: 'Ingrese el token JWT en el formato: Bearer {token}',
+        },
       },
       responses: {
         UnauthorizedError: {
@@ -124,12 +124,12 @@ const options = {
                 properties: {
                   error: {
                     type: 'string',
-                    example: 'Token no válido'
-                  }
-                }
-              }
-            }
-          }
+                    example: 'Token no válido',
+                  },
+                },
+              },
+            },
+          },
         },
         NotFoundError: {
           description: 'Recurso no encontrado',
@@ -140,12 +140,12 @@ const options = {
                 properties: {
                   error: {
                     type: 'string',
-                    example: 'Recurso no encontrado'
-                  }
-                }
-              }
-            }
-          }
+                    example: 'Recurso no encontrado',
+                  },
+                },
+              },
+            },
+          },
         },
         ValidationError: {
           description: 'Error de validación en los datos enviados',
@@ -156,19 +156,19 @@ const options = {
                 properties: {
                   error: {
                     type: 'string',
-                    example: 'Datos de entrada inválidos'
+                    example: 'Datos de entrada inválidos',
                   },
                   details: {
                     type: 'array',
                     items: {
-                      type: 'string'
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       schemas: {
         Comunidad: {
@@ -176,63 +176,63 @@ const options = {
           properties: {
             id: {
               type: 'integer',
-              description: 'ID único de la comunidad'
+              description: 'ID único de la comunidad',
             },
             nombre: {
               type: 'string',
-              description: 'Nombre de la comunidad'
+              description: 'Nombre de la comunidad',
             },
             direccion: {
               type: 'string',
-              description: 'Dirección de la comunidad'
+              description: 'Dirección de la comunidad',
             },
             telefono: {
               type: 'string',
-              description: 'Teléfono de contacto'
+              description: 'Teléfono de contacto',
             },
             email: {
               type: 'string',
               format: 'email',
-              description: 'Email de contacto'
+              description: 'Email de contacto',
             },
             created_at: {
               type: 'string',
               format: 'date-time',
-              description: 'Fecha de creación'
+              description: 'Fecha de creación',
             },
             updated_at: {
               type: 'string',
               format: 'date-time',
-              description: 'Fecha de última actualización'
-            }
-          }
+              description: 'Fecha de última actualización',
+            },
+          },
         },
         Usuario: {
           type: 'object',
           properties: {
             id: {
               type: 'integer',
-              description: 'ID único del usuario'
+              description: 'ID único del usuario',
             },
             username: {
               type: 'string',
-              description: 'Nombre de usuario'
+              description: 'Nombre de usuario',
             },
             email: {
               type: 'string',
               format: 'email',
-              description: 'Email del usuario'
+              description: 'Email del usuario',
             },
             persona_id: {
               type: 'integer',
-              description: 'ID de la persona asociada al usuario'
+              description: 'ID de la persona asociada al usuario',
             },
             created_at: {
               type: 'string',
               format: 'date-time',
-              description: 'Fecha de creación'
-            }
-          }
+              description: 'Fecha de creación',
+            },
+          },
         },
         Rol: {
           type: 'object',
@@ -240,24 +240,33 @@ const options = {
           properties: {
             id: {
               type: 'integer',
-              description: 'ID único del rol'
+              description: 'ID único del rol',
             },
             codigo: {
               type: 'string',
-              enum: ['superadmin', 'admin', 'comite', 'contador', 'conserje', 'propietario', 'residente'],
-              description: 'Código identificador del rol'
+              enum: [
+                'superadmin',
+                'admin',
+                'comite',
+                'contador',
+                'conserje',
+                'propietario',
+                'residente',
+              ],
+              description: 'Código identificador del rol',
             },
             nombre: {
               type: 'string',
-              description: 'Nombre descriptivo del rol'
+              description: 'Nombre descriptivo del rol',
             },
             nivel_acceso: {
               type: 'integer',
               minimum: 1,
               maximum: 7,
-              description: 'Nivel jerárquico (1=máximo acceso, 7=mínimo acceso)'
-            }
-          }
+              description:
+                'Nivel jerárquico (1=máximo acceso, 7=mínimo acceso)',
+            },
+          },
         },
         Membresia: {
           type: 'object',
@@ -265,48 +274,48 @@ const options = {
           properties: {
             id: {
               type: 'integer',
-              description: 'ID único de la membresía'
+              description: 'ID único de la membresía',
             },
             comunidad_id: {
               type: 'integer',
-              description: 'ID de la comunidad'
+              description: 'ID de la comunidad',
             },
             usuario_id: {
               type: 'integer',
-              description: 'ID del usuario'
+              description: 'ID del usuario',
             },
             persona_id: {
               type: 'integer',
-              description: 'ID de la persona (derivado de usuario)'
+              description: 'ID de la persona (derivado de usuario)',
             },
             rol: {
               type: 'string',
-              description: 'Código del rol asignado'
+              description: 'Código del rol asignado',
             },
             rol_nombre: {
               type: 'string',
-              description: 'Nombre del rol'
+              description: 'Nombre del rol',
             },
             nivel_acceso: {
               type: 'integer',
-              description: 'Nivel de acceso jerárquico'
+              description: 'Nivel de acceso jerárquico',
             },
             desde: {
               type: 'string',
               format: 'date',
-              description: 'Fecha de inicio de la membresía'
+              description: 'Fecha de inicio de la membresía',
             },
             hasta: {
               type: 'string',
               format: 'date',
               nullable: true,
-              description: 'Fecha de fin de la membresía (null si indefinida)'
+              description: 'Fecha de fin de la membresía (null si indefinida)',
             },
             activo: {
               type: 'boolean',
-              description: 'Si la membresía está activa'
-            }
-          }
+              description: 'Si la membresía está activa',
+            },
+          },
         },
         JWTToken: {
           type: 'object',
@@ -314,9 +323,9 @@ const options = {
           properties: {
             token: {
               type: 'string',
-              description: 'Token JWT firmado'
-            }
-          }
+              description: 'Token JWT firmado',
+            },
+          },
         },
         JWTPayload: {
           type: 'object',
@@ -324,27 +333,27 @@ const options = {
           properties: {
             sub: {
               type: 'integer',
-              description: 'ID del usuario (subject)'
+              description: 'ID del usuario (subject)',
             },
             username: {
               type: 'string',
-              description: 'Nombre de usuario'
+              description: 'Nombre de usuario',
             },
             persona_id: {
               type: 'integer',
-              description: 'ID de la persona asociada'
+              description: 'ID de la persona asociada',
             },
             roles: {
               type: 'array',
               description: 'Array de códigos de roles del usuario',
               items: {
-                type: 'string'
-              }
+                type: 'string',
+              },
             },
             comunidad_id: {
               type: 'integer',
               nullable: true,
-              description: 'ID de la primera comunidad del usuario'
+              description: 'ID de la primera comunidad del usuario',
             },
             memberships: {
               type: 'array',
@@ -353,221 +362,225 @@ const options = {
                 type: 'object',
                 properties: {
                   comunidadId: {
-                    type: 'integer'
+                    type: 'integer',
                   },
                   rol: {
-                    type: 'string'
+                    type: 'string',
                   },
                   nivel_acceso: {
-                    type: 'integer'
-                  }
-                }
-              }
+                    type: 'integer',
+                  },
+                },
+              },
             },
             is_superadmin: {
               type: 'boolean',
               description: 'DEPRECADO: usar sistema de roles en su lugar',
-              deprecated: true
+              deprecated: true,
             },
             iat: {
               type: 'integer',
-              description: 'Timestamp de emisión del token'
+              description: 'Timestamp de emisión del token',
             },
             exp: {
               type: 'integer',
-              description: 'Timestamp de expiración del token'
-            }
-          }
+              description: 'Timestamp de expiración del token',
+            },
+          },
         },
         Pago: {
           type: 'object',
           properties: {
             id: {
               type: 'integer',
-              description: 'ID único del pago'
+              description: 'ID único del pago',
             },
             monto: {
               type: 'number',
               format: 'decimal',
-              description: 'Monto del pago'
+              description: 'Monto del pago',
             },
             fecha: {
               type: 'string',
               format: 'date',
-              description: 'Fecha del pago'
+              description: 'Fecha del pago',
             },
             estado: {
               type: 'string',
               enum: ['pendiente', 'completado', 'fallido'],
-              description: 'Estado del pago'
+              description: 'Estado del pago',
             },
             metodo_pago: {
               type: 'string',
-              description: 'Método de pago utilizado'
-            }
-          }
+              description: 'Método de pago utilizado',
+            },
+          },
         },
         Error: {
           type: 'object',
           properties: {
             error: {
               type: 'string',
-              description: 'Mensaje de error'
+              description: 'Mensaje de error',
             },
             code: {
               type: 'integer',
-              description: 'Código de error'
+              description: 'Código de error',
             },
             timestamp: {
               type: 'string',
               format: 'date-time',
-              description: 'Timestamp del error'
-            }
-          }
-        }
-      }
+              description: 'Timestamp del error',
+            },
+          },
+        },
+      },
     },
     security: [{ bearerAuth: [] }],
     tags: [
       {
         name: 'Auth',
-        description: '🔐 Autenticación y autorización (Login, Register, 2FA, Password Reset)'
+        description:
+          '🔐 Autenticación y autorización (Login, Register, 2FA, Password Reset)',
       },
       {
         name: 'Comunidades',
-        description: '🏘️ CRUD de comunidades + Dashboard con estadísticas + Flujo de caja'
+        description:
+          '🏘️ CRUD de comunidades + Dashboard con estadísticas + Flujo de caja',
       },
       {
         name: 'Edificios',
-        description: '🏗️ Gestión de edificios, torres y unidades habitacionales'
+        description:
+          '🏗️ Gestión de edificios, torres y unidades habitacionales',
       },
       {
         name: 'Torres',
-        description: '🗼 Gestión de torres por edificio o comunidad'
+        description: '🗼 Gestión de torres por edificio o comunidad',
       },
       {
         name: 'Unidades',
-        description: '🏠 Gestión de unidades, tenencias y residentes'
+        description: '🏠 Gestión de unidades, tenencias y residentes',
       },
       {
         name: 'Personas',
-        description: '👤 CRUD de personas (propietarios, residentes, etc.)'
+        description: '👤 CRUD de personas (propietarios, residentes, etc.)',
       },
       {
         name: 'Membresias',
-        description: '👥 Asignación de roles de usuarios en comunidades'
+        description: '👥 Asignación de roles de usuarios en comunidades',
       },
       {
         name: 'Cargos',
-        description: '💸 Cuentas de cobro y cargos por unidad'
+        description: '💸 Cuentas de cobro y cargos por unidad',
       },
       {
         name: 'Pagos',
-        description: '💰 Registro y aplicación de pagos'
+        description: '💰 Registro y aplicación de pagos',
       },
       {
         name: 'Gastos',
-        description: '💵 Gestión de gastos operacionales'
+        description: '💵 Gestión de gastos operacionales',
       },
       {
         name: 'Emisiones',
-        description: '📋 Emisión de gastos comunes con prorrateo'
+        description: '📋 Emisión de gastos comunes con prorrateo',
       },
       {
         name: 'Categorías de Gasto',
-        description: '📂 Categorías para clasificar gastos'
+        description: '📂 Categorías para clasificar gastos',
       },
       {
         name: 'CentrosCosto',
-        description: '🎯 Centros de costo para contabilidad'
+        description: '🎯 Centros de costo para contabilidad',
       },
       {
         name: 'Proveedores',
-        description: '🏪 Gestión de proveedores y servicios'
+        description: '🏪 Gestión de proveedores y servicios',
       },
       {
         name: 'DocumentosCompra',
-        description: '📄 Facturas y documentos tributarios'
+        description: '📄 Facturas y documentos tributarios',
       },
       {
         name: 'Conciliaciones',
-        description: '🏦 Conciliación bancaria'
+        description: '🏦 Conciliación bancaria',
       },
       {
         name: 'Amenidades',
-        description: '⚡ Gestión de amenidades y reservas'
+        description: '⚡ Gestión de amenidades y reservas',
       },
       {
         name: 'Notificaciones',
-        description: '📢 Sistema de notificaciones push y email'
+        description: '📢 Sistema de notificaciones push y email',
       },
       {
         name: 'Reportes',
-        description: '📊 Generación de reportes y estadísticas'
+        description: '📊 Generación de reportes y estadísticas',
       },
       {
         name: 'Tickets',
-        description: '🎫 Sistema de tickets de soporte'
+        description: '🎫 Sistema de tickets de soporte',
       },
       {
         name: 'Compras',
-        description: '� Gestión de compras y adquisiciones'
+        description: '� Gestión de compras y adquisiciones',
       },
       {
         name: 'Prorrateo',
-        description: '⚖️ Cálculo y distribución de gastos comunes'
+        description: '⚖️ Cálculo y distribución de gastos comunes',
       },
       {
         name: 'Dashboard',
-        description: '📈 Dashboard administrativo con KPIs'
+        description: '📈 Dashboard administrativo con KPIs',
       },
       {
         name: 'Consumos',
-        description: '� Registro de consumos de servicios'
+        description: '� Registro de consumos de servicios',
       },
       {
         name: 'Apelaciones',
-        description: '⚖️ Gestión de apelaciones y reclamos'
+        description: '⚖️ Gestión de apelaciones y reclamos',
       },
       {
         name: 'Soporte',
-        description: '🔧 Tickets, notificaciones, bitácora y documentos'
+        description: '🔧 Tickets, notificaciones, bitácora y documentos',
       },
       {
         name: 'Payment Gateway',
-        description: '💳 Integración con Webpay y Khipu'
+        description: '💳 Integración con Webpay y Khipu',
       },
       {
         name: 'Files',
-        description: '📁 Upload, descarga y gestión de archivos'
+        description: '📁 Upload, descarga y gestión de archivos',
       },
       {
         name: 'Webhooks',
-        description: '🔔 Webhooks para integraciones externas'
+        description: '🔔 Webhooks para integraciones externas',
       },
       {
         name: 'Utilidades',
-        description: '🛠️ Health check, UF, UTM, validación RUT, sync e indicadores'
+        description:
+          '🛠️ Health check, UF, UTM, validación RUT, sync e indicadores',
       },
       {
         name: 'Tarifas de Consumo',
-        description: '💲 Tarifas para cálculo de consumos'
+        description: '💲 Tarifas para cálculo de consumos',
       },
       {
         name: 'Medidores',
-        description: '📊 Gestión de medidores y lecturas'
+        description: '📊 Gestión de medidores y lecturas',
       },
       {
         name: 'Multas',
-        description: '⚠️ Gestión de multas e infracciones'
+        description: '⚠️ Gestión de multas e infracciones',
       },
       {
         name: 'UTM',
-        description: '📈 Valores UTM, conversiones y estadísticas'
-      }
-    ]
+        description: '📈 Valores UTM, conversiones y estadísticas',
+      },
+    ],
   },
-  apis: ['./src/routes/*.js']
+  apis: ['./src/routes/*.js'],
 };
 
 const specs = swaggerJsdoc(options);
@@ -576,16 +589,16 @@ const specs = swaggerJsdoc(options);
 function setupSwagger(app) {
   // Endpoint principal de documentación
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
-  
+
   // Endpoint alternativo para la documentación
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-  
+
   // Endpoint para obtener el JSON de Swagger
   app.get('/swagger.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(specs);
   });
-  
+
   // Información básica de la API
   app.get('/api/info', (req, res) => {
     res.json({
@@ -594,7 +607,7 @@ function setupSwagger(app) {
       description: 'API de Gestión de Comunidades y Edificios',
       documentation: '/docs',
       swagger_json: '/swagger.json',
-      health_check: '/health'
+      health_check: '/health',
     });
   });
 }

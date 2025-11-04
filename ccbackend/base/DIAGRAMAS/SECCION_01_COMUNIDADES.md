@@ -17,7 +17,7 @@ erDiagram
     comunidad ||--o{ configuracion_interes : "define tasas (0..N)"
     comunidad ||--o{ centro_costo : "define (0..N)"
     comunidad ||--o{ categoria_gasto : "clasifica (0..N)"
-    
+
     comunidad {
         bigint id PK "AUTO_INCREMENT"
         varchar razon_social "NOT NULL"
@@ -35,7 +35,7 @@ erDiagram
         bigint created_by "FK usuario"
         bigint updated_by "FK usuario"
     }
-    
+
     edificio {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -45,7 +45,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     torre {
         bigint id PK
         bigint edificio_id FK "NOT NULL"
@@ -54,7 +54,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     unidad {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -70,7 +70,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     parametros_cobranza {
         bigint id PK
         bigint comunidad_id FK "UK - 1:1 con comunidad"
@@ -83,7 +83,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     configuracion_interes {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -94,7 +94,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     centro_costo {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -103,7 +103,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     categoria_gasto {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -133,6 +133,7 @@ Comunidad (raíz)
 ```
 
 **Validaciones:**
+
 - ✅ Una comunidad **DEBE** tener al menos 1 unidad
 - ✅ Si unidad tiene `torre_id`, **DEBE** tener `edificio_id`
 - ✅ El código de unidad es único dentro de la comunidad
@@ -155,6 +156,7 @@ WHERE comunidad_id = ? AND activa = 1;
 ```
 
 **Cálculo de gasto común por unidad:**
+
 ```
 Monto_Unidad = Gasto_Total × Alícuota_Unidad
 
@@ -170,16 +172,17 @@ Depto 102: alícuota 0.08 → $80,000
 
 **Parámetros por comunidad:**
 
-| Parámetro | Descripción | Ejemplo |
-|-----------|-------------|---------|
-| `dias_gracia` | Días después del vencimiento sin interés | 5 días |
-| `tasa_mora_mensual` | Porcentaje mensual de interés | 1.5% |
-| `mora_calculo` | Tipo de cálculo | `mensual` o `diaria` |
-| `interes_max_mensual` | Tope mensual de interés | 3.0% |
-| `aplica_interes_sobre` | Base de cálculo | `saldo` o `capital` |
-| `redondeo` | Método de redondeo | `normal`, `arriba`, `abajo` |
+| Parámetro              | Descripción                              | Ejemplo                     |
+| ---------------------- | ---------------------------------------- | --------------------------- |
+| `dias_gracia`          | Días después del vencimiento sin interés | 5 días                      |
+| `tasa_mora_mensual`    | Porcentaje mensual de interés            | 1.5%                        |
+| `mora_calculo`         | Tipo de cálculo                          | `mensual` o `diaria`        |
+| `interes_max_mensual`  | Tope mensual de interés                  | 3.0%                        |
+| `aplica_interes_sobre` | Base de cálculo                          | `saldo` o `capital`         |
+| `redondeo`             | Método de redondeo                       | `normal`, `arriba`, `abajo` |
 
 **Ejemplo de cálculo de interés:**
+
 ```
 Fecha vencimiento: 2025-10-05
 Días de gracia: 5
@@ -211,7 +214,7 @@ Si mora_calculo = 'diaria':
 -- Una comunidad puede tener múltiples configuraciones de interés
 -- según fecha de vigencia
 
-INSERT INTO configuracion_interes 
+INSERT INTO configuracion_interes
 (comunidad_id, aplica_desde, tasa_mensual, metodo, tope_mensual)
 VALUES
 (1, '2025-01-01', 1.5, 'simple', 3.0),   -- Vigente desde enero
@@ -220,6 +223,7 @@ VALUES
 ```
 
 **Query para obtener tasa vigente:**
+
 ```sql
 SELECT tasa_mensual, metodo, tope_mensual
 FROM configuracion_interes
@@ -234,6 +238,7 @@ LIMIT 1;
 ### **R5: Centros de Costo y Categorías**
 
 **Centro de Costo (dónde se gasta):**
+
 ```
 Ejemplos:
 - Edificio A
@@ -244,6 +249,7 @@ Ejemplos:
 ```
 
 **Categoría de Gasto (qué se gasta):**
+
 ```
 Tipos:
 1. operacional: Gastos mensuales recurrentes
@@ -293,7 +299,7 @@ VALUES (@comunidad_id, CURDATE(), 1.5, 'simple');
 
 -- Paso 4: Crear categorías básicas
 INSERT INTO categoria_gasto (comunidad_id, nombre, tipo, activa)
-VALUES 
+VALUES
 (@comunidad_id, 'Gastos Comunes Operacionales', 'operacional', 1),
 (@comunidad_id, 'Gastos Extraordinarios', 'extraordinario', 1),
 (@comunidad_id, 'Fondo de Reserva', 'fondo_reserva', 1),
@@ -317,7 +323,7 @@ VALUES (@comunidad_id, 'Edificio A', 'EDF-A');
 SET @edificio_a = LAST_INSERT_ID();
 
 INSERT INTO torre (edificio_id, nombre, codigo)
-VALUES 
+VALUES
 (@edificio_a, 'Torre Norte', 'A-N'),
 (@edificio_a, 'Torre Sur', 'A-S');
 
@@ -327,7 +333,7 @@ VALUES (@comunidad_id, 'Edificio B', 'EDF-B');
 SET @edificio_b = LAST_INSERT_ID();
 
 INSERT INTO torre (edificio_id, nombre, codigo)
-VALUES 
+VALUES
 (@edificio_b, 'Torre Oriente', 'B-O'),
 (@edificio_b, 'Torre Poniente', 'B-P');
 ```
@@ -340,7 +346,7 @@ VALUES
 -- Ejemplo: 10 departamentos iguales (alícuota 0.1 cada uno)
 
 INSERT INTO unidad (comunidad_id, edificio_id, torre_id, codigo, alicuota, m2_utiles)
-SELECT 
+SELECT
   @comunidad_id,
   @edificio_a,
   (SELECT id FROM torre WHERE edificio_id = @edificio_a LIMIT 1),
@@ -353,7 +359,7 @@ FROM (
 ) numbers;
 
 -- Verificar suma de alícuotas
-SELECT 
+SELECT
   comunidad_id,
   COUNT(*) as total_unidades,
   SUM(alicuota) as suma_alicuotas
@@ -371,7 +377,7 @@ GROUP BY comunidad_id;
 ### **Q1: Estructura Completa de Comunidad**
 
 ```sql
-SELECT 
+SELECT
   c.razon_social as comunidad,
   e.nombre as edificio,
   t.nombre as torre,
@@ -397,10 +403,10 @@ FROM unidad
 WHERE comunidad_id = ? AND activa = 1 AND alicuota = 0;
 
 -- Suma de alícuotas diferente a 1.0
-SELECT 
+SELECT
   comunidad_id,
   SUM(alicuota) as suma,
-  CASE 
+  CASE
     WHEN ABS(SUM(alicuota) - 1.0) > 0.00001 THEN 'ERROR: No suma 1.0'
     ELSE 'OK'
   END as estado
@@ -414,7 +420,7 @@ GROUP BY comunidad_id;
 ### **Q3: Configuración Activa de Morosidad**
 
 ```sql
-SELECT 
+SELECT
   c.razon_social,
   pc.dias_gracia,
   pc.tasa_mora_mensual,
@@ -441,7 +447,7 @@ WHERE c.id = ?;
 
 ```sql
 -- Categorías activas por comunidad
-SELECT 
+SELECT
   tipo,
   COUNT(*) as cantidad,
   GROUP_CONCAT(nombre ORDER BY nombre SEPARATOR ', ') as categorias
@@ -470,7 +476,7 @@ BEFORE DELETE ON comunidad
 FOR EACH ROW
 BEGIN
   IF EXISTS (SELECT 1 FROM unidad WHERE comunidad_id = OLD.id) THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'No se puede eliminar comunidad con unidades asociadas';
   END IF;
 END$$
@@ -483,7 +489,7 @@ BEFORE INSERT ON unidad
 FOR EACH ROW
 BEGIN
   IF NEW.alicuota < 0 OR NEW.alicuota > 1 THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Alícuota debe estar entre 0 y 1';
   END IF;
 END$$
@@ -496,7 +502,7 @@ BEFORE INSERT ON unidad
 FOR EACH ROW
 BEGIN
   IF NEW.torre_id IS NOT NULL AND NEW.edificio_id IS NULL THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Una unidad no puede tener torre sin edificio';
   END IF;
 END$$
@@ -510,7 +516,7 @@ DELIMITER ;
 ### **M1: Resumen de Comunidad**
 
 ```sql
-SELECT 
+SELECT
   c.razon_social,
   COUNT(DISTINCT e.id) as total_edificios,
   COUNT(DISTINCT t.id) as total_torres,

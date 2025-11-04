@@ -10,7 +10,7 @@ const { categorizeResponse, getWithAuth } = require('./helpers');
 describe('Emisiones Health Check', () => {
   let authToken;
   let comunidadId;
-  let emisionId; 
+  let emisionId;
 
   beforeAll(() => {
     authToken = getAuthToken();
@@ -28,7 +28,7 @@ describe('Emisiones Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /emisiones/comunidad/:comunidadId/count', async () => {
       const endpoint = `/emisiones/comunidad/${comunidadId}/count`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -49,7 +49,7 @@ describe('Emisiones Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /emisiones/:id/detalles (Detalles de Items)', async () => {
       const endpoint = `/emisiones/${emisionId}/detalles`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -101,14 +101,14 @@ describe('Emisiones Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /emisiones/estadisticas/por-mes', async () => {
       const endpoint = `/emisiones/estadisticas/por-mes`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /emisiones/estadisticas/cobranza', async () => {
       const endpoint = `/emisiones/estadisticas/cobranza`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -122,28 +122,28 @@ describe('Emisiones Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /emisiones/validar/gastos/:id', async () => {
       const endpoint = `/emisiones/validar/gastos/${emisionId}`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /emisiones/validar/cuentas/:id', async () => {
       const endpoint = `/emisiones/validar/cuentas/${emisionId}`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /emisiones/validar/cobertura/:comunidadId/:emisionId', async () => {
       const endpoint = `/emisiones/validar/cobertura/${comunidadId}/${emisionId}`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /emisiones/:id/previsualizar-prorrateo', async () => {
       const endpoint = `/emisiones/${emisionId}/previsualizar-prorrateo`;
       const response = await getWithAuth(app, endpoint, authToken);

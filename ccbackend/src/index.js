@@ -46,11 +46,13 @@ const bitacoraRoutes = require('./routes/bitacora');
 const app = express();
 
 app.use(helmet());
-		// app.use(cors());
-		app.use(cors({
-			origin: 'http://localhost:5173',
-			credentials: true
-		}));
+// app.use(cors());
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -97,38 +99,43 @@ app.use('/bitacora', bitacoraRoutes);
 app.get('/healthz', (_, res) => res.json({ status: 'ok' }));
 
 async function start() {
-	try {
-		await sequelize.authenticate();
-		logger.info('Sequelize connected');
-	} catch (err) {
-		logger.error('Failed to connect to DB: %s', err && err.message);
-		if (process.env.SKIP_DB_CONNECT === 'true') {
-			logger.warn('SKIP_DB_CONNECT=true — continuing without DB connection (development only)');
-		} else {
-			process.exit(1);
-		}
-	}
+  try {
+    await sequelize.authenticate();
+    logger.info('Sequelize connected');
+  } catch (err) {
+    logger.error(
+      'Error al conectar con la base de datos: %s',
+      err && err.message
+    );
+    if (process.env.SKIP_DB_CONNECT === 'true') {
+      logger.warn(
+        'SKIP_DB_CONNECT=true — continuando sin conexión a la base de datos (solo desarrollo)'
+      );
+    } else {
+      process.exit(1);
+    }
+  }
 
-		// Redis removed; skipping cache setup
+  // Redis removed; skipping cache setup
 
-	const port = process.env.PORT || 3000;
-	app.listen(port, () => {
-		logger.info(`Server running on port ${port}`);
-		
-		// Inicializar scheduler de indicadores
-		try {
-			const schedulerService = require('./services/schedulerService');
-			schedulerService.start();
-			logger.info('✅ Scheduler de indicadores iniciado');
-		} catch (error) {
-			logger.error('❌ Error iniciando scheduler:', error);
-		}
-	});
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    logger.info(`Server running on port ${port}`);
+
+    // Inicializar scheduler de indicadores
+    try {
+      const schedulerService = require('./services/schedulerService');
+      schedulerService.start();
+      logger.info('Scheduler de indicadores iniciado');
+    } catch (error) {
+      logger.error('Error iniciando scheduler:', error);
+    }
+  });
 }
 
 // Solo inicia el servidor si no estamos en modo test
 if (require.main === module) {
-	start();
+  start();
 }
 
 // Exportar app para tests

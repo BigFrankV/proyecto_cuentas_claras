@@ -44,23 +44,38 @@ const { authorize } = require('../middleware/authorize');
  *       200:
  *         description: Lista de comunidades con estad�sticas
  */
-router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conserje', 'contador', 'proveedor_servicio', 'residente', 'propietario', 'inquilino', 'tesorero', 'presidente_comite'), async (req, res) => {
-  try {
-    console.log('📊 [BACKEND] GET /comunidades - Iniciando');
-    console.log('📊 [BACKEND] Usuario autenticado:', {
-      id: req.user.id,
-      username: req.user.username,
-      persona_id: req.user.persona_id,
-      is_superadmin: req.user.is_superadmin,
-    });
-    
-    const userId = req.user.persona_id; // <-- cambiar a req.user.persona_id
-    const { nombre, direccion, rut } = req.query;
-    
-    console.log('📊 [BACKEND] Parámetros de query:', { nombre, direccion, rut });
-    
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 1.1
-    let query = `
+router.get(
+  '/',
+  authenticate,
+  authorize(
+    'superadmin',
+    'admin_comunidad',
+    'conserje',
+    'contador',
+    'proveedor_servicio',
+    'residente',
+    'propietario',
+    'inquilino',
+    'tesorero',
+    'presidente_comite'
+  ),
+  async (req, res) => {
+    try {
+      console.log('[BACKEND] GET /comunidades - Iniciando');
+      console.log('[BACKEND] Usuario autenticado:', {
+        id: req.user.id,
+        username: req.user.username,
+        persona_id: req.user.persona_id,
+        is_superadmin: req.user.is_superadmin,
+      });
+
+      const userId = req.user.persona_id; // <-- cambiar a req.user.persona_id
+      const { nombre, direccion, rut } = req.query;
+
+      console.log('[BACKEND] Parámetros de query:', { nombre, direccion, rut });
+
+      // Query basado en CONSULTAS_SQL_COMUNIDADES.sql sección 1.1
+      let query = `
       SELECT 
           c.id,
           c.razon_social AS nombre,
@@ -105,48 +120,52 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
           GROUP BY ccu.comunidad_id
       ) AS finanzas ON c.id = finanzas.comunidad_id
       WHERE 1=1`;
-    
-    const params = [];
-    
-    // Filtro por usuario (secci�n 1.2 del SQL) - Si no es superadmin
-    if (!req.user.is_superadmin) {
-      query += ` AND c.id IN (SELECT urc.comunidad_id FROM usuario_miembro_comunidad urc WHERE urc.persona_id = ? AND urc.activo = 1 AND (urc.hasta IS NULL OR urc.hasta > CURDATE()))`; // <-- cambiar usuario_rol_comunidad a usuario_miembro_comunidad
-      params.push(userId);
+
+      const params = [];
+
+      // Filtro por usuario (secci�n 1.2 del SQL) - Si no es superadmin
+      if (!req.user.is_superadmin) {
+        query += ` AND c.id IN (SELECT urc.comunidad_id FROM usuario_miembro_comunidad urc WHERE urc.persona_id = ? AND urc.activo = 1 AND (urc.hasta IS NULL OR urc.hasta > CURDATE()))`; // <-- cambiar usuario_rol_comunidad a usuario_miembro_comunidad
+        params.push(userId);
+      }
+
+      // Filtros adicionales (secci�n 13.1 y 13.2 del SQL)
+      if (nombre) {
+        query += ` AND c.razon_social LIKE ?`;
+        params.push(`%${nombre}%`);
+      }
+
+      if (direccion) {
+        query += ` AND c.direccion LIKE ?`;
+        params.push(`%${direccion}%`);
+      }
+
+      if (rut) {
+        query += ` AND c.rut = ?`;
+        params.push(rut);
+      }
+
+      query += ` ORDER BY c.razon_social`;
+
+      console.log(
+        '[BACKEND] Query preparada:',
+        query.substring(0, 200) + '...'
+      );
+      console.log('[BACKEND] Parámetros SQL:', params);
+
+      const [rows] = await db.query(query, params);
+
+      console.log('[BACKEND] Comunidades encontradas:', rows.length);
+      console.log('[BACKEND] Datos:', rows);
+
+      res.json(rows);
+    } catch (err) {
+      console.error('[BACKEND] Error fetching communities:', err);
+      console.error('[BACKEND] Stack:', err.stack);
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
-    
-    // Filtros adicionales (secci�n 13.1 y 13.2 del SQL)
-    if (nombre) {
-      query += ` AND c.razon_social LIKE ?`;
-      params.push(`%${nombre}%`);
-    }
-    
-    if (direccion) {
-      query += ` AND c.direccion LIKE ?`;
-      params.push(`%${direccion}%`);
-    }
-    
-    if (rut) {
-      query += ` AND c.rut = ?`;
-      params.push(rut);
-    }
-    
-    query += ` ORDER BY c.razon_social`;
-    
-    console.log('📊 [BACKEND] Query preparada:', query.substring(0, 200) + '...');
-    console.log('📊 [BACKEND] Parámetros SQL:', params);
-    
-    const [rows] = await db.query(query, params);
-    
-    console.log('📊 [BACKEND] Comunidades encontradas:', rows.length);
-    console.log('📊 [BACKEND] Datos:', rows);
-    
-    res.json(rows);
-  } catch (err) {
-    console.error('❌ [BACKEND] Error fetching communities:', err);
-    console.error('❌ [BACKEND] Stack:', err.stack);
-    res.status(500).json({ error: 'Error interno del servidor' });
   }
-});
+);
 
 /**
  * @swagger
@@ -172,7 +191,7 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
-    
+
     // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 2.1
     const query = `
       SELECT 
@@ -215,16 +234,16 @@ router.get('/:id', authenticate, async (req, res) => {
           GROUP BY ccu.comunidad_id
       ) AS finanzas ON c.id = finanzas.comunidad_id
       WHERE c.id = ?`;
-    
+
     const [rows] = await db.query(query, [id]);
-    
+
     if (!rows.length) {
       return res.status(404).json({ error: 'Comunidad no encontrada' });
     }
-    
+
     res.json(rows[0]);
   } catch (err) {
-    console.error('Error fetching community:', err);
+    console.error('Error al obtener comunidad:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -251,7 +270,7 @@ router.get('/:id', authenticate, async (req, res) => {
 router.get('/:id/amenidades', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
-    
+
     // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 3.1
     const query = `
       SELECT 
@@ -270,11 +289,11 @@ router.get('/:id/amenidades', authenticate, async (req, res) => {
       FROM amenidad a
       WHERE a.comunidad_id = ?
       ORDER BY a.nombre`;
-    
+
     const [rows] = await db.query(query, [id]);
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching amenities:', err);
+    console.error('Error al obtener amenidades:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -301,7 +320,7 @@ router.get('/:id/amenidades', authenticate, async (req, res) => {
 router.get('/:id/edificios', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
-    
+
     // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 4.1
     const query = `
       SELECT 
@@ -317,11 +336,11 @@ router.get('/:id/edificios', authenticate, async (req, res) => {
       WHERE e.comunidad_id = ?
       GROUP BY e.id, e.nombre, e.codigo, e.direccion, e.created_at, e.updated_at
       ORDER BY e.nombre`;
-    
+
     const [rows] = await db.query(query, [id]);
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching buildings:', err);
+    console.error('Error al obtener edificios:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -350,7 +369,7 @@ router.get('/:id/edificios', authenticate, async (req, res) => {
 router.get('/:id/contactos', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
-    
+
     // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 5.1
     const query = `
       SELECT 
@@ -369,11 +388,11 @@ router.get('/:id/contactos', authenticate, async (req, res) => {
       AND u.activo = 1
       AND (urc.hasta IS NULL OR urc.hasta > CURDATE())
       ORDER BY p.apellidos, p.nombres`;
-    
+
     const [rows] = await db.query(query, [id]);
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching contacts:', err);
+    console.error('Error al obtener contactos:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -400,7 +419,7 @@ router.get('/:id/contactos', authenticate, async (req, res) => {
 router.get('/:id/documentos', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
-    
+
     // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 6.1
     const query = `
       SELECT 
@@ -415,11 +434,11 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
       FROM documento_comunidad dc
       WHERE dc.comunidad_id = ?
       ORDER BY dc.created_at DESC`;
-    
+
     const [rows] = await db.query(query, [id]);
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching documents:', err);
+    console.error('Error al obtener documentos:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -449,7 +468,7 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
 router.get('/:id/residentes', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
-    
+
     // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 7.1
     const query = `
       SELECT DISTINCT
@@ -473,11 +492,11 @@ router.get('/:id/residentes', authenticate, async (req, res) => {
       WHERE tu.comunidad_id = ?
       AND (tu.hasta IS NULL OR tu.hasta > CURDATE())
       ORDER BY p.apellidos, p.nombres`;
-    
+
     const [rows] = await db.query(query, [id]);
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching residents:', err);
+    console.error('Error al obtener residentes:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -538,7 +557,7 @@ router.get('/:id/residentes', authenticate, async (req, res) => {
 router.get('/:id/miembros', authenticate, async (req, res) => {
   try {
     const comunidadId = req.params.id;
-    
+
     const query = `
       SELECT 
         urc.id,
@@ -557,18 +576,18 @@ router.get('/:id/miembros', authenticate, async (req, res) => {
       WHERE urc.comunidad_id = ?
       ORDER BY r.nivel_acceso DESC, u.persona_id
     `;
-    
+
     const [rows] = await db.query(query, [comunidadId]);
-    
+
     // Convertir activo a boolean
-    const miembros = rows.map(row => ({
+    const miembros = rows.map((row) => ({
       ...row,
-      activo: Boolean(row.activo)
+      activo: Boolean(row.activo),
     }));
-    
+
     res.json(miembros);
   } catch (err) {
-    console.error('Error fetching miembros:', err);
+    console.error('Error al obtener miembros:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -597,7 +616,7 @@ router.get('/:id/miembros', authenticate, async (req, res) => {
 router.get('/:id/parametros', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
-    
+
     // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 8.1
     const query = `
       SELECT 
@@ -614,16 +633,16 @@ router.get('/:id/parametros', authenticate, async (req, res) => {
       FROM parametros_cobranza pc
       WHERE pc.comunidad_id = ?
       LIMIT 1`;
-    
+
     const [rows] = await db.query(query, [id]);
-    
+
     if (!rows.length) {
       return res.status(404).json({ error: 'Par�metros no encontrados' });
     }
-    
+
     res.json(rows[0]);
   } catch (err) {
-    console.error('Error fetching parameters:', err);
+    console.error('Error al obtener parámetros:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -652,7 +671,7 @@ router.get('/:id/parametros', authenticate, async (req, res) => {
 router.get('/:id/estadisticas', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
-    
+
     // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 9.1
     const query = `
       SELECT 
@@ -661,15 +680,17 @@ router.get('/:id/estadisticas', authenticate, async (req, res) => {
           COALESCE(SUM(ccu.saldo), 0) AS ingresosPendientes
       FROM cuenta_cobro_unidad ccu
       WHERE ccu.comunidad_id = ?`;
-    
+
     const [rows] = await db.query(query, [id]);
-    res.json(rows[0] || {
-      totalIngresos: 0,
-      ingresosPagados: 0,
-      ingresosPendientes: 0
-    });
+    res.json(
+      rows[0] || {
+        totalIngresos: 0,
+        ingresosPagados: 0,
+        ingresosPendientes: 0,
+      }
+    );
   } catch (err) {
-    console.error('Error fetching statistics:', err);
+    console.error('Error al obtener estadísticas:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -698,7 +719,7 @@ router.get('/:id/estadisticas', authenticate, async (req, res) => {
 router.get('/:id/flujo-caja', authenticate, async (req, res) => {
   try {
     const id = req.params.id;
-    
+
     // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 10.1
     const query = `
       SELECT 
@@ -715,11 +736,11 @@ router.get('/:id/flujo-caja', authenticate, async (req, res) => {
       GROUP BY e.periodo, e.fecha_vencimiento
       ORDER BY e.periodo DESC
       LIMIT 12`;
-    
+
     const [rows] = await db.query(query, [id]);
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching cash flow:', err);
+    console.error('Error al obtener flujo de caja:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -765,33 +786,36 @@ router.get('/:id/flujo-caja', authenticate, async (req, res) => {
  *       400:
  *         description: Datos inv�lidos
  */
-router.post('/', [
-  authenticate,
-  authorize('admin', 'superadmin'),
-  body('razon_social').notEmpty().withMessage('Raz�n social es requerida'),
-  body('rut').notEmpty().withMessage('RUT es requerido'),
-  body('dv').notEmpty().withMessage('D�gito verificador es requerido')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  
-  try {
-    const {
-      razon_social,
-      rut,
-      dv,
-      giro,
-      direccion,
-      email_contacto,
-      telefono_contacto
-    } = req.body;
-    
-    const userId = req.user.id;
-    
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 11.1
-    const query = `
+router.post(
+  '/',
+  [
+    authenticate,
+    authorize('admin', 'superadmin'),
+    body('razon_social').notEmpty().withMessage('Raz�n social es requerida'),
+    body('rut').notEmpty().withMessage('RUT es requerido'),
+    body('dv').notEmpty().withMessage('D�gito verificador es requerido'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const {
+        razon_social,
+        rut,
+        dv,
+        giro,
+        direccion,
+        email_contacto,
+        telefono_contacto,
+      } = req.body;
+
+      const userId = req.user.id;
+
+      // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 11.1
+      const query = `
       INSERT INTO comunidad (
           razon_social,
           rut,
@@ -806,30 +830,31 @@ router.post('/', [
           created_at,
           updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, 'CLP', 'America/Santiago', ?, NOW(), NOW())`;
-    
-    const [result] = await db.query(query, [
-      razon_social,
-      rut,
-      dv,
-      giro || null,
-      direccion || null,
-      email_contacto || null,
-      telefono_contacto || null,
-      userId
-    ]);
-    
-    // Retornar la comunidad creada
-    const [row] = await db.query(
-      'SELECT id, razon_social, rut, dv FROM comunidad WHERE id = ? LIMIT 1',
-      [result.insertId]
-    );
-    
-    res.status(201).json(row[0]);
-  } catch (err) {
-    console.error('Error creating community:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+
+      const [result] = await db.query(query, [
+        razon_social,
+        rut,
+        dv,
+        giro || null,
+        direccion || null,
+        email_contacto || null,
+        telefono_contacto || null,
+        userId,
+      ]);
+
+      // Retornar la comunidad creada
+      const [row] = await db.query(
+        'SELECT id, razon_social, rut, dv FROM comunidad WHERE id = ? LIMIT 1',
+        [result.insertId]
+      );
+
+      res.status(201).json(row[0]);
+    } catch (err) {
+      console.error('Error al crear comunidad:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -872,62 +897,63 @@ router.post('/', [
  *       400:
  *         description: Sin campos para actualizar
  */
-router.patch('/:id', [
-  authenticate,
-  authorize('admin', 'superadmin')
-], async (req, res) => {
-  try {
-    const id = req.params.id;
-    const userId = req.user.id;
-    
-    const allowedFields = [
-      'razon_social',
-      'rut',
-      'dv',
-      'giro',
-      'direccion',
-      'email_contacto',
-      'telefono_contacto'
-    ];
-    
-    const updates = [];
-    const values = [];
-    
-    allowedFields.forEach(field => {
-      if (req.body[field] !== undefined) {
-        updates.push(`${field} = ?`);
-        values.push(req.body[field]);
+router.patch(
+  '/:id',
+  [authenticate, authorize('admin', 'superadmin')],
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+      const userId = req.user.id;
+
+      const allowedFields = [
+        'razon_social',
+        'rut',
+        'dv',
+        'giro',
+        'direccion',
+        'email_contacto',
+        'telefono_contacto',
+      ];
+
+      const updates = [];
+      const values = [];
+
+      allowedFields.forEach((field) => {
+        if (req.body[field] !== undefined) {
+          updates.push(`${field} = ?`);
+          values.push(req.body[field]);
+        }
+      });
+
+      if (!updates.length) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
       }
-    });
-    
-    if (!updates.length) {
-      return res.status(400).json({ error: 'No hay campos para actualizar' });
+
+      // Agregar updated_at y updated_by
+      updates.push('updated_at = NOW()');
+      updates.push('updated_by = ?');
+      values.push(userId);
+      values.push(id);
+
+      // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 11.2
+      await db.query(
+        `UPDATE comunidad SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+
+      // Retornar la comunidad actualizada
+      const [rows] = await db.query(
+        'SELECT id, razon_social, rut, dv FROM comunidad WHERE id = ? LIMIT 1',
+        [id]
+      );
+
+      res.json(rows[0]);
+    } catch (err) {
+      console.error('Error al actualizar comunidad:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
-    
-    // Agregar updated_at y updated_by
-    updates.push('updated_at = NOW()');
-    updates.push('updated_by = ?');
-    values.push(userId);
-    values.push(id);
-    
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 11.2
-    await db.query(
-      `UPDATE comunidad SET ${updates.join(', ')} WHERE id = ?`,
-      values
-    );
-    
-    // Retornar la comunidad actualizada
-    const [rows] = await db.query(
-      'SELECT id, razon_social, rut, dv FROM comunidad WHERE id = ? LIMIT 1',
-      [id]
-    );
-    
-    res.json(rows[0]);
-  } catch (err) {
-    console.error('Error updating community:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
   }
-});
+);
 
 /**
  * @swagger
@@ -953,22 +979,23 @@ router.patch('/:id', [
  *       403:
  *         description: Sin permisos suficientes
  */
-router.delete('/:id', [
-  authenticate,
-  authorize('superadmin')
-], async (req, res) => {
-  try {
-    const id = req.params.id;
-    
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 12.1
-    await db.query('DELETE FROM comunidad WHERE id = ?', [id]);
-    
-    res.status(204).end();
-  } catch (err) {
-    console.error('Error deleting community:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+router.delete(
+  '/:id',
+  [authenticate, authorize('superadmin')],
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+
+      // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 12.1
+      await db.query('DELETE FROM comunidad WHERE id = ?', [id]);
+
+      res.status(204).end();
+    } catch (err) {
+      console.error('Error al eliminar comunidad:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -993,7 +1020,7 @@ router.get('/verificar-acceso/:id', authenticate, async (req, res) => {
   try {
     const comunidadId = req.params.id;
     const userId = req.user.id;
-    
+
     // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 14.3
     const query = `
       SELECT COUNT(*) AS tiene_acceso
@@ -1002,15 +1029,15 @@ router.get('/verificar-acceso/:id', authenticate, async (req, res) => {
       AND urc.comunidad_id = ?
       AND urc.activo = 1
       AND (urc.hasta IS NULL OR urc.hasta > CURDATE())`;
-    
+
     const [rows] = await db.query(query, [userId, comunidadId]);
-    
+
     res.json({
       tieneAcceso: rows[0].tiene_acceso > 0,
-      esSuperadmin: req.user.is_superadmin || false
+      esSuperadmin: req.user.is_superadmin || false,
     });
   } catch (err) {
-    console.error('Error verifying access:', err);
+    console.error('Error al verificar acceso:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -1033,7 +1060,7 @@ router.get('/verificar-acceso/:id', authenticate, async (req, res) => {
 router.get('/mis-membresias', authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 14.2
     const query = `
       SELECT 
@@ -1048,11 +1075,11 @@ router.get('/mis-membresias', authenticate, async (req, res) => {
       WHERE urc.usuario_id = ?
       AND urc.activo = 1
       AND (urc.hasta IS NULL OR urc.hasta > CURDATE())`;
-    
+
     const [rows] = await db.query(query, [userId]);
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching memberships:', err);
+    console.error('Error al obtener membresías:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -1086,7 +1113,3 @@ module.exports = router;
 
 // // VALIDACI�N
 // GET: /comunidades/verificar-acceso/:id
-
-
-
-

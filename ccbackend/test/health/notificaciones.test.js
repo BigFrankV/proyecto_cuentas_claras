@@ -10,7 +10,7 @@ const { categorizeResponse, getWithAuth } = require('./helpers');
 describe('Notificaciones Health Check', () => {
   let authToken;
   let comunidadId;
-  let notificacionId; 
+  let notificacionId;
 
   beforeAll(() => {
     authToken = getAuthToken();
@@ -35,14 +35,14 @@ describe('Notificaciones Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /notificaciones/comunidad/:comunidadId/listado-completo', async () => {
       const endpoint = `/notificaciones/comunidad/${comunidadId}/listado-completo`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /notificaciones/comunidad/:comunidadId/pendientes', async () => {
       const endpoint = `/notificaciones/comunidad/${comunidadId}/pendientes`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -68,28 +68,28 @@ describe('Notificaciones Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /notificaciones/estadisticas/por-estado', async () => {
       const endpoint = `/notificaciones/estadisticas/por-estado`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /notificaciones/estadisticas/por-tipo', async () => {
       const endpoint = `/notificaciones/estadisticas/por-tipo`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /notificaciones/estadisticas/por-canal', async () => {
       const endpoint = `/notificaciones/estadisticas/por-canal`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /notificaciones/estadisticas/mensuales', async () => {
       const endpoint = `/notificaciones/estadisticas/mensuales`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -108,14 +108,14 @@ describe('Notificaciones Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /notificaciones/por-comunidad', async () => {
       const endpoint = `/notificaciones/por-comunidad`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /notificaciones/por-audiencia', async () => {
       const endpoint = `/notificaciones/por-audiencia`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -134,21 +134,21 @@ describe('Notificaciones Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /notificaciones/exportar/enviadas', async () => {
       const endpoint = `/notificaciones/exportar/enviadas`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /notificaciones/exportar/estadisticas-mensuales', async () => {
       const endpoint = `/notificaciones/exportar/estadisticas-mensuales`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /notificaciones/validaciones/integridad', async () => {
       const endpoint = `/notificaciones/validaciones/integridad`;
       const response = await getWithAuth(app, endpoint, authToken);

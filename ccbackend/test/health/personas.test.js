@@ -9,7 +9,7 @@ const { categorizeResponse, getWithAuth } = require('./helpers');
 
 describe('Personas Health Check', () => {
   let authToken;
-  let personaId; 
+  let personaId;
 
   beforeAll(() => {
     authToken = getAuthToken();
@@ -52,7 +52,7 @@ describe('Personas Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /personas/:id/actividad', async () => {
       const endpoint = `/personas/${personaId}/actividad`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -73,14 +73,14 @@ describe('Personas Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /personas/:id/roles', async () => {
       const endpoint = `/personas/${personaId}/roles`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /personas/:id/resumen-financiero', async () => {
       const endpoint = `/personas/${personaId}/resumen-financiero`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -88,7 +88,7 @@ describe('Personas Health Check', () => {
       expect([200, 401, 404, 500]).toContain(response.status);
     });
   });
-  
+
   // =========================================
   // 3. Estadísticas y Utilidades
   // =========================================

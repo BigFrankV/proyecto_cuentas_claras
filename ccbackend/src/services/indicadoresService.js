@@ -18,21 +18,28 @@ class IndicadoresService {
         const response = await axios.get(this.apiUrl, {
           timeout: 10000, // 10 segundos timeout
           headers: {
-            'User-Agent': 'CuentasClaras/1.0.0'
-          }
+            'User-Agent': 'CuentasClaras/1.0.0',
+          },
         });
-        
+
         logger.info('Datos obtenidos exitosamente de mindicador.cl');
         return response.data;
       } catch (error) {
-        logger.warn(`Intento ${attempt}/${this.maxRetries} fallido:`, error.message);
-        
+        logger.warn(
+          `Intento ${attempt}/${this.maxRetries} fallido:`,
+          error.message
+        );
+
         if (attempt === this.maxRetries) {
-          throw new Error(`Error al obtener datos después de ${this.maxRetries} intentos: ${error.message}`);
+          throw new Error(
+            `Error al obtener datos después de ${this.maxRetries} intentos: ${error.message}`
+          );
         }
-        
+
         // Esperar antes del siguiente intento
-        await new Promise(resolve => setTimeout(resolve, this.retryDelay * attempt));
+        await new Promise((resolve) =>
+          setTimeout(resolve, this.retryDelay * attempt)
+        );
       }
     }
   }
@@ -57,7 +64,9 @@ class IndicadoresService {
 
     try {
       await db.query(query, [fecha, valor]);
-      logger.info(`UF actualizada: ${fecha} = $${valor.toLocaleString('es-CL')}`);
+      logger.info(
+        `UF actualizada: ${fecha} = $${valor.toLocaleString('es-CL')}`
+      );
       return { fecha, valor, updated: true };
     } catch (error) {
       logger.error('Error actualizando UF:', error);
@@ -85,7 +94,9 @@ class IndicadoresService {
 
     try {
       await db.query(query, [fecha, valor]);
-      logger.info(`UTM actualizada: ${fecha} = $${valor.toLocaleString('es-CL')}`);
+      logger.info(
+        `UTM actualizada: ${fecha} = $${valor.toLocaleString('es-CL')}`
+      );
       return { fecha, valor, updated: true };
     } catch (error) {
       logger.error('Error actualizando UTM:', error);
@@ -104,7 +115,9 @@ class IndicadoresService {
       if (data[indicador] && data[indicador].valor !== undefined) {
         try {
           const indicadorData = data[indicador];
-          const fecha = new Date(indicadorData.fecha).toISOString().split('T')[0];
+          const fecha = new Date(indicadorData.fecha)
+            .toISOString()
+            .split('T')[0];
           const valor = parseFloat(indicadorData.valor);
 
           const query = `
@@ -121,11 +134,13 @@ class IndicadoresService {
             indicadorData.nombre,
             fecha,
             valor,
-            indicadorData.unidad_medida
+            indicadorData.unidad_medida,
           ]);
 
           results.push({ codigo: indicador, fecha, valor, updated: true });
-          logger.info(`${indicador.toUpperCase()} actualizado: ${fecha} = ${valor}`);
+          logger.info(
+            `${indicador.toUpperCase()} actualizado: ${fecha} = ${valor}`
+          );
         } catch (error) {
           logger.error(`Error actualizando ${indicador}:`, error);
           results.push({ codigo: indicador, error: error.message });
@@ -148,40 +163,39 @@ class IndicadoresService {
       utm: null,
       otros: [],
       errors: [],
-      duration: 0
+      duration: 0,
     };
 
     try {
       logger.info('🔄 Iniciando sincronización de indicadores...');
-      
+
       // Obtener datos de la API
       const data = await this.fetchIndicadores();
-      
+
       // Actualizar UF
       if (data.uf) {
         resultado.uf = await this.updateUF(data.uf);
       }
-      
+
       // Actualizar UTM
       if (data.utm) {
         resultado.utm = await this.updateUTM(data.utm);
       }
-      
+
       // Actualizar otros indicadores
       resultado.otros = await this.updateOtrosIndicadores(data);
-      
+
       resultado.success = true;
       resultado.duration = Date.now() - startTime;
-      
-      logger.info(`✅ Sincronización completada en ${resultado.duration}ms`);
-      
+
+      logger.info(`Sincronización completada en ${resultado.duration}ms`);
+
       return resultado;
-      
     } catch (error) {
       resultado.errors.push(error.message);
       resultado.duration = Date.now() - startTime;
-      
-      logger.error('❌ Error en sincronización:', error);
+
+      logger.error('Error en sincronización:', error);
       throw error;
     }
   }
@@ -191,13 +205,13 @@ class IndicadoresService {
    */
   async getHistorico(indicador, año) {
     const url = `${this.apiUrl}/${indicador}/${año}`;
-    
+
     try {
       const response = await axios.get(url, {
         timeout: 15000,
-        headers: { 'User-Agent': 'CuentasClaras/1.0.0' }
+        headers: { 'User-Agent': 'CuentasClaras/1.0.0' },
       });
-      
+
       return response.data;
     } catch (error) {
       logger.error(`Error obteniendo histórico de ${indicador}:`, error);
@@ -209,11 +223,11 @@ class IndicadoresService {
    * Sincronización inicial con datos históricos
    */
   async sincronizacionInicial() {
-    logger.info('🚀 Iniciando sincronización inicial con datos históricos...');
-    
+    logger.info('Iniciando sincronización inicial con datos históricos...');
+
     const currentYear = new Date().getFullYear();
     const years = [currentYear - 1, currentYear]; // Último año y año actual
-    
+
     for (const year of years) {
       try {
         // UF histórica
@@ -223,7 +237,7 @@ class IndicadoresService {
             await this.updateUF(item);
           }
         }
-        
+
         // UTM histórica
         const utmHistorico = await this.getHistorico('utm', year);
         if (utmHistorico.serie) {
@@ -231,18 +245,17 @@ class IndicadoresService {
             await this.updateUTM(item);
           }
         }
-        
+
         logger.info(`Datos históricos de ${year} procesados`);
-        
+
         // Pausa entre años para no sobrecargar la API
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (error) {
         logger.error(`Error procesando año ${year}:`, error);
       }
     }
-    
-    logger.info('✅ Sincronización inicial completada');
+
+    logger.info('Sincronización inicial completada');
   }
 }
 
