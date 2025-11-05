@@ -558,4 +558,3 @@ export function ViewControls({
     </div>
   );
 }
-

@@ -46,7 +46,7 @@ export default function TorresListado() {
 
         // Load torres list
         const torresResponse = await apiClient.get(
-          `/torres/edificio/${edificioId}/listado`,
+          `/torres/edificio/${edificioId}/listado`
         );
         const torresData = torresResponse.data.map((torre: any) => ({
           id: String(torre.id),
@@ -62,7 +62,7 @@ export default function TorresListado() {
 
         // Load statistics
         const statsResponse = await apiClient.get(
-          `/torres/edificio/${edificioId}/estadisticas`,
+          `/torres/edificio/${edificioId}/estadisticas`
         );
         const statsData = statsResponse.data;
         setStats({
@@ -71,8 +71,8 @@ export default function TorresListado() {
           promedioUnidades: statsData.promedioUnidadesPorTorre || 0,
         });
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error loading torres data:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error loading torres data:', err);
         setError('Error al cargar los datos de las torres');
       } finally {
         setLoading(false);
@@ -495,7 +495,10 @@ console.error('Error loading torres data:', err);
                           <hr className='dropdown-divider' />
                         </li>
                         <li>
-                          <button className='dropdown-item text-danger' type='button'>
+                          <button
+                            className='dropdown-item text-danger'
+                            type='button'
+                          >
                             Eliminar seleccionadas
                           </button>
                         </li>
@@ -546,7 +549,7 @@ console.error('Error loading torres data:', err);
                                     onChange={e =>
                                       handleSelectTorre(
                                         torre.id,
-                                        e.target.checked,
+                                        e.target.checked
                                       )
                                     }
                                   />
@@ -724,7 +727,7 @@ console.error('Error loading torres data:', err);
                             onMouseLeave={e =>
                               (e.currentTarget.style.opacity = '0')
                             }
-                            role="presentation"
+                            role='presentation'
                           >
                             <div className='btn-group'>
                               <Link
@@ -837,4 +840,3 @@ console.error('Error loading torres data:', err);
     </ProtectedRoute>
   );
 }
-

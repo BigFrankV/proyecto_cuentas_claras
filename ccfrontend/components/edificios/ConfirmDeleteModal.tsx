@@ -13,7 +13,9 @@ export default function ConfirmDeleteModal({
   onCancel,
   loading = false,
 }: ConfirmDeleteModalProps) {
-  if (!isOpen) {return null;}
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <>
@@ -96,4 +98,3 @@ export default function ConfirmDeleteModal({
     </>
   );
 }
-

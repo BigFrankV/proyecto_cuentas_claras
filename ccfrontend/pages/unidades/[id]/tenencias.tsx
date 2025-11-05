@@ -13,15 +13,19 @@ export default function TenenciasUnidad() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
     let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
         const res = await apiClient.get(`/unidades/${id}/tenencias`);
-        if (mounted) {setTenencias(res.data || []);}
+        if (mounted) {
+          setTenencias(res.data || []);
+        }
       } catch (err) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error('Error loading tenencias', err);
       } finally {
         setLoading(false);

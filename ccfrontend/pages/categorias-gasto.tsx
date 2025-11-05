@@ -56,27 +56,27 @@ export default function CategoriasGastoListado() {
     try {
       setLoading(true);
       const response = await listCategorias(resolvedComunidadId);
-// eslint-disable-next-line no-console
-console.log('API Response:', response); // <-- añadir
-// eslint-disable-next-line no-console
-console.log('Response data:', response.data); // <-- añadir
+      // eslint-disable-next-line no-console
+      console.log('API Response:', response); // <-- añadir
+      // eslint-disable-next-line no-console
+      console.log('Response data:', response.data); // <-- añadir
       setCategories(response.data);
       setPagination({
         total: response.pagination?.total || 0,
         page: response.pagination?.offset
           ? Math.floor(
               (response.pagination.offset || 0) /
-                (response.pagination.limit || 10),
+                (response.pagination.limit || 10)
             ) + 1
           : 1,
         limit: response.pagination?.limit || 10,
         pages: response.pagination?.pages || 0,
       });
-// eslint-disable-next-line no-console
-console.log('Categories set:', response.data); // <-- añadir
+      // eslint-disable-next-line no-console
+      console.log('Categories set:', response.data); // <-- añadir
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading categories:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading categories:', error);
     } finally {
       setLoading(false);
     }
@@ -113,8 +113,8 @@ console.error('Error loading categories:', error);
       setSelectedCategory(null);
       alert('Categoría eliminada exitosamente');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error deleting category:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error deleting category:', error);
       alert('Error al eliminar la categoría');
     }
   };
@@ -130,7 +130,7 @@ console.error('Error deleting category:', error);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedCategories = filteredCategories.slice(
     startIndex,
-    startIndex + itemsPerPage,
+    startIndex + itemsPerPage
   );
 
   const stats = {
@@ -554,4 +554,3 @@ console.error('Error deleting category:', error);
     </ProtectedRoute>
   );
 }
-

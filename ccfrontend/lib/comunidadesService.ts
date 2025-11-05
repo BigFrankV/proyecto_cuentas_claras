@@ -16,9 +16,7 @@ class ComunidadesService {
   async getComunidades(filtros?: ComunidadFiltros): Promise<Comunidad[]> {
     try {
       // eslint-disable-next-line no-console
-      console.log(
-        '[ComunidadesService] getComunidades - Iniciando solicitud',
-      );
+      console.log('[ComunidadesService] getComunidades - Iniciando solicitud');
       // eslint-disable-next-line no-console
       // eslint-disable-next-line no-console`n      console.log('[ComunidadesService] Filtros:', filtros);
 
@@ -46,7 +44,7 @@ class ComunidadesService {
       if (!token) {
         // eslint-disable-next-line no-console
         console.error(
-          '[ComunidadesService] SIN TOKEN - No se puede acceder a comunidades',
+          '[ComunidadesService] SIN TOKEN - No se puede acceder a comunidades'
         );
         throw new Error('No hay autenticación (token ausente)');
       }
@@ -55,34 +53,34 @@ class ComunidadesService {
       // eslint-disable-next-line no-console
       console.log(
         '[ComunidadesService] Respuesta exitosa. Comunidades:',
-        response.data.length,
+        response.data.length
       );
 
       return response.data.map((comunidad: any) =>
-        this.normalizeComunidad(comunidad),
+        this.normalizeComunidad(comunidad)
       );
     } catch (error: any) {
       // eslint-disable-next-line no-console
       console.error(
         '[ComunidadesService] Error obteniendo comunidades:',
-        error.message,
+        error.message
       );
       // eslint-disable-next-line no-console
-console.error('[ComunidadesService] Status:', error.response?.status);
+      console.error('[ComunidadesService] Status:', error.response?.status);
       // eslint-disable-next-line no-console
-console.error('[ComunidadesService] Response:', error.response?.data);
+      console.error('[ComunidadesService] Response:', error.response?.data);
 
       // ✅ NUEVA MANEJO: Si es 401, informar claramente
       if (error.response?.status === 401) {
         // eslint-disable-next-line no-console
         console.error(
-          '[ComunidadesService] 401 - Sin autorización. Usuario debe hacer login.',
+          '[ComunidadesService] 401 - Sin autorización. Usuario debe hacer login.'
         );
         throw new Error('No autorizado. Por favor, haz login.');
       }
 
       // eslint-disable-next-line no-console
-console.error('[ComunidadesService] Error completo:', error);
+      console.error('[ComunidadesService] Error completo:', error);
       throw error; // Propagar error para manejarlo en el componente
     }
   }
@@ -93,7 +91,7 @@ console.error('[ComunidadesService] Error completo:', error);
       return this.normalizeComunidad(response.data) as ComunidadDetalle;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo comunidad ${id}:`, error);
+      console.error(`Error obteniendo comunidad ${id}:`, error);
       throw error;
     }
   }
@@ -105,7 +103,7 @@ console.error(`Error obteniendo comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo amenidades para comunidad ${id}:`, error);
+      console.error(`Error obteniendo amenidades para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -116,7 +114,7 @@ console.error(`Error obteniendo amenidades para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo edificios para comunidad ${id}:`, error);
+      console.error(`Error obteniendo edificios para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -127,7 +125,7 @@ console.error(`Error obteniendo edificios para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo contactos para comunidad ${id}:`, error);
+      console.error(`Error obteniendo contactos para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -138,7 +136,7 @@ console.error(`Error obteniendo contactos para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo documentos para comunidad ${id}:`, error);
+      console.error(`Error obteniendo documentos para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -149,7 +147,7 @@ console.error(`Error obteniendo documentos para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo residentes para comunidad ${id}:`, error);
+      console.error(`Error obteniendo residentes para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -160,7 +158,7 @@ console.error(`Error obteniendo residentes para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo parametros para comunidad ${id}:`, error);
+      console.error(`Error obteniendo parametros para comunidad ${id}:`, error);
       return null;
     }
   }
@@ -168,12 +166,15 @@ console.error(`Error obteniendo parametros para comunidad ${id}:`, error);
   async getEstadisticasByComunidad(id: number): Promise<any> {
     try {
       const response = await apiClient.get(
-        `${this.baseUrl}/${id}/estadisticas`,
+        `${this.baseUrl}/${id}/estadisticas`
       );
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo estadisticas para comunidad ${id}:`, error);
+      console.error(
+        `Error obteniendo estadisticas para comunidad ${id}:`,
+        error
+      );
       return {
         totalIngresos: 0,
         ingresosPagados: 0,
@@ -191,7 +192,7 @@ console.error(`Error obteniendo estadisticas para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo flujo-caja para comunidad ${id}:`, error);
+      console.error(`Error obteniendo flujo-caja para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -213,14 +214,14 @@ console.error(`Error obteniendo flujo-caja para comunidad ${id}:`, error);
       return this.normalizeComunidad(response.data);
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error creando comunidad:', error);
+      console.error('Error creando comunidad:', error);
       throw error;
     }
   }
 
   async updateComunidad(
     id: number,
-    data: Partial<ComunidadFormData>,
+    data: Partial<ComunidadFormData>
   ): Promise<Comunidad> {
     try {
       // Mapear campos del frontend al backend
@@ -252,7 +253,7 @@ console.error('Error creando comunidad:', error);
       return this.normalizeComunidad(response.data);
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error actualizando comunidad ${id}:`, error);
+      console.error(`Error actualizando comunidad ${id}:`, error);
       throw error;
     }
   }
@@ -262,25 +263,25 @@ console.error(`Error actualizando comunidad ${id}:`, error);
       await apiClient.delete(`${this.baseUrl}/${id}`);
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error eliminando comunidad ${id}:`, error);
+      console.error(`Error eliminando comunidad ${id}:`, error);
       throw error;
     }
   }
 
   // Métodos para parámetros de cobranza
   async getParametrosCobranza(
-    comunidadId: number,
+    comunidadId: number
   ): Promise<ParametrosCobranza> {
     try {
       const response = await apiClient.get(
-        `${this.baseUrl}/${comunidadId}/parametros`,
+        `${this.baseUrl}/${comunidadId}/parametros`
       );
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(
         `Error obteniendo parametros para comunidad ${comunidadId}:`,
-        error,
+        error
       );
       throw error;
     }
@@ -288,19 +289,19 @@ console.error(`Error eliminando comunidad ${id}:`, error);
 
   async updateParametrosCobranza(
     comunidadId: number,
-    parametros: Partial<ParametrosCobranza>,
+    parametros: Partial<ParametrosCobranza>
   ): Promise<ParametrosCobranza> {
     try {
       const response = await apiClient.patch(
         `${this.baseUrl}/${comunidadId}/parametros`,
-        parametros,
+        parametros
       );
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(
         `Error actualizando parametros para comunidad ${comunidadId}:`,
-        error,
+        error
       );
       throw error;
     }
@@ -310,14 +311,14 @@ console.error(`Error eliminando comunidad ${id}:`, error);
   async getEstadisticasComunidad(comunidadId: number): Promise<any> {
     try {
       const response = await apiClient.get(
-        `${this.baseUrl}/${comunidadId}/estadisticas`,
+        `${this.baseUrl}/${comunidadId}/estadisticas`
       );
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(
         `Error obteniendo estadisticas para comunidad ${comunidadId}:`,
-        error,
+        error
       );
       throw error;
     }
@@ -325,18 +326,18 @@ console.error(`Error eliminando comunidad ${id}:`, error);
 
   // Métodos nuevos basados en los endpoints de la API
   async verificarAcceso(
-    comunidadId: number,
+    comunidadId: number
   ): Promise<{ tieneAcceso: boolean; esSuperadmin: boolean }> {
     try {
       const response = await apiClient.get(
-        `${this.baseUrl}/verificar-acceso/${comunidadId}`,
+        `${this.baseUrl}/verificar-acceso/${comunidadId}`
       );
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(
         `Error verificando acceso a comunidad ${comunidadId}:`,
-        error,
+        error
       );
       return { tieneAcceso: false, esSuperadmin: false };
     }
@@ -348,7 +349,7 @@ console.error(`Error eliminando comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error obteniendo membresías:', error);
+      console.error('Error obteniendo membresías:', error);
       return [];
     }
   }
@@ -434,4 +435,3 @@ console.error('Error obteniendo membresías:', error);
 
 const comunidadesService = new ComunidadesService();
 export default comunidadesService;
-

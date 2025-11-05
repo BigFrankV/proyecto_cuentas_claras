@@ -90,7 +90,7 @@ export default function PersonaDetalle() {
       setRoles(rolesData);
       setResumenFinanciero(resumenData);
     } catch (err) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error cargando datos de persona:', err);
     }
   };
@@ -383,7 +383,7 @@ export default function PersonaDetalle() {
                         <div className='text-muted small'>Fecha Alta</div>
                         <div className='fw-medium'>
                           {new Date(persona.fecha_registro).toLocaleDateString(
-                            'es-AR',
+                            'es-AR'
                           )}
                         </div>
                       </div>
@@ -432,7 +432,7 @@ export default function PersonaDetalle() {
                     <div className='fw-medium'>
                       {persona.ultimo_acceso
                         ? new Date(persona.ultimo_acceso).toLocaleString(
-                            'es-AR',
+                            'es-AR'
                           )
                         : 'Nunca'}
                     </div>
@@ -1114,7 +1114,7 @@ export default function PersonaDetalle() {
                                           className={`fw-bold ${resumen.saldo_pendiente > 0 ? 'text-danger' : 'text-success'}`}
                                         >
                                           {formatCurrency(
-                                            resumen.saldo_pendiente,
+                                            resumen.saldo_pendiente
                                           )}
                                         </div>
                                       </div>
@@ -1140,7 +1140,7 @@ export default function PersonaDetalle() {
                                         <span>{resumen.ultimo_pago.fecha}</span>
                                         <span className='fw-bold text-success'>
                                           {formatCurrency(
-                                            resumen.ultimo_pago.importe,
+                                            resumen.ultimo_pago.importe
                                           )}
                                         </span>
                                       </div>

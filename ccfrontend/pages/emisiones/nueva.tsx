@@ -116,8 +116,8 @@ export default function EmisionNueva() {
         const comunidadesData = await comunidadesService.getComunidades();
         setComunidades(comunidadesData);
       } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading comunidades:', error);
+        // eslint-disable-next-line no-console
+        console.error('Error loading comunidades:', error);
         // Fallback to mock data if API fails
         setComunidades([
           { id: 1, razon_social: 'Edificio Central' },
@@ -144,20 +144,22 @@ console.error('Error loading comunidades:', error);
       prev.map(expense =>
         expense.id === expenseId
           ? { ...expense, selected: !expense.selected }
-          : expense,
-      ),
+          : expense
+      )
     );
   };
 
   const handleSelectAllExpenses = () => {
     const allSelected = expenses.every(expense => expense.selected);
     setExpenses(prev =>
-      prev.map(expense => ({ ...expense, selected: !allSelected })),
+      prev.map(expense => ({ ...expense, selected: !allSelected }))
     );
   };
 
   const handleAddConcept = () => {
-    if (!newConcept.name.trim() || newConcept.amount <= 0) {return;}
+    if (!newConcept.name.trim() || newConcept.amount <= 0) {
+      return;
+    }
 
     const concept: Concept = {
       id: Date.now().toString(),
@@ -241,14 +243,14 @@ console.error('Error loading comunidades:', error);
       // Call API to create emission
       const nuevaEmision = await emisionesService.createEmision(
         comunidadId,
-        emisionData,
+        emisionData
       );
 
       alert('Emisión creada exitosamente');
       router.push('/emisiones');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error creating emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error creating emision:', error);
       alert('Error al crear la emisión. Por favor intenta nuevamente.');
     } finally {
       setLoading(false);
@@ -463,7 +465,7 @@ console.error('Error creating emision:', error);
                             onChange={e =>
                               handleInputChange(
                                 'interestRate',
-                                parseFloat(e.target.value),
+                                parseFloat(e.target.value)
                               )
                             }
                             step='0.1'
@@ -482,7 +484,7 @@ console.error('Error creating emision:', error);
                             onChange={e =>
                               handleInputChange(
                                 'gracePeriod',
-                                parseInt(e.target.value),
+                                parseInt(e.target.value)
                               )
                             }
                             min='0'
@@ -632,7 +634,7 @@ console.error('Error creating emision:', error);
                               <td>{expense.supplier}</td>
                               <td>
                                 {new Date(expense.date).toLocaleDateString(
-                                  'es-CL',
+                                  'es-CL'
                                 )}
                               </td>
                               <td>{formatCurrency(expense.amount)}</td>
@@ -950,4 +952,3 @@ console.error('Error creating emision:', error);
     </ProtectedRoute>
   );
 }
-

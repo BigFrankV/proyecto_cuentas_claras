@@ -13,15 +13,19 @@ export default function ResidentesUnidad() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
     let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
         const res = await apiClient.get(`/unidades/${id}/residentes`);
-        if (mounted) {setResidentes(res.data || []);}
+        if (mounted) {
+          setResidentes(res.data || []);
+        }
       } catch (err) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error(err);
       } finally {
         setLoading(false);

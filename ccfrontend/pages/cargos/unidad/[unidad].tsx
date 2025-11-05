@@ -17,7 +17,9 @@ export default function CargosUnidadPage() {
 
   useEffect(() => {
     const fetchUnitData = async () => {
-      if (!unidad || typeof unidad !== 'string') {return;}
+      if (!unidad || typeof unidad !== 'string') {
+        return;
+      }
 
       setLoading(true);
       setError(null);
@@ -75,7 +77,7 @@ export default function CargosUnidadPage() {
           coeficiente: 0,
         };
 
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.log('✅ Datos cargados:', {
           unitData,
           cargosCount: mappedCargos.length,
@@ -83,12 +85,12 @@ export default function CargosUnidadPage() {
         setUnitInfo(unitData);
         setCargos(mappedCargos);
       } catch (err) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error('❌ Error al cargar datos de la unidad:', err);
         setError(
           err instanceof Error
             ? err.message
-            : 'Error desconocido al cargar los datos',
+            : 'Error desconocido al cargar los datos'
         );
       } finally {
         setLoading(false);

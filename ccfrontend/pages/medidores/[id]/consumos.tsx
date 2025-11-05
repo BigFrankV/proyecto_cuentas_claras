@@ -42,7 +42,7 @@ ChartJS.register(
   Tooltip,
   Legend,
   ArcElement,
-  Filler,
+  Filler
 );
 
 interface ConsumptionData {
@@ -124,7 +124,7 @@ export default function ConsumosMedidor() {
       // Simular datos de consumo con contexto chileno
       const mockConsumptionData: ConsumptionData[] = generateConsumptionData(
         meterData.type,
-        selectedPeriod,
+        selectedPeriod
       );
 
       // Simular alertas
@@ -164,7 +164,7 @@ export default function ConsumosMedidor() {
       setConsumptionData(mockConsumptionData);
       setAlerts(mockAlerts);
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading consumption data:', error);
     } finally {
       setLoading(false);
@@ -173,7 +173,7 @@ export default function ConsumosMedidor() {
 
   const generateConsumptionData = (
     meterType: string,
-    period: string,
+    period: string
   ): ConsumptionData[] => {
     const data: ConsumptionData[] = [];
     const currentDate = new Date();
@@ -184,7 +184,7 @@ export default function ConsumosMedidor() {
         const date = new Date(
           currentDate.getFullYear(),
           currentDate.getMonth() - i,
-          1,
+          1
         );
         const baseConsumption =
           meterType === 'electric' ? 850 : meterType === 'water' ? 15 : 45;
@@ -192,7 +192,7 @@ export default function ConsumosMedidor() {
         // Variación estacional para Chile
         const seasonalFactor = getSummerSeasonalFactor(date.getMonth());
         const consumption = Math.round(
-          baseConsumption * seasonalFactor + (Math.random() - 0.5) * 100,
+          baseConsumption * seasonalFactor + (Math.random() - 0.5) * 100
         );
         const previous =
           i === 11
@@ -232,13 +232,13 @@ export default function ConsumosMedidor() {
       const daysInMonth = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth() + 1,
-        0,
+        0
       ).getDate();
       for (let i = daysInMonth - 1; i >= 0; i--) {
         const date = new Date(
           currentDate.getFullYear(),
           currentDate.getMonth(),
-          currentDate.getDate() - i,
+          currentDate.getDate() - i
         );
         const baseDaily =
           meterType === 'electric' ? 28 : meterType === 'water' ? 0.5 : 1.5;
@@ -404,7 +404,7 @@ export default function ConsumosMedidor() {
               ? '#e74c3c'
               : d.variation < -15
                 ? '#27ae60'
-                : '#3498db',
+                : '#3498db'
           ),
         borderColor: '#2c3e50',
         borderWidth: 1,
@@ -608,7 +608,7 @@ export default function ConsumosMedidor() {
                   <div className='stats-card-content'>
                     <div className='stats-card-value'>
                       {Math.round(getTotalConsumption()).toLocaleString(
-                        'es-CL',
+                        'es-CL'
                       )}
                       <span className='stats-card-unit'>{getUnit()}</span>
                     </div>
@@ -645,7 +645,7 @@ export default function ConsumosMedidor() {
                   <div className='stats-card-content'>
                     <div className='stats-card-value'>
                       {Math.round(getAverageConsumption()).toLocaleString(
-                        'es-CL',
+                        'es-CL'
                       )}
                       <span className='stats-card-unit'>{getUnit()}</span>
                     </div>

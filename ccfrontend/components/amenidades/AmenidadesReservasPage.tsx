@@ -68,7 +68,7 @@ const AmenidadesReservasPage: React.FC = () => {
     // TODO: Load occupied slots from API
     const occupiedSlots: string[] = [];
     setAvailableTimeSlots(
-      timeSlots.filter(slot => !occupiedSlots.includes(slot)),
+      timeSlots.filter(slot => !occupiedSlots.includes(slot))
     );
   }, []);
 
@@ -94,7 +94,7 @@ const AmenidadesReservasPage: React.FC = () => {
 
       // Obtener unidades de la comunidad del usuario
       const unidades = await unidadesService.getUnidadesPorComunidad(
-        activeMembership.comunidadId,
+        activeMembership.comunidadId
       );
 
       // Buscar la unidad que pertenece a la persona del usuario
@@ -106,8 +106,8 @@ const AmenidadesReservasPage: React.FC = () => {
 
       return null;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error obteniendo unidad del usuario:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error obteniendo unidad del usuario:', error);
       return null;
     }
   }, [user]);
@@ -132,7 +132,7 @@ console.error('Error obteniendo unidad del usuario:', error);
 
     if (!user?.persona_id) {
       alert(
-        'Error: No se pudo identificar al usuario. Por favor, inicie sesión nuevamente.',
+        'Error: No se pudo identificar al usuario. Por favor, inicie sesión nuevamente.'
       );
       return;
     }
@@ -148,7 +148,7 @@ console.error('Error obteniendo unidad del usuario:', error);
     const unidadId = await getUserUnidad();
     if (!unidadId) {
       alert(
-        'Error: No se pudo determinar la unidad del usuario. Verifique que tenga una membresía activa.',
+        'Error: No se pudo determinar la unidad del usuario. Verifique que tenga una membresía activa.'
       );
       return;
     }
@@ -176,7 +176,7 @@ console.error('Error obteniendo unidad del usuario:', error);
     setShowModal(false);
 
     alert(
-      'Reserva creada exitosamente. Pendiente de confirmación por el administrador.',
+      'Reserva creada exitosamente. Pendiente de confirmación por el administrador.'
     );
   };
 
@@ -203,16 +203,16 @@ console.error('Error obteniendo unidad del usuario:', error);
   const clearFilters = () => {
     // Reset all filters
     const amenityFilter = document.getElementById(
-      'amenityFilter',
+      'amenityFilter'
     ) as HTMLSelectElement;
     const statusFilter = document.getElementById(
-      'statusFilter',
+      'statusFilter'
     ) as HTMLSelectElement;
     const dateFromFilter = document.getElementById(
-      'dateFromFilter',
+      'dateFromFilter'
     ) as HTMLInputElement;
     const dateToFilter = document.getElementById(
-      'dateToFilter',
+      'dateToFilter'
     ) as HTMLInputElement;
 
     if (amenityFilter) {
@@ -300,9 +300,7 @@ console.error('Error obteniendo unidad del usuario:', error);
                   </a>
                 </li>
                 <li>
-                  <button className='dropdown-item'>
-                    Configuración
-                  </button>
+                  <button className='dropdown-item'>Configuración</button>
                 </li>
                 <li>
                   <hr className='dropdown-divider' />
@@ -500,14 +498,14 @@ console.error('Error obteniendo unidad del usuario:', error);
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric',
-                        },
+                        }
                       )}
                     </div>
                     <div className='reservation-time'>
                       <span className='material-icons me-1'>schedule</span>
                       {new Date(reservation.inicio).toLocaleTimeString(
                         'es-ES',
-                        { hour: '2-digit', minute: '2-digit' },
+                        { hour: '2-digit', minute: '2-digit' }
                       )}{' '}
                       -
                       {new Date(reservation.fin).toLocaleTimeString('es-ES', {
@@ -583,14 +581,10 @@ console.error('Error obteniendo unidad del usuario:', error);
                 </button>
               </li>
               <li className='page-item'>
-                <button className='page-link'>
-                  2
-                </button>
+                <button className='page-link'>2</button>
               </li>
               <li className='page-item'>
-                <button className='page-link'>
-                  3
-                </button>
+                <button className='page-link'>3</button>
               </li>
               <li className='page-item'>
                 <button className='page-link'>
@@ -665,13 +659,13 @@ console.error('Error obteniendo unidad del usuario:', error);
                             key={slot}
                             className={`time-slot ${selectedTimeSlot === slot ? 'selected' : ''}`}
                             onClick={() => selectTimeSlot(slot)}
-                            onKeyDown={(e) => {
+                            onKeyDown={e => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
                                 selectTimeSlot(slot);
                               }
                             }}
-                            role="button"
+                            role='button'
                             tabIndex={0}
                           >
                             {slot}
@@ -997,4 +991,3 @@ console.error('Error obteniendo unidad del usuario:', error);
 };
 
 export default AmenidadesReservasPage;
-

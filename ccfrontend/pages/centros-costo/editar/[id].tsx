@@ -126,7 +126,7 @@ export default function CentroCostoEditar() {
 
       setFormData(mockData);
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading cost center:', error);
       alert('Error al cargar el centro de costo');
       router.push('/centros-costo');
@@ -173,7 +173,7 @@ export default function CentroCostoEditar() {
       alert('Centro de costo actualizado exitosamente');
       router.push(`/centros-costo/${id}`);
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error updating cost center:', error);
       alert('Error al actualizar el centro de costo');
     } finally {
@@ -203,7 +203,7 @@ export default function CentroCostoEditar() {
   }
 
   const selectedDepartment = departmentOptions.find(
-    d => d.value === formData.department,
+    d => d.value === formData.department
   );
 
   return (
@@ -418,7 +418,7 @@ export default function CentroCostoEditar() {
                                   </span>
                                 </Button>
                               </Badge>
-                            ),
+                            )
                           )}
                         </div>
                       </div>
@@ -483,7 +483,7 @@ export default function CentroCostoEditar() {
                             {formData.budget
                               ? (parseInt(formData.budget) / 12).toLocaleString(
                                   undefined,
-                                  { maximumFractionDigits: 0 },
+                                  { maximumFractionDigits: 0 }
                                 )
                               : '0'}
                           </small>

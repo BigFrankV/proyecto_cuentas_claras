@@ -17,10 +17,9 @@ describe('Layout mock', () => {
     render(
       <Layout title='Test Title'>
         <Child />
-      </Layout>,
+      </Layout>
     );
     expect(screen.getByTestId('layout-title')).toHaveTextContent('Test Title');
     expect(screen.getByTestId('layout-children')).toHaveTextContent('Content');
   });
 });
-

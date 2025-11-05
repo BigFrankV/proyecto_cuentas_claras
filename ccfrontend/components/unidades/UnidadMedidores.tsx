@@ -70,10 +70,10 @@ const UnidadMedidores: React.FC<UnidadMedidoresProps> = ({
 
   const handleEditMedidor = (
     medidorId: string,
-    updatedMedidor: Partial<Medidor>,
+    updatedMedidor: Partial<Medidor>
   ) => {
     onMedidoresChange(
-      medidores.map(m => (m.id === medidorId ? { ...m, ...updatedMedidor } : m)),
+      medidores.map(m => (m.id === medidorId ? { ...m, ...updatedMedidor } : m))
     );
     setEditingMedidor(null);
   };
@@ -419,7 +419,7 @@ const UnidadMedidores: React.FC<UnidadMedidoresProps> = ({
                           </small>
                           <span>
                             {new Date(
-                              medidor.fechaInstalacion,
+                              medidor.fechaInstalacion
                             ).toLocaleDateString('es-CL')}
                           </span>
                         </div>
@@ -450,4 +450,3 @@ const UnidadMedidores: React.FC<UnidadMedidoresProps> = ({
 };
 
 export default UnidadMedidores;
-

@@ -24,7 +24,9 @@ export default function TwoFactorModal({
   const [code, setCode] = useState('');
 
   const handleSubmit = async () => {
-    if (code.length !== 6) {return;}
+    if (code.length !== 6) {
+      return;
+    }
 
     try {
       if (mode === 'setup' && onEnable) {
@@ -44,7 +46,9 @@ export default function TwoFactorModal({
     onClose();
   };
 
-  if (!isOpen) {return null;}
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div
@@ -189,4 +193,3 @@ export default function TwoFactorModal({
     </div>
   );
 }
-

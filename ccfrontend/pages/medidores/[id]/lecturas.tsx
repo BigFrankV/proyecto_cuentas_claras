@@ -156,7 +156,7 @@ export default function LecturasMedidor() {
   // METERS[0] could be undefined in some strict TS configs, provide a safe fallback
   const [selectedMeter, setSelectedMeter] = useState<Meter>(METERS[0] as Meter);
   const [readingDate, setReadingDate] = useState<string>(() =>
-    new Date().toISOString().slice(0, 16),
+    new Date().toISOString().slice(0, 16)
   );
   const [currentReading, setCurrentReading] = useState<string>('');
   const [readingType, setReadingType] = useState<string>('real');
@@ -213,7 +213,7 @@ export default function LecturasMedidor() {
     if (Number(currentReading) < lastReading) {
       if (
         !window.confirm(
-          'La lectura actual es menor que la anterior. ¿Está seguro de continuar?',
+          'La lectura actual es menor que la anterior. ¿Está seguro de continuar?'
         )
       ) {
         return;
@@ -314,7 +314,7 @@ export default function LecturasMedidor() {
                       m =>
                         m.id.toLowerCase().includes(search.toLowerCase()) ||
                         m.unidad.toLowerCase().includes(search.toLowerCase()) ||
-                        m.torre.toLowerCase().includes(search.toLowerCase()),
+                        m.torre.toLowerCase().includes(search.toLowerCase())
                     ).map(meter => (
                       <div
                         key={meter.id}

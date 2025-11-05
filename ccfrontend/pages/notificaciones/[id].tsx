@@ -54,13 +54,15 @@ export default function NotificacionDetalle() {
   const router = useRouter();
   const { id } = router.query;
   const [notification, setNotification] = useState<NotificationDetail | null>(
-    null,
+    null
   );
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('content');
 
   useEffect(() => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
 
     // Mock data - replace with API call
     setTimeout(() => {
@@ -133,7 +135,9 @@ export default function NotificacionDetalle() {
   };
 
   const handleDuplicate = () => {
-    if (!notification) {return;}
+    if (!notification) {
+      return;
+    }
 
     // Redirect to new notification page with pre-filled data
     const duplicateData = {
@@ -149,13 +153,15 @@ export default function NotificacionDetalle() {
     // Store in sessionStorage to pre-fill the form
     sessionStorage.setItem(
       'duplicateNotification',
-      JSON.stringify(duplicateData),
+      JSON.stringify(duplicateData)
     );
     router.push('/notificaciones/nueva?duplicate=true');
   };
 
   const handleSendNow = () => {
-    if (!notification) {return;}
+    if (!notification) {
+      return;
+    }
 
     if (
       confirm('¿Estás seguro de que deseas enviar esta notificación ahora?')
@@ -168,7 +174,7 @@ export default function NotificacionDetalle() {
               status: 'sent',
               sentAt: new Date().toISOString(),
             }
-          : null,
+          : null
       );
 
       alert('Notificación enviada exitosamente');
@@ -176,11 +182,13 @@ export default function NotificacionDetalle() {
   };
 
   const handleResend = () => {
-    if (!notification) {return;}
+    if (!notification) {
+      return;
+    }
 
     if (
       confirm(
-        '¿Estás seguro de que deseas reenviar esta notificación a todos los destinatarios?',
+        '¿Estás seguro de que deseas reenviar esta notificación a todos los destinatarios?'
       )
     ) {
       // Update sent timestamp
@@ -190,7 +198,7 @@ export default function NotificacionDetalle() {
               ...prev,
               sentAt: new Date().toISOString(),
             }
-          : null,
+          : null
       );
 
       alert('Notificación reenviada exitosamente');
@@ -198,7 +206,9 @@ export default function NotificacionDetalle() {
   };
 
   const handleEdit = () => {
-    if (!notification) {return;}
+    if (!notification) {
+      return;
+    }
 
     // Only drafts can be edited
     if (notification.status !== 'draft') {
@@ -210,7 +220,9 @@ export default function NotificacionDetalle() {
   };
 
   const handleExport = () => {
-    if (!notification) {return;}
+    if (!notification) {
+      return;
+    }
 
     // Create export data
     const exportData = {
@@ -243,11 +255,13 @@ export default function NotificacionDetalle() {
   };
 
   const handleDelete = () => {
-    if (!notification) {return;}
+    if (!notification) {
+      return;
+    }
 
     if (
       confirm(
-        '¿Estás seguro de que deseas eliminar esta notificación? Esta acción no se puede deshacer.',
+        '¿Estás seguro de que deseas eliminar esta notificación? Esta acción no se puede deshacer.'
       )
     ) {
       // In a real app, this would make an API call
@@ -257,13 +271,17 @@ export default function NotificacionDetalle() {
   };
 
   const getDeliveryRate = () => {
-    if (!notification?.deliveryStats) {return 0;}
+    if (!notification?.deliveryStats) {
+      return 0;
+    }
     const { delivered, sent } = notification.deliveryStats;
     return Math.round((delivered / sent) * 100);
   };
 
   const getOpenRate = () => {
-    if (!notification?.deliveryStats) {return 0;}
+    if (!notification?.deliveryStats) {
+      return 0;
+    }
     const { opened, delivered } = notification.deliveryStats;
     return Math.round((opened / delivered) * 100);
   };
@@ -731,7 +749,7 @@ export default function NotificacionDetalle() {
                                     </i>
                                     {detail}
                                   </li>
-                                ),
+                                )
                               )}
                             </ul>
                           </div>

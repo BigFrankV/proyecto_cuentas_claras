@@ -24,7 +24,9 @@ export const useEdificios = () => {
   // Cargar todos los edificios
   const fetchEdificios = useCallback(
     async (filters?: EdificioFilters) => {
-      if (typeof window === 'undefined') {return;}
+      if (typeof window === 'undefined') {
+        return;
+      }
 
       setLoading(true);
       setError(null);
@@ -35,21 +37,23 @@ export const useEdificios = () => {
         setEdificios(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al cargar los edificios',
+          err instanceof Error ? err.message : 'Error al cargar los edificios'
         );
-// eslint-disable-next-line no-console
-console.error('Error fetching edificios:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error fetching edificios:', err);
       } finally {
         setLoading(false);
       }
     },
-    [getApi],
+    [getApi]
   );
 
   // Crear un nuevo edificio
   const createEdificio = useCallback(
     async (data: EdificioFormData): Promise<boolean> => {
-      if (typeof window === 'undefined') {return false;}
+      if (typeof window === 'undefined') {
+        return false;
+      }
 
       setLoading(true);
       setError(null);
@@ -64,22 +68,24 @@ console.error('Error fetching edificios:', err);
         return false;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al crear el edificio',
+          err instanceof Error ? err.message : 'Error al crear el edificio'
         );
-// eslint-disable-next-line no-console
-console.error('Error creating edificio:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error creating edificio:', err);
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [getApi],
+    [getApi]
   );
 
   // Actualizar un edificio
   const updateEdificio = useCallback(
     async (id: string, data: Partial<EdificioFormData>): Promise<boolean> => {
-      if (typeof window === 'undefined') {return false;}
+      if (typeof window === 'undefined') {
+        return false;
+      }
 
       setLoading(true);
       setError(null);
@@ -90,30 +96,32 @@ console.error('Error creating edificio:', err);
         if (updatedEdificio) {
           setEdificios(prev =>
             prev.map(edificio =>
-              edificio.id === id ? updatedEdificio : edificio,
-            ),
+              edificio.id === id ? updatedEdificio : edificio
+            )
           );
           return true;
         }
         return false;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al actualizar el edificio',
+          err instanceof Error ? err.message : 'Error al actualizar el edificio'
         );
-// eslint-disable-next-line no-console
-console.error('Error updating edificio:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error updating edificio:', err);
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [getApi],
+    [getApi]
   );
 
   // Eliminar un edificio
   const deleteEdificio = useCallback(
     async (id: string): Promise<boolean> => {
-      if (typeof window === 'undefined') {return false;}
+      if (typeof window === 'undefined') {
+        return false;
+      }
 
       setLoading(true);
       setError(null);
@@ -125,22 +133,24 @@ console.error('Error updating edificio:', err);
         return true;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al eliminar el edificio',
+          err instanceof Error ? err.message : 'Error al eliminar el edificio'
         );
-// eslint-disable-next-line no-console
-console.error('Error deleting edificio:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error deleting edificio:', err);
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [getApi],
+    [getApi]
   );
 
   // Obtener edificio por ID
   const getEdificioById = useCallback(
     async (id: string): Promise<Edificio | null> => {
-      if (typeof window === 'undefined') {return null;}
+      if (typeof window === 'undefined') {
+        return null;
+      }
 
       setLoading(true);
       setError(null);
@@ -151,45 +161,49 @@ console.error('Error deleting edificio:', err);
         return edificio;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al cargar el edificio',
+          err instanceof Error ? err.message : 'Error al cargar el edificio'
         );
-// eslint-disable-next-line no-console
-console.error('Error getting edificio by id:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error getting edificio by id:', err);
         return null;
       } finally {
         setLoading(false);
       }
     },
-    [getApi],
+    [getApi]
   );
 
   // Verificar dependencias
   const checkDependencies = useCallback(
     async (id: string) => {
-      if (typeof window === 'undefined') {return {};}
+      if (typeof window === 'undefined') {
+        return {};
+      }
 
       try {
         const api = await getApi();
         return await api.edificios.checkDependencies(id);
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error checking dependencies:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error checking dependencies:', err);
         return {};
       }
     },
-    [getApi],
+    [getApi]
   );
 
   // Obtener estadísticas
   const getStats = useCallback(async (): Promise<EdificioStats | null> => {
-    if (typeof window === 'undefined') {return null;}
+    if (typeof window === 'undefined') {
+      return null;
+    }
 
     try {
       const api = await getApi();
       return await api.stats.getStats();
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error getting stats:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error getting stats:', err);
       return null;
     }
   }, [getApi]);
@@ -227,7 +241,7 @@ console.error('Error getting stats:', err);
         return true;
       });
     },
-    [edificios],
+    [edificios]
   );
 
   return {
@@ -252,7 +266,9 @@ export const useEdificiosStats = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchStats = useCallback(async () => {
-    if (typeof window === 'undefined') {return;}
+    if (typeof window === 'undefined') {
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -263,10 +279,10 @@ export const useEdificiosStats = () => {
       setStats(data);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Error al cargar estadísticas',
+        err instanceof Error ? err.message : 'Error al cargar estadísticas'
       );
-// eslint-disable-next-line no-console
-console.error('Error fetching stats:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching stats:', err);
     } finally {
       setLoading(false);
     }
@@ -287,7 +303,9 @@ export const useTorres = (edificioId: string) => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchTorres = useCallback(async () => {
-    if (!edificioId || typeof window === 'undefined') {return;}
+    if (!edificioId || typeof window === 'undefined') {
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -298,8 +316,8 @@ export const useTorres = (edificioId: string) => {
       setTorres(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar torres');
-// eslint-disable-next-line no-console
-console.error('Error fetching torres:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching torres:', err);
     } finally {
       setLoading(false);
     }
@@ -307,7 +325,9 @@ console.error('Error fetching torres:', err);
 
   const createTorre = useCallback(
     async (data: any): Promise<boolean> => {
-      if (!edificioId || typeof window === 'undefined') {return false;}
+      if (!edificioId || typeof window === 'undefined') {
+        return false;
+      }
 
       setLoading(true);
       setError(null);
@@ -322,14 +342,14 @@ console.error('Error fetching torres:', err);
         return false;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al crear torre');
-// eslint-disable-next-line no-console
-console.error('Error creating torre:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error creating torre:', err);
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [edificioId],
+    [edificioId]
   );
 
   return {
@@ -348,7 +368,9 @@ export const useUnidades = (edificioId: string, torreId?: string) => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUnidades = useCallback(async () => {
-    if (!edificioId || typeof window === 'undefined') {return;}
+    if (!edificioId || typeof window === 'undefined') {
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -359,8 +381,8 @@ export const useUnidades = (edificioId: string, torreId?: string) => {
       setUnidades(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar unidades');
-// eslint-disable-next-line no-console
-console.error('Error fetching unidades:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching unidades:', err);
     } finally {
       setLoading(false);
     }
@@ -368,7 +390,9 @@ console.error('Error fetching unidades:', err);
 
   const createUnidad = useCallback(
     async (data: any): Promise<boolean> => {
-      if (!edificioId || typeof window === 'undefined') {return false;}
+      if (!edificioId || typeof window === 'undefined') {
+        return false;
+      }
 
       setLoading(true);
       setError(null);
@@ -383,14 +407,14 @@ console.error('Error fetching unidades:', err);
         return false;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al crear unidad');
-// eslint-disable-next-line no-console
-console.error('Error creating unidad:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error creating unidad:', err);
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [edificioId],
+    [edificioId]
   );
 
   return {
@@ -405,27 +429,31 @@ console.error('Error creating unidad:', err);
 // Hook para utilidades de edificios
 export const useEdificiosUtils = () => {
   const searchEdificios = useCallback(async (query: string, limit = 10) => {
-    if (typeof window === 'undefined') {return [];}
+    if (typeof window === 'undefined') {
+      return [];
+    }
 
     try {
       const { default: api } = await import('@/lib/api/edificios');
       return await api.utils.search(query, limit);
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error searching edificios:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error searching edificios:', err);
       return [];
     }
   }, []);
 
   const getComunidadesOpciones = useCallback(async () => {
-    if (typeof window === 'undefined') {return [];}
+    if (typeof window === 'undefined') {
+      return [];
+    }
 
     try {
       const { default: api } = await import('@/lib/api/edificios');
       return await api.utils.getComunidadesOpciones();
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error getting comunidades opciones:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error getting comunidades opciones:', err);
       return [];
     }
   }, []);
@@ -434,20 +462,22 @@ console.error('Error getting comunidades opciones:', err);
     async (
       edificioId: string,
       codigo: string,
-      tipo: 'edificio' | 'torre' | 'unidad',
+      tipo: 'edificio' | 'torre' | 'unidad'
     ) => {
-      if (typeof window === 'undefined') {return false;}
+      if (typeof window === 'undefined') {
+        return false;
+      }
 
       try {
         const { default: api } = await import('@/lib/api/edificios');
         return await api.utils.validarCodigo(edificioId, codigo, tipo);
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error validating codigo:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error validating codigo:', err);
         return false;
       }
     },
-    [],
+    []
   );
 
   return {
@@ -490,7 +520,7 @@ export const useEdificioForm = () => {
         }));
       }
     },
-    [errors],
+    [errors]
   );
 
   const touchField = useCallback((field: keyof EdificioFormData) => {
@@ -543,4 +573,3 @@ export const useEdificioForm = () => {
     isValid: Object.keys(errors).length === 0,
   };
 };
-

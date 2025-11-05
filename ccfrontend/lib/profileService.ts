@@ -24,9 +24,9 @@ class ProfileService {
       return response.data;
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error obteniendo perfil:', error);
+      console.error('Error obteniendo perfil:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al obtener perfil',
+        error.response?.data?.message || 'Error al obtener perfil'
       );
     }
   }
@@ -38,16 +38,16 @@ console.error('Error obteniendo perfil:', error);
       return response.data;
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error actualizando perfil:', error);
+      console.error('Error actualizando perfil:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al actualizar perfil',
+        error.response?.data?.message || 'Error al actualizar perfil'
       );
     }
   }
 
   // Cambiar contraseña
   async changePassword(
-    data: PasswordChangeData,
+    data: PasswordChangeData
   ): Promise<PasswordChangeResponse> {
     try {
       const response = await apiClient.post('/auth/change-password', {
@@ -57,25 +57,25 @@ console.error('Error actualizando perfil:', error);
       return response.data;
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error cambiando contraseña:', error);
+      console.error('Error cambiando contraseña:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al cambiar contraseña',
+        error.response?.data?.message || 'Error al cambiar contraseña'
       );
     }
   }
 
   // Actualizar preferencias
   async updatePreferences(
-    preferences: UserPreferences,
+    preferences: UserPreferences
   ): Promise<PreferencesUpdateResponse> {
     try {
       const response = await apiClient.patch('/auth/preferences', preferences);
       return response.data;
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error actualizando preferencias:', error);
+      console.error('Error actualizando preferencias:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al actualizar preferencias',
+        error.response?.data?.message || 'Error al actualizar preferencias'
       );
     }
   }
@@ -87,7 +87,7 @@ console.error('Error actualizando preferencias:', error);
       return response.data.sessions || [];
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error obteniendo sesiones:', error);
+      console.error('Error obteniendo sesiones:', error);
       // Devolver datos mock como fallback
       return this.getMockSessions();
     }
@@ -100,9 +100,9 @@ console.error('Error obteniendo sesiones:', error);
       return response.data;
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error cerrando sesión:', error);
+      console.error('Error cerrando sesión:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al cerrar sesión',
+        error.response?.data?.message || 'Error al cerrar sesión'
       );
     }
   }
@@ -114,9 +114,9 @@ console.error('Error cerrando sesión:', error);
       return response.data;
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error cerrando todas las sesiones:', error);
+      console.error('Error cerrando todas las sesiones:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al cerrar sesiones',
+        error.response?.data?.message || 'Error al cerrar sesiones'
       );
     }
   }
@@ -131,7 +131,7 @@ console.error('Error cerrando todas las sesiones:', error);
       return { enabled: totp_enabled };
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error checking 2FA status via /auth/me:', error);
+      console.error('Error checking 2FA status via /auth/me:', error);
 
       // Fallback al método anterior si /auth/me falla
       try {
@@ -183,9 +183,9 @@ console.error('Error checking 2FA status via /auth/me:', error);
       return response.data;
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error configurando 2FA:', error);
+      console.error('Error configurando 2FA:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al configurar 2FA',
+        error.response?.data?.message || 'Error al configurar 2FA'
       );
     }
   }
@@ -200,7 +200,7 @@ console.error('Error configurando 2FA:', error);
       return { success: true, message: '2FA activado exitosamente' };
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error activando 2FA:', error);
+      console.error('Error activando 2FA:', error);
       throw new Error(error.response?.data?.message || 'Error al activar 2FA');
     }
   }
@@ -212,9 +212,9 @@ console.error('Error activando 2FA:', error);
       return { success: true, message: '2FA desactivado exitosamente' };
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error desactivando 2FA:', error);
+      console.error('Error desactivando 2FA:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al desactivar 2FA',
+        error.response?.data?.message || 'Error al desactivar 2FA'
       );
     }
   }
@@ -229,7 +229,7 @@ console.error('Error desactivando 2FA:', error);
       return response.data;
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error verificando 2FA:', error);
+      console.error('Error verificando 2FA:', error);
       throw new Error(error.response?.data?.message || 'Código 2FA inválido');
     }
   }
@@ -271,4 +271,3 @@ console.error('Error verificando 2FA:', error);
 
 const profileService = new ProfileService();
 export default profileService;
-

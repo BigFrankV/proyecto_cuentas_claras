@@ -93,12 +93,12 @@ export default function NuevoCargoPage() {
       // Redirigir de vuelta a la lista
       router.push('/cargos');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('❌ Error al crear cargo:', error);
+      // eslint-disable-next-line no-console
+      console.error('❌ Error al crear cargo:', error);
       setApiError(
         error instanceof Error
           ? error.message
-          : 'Error desconocido al crear el cargo',
+          : 'Error desconocido al crear el cargo'
       );
     } finally {
       setSaving(false);
@@ -259,7 +259,7 @@ console.error('❌ Error al crear cargo:', error);
                             onChange={e =>
                               handleInputChange(
                                 'amount',
-                                parseFloat(e.target.value) || 0,
+                                parseFloat(e.target.value) || 0
                               )
                             }
                             min='0'
@@ -416,4 +416,3 @@ console.error('❌ Error al crear cargo:', error);
     </ProtectedRoute>
   );
 }
-

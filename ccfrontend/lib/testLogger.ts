@@ -17,7 +17,7 @@ class TestLogger {
   private createLogEntry(
     level: LogEntry['level'],
     message: string,
-    data?: any,
+    data?: any
   ): LogEntry {
     return {
       timestamp: new Date().toISOString(),
@@ -116,4 +116,3 @@ testLogger.catchUnhandledErrors();
 
 export default testLogger;
 export { TestLogger };
-

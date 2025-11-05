@@ -587,4 +587,3 @@ export default function MembresiaNueva() {
     </ProtectedRoute>
   );
 }
-

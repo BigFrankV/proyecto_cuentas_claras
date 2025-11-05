@@ -196,7 +196,7 @@ class EmisionesService {
   async getEmisionesComunidad(
     comunidadId: number,
     page: number = 1,
-    limit: number = 50,
+    limit: number = 50
   ): Promise<{
     emisiones: Emision[];
     total: number;
@@ -224,8 +224,8 @@ class EmisionesService {
         totalPages,
       };
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching emisiones:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching emisiones:', error);
       throw error;
     }
   }
@@ -234,16 +234,16 @@ console.error('Error fetching emisiones:', error);
    * Obtener resumen de emisiones con métricas consolidadas
    */
   async getEmisionesComunidadResumen(
-    comunidadId: number,
+    comunidadId: number
   ): Promise<EmisionResumen[]> {
     try {
       const response = await apiClient.get(
-        `/emisiones/comunidad/${comunidadId}/resumen`,
+        `/emisiones/comunidad/${comunidadId}/resumen`
       );
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching emisiones resumen:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching emisiones resumen:', error);
       throw error;
     }
   }
@@ -256,8 +256,8 @@ console.error('Error fetching emisiones resumen:', error);
       const response = await apiClient.get(`/emisiones/${id}`);
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching emision:', error);
       throw error;
     }
   }
@@ -270,8 +270,8 @@ console.error('Error fetching emision:', error);
       const response = await apiClient.get(`/emisiones/${id}/detalle-completo`);
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching emision detalle completo:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching emision detalle completo:', error);
       throw error;
     }
   }
@@ -285,17 +285,17 @@ console.error('Error fetching emision detalle completo:', error);
       periodo: string;
       fecha_vencimiento: string;
       observaciones?: string;
-    },
+    }
   ): Promise<Emision> {
     try {
       const response = await apiClient.post(
         `/emisiones/comunidad/${comunidadId}`,
-        data,
+        data
       );
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error creating emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error creating emision:', error);
       throw error;
     }
   }
@@ -308,8 +308,8 @@ console.error('Error creating emision:', error);
       const response = await apiClient.patch(`/emisiones/${id}`, data);
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error updating emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error updating emision:', error);
       throw error;
     }
   }
@@ -321,8 +321,8 @@ console.error('Error updating emision:', error);
     try {
       await apiClient.delete(`/emisiones/${id}`);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error deleting emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error deleting emision:', error);
       throw error;
     }
   }
@@ -339,8 +339,8 @@ console.error('Error deleting emision:', error);
       const response = await apiClient.get(`/emisiones/${emisionId}/detalles`);
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching detalles emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching detalles emision:', error);
       throw error;
     }
   }
@@ -356,17 +356,17 @@ console.error('Error fetching detalles emision:', error);
       regla_prorrateo: string;
       monto: number;
       metadata_json?: string;
-    },
+    }
   ): Promise<DetalleEmision> {
     try {
       const response = await apiClient.post(
         `/emisiones/${emisionId}/detalles`,
-        data,
+        data
       );
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error adding detalle emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error adding detalle emision:', error);
       throw error;
     }
   }
@@ -391,8 +391,8 @@ console.error('Error adding detalle emision:', error);
       const response = await apiClient.get(`/emisiones/${emisionId}/gastos`);
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching gastos emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching gastos emision:', error);
       throw error;
     }
   }
@@ -409,8 +409,8 @@ console.error('Error fetching gastos emision:', error);
       const response = await apiClient.get(`/emisiones/${emisionId}/unidades`);
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching unidades emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching unidades emision:', error);
       throw error;
     }
   }
@@ -427,8 +427,8 @@ console.error('Error fetching unidades emision:', error);
       const response = await apiClient.get(`/emisiones/${emisionId}/pagos`);
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching pagos emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching pagos emision:', error);
       throw error;
     }
   }
@@ -445,8 +445,8 @@ console.error('Error fetching pagos emision:', error);
       const response = await apiClient.get(`/emisiones/${emisionId}/auditoria`);
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching auditoria emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching auditoria emision:', error);
       throw error;
     }
   }
@@ -463,8 +463,8 @@ console.error('Error fetching auditoria emision:', error);
       const response = await apiClient.get('/emisiones/estadisticas/general');
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching estadisticas generales:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching estadisticas generales:', error);
       throw error;
     }
   }
@@ -477,8 +477,8 @@ console.error('Error fetching estadisticas generales:', error);
       const response = await apiClient.get('/emisiones/estadisticas/por-mes');
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching estadisticas por mes:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching estadisticas por mes:', error);
       throw error;
     }
   }
@@ -491,8 +491,8 @@ console.error('Error fetching estadisticas por mes:', error);
       const response = await apiClient.get('/emisiones/estadisticas/cobranza');
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching estadisticas cobranza:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching estadisticas cobranza:', error);
       throw error;
     }
   }
@@ -506,7 +506,7 @@ console.error('Error fetching estadisticas cobranza:', error);
    */
   async validarExistenciaEmision(
     comunidadId: number,
-    periodo: string,
+    periodo: string
   ): Promise<{
     existe: boolean;
     emision_id?: number;
@@ -517,8 +517,8 @@ console.error('Error fetching estadisticas cobranza:', error);
       });
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error validating emision existencia:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error validating emision existencia:', error);
       throw error;
     }
   }
@@ -531,16 +531,16 @@ console.error('Error validating emision existencia:', error);
    * Obtener emisiones de gastos comunes por comunidad (Prorrateo)
    */
   async getEmisionesProrrateo(
-    comunidadId: number,
+    comunidadId: number
   ): Promise<EmisionProrrateo[]> {
     try {
       const response = await apiClient.get(
-        `/prorrateo/emisiones/${comunidadId}`,
+        `/prorrateo/emisiones/${comunidadId}`
       );
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching emisiones prorrateo:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching emisiones prorrateo:', error);
       throw error;
     }
   }
@@ -549,16 +549,16 @@ console.error('Error fetching emisiones prorrateo:', error);
    * Obtener detalles de gastos de una emisión (Prorrateo)
    */
   async getDetallesEmisionProrrateo(
-    emisionId: number,
+    emisionId: number
   ): Promise<DetalleEmisionProrrateo[]> {
     try {
       const response = await apiClient.get(
-        `/prorrateo/emision/${emisionId}/detalles`,
+        `/prorrateo/emision/${emisionId}/detalles`
       );
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching detalles emision prorrateo:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching detalles emision prorrateo:', error);
       throw error;
     }
   }
@@ -567,16 +567,16 @@ console.error('Error fetching detalles emision prorrateo:', error);
    * Obtener cuentas de cobro de una emisión (Prorrateo)
    */
   async getCuentasCobroEmision(
-    emisionId: number,
+    emisionId: number
   ): Promise<CuentaCobroProrrateo[]> {
     try {
       const response = await apiClient.get(
-        `/prorrateo/emision/${emisionId}/cuentas`,
+        `/prorrateo/emision/${emisionId}/cuentas`
       );
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching cuentas cobro emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching cuentas cobro emision:', error);
       throw error;
     }
   }
@@ -585,16 +585,16 @@ console.error('Error fetching cuentas cobro emision:', error);
    * Obtener detalles de cargos de una cuenta específica (Prorrateo)
    */
   async getDetallesCuentaCobro(
-    cuentaId: number,
+    cuentaId: number
   ): Promise<DetalleCargoCuenta[]> {
     try {
       const response = await apiClient.get(
-        `/prorrateo/cuenta/${cuentaId}/detalles`,
+        `/prorrateo/cuenta/${cuentaId}/detalles`
       );
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error fetching detalles cuenta cobro:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error fetching detalles cuenta cobro:', error);
       throw error;
     }
   }
@@ -602,4 +602,3 @@ console.error('Error fetching detalles cuenta cobro:', error);
 
 const emisionesService = new EmisionesService();
 export default emisionesService;
-

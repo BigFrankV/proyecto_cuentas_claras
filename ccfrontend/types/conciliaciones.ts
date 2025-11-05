@@ -164,4 +164,3 @@ export interface ValidacionConciliacion {
     sinMonto: number;
   };
 }
-

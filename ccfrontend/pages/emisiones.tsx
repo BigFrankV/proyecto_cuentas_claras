@@ -35,7 +35,7 @@ export default function EmisionesListado() {
       const result = await emisionesService.getEmisionesComunidad(
         comunidadId,
         currentPage,
-        itemsPerPage,
+        itemsPerPage
       );
 
       // Mapear los datos de la API al formato del frontend
@@ -52,14 +52,14 @@ export default function EmisionesListado() {
           unitCount: 0, // Se obtendrá después
           description: emision.observaciones || '',
           communityName: 'Comunidad Actual', // Se obtendrá del contexto
-        }),
+        })
       );
 
       setEmissions(mappedEmissions);
       setFilteredEmissions(mappedEmissions);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading emissions:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading emissions:', error);
       // Mostrar estado vacío si falla la API
       setEmissions([]);
       setFilteredEmissions([]);
@@ -104,14 +104,14 @@ console.error('Error loading emissions:', error);
           (emission.communityName &&
             emission.communityName
               .toLowerCase()
-              .includes(filters.search.toLowerCase())),
+              .includes(filters.search.toLowerCase()))
       );
     }
 
     // Filtro por estado
     if (filters.status !== 'all') {
       filtered = filtered.filter(
-        emission => emission.status === filters.status,
+        emission => emission.status === filters.status
       );
     }
 
@@ -123,20 +123,20 @@ console.error('Error loading emissions:', error);
     // Filtro por período
     if (filters.period !== 'all') {
       filtered = filtered.filter(emission =>
-        emission.period.includes(filters.period),
+        emission.period.includes(filters.period)
       );
     }
 
     // Filtro por fechas
     if (filters.dateFrom) {
       filtered = filtered.filter(
-        emission => new Date(emission.issueDate) >= new Date(filters.dateFrom),
+        emission => new Date(emission.issueDate) >= new Date(filters.dateFrom)
       );
     }
 
     if (filters.dateTo) {
       filtered = filtered.filter(
-        emission => new Date(emission.issueDate) <= new Date(filters.dateTo),
+        emission => new Date(emission.issueDate) <= new Date(filters.dateTo)
       );
     }
 
@@ -161,13 +161,13 @@ console.error('Error loading emissions:', error);
   const handleSelectAll = () => {
     const currentPageEmissions = getCurrentPageEmissions();
     const allSelected = currentPageEmissions.every(emission =>
-      selectedEmissions.includes(emission.id),
+      selectedEmissions.includes(emission.id)
     );
 
     if (allSelected) {
       // Deseleccionar todos de la página actual
       const newSelected = selectedEmissions.filter(
-        id => !currentPageEmissions.some(emission => emission.id === id),
+        id => !currentPageEmissions.some(emission => emission.id === id)
       );
       setSelectedEmissions(newSelected);
     } else {
@@ -186,7 +186,7 @@ console.error('Error loading emissions:', error);
     // eslint-disable-next-line no-console`n    console.log(`Acción masiva: ${action}`, selectedEmissions);
     // Implementar acciones masivas aquí
     alert(
-      `Acción "${action}" aplicada a ${selectedEmissions.length} emisiones`,
+      `Acción "${action}" aplicada a ${selectedEmissions.length} emisiones`
     );
   };
 
@@ -206,7 +206,9 @@ console.error('Error loading emissions:', error);
 
   // Render paginación
   const renderPagination = () => {
-    if (totalPages <= 1) {return null;}
+    if (totalPages <= 1) {
+      return null;
+    }
 
     const pages = [];
     const maxVisiblePages = 5;
@@ -390,7 +392,7 @@ console.error('Error loading emissions:', error);
                             checked={
                               getCurrentPageEmissions().length > 0 &&
                               getCurrentPageEmissions().every(emission =>
-                                selectedEmissions.includes(emission.id),
+                                selectedEmissions.includes(emission.id)
                               )
                             }
                             onChange={handleSelectAll}
@@ -530,4 +532,3 @@ console.error('Error loading emissions:', error);
     </ProtectedRoute>
   );
 }
-

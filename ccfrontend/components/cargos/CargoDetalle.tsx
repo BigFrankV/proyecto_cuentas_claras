@@ -131,7 +131,9 @@ export default function CargoDetalle({
 
   const formatPeriod = (period: string): string => {
     const [year, month] = period.split('-');
-    if (!year || !month) {return period;}
+    if (!year || !month) {
+      return period;
+    }
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
       month: 'long',
@@ -139,7 +141,9 @@ export default function CargoDetalle({
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) {return '0 Bytes';}
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -658,4 +662,3 @@ export default function CargoDetalle({
     </div>
   );
 }
-

@@ -110,7 +110,7 @@ export default function PersonaNueva() {
         const username =
           `${nombre.toLowerCase()}${apellido.toLowerCase().charAt(0)}`.replace(
             /\s+/g,
-            '',
+            ''
           );
         setFormData(prev => ({ ...prev, username }));
       }
@@ -129,8 +129,8 @@ export default function PersonaNueva() {
           setErrors(prev => ({ ...prev, nroDoc: '' }));
         }
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error validando RUT:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error validando RUT:', err);
       }
     }
 
@@ -146,8 +146,8 @@ console.error('Error validando RUT:', err);
           setErrors(prev => ({ ...prev, email: '' }));
         }
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error validando email:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error validando email:', err);
       }
     }
 
@@ -163,8 +163,8 @@ console.error('Error validando email:', err);
           setErrors(prev => ({ ...prev, username: '' }));
         }
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error validando username:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error validando username:', err);
       }
     }
 
@@ -212,12 +212,12 @@ console.error('Error validando username:', err);
 
   const updateUnidadRelacion = (
     unidadId: string,
-    relacion: 'Propietario' | 'Inquilino',
+    relacion: 'Propietario' | 'Inquilino'
   ) => {
     setFormData(prev => ({
       ...prev,
       unidades: prev.unidades.map(u =>
-        u.id === unidadId ? { ...u, relacion } : u,
+        u.id === unidadId ? { ...u, relacion } : u
       ),
     }));
   };
@@ -225,14 +225,20 @@ console.error('Error validando username:', err);
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.nombre.trim()) {newErrors.nombre = 'El nombre es obligatorio';}
-    if (!formData.apellido.trim())
-      {newErrors.apellido = 'El apellido es obligatorio';}
-    if (!formData.nroDoc.trim())
-      {newErrors.nroDoc = 'El número de documento es obligatorio';}
-    if (!formData.email.trim()) {newErrors.email = 'El email es obligatorio';}
-    else if (!/\S+@\S+\.\S+/.test(formData.email))
-      {newErrors.email = 'El email no es válido';}
+    if (!formData.nombre.trim()) {
+      newErrors.nombre = 'El nombre es obligatorio';
+    }
+    if (!formData.apellido.trim()) {
+      newErrors.apellido = 'El apellido es obligatorio';
+    }
+    if (!formData.nroDoc.trim()) {
+      newErrors.nroDoc = 'El número de documento es obligatorio';
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = 'El email es obligatorio';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'El email no es válido';
+    }
 
     if (formData.tipo !== 'Administrador' && formData.unidades.length === 0) {
       newErrors.unidades = 'Debe seleccionar al menos una unidad';
@@ -244,7 +250,9 @@ console.error('Error validando username:', err);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) {return;}
+    if (!validateForm()) {
+      return;
+    }
 
     try {
       // Preparar datos para la API
@@ -262,10 +270,18 @@ console.error('Error validando username:', err);
       };
 
       // Agregar campos opcionales solo si tienen valor
-      if (formData.email) {personaData.email = formData.email;}
-      if (formData.telefono) {personaData.telefono = formData.telefono;}
-      if (formData.direccion) {personaData.direccion = formData.direccion;}
-      if (avatarPreview) {personaData.avatar = avatarPreview;}
+      if (formData.email) {
+        personaData.email = formData.email;
+      }
+      if (formData.telefono) {
+        personaData.telefono = formData.telefono;
+      }
+      if (formData.direccion) {
+        personaData.direccion = formData.direccion;
+      }
+      if (avatarPreview) {
+        personaData.avatar = avatarPreview;
+      }
 
       const nuevaPersona = await crearPersona(personaData);
 
@@ -278,8 +294,8 @@ console.error('Error validando username:', err);
       // Redirigir a la lista o al detalle
       router.push('/personas');
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error al crear persona:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error al crear persona:', err);
       setErrors({ submit: 'Error al crear la persona. Intente nuevamente.' });
     }
   };
@@ -370,22 +386,20 @@ console.error('Error al crear persona:', err);
                       {tiposPersona.map(tipo => (
                         <div key={tipo.key} className='col-12 col-md-4'>
                           <div
-                            className={
-                              `card h-100 cursor-pointer ${
-                                formData.tipo === tipo.key
-                                  ? 'border-primary bg-primary bg-opacity-10'
-                                  : ''
-                              }`
-                            }
+                            className={`card h-100 cursor-pointer ${
+                              formData.tipo === tipo.key
+                                ? 'border-primary bg-primary bg-opacity-10'
+                                : ''
+                            }`}
                             onClick={() => handleInputChange('tipo', tipo.key)}
-                            onKeyDown={(e) => {
+                            onKeyDown={e => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
                                 handleInputChange('tipo', tipo.key);
                               }
                             }}
                             tabIndex={0}
-                            role="button"
+                            role='button'
                             aria-label={`Seleccionar tipo ${tipo.title}`}
                             style={{
                               cursor: 'pointer',
@@ -436,15 +450,15 @@ console.error('Error al crear persona:', err);
                             className='position-relative'
                             style={{ cursor: 'pointer' }}
                             onClick={() => fileInputRef.current?.click()}
-                            onKeyDown={(e) => {
+                            onKeyDown={e => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
                                 fileInputRef.current?.click();
                               }
                             }}
                             tabIndex={0}
-                            role="button"
-                            aria-label="Seleccionar foto de perfil"
+                            role='button'
+                            aria-label='Seleccionar foto de perfil'
                           >
                             {avatarPreview ? (
                               <Image
@@ -479,7 +493,7 @@ console.error('Error al crear persona:', err);
                                   >
                                     {getInitials(
                                       formData.nombre,
-                                      formData.apellido,
+                                      formData.apellido
                                     )}
                                   </span>
                                 ) : (
@@ -693,31 +707,29 @@ console.error('Error al crear persona:', err);
                       <div className='row g-2'>
                         {mockUnidades.map(unidad => {
                           const isSelected = formData.unidades.find(
-                            u => u.id === unidad.id,
+                            u => u.id === unidad.id
                           );
                           const selectedUnidad = formData.unidades.find(
-                            u => u.id === unidad.id,
+                            u => u.id === unidad.id
                           );
 
                           return (
                             <div key={unidad.id} className='col-12'>
                               <div
-                                className={
-                                  `p-3 border rounded cursor-pointer ${
-                                    isSelected
-                                      ? 'border-primary bg-primary bg-opacity-10'
-                                      : 'border-secondary'
-                                  }`
-                                }
+                                className={`p-3 border rounded cursor-pointer ${
+                                  isSelected
+                                    ? 'border-primary bg-primary bg-opacity-10'
+                                    : 'border-secondary'
+                                }`}
                                 onClick={() => toggleUnidad(unidad)}
-                                onKeyDown={(e) => {
+                                onKeyDown={e => {
                                   if (e.key === 'Enter' || e.key === ' ') {
                                     e.preventDefault();
                                     toggleUnidad(unidad);
                                   }
                                 }}
                                 tabIndex={0}
-                                role="button"
+                                role='button'
                                 aria-label={`Seleccionar unidad ${unidad.nombre}`}
                                 style={{ cursor: 'pointer' }}
                               >
@@ -738,8 +750,8 @@ console.error('Error al crear persona:', err);
                                   {isSelected && (
                                     <div
                                       onClick={e => e.stopPropagation()}
-                                      role="presentation"
-                                      aria-hidden="true"
+                                      role='presentation'
+                                      aria-hidden='true'
                                     >
                                       <select
                                         className='form-select form-select-sm'
@@ -752,7 +764,7 @@ console.error('Error al crear persona:', err);
                                             unidad.id,
                                             e.target.value as
                                               | 'Propietario'
-                                              | 'Inquilino',
+                                              | 'Inquilino'
                                           )
                                         }
                                       >
@@ -904,4 +916,3 @@ console.error('Error al crear persona:', err);
     </ProtectedRoute>
   );
 }
-

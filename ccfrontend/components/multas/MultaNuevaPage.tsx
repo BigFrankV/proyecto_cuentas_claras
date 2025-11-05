@@ -47,7 +47,7 @@ const MultaNuevaPage: React.FC = () => {
       (unit.codigo || '').toLowerCase().includes(unitSearch.toLowerCase()) ||
       (unit.owner || unit.propietario || '')
         .toLowerCase()
-        .includes(unitSearch.toLowerCase()),
+        .includes(unitSearch.toLowerCase())
   );
 
   // Cargar comunidades al montar (si existe endpoint)
@@ -65,23 +65,25 @@ const MultaNuevaPage: React.FC = () => {
           method: 'GET',
         });
         if (!resp.ok) {
-// eslint-disable-next-line no-console
+          // eslint-disable-next-line no-console
           console.warn(
             'No se pudieron cargar comunidades (status):',
-            resp.status,
+            resp.status
           );
           return;
         }
         const json = await resp.json();
         const data = Array.isArray(json) ? json : json.data || [];
-        if (!mounted) {return;}
+        if (!mounted) {
+          return;
+        }
         setComunidades(data);
         if (Array.isArray(data) && data.length === 1) {
           setSelectedComunidadGlobal(Number(data[0].id));
         }
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error cargando comunidades:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error cargando comunidades:', err);
       } finally {
         setComunidadesLoading(false);
       }
@@ -110,8 +112,8 @@ console.error('Error cargando comunidades:', err);
         }));
         setUnits(mappedData);
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error cargando unidades:', err);
+        // eslint-disable-next-line no-console
+        console.error('Error cargando unidades:', err);
         setUnits([]);
       } finally {
         setLoadingUnits(false);
@@ -123,8 +125,9 @@ console.error('Error cargando unidades:', err);
 
   // UI: helper para mostrar select de comunidades en Step 2
   const renderComunidadSelector = () => {
-    if (comunidadesLoading)
-      {return <div className='mb-3'>Cargando comunidades...</div>;}
+    if (comunidadesLoading) {
+      return <div className='mb-3'>Cargando comunidades...</div>;
+    }
     if (!comunidades || comunidades.length <= 1) {
       if (comunidades && comunidades.length === 1) {
         return (
@@ -143,7 +146,7 @@ console.error('Error cargando unidades:', err);
           value={selectedComunidadGlobal ?? ''}
           onChange={e =>
             setSelectedComunidadGlobal(
-              e.target.value ? Number(e.target.value) : null,
+              e.target.value ? Number(e.target.value) : null
             )
           }
         >
@@ -171,7 +174,7 @@ console.error('Error cargando unidades:', err);
     try {
       if (unit.comunidad_id) {
         const tipos = await multasService.obtenerTipos(
-          Number(unit.comunidad_id),
+          Number(unit.comunidad_id)
         );
         setViolationTypes(
           (tipos || []).map((t: any, i: number) => ({
@@ -183,17 +186,19 @@ console.error('Error cargando unidades:', err);
               t.icono ||
               ['warning', 'gavel', 'pets', 'cleaning_services'][i % 4],
             color: t.color || '#6f42c1',
-          })),
+          }))
         );
       }
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error recargando tipos por comunidad:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error recargando tipos por comunidad:', err);
     }
   };
 
   const handleFileUpload = (files: FileList | null) => {
-    if (!files) {return;}
+    if (!files) {
+      return;
+    }
     const newFiles = Array.from(files);
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
@@ -204,7 +209,9 @@ console.error('Error recargando tipos por comunidad:', err);
 
   const changeStep = (direction: number) => {
     const newStep = currentStep + direction;
-    if (newStep >= 1 && newStep <= 4) {setCurrentStep(newStep);}
+    if (newStep >= 1 && newStep <= 4) {
+      setCurrentStep(newStep);
+    }
   };
 
   const validateStep = (step: number): boolean => {
@@ -214,8 +221,12 @@ console.error('Error recargando tipos por comunidad:', err);
       case 2:
         return selectedUnitId !== null;
       case 3:
-        if (monto === '' || Number(monto) <= 0) {return false;}
-        if (!fechaInfraccion) {return false;}
+        if (monto === '' || Number(monto) <= 0) {
+          return false;
+        }
+        if (!fechaInfraccion) {
+          return false;
+        }
         return true;
       case 4:
         return true;
@@ -225,7 +236,7 @@ console.error('Error recargando tipos por comunidad:', err);
   };
 
   const selectedViolation = violationTypes.find(
-    v => v.id === selectedViolationType,
+    v => v.id === selectedViolationType
   );
 
   useEffect(() => {
@@ -242,11 +253,11 @@ console.error('Error recargando tipos por comunidad:', err);
               t.icono ||
               ['warning', 'gavel', 'pets', 'cleaning_services'][i % 4],
             color: t.color || '#6f42c1',
-          })),
+          }))
         );
       } catch (e) {
-// eslint-disable-next-line no-console
-console.error('Error cargando tipos:', e);
+        // eslint-disable-next-line no-console
+        console.error('Error cargando tipos:', e);
         setViolationTypes([
           {
             id: 1,
@@ -303,7 +314,7 @@ console.error('Error cargando tipos:', e);
   const handleSubmit = async () => {
     if (!validateStep(3)) {
       window.alert(
-        'Completa todos los campos obligatorios antes de crear la multa.',
+        'Completa todos los campos obligatorios antes de crear la multa.'
       );
       return;
     }
@@ -330,7 +341,9 @@ console.error('Error cargando tipos:', e);
       fecha_infraccion: fechaInfraccion || null,
       prioridad,
     };
-    if (fechaVencimiento) {payload.fecha_vencimiento = fechaVencimiento;}
+    if (fechaVencimiento) {
+      payload.fecha_vencimiento = fechaVencimiento;
+    }
 
     try {
       const createdMulta = await multasService.createMulta(payload);
@@ -338,8 +351,8 @@ console.error('Error cargando tipos:', e);
       if (!multaId) {
         // eslint-disable-next-line no-console
 
-// eslint-disable-next-line no-console
-console.warn('Respuesta creación multa inesperada:', createdMulta);
+        // eslint-disable-next-line no-console
+        console.warn('Respuesta creación multa inesperada:', createdMulta);
         window.alert('Multa creada pero no se obtuvo id. Revisa logs.');
         router.push('/multas');
         return;
@@ -349,8 +362,8 @@ console.warn('Respuesta creación multa inesperada:', createdMulta);
         try {
           await multasService.uploadDocumentos(multaId, uploadedFiles);
         } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error en upload:', err);
+          // eslint-disable-next-line no-console
+          console.error('Error en upload:', err);
           window.alert('Multa creada pero fallo la subida de archivos.');
         }
       }
@@ -358,8 +371,8 @@ console.error('Error en upload:', err);
       window.alert('Multa creada correctamente.');
       router.push(`/multas/${multaId}`);
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error creando multa:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error creando multa:', err);
       window.alert('Error al crear la multa. Revisa la consola.');
     }
   };
@@ -554,7 +567,7 @@ console.error('Error creando multa:', err);
                       value={monto}
                       onChange={e =>
                         setMonto(
-                          e.target.value === '' ? '' : Number(e.target.value),
+                          e.target.value === '' ? '' : Number(e.target.value)
                         )
                       }
                       min={0}
@@ -731,11 +744,13 @@ console.error('Error creando multa:', err);
               <button
                 className='btn btn-primary'
                 onClick={() => {
-                  if (validateStep(currentStep)) {changeStep(1);}
-                  else
-                    {window.alert(
-                      'Completa los campos obligatorios en este paso.',
-                    );}
+                  if (validateStep(currentStep)) {
+                    changeStep(1);
+                  } else {
+                    window.alert(
+                      'Completa los campos obligatorios en este paso.'
+                    );
+                  }
                 }}
               >
                 Siguiente
@@ -766,4 +781,3 @@ console.error('Error creando multa:', err);
 };
 
 export default MultaNuevaPage;
-

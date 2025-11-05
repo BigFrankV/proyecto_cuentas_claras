@@ -39,7 +39,9 @@ export function EmissionCard({ emission }: EmissionCardProps) {
   };
 
   const getPaymentProgress = () => {
-    if (emission.totalAmount === 0) {return 0;}
+    if (emission.totalAmount === 0) {
+      return 0;
+    }
     return (emission.paidAmount / emission.totalAmount) * 100;
   };
 
@@ -578,4 +580,3 @@ export function EmissionRow({
     </tr>
   );
 }
-

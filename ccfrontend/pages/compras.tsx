@@ -80,7 +80,7 @@ export default function ComprasListado() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(
-    null,
+    null
   );
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
@@ -123,10 +123,18 @@ export default function ComprasListado() {
         offset,
       };
 
-      if (filters.search) {filtersApi.search = filters.search;}
-      if (filters.type) {filtersApi.tipo_doc = filters.type;}
-      if (filters.dateFrom) {filtersApi.fecha_desde = filters.dateFrom;}
-      if (filters.dateTo) {filtersApi.fecha_hasta = filters.dateTo;}
+      if (filters.search) {
+        filtersApi.search = filters.search;
+      }
+      if (filters.type) {
+        filtersApi.tipo_doc = filters.type;
+      }
+      if (filters.dateFrom) {
+        filtersApi.fecha_desde = filters.dateFrom;
+      }
+      if (filters.dateTo) {
+        filtersApi.fecha_hasta = filters.dateTo;
+      }
 
       const resp = await comprasApi.getAll(filtersApi);
       const rows: CompraBackend[] = resp.data || [];
@@ -175,12 +183,12 @@ export default function ComprasListado() {
       const total = resp.pagination.total ?? 0;
       const pages = Math.max(
         1,
-        resp.pagination.pages ?? Math.ceil(total / limit),
+        resp.pagination.pages ?? Math.ceil(total / limit)
       );
       setCurrentPage(resp.pagination.page ?? page);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading purchases:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading purchases:', error);
       setPurchases([]);
     } finally {
       setLoading(false);
@@ -293,8 +301,8 @@ console.error('Error loading purchases:', error);
       setSelectedPurchase(null);
       alert('Compra eliminada exitosamente');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error deleting purchase:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error deleting purchase:', error);
       alert('Error al eliminar la compra');
     }
   };
@@ -308,7 +316,7 @@ console.error('Error deleting purchase:', error);
     setSelectedPurchases(prev =>
       prev.includes(purchaseId)
         ? prev.filter(id => id !== purchaseId)
-        : [...prev, purchaseId],
+        : [...prev, purchaseId]
     );
   };
 
@@ -316,7 +324,7 @@ console.error('Error deleting purchase:', error);
     setSelectedPurchases(prev =>
       prev.length === paginatedPurchases.length
         ? []
-        : paginatedPurchases.map(p => p.id),
+        : paginatedPurchases.map(p => p.id)
     );
   };
 
@@ -344,7 +352,7 @@ console.error('Error deleting purchase:', error);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedPurchases = filteredPurchases.slice(
     startIndex,
-    startIndex + itemsPerPage,
+    startIndex + itemsPerPage
   );
 
   const stats = {
@@ -781,7 +789,7 @@ console.error('Error deleting purchase:', error);
                           <div className='fw-medium'>{purchase.number}</div>
                           <small className='text-muted'>
                             {new Date(
-                              purchase.requestDate,
+                              purchase.requestDate
                             ).toLocaleDateString()}
                           </small>
                         </td>
@@ -817,14 +825,14 @@ console.error('Error deleting purchase:', error);
                           <div className='fw-medium'>
                             {formatCurrency(
                               purchase.totalAmount,
-                              purchase.currency,
+                              purchase.currency
                             )}
                           </div>
                         </td>
                         <td>
                           <div>
                             {new Date(
-                              purchase.requiredDate,
+                              purchase.requiredDate
                             ).toLocaleDateString()}
                           </div>
                           <small className='text-muted'>
@@ -933,7 +941,7 @@ console.error('Error deleting purchase:', error);
                             <div className='fw-bold'>
                               {formatCurrency(
                                 purchase.totalAmount,
-                                purchase.currency,
+                                purchase.currency
                               )}
                             </div>
                             <small className='text-muted'>Total</small>
@@ -1084,4 +1092,3 @@ console.error('Error deleting purchase:', error);
     </ProtectedRoute>
   );
 }
-

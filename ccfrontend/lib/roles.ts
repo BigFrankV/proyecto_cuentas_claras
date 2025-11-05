@@ -46,7 +46,7 @@ export function getUserRole(user: User | null): string {
 
     for (const hierarchyRole of roleHierarchy) {
       const foundRole = user.roles.find(
-        role => role?.toLowerCase() === hierarchyRole,
+        role => role?.toLowerCase() === hierarchyRole
       );
       if (foundRole) {
         return normalizeRole(foundRole);
@@ -190,4 +190,3 @@ export function getUserRoles(user: User | null): string[] {
 
   return roles;
 }
-

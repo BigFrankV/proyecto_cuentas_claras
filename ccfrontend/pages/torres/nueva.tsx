@@ -72,12 +72,12 @@ export default function TorreNueva() {
           `/torres/edificio/${formData.edificioId}/validar-codigo`,
           {
             params: { codigo: formData.codigo },
-          },
+          }
         );
         setCodigoExists(response.data.existe);
       } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error validating codigo:', error);
+        // eslint-disable-next-line no-console
+        console.error('Error validating codigo:', error);
         setCodigoExists(null);
       } finally {
         setCodigoValidating(false);
@@ -91,19 +91,21 @@ console.error('Error validating codigo:', error);
   // Get suggested next codigo
   useEffect(() => {
     const getSiguienteCodigo = async () => {
-      if (!formData.edificioId) {return;}
+      if (!formData.edificioId) {
+        return;
+      }
 
       try {
         const response = await apiClient.get(
-          `/torres/edificio/${formData.edificioId}/siguiente-codigo`,
+          `/torres/edificio/${formData.edificioId}/siguiente-codigo`
         );
         const suggestedCode = response.data.siguienteCodigo;
         if (suggestedCode && !formData.codigo) {
           setFormData(prev => ({ ...prev, codigo: suggestedCode }));
         }
       } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error getting siguiente codigo:', error);
+        // eslint-disable-next-line no-console
+        console.error('Error getting siguiente codigo:', error);
       }
     };
 
@@ -241,8 +243,8 @@ console.error('Error getting siguiente codigo:', error);
       // Redirigir al listado de torres
       router.push('/torres');
     } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error('Error al crear torre:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error al crear torre:', error);
       if (error.response?.status === 409) {
         setErrors({ codigo: 'Este código ya existe en el edificio' });
       } else {
@@ -459,7 +461,7 @@ console.error('Error al crear torre:', error);
                             onChange={e =>
                               handleInputChange(
                                 'numPisos',
-                                parseInt(e.target.value) || 1,
+                                parseInt(e.target.value) || 1
                               )
                             }
                           />
@@ -484,7 +486,7 @@ console.error('Error al crear torre:', error);
                             onChange={e =>
                               handleInputChange(
                                 'numUnidades',
-                                parseInt(e.target.value) || 1,
+                                parseInt(e.target.value) || 1
                               )
                             }
                           />
@@ -513,7 +515,7 @@ console.error('Error al crear torre:', error);
                             onChange={e =>
                               handleInputChange(
                                 'administradorId',
-                                e.target.value,
+                                e.target.value
                               )
                             }
                           >
@@ -540,7 +542,7 @@ console.error('Error al crear torre:', error);
                               onChange={e =>
                                 handleInputChange(
                                   'tieneAscensor',
-                                  e.target.checked,
+                                  e.target.checked
                                 )
                               }
                             />
@@ -560,7 +562,7 @@ console.error('Error al crear torre:', error);
                               onChange={e =>
                                 handleInputChange(
                                   'tienePorteria',
-                                  e.target.checked,
+                                  e.target.checked
                                 )
                               }
                             />
@@ -580,7 +582,7 @@ console.error('Error al crear torre:', error);
                               onChange={e =>
                                 handleInputChange(
                                   'tieneEstacionamiento',
-                                  e.target.checked,
+                                  e.target.checked
                                 )
                               }
                             />
@@ -621,7 +623,7 @@ console.error('Error al crear torre:', error);
                           onChange={e =>
                             handleInputChange(
                               'gastosEspecificos',
-                              e.target.value as 'si' | 'no',
+                              e.target.value as 'si' | 'no'
                             )
                           }
                         />
@@ -640,7 +642,7 @@ console.error('Error al crear torre:', error);
                           onChange={e =>
                             handleInputChange(
                               'gastosEspecificos',
-                              e.target.value as 'si' | 'no',
+                              e.target.value as 'si' | 'no'
                             )
                           }
                         />
@@ -670,7 +672,7 @@ console.error('Error al crear torre:', error);
                           onChange={e =>
                             handleInputChange(
                               'coeficienteTorre',
-                              parseFloat(e.target.value) || 0,
+                              parseFloat(e.target.value) || 0
                             )
                           }
                           required={formData.gastosEspecificos === 'si'}
@@ -715,24 +717,26 @@ console.error('Error al crear torre:', error);
                             : '#f8f9fa',
                         }}
                         onClick={() => fileInputRef.current?.click()}
-                        onKeyDown={(e) => {
+                        onKeyDown={e => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
                             fileInputRef.current?.click();
                           }
                         }}
                         onMouseEnter={e => {
-                          if (!imagePreview)
-                            {e.currentTarget.style.borderColor =
-                              'var(--color-primary)';}
+                          if (!imagePreview) {
+                            e.currentTarget.style.borderColor =
+                              'var(--color-primary)';
+                          }
                         }}
                         onMouseLeave={e => {
-                          if (!imagePreview)
-                            {e.currentTarget.style.borderColor = '#ddd';}
+                          if (!imagePreview) {
+                            e.currentTarget.style.borderColor = '#ddd';
+                          }
                         }}
-                        role="button"
+                        role='button'
                         tabIndex={0}
-                        aria-label="Haz clic para seleccionar imagen"
+                        aria-label='Haz clic para seleccionar imagen'
                       >
                         {imagePreview ? (
                           <Image
@@ -825,7 +829,7 @@ console.error('Error al crear torre:', error);
                         onChange={e =>
                           handleInputChange(
                             'facturacionIndependiente',
-                            e.target.checked,
+                            e.target.checked
                           )
                         }
                       />
@@ -899,4 +903,3 @@ console.error('Error al crear torre:', error);
     </ProtectedRoute>
   );
 }
-

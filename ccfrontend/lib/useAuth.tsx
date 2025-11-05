@@ -46,8 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await authService.logout();
         // eslint-disable-next-line no-console`n        console.log('Logout exitoso en servidor');
       } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error en logout del servidor:', error);
+        // eslint-disable-next-line no-console
+        console.error('Error en logout del servidor:', error);
       } finally {
         if (isMounted) {
           // eslint-disable-next-line no-console`n          console.log('Limpiando estado local...');
@@ -79,10 +79,10 @@ console.error('Error en logout del servidor:', error);
         // Intentar obtener datos del usuario desde localStorage
         const userData = authService.getUserData();
         if (userData) {
-// eslint-disable-next-line no-console
+          // eslint-disable-next-line no-console
           console.log(
             'Datos de usuario encontrados en localStorage:',
-            userData,
+            userData
           );
           // ✅ NUEVO: Log de memberships para debug
           if (userData.memberships) {
@@ -99,10 +99,10 @@ console.error('Error en logout del servidor:', error);
               // eslint-disable-next-line no-console`n              console.log('Usuario verificado con servidor:', currentUser);
               // ✅ NUEVO: Log de memberships actualizadas
               if (currentUser.memberships) {
-// eslint-disable-next-line no-console
+                // eslint-disable-next-line no-console
                 console.log(
                   'Membresías actualizadas del servidor:',
-                  currentUser.memberships,
+                  currentUser.memberships
                 );
               }
               // Actualizar datos con información completa del servidor
@@ -112,31 +112,26 @@ console.error('Error en logout del servidor:', error);
               if (typeof window !== 'undefined') {
                 localStorage.setItem(
                   'user_data',
-                  JSON.stringify(updatedUserData),
+                  JSON.stringify(updatedUserData)
                 );
               }
             } else if (!currentUser) {
-// eslint-disable-next-line no-console
+              // eslint-disable-next-line no-console
               console.log(
-                'Servidor no reconoce el token, manteniendo datos locales',
+                'Servidor no reconoce el token, manteniendo datos locales'
               );
             }
           } catch (serverError: any) {
-// eslint-disable-next-line no-console
-            console.log(
-              'Error verificando con servidor:',
-              serverError.message,
-            );
+            // eslint-disable-next-line no-console
+            console.log('Error verificando con servidor:', serverError.message);
             if (serverError.response?.status === 401) {
               // eslint-disable-next-line no-console`n              console.log('Token inválido según servidor, limpiando sesión');
               await clearSession();
               return;
             }
             // Si es otro tipo de error, mantener datos locales
-// eslint-disable-next-line no-console
-            console.log(
-              'Manteniendo sesión local por error de conectividad',
-            );
+            // eslint-disable-next-line no-console
+            console.log('Manteniendo sesión local por error de conectividad');
           }
         } else {
           // eslint-disable-next-line no-console`n          console.log('No se encontraron datos de usuario en localStorage');
@@ -144,8 +139,8 @@ console.error('Error en logout del servidor:', error);
           await clearSession();
         }
       } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error verificando autenticación:', error);
+        // eslint-disable-next-line no-console
+        console.error('Error verificando autenticación:', error);
         // Si hay error, limpiar datos
         await clearSession();
       } finally {
@@ -175,10 +170,10 @@ console.error('Error verificando autenticación:', error);
       // eslint-disable-next-line no-console`n      console.log('Login exitoso, datos recibidos:', response.user);
       // ✅ NUEVO: Log específico para memberships
       if (response.user?.memberships) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.log(
           'Membresías recibidas en login:',
-          response.user.memberships,
+          response.user.memberships
         );
       }
       if (response.user?.is_superadmin) {
@@ -190,8 +185,8 @@ console.error('Error verificando autenticación:', error);
       }
       return response; // Devolver la respuesta para manejar 2FA
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error en login:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error en login:', error);
       throw error; // Re-lanzar para que el componente maneje el error
     }
   };
@@ -203,10 +198,10 @@ console.error('Error en login:', error);
       // eslint-disable-next-line no-console`n      console.log('Login 2FA exitoso, datos recibidos:', response.user);
       // ✅ NUEVO: Log específico para memberships en 2FA
       if (response.user?.memberships) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.log(
           'Membresías recibidas en 2FA login:',
-          response.user.memberships,
+          response.user.memberships
         );
       }
       if (response.user) {
@@ -214,8 +209,8 @@ console.error('Error en login:', error);
         // eslint-disable-next-line no-console`n        console.log('Usuario establecido en contexto:', response.user);
       }
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error en login 2FA:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error en login 2FA:', error);
       throw error;
     }
   };
@@ -226,8 +221,8 @@ console.error('Error en login 2FA:', error);
       await authService.logout();
       // eslint-disable-next-line no-console`n      console.log('Logout exitoso en servidor');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error en logout del servidor:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error en logout del servidor:', error);
     } finally {
       // eslint-disable-next-line no-console`n      console.log('Limpiando estado local...');
       setUser(null);
@@ -251,8 +246,8 @@ console.error('Error en logout del servidor:', error);
         localStorage.setItem('user_data', JSON.stringify(currentUser));
       }
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error refrescando usuario:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error refrescando usuario:', error);
     }
   };
 
@@ -285,12 +280,12 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-// eslint-disable-next-line no-console
+    // eslint-disable-next-line no-console
     console.log(
       'ProtectedRoute - autenticado:',
       isAuthenticated,
       'cargando:',
-      isLoading,
+      isLoading
     );
     if (!isLoading && !isAuthenticated) {
       // eslint-disable-next-line no-console`n      console.log('No autenticado, redirigiendo a login...');
@@ -310,9 +305,9 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   }
 
   if (!isAuthenticated) {
-// eslint-disable-next-line no-console
+    // eslint-disable-next-line no-console
     console.log(
-      'ProtectedRoute - Usuario no autenticado, no mostrando contenido',
+      'ProtectedRoute - Usuario no autenticado, no mostrando contenido'
     );
     return null;
   }
@@ -320,4 +315,3 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   // eslint-disable-next-line no-console`n  console.log('ProtectedRoute - Usuario autenticado, mostrando contenido');
   return <>{children}</>;
 }
-

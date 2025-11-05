@@ -75,16 +75,16 @@ export default function GastosListado() {
         limit: 100,
         offset: 0,
       });
-// eslint-disable-next-line no-console
-console.log('Respuesta del backend:', resp.data); // Verifica si 'estado' es correcto
+      // eslint-disable-next-line no-console
+      console.log('Respuesta del backend:', resp.data); // Verifica si 'estado' es correcto
       const items = resp.data || [];
       const mapped: Expense[] = (Array.isArray(items) ? items : []).map(
-        mapBackendToExpense,
+        mapBackendToExpense
       );
       setExpenses(mapped);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading expenses from API:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading expenses from API:', error);
       setExpenses([]);
     } finally {
       setLoading(false);
@@ -190,7 +190,7 @@ console.error('Error loading expenses from API:', error);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedExpenses = filteredExpenses.slice(
     startIndex,
-    startIndex + itemsPerPage,
+    startIndex + itemsPerPage
   );
 
   const getActiveFiltersCount = () =>
@@ -212,13 +212,13 @@ console.error('Error loading expenses from API:', error);
         }));
         setCategories(
           normalized.sort((a: any, b: any) =>
-            String(a.nombre).localeCompare(String(b.nombre)),
-          ),
+            String(a.nombre).localeCompare(String(b.nombre))
+          )
         );
       })
       .catch(err => {
-// eslint-disable-next-line no-console
-console.error('Error getCategorias', err);
+        // eslint-disable-next-line no-console
+        console.error('Error getCategorias', err);
         setCategories([]);
       });
 
@@ -231,8 +231,8 @@ console.error('Error getCategorias', err);
         setCostCenters(normalized);
       })
       .catch(err => {
-// eslint-disable-next-line no-console
-console.error('Error getCentrosCosto', err);
+        // eslint-disable-next-line no-console
+        console.error('Error getCentrosCosto', err);
         setCostCenters([]);
       });
 
@@ -245,8 +245,8 @@ console.error('Error getCentrosCosto', err);
         setProviders(normalized);
       })
       .catch(err => {
-// eslint-disable-next-line no-console
-console.error('Error getProveedores', err);
+        // eslint-disable-next-line no-console
+        console.error('Error getProveedores', err);
         setProviders([]);
       });
   }, [resolvedComunidadId]);
@@ -290,7 +290,7 @@ console.error('Error getProveedores', err);
                   <div className='stat-item'>
                     <div className='stat-number'>
                       {formatCurrency(
-                        expenses.reduce((sum, e) => sum + e.amount, 0),
+                        expenses.reduce((sum, e) => sum + e.amount, 0)
                       )}
                     </div>
                     <div className='stat-label'>Monto Total</div>
@@ -476,7 +476,7 @@ console.error('Error getProveedores', err);
                           onChange={e => {
                             if (e.target.checked) {
                               setSelectedExpenses(
-                                paginatedExpenses.map(exp => exp.id),
+                                paginatedExpenses.map(exp => exp.id)
                               );
                             } else {
                               setSelectedExpenses([]);
@@ -514,8 +514,8 @@ console.error('Error getProveedores', err);
                               } else {
                                 setSelectedExpenses(
                                   selectedExpenses.filter(
-                                    id => id !== expense.id,
-                                  ),
+                                    id => id !== expense.id
+                                  )
                                 );
                               }
                             }}
@@ -648,7 +648,7 @@ console.error('Error getProveedores', err);
                               ]);
                             } else {
                               setSelectedExpenses(
-                                selectedExpenses.filter(id => id !== expense.id),
+                                selectedExpenses.filter(id => id !== expense.id)
                               );
                             }
                           }}
@@ -778,4 +778,3 @@ console.error('Error getProveedores', err);
     </ProtectedRoute>
   );
 }
-

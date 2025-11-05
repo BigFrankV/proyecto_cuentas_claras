@@ -128,7 +128,7 @@ export default function NuevoTicket() {
   ];
 
   const filteredUnits = units.filter(unit =>
-    unit.toLowerCase().includes(unitSearchTerm.toLowerCase()),
+    unit.toLowerCase().includes(unitSearchTerm.toLowerCase())
   );
 
   const handleInputChange = (field: keyof TicketForm, value: any) => {
@@ -224,8 +224,8 @@ export default function NuevoTicket() {
       // Success - redirect to tickets list
       router.push('/tickets');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error creating ticket:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error creating ticket:', error);
       // TODO: Mostrar error al usuario
     } finally {
       setIsSubmitting(false);
@@ -233,7 +233,9 @@ console.error('Error creating ticket:', error);
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) {return '0 Bytes';}
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -357,13 +359,13 @@ console.error('Error creating ticket:', error);
                             onClick={() =>
                               handleInputChange('prioridad', priority.value)
                             }
-                            onKeyDown={(e) => {
+                            onKeyDown={e => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
                                 handleInputChange('prioridad', priority.value);
                               }
                             }}
-                            role="button"
+                            role='button'
                             tabIndex={0}
                           >
                             <div className='text-center'>
@@ -432,13 +434,13 @@ console.error('Error creating ticket:', error);
                             onClick={() =>
                               handleInputChange('categoria', category.value)
                             }
-                            onKeyDown={(e) => {
+                            onKeyDown={e => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
                                 handleInputChange('categoria', category.value);
                               }
                             }}
-                            role="button"
+                            role='button'
                             tabIndex={0}
                           >
                             <div className='d-flex align-items-center'>
@@ -501,15 +503,15 @@ console.error('Error creating ticket:', error);
                       onDragOver={handleDragOver}
                       onDrop={handleDrop}
                       onClick={handleFileSelect}
-                      onKeyDown={(e) => {
+                      onKeyDown={e => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
                           handleFileSelect();
                         }
                       }}
-                      role="button"
+                      role='button'
                       tabIndex={0}
-                      aria-label="Haz clic o arrastra archivos para subir"
+                      aria-label='Haz clic o arrastra archivos para subir'
                     >
                       <i
                         className='material-icons mb-2'
@@ -728,7 +730,7 @@ console.error('Error creating ticket:', error);
                       <span className='text-muted'>Prioridad:</span>
                       <span className='fw-semibold'>
                         {priorityOptions.find(
-                          p => p.value === formData.prioridad,
+                          p => p.value === formData.prioridad
                         )?.label || 'No seleccionada'}
                       </span>
                     </div>
@@ -736,7 +738,7 @@ console.error('Error creating ticket:', error);
                       <span className='text-muted'>Categoría:</span>
                       <span className='fw-semibold'>
                         {categoryOptions.find(
-                          c => c.value === formData.categoria,
+                          c => c.value === formData.categoria
                         )?.label || 'No seleccionada'}
                       </span>
                     </div>
@@ -789,4 +791,3 @@ console.error('Error creating ticket:', error);
     </ProtectedRoute>
   );
 }
-

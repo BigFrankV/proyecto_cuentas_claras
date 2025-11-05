@@ -46,8 +46,12 @@ export function calculateDV(rut: string): string {
   const dv = 11 - remainder;
 
   // Casos especiales
-  if (dv === 11) {return '0';}
-  if (dv === 10) {return 'K';}
+  if (dv === 11) {
+    return '0';
+  }
+  if (dv === 10) {
+    return 'K';
+  }
   return dv.toString();
 }
 
@@ -94,7 +98,9 @@ export function validateRut(rut: string, dv: string): boolean {
  * Acepta formatos: 12345678-9, 12.345.678-9, 123456789
  */
 export function validateFullRut(fullRut: string): boolean {
-  if (!fullRut) {return false;}
+  if (!fullRut) {
+    return false;
+  }
 
   const cleaned = cleanRut(fullRut);
 
@@ -117,7 +123,9 @@ export function validateFullRut(fullRut: string): boolean {
  * @returns RUT formateado
  */
 export function formatRut(rut: string, dv: string): string {
-  if (!rut) {return '';}
+  if (!rut) {
+    return '';
+  }
 
   const cleaned = cleanRut(rut);
 
@@ -143,7 +151,9 @@ export function formatRut(rut: string, dv: string): string {
  * @returns Objeto con rut y dv separados
  */
 export function splitRut(fullRut: string): { rut: string; dv: string } {
-  if (!fullRut) {return { rut: '', dv: '' };}
+  if (!fullRut) {
+    return { rut: '', dv: '' };
+  }
 
   const cleaned = cleanRut(fullRut);
 
@@ -212,4 +222,3 @@ export default {
   splitRut,
   getRutValidationError,
 };
-

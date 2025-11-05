@@ -66,4 +66,3 @@ export interface ComprasEstadisticas {
   proveedores_distintos: number;
   tipos_documentos: Record<string, number>;
 }
-

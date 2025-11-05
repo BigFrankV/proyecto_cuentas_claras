@@ -85,7 +85,7 @@ export default function CentroCostoDetalle() {
 
       setCostCenter(mockCenter);
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading cost center:', error);
     } finally {
       setLoading(false);
@@ -140,7 +140,7 @@ export default function CentroCostoDetalle() {
 
       setExpenses(mockExpenses);
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading expenses:', error);
     }
   };
@@ -179,7 +179,7 @@ export default function CentroCostoDetalle() {
       alert('Centro de costo eliminado exitosamente');
       router.push('/centros-costo');
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error deleting cost center:', error);
       alert('Error al eliminar el centro de costo');
     }
@@ -350,7 +350,7 @@ export default function CentroCostoDetalle() {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric',
-                            },
+                            }
                           )}
                         </div>
                       </div>
@@ -367,7 +367,7 @@ export default function CentroCostoDetalle() {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric',
-                            },
+                            }
                           )}
                         </div>
                       </div>
@@ -396,7 +396,7 @@ export default function CentroCostoDetalle() {
                         >
                           {responsibility}
                         </Badge>
-                      ),
+                      )
                     )}
                   </div>
                 </Card.Body>
@@ -428,7 +428,7 @@ export default function CentroCostoDetalle() {
                               </div>
                               <small className='text-muted'>
                                 {new Date(expense.date).toLocaleDateString(
-                                  'es-ES',
+                                  'es-ES'
                                 )}
                               </small>
                             </div>
@@ -538,7 +538,7 @@ export default function CentroCostoDetalle() {
                             $
                             {(costCenter.budget / 12).toLocaleString(
                               undefined,
-                              { maximumFractionDigits: 0 },
+                              { maximumFractionDigits: 0 }
                             )}
                           </span>
                         </div>

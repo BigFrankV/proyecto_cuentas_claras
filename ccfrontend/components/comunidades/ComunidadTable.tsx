@@ -74,7 +74,7 @@ const ComunidadTable: React.FC<ComunidadTableProps> = ({
                         style={{ fontSize: '18px' }}
                       >
                         {comunidadesService.getTipoComunidadIcon(
-                          comunidad.tipo,
+                          comunidad.tipo
                         )}
                       </span>
                       {comunidad.tipo}
@@ -133,7 +133,7 @@ const ComunidadTable: React.FC<ComunidadTableProps> = ({
                       className={`fw-bold ${comunidad.saldoPendiente > 0 ? 'text-warning' : 'text-success'}`}
                     >
                       {comunidadesService.formatCurrency(
-                        comunidad.saldoPendiente,
+                        comunidad.saldoPendiente
                       )}
                     </span>
                   </td>
@@ -231,4 +231,3 @@ const ComunidadTable: React.FC<ComunidadTableProps> = ({
 };
 
 export default ComunidadTable;
-

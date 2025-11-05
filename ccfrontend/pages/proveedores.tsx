@@ -37,7 +37,7 @@ export default function ProveedoresListado() {
   const [comunidadId, setComunidadId] = useState<number | null>(null);
 
   const [selectedProvider, setSelectedProvider] = useState<Proveedor | null>(
-    null,
+    null
   );
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -45,11 +45,13 @@ export default function ProveedoresListado() {
 
   const resolvedComunidadId = useMemo(
     () => (isSuperUser ? undefined : undefined),
-    [isSuperUser],
+    [isSuperUser]
   );
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {loadProviders(pagination.page);}
+    if (!authLoading && isAuthenticated) {
+      loadProviders(pagination.page);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated, pagination.page]);
 
@@ -59,26 +61,31 @@ export default function ProveedoresListado() {
       const params: any = { limit: pagination.limit };
       const offset = (page - 1) * pagination.limit;
       params.offset = offset;
-      if (search) {params.search = search;}
-      if (status)
-        {params.activo =
-          status === 'active' ? 1 : status === 'inactive' ? 0 : undefined;}
+      if (search) {
+        params.search = search;
+      }
+      if (status) {
+        params.activo =
+          status === 'active' ? 1 : status === 'inactive' ? 0 : undefined;
+      }
 
       const resp = await listProveedores(
         comunidadId ?? resolvedComunidadId,
-        params,
+        params
       );
       setProviders(resp.data);
-      if (resp.pagination) {setPagination(resp.pagination);}
-      else
-        {setPagination(prev => ({
+      if (resp.pagination) {
+        setPagination(resp.pagination);
+      } else {
+        setPagination(prev => ({
           ...prev,
           total: resp.data.length,
           pages: Math.ceil(resp.data.length / prev.limit),
-        }));}
+        }));
+      }
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error loading providers:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error loading providers:', err);
     } finally {
       setLoading(false);
     }
@@ -92,23 +99,31 @@ console.error('Error loading providers:', err);
   };
 
   const confirmDelete = async () => {
-    if (!selectedProvider) {return;}
+    if (!selectedProvider) {
+      return;
+    }
     try {
       await deleteProveedor(selectedProvider.id);
       setShowDeleteModal(false);
       setSelectedProvider(null);
       loadProviders(pagination.page);
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error deleting provider:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error deleting provider:', err);
       alert('No se pudo eliminar el proveedor');
     }
   };
 
   const handleFiltersChange = (payload: any) => {
-    if (payload.search !== undefined) {setSearch(payload.search);}
-    if (payload.status !== undefined) {setStatus(payload.status);}
-    if (payload.comunidadId !== undefined) {setComunidadId(payload.comunidadId);}
+    if (payload.search !== undefined) {
+      setSearch(payload.search);
+    }
+    if (payload.status !== undefined) {
+      setStatus(payload.status);
+    }
+    if (payload.comunidadId !== undefined) {
+      setComunidadId(payload.comunidadId);
+    }
     setPagination(prev => ({ ...prev, page: 1 }));
     loadProviders(1);
   };
@@ -259,4 +274,3 @@ console.error('Error deleting provider:', err);
     </ProtectedRoute>
   );
 }
-

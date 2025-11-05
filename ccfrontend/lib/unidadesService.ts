@@ -5,7 +5,7 @@ import api from './api';
 class UnidadesService {
   // ===== LISTADOS Y FILTROS =====
   async getUnidades(
-    params?: any,
+    params?: any
   ): Promise<{ data: any[]; totalPaginas?: number }> {
     // eslint-disable-next-line no-console
     // eslint-disable-next-line no-console`n    console.log('Frontend: Llamando getUnidades con params:', params);
@@ -15,7 +15,7 @@ class UnidadesService {
       console.log(
         'Frontend: Respuesta getUnidades:',
         response.status,
-        response.data,
+        response.data
       );
       const data = response.data?.data ?? response.data;
       const totalPaginas = response.data?.totalPaginas ?? 1;
@@ -28,7 +28,7 @@ class UnidadesService {
       console.error(
         'Frontend: Error en getUnidades:',
         err.response?.status,
-        err.message,
+        err.message
       );
       throw err;
     }
@@ -36,7 +36,7 @@ class UnidadesService {
 
   async getUnidadesPorComunidad(
     comunidadId: number,
-    params?: any,
+    params?: any
   ): Promise<any[]> {
     const response = await api.get(`/unidades/comunidad/${comunidadId}`, {
       params,
@@ -58,7 +58,7 @@ class UnidadesService {
 
   async validarEstacionamiento(
     comunidadId: number,
-    nroEstacionamiento: string,
+    nroEstacionamiento: string
   ): Promise<any> {
     const response = await api.get('/unidades/validate/estacionamiento', {
       params: {
@@ -132,7 +132,7 @@ class UnidadesService {
     };
     const response = await api.post(
       `/unidades/comunidad/${comunidadId}`,
-      payload,
+      payload
     );
     return response.data?.data ?? response.data;
   }
@@ -186,7 +186,7 @@ class UnidadesService {
   async createPagoAplicacion(pagoId: number, data: any): Promise<any> {
     const response = await api.post(
       `/unidades/pagos/${pagoId}/aplicaciones`,
-      data,
+      data
     );
     return response.data?.data ?? response.data;
   }
@@ -213,7 +213,7 @@ class UnidadesService {
   async createLecturaMedidor(medidorId: number, data: any): Promise<any> {
     const response = await api.post(
       `/unidades/medidores/${medidorId}/lecturas`,
-      data,
+      data
     );
     return response.data?.data ?? response.data;
   }
@@ -272,7 +272,7 @@ class UnidadesService {
   async addDetalleCuenta(cuentaId: number, data: any): Promise<any> {
     const response = await api.post(
       `/unidades/cuentas/${cuentaId}/detalle`,
-      data,
+      data
     );
     return response.data?.data ?? response.data;
   }
@@ -361,4 +361,3 @@ export const getUnidades = (params?: any) =>
 export const getDropdownComunidades = () =>
   unidadesService.getDropdownComunidades();
 // Agrega más exports según necesites
-

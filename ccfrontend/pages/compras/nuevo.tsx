@@ -184,8 +184,8 @@ export default function NuevaCompra() {
       setCostCenters(mockCostCenters);
       setCategories(mockCategories);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading initial data:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading initial data:', error);
     }
   };
 
@@ -204,7 +204,7 @@ console.error('Error loading initial data:', error);
   const handleItemChange = (
     itemId: string,
     field: string,
-    value: string | number,
+    value: string | number
   ) => {
     setItems(prev =>
       prev.map(item => {
@@ -220,7 +220,7 @@ console.error('Error loading initial data:', error);
           return updatedItem;
         }
         return item;
-      }),
+      })
     );
   };
 
@@ -283,7 +283,7 @@ console.error('Error loading initial data:', error);
 
     // Validar items
     const validItems = items.filter(
-      item => item.description.trim() && item.quantity > 0 && item.unitPrice > 0,
+      item => item.description.trim() && item.quantity > 0 && item.unitPrice > 0
     );
 
     if (validItems.length === 0) {
@@ -330,8 +330,8 @@ console.error('Error loading initial data:', error);
       alert('Compra creada exitosamente');
       router.push('/compras');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error creating purchase:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error creating purchase:', error);
       alert('Error al crear la compra');
     } finally {
       setLoading(false);
@@ -598,7 +598,7 @@ console.error('Error creating purchase:', error);
                                 (Disponible:{' '}
                                 {formatCurrency(
                                   center.budget - center.spent,
-                                  formData.currency,
+                                  formData.currency
                                 )}
                                 )
                               </option>
@@ -642,7 +642,7 @@ console.error('Error creating purchase:', error);
                                 {formatCurrency(
                                   getSelectedCostCenter()!.budget -
                                     getSelectedCostCenter()!.spent,
-                                  formData.currency,
+                                  formData.currency
                                 )}
                               </strong>
                             </div>
@@ -718,7 +718,7 @@ console.error('Error creating purchase:', error);
                                     handleItemChange(
                                       item.id,
                                       'description',
-                                      e.target.value,
+                                      e.target.value
                                     )
                                   }
                                   size='sm'
@@ -732,7 +732,7 @@ console.error('Error creating purchase:', error);
                                     handleItemChange(
                                       item.id,
                                       'notes',
-                                      e.target.value,
+                                      e.target.value
                                     )
                                   }
                                   size='sm'
@@ -748,7 +748,7 @@ console.error('Error creating purchase:', error);
                                     handleItemChange(
                                       item.id,
                                       'quantity',
-                                      parseInt(e.target.value) || 1,
+                                      parseInt(e.target.value) || 1
                                     )
                                   }
                                   size='sm'
@@ -761,7 +761,7 @@ console.error('Error creating purchase:', error);
                                     handleItemChange(
                                       item.id,
                                       'unit',
-                                      e.target.value,
+                                      e.target.value
                                     )
                                   }
                                   size='sm'
@@ -788,7 +788,7 @@ console.error('Error creating purchase:', error);
                                     handleItemChange(
                                       item.id,
                                       'unitPrice',
-                                      parseFloat(e.target.value) || 0,
+                                      parseFloat(e.target.value) || 0
                                     )
                                   }
                                   size='sm'
@@ -820,7 +820,7 @@ console.error('Error creating purchase:', error);
                             <td className='fw-bold'>
                               {formatCurrency(
                                 getTotalAmount(),
-                                formData.currency,
+                                formData.currency
                               )}
                             </td>
                             <td></td>
@@ -866,7 +866,7 @@ console.error('Error creating purchase:', error);
                             onChange={e =>
                               handleInputChange(
                                 'requestJustification',
-                                e.target.value,
+                                e.target.value
                               )
                             }
                           />
@@ -900,7 +900,7 @@ console.error('Error creating purchase:', error);
                           <div className='stat-value'>
                             {items.reduce(
                               (sum, item) => sum + item.quantity,
-                              0,
+                              0
                             )}
                           </div>
                           <div className='stat-label'>Cantidad Total</div>
@@ -912,7 +912,7 @@ console.error('Error creating purchase:', error);
                           <div className='total-value'>
                             {formatCurrency(
                               getTotalAmount(),
-                              formData.currency,
+                              formData.currency
                             )}
                           </div>
                         </div>
@@ -1094,4 +1094,3 @@ console.error('Error creating purchase:', error);
     </ProtectedRoute>
   );
 }
-

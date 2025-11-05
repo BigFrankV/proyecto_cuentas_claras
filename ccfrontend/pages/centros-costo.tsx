@@ -32,7 +32,7 @@ export default function CentrosCostoListado() {
   // modal / selección
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCentro, setSelectedCentro] = useState<CentroCosto | null>(
-    null,
+    null
   );
 
   // filtros locales
@@ -61,8 +61,8 @@ export default function CentrosCostoListado() {
       setCentros(response.data);
       setPagination(response.pagination);
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error loading centros:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error loading centros:', err);
     } finally {
       setLoading(false);
     }
@@ -87,8 +87,8 @@ console.error('Error loading centros:', err);
       setSelectedCentro(null);
       loadCentros(pagination.page);
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error deleting centro:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error deleting centro:', err);
     }
   };
 
@@ -272,4 +272,3 @@ console.error('Error deleting centro:', err);
     </ProtectedRoute>
   );
 }
-

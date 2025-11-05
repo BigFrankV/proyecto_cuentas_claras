@@ -36,11 +36,15 @@ export const useRutValidator = () => {
       const resto = suma % 11;
       const dv = 11 - resto;
 
-      if (dv === 11) {return '0';}
-      if (dv === 10) {return 'K';}
+      if (dv === 11) {
+        return '0';
+      }
+      if (dv === 10) {
+        return 'K';
+      }
       return dv.toString();
     },
-    [],
+    []
   );
 
   // Función para limpiar RUT
@@ -52,7 +56,9 @@ export const useRutValidator = () => {
   const formatRut = useCallback(
     (rut: string, format: 'dots' | 'clean' | 'dash' = 'dots'): string => {
       const cleaned = cleanRut(rut);
-      if (cleaned.length < 2) {return cleaned;}
+      if (cleaned.length < 2) {
+        return cleaned;
+      }
 
       const numbers = cleaned.slice(0, -1);
       const dv = cleaned.slice(-1);
@@ -68,7 +74,7 @@ export const useRutValidator = () => {
           return cleaned;
       }
     },
-    [cleanRut],
+    [cleanRut]
   );
 
   // Función para validar RUT
@@ -143,7 +149,7 @@ export const useRutValidator = () => {
       setValidation(result);
       return result;
     },
-    [cleanRut, calculateDigitoVerificador, formatRut],
+    [cleanRut, calculateDigitoVerificador, formatRut]
   );
 
   // Función para generar RUTs válidos
@@ -175,7 +181,7 @@ export const useRutValidator = () => {
         }, 300);
       });
     },
-    [calculateDigitoVerificador, formatRut],
+    [calculateDigitoVerificador, formatRut]
   );
 
   // Función para limpiar resultados
@@ -199,7 +205,7 @@ export const useRutValidator = () => {
 // Hook para consulta y cálculo de UF
 export const useUfConsultor = () => {
   const [consultaResult, setConsultaResult] = useState<UfConsultaResult | null>(
-    null,
+    null
   );
   const [calculatorState, setCalculatorState] = useState<CalculatorState>({
     loading: false,
@@ -221,7 +227,7 @@ export const useUfConsultor = () => {
         const dayOfYear = Math.floor(
           (dateObj.getTime() -
             new Date(dateObj.getFullYear(), 0, 0).getTime()) /
-            86400000,
+            86400000
         );
         const variation =
           Math.sin((dayOfYear / 365) * 2 * Math.PI) * 500 +
@@ -257,14 +263,14 @@ export const useUfConsultor = () => {
         setIsLoading(false);
       }
     },
-    [],
+    []
   );
 
   // Función para calcular conversiones UF
   const calcularConversionUF = useCallback(
     (
       inputs: UfCalculatorInputs,
-      type: 'toPesos' | 'toUf',
+      type: 'toPesos' | 'toUf'
     ): Promise<UfCalculatorResult> => {
       setCalculatorState(prev => ({ ...prev, loading: true, error: null }));
 
@@ -319,7 +325,7 @@ export const useUfConsultor = () => {
         }, 300);
       });
     },
-    [consultaResult],
+    [consultaResult]
   );
 
   return {
@@ -415,14 +421,14 @@ export const useUtmConsultor = () => {
         setIsLoading(false);
       }
     },
-    [],
+    []
   );
 
   // Función para calcular conversiones UTM
   const calcularConversionUTM = useCallback(
     (
       inputs: UtmCalculatorInputs,
-      type: 'toPesos' | 'toUtm',
+      type: 'toPesos' | 'toUtm'
     ): Promise<UtmCalculatorResult> => {
       setCalculatorState(prev => ({ ...prev, loading: true, error: null }));
 
@@ -479,7 +485,7 @@ export const useUtmConsultor = () => {
         }, 300);
       });
     },
-    [consultaResult],
+    [consultaResult]
   );
 
   return {
@@ -530,7 +536,9 @@ export const usePeriodosRapidos = () => {
           break;
         case 'previous':
           targetMes = targetMes === 1 ? 12 : targetMes - 1;
-          if (targetMes === 12) {targetAno--;}
+          if (targetMes === 12) {
+            targetAno--;
+          }
           break;
         case 'year_ago':
           targetAno--;
@@ -541,7 +549,7 @@ export const usePeriodosRapidos = () => {
 
       return { mes: targetMes, ano: targetAno };
     },
-    [],
+    []
   );
 
   return {
@@ -561,21 +569,17 @@ export const useNumberFormatter = () => {
   }, []);
 
   const formatUF = useCallback((amount: number): string => {
-    return (
-      `${amount.toLocaleString('es-CL', {
-        minimumFractionDigits: 4,
-        maximumFractionDigits: 4,
-      })} UF`
-    );
+    return `${amount.toLocaleString('es-CL', {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    })} UF`;
   }, []);
 
   const formatUTM = useCallback((amount: number): string => {
-    return (
-      `${amount.toLocaleString('es-CL', {
-        minimumFractionDigits: 4,
-        maximumFractionDigits: 4,
-      })} UTM`
-    );
+    return `${amount.toLocaleString('es-CL', {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    })} UTM`;
   }, []);
 
   const formatNumber = useCallback(
@@ -585,7 +589,7 @@ export const useNumberFormatter = () => {
         maximumFractionDigits: decimals,
       });
     },
-    [],
+    []
   );
 
   return {
@@ -611,12 +615,12 @@ export const useClipboard = () => {
 
         return true;
       } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error al copiar al portapapeles:', error);
+        // eslint-disable-next-line no-console
+        console.error('Error al copiar al portapapeles:', error);
         return false;
       }
     },
-    [],
+    []
   );
 
   const clearCopied = useCallback(() => {
@@ -646,7 +650,7 @@ export const useDateUtils = () => {
         day: 'numeric',
       });
     },
-    [],
+    []
   );
 
   const getCurrentMonth = useCallback((): number => {
@@ -670,4 +674,3 @@ export const useDateUtils = () => {
     isValidDate,
   };
 };
-

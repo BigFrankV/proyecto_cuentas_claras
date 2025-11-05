@@ -102,7 +102,9 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
   };
 
   const handlePayment = async () => {
-    if (!validateForm()) {return;}
+    if (!validateForm()) {
+      return;
+    }
 
     setProcessing(true);
     setError('');
@@ -190,8 +192,8 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
           onError?.('Tiempo de espera agotado');
         }
       } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error polling transaction status:', error);
+        // eslint-disable-next-line no-console
+        console.error('Error polling transaction status:', error);
         attempts++;
         if (attempts < maxAttempts) {
           setTimeout(poll, 10000);
@@ -423,4 +425,3 @@ console.error('Error polling transaction status:', error);
 };
 
 export default PaymentComponent;
-

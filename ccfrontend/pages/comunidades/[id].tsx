@@ -22,7 +22,7 @@ export default function ComunidadDetallePage() {
   const [activeTab, setActiveTab] = useState<string>('resumen');
   const [isLoading, setIsLoading] = useState(true);
   const [loadingData, setLoadingData] = useState<{ [key: string]: boolean }>(
-    {},
+    {}
   );
   const [error, setError] = useState<string | null>(null);
   const [tabErrors, setTabErrors] = useState<{ [key: string]: string }>({});
@@ -51,7 +51,7 @@ export default function ComunidadDetallePage() {
       // Cargar amenidades para la pestaña resumen por defecto
       await loadAmenidades();
     } catch (error: any) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading comunidad:', error);
       const errorMessage =
         error?.response?.data?.message ||
@@ -64,7 +64,9 @@ export default function ComunidadDetallePage() {
   };
 
   const loadTabData = async (tab: string) => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
 
     switch (tab) {
       case 'resumen':
@@ -86,19 +88,21 @@ export default function ComunidadDetallePage() {
   };
 
   const loadAmenidades = async () => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
 
     setLoadingData(prev => ({ ...prev, amenidades: true }));
     setTabErrors(prev => ({ ...prev, amenidades: '' }));
     try {
       const data = await comunidadesService.getAmenidadesByComunidad(
-        Number(id),
+        Number(id)
       );
       // eslint-disable-next-line no-console
       console.log('Amenidades cargadas:', data);
       setAmenidades(data);
     } catch (error: any) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading amenidades:', error);
       const errorMessage =
         error?.response?.data?.message ||
@@ -112,7 +116,9 @@ export default function ComunidadDetallePage() {
   };
 
   const loadEdificios = async () => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
 
     setLoadingData(prev => ({ ...prev, edificios: true }));
     setTabErrors(prev => ({ ...prev, edificios: '' }));
@@ -122,7 +128,7 @@ export default function ComunidadDetallePage() {
       console.log('Edificios cargados:', data);
       setEdificios(data);
     } catch (error: any) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading edificios:', error);
       const errorMessage =
         error?.response?.data?.message ||
@@ -136,18 +142,20 @@ export default function ComunidadDetallePage() {
   };
 
   const loadResidentes = async () => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
 
     setLoadingData(prev => ({ ...prev, residentes: true }));
     try {
       const data = await comunidadesService.getResidentesByComunidad(
-        Number(id),
+        Number(id)
       );
       // eslint-disable-next-line no-console
       console.log('Residentes cargados:', data);
       setResidentes(data);
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading residentes:', error);
       setResidentes([]);
     } finally {
@@ -156,12 +164,14 @@ export default function ComunidadDetallePage() {
   };
 
   const loadEstadisticas = async () => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
 
     setLoadingData(prev => ({ ...prev, estadisticas: true }));
     try {
       const data = await comunidadesService.getEstadisticasByComunidad(
-        Number(id),
+        Number(id)
       );
       // eslint-disable-next-line no-console
       console.log('Estadísticas cargadas:', data);
@@ -169,13 +179,13 @@ export default function ComunidadDetallePage() {
 
       // También cargar flujo de caja para el gráfico
       const flujoData = await comunidadesService.getFlujoCajaByComunidad(
-        Number(id),
+        Number(id)
       );
       // eslint-disable-next-line no-console
       console.log('Flujo de caja cargado:', flujoData);
       setFlujoCaja(flujoData);
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading estadisticas:', error);
       setEstadisticas(null);
       setFlujoCaja([]);
@@ -185,18 +195,20 @@ export default function ComunidadDetallePage() {
   };
 
   const loadDocumentos = async () => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
 
     setLoadingData(prev => ({ ...prev, documentos: true }));
     try {
       const data = await comunidadesService.getDocumentosByComunidad(
-        Number(id),
+        Number(id)
       );
       // eslint-disable-next-line no-console
       console.log('Documentos cargados:', data);
       setDocumentos(data);
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading documentos:', error);
       setDocumentos([]);
     } finally {
@@ -216,7 +228,9 @@ export default function ComunidadDetallePage() {
 
   const formatFileSize = (bytes: number) => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    if (bytes === 0) {return '0 Bytes';}
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return `${Math.round((bytes / Math.pow(1024, i)) * 100) / 100} ${sizes[i]}`;
   };
@@ -418,7 +432,7 @@ export default function ComunidadDetallePage() {
                   <div className='stat-content'>
                     <div className='stat-value text-warning'>
                       {comunidadesService.formatCurrency(
-                        comunidad.saldoPendiente,
+                        comunidad.saldoPendiente
                       )}
                     </div>
                     <div className='stat-label'>Saldo Pendiente</div>
@@ -665,7 +679,7 @@ export default function ComunidadDetallePage() {
                                 <span className='text-primary'>
                                   Creado:{' '}
                                   {new Date(
-                                    edificio.fechaCreacion,
+                                    edificio.fechaCreacion
                                   ).toLocaleDateString()}
                                 </span>
                               </small>
@@ -931,7 +945,7 @@ export default function ComunidadDetallePage() {
                     <div className='stat-value text-success'>
                       {estadisticas
                         ? comunidadesService.formatCurrency(
-                            estadisticas.totalIngresos || 0,
+                            estadisticas.totalIngresos || 0
                           )
                         : 'Cargando...'}
                     </div>
@@ -951,7 +965,7 @@ export default function ComunidadDetallePage() {
                     <div className='stat-value text-primary'>
                       {estadisticas
                         ? comunidadesService.formatCurrency(
-                            estadisticas.ingresosPagados || 0,
+                            estadisticas.ingresosPagados || 0
                           )
                         : 'Cargando...'}
                     </div>
@@ -969,7 +983,7 @@ export default function ComunidadDetallePage() {
                     <div className='stat-value text-warning'>
                       {estadisticas
                         ? comunidadesService.formatCurrency(
-                            estadisticas.ingresosPendientes || 0,
+                            estadisticas.ingresosPendientes || 0
                           )
                         : 'Cargando...'}
                     </div>
@@ -991,7 +1005,7 @@ export default function ComunidadDetallePage() {
                         ? comunidadesService.formatCurrency(
                             (estadisticas.serviciosBasicos || 0) +
                               (estadisticas.mantenimiento || 0) +
-                              (estadisticas.administracion || 0),
+                              (estadisticas.administracion || 0)
                           )
                         : 'Cargando...'}
                     </div>
@@ -1044,7 +1058,7 @@ export default function ComunidadDetallePage() {
                           <span>Ingresos Totales:</span>
                           <strong className='text-success'>
                             {comunidadesService.formatCurrency(
-                              estadisticas.totalIngresos || 0,
+                              estadisticas.totalIngresos || 0
                             )}
                           </strong>
                         </div>
@@ -1052,7 +1066,7 @@ export default function ComunidadDetallePage() {
                           <span>Pagados:</span>
                           <strong className='text-primary'>
                             {comunidadesService.formatCurrency(
-                              estadisticas.ingresosPagados || 0,
+                              estadisticas.ingresosPagados || 0
                             )}
                           </strong>
                         </div>
@@ -1060,7 +1074,7 @@ export default function ComunidadDetallePage() {
                           <span>Pendientes:</span>
                           <strong className='text-warning'>
                             {comunidadesService.formatCurrency(
-                              estadisticas.ingresosPendientes || 0,
+                              estadisticas.ingresosPendientes || 0
                             )}
                           </strong>
                         </div>
@@ -1069,7 +1083,7 @@ export default function ComunidadDetallePage() {
                           <span>Servicios Básicos:</span>
                           <strong className='text-danger'>
                             {comunidadesService.formatCurrency(
-                              estadisticas.serviciosBasicos || 0,
+                              estadisticas.serviciosBasicos || 0
                             )}
                           </strong>
                         </div>
@@ -1077,7 +1091,7 @@ export default function ComunidadDetallePage() {
                           <span>Mantenimiento:</span>
                           <strong className='text-danger'>
                             {comunidadesService.formatCurrency(
-                              estadisticas.mantenimiento || 0,
+                              estadisticas.mantenimiento || 0
                             )}
                           </strong>
                         </div>
@@ -1085,7 +1099,7 @@ export default function ComunidadDetallePage() {
                           <span>Administración:</span>
                           <strong className='text-danger'>
                             {comunidadesService.formatCurrency(
-                              estadisticas.administracion || 0,
+                              estadisticas.administracion || 0
                             )}
                           </strong>
                         </div>
@@ -1109,7 +1123,7 @@ export default function ComunidadDetallePage() {
                               (estadisticas.totalIngresos || 0) -
                                 ((estadisticas.serviciosBasicos || 0) +
                                   (estadisticas.mantenimiento || 0) +
-                                  (estadisticas.administracion || 0)),
+                                  (estadisticas.administracion || 0))
                             )}
                           </strong>
                         </div>
@@ -1185,7 +1199,7 @@ export default function ComunidadDetallePage() {
                                 </span>{' '}
                                 •
                                 {new Date(
-                                  documento.fechaSubida,
+                                  documento.fechaSubida
                                 ).toLocaleDateString()}
                               </small>
                             </div>

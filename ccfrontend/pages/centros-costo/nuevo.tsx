@@ -125,8 +125,8 @@ export default function CentroCostoNuevo() {
       alert('Centro de costo creado exitosamente');
       router.push('/centros-costo');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error creating cost center:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error creating cost center:', error);
       alert('Error al crear el centro de costo');
     } finally {
       setIsSubmitting(false);
@@ -134,7 +134,7 @@ console.error('Error creating cost center:', error);
   };
 
   const selectedDepartment = departmentOptions.find(
-    d => d.value === formData.department,
+    d => d.value === formData.department
   );
 
   return (
@@ -335,7 +335,7 @@ console.error('Error creating cost center:', error);
                                   </span>
                                 </Button>
                               </Badge>
-                            ),
+                            )
                           )}
                         </div>
                       </div>
@@ -395,7 +395,7 @@ console.error('Error creating cost center:', error);
                             {formData.budget
                               ? (parseInt(formData.budget) / 12).toLocaleString(
                                   undefined,
-                                  { maximumFractionDigits: 0 },
+                                  { maximumFractionDigits: 0 }
                                 )
                               : '0'}
                           </small>
@@ -567,4 +567,3 @@ console.error('Error creating cost center:', error);
     </ProtectedRoute>
   );
 }
-

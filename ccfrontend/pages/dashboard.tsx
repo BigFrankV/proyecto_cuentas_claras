@@ -23,7 +23,7 @@ export default function Dashboard() {
 
   // Estados para datos dinámicos
   const [selectedComunidad, setSelectedComunidad] = useState<number | null>(
-    null,
+    null
   );
   const [comunidades, setComunidades] = useState<any[]>([]);
   const [searchComunidad, setSearchComunidad] = useState('');
@@ -44,14 +44,14 @@ export default function Dashboard() {
         // eslint-disable-next-line no-console`n        console.log('📊 [Dashboard] Usuario actual:', user);
         console.log(
           '📊 [Dashboard] Token:',
-          localStorage.getItem('auth_token'),
+          localStorage.getItem('auth_token')
         );
 
         // ✅ NUEVA VERIFICACIÓN: Si no hay usuario, no continuar
         if (!user) {
-// eslint-disable-next-line no-console
+          // eslint-disable-next-line no-console
           console.log(
-            '❌ [Dashboard] Sin usuario autenticado, abortando carga de datos',
+            '❌ [Dashboard] Sin usuario autenticado, abortando carga de datos'
           );
           setIsLoading(false);
           return;
@@ -64,10 +64,10 @@ export default function Dashboard() {
           return;
         }
 
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.log(
           '📊 [Dashboard] Comunidades recibidas:',
-          comunidadesData.length,
+          comunidadesData.length
         );
         setComunidades(comunidadesData);
 
@@ -75,23 +75,23 @@ export default function Dashboard() {
         if (comunidadesData.length > 0) {
           const primeraComunidad = comunidadesData[0];
           if (primeraComunidad) {
-// eslint-disable-next-line no-console
+            // eslint-disable-next-line no-console
             console.log(
               '📊 [Dashboard] Estableciendo primera comunidad:',
-              primeraComunidad.id,
+              primeraComunidad.id
             );
             setSelectedComunidad(primeraComunidad.id);
           }
         } else {
           // eslint-disable-next-line no-console
 
-// eslint-disable-next-line no-console
-console.warn('📊 [Dashboard] ⚠️ No hay comunidades disponibles');
+          // eslint-disable-next-line no-console
+          console.warn('📊 [Dashboard] ⚠️ No hay comunidades disponibles');
         }
       } catch (err) {
         if (isMounted) {
-// eslint-disable-next-line no-console
-console.error('❌ [Dashboard] Error loading initial data:', err);
+          // eslint-disable-next-line no-console
+          console.error('❌ [Dashboard] Error loading initial data:', err);
           setError('Error al cargar los datos iniciales');
         }
       } finally {
@@ -115,8 +115,8 @@ console.error('❌ [Dashboard] Error loading initial data:', err);
       const data = await dashboardService.getResumenCompleto(comunidadId);
       setDashboardData(data);
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error loading dashboard data:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error loading dashboard data:', err);
       setError('Error al cargar los datos del dashboard');
     }
   };
@@ -304,7 +304,7 @@ console.error('Error loading dashboard data:', err);
                       .filter(c =>
                         c.nombre
                           .toLowerCase()
-                          .includes(searchComunidad.toLowerCase()),
+                          .includes(searchComunidad.toLowerCase())
                       )
                       .map(comunidad => (
                         <button
@@ -347,7 +347,7 @@ console.error('Error loading dashboard data:', err);
                     {comunidades.filter(c =>
                       c.nombre
                         .toLowerCase()
-                        .includes(searchComunidad.toLowerCase()),
+                        .includes(searchComunidad.toLowerCase())
                     ).length === 0 && (
                       <div className='px-3 py-2 text-muted text-center'>
                         No se encontraron comunidades
@@ -439,7 +439,7 @@ console.error('Error loading dashboard data:', err);
                       </span>
                       <span>
                         {Math.abs(
-                          dashboardData?.kpis?.saldoTotalChange || 0,
+                          dashboardData?.kpis?.saldoTotalChange || 0
                         ).toFixed(1)}
                         % vs mes anterior
                       </span>
@@ -486,7 +486,7 @@ console.error('Error loading dashboard data:', err);
                       </span>
                       <span>
                         {Math.abs(
-                          dashboardData?.kpis?.ingresosMesChange || 0,
+                          dashboardData?.kpis?.ingresosMesChange || 0
                         ).toFixed(1)}
                         % vs mes anterior
                       </span>
@@ -528,7 +528,7 @@ console.error('Error loading dashboard data:', err);
                       </span>
                       <span>
                         {Math.abs(
-                          dashboardData?.kpis?.gastosMesChange || 0,
+                          dashboardData?.kpis?.gastosMesChange || 0
                         ).toFixed(1)}
                         % vs mes anterior
                       </span>
@@ -573,7 +573,7 @@ console.error('Error loading dashboard data:', err);
                       </span>
                       <span>
                         {Math.abs(
-                          dashboardData?.kpis?.tasaMorosidadChange || 0,
+                          dashboardData?.kpis?.tasaMorosidadChange || 0
                         ).toFixed(1)}
                         % vs mes anterior
                       </span>
@@ -730,7 +730,7 @@ console.error('Error loading dashboard data:', err);
                           </div>
                         </div>
                       </div>
-                    ),
+                    )
                   ) || (
                     <div className='list-group-item text-center text-muted'>
                       No hay actividades próximas
@@ -812,4 +812,3 @@ console.error('Error loading dashboard data:', err);
     </ProtectedRoute>
   );
 }
-

@@ -106,12 +106,12 @@ export default function AmenidadesPage(): JSX.Element {
   const calculateStats = useCallback(() => {
     const totalAmenidades = amenidades.length;
     const amenidadesActivas = amenidades.filter(
-      a => a.requiere_aprobacion,
+      a => a.requiere_aprobacion
     ).length;
     const reservasMesActual = reservas.filter(
       r =>
         new Date(r.inicio).getMonth() === new Date().getMonth() &&
-        new Date(r.inicio).getFullYear() === new Date().getFullYear(),
+        new Date(r.inicio).getFullYear() === new Date().getFullYear()
     ).length;
 
     const ingresosMesActual = amenidades.reduce((total, amenidad) => {
@@ -123,7 +123,7 @@ export default function AmenidadesPage(): JSX.Element {
         ? amenidades.reduce((total, amenidad) => {
             // Calcular ocupación basada en reservas vs capacidad
             const reservasAmenidad = reservas.filter(
-              r => r.amenidad_id === amenidad.id,
+              r => r.amenidad_id === amenidad.id
             ).length;
             const ocupacion = amenidad.capacidad
               ? (reservasAmenidad / amenidad.capacidad) * 100
@@ -351,19 +351,13 @@ export default function AmenidadesPage(): JSX.Element {
                         </button>
                       </li>
                       <li className='page-item'>
-                        <button className='page-link'>
-                          2
-                        </button>
+                        <button className='page-link'>2</button>
                       </li>
                       <li className='page-item'>
-                        <button className='page-link'>
-                          3
-                        </button>
+                        <button className='page-link'>3</button>
                       </li>
                       <li className='page-item'>
-                        <button className='page-link'>
-                          »
-                        </button>
+                        <button className='page-link'>»</button>
                       </li>
                     </ul>
                   </nav>
@@ -376,4 +370,3 @@ export default function AmenidadesPage(): JSX.Element {
     </div>
   );
 }
-

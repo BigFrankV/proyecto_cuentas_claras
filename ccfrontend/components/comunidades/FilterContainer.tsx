@@ -36,7 +36,7 @@ const FilterContainer: React.FC<FilterContainerProps> = ({
   };
 
   const tienesFiltrosActivos = Object.values(filtros).some(
-    value => value !== '',
+    value => value !== ''
   );
 
   return (
@@ -187,4 +187,3 @@ const FilterContainer: React.FC<FilterContainerProps> = ({
 };
 
 export default FilterContainer;
-

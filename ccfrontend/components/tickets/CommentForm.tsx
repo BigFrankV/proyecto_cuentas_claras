@@ -53,8 +53,8 @@ export const CommentForm: React.FC<CommentFormProps> = ({
       setIsInternal(false);
       setAttachments([]);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error submitting comment:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error submitting comment:', error);
     }
   };
 
@@ -86,7 +86,9 @@ console.error('Error submitting comment:', error);
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) {return '0 Bytes';}
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -314,4 +316,3 @@ console.error('Error submitting comment:', error);
 };
 
 export default CommentForm;
-

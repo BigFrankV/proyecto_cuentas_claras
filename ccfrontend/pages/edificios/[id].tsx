@@ -46,7 +46,7 @@ export default function EdificioDetalle() {
           fetchTorres();
           fetchUnidades();
         } catch (error) {
-// eslint-disable-next-line no-console
+          // eslint-disable-next-line no-console
           console.error('Error cargando edificio:', error);
         }
       }
@@ -147,7 +147,7 @@ export default function EdificioDetalle() {
         const confirmDelete = window.confirm(
           `El edificio "${edificio.nombre}" tiene ${dependencies.torres} torres y ${dependencies.unidades} unidades relacionadas.\n\n` +
             'Eliminar este edificio también eliminará toda la información relacionada.\n\n' +
-            '¿Estás seguro de que deseas continuar?',
+            '¿Estás seguro de que deseas continuar?'
         );
 
         if (!confirmDelete) {
@@ -160,7 +160,7 @@ export default function EdificioDetalle() {
       setShowDeleteModal(false);
       router.push('/edificios');
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error eliminando edificio:', error);
       // Aquí podrías mostrar un mensaje de error al usuario
     }
@@ -370,7 +370,7 @@ export default function EdificioDetalle() {
                             <div className='detail-value'>
                               {
                                 TIPOS_EDIFICIO.find(
-                                  t => t.value === edificio.tipo,
+                                  t => t.value === edificio.tipo
                                 )?.label
                               }
                             </div>
@@ -779,14 +779,14 @@ export default function EdificioDetalle() {
                               <i
                                 className={`material-icons me-2 ${
                                   (edificio.servicios || []).includes(
-                                    servicio.value,
+                                    servicio.value
                                   )
                                     ? 'text-success'
                                     : 'text-muted'
                                 }`}
                               >
                                 {(edificio.servicios || []).includes(
-                                  servicio.value,
+                                  servicio.value
                                 )
                                   ? 'check_circle'
                                   : 'radio_button_unchecked'}
@@ -794,7 +794,7 @@ export default function EdificioDetalle() {
                               <span
                                 className={
                                   (edificio.servicios || []).includes(
-                                    servicio.value,
+                                    servicio.value
                                   )
                                     ? 'fw-semibold'
                                     : 'text-muted'
@@ -830,14 +830,14 @@ export default function EdificioDetalle() {
                               <i
                                 className={`material-icons me-2 ${
                                   (edificio.amenidades || []).includes(
-                                    amenidad.value,
+                                    amenidad.value
                                   )
                                     ? 'text-success'
                                     : 'text-muted'
                                 }`}
                               >
                                 {(edificio.amenidades || []).includes(
-                                  amenidad.value,
+                                  amenidad.value
                                 )
                                   ? 'check_circle'
                                   : 'radio_button_unchecked'}
@@ -845,7 +845,7 @@ export default function EdificioDetalle() {
                               <span
                                 className={
                                   (edificio.amenidades || []).includes(
-                                    amenidad.value,
+                                    amenidad.value
                                   )
                                     ? 'fw-semibold'
                                     : 'text-muted'

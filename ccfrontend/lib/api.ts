@@ -33,17 +33,17 @@ apiClient.interceptors.request.use(
       // eslint-disable-next-line no-console
       // eslint-disable-next-line no-console
 
-// eslint-disable-next-line no-console
-console.warn('[API Request] No hay token en localStorage');
+      // eslint-disable-next-line no-console
+      console.warn('[API Request] No hay token en localStorage');
     }
 
     return config;
   },
   error => {
     // eslint-disable-next-line no-console
-console.error('[API Request Error]:', error);
+    console.error('[API Request Error]:', error);
     return Promise.reject(error);
-  },
+  }
 );
 
 // Interceptor para manejar respuestas y errores
@@ -90,9 +90,8 @@ apiClient.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  },
+  }
 );
 
 export default apiClient;
 export { API_BASE_URL };
-

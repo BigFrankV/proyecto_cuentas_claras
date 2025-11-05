@@ -74,7 +74,9 @@ export function usePermissions() {
 
   // Determinar el rol del usuario
   const getUserRole = (): UserRole => {
-    if (!user) {return UserRole.USER;}
+    if (!user) {
+      return UserRole.USER;
+    }
 
     // Verificar si es superadmin desde el token
     if (user.is_superadmin) {
@@ -85,11 +87,15 @@ export function usePermissions() {
     if (user.roles && user.roles.length > 0) {
       const roles = user.roles.map((r: any) => r.toLowerCase()); // ✅ AGREGAR tipo any
 
-      if (roles.includes('admin')) {return UserRole.ADMIN;}
-      if (roles.includes('manager') || roles.includes('comite'))
-        {return UserRole.MANAGER;}
-      if (roles.includes('propietario') || roles.includes('residente'))
-        {return UserRole.USER;}
+      if (roles.includes('admin')) {
+        return UserRole.ADMIN;
+      }
+      if (roles.includes('manager') || roles.includes('comite')) {
+        return UserRole.MANAGER;
+      }
+      if (roles.includes('propietario') || roles.includes('residente')) {
+        return UserRole.USER;
+      }
     }
 
     // Patrick es superuser por defecto (fallback para compatibilidad)
@@ -110,15 +116,19 @@ export function usePermissions() {
   // ✅ NUEVO: Verificar acceso a comunidad específica
   const hasAccessToCommunity = (communityId?: number): boolean => {
     // Superadmin ve todas las comunidades
-    if (user?.is_superadmin) {return true;}
+    if (user?.is_superadmin) {
+      return true;
+    }
 
     // Si no hay comunidad específica, permitir
-    if (!communityId) {return true;}
+    if (!communityId) {
+      return true;
+    }
 
     // Verificar si el usuario pertenece a esa comunidad
     if (user?.memberships && Array.isArray(user.memberships)) {
       return user.memberships.some(
-        (membership: any) => membership.comunidadId === communityId,
+        (membership: any) => membership.comunidadId === communityId
       );
     }
 
@@ -131,22 +141,26 @@ export function usePermissions() {
     comunidadId: number;
     rol: string;
   }> => {
-    if (user?.is_superadmin) {return [];} // Superadmin ve todas
+    if (user?.is_superadmin) {
+      return [];
+    } // Superadmin ve todas
     return user?.memberships || [];
   };
 
   // ✅ NUEVO: Verificar si tiene un rol específico en una comunidad
   const hasRoleInCommunity = (
     communityId: number,
-    roleToCheck: string,
+    roleToCheck: string
   ): boolean => {
-    if (user?.is_superadmin) {return true;}
+    if (user?.is_superadmin) {
+      return true;
+    }
 
     return (
       user?.memberships?.some(
         (membership: any) =>
           membership.comunidadId === communityId &&
-          membership.rol.toLowerCase() === roleToCheck.toLowerCase(),
+          membership.rol.toLowerCase() === roleToCheck.toLowerCase()
       ) || false
     );
   };
@@ -154,19 +168,25 @@ export function usePermissions() {
   // ✅ MODIFICADO: Verificar permisos con contexto de comunidad
   const hasPermission = (
     permission: Permission,
-    communityId?: number,
+    communityId?: number
   ): boolean => {
     const rolePermissions = ROLE_PERMISSIONS[currentRole] || [];
     const hasBasePermission = rolePermissions.includes(permission);
 
     // Si no tiene el permiso base, denegar
-    if (!hasBasePermission) {return false;}
+    if (!hasBasePermission) {
+      return false;
+    }
 
     // Si es superadmin, permitir siempre
-    if (user?.is_superadmin) {return true;}
+    if (user?.is_superadmin) {
+      return true;
+    }
 
     // Si no se especifica comunidad, verificar solo el permiso base
-    if (!communityId) {return true;}
+    if (!communityId) {
+      return true;
+    }
 
     // Verificar acceso a la comunidad específica
     return hasAccessToCommunity(communityId);
@@ -267,4 +287,3 @@ export function PermissionGuard({
 
   return hasAccess ? <>{children}</> : <>{fallback}</>;
 }
-

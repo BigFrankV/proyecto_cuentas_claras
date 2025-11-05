@@ -9,15 +9,15 @@ import { ProtectedRoute } from '@/lib/useAuth'; // Agrega si no está
 import { usePermissions } from '@/lib/usePermissions';
 
 const MultasListadoPage: React.FC = () => {
-// eslint-disable-next-line no-console
-console.log('🚀 MultasListadoPage - Componente montado'); // ✅ Agrega esto
+  // eslint-disable-next-line no-console
+  console.log('🚀 MultasListadoPage - Componente montado'); // ✅ Agrega esto
 
   const router = useRouter();
   const { user } = useAuth();
   const { canManageFinances } = usePermissions();
 
-// eslint-disable-next-line no-console
-console.log('👤 Usuario en MultasListadoPage:', user); // ✅ Agrega esto
+  // eslint-disable-next-line no-console
+  console.log('👤 Usuario en MultasListadoPage:', user); // ✅ Agrega esto
 
   const [multas, setMultas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,8 +32,8 @@ console.log('👤 Usuario en MultasListadoPage:', user); // ✅ Agrega esto
   const [totalPaginas, setTotalPaginas] = useState(1);
 
   useEffect(() => {
-// eslint-disable-next-line no-console
-console.log('🔄 useEffect ejecutado en MultasListadoPage'); // ✅ Agrega esto
+    // eslint-disable-next-line no-console
+    console.log('🔄 useEffect ejecutado en MultasListadoPage'); // ✅ Agrega esto
     cargarMultas();
   }, [filtros, pagina]);
 
@@ -48,8 +48,8 @@ console.log('🔄 useEffect ejecutado en MultasListadoPage'); // ✅ Agrega esto
       setTotalPaginas(response.totalPaginas || 1);
     } catch (err) {
       setError('Error al cargar multas');
-// eslint-disable-next-line no-console
-console.error('Error en cargarMultas:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error en cargarMultas:', err);
     } finally {
       setLoading(false);
     }
@@ -83,23 +83,23 @@ console.error('Error en cargarMultas:', err);
     try {
       if (action === 'delete') {
         await Promise.all(
-          selectedFines.map(id => multasService.deleteMulta(Number(id))),
+          selectedFines.map(id => multasService.deleteMulta(Number(id)))
         );
         cargarMultas();
       } else if (action === 'cancel') {
         // ✅ Agrega acción para anular
         await Promise.all(
           selectedFines.map(id =>
-            multasService.anularMulta(Number(id), 'Anulada masivamente'),
-          ),
+            multasService.anularMulta(Number(id), 'Anulada masivamente')
+          )
         );
         cargarMultas();
       }
       // ✅ Agrega más si es necesario
     } catch (err) {
       setError('Error en acción masiva');
-// eslint-disable-next-line no-console
-console.error('Error en handleBulkAction:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error en handleBulkAction:', err);
     }
   };
 
@@ -639,4 +639,3 @@ console.error('Error en handleBulkAction:', err);
 };
 
 export default MultasListadoPage;
-

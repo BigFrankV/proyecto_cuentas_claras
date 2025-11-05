@@ -17,7 +17,7 @@ const MembresiasListado = () => {
     'todos' | 'activo' | 'inactivo'
   >('todos');
   const [comunidadFilter, setComunidadFilter] = useState<number | 'todos'>(
-    'todos',
+    'todos'
   );
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,8 +48,8 @@ const MembresiasListado = () => {
       setRoles(rolesData);
       setComunidades(comunidadesData);
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error al cargar catálogos:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error al cargar catálogos:', err);
     }
   };
 
@@ -72,8 +72,8 @@ console.error('Error al cargar catálogos:', err);
       setMembresias(response.data);
       setTotal(response.meta.total);
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error al cargar membresías:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error al cargar membresías:', err);
     }
   };
 
@@ -91,10 +91,10 @@ console.error('Error al cargar membresías:', err);
         m.hasta &&
         new Date(m.hasta) > now &&
         (new Date(m.hasta).getTime() - now.getTime()) / (1000 * 60 * 60 * 24) <=
-          30,
+          30
     ).length;
     const vencidas = membresias.filter(
-      m => m.hasta && new Date(m.hasta) < now,
+      m => m.hasta && new Date(m.hasta) < now
     ).length;
 
     return { total, activas, vencenEsteMes, vencidas };
@@ -120,14 +120,22 @@ console.error('Error al cargar membresías:', err);
   };
 
   const getProgressColor = (activo: boolean, hasta: string | null) => {
-    if (!activo) {return 'bg-secondary';}
-    if (!hasta) {return 'bg-success';}
+    if (!activo) {
+      return 'bg-secondary';
+    }
+    if (!hasta) {
+      return 'bg-success';
+    }
     const now = new Date();
     const vencimiento = new Date(hasta);
     const diasRestantes =
       (vencimiento.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-    if (diasRestantes < 0) {return 'bg-danger';}
-    if (diasRestantes <= 30) {return 'bg-warning';}
+    if (diasRestantes < 0) {
+      return 'bg-danger';
+    }
+    if (diasRestantes <= 30) {
+      return 'bg-warning';
+    }
     return 'bg-success';
   };
 
@@ -202,7 +210,7 @@ console.error('Error al cargar membresías:', err);
                         setNivelFilter(
                           e.target.value === 'todos'
                             ? 'todos'
-                            : parseInt(e.target.value),
+                            : parseInt(e.target.value)
                         )
                       }
                     >
@@ -220,7 +228,7 @@ console.error('Error al cargar membresías:', err);
                       value={estadoFilter}
                       onChange={e =>
                         setEstadoFilter(
-                          e.target.value as 'todos' | 'activo' | 'inactivo',
+                          e.target.value as 'todos' | 'activo' | 'inactivo'
                         )
                       }
                     >
@@ -237,7 +245,7 @@ console.error('Error al cargar membresías:', err);
                         setComunidadFilter(
                           e.target.value === 'todos'
                             ? 'todos'
-                            : parseInt(e.target.value),
+                            : parseInt(e.target.value)
                         )
                       }
                     >
@@ -453,7 +461,7 @@ console.error('Error al cargar membresías:', err);
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     backgroundColor: getAvatarColor(
-                                      membresia.rol_codigo,
+                                      membresia.rol_codigo
                                     ),
                                     color: '#fff',
                                     fontWeight: 'bold',
@@ -480,7 +488,7 @@ console.error('Error al cargar membresías:', err);
                             <td>
                               <span
                                 className={getTierBadgeClass(
-                                  membresia.rol_codigo,
+                                  membresia.rol_codigo
                                 )}
                               >
                                 {membresia.rol_nombre}
@@ -531,12 +539,12 @@ console.error('Error al cargar membresías:', err);
                                           Math.min(
                                             100,
                                             ((new Date(
-                                              membresia.hasta,
+                                              membresia.hasta
                                             ).getTime() -
                                               new Date().getTime()) /
                                               (1000 * 60 * 60 * 24 * 365)) *
-                                              100,
-                                          ),
+                                              100
+                                          )
                                         )
                                       : 100
                                   }
@@ -550,7 +558,7 @@ console.error('Error al cargar membresías:', err);
                                       const diasRestantes = Math.ceil(
                                         (new Date(membresia.hasta!).getTime() -
                                           new Date().getTime()) /
-                                          (1000 * 60 * 60 * 24),
+                                          (1000 * 60 * 60 * 24)
                                       );
                                       return diasRestantes > 0
                                         ? `Vence en ${diasRestantes} días`
@@ -667,7 +675,7 @@ console.error('Error al cargar membresías:', err);
                                   height: '48px',
                                   borderRadius: '50%',
                                   backgroundColor: getAvatarColor(
-                                    membresia.rol_codigo,
+                                    membresia.rol_codigo
                                   ),
                                   fontSize: '20px',
                                 }}
@@ -690,7 +698,7 @@ console.error('Error al cargar membresías:', err);
                             </div>
                             <span
                               className={getTierBadgeClass(
-                                membresia.rol_codigo,
+                                membresia.rol_codigo
                               )}
                             >
                               {membresia.rol_nombre}
@@ -725,7 +733,7 @@ console.error('Error al cargar membresías:', err);
                                       const diasRestantes = Math.ceil(
                                         (new Date(membresia.hasta!).getTime() -
                                           new Date().getTime()) /
-                                          (1000 * 60 * 60 * 24),
+                                          (1000 * 60 * 60 * 24)
                                       );
                                       return diasRestantes > 0
                                         ? `${diasRestantes} días restantes`
@@ -753,12 +761,12 @@ console.error('Error al cargar membresías:', err);
                                         Math.min(
                                           100,
                                           ((new Date(
-                                            membresia.hasta,
+                                            membresia.hasta
                                           ).getTime() -
                                             new Date().getTime()) /
                                             (1000 * 60 * 60 * 24 * 365)) *
-                                            100,
-                                        ),
+                                            100
+                                        )
                                       )
                                     : 100
                                 }
@@ -905,4 +913,3 @@ console.error('Error al cargar membresías:', err);
 };
 
 export default MembresiasListado;
-

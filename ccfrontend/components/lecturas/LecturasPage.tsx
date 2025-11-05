@@ -119,4 +119,3 @@ export default function LecturasPage(): React.ReactElement {
     </div>
   );
 }
-

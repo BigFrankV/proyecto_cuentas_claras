@@ -57,14 +57,14 @@ export default function ActivityTypeCard({
     <div
       className={`activity-type-card ${type} ${selected ? 'selected' : ''}`}
       onClick={() => onSelect(type)}
-      onKeyDown={(e) => {
+      onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           onSelect(type);
         }
       }}
       style={{ cursor: 'pointer' }}
-      role="button"
+      role='button'
       tabIndex={0}
     >
       <div
@@ -159,4 +159,3 @@ export default function ActivityTypeCard({
     </div>
   );
 }
-

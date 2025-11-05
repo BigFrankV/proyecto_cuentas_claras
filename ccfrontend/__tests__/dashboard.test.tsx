@@ -104,4 +104,3 @@ describe('Dashboard Page', () => {
     expect(screen.getByText('Pagos Recientes')).toBeInTheDocument();
   });
 });
-

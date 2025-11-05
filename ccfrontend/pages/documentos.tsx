@@ -133,7 +133,7 @@ export default function DocumentosListado() {
       doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.tags.some(tag =>
-        tag.toLowerCase().includes(searchTerm.toLowerCase()),
+        tag.toLowerCase().includes(searchTerm.toLowerCase())
       );
     const matchesCategory =
       selectedCategory === 'all' || doc.category === selectedCategory;
@@ -185,11 +185,11 @@ export default function DocumentosListado() {
       case 'delete':
         if (
           confirm(
-            `¿Estás seguro de que deseas eliminar ${selectedDocuments.length} documentos?`,
+            `¿Estás seguro de que deseas eliminar ${selectedDocuments.length} documentos?`
           )
         ) {
           setDocuments(prev =>
-            prev.filter(doc => !selectedDocuments.includes(doc.id)),
+            prev.filter(doc => !selectedDocuments.includes(doc.id))
           );
           setSelectedDocuments([]);
           alert('Documentos eliminados exitosamente');
@@ -197,7 +197,7 @@ export default function DocumentosListado() {
         break;
       case 'export':
         alert(
-          `Exportando información de ${selectedDocuments.length} documentos`,
+          `Exportando información de ${selectedDocuments.length} documentos`
         );
         break;
     }
@@ -590,7 +590,7 @@ export default function DocumentosListado() {
                                 ]);
                               } else {
                                 setSelectedDocuments(prev =>
-                                  prev.filter(id => id !== document.id),
+                                  prev.filter(id => id !== document.id)
                                 );
                               }
                             }}
@@ -656,7 +656,7 @@ export default function DocumentosListado() {
                                   onClick={() =>
                                     handleDocumentAction(
                                       'download',
-                                      document.id,
+                                      document.id
                                     )
                                   }
                                 >
@@ -730,4 +730,3 @@ export default function DocumentosListado() {
     </ProtectedRoute>
   );
 }
-

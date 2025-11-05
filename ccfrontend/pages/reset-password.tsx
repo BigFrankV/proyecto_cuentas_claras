@@ -34,7 +34,9 @@ export default function ResetPassword() {
       [name]: value,
     }));
     // Limpiar error cuando el usuario empiece a escribir
-    if (error) {setError('');}
+    if (error) {
+      setError('');
+    }
   };
 
   const togglePasswordVisibility = (field: 'password' | 'confirmPassword') => {
@@ -338,4 +340,3 @@ export default function ResetPassword() {
     </>
   );
 }
-

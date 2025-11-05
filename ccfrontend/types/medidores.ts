@@ -60,4 +60,3 @@ export interface MedidoresListResponse {
   data: Medidor[];
   pagination?: { total: number; limit: number; offset: number; pages: number };
 }
-

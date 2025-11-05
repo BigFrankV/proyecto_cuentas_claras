@@ -24,7 +24,7 @@ const handleApiError = (error: unknown) => {
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as { response?: { data?: { error?: string } } };
     throw new Error(
-      apiError.response?.data?.error || 'Error de conexión con el servidor',
+      apiError.response?.data?.error || 'Error de conexión con el servidor'
     );
   }
   throw new Error('Error de conexión con el servidor');
@@ -33,7 +33,7 @@ const handleApiError = (error: unknown) => {
 // Helper para hacer peticiones autenticadas
 const apiRequest = async (
   url: string,
-  options: Record<string, unknown> = {},
+  options: Record<string, unknown> = {}
 ) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
   const token =
@@ -57,7 +57,7 @@ const apiRequest = async (
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      errorData.error || `HTTP error! status: ${response.status}`,
+      errorData.error || `HTTP error! status: ${response.status}`
     );
   }
 
@@ -76,7 +76,7 @@ export const ticketsApi = {
   // Listar tickets con filtros avanzados
   getByComunidad: async (
     comunidadId: number,
-    filtros?: TicketFiltros,
+    filtros?: TicketFiltros
   ): Promise<Ticket[]> => {
     try {
       const queryParams = new URLSearchParams();
@@ -161,7 +161,7 @@ export const ticketsApi = {
             | 'urgente'
             | 'normal',
           dias_abiertos: ticket.dias_abiertos,
-        }),
+        })
       );
     } catch (error) {
       handleApiError(error);
@@ -171,11 +171,11 @@ export const ticketsApi = {
 
   // Estadísticas de tickets por comunidad
   getEstadisticasByComunidad: async (
-    comunidadId: number,
+    comunidadId: number
   ): Promise<TicketEstadisticas> => {
     try {
       const data = await apiRequest(
-        `/tickets/comunidad/${comunidadId}/estadisticas`,
+        `/tickets/comunidad/${comunidadId}/estadisticas`
       );
       return {
         comunidad: data.comunidad,
@@ -196,11 +196,11 @@ export const ticketsApi = {
 
   // Tickets próximos a vencer
   getProximosVencer: async (
-    comunidadId: number,
+    comunidadId: number
   ): Promise<TicketProximoVencer[]> => {
     try {
       const data = await apiRequest(
-        `/tickets/comunidad/${comunidadId}/proximos-vencer`,
+        `/tickets/comunidad/${comunidadId}/proximos-vencer`
       );
       return data.map(
         (ticket: {
@@ -227,7 +227,7 @@ export const ticketsApi = {
           urgencia: ticket.urgencia as 'alta' | 'media' | 'baja',
           prioridad: ticket.prioridad as 'alta' | 'media' | 'baja',
           categoria: ticket.categoria,
-        }),
+        })
       );
     } catch (error) {
       handleApiError(error);
@@ -343,7 +343,7 @@ export const ticketsApi = {
             | 'urgente'
             | 'normal',
           dias_abiertos: ticket.dias_abiertos,
-        }),
+        })
       );
     } catch (error) {
       handleApiError(error);
@@ -400,7 +400,7 @@ export const ticketsApi = {
           tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
           mas_antiguo: stat.mas_antiguo,
           mas_reciente: stat.mas_reciente,
-        }),
+        })
       );
     } catch (error) {
       handleApiError(error);
@@ -427,7 +427,7 @@ export const ticketsApi = {
           resueltos: stat.resueltos,
           porcentaje_resolucion_prioridad: stat.porcentaje_resolucion_prioridad,
           tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
-        }),
+        })
       );
     } catch (error) {
       handleApiError(error);
@@ -458,7 +458,7 @@ export const ticketsApi = {
           tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
           mas_antiguo: stat.mas_antiguo,
           mas_reciente: stat.mas_reciente,
-        }),
+        })
       );
     } catch (error) {
       handleApiError(error);
@@ -493,7 +493,7 @@ export const ticketsApi = {
           escalados: stat.escalados,
           porcentaje_resolucion: stat.porcentaje_resolucion,
           tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
-        }),
+        })
       );
     } catch (error) {
       handleApiError(error);
@@ -507,7 +507,7 @@ export const ticketsApi = {
 
   // Búsqueda avanzada
   busquedaAvanzada: async (
-    filtros: BusquedaAvanzadaFiltros,
+    filtros: BusquedaAvanzadaFiltros
   ): Promise<Ticket[]> => {
     try {
       const queryParams = new URLSearchParams();
@@ -539,7 +539,7 @@ export const ticketsApi = {
       if (filtros.dias_vencimiento) {
         queryParams.append(
           'dias_vencimiento',
-          filtros.dias_vencimiento.toString(),
+          filtros.dias_vencimiento.toString()
         );
       }
       if (filtros.limit) {
@@ -600,7 +600,7 @@ export const ticketsApi = {
             | 'urgente'
             | 'normal',
           dias_abiertos: ticket.dias_abiertos,
-        }),
+        })
       );
     } catch (error) {
       handleApiError(error);
@@ -635,7 +635,7 @@ export const ticketsApi = {
           cerrados: stat.cerrados,
           tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
           ultimo_ticket: stat.ultimo_ticket,
-        }),
+        })
       );
     } catch (error) {
       handleApiError(error);
@@ -720,7 +720,7 @@ export const ticketsApi = {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       );
 
       if (!response.ok) {
@@ -761,7 +761,7 @@ export const ticketsApi = {
   // Crear nuevo ticket
   create: async (
     comunidadId: number,
-    ticketData: TicketFormData,
+    ticketData: TicketFormData
   ): Promise<Ticket> => {
     try {
       const data = await apiRequest(`/tickets/comunidad/${comunidadId}`, {
@@ -831,7 +831,7 @@ export const ticketsApi = {
 
   // Eliminar ticket
   delete: async (
-    id: number,
+    id: number
   ): Promise<{ success: boolean; message: string }> => {
     try {
       await apiRequest(`/tickets/${id}`, {
@@ -844,4 +844,3 @@ export const ticketsApi = {
     }
   },
 };
-

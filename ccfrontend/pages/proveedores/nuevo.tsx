@@ -85,12 +85,12 @@ export default function ProveedorNuevo() {
   const handleContactChange = (
     contactId: string,
     field: string,
-    value: string | boolean,
+    value: string | boolean
   ) => {
     setContacts(prev =>
       prev.map(contact =>
-        contact.id === contactId ? { ...contact, [field]: value } : contact,
-      ),
+        contact.id === contactId ? { ...contact, [field]: value } : contact
+      )
     );
   };
 
@@ -115,7 +115,7 @@ export default function ProveedorNuevo() {
 
   const setPrimaryContact = (contactId: string) => {
     setContacts(prev =>
-      prev.map(contact => ({ ...contact, isPrimary: contact.id === contactId })),
+      prev.map(contact => ({ ...contact, isPrimary: contact.id === contactId }))
     );
   };
 
@@ -197,7 +197,7 @@ export default function ProveedorNuevo() {
       // Simular envío de datos
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.log('Datos del proveedor:', {
         ...formData,
         contacts: contacts.filter(c => c.name.trim()),
@@ -209,8 +209,8 @@ export default function ProveedorNuevo() {
       alert('Proveedor creado exitosamente');
       router.push('/proveedores');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error creating provider:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error creating provider:', error);
       alert('Error al crear el proveedor');
     } finally {
       setLoading(false);
@@ -244,7 +244,7 @@ console.error('Error creating provider:', error);
           <label htmlFor={`star${i}`} className='rating-label'>
             <span className='material-icons'>star</span>
           </label>
-        </React.Fragment>,
+        </React.Fragment>
       );
     }
     return <div className='rating-input'>{stars}</div>;
@@ -538,7 +538,7 @@ console.error('Error creating provider:', error);
                                   handleContactChange(
                                     contact.id,
                                     'name',
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                               />
@@ -555,7 +555,7 @@ console.error('Error creating provider:', error);
                                   handleContactChange(
                                     contact.id,
                                     'position',
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                               />
@@ -574,7 +574,7 @@ console.error('Error creating provider:', error);
                                   handleContactChange(
                                     contact.id,
                                     'phone',
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                               />
@@ -591,7 +591,7 @@ console.error('Error creating provider:', error);
                                   handleContactChange(
                                     contact.id,
                                     'email',
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                               />
@@ -609,7 +609,7 @@ console.error('Error creating provider:', error);
                                   handleContactChange(
                                     contact.id,
                                     'notes',
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                               />
@@ -747,15 +747,15 @@ console.error('Error creating provider:', error);
                     <div
                       className='file-upload-box'
                       onClick={() => fileInputRef.current?.click()}
-                      onKeyDown={(e) => {
+                      onKeyDown={e => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
                           fileInputRef.current?.click();
                         }
                       }}
                       tabIndex={0}
-                      role="button"
-                      aria-label="Seleccionar archivos para subir"
+                      role='button'
+                      aria-label='Seleccionar archivos para subir'
                     >
                       <div className='upload-content'>
                         <span className='material-icons'>cloud_upload</span>
@@ -883,15 +883,15 @@ console.error('Error creating provider:', error);
                       <div
                         className='provider-logo-upload'
                         onClick={() => logoInputRef.current?.click()}
-                        onKeyDown={(e) => {
+                        onKeyDown={e => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
                             logoInputRef.current?.click();
                           }
                         }}
                         tabIndex={0}
-                        role="button"
-                        aria-label="Seleccionar logo del proveedor"
+                        role='button'
+                        aria-label='Seleccionar logo del proveedor'
                       >
                         {logoPreview ? (
                           <>
@@ -971,4 +971,3 @@ console.error('Error creating provider:', error);
     </ProtectedRoute>
   );
 }
-

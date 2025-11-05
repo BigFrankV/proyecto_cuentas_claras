@@ -42,17 +42,21 @@ export default function MedidoresListadoPage() {
 
   // cargar comunidades para selector (superadmin)
   useEffect(() => {
-    if (!isSuper) {return;}
+    if (!isSuper) {
+      return;
+    }
     let mounted = true;
     (async () => {
       try {
         const resp = await comunidadesService.listComunidades?.();
         const list = Array.isArray(resp) ? resp : (resp?.data ?? []);
-        if (!mounted) {return;}
+        if (!mounted) {
+          return;
+        }
         setComunidades(list);
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error cargando comunidades', err);
+        // eslint-disable-next-line no-console
+        console.error('Error cargando comunidades', err);
       }
     })();
     return () => {
@@ -75,9 +79,13 @@ console.error('Error cargando comunidades', err);
           marca: filterMarca,
         };
         if (isSuper) {
-          if (selectedComunidad?.id) {params.comunidad_id = selectedComunidad.id;}
+          if (selectedComunidad?.id) {
+            params.comunidad_id = selectedComunidad.id;
+          }
           const resp = await listAllMedidores(params);
-          if (!mounted) {return;}
+          if (!mounted) {
+            return;
+          }
           setMedidores(resp.data || []);
           setPagination({
             total: resp.pagination?.total ?? resp.data?.length ?? 0,
@@ -94,7 +102,9 @@ console.error('Error cargando comunidades', err);
           return;
         }
         const resp = await listMedidores(comunidadUsuarioId, params);
-        if (!mounted) {return;}
+        if (!mounted) {
+          return;
+        }
         setMedidores(resp.data || []);
         setPagination({
           total: resp.pagination?.total ?? resp.data?.length ?? 0,
@@ -102,12 +112,17 @@ console.error('Error cargando comunidades', err);
           offset: resp.pagination?.offset ?? (page - 1) * limit,
         });
       } catch (err: any) {
-// eslint-disable-next-line no-console
-console.error('Error cargando medidores', err);
-        if (err?.response?.status === 403) {alert('No autorizado');}
-        else {alert('Error cargando medidores');}
+        // eslint-disable-next-line no-console
+        console.error('Error cargando medidores', err);
+        if (err?.response?.status === 403) {
+          alert('No autorizado');
+        } else {
+          alert('Error cargando medidores');
+        }
       } finally {
-        if (mounted) {setLoading(false);}
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
     load();
@@ -127,12 +142,16 @@ console.error('Error cargando medidores', err);
   ]);
 
   const canManage = (medidor?: Medidor) => {
-    if (!user) {return false;}
-    if (user.is_superadmin) {return true;}
+    if (!user) {
+      return false;
+    }
+    if (user.is_superadmin) {
+      return true;
+    }
     const comunidadId = medidor?.comunidad_id ?? comunidadUsuarioId;
     return !!user.comunidades?.some(
       (c: any) =>
-        c.id === comunidadId && (c.role === 'admin' || c.role === 'gestor'),
+        c.id === comunidadId && (c.role === 'admin' || c.role === 'gestor')
     );
   };
 
@@ -140,18 +159,26 @@ console.error('Error cargando medidores', err);
   const handleNew = () => router.push('/medidores/nuevo');
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Eliminar medidor? (si tiene lecturas quedará desactivado)'))
-      {return;}
+    if (
+      !confirm('¿Eliminar medidor? (si tiene lecturas quedará desactivado)')
+    ) {
+      return;
+    }
     setLoading(true);
     try {
       const resp = await deleteMedidor(id);
-      if (resp?.softDeleted) {alert('Medidor desactivado (soft-delete).');}
+      if (resp?.softDeleted) {
+        alert('Medidor desactivado (soft-delete).');
+      }
       setMedidores(prev => prev.filter(m => m.id !== id));
     } catch (err: any) {
-// eslint-disable-next-line no-console
-console.error('delete err', err);
-      if (err?.response?.status === 403) {alert('No autorizado.');}
-      else {alert('Error al eliminar medidor.');}
+      // eslint-disable-next-line no-console
+      console.error('delete err', err);
+      if (err?.response?.status === 403) {
+        alert('No autorizado.');
+      } else {
+        alert('Error al eliminar medidor.');
+      }
     } finally {
       setLoading(false);
     }
@@ -450,7 +477,7 @@ console.error('delete err', err);
                     const v =
                       e.target.value === '' ? null : Number(e.target.value);
                     setSelectedComunidad(
-                      comunidades.find(c => c.id === v) ?? null,
+                      comunidades.find(c => c.id === v) ?? null
                     );
                     setPage(1);
                   }}
@@ -590,4 +617,3 @@ console.error('delete err', err);
     </ProtectedRoute>
   );
 }
-

@@ -69,7 +69,7 @@ export const amenidades = {
       if (filters?.requiere_aprobacion !== undefined) {
         params.append(
           'requiere_aprobacion',
-          filters.requiere_aprobacion.toString(),
+          filters.requiere_aprobacion.toString()
         );
       }
       if (filters?.capacidad_min) {
@@ -147,7 +147,7 @@ export const amenidades = {
   // Actualizar amenidad
   update: async (
     id: string,
-    data: Partial<AmenidadFormData>,
+    data: Partial<AmenidadFormData>
   ): Promise<Amenidad | null> => {
     try {
       return await apiRequest(`/amenidades/${id}`, {
@@ -187,7 +187,7 @@ export const amenidades = {
       if (filters.requiere_aprobacion !== undefined) {
         params.append(
           'requiere_aprobacion',
-          filters.requiere_aprobacion.toString(),
+          filters.requiere_aprobacion.toString()
         );
       }
       if (filters.capacidad_min) {
@@ -245,7 +245,7 @@ export const reservasAmenidades = {
   // Crear reserva
   create: async (
     amenidadId: string,
-    data: ReservaAmenidadFormData,
+    data: ReservaAmenidadFormData
   ): Promise<ReservaAmenidad | null> => {
     try {
       return await apiRequest(`/amenidades/${amenidadId}/reservas`, {
@@ -261,7 +261,7 @@ export const reservasAmenidades = {
   // Actualizar reserva
   update: async (
     id: string,
-    data: Partial<ReservaAmenidadFormData>,
+    data: Partial<ReservaAmenidadFormData>
   ): Promise<ReservaAmenidad | null> => {
     try {
       return await apiRequest(`/reservas-amenidades/${id}`, {
@@ -313,4 +313,3 @@ export const reservasAmenidades = {
     }
   },
 };
-

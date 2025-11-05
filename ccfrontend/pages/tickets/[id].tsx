@@ -78,10 +78,10 @@ export default function TicketDetalle() {
       const ticketData = await ticketsApi.getById(Number(id));
       setTicket(ticketData);
     } catch (err) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading ticket:', err);
       setError(
-        err instanceof Error ? err.message : 'Error al cargar el ticket',
+        err instanceof Error ? err.message : 'Error al cargar el ticket'
       );
     } finally {
       setLoading(false);
@@ -99,7 +99,9 @@ export default function TicketDetalle() {
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) {return '0 Bytes';}
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -107,7 +109,9 @@ export default function TicketDetalle() {
   };
 
   const handleAddComment = async () => {
-    if (!newComment.trim()) {return;}
+    if (!newComment.trim()) {
+      return;
+    }
 
     setIsAddingComment(true);
     try {
@@ -132,12 +136,12 @@ export default function TicketDetalle() {
               ...prev,
               comments: [...prev.comments, comment],
             }
-          : null,
+          : null
       );
 
       setNewComment('');
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error adding comment:', error);
     } finally {
       setIsAddingComment(false);
@@ -338,7 +342,7 @@ export default function TicketDetalle() {
                     {
                       ticket.comments.filter(
                         (c: { isInternal: any }) =>
-                          !c.isInternal || showInternalComments,
+                          !c.isInternal || showInternalComments
                       ).length
                     }
                     )
@@ -361,7 +365,7 @@ export default function TicketDetalle() {
                     {ticket.comments
                       .filter(
                         (comment: { isInternal: any }) =>
-                          !comment.isInternal || showInternalComments,
+                          !comment.isInternal || showInternalComments
                       )
                       .map(
                         (comment: {
@@ -470,7 +474,7 @@ export default function TicketDetalle() {
                               </div>
                             </div>
                           </div>
-                        ),
+                        )
                       )}
                   </div>
 
@@ -572,7 +576,7 @@ export default function TicketDetalle() {
                               | undefined;
                           };
                         },
-                        index: number,
+                        index: number
                       ) => (
                         <div
                           key={item.id}
@@ -630,7 +634,7 @@ export default function TicketDetalle() {
                             </p>
                           </div>
                         </div>
-                      ),
+                      )
                     )}
                   </div>
                 </div>
@@ -661,7 +665,7 @@ export default function TicketDetalle() {
                     </label>
                     <div>
                       {new Date(ticket.fecha_creacion).toLocaleDateString(
-                        'es-ES',
+                        'es-ES'
                       )}
                     </div>
                   </div>
@@ -672,7 +676,7 @@ export default function TicketDetalle() {
                     </label>
                     <div>
                       {new Date(ticket.fecha_actualizacion).toLocaleDateString(
-                        'es-ES',
+                        'es-ES'
                       )}
                     </div>
                   </div>
@@ -684,7 +688,7 @@ export default function TicketDetalle() {
                       </label>
                       <div className='text-warning fw-semibold'>
                         {new Date(ticket.fecha_vencimiento).toLocaleDateString(
-                          'es-ES',
+                          'es-ES'
                         )}
                       </div>
                     </div>
@@ -709,7 +713,7 @@ export default function TicketDetalle() {
                             | Promise<AwaitedReactNode>
                             | null
                             | undefined,
-                          index: Key | null | undefined,
+                          index: Key | null | undefined
                         ) => (
                           <span
                             key={index}
@@ -717,7 +721,7 @@ export default function TicketDetalle() {
                           >
                             {tag}
                           </span>
-                        ),
+                        )
                       )}
                     </div>
                   </div>
@@ -885,7 +889,7 @@ export default function TicketDetalle() {
                               </button>
                             </div>
                           </div>
-                        ),
+                        )
                       )}
                     </div>
                   )}

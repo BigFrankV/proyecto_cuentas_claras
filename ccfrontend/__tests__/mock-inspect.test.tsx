@@ -58,10 +58,12 @@ jest.mock('react-bootstrap', () => {
     React.createElement('small', props, props.children);
   Form.Control = (props: any) => {
     const { as, children, ...rest } = props || {};
-    if (as === 'textarea')
-      {return React.createElement('textarea', rest, children);}
-    if (props && props.as === 'select')
-      {return React.createElement('select', rest, children);}
+    if (as === 'textarea') {
+      return React.createElement('textarea', rest, children);
+    }
+    if (props && props.as === 'select') {
+      return React.createElement('select', rest, children);
+    }
     return React.createElement('input', rest);
   };
   Form.Select = (props: any) =>
@@ -109,7 +111,7 @@ test('inspect mocks shapes', () => {
     'DEBUG-MOCK: PlaylistAddCheck type=',
     typeof icons.PlaylistAddCheck,
     'defaultExists=',
-    !!icons.default,
+    !!icons.default
   );
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -121,7 +123,7 @@ test('inspect mocks shapes', () => {
     'DEBUG-MOCK: Button type=',
     typeof rb.Button,
     'Form.Control type=',
-    typeof (rb.Form && rb.Form.Control),
+    typeof (rb.Form && rb.Form.Control)
   );
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -134,9 +136,8 @@ test('inspect mocks shapes', () => {
   // eslint-disable-next-line no-console
   console.log(
     'DEBUG-MOCK: ProtectedRoute type=',
-    typeof useAuthMod.ProtectedRoute,
+    typeof useAuthMod.ProtectedRoute
   );
 
   expect(true).toBe(true);
 });
-

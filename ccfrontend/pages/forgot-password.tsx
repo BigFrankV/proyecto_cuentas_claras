@@ -15,7 +15,9 @@ export default function ForgotPassword() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
     // Limpiar error cuando el usuario empiece a escribir
-    if (error) {setError('');}
+    if (error) {
+      setError('');
+    }
   };
 
   const validateEmail = (email: string): boolean => {
@@ -232,4 +234,3 @@ export default function ForgotPassword() {
     </>
   );
 }
-

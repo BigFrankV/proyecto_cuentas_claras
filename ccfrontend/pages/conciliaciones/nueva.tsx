@@ -88,7 +88,7 @@ export default function NuevaConciliacion() {
   ]);
 
   const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>(
-    [],
+    []
   );
   const [matchingSummary, setMatchingSummary] = useState({
     totalTransactions: 0,
@@ -112,8 +112,8 @@ export default function NuevaConciliacion() {
         const accounts = await conciliacionesApi.getCuentasBancarias();
         setBankAccounts(accounts);
       } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading bank accounts:', error);
+        // eslint-disable-next-line no-console
+        console.error('Error loading bank accounts:', error);
         // Fallback to hardcoded data if API fails
         setBankAccounts({
           'banco-chile': [
@@ -160,12 +160,12 @@ console.error('Error loading bank accounts:', error);
 
   const updateStepStatus = (
     stepNumber: number,
-    status: 'pending' | 'active' | 'completed',
+    status: 'pending' | 'active' | 'completed'
   ) => {
     setProcessSteps(prev =>
       prev.map(step =>
-        step.number === stepNumber ? { ...step, status } : step,
-      ),
+        step.number === stepNumber ? { ...step, status } : step
+      )
     );
   };
 
@@ -241,7 +241,7 @@ console.error('Error loading bank accounts:', error);
       const total = mockTransactions.length;
       const totalAmount = mockTransactions.reduce(
         (sum, t) => sum + t.amount,
-        0,
+        0
       );
 
       setMatchingSummary({
@@ -269,7 +269,9 @@ console.error('Error loading bank accounts:', error);
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) {return '0 Bytes';}
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -762,7 +764,7 @@ console.error('Error loading bank accounts:', error);
                                 <tr key={transaction.id}>
                                   <td>
                                     {new Date(
-                                      transaction.date,
+                                      transaction.date
                                     ).toLocaleDateString('es-CL')}
                                   </td>
                                   <td>
@@ -871,4 +873,3 @@ console.error('Error loading bank accounts:', error);
     </ProtectedRoute>
   );
 }
-

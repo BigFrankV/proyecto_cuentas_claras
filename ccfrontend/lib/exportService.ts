@@ -48,7 +48,7 @@ class ExportService {
       return { success: true, message: 'Archivo exportado exitosamente' };
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error exportando CSV:', error);
+      console.error('Error exportando CSV:', error);
       return { success: false, message: 'Error al exportar archivo' };
     }
   }
@@ -107,7 +107,6 @@ console.error('Error exportando CSV:', error);
     });
   }
 
-
   /**
    * Descargar blob como archivo
    */
@@ -153,7 +152,7 @@ console.error('Error exportando CSV:', error);
   async exportFromServer(
     endpoint: string,
     params: any = {},
-    filename?: string,
+    filename?: string
   ) {
     try {
       const response = await fetch(`/api/export/${endpoint}`, {
@@ -183,11 +182,10 @@ console.error('Error exportando CSV:', error);
       return { success: true, message: 'Archivo exportado desde servidor' };
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error exportando desde servidor:', error);
+      console.error('Error exportando desde servidor:', error);
       return { success: false, message: 'Error al exportar desde servidor' };
     }
   }
 }
 
 export default new ExportService();
-

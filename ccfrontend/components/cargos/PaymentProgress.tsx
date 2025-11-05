@@ -26,9 +26,15 @@ export default function PaymentProgress({
   };
 
   const getProgressClass = (): string => {
-    if (percentage >= 100) {return 'bg-success';}
-    if (percentage >= 50) {return 'bg-info';}
-    if (percentage >= 25) {return 'bg-warning';}
+    if (percentage >= 100) {
+      return 'bg-success';
+    }
+    if (percentage >= 50) {
+      return 'bg-info';
+    }
+    if (percentage >= 25) {
+      return 'bg-warning';
+    }
     return 'bg-danger';
   };
 
@@ -65,4 +71,3 @@ export default function PaymentProgress({
     </div>
   );
 }
-

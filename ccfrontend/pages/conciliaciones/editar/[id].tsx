@@ -17,7 +17,6 @@ import {
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 
-
 interface FormData {
   bank: string;
   bankAccount: string;
@@ -85,7 +84,7 @@ export default function EditarConciliacion() {
     variant: 'success',
   });
   const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>(
-    [],
+    []
   );
   const [processSteps, setProcessSteps] = useState<ProcessStep[]>([
     {
@@ -162,7 +161,7 @@ export default function EditarConciliacion() {
         updateProcessSteps(4);
       }
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading conciliation data:', error);
       setAlert({
         show: true,
@@ -224,7 +223,7 @@ export default function EditarConciliacion() {
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
+    >
   ) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -251,7 +250,7 @@ export default function EditarConciliacion() {
             : step.number === activeStep
               ? 'active'
               : 'pending',
-      })),
+      }))
     );
   };
 
@@ -304,7 +303,7 @@ export default function EditarConciliacion() {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Simular actualización de datos básicos
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.log('Actualizando conciliación con datos:', {
           bank: formData.bank,
           bankAccount: formData.bankAccount,
@@ -386,7 +385,7 @@ export default function EditarConciliacion() {
           variant: 'success',
         });
       } catch (error) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error('Error updating conciliation:', error);
         setAlert({
           show: true,
@@ -765,7 +764,7 @@ export default function EditarConciliacion() {
                           <div className='summary-value'>
                             {
                               bankTransactions.filter(
-                                t => t.matchStatus === 'matched',
+                                t => t.matchStatus === 'matched'
                               ).length
                             }
                           </div>
@@ -780,7 +779,7 @@ export default function EditarConciliacion() {
                           <div className='summary-value'>
                             {
                               bankTransactions.filter(
-                                t => t.matchStatus === 'unmatched',
+                                t => t.matchStatus === 'unmatched'
                               ).length
                             }
                           </div>
@@ -796,8 +795,8 @@ export default function EditarConciliacion() {
                             {formatCurrency(
                               bankTransactions.reduce(
                                 (sum, t) => sum + t.amount,
-                                0,
-                              ),
+                                0
+                              )
                             )}
                           </div>
                           <div className='summary-label'>Monto Total</div>
@@ -830,7 +829,7 @@ export default function EditarConciliacion() {
                               <tr key={transaction.id}>
                                 <td>
                                   {new Date(
-                                    transaction.date,
+                                    transaction.date
                                   ).toLocaleDateString('es-CL')}
                                 </td>
                                 <td>

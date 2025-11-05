@@ -217,4 +217,3 @@ export const AMENIDADES_DISPONIBLES: OpcionSelect[] = [
   { value: 'citofono', label: 'Citófono' },
   { value: 'lavanderia', label: 'Lavandería' },
 ];
-

@@ -33,7 +33,7 @@ async function fetchJson(path: string, opts: RequestInit = {}) {
 
 export async function listApelaciones(
   params: Record<string, any> = {},
-  token?: string,
+  token?: string
 ) {
   const qs = new URLSearchParams(params).toString();
   return await fetchJson(`/apelaciones${qs ? `?${qs}` : ''}`, {
@@ -69,7 +69,7 @@ export async function createApelacion(payload: any, token?: string) {
 export async function updateApelacion(
   id: number,
   payload: any,
-  token?: string,
+  token?: string
 ) {
   return await fetchJson(`/apelaciones/${id}`, {
     method: 'PUT',
@@ -84,7 +84,7 @@ export async function resolveApelacion(
     accion: 'aceptar' | 'rechazar' | 'aceptada' | 'rechazada';
     resolucion?: string;
   },
-  token?: string,
+  token?: string
 ) {
   return await fetchJson(`/apelaciones/${id}/resolver`, {
     method: 'POST',
@@ -100,4 +100,3 @@ export default {
   updateApelacion,
   resolveApelacion,
 };
-

@@ -23,7 +23,7 @@ export default function ComunidadesListado() {
   // Estados principales
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [comunidadesFiltradas, setComunidadesFiltradas] = useState<Comunidad[]>(
-    [],
+    []
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,8 +67,8 @@ export default function ComunidadesListado() {
       // eslint-disable-next-line no-console
       console.log(`📊 Total comunidades cargadas: ${data.length}`);
     } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error('❌ Error loading comunidades:', error);
+      // eslint-disable-next-line no-console
+      console.error('❌ Error loading comunidades:', error);
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||
@@ -97,26 +97,26 @@ console.error('❌ Error loading comunidades:', error);
       resultado = resultado.filter(
         comunidad =>
           comunidad.nombre.toLowerCase().includes(busqueda) ||
-          comunidad.direccion.toLowerCase().includes(busqueda),
+          comunidad.direccion.toLowerCase().includes(busqueda)
       );
     }
 
     if (filtros.tipo) {
       resultado = resultado.filter(
-        comunidad => comunidad.tipo === filtros.tipo,
+        comunidad => comunidad.tipo === filtros.tipo
       );
     }
 
     if (filtros.estado) {
       resultado = resultado.filter(
-        comunidad => comunidad.estado === filtros.estado,
+        comunidad => comunidad.estado === filtros.estado
       );
     }
 
     if (filtros.administrador) {
       const admin = filtros.administrador.toLowerCase();
       resultado = resultado.filter(comunidad =>
-        comunidad.administrador.toLowerCase().includes(admin),
+        comunidad.administrador.toLowerCase().includes(admin)
       );
     }
 
@@ -151,8 +151,8 @@ console.error('❌ Error loading comunidades:', error);
         await comunidadesService.deleteComunidad(id);
         await loadComunidades();
       } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error deleting comunidad:', error);
+        // eslint-disable-next-line no-console
+        console.error('Error deleting comunidad:', error);
         alert('Error al eliminar la comunidad');
       }
     }
@@ -315,4 +315,3 @@ console.error('Error deleting comunidad:', error);
     </ProtectedRoute>
   );
 }
-

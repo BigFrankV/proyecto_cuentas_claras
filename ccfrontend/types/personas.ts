@@ -146,4 +146,3 @@ export interface ValidacionCampo {
   valido: boolean;
   mensaje?: string;
 }
-

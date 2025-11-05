@@ -98,7 +98,7 @@ const ApelacionesListadoPage: React.FC = () => {
 
       const res = await fetch(
         `${API_BASE}/apelaciones?page=${p}&limit=${limit}`,
-        options,
+        options
       );
 
       if (res.status === 401) {
@@ -124,8 +124,8 @@ const ApelacionesListadoPage: React.FC = () => {
       setAppeals(rows);
       // aquí podrías manejar la paginación si es necesario, usando el total
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('load apelaciones error', err);
+      // eslint-disable-next-line no-console
+      console.error('load apelaciones error', err);
       setAppeals(sampleAppeals);
     } finally {
       setLoading(false);
@@ -549,4 +549,3 @@ console.error('load apelaciones error', err);
 };
 
 export default ApelacionesListadoPage;
-
