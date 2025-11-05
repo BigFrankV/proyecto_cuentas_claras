@@ -254,4 +254,3 @@ export interface ValidacionIntegridad {
     descripcion: string;
   }>;
 }
-

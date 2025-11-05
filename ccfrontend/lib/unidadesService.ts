@@ -8,7 +8,7 @@ class UnidadesService {
     params?: any,
   ): Promise<{ data: any[]; totalPaginas?: number }> {
     // eslint-disable-next-line no-console
-    // eslint-disable-next-line no-console`n    console.log('Frontend: Llamando getUnidades con params:', params);
+    console.log('Frontend: Llamando getUnidades con params:', params);
     try {
       const response = await api.get('/unidades', { params });
       // eslint-disable-next-line no-console
@@ -361,4 +361,3 @@ export const getUnidades = (params?: any) =>
 export const getDropdownComunidades = () =>
   unidadesService.getDropdownComunidades();
 // Agrega más exports según necesites
-

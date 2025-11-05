@@ -265,4 +265,3 @@ export type UtmCalculator = (
   inputs: UtmCalculatorInputs,
   type: 'toPesos' | 'toUtm'
 ) => UtmCalculatorResult;
-

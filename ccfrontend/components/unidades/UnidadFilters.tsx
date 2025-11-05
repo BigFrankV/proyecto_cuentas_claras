@@ -58,7 +58,7 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
   const { user } = useAuth();
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [selectedComunidad, setSelectedComunidad] = useState<string | null>(
-    null,
+    null
   );
 
   useEffect(() => {
@@ -75,8 +75,8 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
           onFilterChange('comunidad', String(user.comunidad_id));
         }
       } catch (err: any) {
-// eslint-disable-next-line no-console
-console.error('Error loading comunidades dropdown', err);
+        // eslint-disable-next-line no-console
+        console.error('Error loading comunidades dropdown', err);
         // fallback si backend devuelve 403: usar comunidad_id del user si existe
         if (err?.response?.status === 403 && user?.comunidad_id) {
           const fallback = [
@@ -98,12 +98,12 @@ console.error('Error loading comunidades dropdown', err);
 
   // Filtrar edificios según comunidad seleccionada
   const availableEdificios = edificios.filter(
-    edificio => !filters.comunidad || edificio.comunidadId === filters.comunidad,
+    edificio => !filters.comunidad || edificio.comunidadId === filters.comunidad
   );
 
   // Filtrar torres según edificio seleccionado
   const availableTorres = torres.filter(
-    torre => !filters.edificio || torre.edificioId === filters.edificio,
+    torre => !filters.edificio || torre.edificioId === filters.edificio
   );
 
   const isAdmin =
@@ -305,4 +305,3 @@ console.error('Error loading comunidades dropdown', err);
 };
 
 export default UnidadFilters;
-

@@ -15,4 +15,3 @@ export interface CentrosResponse {
     pages: number;
   };
 }
-

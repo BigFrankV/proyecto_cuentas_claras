@@ -40,8 +40,12 @@ export default function ConsumosMedidores({
   const getConsumoColor = (consumo: number) => {
     const porcentaje = maxConsumo > 0 ? (consumo / maxConsumo) * 100 : 0;
 
-    if (porcentaje >= 80) {return 'text-danger';}
-    if (porcentaje >= 60) {return 'text-warning';}
+    if (porcentaje >= 80) {
+      return 'text-danger';
+    }
+    if (porcentaje >= 60) {
+      return 'text-warning';
+    }
     return 'text-success';
   };
 
@@ -136,4 +140,3 @@ export default function ConsumosMedidores({
     </div>
   );
 }
-

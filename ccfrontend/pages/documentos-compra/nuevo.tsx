@@ -111,7 +111,7 @@ export default function NuevoDocumentoCompra() {
   const updateItem = (
     id: string,
     field: keyof DocumentItem,
-    value: string | number,
+    value: string | number
   ) => {
     setItems(
       items.map(item => {
@@ -123,7 +123,7 @@ export default function NuevoDocumentoCompra() {
           return updatedItem;
         }
         return item;
-      }),
+      })
     );
   };
 
@@ -151,8 +151,8 @@ export default function NuevoDocumentoCompra() {
           prev.map(f =>
             f.id === uploadFile.id
               ? { ...f, progress: Math.min(f.progress + 20, 100) }
-              : f,
-          ),
+              : f
+          )
         );
       }, 200);
 
@@ -160,8 +160,8 @@ export default function NuevoDocumentoCompra() {
         clearInterval(interval);
         setAttachedFiles(prev =>
           prev.map(f =>
-            f.id === uploadFile.id ? { ...f, progress: 100, uploaded: true } : f,
-          ),
+            f.id === uploadFile.id ? { ...f, progress: 100, uploaded: true } : f
+          )
         );
       }, 1000);
     });
@@ -183,7 +183,9 @@ export default function NuevoDocumentoCompra() {
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) {return '0 Bytes';}
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -403,7 +405,7 @@ export default function NuevoDocumentoCompra() {
                                     updateItem(
                                       item.id,
                                       'description',
-                                      e.target.value,
+                                      e.target.value
                                     )
                                   }
                                 />
@@ -418,7 +420,7 @@ export default function NuevoDocumentoCompra() {
                                     updateItem(
                                       item.id,
                                       'quantity',
-                                      parseInt(e.target.value) || 0,
+                                      parseInt(e.target.value) || 0
                                     )
                                   }
                                 />
@@ -434,7 +436,7 @@ export default function NuevoDocumentoCompra() {
                                     updateItem(
                                       item.id,
                                       'unitPrice',
-                                      parseFloat(e.target.value) || 0,
+                                      parseFloat(e.target.value) || 0
                                     )
                                   }
                                 />
@@ -702,4 +704,3 @@ export default function NuevoDocumentoCompra() {
     </ProtectedRoute>
   );
 }
-

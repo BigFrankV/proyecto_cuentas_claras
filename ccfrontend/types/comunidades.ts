@@ -243,4 +243,3 @@ export const VALIDATION_RULES = {
     required: true,
   },
 } as const;
-

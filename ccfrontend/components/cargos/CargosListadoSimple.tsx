@@ -130,7 +130,7 @@ const CargosListado: React.FC<CargosListadoProps> = ({ comunidadId }) => {
       // Aquí podríamos implementar la lógica para marcar como pagado
       // Por ahora solo mostramos un mensaje
       alert(
-        `Funcionalidad para marcar como pagado el cargo ${chargeId} próximamente disponible`,
+        `Funcionalidad para marcar como pagado el cargo ${chargeId} próximamente disponible`
       );
     } catch {
       // Error handling sin console
@@ -394,4 +394,3 @@ const CargosListado: React.FC<CargosListadoProps> = ({ comunidadId }) => {
 };
 
 export default CargosListado;
-

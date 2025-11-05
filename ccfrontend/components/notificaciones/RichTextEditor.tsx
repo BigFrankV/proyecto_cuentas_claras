@@ -47,7 +47,9 @@ export default function RichTextEditor({
 
   const insertText = (text: string) => {
     const textarea = textareaRef.current;
-    if (!textarea) {return;}
+    if (!textarea) {
+      return;
+    }
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
@@ -64,7 +66,9 @@ export default function RichTextEditor({
 
   const wrapSelection = (before: string, after: string = '') => {
     const textarea = textareaRef.current;
-    if (!textarea) {return;}
+    if (!textarea) {
+      return;
+    }
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
@@ -82,7 +86,7 @@ export default function RichTextEditor({
       } else {
         textarea.setSelectionRange(
           start + before.length,
-          start + before.length,
+          start + before.length
         );
       }
     }, 0);
@@ -334,4 +338,3 @@ export default function RichTextEditor({
     </div>
   );
 }
-

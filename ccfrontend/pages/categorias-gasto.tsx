@@ -56,10 +56,10 @@ export default function CategoriasGastoListado() {
     try {
       setLoading(true);
       const response = await listCategorias(resolvedComunidadId);
-// eslint-disable-next-line no-console
-console.log('API Response:', response); // <-- añadir
-// eslint-disable-next-line no-console
-console.log('Response data:', response.data); // <-- añadir
+      // eslint-disable-next-line no-console
+      console.log('API Response:', response); // <-- añadir
+      // eslint-disable-next-line no-console
+      console.log('Response data:', response.data); // <-- añadir
       setCategories(response.data);
       setPagination({
         total: response.pagination?.total || 0,
@@ -72,11 +72,11 @@ console.log('Response data:', response.data); // <-- añadir
         limit: response.pagination?.limit || 10,
         pages: response.pagination?.pages || 0,
       });
-// eslint-disable-next-line no-console
-console.log('Categories set:', response.data); // <-- añadir
+      // eslint-disable-next-line no-console
+      console.log('Categories set:', response.data); // <-- añadir
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading categories:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading categories:', error);
     } finally {
       setLoading(false);
     }
@@ -113,8 +113,8 @@ console.error('Error loading categories:', error);
       setSelectedCategory(null);
       alert('Categoría eliminada exitosamente');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error deleting category:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error deleting category:', error);
       alert('Error al eliminar la categoría');
     }
   };
@@ -426,7 +426,7 @@ console.error('Error deleting category:', error);
                       </div>
 
                       <p className='data-card-subtitle mb-3'>
-                        {category.description}
+                        {category.nombre}
                       </p>
 
                       <div className='d-flex justify-content-between align-items-center'>
@@ -532,7 +532,7 @@ console.error('Error deleting category:', error);
                 </div>
                 <p>
                   ¿Estás seguro de que deseas eliminar la categoría{' '}
-                  <strong>"{selectedCategory.name}"</strong>?
+                  <strong>"{selectedCategory.nombre}"</strong>?
                 </p>
               </>
             )}
@@ -554,4 +554,3 @@ console.error('Error deleting category:', error);
     </ProtectedRoute>
   );
 }
-

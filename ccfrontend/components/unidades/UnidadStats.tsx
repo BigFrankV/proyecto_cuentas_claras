@@ -55,4 +55,3 @@ const UnidadStats: React.FC<UnidadStatsProps> = ({ stats }) => {
 };
 
 export default UnidadStats;
-

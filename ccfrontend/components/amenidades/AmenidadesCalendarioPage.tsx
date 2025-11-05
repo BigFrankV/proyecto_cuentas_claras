@@ -30,7 +30,7 @@ const AmenidadesCalendarioPage: React.FC = () => {
 
   const handleEventClick = (info: any) => {
     alert(
-      `Reserva: ${info.event.title}\nFecha: ${info.event.start.toLocaleDateString()}`,
+      `Reserva: ${info.event.title}\nFecha: ${info.event.start.toLocaleDateString()}`
     );
   };
 
@@ -63,8 +63,8 @@ const AmenidadesCalendarioPage: React.FC = () => {
         // Por ahora, dejamos vacío hasta que se implemente el servicio
         setEvents([]);
       } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading events:', error);
+        // eslint-disable-next-line no-console
+        console.error('Error loading events:', error);
         setEvents([]);
       } finally {
         setIsLoading(false);
@@ -255,4 +255,3 @@ console.error('Error loading events:', error);
 };
 
 export default AmenidadesCalendarioPage;
-

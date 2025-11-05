@@ -16,11 +16,9 @@ class ComunidadesService {
   async getComunidades(filtros?: ComunidadFiltros): Promise<Comunidad[]> {
     try {
       // eslint-disable-next-line no-console
-      console.log(
-        '[ComunidadesService] getComunidades - Iniciando solicitud',
-      );
+      console.log('[ComunidadesService] getComunidades - Iniciando solicitud');
       // eslint-disable-next-line no-console
-      // eslint-disable-next-line no-console`n      console.log('[ComunidadesService] Filtros:', filtros);
+      console.log('[ComunidadesService] Filtros:', filtros);
 
       const params = new URLSearchParams();
 
@@ -36,11 +34,11 @@ class ComunidadesService {
 
       const url = `${this.baseUrl}${params.toString() ? `?${params.toString()}` : ''}`;
       // eslint-disable-next-line no-console
-      // eslint-disable-next-line no-console`n      console.log('[ComunidadesService] URL completa:', url);
+      console.log('[ComunidadesService] URL completa:', url);
 
       const token = localStorage.getItem('auth_token');
       // eslint-disable-next-line no-console
-      // eslint-disable-next-line no-console`n      console.log('[ComunidadesService] Token presente:', !!token);
+      console.log('[ComunidadesService] Token presente:', !!token);
 
       // ✅ NUEVA VERIFICACIÓN: Si no hay token, no intentar
       if (!token) {
@@ -68,9 +66,9 @@ class ComunidadesService {
         error.message,
       );
       // eslint-disable-next-line no-console
-console.error('[ComunidadesService] Status:', error.response?.status);
+      console.error('[ComunidadesService] Status:', error.response?.status);
       // eslint-disable-next-line no-console
-console.error('[ComunidadesService] Response:', error.response?.data);
+      console.error('[ComunidadesService] Response:', error.response?.data);
 
       // ✅ NUEVA MANEJO: Si es 401, informar claramente
       if (error.response?.status === 401) {
@@ -82,7 +80,7 @@ console.error('[ComunidadesService] Response:', error.response?.data);
       }
 
       // eslint-disable-next-line no-console
-console.error('[ComunidadesService] Error completo:', error);
+      console.error('[ComunidadesService] Error completo:', error);
       throw error; // Propagar error para manejarlo en el componente
     }
   }
@@ -93,7 +91,7 @@ console.error('[ComunidadesService] Error completo:', error);
       return this.normalizeComunidad(response.data) as ComunidadDetalle;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo comunidad ${id}:`, error);
+      console.error(`Error obteniendo comunidad ${id}:`, error);
       throw error;
     }
   }
@@ -105,7 +103,7 @@ console.error(`Error obteniendo comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo amenidades para comunidad ${id}:`, error);
+      console.error(`Error obteniendo amenidades para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -116,7 +114,7 @@ console.error(`Error obteniendo amenidades para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo edificios para comunidad ${id}:`, error);
+      console.error(`Error obteniendo edificios para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -127,7 +125,7 @@ console.error(`Error obteniendo edificios para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo contactos para comunidad ${id}:`, error);
+      console.error(`Error obteniendo contactos para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -138,7 +136,7 @@ console.error(`Error obteniendo contactos para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo documentos para comunidad ${id}:`, error);
+      console.error(`Error obteniendo documentos para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -149,7 +147,7 @@ console.error(`Error obteniendo documentos para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo residentes para comunidad ${id}:`, error);
+      console.error(`Error obteniendo residentes para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -160,7 +158,7 @@ console.error(`Error obteniendo residentes para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo parametros para comunidad ${id}:`, error);
+      console.error(`Error obteniendo parametros para comunidad ${id}:`, error);
       return null;
     }
   }
@@ -173,7 +171,10 @@ console.error(`Error obteniendo parametros para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo estadisticas para comunidad ${id}:`, error);
+      console.error(
+        `Error obteniendo estadisticas para comunidad ${id}:`,
+        error,
+      );
       return {
         totalIngresos: 0,
         ingresosPagados: 0,
@@ -191,7 +192,7 @@ console.error(`Error obteniendo estadisticas para comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error obteniendo flujo-caja para comunidad ${id}:`, error);
+      console.error(`Error obteniendo flujo-caja para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -213,7 +214,7 @@ console.error(`Error obteniendo flujo-caja para comunidad ${id}:`, error);
       return this.normalizeComunidad(response.data);
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error creando comunidad:', error);
+      console.error('Error creando comunidad:', error);
       throw error;
     }
   }
@@ -252,7 +253,7 @@ console.error('Error creando comunidad:', error);
       return this.normalizeComunidad(response.data);
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error actualizando comunidad ${id}:`, error);
+      console.error(`Error actualizando comunidad ${id}:`, error);
       throw error;
     }
   }
@@ -262,7 +263,7 @@ console.error(`Error actualizando comunidad ${id}:`, error);
       await apiClient.delete(`${this.baseUrl}/${id}`);
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error eliminando comunidad ${id}:`, error);
+      console.error(`Error eliminando comunidad ${id}:`, error);
       throw error;
     }
   }
@@ -348,7 +349,7 @@ console.error(`Error eliminando comunidad ${id}:`, error);
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error obteniendo membresías:', error);
+      console.error('Error obteniendo membresías:', error);
       return [];
     }
   }
@@ -434,4 +435,3 @@ console.error('Error obteniendo membresías:', error);
 
 const comunidadesService = new ComunidadesService();
 export default comunidadesService;
-

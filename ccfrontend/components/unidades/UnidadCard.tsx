@@ -150,4 +150,3 @@ const UnidadCard: React.FC<UnidadCardProps> = ({ unidad }) => {
 };
 
 export default UnidadCard;
-

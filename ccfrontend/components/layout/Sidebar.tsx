@@ -149,8 +149,8 @@ export default function Sidebar() {
     try {
       await logout();
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error al cerrar sesión:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error al cerrar sesión:', error);
     }
   };
 
@@ -249,11 +249,13 @@ console.error('Error al cerrar sesión:', error);
             .map((section, sectionIndex) => {
               // Filtrar items de la sección según permisos
               const visibleItems = section.items.filter(item =>
-                shouldShowItem(item.href),
+                shouldShowItem(item.href)
               );
 
               // Si no hay items visibles, no mostrar la sección
-              if (visibleItems.length === 0) {return null;}
+              if (visibleItems.length === 0) {
+                return null;
+              }
 
               return (
                 <div key={section.title}>
@@ -399,4 +401,3 @@ console.error('Error al cerrar sesión:', error);
     </>
   );
 }
-

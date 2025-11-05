@@ -25,4 +25,3 @@ export type {
   Document,
 } from './CargoDetalle';
 export type { CargosUnidadProps, UnitInfo } from './CargosUnidad';
-

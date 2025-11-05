@@ -18,14 +18,16 @@ export default function ProviderTable({
   onEdit,
   onDelete,
 }: ProviderTableProps) {
-  if (loading)
-    {return <div className='py-4 text-center'>Cargando proveedores...</div>;}
-  if (!providers.length)
-    {return (
+  if (loading) {
+    return <div className='py-4 text-center'>Cargando proveedores...</div>;
+  }
+  if (!providers.length) {
+    return (
       <div className='py-4 text-center text-muted'>
         No se encontraron proveedores
       </div>
-    );}
+    );
+  }
 
   return (
     <div className='table-responsive'>
@@ -94,4 +96,3 @@ export default function ProviderTable({
     </div>
   );
 }
-

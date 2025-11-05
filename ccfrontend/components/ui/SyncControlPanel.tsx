@@ -18,7 +18,7 @@ const SyncControlPanel: React.FC<SyncControlPanelProps> = ({
   const [initLoading, setInitLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
   const [messageType, setMessageType] = useState<'success' | 'error' | 'info'>(
-    'info',
+    'info'
   );
 
   // Cargar estado de sincronización
@@ -78,7 +78,7 @@ const SyncControlPanel: React.FC<SyncControlPanelProps> = ({
 
       if (result.success) {
         setMessage(
-          result.message || 'Inicialización de datos históricos completada',
+          result.message || 'Inicialización de datos históricos completada'
         );
         setMessageType('success');
 
@@ -100,7 +100,9 @@ const SyncControlPanel: React.FC<SyncControlPanelProps> = ({
 
   // Formatear fecha
   const formatDate = (dateString: string | null): string => {
-    if (!dateString) {return 'Nunca';}
+    if (!dateString) {
+      return 'Nunca';
+    }
 
     const date = new Date(dateString);
     return date.toLocaleString('es-CL', {
@@ -314,4 +316,3 @@ const SyncControlPanel: React.FC<SyncControlPanelProps> = ({
 };
 
 export default SyncControlPanel;
-

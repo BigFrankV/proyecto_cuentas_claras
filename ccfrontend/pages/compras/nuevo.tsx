@@ -184,8 +184,8 @@ export default function NuevaCompra() {
       setCostCenters(mockCostCenters);
       setCategories(mockCategories);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading initial data:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading initial data:', error);
     }
   };
 
@@ -326,12 +326,13 @@ console.error('Error loading initial data:', error);
         requestDate: new Date().toISOString(),
       };
 
-      // eslint-disable-next-line no-console`n      console.log('Nueva compra:', purchaseData);
+      // eslint-disable-next-line no-console
+      console.log('Nueva compra:', purchaseData);
       alert('Compra creada exitosamente');
       router.push('/compras');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error creating purchase:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error creating purchase:', error);
       alert('Error al crear la compra');
     } finally {
       setLoading(false);
@@ -1094,4 +1095,3 @@ console.error('Error creating purchase:', error);
     </ProtectedRoute>
   );
 }
-

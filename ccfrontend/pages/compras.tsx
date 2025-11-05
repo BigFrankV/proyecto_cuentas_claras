@@ -123,10 +123,18 @@ export default function ComprasListado() {
         offset,
       };
 
-      if (filters.search) {filtersApi.search = filters.search;}
-      if (filters.type) {filtersApi.tipo_doc = filters.type;}
-      if (filters.dateFrom) {filtersApi.fecha_desde = filters.dateFrom;}
-      if (filters.dateTo) {filtersApi.fecha_hasta = filters.dateTo;}
+      if (filters.search) {
+        filtersApi.search = filters.search;
+      }
+      if (filters.type) {
+        filtersApi.tipo_doc = filters.type;
+      }
+      if (filters.dateFrom) {
+        filtersApi.fecha_desde = filters.dateFrom;
+      }
+      if (filters.dateTo) {
+        filtersApi.fecha_hasta = filters.dateTo;
+      }
 
       const resp = await comprasApi.getAll(filtersApi);
       const rows: CompraBackend[] = resp.data || [];
@@ -179,8 +187,8 @@ export default function ComprasListado() {
       );
       setCurrentPage(resp.pagination.page ?? page);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading purchases:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading purchases:', error);
       setPurchases([]);
     } finally {
       setLoading(false);
@@ -293,14 +301,15 @@ console.error('Error loading purchases:', error);
       setSelectedPurchase(null);
       alert('Compra eliminada exitosamente');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error deleting purchase:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error deleting purchase:', error);
       alert('Error al eliminar la compra');
     }
   };
 
   const handleBulkAction = (action: string) => {
-    // eslint-disable-next-line no-console`n    console.log(`Bulk action: ${action} on purchases:`, selectedPurchases);
+    // eslint-disable-next-line no-console
+    console.log(`Bulk action: ${action} on purchases:`, selectedPurchases);
     // Implementar acciones masivas
   };
 
@@ -1084,4 +1093,3 @@ console.error('Error deleting purchase:', error);
     </ProtectedRoute>
   );
 }
-

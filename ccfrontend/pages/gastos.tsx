@@ -75,16 +75,16 @@ export default function GastosListado() {
         limit: 100,
         offset: 0,
       });
-// eslint-disable-next-line no-console
-console.log('Respuesta del backend:', resp.data); // Verifica si 'estado' es correcto
+      // eslint-disable-next-line no-console
+      console.log('Respuesta del backend:', resp.data); // Verifica si 'estado' es correcto
       const items = resp.data || [];
       const mapped: Expense[] = (Array.isArray(items) ? items : []).map(
         mapBackendToExpense,
       );
       setExpenses(mapped);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading expenses from API:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading expenses from API:', error);
       setExpenses([]);
     } finally {
       setLoading(false);
@@ -217,8 +217,8 @@ console.error('Error loading expenses from API:', error);
         );
       })
       .catch(err => {
-// eslint-disable-next-line no-console
-console.error('Error getCategorias', err);
+        // eslint-disable-next-line no-console
+        console.error('Error getCategorias', err);
         setCategories([]);
       });
 
@@ -231,8 +231,8 @@ console.error('Error getCategorias', err);
         setCostCenters(normalized);
       })
       .catch(err => {
-// eslint-disable-next-line no-console
-console.error('Error getCentrosCosto', err);
+        // eslint-disable-next-line no-console
+        console.error('Error getCentrosCosto', err);
         setCostCenters([]);
       });
 
@@ -245,8 +245,8 @@ console.error('Error getCentrosCosto', err);
         setProviders(normalized);
       })
       .catch(err => {
-// eslint-disable-next-line no-console
-console.error('Error getProveedores', err);
+        // eslint-disable-next-line no-console
+        console.error('Error getProveedores', err);
         setProviders([]);
       });
   }, [resolvedComunidadId]);
@@ -778,4 +778,3 @@ console.error('Error getProveedores', err);
     </ProtectedRoute>
   );
 }
-

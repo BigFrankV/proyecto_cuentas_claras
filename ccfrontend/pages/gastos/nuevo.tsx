@@ -87,21 +87,21 @@ export default function GastoNuevo() {
 
   useEffect(() => {
     const loadLists = async () => {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.log(
-        '[GASTO-NUEVO] idToUse:',
+        'idToUse:',
         comunidadParaEnviar,
         'isSuperUser:',
         isSuperUser,
       );
       try {
         // eslint-disable-next-line no-console
-        console.log('[GASTO-NUEVO] -> llamando getCategorias...');
+        console.log('-> llamando getCategorias...');
         const cats = await getCategorias(comunidadParaEnviar);
         const catsArray = Array.isArray(cats) ? cats : (cats?.data ?? []);
         // eslint-disable-next-line no-console
         console.log(
-          '[GASTO-NUEVO] <- getCategorias normalized length:',
+          '<- getCategorias normalized length:',
           catsArray.length,
         );
         setCategories(
@@ -112,14 +112,14 @@ export default function GastoNuevo() {
         );
 
         // eslint-disable-next-line no-console
-        console.log('[GASTO-NUEVO] -> llamando getCentrosCosto...');
+        console.log('-> llamando getCentrosCosto...');
         const centros = await getCentrosCosto(comunidadParaEnviar);
         const centrosArray = Array.isArray(centros)
           ? centros
           : (centros?.data ?? []);
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.log(
-          '[GASTO-NUEVO] <- getCentrosCosto normalized length:',
+          '<- getCentrosCosto normalized length:',
           centrosArray.length,
         );
         setCostCenters(
@@ -130,12 +130,12 @@ export default function GastoNuevo() {
         );
 
         // eslint-disable-next-line no-console
-        console.log('[GASTO-NUEVO] -> llamando getProveedores...');
+        console.log('-> llamando getProveedores...');
         const provs = await getProveedores(comunidadParaEnviar);
         const provsArray = Array.isArray(provs) ? provs : (provs?.data ?? []);
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.log(
-          '[GASTO-NUEVO] <- getProveedores normalized length:',
+          '<- getProveedores normalized length:',
           provsArray.length,
         );
         setProviders(
@@ -145,9 +145,9 @@ export default function GastoNuevo() {
           })),
         );
       } catch (err) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error(
-          '[GASTO-NUEVO] Error cargando listas para dropdowns:',
+          'Error cargando listas para dropdowns:',
           err,
         );
         setCategories([]);
@@ -370,18 +370,20 @@ export default function GastoNuevo() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) {return;}
+    if (!validateForm()) {
+      return;
+    }
     setLoading(true);
     try {
       const payload = mapFormDataToPayload(formData);
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.log(
-        '[GASTO-NUEVO] creando gasto - comunidadId:',
+        'creando gasto - comunidadId:',
         isSuper ? selectedComunidad : comunidadParaEnviar,
         'payload:',
         payload,
       );
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.log(
         'Antes de createGasto - user.is_superadmin:',
         user?.is_superadmin,
@@ -396,8 +398,8 @@ export default function GastoNuevo() {
       const newGasto = await createGasto(comunidadIdFinal ?? null, payload);
       router.push(`/gastos/${newGasto.id}`);
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error creando gasto:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error creando gasto:', err);
       setErrors({ general: 'Error al crear gasto' });
     } finally {
       setLoading(false);
@@ -715,15 +717,15 @@ console.error('Error creando gasto:', err);
                       onDragOver={handleDrag}
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
-                      onKeyDown={(e) => {
+                      onKeyDown={e => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
                           fileInputRef.current?.click();
                         }
                       }}
-                      role="button"
+                      role='button'
                       tabIndex={0}
-                      aria-label="Haz clic o arrastra archivos para subir"
+                      aria-label='Haz clic o arrastra archivos para subir'
                     >
                       <div className='file-upload-content'>
                         <span className='material-icons file-upload-icon'>
@@ -979,4 +981,3 @@ console.error('Error creando gasto:', err);
     </ProtectedRoute>
   );
 }
-

@@ -164,11 +164,18 @@ export function FileIcon({ fileName, size = 'md' }: FileIconProps) {
   const getFileType = (name: string) => {
     const extension = name.split('.').pop()?.toLowerCase();
 
-    if (['pdf'].includes(extension || '')) {return 'pdf';}
-    if (['doc', 'docx'].includes(extension || '')) {return 'doc';}
-    if (['xls', 'xlsx'].includes(extension || '')) {return 'xlsx';}
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || ''))
-      {return 'image';}
+    if (['pdf'].includes(extension || '')) {
+      return 'pdf';
+    }
+    if (['doc', 'docx'].includes(extension || '')) {
+      return 'doc';
+    }
+    if (['xls', 'xlsx'].includes(extension || '')) {
+      return 'xlsx';
+    }
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '')) {
+      return 'image';
+    }
     return 'default';
   };
 
@@ -235,4 +242,3 @@ export function FileIcon({ fileName, size = 'md' }: FileIconProps) {
     </div>
   );
 }
-

@@ -49,4 +49,3 @@ describe('PersonaCard', () => {
     expect(screen.getByText('2 unidades')).toBeInTheDocument();
   });
 });
-

@@ -141,8 +141,8 @@ export default function NuevoMedidor() {
 
       setCommunities(mockCommunities);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading initial data:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading initial data:', error);
     }
   };
 
@@ -158,8 +158,8 @@ console.error('Error loading initial data:', error);
 
       setBuildings(mockBuildings);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading buildings:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading buildings:', error);
     }
   };
 
@@ -177,14 +177,14 @@ console.error('Error loading buildings:', error);
 
       setUnits(mockUnits);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading units:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading units:', error);
     }
   };
 
   const handleInputChange = (
     field: string,
-    value: string | boolean | number,
+    value: string | boolean | number
   ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -276,8 +276,8 @@ console.error('Error loading units:', error);
       alert('Medidor creado exitosamente');
       router.push('/medidores');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error creating meter:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error creating meter:', error);
       alert('Error al crear el medidor');
     } finally {
       setLoading(false);
@@ -809,7 +809,7 @@ console.error('Error creating meter:', error);
                             onChange={e =>
                               handleInputChange(
                                 'communicationType',
-                                e.target.value,
+                                e.target.value
                               )
                             }
                           >
@@ -1024,7 +1024,7 @@ console.error('Error creating meter:', error);
                         onChange={e =>
                           handleInputChange(
                             'maintenanceFrequency',
-                            e.target.value,
+                            e.target.value
                           )
                         }
                       >
@@ -1174,7 +1174,7 @@ console.error('Error creating meter:', error);
                       <strong>Fecha:</strong>{' '}
                       {formData.installationDate
                         ? new Date(
-                            formData.installationDate,
+                            formData.installationDate
                           ).toLocaleDateString()
                         : '-'}
                     </li>
@@ -1202,4 +1202,3 @@ console.error('Error creating meter:', error);
     </ProtectedRoute>
   );
 }
-

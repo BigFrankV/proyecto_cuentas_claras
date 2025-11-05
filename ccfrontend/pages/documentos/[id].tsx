@@ -65,7 +65,9 @@ export default function DocumentoDetalle() {
   const [newComment, setNewComment] = useState('');
 
   useEffect(() => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
 
     // Mock data
     setTimeout(() => {
@@ -170,7 +172,9 @@ export default function DocumentoDetalle() {
   }, [id]);
 
   const handleDownload = () => {
-    if (!document) {return;}
+    if (!document) {
+      return;
+    }
 
     // Mock download
     setDocument(prev =>
@@ -180,14 +184,16 @@ export default function DocumentoDetalle() {
             downloadCount: (prev.downloadCount || 0) + 1,
             lastDownloaded: new Date().toISOString(),
           }
-        : null,
+        : null
     );
 
     alert(`Descargando ${document.fileName}`);
   };
 
   const handleAddComment = () => {
-    if (!newComment.trim()) {return;}
+    if (!newComment.trim()) {
+      return;
+    }
 
     const comment: Comment = {
       id: Date.now().toString(),

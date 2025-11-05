@@ -174,8 +174,8 @@ export default function NuevaNotificacion() {
         router.push('/notificaciones?message=scheduled');
       }
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error saving notification:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error saving notification:', error);
     } finally {
       setSaving(false);
     }
@@ -715,7 +715,7 @@ console.error('Error saving notification:', error);
                             className={`channel-card ${formData.channels.includes(channel.id) ? 'selected' : ''}`}
                             style={{
                               backgroundColor: formData.channels.includes(
-                                channel.id,
+                                channel.id
                               )
                                 ? channel.bg
                                 : '#fff',
@@ -1277,7 +1277,7 @@ console.error('Error saving notification:', error);
                       <div className='d-flex flex-wrap gap-1'>
                         {formData.channels.map(channel => {
                           const channelConfig = channels.find(
-                            c => c.id === channel,
+                            c => c.id === channel
                           );
                           return (
                             <span
@@ -1330,4 +1330,3 @@ console.error('Error saving notification:', error);
     </ProtectedRoute>
   );
 }
-

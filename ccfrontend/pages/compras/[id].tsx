@@ -23,7 +23,7 @@ import { CompraBackend } from '@/types/compras';
 // Función para formatear moneda chilena
 const formatCurrency = (
   amount: number,
-  currency: 'clp' | 'usd' = 'clp',
+  currency: 'clp' | 'usd' = 'clp'
 ): string => {
   if (currency === 'clp') {
     return `$${amount.toLocaleString('es-CL')}`;
@@ -195,7 +195,7 @@ export default function DetallePurchase() {
       setPurchase(mappedPurchase);
       setDocuments([]); // por ahora vacío
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading purchase data:', error);
       setPurchase(null);
       setDocuments([]);
@@ -279,7 +279,7 @@ export default function DetallePurchase() {
         alert('Compra aprobada exitosamente');
       }
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error approving purchase:', error);
       alert('Error al aprobar la compra');
     }
@@ -318,7 +318,7 @@ export default function DetallePurchase() {
         alert('Compra rechazada');
       }
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error rejecting purchase:', error);
       alert('Error al rechazar la compra');
     }
@@ -352,7 +352,7 @@ export default function DetallePurchase() {
         setNewNote('');
       }
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error adding note:', error);
     }
   };
@@ -571,7 +571,7 @@ export default function DetallePurchase() {
                             </label>
                             <div className='detail-value'>
                               {new Date(
-                                purchase.requiredDate,
+                                purchase.requiredDate
                               ).toLocaleDateString('es-ES')}
                             </div>
                           </div>
@@ -590,7 +590,7 @@ export default function DetallePurchase() {
                             <div className='detail-value fw-bold'>
                               {formatCurrency(
                                 purchase.totalAmount,
-                                purchase.currency,
+                                purchase.currency
                               )}
                             </div>
                           </div>
@@ -692,7 +692,7 @@ export default function DetallePurchase() {
                               <strong>
                                 {formatCurrency(
                                   purchase.costCenter.budget,
-                                  purchase.currency,
+                                  purchase.currency
                                 )}
                               </strong>
                             </div>
@@ -701,7 +701,7 @@ export default function DetallePurchase() {
                               <span>
                                 {formatCurrency(
                                   purchase.costCenter.spent,
-                                  purchase.currency,
+                                  purchase.currency
                                 )}
                               </span>
                             </div>
@@ -711,7 +711,7 @@ export default function DetallePurchase() {
                                 {formatCurrency(
                                   purchase.costCenter.budget -
                                     purchase.costCenter.spent,
-                                  purchase.currency,
+                                  purchase.currency
                                 )}
                               </span>
                             </div>
@@ -789,7 +789,7 @@ export default function DetallePurchase() {
                               <td className='fw-bold'>
                                 {formatCurrency(
                                   purchase.totalAmount,
-                                  purchase.currency,
+                                  purchase.currency
                                 )}
                               </td>
                               <td></td>
@@ -835,7 +835,7 @@ export default function DetallePurchase() {
                             <div className='total-value'>
                               {formatCurrency(
                                 purchase.totalAmount,
-                                purchase.currency,
+                                purchase.currency
                               )}
                             </div>
                           </div>

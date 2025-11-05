@@ -18,7 +18,7 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend,
+  Legend
 );
 
 interface GastosPorCategoriaChartProps {
@@ -85,7 +85,7 @@ export default function GastosPorCategoriaChart({
         borderColor: '#ddd',
         borderWidth: 1,
         callbacks: {
-          label (context: any) {
+          label(context: any) {
             const value = new Intl.NumberFormat('es-CL', {
               style: 'currency',
               currency: 'CLP',
@@ -114,7 +114,7 @@ export default function GastosPorCategoriaChart({
           color: 'rgba(0, 0, 0, 0.1)',
         },
         ticks: {
-          callback (value: any) {
+          callback(value: any) {
             return new Intl.NumberFormat('es-CL', {
               style: 'currency',
               currency: 'CLP',
@@ -135,4 +135,3 @@ export default function GastosPorCategoriaChart({
     </div>
   );
 }
-

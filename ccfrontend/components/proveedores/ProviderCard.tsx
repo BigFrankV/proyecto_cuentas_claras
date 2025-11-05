@@ -16,10 +16,11 @@ export default function ProviderCard({
   onEdit,
   onDelete,
 }: ProviderCardProps) {
-  if (!providers.length)
-    {return (
+  if (!providers.length) {
+    return (
       <div className='py-4 text-center text-muted'>No hay proveedores</div>
-    );}
+    );
+  }
 
   return (
     <Row xs={1} md={2} lg={3} className='g-3'>
@@ -77,4 +78,3 @@ export default function ProviderCard({
     </Row>
   );
 }
-

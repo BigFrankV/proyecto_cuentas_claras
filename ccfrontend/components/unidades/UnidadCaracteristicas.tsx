@@ -218,9 +218,11 @@ const UnidadCaracteristicas: React.FC<UnidadCaracteristicasProps> = ({
   }, []);
 
   const filteredCaracteristicas = useMemo(() => {
-    if (!searchTerm) {return caracteristicas;}
+    if (!searchTerm) {
+      return caracteristicas;
+    }
     return caracteristicas.filter(c =>
-      c.nombre.toLowerCase().includes(searchTerm.toLowerCase()),
+      c.nombre.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm]);
 
@@ -302,7 +304,9 @@ const UnidadCaracteristicas: React.FC<UnidadCaracteristicasProps> = ({
           {categorias.map(categoria => {
             const caracteristicasCategoria =
               getCaracteristicasByCategoria(categoria);
-            if (caracteristicasCategoria.length === 0) {return null;}
+            if (caracteristicasCategoria.length === 0) {
+              return null;
+            }
 
             return (
               <div key={categoria} className='mb-4'>
@@ -324,7 +328,7 @@ const UnidadCaracteristicas: React.FC<UnidadCaracteristicasProps> = ({
                           type='checkbox'
                           id={`caracteristica-${caracteristica.id}`}
                           checked={selectedCaracteristicas.includes(
-                            caracteristica.id,
+                            caracteristica.id
                           )}
                           onChange={() =>
                             handleCaracteristicaToggle(caracteristica.id)
@@ -365,4 +369,3 @@ const UnidadCaracteristicas: React.FC<UnidadCaracteristicasProps> = ({
 };
 
 export default UnidadCaracteristicas;
-

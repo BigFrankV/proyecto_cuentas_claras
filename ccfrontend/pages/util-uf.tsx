@@ -37,14 +37,14 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler,
+  Filler
 );
 
 const ConsultorUF: React.FC = () => {
   // Estados principales
   const [fechaConsulta, setFechaConsulta] = useState<string>('');
   const [consultaResult, setConsultaResult] = useState<UfConsultaResult | null>(
-    null,
+    null
   );
   const [calculatorInputs, setCalculatorInputs] = useState<UfCalculatorInputs>({
     pesos: 0,
@@ -187,7 +187,7 @@ const ConsultorUF: React.FC = () => {
       const dateRange = indicadoresAPI.getDateRange(period);
       const apiResponse = await indicadoresAPI.getUfHistorico(
         dateRange.start,
-        dateRange.end,
+        dateRange.end
       );
 
       if (apiResponse.success) {
@@ -236,7 +236,9 @@ const ConsultorUF: React.FC = () => {
 
   // Crear configuración del gráfico para react-chartjs-2
   const createChartConfig = () => {
-    if (!chartData) {return null;}
+    if (!chartData) {
+      return null;
+    }
 
     return {
       labels: chartData.labels.map(label => {
@@ -273,7 +275,7 @@ const ConsultorUF: React.FC = () => {
       y: {
         beginAtZero: false,
         ticks: {
-          callback (value: any) {
+          callback(value: any) {
             return `$${Number(value).toLocaleString('es-CL')}`;
           },
         },
@@ -294,7 +296,7 @@ const ConsultorUF: React.FC = () => {
         titleColor: '#ffffff',
         bodyColor: '#ffffff',
         callbacks: {
-          label (context: any) {
+          label(context: any) {
             return `UF: $${Number(context.parsed.y).toLocaleString('es-CL')}`;
           },
         },
@@ -723,7 +725,7 @@ const ConsultorUF: React.FC = () => {
                           className={`btn ${selectedPeriod === period.key ? 'btn-primary' : 'btn-outline-primary'}`}
                           onClick={() =>
                             cargarHistorico(
-                              period.key as '7d' | '30d' | '90d' | '1y',
+                              period.key as '7d' | '30d' | '90d' | '1y'
                             )
                           }
                         >
@@ -764,7 +766,7 @@ const ConsultorUF: React.FC = () => {
                               <tr key={index}>
                                 <td>
                                   {new Date(item.fecha).toLocaleDateString(
-                                    'es-CL',
+                                    'es-CL'
                                   )}
                                 </td>
                                 <td>{formatPesos(item.valor)}</td>
@@ -810,4 +812,3 @@ const ConsultorUF: React.FC = () => {
 };
 
 export default ConsultorUF;
-

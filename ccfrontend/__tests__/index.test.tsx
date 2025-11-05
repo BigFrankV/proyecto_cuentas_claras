@@ -68,4 +68,3 @@ describe('Home Page', () => {
     expect(mainHeading).toBeInTheDocument();
   });
 });
-

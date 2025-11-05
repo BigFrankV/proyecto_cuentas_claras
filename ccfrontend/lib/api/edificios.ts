@@ -80,7 +80,7 @@ const handleApiError = (error: unknown) => {
   // En producción, no mostrar detalles del error por seguridad
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line no-console
-console.error('API Error:', error);
+    console.error('API Error:', error);
   }
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as { response?: { data?: { error?: string } } };
@@ -101,7 +101,7 @@ interface FetchOptions {
 // Helper para hacer peticiones autenticadas
 const apiRequest = async (
   url: string,
-  options: FetchOptions = {},
+  options: FetchOptions = {}
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> => {
   // Obtener token directamente de localStorage para evitar problemas de importación
@@ -127,7 +127,7 @@ const apiRequest = async (
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      errorData.error || `HTTP error! status: ${response.status}`,
+      errorData.error || `HTTP error! status: ${response.status}`
     );
   }
 
@@ -144,15 +144,24 @@ export const edificiosApi = {
     try {
       const queryParams = new URLSearchParams();
 
-      if (filters?.busqueda) {queryParams.append('search', filters.busqueda);}
-      if (filters?.comunidadId)
-        {queryParams.append('comunidadId', filters.comunidadId);}
-      if (filters?.estado) {queryParams.append('estado', filters.estado);}
-      if (filters?.tipo) {queryParams.append('tipo', filters.tipo);}
-      if (filters?.fechaDesde)
-        {queryParams.append('fechaDesde', filters.fechaDesde);}
-      if (filters?.fechaHasta)
-        {queryParams.append('fechaHasta', filters.fechaHasta);}
+      if (filters?.busqueda) {
+        queryParams.append('search', filters.busqueda);
+      }
+      if (filters?.comunidadId) {
+        queryParams.append('comunidadId', filters.comunidadId);
+      }
+      if (filters?.estado) {
+        queryParams.append('estado', filters.estado);
+      }
+      if (filters?.tipo) {
+        queryParams.append('tipo', filters.tipo);
+      }
+      if (filters?.fechaDesde) {
+        queryParams.append('fechaDesde', filters.fechaDesde);
+      }
+      if (filters?.fechaHasta) {
+        queryParams.append('fechaHasta', filters.fechaHasta);
+      }
 
       const url = `/edificios${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const data = await apiRequest(url);
@@ -249,7 +258,9 @@ export const edificiosApi = {
         telefonoAdministrador: data.telefono_administrador,
         emailAdministrador: data.email_administrador,
         servicios: (() => {
-          if (Array.isArray(data.servicios)) {return data.servicios;}
+          if (Array.isArray(data.servicios)) {
+            return data.servicios;
+          }
           if (typeof data.servicios === 'string' && data.servicios.trim()) {
             try {
               return JSON.parse(data.servicios);
@@ -260,7 +271,9 @@ export const edificiosApi = {
           return [];
         })(),
         amenidades: (() => {
-          if (Array.isArray(data.amenidades)) {return data.amenidades;}
+          if (Array.isArray(data.amenidades)) {
+            return data.amenidades;
+          }
           if (typeof data.amenidades === 'string' && data.amenidades.trim()) {
             try {
               return JSON.parse(data.amenidades);
@@ -340,7 +353,7 @@ export const edificiosApi = {
   // Actualizar edificio
   update: async (
     id: string,
-    data: Partial<EdificioFormData>,
+    data: Partial<EdificioFormData>
   ): Promise<Edificio | null> => {
     try {
       const payload: Record<string, unknown> = {
@@ -493,7 +506,7 @@ export const torresApi = {
   // Crear nueva torre
   create: async (
     edificioId: string,
-    data: TorreFormData,
+    data: TorreFormData
   ): Promise<Torre | null> => {
     try {
       const payload = {
@@ -536,12 +549,12 @@ export const unidadesApi = {
   // Obtener unidades de un edificio
   getByEdificio: async (
     edificioId: string,
-    torreId?: string,
+    torreId?: string
   ): Promise<Unidad[]> => {
     try {
       const queryParams = torreId ? `?torreId=${torreId}` : '';
       const data = await apiRequest(
-        `/edificios/${edificioId}/unidades${queryParams}`,
+        `/edificios/${edificioId}/unidades${queryParams}`
       );
 
       return data.map((unidad: ApiUnidadResponse) => ({
@@ -570,7 +583,7 @@ export const unidadesApi = {
   // Crear nueva unidad
   create: async (
     edificioId: string,
-    data: UnidadFormData,
+    data: UnidadFormData
   ): Promise<Unidad | null> => {
     try {
       const payload = {
@@ -615,7 +628,7 @@ export const edificiosUtilsApi = {
   search: async (query: string, limit = 10) => {
     try {
       return await apiRequest(
-        `/edificios/buscar?q=${encodeURIComponent(query)}&limit=${limit}`,
+        `/edificios/buscar?q=${encodeURIComponent(query)}&limit=${limit}`
       );
     } catch (error) {
       handleApiError(error);
@@ -653,11 +666,11 @@ export const edificiosUtilsApi = {
   validarCodigo: async (
     edificioId: string,
     codigo: string,
-    tipo: 'edificio' | 'torre' | 'unidad',
+    tipo: 'edificio' | 'torre' | 'unidad'
   ) => {
     try {
       return await apiRequest(
-        `/edificios/${edificioId}/validar-codigo?codigo=${encodeURIComponent(codigo)}&tipo=${tipo}`,
+        `/edificios/${edificioId}/validar-codigo?codigo=${encodeURIComponent(codigo)}&tipo=${tipo}`
       );
     } catch (error) {
       handleApiError(error);
@@ -687,4 +700,3 @@ const edificiosApiClient = {
 };
 
 export default edificiosApiClient;
-

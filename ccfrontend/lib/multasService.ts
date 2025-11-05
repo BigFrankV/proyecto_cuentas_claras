@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-undef */
-import {
-  Multa,
-  TipoInfraccion,
-} from '@/types/multas';
+import { Multa, TipoInfraccion } from '@/types/multas';
 
 import api from './api';
 
@@ -12,12 +9,14 @@ class MultasService {
   async obtenerTipos(comunidadId?: number): Promise<TipoInfraccion[]> {
     try {
       const params: any = {};
-      if (comunidadId) {params.comunidadId = comunidadId;}
+      if (comunidadId) {
+        params.comunidadId = comunidadId;
+      }
       const response = await api.get('/multas/tipos-infraccion', { params });
       return response.data?.data ?? response.data ?? [];
     } catch (err) {
       // eslint-disable-next-line no-console
-console.error('Error obteniendo tipos de infracción:', err);
+      console.error('Error obteniendo tipos de infracción:', err);
       // fallback seguro: devolver array vacío (o llamar a getTiposInfraccionPredefinidos si existe)
       if (typeof (this as any).getTiposInfraccionPredefinidos === 'function') {
         return (this as any).getTiposInfraccionPredefinidos();
@@ -28,7 +27,7 @@ console.error('Error obteniendo tipos de infracción:', err);
 
   // ===== CRUD ADAPTADO A TU BACKEND =====
   async getMultas(
-    filtros?: any,
+    filtros?: any
   ): Promise<{ data: any[]; totalPaginas: number }> {
     try {
       const params: any = {};
@@ -53,7 +52,7 @@ console.error('Error obteniendo tipos de infracción:', err);
       };
     } catch (err) {
       // eslint-disable-next-line no-console
-console.error('Error obteniendo multas:', err);
+      console.error('Error obteniendo multas:', err);
       throw err;
     }
   }
@@ -112,7 +111,7 @@ console.error('Error obteniendo multas:', err);
       monto: data.monto,
       prioridad: data.prioridad,
       fecha_infraccion: this.formatearFechaParaBackend(
-        data.fecha || data.fecha_infraccion,
+        data.fecha || data.fecha_infraccion
       ),
       fecha_vencimiento: data.fecha_vencimiento,
     };
@@ -130,7 +129,7 @@ console.error('Error obteniendo multas:', err);
       return this.adaptMultaFromBackend(raw);
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error(`Error actualizando multa ${id}:`, error);
+      console.error(`Error actualizando multa ${id}:`, error);
       throw error;
     }
   }
@@ -211,7 +210,7 @@ console.error(`Error actualizando multa ${id}:`, error);
       return fecha.toISOString().split('T')[0];
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error formateando fecha para backend:', error);
+      console.error('Error formateando fecha para backend:', error);
       return new Date().toISOString().split('T')[0];
     }
   }
@@ -236,7 +235,7 @@ console.error('Error formateando fecha para backend:', error);
       return new Date(fecha).toISOString().split('T')[0];
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error normalizando fecha:', error);
+      console.error('Error normalizando fecha:', error);
       return new Date().toISOString().split('T')[0];
     }
   }
@@ -258,7 +257,7 @@ console.error('Error normalizando fecha:', error);
       return new Date().toISOString();
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error normalizando timestamp:', error);
+      console.error('Error normalizando timestamp:', error);
       return new Date().toISOString();
     }
   }
@@ -287,7 +286,7 @@ console.error('Error normalizando timestamp:', error);
       return fecha.toISOString().split('T')[0];
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error calculando vencimiento:', error);
+      console.error('Error calculando vencimiento:', error);
       const fallback = new Date();
       fallback.setDate(fallback.getDate() + 30);
       return fallback.toISOString().split('T')[0];
@@ -384,7 +383,7 @@ console.error('Error calculando vencimiento:', error);
       metodo_pago?: string;
       referencia?: string;
       monto?: number;
-    },
+    }
   ): Promise<Multa> {
     const response = await api.post(`/multas/${id}/registrar-pago`, pagoData);
     const raw = response.data?.data ?? response.data;
@@ -394,7 +393,7 @@ console.error('Error calculando vencimiento:', error);
   // Crear apelación (wrapper). Backend esperado: POST /multas/:id/apelacion
   async crearApelacion(
     id: number,
-    body: { motivo: string; documentos_json?: any[] },
+    body: { motivo: string; documentos_json?: any[] }
   ): Promise<any> {
     const response = await api.post(`/multas/${id}/apelacion`, body);
     return response.data?.data ?? response.data;
@@ -417,10 +416,12 @@ console.error('Error calculando vencimiento:', error);
   // Agregar este método en la clase MultasService
   async obtenerUnidadesAutocompletar(
     search: string,
-    comunidadId?: number,
+    comunidadId?: number
   ): Promise<any[]> {
     const params: any = { search, limit: 10 };
-    if (comunidadId) {params.comunidad_id = comunidadId;}
+    if (comunidadId) {
+      params.comunidad_id = comunidadId;
+    }
     const response = await api.get('/unidades', { params });
     return response.data.map((u: any) => ({
       id: u.id,
@@ -429,10 +430,9 @@ console.error('Error calculando vencimiento:', error);
       propietario: u.propietario_nombre || '',
       edificio: u.edificio_nombre || '',
       torre: u.torre_nombre || '',
-      display:
-        `${u.numero} - ${u.propietario_nombre || 'Sin propietario'} ${
-          u.edificio_nombre ? `(${u.edificio_nombre})` : ''
-        }`.trim(),
+      display: `${u.numero} - ${u.propietario_nombre || 'Sin propietario'} ${
+        u.edificio_nombre ? `(${u.edificio_nombre})` : ''
+      }`.trim(),
     }));
   }
 }
@@ -447,9 +447,13 @@ export const createMulta = (data: any) => multasService.createMulta(data);
 // ===== HELPERS DE AUTENTICACIÓN PARA FETCH / AXIOS =====
 export function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = { Accept: 'application/json' };
-  if (typeof window === 'undefined') {return headers;}
+  if (typeof window === 'undefined') {
+    return headers;
+  }
   const token = localStorage.getItem('token'); // confirmar key ('token' o 'accessToken')
-  if (token) {headers['Authorization'] = `Bearer ${token}`;}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
   return headers;
 }
 
@@ -459,7 +463,7 @@ export function getAuthHeaders(): Record<string, string> {
  */
 export async function fetchWithAuth(
   input: RequestInfo,
-  init: RequestInit = {},
+  init: RequestInit = {}
 ) {
   const baseHeaders = getAuthHeaders();
   const mergedHeaders = Object.assign({}, baseHeaders, init.headers || {});
@@ -478,7 +482,9 @@ export async function fetchWithAuth(
 export function setAxiosAuthToken(token?: string | null) {
   try {
     const anyApi: any = api as any;
-    if (!anyApi || !anyApi.defaults) {return;}
+    if (!anyApi || !anyApi.defaults) {
+      return;
+    }
     if (token) {
       anyApi.defaults.headers = anyApi.defaults.headers || {};
       anyApi.defaults.headers.common = anyApi.defaults.headers.common || {};
@@ -492,8 +498,7 @@ export function setAxiosAuthToken(token?: string | null) {
     // eslint-disable-next-line no-console
     // eslint-disable-next-line no-console
 
-// eslint-disable-next-line no-console
-console.warn('setAxiosAuthToken error', err);
+    // eslint-disable-next-line no-console
+    console.warn('setAxiosAuthToken error', err);
   }
 }
-

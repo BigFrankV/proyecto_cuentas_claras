@@ -38,24 +38,30 @@ export default function MedidorDetallePage() {
   const [form, setForm] = useState({ fecha: '', lectura: '', periodo: '' });
 
   useEffect(() => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
     let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
         const data = await getMedidor(Number(id));
-        if (!mounted) {return;}
+        if (!mounted) {
+          return;
+        }
         setMedidor(data);
         const lecResp = await listLecturas(Number(id), { limit: 24 });
         setLecturas(lecResp.data ?? lecResp);
         const consResp = await getConsumos(Number(id));
         setConsumos(consResp.data ?? []);
       } catch (err) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error('load medidor err', err);
         alert('Error cargando medidor');
       } finally {
-        if (mounted) {setLoading(false);}
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
     load();
@@ -65,18 +71,24 @@ export default function MedidorDetallePage() {
   }, [id]);
 
   const canManage = () => {
-    if (!user) {return false;}
-    if (user.is_superadmin) {return true;}
+    if (!user) {
+      return false;
+    }
+    if (user.is_superadmin) {
+      return true;
+    }
     return !!user.comunidades?.find(
       (c: any) =>
         c.id === medidor?.comunidad_id &&
-        (c.role === 'admin' || c.role === 'gestor'),
+        (c.role === 'admin' || c.role === 'gestor')
     );
   };
 
   const submitLectura = async (e: any) => {
     e.preventDefault();
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
     if (!form.fecha || form.lectura === '' || !form.periodo) {
       alert('Completa fecha, lectura y periodo');
       return;
@@ -96,29 +108,38 @@ export default function MedidorDetallePage() {
       setMedidor(data);
       setForm({ fecha: '', lectura: '', periodo: '' });
     } catch (err: any) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('create lectura err', err);
-      if (err?.response?.status === 409)
-        {alert('Ya existe una lectura para ese periodo');}
-      else if (err?.response?.status === 403) {alert('No autorizado');}
-      else {alert('Error al crear lectura');}
+      if (err?.response?.status === 409) {
+        alert('Ya existe una lectura para ese periodo');
+      } else if (err?.response?.status === 403) {
+        alert('No autorizado');
+      } else {
+        alert('Error al crear lectura');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!medidor) {return;}
-    if (!confirm('Eliminar medidor? (si tiene lecturas, será desactivado)'))
-      {return;}
+    if (!medidor) {
+      return;
+    }
+    if (!confirm('Eliminar medidor? (si tiene lecturas, será desactivado)')) {
+      return;
+    }
     setLoading(true);
     try {
       const resp = await deleteMedidor(medidor.id);
-      if (resp?.softDeleted) {alert('Medidor desactivado (soft-delete)');}
-      else {alert('Medidor eliminado');}
+      if (resp?.softDeleted) {
+        alert('Medidor desactivado (soft-delete)');
+      } else {
+        alert('Medidor eliminado');
+      }
       router.push('/medidores');
     } catch (err: any) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('delete medidor err', err);
       alert('Error al eliminar medidor');
     } finally {
@@ -126,8 +147,12 @@ export default function MedidorDetallePage() {
     }
   };
 
-  if (!id) {return <div>Cargando id...</div>;}
-  if (loading && !medidor) {return <div>Cargando...</div>;}
+  if (!id) {
+    return <div>Cargando id...</div>;
+  }
+  if (loading && !medidor) {
+    return <div>Cargando...</div>;
+  }
 
   return (
     <ProtectedRoute>
@@ -357,7 +382,7 @@ export default function MedidorDetallePage() {
                         <span className='info-label'>Fecha de Instalación</span>
                         <span className='info-value'>
                           {new Date(
-                            medidor?.fecha_instalacion,
+                            medidor?.fecha_instalacion
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -456,7 +481,7 @@ export default function MedidorDetallePage() {
                         <span className='info-label'>Último Servicio</span>
                         <span className='info-value'>
                           {new Date(
-                            medidor?.ultimo_servicio,
+                            medidor?.ultimo_servicio
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -464,7 +489,7 @@ export default function MedidorDetallePage() {
                         <span className='info-label'>Próximo Servicio</span>
                         <span className='info-value'>
                           {new Date(
-                            medidor?.proximo_servicio,
+                            medidor?.proximo_servicio
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -630,7 +655,7 @@ export default function MedidorDetallePage() {
                         <span className='info-label'>Garantía hasta</span>
                         <span className='info-value'>
                           {new Date(
-                            medidor?.garantia_hasta,
+                            medidor?.garantia_hasta
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -638,7 +663,7 @@ export default function MedidorDetallePage() {
                         <span className='info-label'>Fecha de Creación</span>
                         <span className='info-value'>
                           {new Date(
-                            medidor?.fecha_creacion,
+                            medidor?.fecha_creacion
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -646,7 +671,7 @@ export default function MedidorDetallePage() {
                         <span className='info-label'>Última Actualización</span>
                         <span className='info-value'>
                           {new Date(
-                            medidor?.ultima_actualizacion,
+                            medidor?.ultima_actualizacion
                           ).toLocaleDateString()}
                         </span>
                       </div>

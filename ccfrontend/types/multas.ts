@@ -154,4 +154,3 @@ export interface MultasResumen {
   estadisticas: MultasEstadisticas;
   multas_recientes: Multa[];
 }
-

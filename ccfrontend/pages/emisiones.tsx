@@ -58,8 +58,8 @@ export default function EmisionesListado() {
       setEmissions(mappedEmissions);
       setFilteredEmissions(mappedEmissions);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading emissions:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading emissions:', error);
       // Mostrar estado vacío si falla la API
       setEmissions([]);
       setFilteredEmissions([]);
@@ -183,7 +183,8 @@ console.error('Error loading emissions:', error);
   };
 
   const handleBulkAction = (action: string) => {
-    // eslint-disable-next-line no-console`n    console.log(`Acción masiva: ${action}`, selectedEmissions);
+    // eslint-disable-next-line no-console
+    console.log(`Acción masiva: ${action}`, selectedEmissions);
     // Implementar acciones masivas aquí
     alert(
       `Acción "${action}" aplicada a ${selectedEmissions.length} emisiones`,
@@ -206,7 +207,9 @@ console.error('Error loading emissions:', error);
 
   // Render paginación
   const renderPagination = () => {
-    if (totalPages <= 1) {return null;}
+    if (totalPages <= 1) {
+      return null;
+    }
 
     const pages = [];
     const maxVisiblePages = 5;
@@ -530,4 +533,3 @@ console.error('Error loading emissions:', error);
     </ProtectedRoute>
   );
 }
-

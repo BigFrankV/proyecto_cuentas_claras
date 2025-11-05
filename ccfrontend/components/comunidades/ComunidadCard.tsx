@@ -198,4 +198,3 @@ const ComunidadCard: React.FC<ComunidadCardProps> = ({
 };
 
 export default ComunidadCard;
-

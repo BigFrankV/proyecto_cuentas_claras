@@ -23,7 +23,7 @@ export default function MultaTable({ multas, onAction }: any) {
             hasPermission(Permission.MANAGE_FINANCES, m.comunidad_id);
           const showAnular = hasPermission(
             Permission.MANAGE_FINANCES,
-            m.comunidad_id,
+            m.comunidad_id
           );
           const showApelar = !isPagada && user; // Users can appeal if authenticated
           const showDelete = hasPermission(Permission.MANAGE_FINANCES);
@@ -102,4 +102,3 @@ export default function MultaTable({ multas, onAction }: any) {
     </table>
   );
 }
-

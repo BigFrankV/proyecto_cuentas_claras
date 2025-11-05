@@ -83,18 +83,20 @@ export default function NuevoCargoPage() {
     setApiError(null);
 
     try {
-      // eslint-disable-next-line no-console`n      console.log('📝 Creando cargo con datos:', formData);
+      // eslint-disable-next-line no-console
+      console.log('📝 Creando cargo con datos:', formData);
 
       // Crear el cargo usando la API
       const newCharge = await cargosApi.create(formData);
 
-      // eslint-disable-next-line no-console`n      console.log('✅ Cargo creado exitosamente:', newCharge);
+      // eslint-disable-next-line no-console
+      console.log('✅ Cargo creado exitosamente:', newCharge);
 
       // Redirigir de vuelta a la lista
       router.push('/cargos');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('❌ Error al crear cargo:', error);
+      // eslint-disable-next-line no-console
+      console.error('❌ Error al crear cargo:', error);
       setApiError(
         error instanceof Error
           ? error.message
@@ -416,4 +418,3 @@ console.error('❌ Error al crear cargo:', error);
     </ProtectedRoute>
   );
 }
-

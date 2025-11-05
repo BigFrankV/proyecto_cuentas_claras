@@ -98,12 +98,12 @@ export default function UnidadNueva() {
   // Filtrar edificios según comunidad seleccionada
   const availableEdificios = edificios.filter(
     edificio =>
-      !formData.comunidad || edificio.comunidadId === formData.comunidad,
+      !formData.comunidad || edificio.comunidadId === formData.comunidad
   );
 
   // Filtrar torres según edificio seleccionado
   const availableTorres = torres.filter(
-    torre => !formData.edificio || torre.edificioId === formData.edificio,
+    torre => !formData.edificio || torre.edificioId === formData.edificio
   );
 
   // Calcular m² totales automáticamente
@@ -132,7 +132,7 @@ export default function UnidadNueva() {
     setSelectedCaracteristicas(prev =>
       prev.includes(caracteristica)
         ? prev.filter(c => c !== caracteristica)
-        : [...prev, caracteristica],
+        : [...prev, caracteristica]
     );
   };
 
@@ -149,8 +149,8 @@ export default function UnidadNueva() {
   const handleMedidorChange = (id: string, field: string, value: string) => {
     setMedidores(prev =>
       prev.map(medidor =>
-        medidor.id === id ? { ...medidor, [field]: value } : medidor,
-      ),
+        medidor.id === id ? { ...medidor, [field]: value } : medidor
+      )
     );
   };
 
@@ -161,14 +161,21 @@ export default function UnidadNueva() {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.comunidad) {newErrors.comunidad = 'La comunidad es requerida';}
-    if (!formData.edificio) {newErrors.edificio = 'El edificio es requerido';}
-    if (!formData.codigoUnidad)
-      {newErrors.codigoUnidad = 'El código de unidad es requerido';}
-    if (!formData.tipoUnidad)
-      {newErrors.tipoUnidad = 'El tipo de unidad es requerido';}
-    if (formData.m2Utiles <= 0)
-      {newErrors.m2Utiles = 'Los m² útiles deben ser mayor a 0';}
+    if (!formData.comunidad) {
+      newErrors.comunidad = 'La comunidad es requerida';
+    }
+    if (!formData.edificio) {
+      newErrors.edificio = 'El edificio es requerido';
+    }
+    if (!formData.codigoUnidad) {
+      newErrors.codigoUnidad = 'El código de unidad es requerido';
+    }
+    if (!formData.tipoUnidad) {
+      newErrors.tipoUnidad = 'El tipo de unidad es requerido';
+    }
+    if (formData.m2Utiles <= 0) {
+      newErrors.m2Utiles = 'Los m² útiles deben ser mayor a 0';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -177,7 +184,9 @@ export default function UnidadNueva() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {return;}
+    if (!validateForm()) {
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -215,7 +224,7 @@ export default function UnidadNueva() {
       const comunidadId = formData.comunidad;
       const resp = await apiClient.post(
         `/unidades/comunidad/${comunidadId}`,
-        payload,
+        payload
       );
       // on success, navigate to new unidad detail or list
       const created = resp.data;
@@ -226,8 +235,8 @@ export default function UnidadNueva() {
       }
     } catch (err) {
       const error: any = err;
-// eslint-disable-next-line no-console
-console.error('Error al crear unidad:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error al crear unidad:', error);
       // map server validation
       const serverErr = error?.response?.data;
       if (serverErr) {
@@ -456,7 +465,7 @@ console.error('Error al crear unidad:', error);
                             onChange={e =>
                               handleInputChange(
                                 'piso',
-                                parseInt(e.target.value) || 0,
+                                parseInt(e.target.value) || 0
                               )
                             }
                           />
@@ -479,7 +488,7 @@ console.error('Error al crear unidad:', error);
                             onChange={e =>
                               handleInputChange(
                                 'nroDormitorios',
-                                parseInt(e.target.value) || 0,
+                                parseInt(e.target.value) || 0
                               )
                             }
                           />
@@ -499,7 +508,7 @@ console.error('Error al crear unidad:', error);
                             onChange={e =>
                               handleInputChange(
                                 'nroBanos',
-                                parseInt(e.target.value) || 0,
+                                parseInt(e.target.value) || 0
                               )
                             }
                           />
@@ -560,7 +569,7 @@ console.error('Error al crear unidad:', error);
                               onChange={e =>
                                 handleInputChange(
                                   'm2Utiles',
-                                  parseFloat(e.target.value) || 0,
+                                  parseFloat(e.target.value) || 0
                                 )
                               }
                               required
@@ -590,7 +599,7 @@ console.error('Error al crear unidad:', error);
                               onChange={e =>
                                 handleInputChange(
                                   'm2Terrazas',
-                                  parseFloat(e.target.value) || 0,
+                                  parseFloat(e.target.value) || 0
                                 )
                               }
                             />
@@ -638,7 +647,7 @@ console.error('Error al crear unidad:', error);
                             onChange={e =>
                               handleInputChange(
                                 'alicuota',
-                                parseFloat(e.target.value) || 0,
+                                parseFloat(e.target.value) || 0
                               )
                             }
                           />
@@ -707,7 +716,7 @@ console.error('Error al crear unidad:', error);
                             onChange={e =>
                               handleInputChange(
                                 'estacionamiento',
-                                e.target.value,
+                                e.target.value
                               )
                             }
                           />
@@ -728,7 +737,7 @@ console.error('Error al crear unidad:', error);
                             onChange={e =>
                               handleInputChange(
                                 'ubicacionEstacionamiento',
-                                e.target.value,
+                                e.target.value
                               )
                             }
                           />
@@ -766,7 +775,7 @@ console.error('Error al crear unidad:', error);
                             onChange={e =>
                               handleInputChange(
                                 'ubicacionBodega',
-                                e.target.value,
+                                e.target.value
                               )
                             }
                           />
@@ -813,12 +822,12 @@ console.error('Error al crear unidad:', error);
                             borderRadius: '16px',
                             fontSize: '0.875rem',
                           }}
-                          role="button"
+                          role='button'
                           tabIndex={0}
                           onClick={() =>
                             handleCaracteristicaToggle(caracteristica)
                           }
-                          onKeyDown={(e) => {
+                          onKeyDown={e => {
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault();
                               handleCaracteristicaToggle(caracteristica);
@@ -866,8 +875,8 @@ console.error('Error al crear unidad:', error);
                   <div className='p-4'>
                     {medidores.length === 0 ? (
                       <p className='text-muted mb-0'>
-                        No hay medidores configurados. Haga clic en &quot;Agregar
-                        Medidor&quot; para añadir uno.
+                        No hay medidores configurados. Haga clic en
+                        &quot;Agregar Medidor&quot; para añadir uno.
                       </p>
                     ) : (
                       medidores.map(medidor => (
@@ -885,7 +894,7 @@ console.error('Error al crear unidad:', error);
                                   handleMedidorChange(
                                     medidor.id,
                                     'tipo',
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                               >
@@ -908,7 +917,7 @@ console.error('Error al crear unidad:', error);
                                   handleMedidorChange(
                                     medidor.id,
                                     'numero',
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                                 placeholder='Número del medidor'
@@ -924,7 +933,7 @@ console.error('Error al crear unidad:', error);
                                   handleMedidorChange(
                                     medidor.id,
                                     'ubicacion',
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                                 placeholder='Ubicación del medidor'
@@ -1035,4 +1044,3 @@ console.error('Error al crear unidad:', error);
     </ProtectedRoute>
   );
 }
-

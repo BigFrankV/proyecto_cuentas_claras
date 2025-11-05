@@ -9,15 +9,15 @@ import { ProtectedRoute } from '@/lib/useAuth'; // Agrega si no está
 import { usePermissions } from '@/lib/usePermissions';
 
 const MultasListadoPage: React.FC = () => {
-// eslint-disable-next-line no-console
-console.log('🚀 MultasListadoPage - Componente montado'); // ✅ Agrega esto
+  // eslint-disable-next-line no-console
+  console.log('🚀 MultasListadoPage - Componente montado'); // ✅ Agrega esto
 
   const router = useRouter();
   const { user } = useAuth();
   const { canManageFinances } = usePermissions();
 
-// eslint-disable-next-line no-console
-console.log('👤 Usuario en MultasListadoPage:', user); // ✅ Agrega esto
+  // eslint-disable-next-line no-console
+  console.log('👤 Usuario en MultasListadoPage:', user); // ✅ Agrega esto
 
   const [multas, setMultas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,13 +32,14 @@ console.log('👤 Usuario en MultasListadoPage:', user); // ✅ Agrega esto
   const [totalPaginas, setTotalPaginas] = useState(1);
 
   useEffect(() => {
-// eslint-disable-next-line no-console
-console.log('🔄 useEffect ejecutado en MultasListadoPage'); // ✅ Agrega esto
+    // eslint-disable-next-line no-console
+    console.log('🔄 useEffect ejecutado en MultasListadoPage'); // ✅ Agrega esto
     cargarMultas();
   }, [filtros, pagina]);
 
   const cargarMultas = async () => {
-    // eslint-disable-next-line no-console`n    console.log('📡 Cargando multas...');
+    // eslint-disable-next-line no-console
+    console.log('📡 Cargando multas...');
     setLoading(true);
     setError(null);
     try {
@@ -48,8 +49,8 @@ console.log('🔄 useEffect ejecutado en MultasListadoPage'); // ✅ Agrega esto
       setTotalPaginas(response.totalPaginas || 1);
     } catch (err) {
       setError('Error al cargar multas');
-// eslint-disable-next-line no-console
-console.error('Error en cargarMultas:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error en cargarMultas:', err);
     } finally {
       setLoading(false);
     }
@@ -98,8 +99,8 @@ console.error('Error en cargarMultas:', err);
       // ✅ Agrega más si es necesario
     } catch (err) {
       setError('Error en acción masiva');
-// eslint-disable-next-line no-console
-console.error('Error en handleBulkAction:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error en handleBulkAction:', err);
     }
   };
 
@@ -639,4 +640,3 @@ console.error('Error en handleBulkAction:', err);
 };
 
 export default MultasListadoPage;
-

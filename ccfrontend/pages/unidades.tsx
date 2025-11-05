@@ -141,11 +141,13 @@ export default function UnidadesListado() {
     (async () => {
       try {
         const res = await apiClient.get('/unidades/dropdowns/comunidades');
-        if (!mounted) {return;}
+        if (!mounted) {
+          return;
+        }
         setComunidadesState(res.data || []);
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error loading comunidades dropdown', err);
+        // eslint-disable-next-line no-console
+        console.error('Error loading comunidades dropdown', err);
       }
     })();
     return () => {
@@ -165,11 +167,13 @@ console.error('Error loading comunidades dropdown', err);
         const res = await apiClient.get('/unidades/dropdowns/edificios', {
           params: { comunidad_id: filters.comunidad },
         });
-        if (!mounted) {return;}
+        if (!mounted) {
+          return;
+        }
         setAvailableEdificios(res.data || []);
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error loading edificios dropdown', err);
+        // eslint-disable-next-line no-console
+        console.error('Error loading edificios dropdown', err);
       }
     })();
     return () => {
@@ -189,11 +193,13 @@ console.error('Error loading edificios dropdown', err);
         const res = await apiClient.get('/unidades/dropdowns/torres', {
           params: { edificio_id: filters.edificio },
         });
-        if (!mounted) {return;}
+        if (!mounted) {
+          return;
+        }
         setAvailableTorres(res.data || []);
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error loading torres dropdown', err);
+        // eslint-disable-next-line no-console
+        console.error('Error loading torres dropdown', err);
       }
     })();
     return () => {
@@ -216,24 +222,24 @@ console.error('Error loading torres dropdown', err);
             ?.toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
           unidad.residente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          unidad.torre.toLowerCase().includes(searchTerm.toLowerCase()),
+          unidad.torre.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Filtrar por comunidad
     if (filters.comunidad) {
       const comunidadNombre = comunidadesState.find(
-        (c: any) => c.id === filters.comunidad,
+        (c: any) => c.id === filters.comunidad
       )?.nombre;
       filtered = filtered.filter(
-        unidad => unidad.comunidad === comunidadNombre,
+        unidad => unidad.comunidad === comunidadNombre
       );
     }
 
     // Filtrar por edificio
     if (filters.edificio) {
       const edificioNombre = availableEdificios.find(
-        (e: any) => e.id === filters.edificio,
+        (e: any) => e.id === filters.edificio
       )?.nombre;
       filtered = filtered.filter(unidad => unidad.edificio === edificioNombre);
     }
@@ -241,7 +247,7 @@ console.error('Error loading torres dropdown', err);
     // Filtrar por torre
     if (filters.torre) {
       const torreNombre = availableTorres.find(
-        (t: any) => t.id === filters.torre,
+        (t: any) => t.id === filters.torre
       )?.nombre;
       filtered = filtered.filter(unidad => unidad.torre === torreNombre);
     }
@@ -277,7 +283,7 @@ console.error('Error loading torres dropdown', err);
     setSelectedUnidades(prev =>
       prev.includes(unidadId)
         ? prev.filter(id => id !== unidadId)
-        : [...prev, unidadId],
+        : [...prev, unidadId]
     );
   };
 
@@ -285,7 +291,7 @@ console.error('Error loading torres dropdown', err);
     setSelectedUnidades(
       selectedUnidades.length === filteredUnidades.length
         ? []
-        : filteredUnidades.map(u => u.id),
+        : filteredUnidades.map(u => u.id)
     );
   };
 
@@ -337,14 +343,14 @@ console.error('Error loading torres dropdown', err);
     const total = filteredUnidades.length;
     const activas = filteredUnidades.filter(u => u.estado === 'Activa').length;
     const inactivas = filteredUnidades.filter(
-      u => u.estado === 'Inactiva',
+      u => u.estado === 'Inactiva'
     ).length;
     const mantenimiento = filteredUnidades.filter(
-      u => u.estado === 'Mantenimiento',
+      u => u.estado === 'Mantenimiento'
     ).length;
     const saldoTotal = filteredUnidades.reduce(
       (sum, u) => sum + u.saldoPendiente,
-      0,
+      0
     );
 
     return { total, activas, inactivas, mantenimiento, saldoTotal };
@@ -359,16 +365,29 @@ console.error('Error loading torres dropdown', err);
       try {
         const params: any = {};
         // map filters from UI to API params (basic)
-        if (filters.comunidad) {params.comunidad_id = filters.comunidad;}
-        if (filters.edificio) {params.edificio_id = filters.edificio;}
-        if (filters.torre) {params.torre_id = filters.torre;}
-        if (filters.estado)
-          {params.activa = filters.estado === 'Activa' ? true : undefined;}
-        if (filters.tipo) {params.tipo = filters.tipo;}
-        if (searchTerm) {params.search = searchTerm;}
+        if (filters.comunidad) {
+          params.comunidad_id = filters.comunidad;
+        }
+        if (filters.edificio) {
+          params.edificio_id = filters.edificio;
+        }
+        if (filters.torre) {
+          params.torre_id = filters.torre;
+        }
+        if (filters.estado) {
+          params.activa = filters.estado === 'Activa' ? true : undefined;
+        }
+        if (filters.tipo) {
+          params.tipo = filters.tipo;
+        }
+        if (searchTerm) {
+          params.search = searchTerm;
+        }
 
         const resp = await apiClient.get('/unidades', { params });
-        if (!mounted) {return;}
+        if (!mounted) {
+          return;
+        }
         const data = resp.data || [];
         // Map backend shapes to frontend Unidad as needed (light mapping)
         const mapped = data.map((u: any) => ({
@@ -392,12 +411,12 @@ console.error('Error loading torres dropdown', err);
         setUnidades(mapped);
         setFilteredUnidades(mapped);
       } catch (err: any) {
-// eslint-disable-next-line no-console
-console.error('Error fetching unidades', err);
+        // eslint-disable-next-line no-console
+        console.error('Error fetching unidades', err);
         setError(
           err?.response?.data?.error ||
             err.message ||
-            'Error al cargar unidades',
+            'Error al cargar unidades'
         );
       } finally {
         setLoading(false);
@@ -825,7 +844,7 @@ console.error('Error fetching unidades', err);
                       e.currentTarget.style.transform = 'translateY(0)';
                       e.currentTarget.style.boxShadow = '';
                     }}
-                    role="presentation"
+                    role='presentation'
                   >
                     <div className='position-absolute top-0 end-0 p-2'>
                       <span
@@ -943,4 +962,3 @@ console.error('Error fetching unidades', err);
     </ProtectedRoute>
   );
 }
-

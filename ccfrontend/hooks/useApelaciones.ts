@@ -24,7 +24,7 @@ export default function useApelaciones(token?: string) {
         setLoading(false);
       }
     },
-    [token],
+    [token]
   );
 
   const get = useCallback(
@@ -41,7 +41,7 @@ export default function useApelaciones(token?: string) {
         setLoading(false);
       }
     },
-    [token],
+    [token]
   );
 
   const create = useCallback(
@@ -58,7 +58,7 @@ export default function useApelaciones(token?: string) {
         setLoading(false);
       }
     },
-    [token],
+    [token]
   );
 
   const update = useCallback(
@@ -75,7 +75,7 @@ export default function useApelaciones(token?: string) {
         setLoading(false);
       }
     },
-    [token],
+    [token]
   );
 
   const resolve = useCallback(
@@ -92,7 +92,7 @@ export default function useApelaciones(token?: string) {
         setLoading(false);
       }
     },
-    [token],
+    [token]
   );
 
   return {
@@ -108,4 +108,3 @@ export default function useApelaciones(token?: string) {
     setData,
   };
 }
-

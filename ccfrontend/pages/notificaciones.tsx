@@ -457,8 +457,7 @@ export default function NotificacionesListado() {
         );
         const csvContent =
           'data:text/csv;charset=utf-8,' +
-          `ID,Asunto,Tipo,Estado,Autor,Fecha\n${ 
-          selectedNotificationData
+          `ID,Asunto,Tipo,Estado,Autor,Fecha\n${selectedNotificationData
             .map(
               n =>
                 `${n.id},"${n.subject}",${n.type},${n.status},${n.author.name},${n.createdAt}`,
@@ -934,8 +933,7 @@ export default function NotificacionesListado() {
                       // Exportar todas las notificaciones
                       const csvContent =
                         'data:text/csv;charset=utf-8,' +
-                        `ID,Asunto,Tipo,Estado,Autor,Fecha\n${ 
-                        filteredNotifications
+                        `ID,Asunto,Tipo,Estado,Autor,Fecha\n${filteredNotifications
                           .map(
                             n =>
                               `${n.id},"${n.subject}",${n.type},${n.status},${n.author.name},${n.createdAt}`,
@@ -1520,19 +1518,13 @@ export default function NotificacionesListado() {
                   </button>
                 </li>
                 <li className='page-item'>
-                  <button className='page-link'>
-                    2
-                  </button>
+                  <button className='page-link'>2</button>
                 </li>
                 <li className='page-item'>
-                  <button className='page-link'>
-                    3
-                  </button>
+                  <button className='page-link'>3</button>
                 </li>
                 <li className='page-item'>
-                  <button className='page-link'>
-                    Siguiente
-                  </button>
+                  <button className='page-link'>Siguiente</button>
                 </li>
               </ul>
             </nav>
@@ -1542,4 +1534,3 @@ export default function NotificacionesListado() {
     </ProtectedRoute>
   );
 }
-

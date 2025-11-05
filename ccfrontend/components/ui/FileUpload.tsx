@@ -33,10 +33,12 @@ export default function FileUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const files = event.target.files;
-    if (!files || files.length === 0) {return;}
+    if (!files || files.length === 0) {
+      return;
+    }
 
     await handleFiles(files);
   };
@@ -44,7 +46,9 @@ export default function FileUpload({
   const handleDrop = async (event: React.DragEvent) => {
     event.preventDefault();
     const files = event.dataTransfer.files;
-    if (!files || files.length === 0) {return;}
+    if (!files || files.length === 0) {
+      return;
+    }
 
     await handleFiles(files);
   };
@@ -60,7 +64,9 @@ export default function FileUpload({
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        if (!file) {continue;}
+        if (!file) {
+          continue;
+        }
 
         // Validar tipo
         if (!fileService.validateFileType(file)) {
@@ -71,7 +77,7 @@ export default function FileUpload({
         // Validar tamaño
         if (!fileService.validateFileSize(file, maxSizeMB)) {
           errors.push(
-            `${file.name}: Archivo demasiado grande (máximo ${maxSizeMB}MB)`,
+            `${file.name}: Archivo demasiado grande (máximo ${maxSizeMB}MB)`
           );
           continue;
         }
@@ -93,10 +99,10 @@ export default function FileUpload({
       setUploadProgress(100);
       onUploadSuccess?.(uploadedFiles);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error uploading files:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error uploading files:', error);
       onUploadError?.(
-        error instanceof Error ? error.message : 'Error subiendo archivos',
+        error instanceof Error ? error.message : 'Error subiendo archivos'
       );
     } finally {
       setIsUploading(false);
@@ -185,4 +191,3 @@ console.error('Error uploading files:', error);
     </div>
   );
 }
-

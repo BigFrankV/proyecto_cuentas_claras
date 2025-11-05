@@ -60,15 +60,21 @@ const PersonasListado = () => {
         offset: (currentPage - 1) * itemsPerPage,
       };
 
-      if (searchTerm) {filters.search = searchTerm;}
-      if (tipoFilter !== 'todos') {filters.tipo = tipoFilter as any;}
-      if (estadoFilter !== 'todos') {filters.estado = estadoFilter as any;}
+      if (searchTerm) {
+        filters.search = searchTerm;
+      }
+      if (tipoFilter !== 'todos') {
+        filters.tipo = tipoFilter as any;
+      }
+      if (estadoFilter !== 'todos') {
+        filters.estado = estadoFilter as any;
+      }
 
       const data = await listarPersonas(filters);
       setPersonas(data);
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error al cargar personas:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error al cargar personas:', err);
     }
   };
 
@@ -82,8 +88,8 @@ console.error('Error al cargar personas:', err);
         administradores: data.administradores,
       });
     } catch (err) {
-// eslint-disable-next-line no-console
-console.error('Error al cargar estadísticas:', err);
+      // eslint-disable-next-line no-console
+      console.error('Error al cargar estadísticas:', err);
     }
   };
 
@@ -102,7 +108,7 @@ console.error('Error al cargar estadísticas:', err);
       estado: (persona.usuario?.estado || 'Activo') as 'Activo' | 'Inactivo',
       unidades: 0, // TODO: Obtener de API
       fechaRegistro: new Date(persona.fecha_registro).toLocaleDateString(
-        'es-AR',
+        'es-AR'
       ),
       avatar: persona.avatar || undefined,
     }));
@@ -214,4 +220,3 @@ console.error('Error al cargar estadísticas:', err);
 };
 
 export default PersonasListado;
-

@@ -76,7 +76,7 @@ export default function ApelacionTable({
       return true;
     }
     const roles = (u.memberships || []).map((m: any) =>
-      String(m.rol_slug || m.rol || '').toLowerCase(),
+      String(m.rol_slug || m.rol || '').toLowerCase()
     );
     const allowed = [
       'presidente_comite',
@@ -116,11 +116,11 @@ export default function ApelacionTable({
             ? res.meta.total
             : res.data
               ? res.data.length
-              : 0,
+              : 0
         );
       } catch (err: any) {
-// eslint-disable-next-line no-console
-console.error('ApelacionTable.list.error', err);
+        // eslint-disable-next-line no-console
+        console.error('ApelacionTable.list.error', err);
         setError(err?.message || 'Error al cargar apelaciones');
       } finally {
         setLoading(false);
@@ -267,4 +267,3 @@ console.error('ApelacionTable.list.error', err);
     </div>
   );
 }
-

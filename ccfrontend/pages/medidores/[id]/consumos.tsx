@@ -164,7 +164,7 @@ export default function ConsumosMedidor() {
       setConsumptionData(mockConsumptionData);
       setAlerts(mockAlerts);
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error loading consumption data:', error);
     } finally {
       setLoading(false);

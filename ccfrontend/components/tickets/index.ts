@@ -22,4 +22,3 @@ export { default as CategoryBadgeDefault } from './CategoryBadge';
 export { default as TicketCardDefault } from './TicketCard';
 export { default as TimelineDefault } from './Timeline';
 export { default as CommentFormDefault } from './CommentForm';
-

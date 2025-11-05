@@ -8,7 +8,6 @@ import { ProtectedRoute } from '@/lib/useAuth';
 
 import styles from '../styles/tarifas.module.css';
 
-
 export default function TarifasListado() {
   // Estado para modales
   const [showImport, setShowImport] = useState(false);
@@ -183,7 +182,7 @@ export default function TarifasListado() {
                                       ${tramo.precio}
                                     </span>
                                   </div>
-                                ),
+                                )
                               )}
                             </div>
                           )}
@@ -203,7 +202,7 @@ export default function TarifasListado() {
                                       ${est.precio}
                                     </span>
                                   </div>
-                                ),
+                                )
                               )}
                             </div>
                           )}
@@ -289,4 +288,3 @@ export default function TarifasListado() {
     </ProtectedRoute>
   );
 }
-

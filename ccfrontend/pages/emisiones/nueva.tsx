@@ -116,8 +116,8 @@ export default function EmisionNueva() {
         const comunidadesData = await comunidadesService.getComunidades();
         setComunidades(comunidadesData);
       } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading comunidades:', error);
+        // eslint-disable-next-line no-console
+        console.error('Error loading comunidades:', error);
         // Fallback to mock data if API fails
         setComunidades([
           { id: 1, razon_social: 'Edificio Central' },
@@ -157,7 +157,9 @@ console.error('Error loading comunidades:', error);
   };
 
   const handleAddConcept = () => {
-    if (!newConcept.name.trim() || newConcept.amount <= 0) {return;}
+    if (!newConcept.name.trim() || newConcept.amount <= 0) {
+      return;
+    }
 
     const concept: Concept = {
       id: Date.now().toString(),
@@ -247,8 +249,8 @@ console.error('Error loading comunidades:', error);
       alert('Emisión creada exitosamente');
       router.push('/emisiones');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error creating emision:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error creating emision:', error);
       alert('Error al crear la emisión. Por favor intenta nuevamente.');
     } finally {
       setLoading(false);
@@ -950,4 +952,3 @@ console.error('Error creating emision:', error);
     </ProtectedRoute>
   );
 }
-

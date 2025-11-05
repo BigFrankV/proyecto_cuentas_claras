@@ -43,7 +43,9 @@ export default function EditarCargoPage() {
 
   useEffect(() => {
     const fetchCharge = async () => {
-      if (!id || typeof id !== 'string') {return;}
+      if (!id || typeof id !== 'string') {
+        return;
+      }
 
       setLoading(true);
       try {
@@ -109,10 +111,10 @@ export default function EditarCargoPage() {
 
         // eslint-disable-next-line no-console
 
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.log('✅ Cargo cargado para edición:', mappedCharge);
       } catch (err) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error('❌ Error al cargar cargo:', err);
         // Aquí podrías mostrar un mensaje de error o redirigir
       } finally {
@@ -180,7 +182,7 @@ export default function EditarCargoPage() {
       // Redirigir de vuelta a la lista
       router.push('/cargos');
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error al guardar:', error);
       // Aquí podrías mostrar un mensaje de error
     } finally {
@@ -385,7 +387,7 @@ export default function EditarCargoPage() {
                             onChange={e =>
                               handleInputChange(
                                 'amount',
-                                parseFloat(e.target.value) || 0,
+                                parseFloat(e.target.value) || 0
                               )
                             }
                             min='0'
@@ -524,7 +526,7 @@ export default function EditarCargoPage() {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
-                          },
+                          }
                         )}
                       </div>
                     </div>

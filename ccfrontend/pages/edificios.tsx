@@ -68,9 +68,12 @@ export default function EdificiosListado() {
   };
 
   // Debug: log de estadísticas calculadas
-  // eslint-disable-next-line no-console`n  console.log('Edificios cargados:', edificios.length);
-  // eslint-disable-next-line no-console`n  console.log('Estadísticas calculadas:', statsCalculadas);
-  // eslint-disable-next-line no-console`n  console.log('Muestra de edificios:', edificios.slice(0, 2));
+  // eslint-disable-next-line no-console
+  console.log('Edificios cargados:', edificios.length);
+  // eslint-disable-next-line no-console
+  console.log('Estadísticas calculadas:', statsCalculadas);
+  // eslint-disable-next-line no-console
+  console.log('Muestra de edificios:', edificios.slice(0, 2));
 
   const handleFilterChange = (key: keyof EdificioFilters, value: string) => {
     setFilters(prev => ({
@@ -795,4 +798,3 @@ export default function EdificiosListado() {
     </ProtectedRoute>
   );
 }
-

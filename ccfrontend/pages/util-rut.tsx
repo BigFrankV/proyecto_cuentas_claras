@@ -40,8 +40,12 @@ const ValidadorRUT: React.FC = () => {
     const resto = suma % 11;
     const dv = 11 - resto;
 
-    if (dv === 11) {return '0';}
-    if (dv === 10) {return 'K';}
+    if (dv === 11) {
+      return '0';
+    }
+    if (dv === 10) {
+      return 'K';
+    }
     return dv.toString();
   };
 
@@ -53,10 +57,12 @@ const ValidadorRUT: React.FC = () => {
   // Función para formatear RUT
   const formatRut = (
     rut: string,
-    format: 'dots' | 'clean' | 'dash' = 'dots',
+    format: 'dots' | 'clean' | 'dash' = 'dots'
   ): string => {
     const cleaned = cleanRut(rut);
-    if (cleaned.length < 2) {return cleaned;}
+    if (cleaned.length < 2) {
+      return cleaned;
+    }
 
     const numbers = cleaned.slice(0, -1);
     const dv = cleaned.slice(-1);
@@ -258,7 +264,8 @@ const ValidadorRUT: React.FC = () => {
             role='alert'
           >
             <i className='material-icons me-2'>check_circle</i>
-            <strong>¡Copiado!</strong> RUT "{showCopiedAlert}&rdquo; copiado al portapapeles.
+            <strong>¡Copiado!</strong> RUT "{showCopiedAlert}&rdquo; copiado al
+            portapapeles.
             <button
               type='button'
               className='btn-close'
@@ -412,7 +419,7 @@ const ValidadorRUT: React.FC = () => {
                       value={generateFormat}
                       onChange={e =>
                         setGenerateFormat(
-                          e.target.value as 'dots' | 'clean' | 'dash',
+                          e.target.value as 'dots' | 'clean' | 'dash'
                         )
                       }
                     >
@@ -566,4 +573,3 @@ const ValidadorRUT: React.FC = () => {
 };
 
 export default ValidadorRUT;
-

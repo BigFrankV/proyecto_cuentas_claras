@@ -23,9 +23,15 @@ export default function AmountCell({
   };
 
   const getTypeClass = (): string => {
-    if (type) {return `amount-cell ${type}`;}
-    if (amount > 0) {return 'amount-cell positive';}
-    if (amount < 0) {return 'amount-cell negative';}
+    if (type) {
+      return `amount-cell ${type}`;
+    }
+    if (amount > 0) {
+      return 'amount-cell positive';
+    }
+    if (amount < 0) {
+      return 'amount-cell negative';
+    }
     return 'amount-cell pending';
   };
 
@@ -35,4 +41,3 @@ export default function AmountCell({
     </span>
   );
 }
-

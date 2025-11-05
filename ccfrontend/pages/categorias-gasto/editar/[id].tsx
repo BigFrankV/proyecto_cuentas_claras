@@ -56,7 +56,9 @@ export default function EditarCategoriaGasto() {
 
   // Cargar datos de la categoría
   useEffect(() => {
-    if (!id || !isAuthenticated || authLoading) {return;}
+    if (!id || !isAuthenticated || authLoading) {
+      return;
+    }
 
     const loadCategoria = async () => {
       try {
@@ -74,7 +76,7 @@ export default function EditarCategoriaGasto() {
         setFormData(formDataFromCategoria);
         setOriginalData(formDataFromCategoria);
       } catch (error) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error('Error al cargar categoría:', error);
         toast.error('Error al cargar la categoría');
         router.push('/categorias-gasto');
@@ -106,7 +108,9 @@ export default function EditarCategoriaGasto() {
 
   // Verificar si hay cambios
   const hasChanges = (): boolean => {
-    if (!originalData) {return false;}
+    if (!originalData) {
+      return false;
+    }
 
     return (
       formData.nombre !== originalData.nombre ||
@@ -119,7 +123,7 @@ export default function EditarCategoriaGasto() {
   // Manejar cambios en el formulario
   const handleInputChange = (
     field: keyof FormData,
-    value: string | boolean,
+    value: string | boolean
   ) => {
     setFormData(prev => ({
       ...prev,
@@ -139,7 +143,9 @@ export default function EditarCategoriaGasto() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm() || !categoria) {return;}
+    if (!validateForm() || !categoria) {
+      return;
+    }
 
     try {
       setSaving(true);
@@ -156,7 +162,7 @@ export default function EditarCategoriaGasto() {
       toast.success('Categoría actualizada exitosamente');
       router.push('/categorias-gasto');
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error al actualizar categoría:', error);
       toast.error('Error al actualizar la categoría');
     } finally {
@@ -169,7 +175,7 @@ export default function EditarCategoriaGasto() {
     if (hasChanges()) {
       if (
         window.confirm(
-          '¿Estás seguro de que quieres cancelar? Los cambios se perderán.',
+          '¿Estás seguro de que quieres cancelar? Los cambios se perderán.'
         )
       ) {
         router.push('/categorias-gasto');

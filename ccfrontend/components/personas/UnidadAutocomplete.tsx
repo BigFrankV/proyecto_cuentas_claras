@@ -36,8 +36,8 @@ export const UnidadAutocomplete: React.FC<UnidadAutocompleteProps> = ({
           setSuggestions(results);
           setIsOpen(true);
         } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error buscando unidades:', error);
+          // eslint-disable-next-line no-console
+          console.error('Error buscando unidades:', error);
           setSuggestions([]);
         } finally {
           setIsLoading(false);
@@ -89,7 +89,7 @@ console.error('Error buscando unidades:', error);
   const handleSelectUnit = (unidad: UnidadAutocompleteType) => {
     onChange(unidad);
     setSearchTerm(
-      `${unidad.nombre} - ${unidad.edificio} (${unidad.comunidad})`,
+      `${unidad.nombre} - ${unidad.edificio} (${unidad.comunidad})`
     );
     setIsOpen(false);
   };
@@ -189,4 +189,3 @@ console.error('Error buscando unidades:', error);
     </div>
   );
 };
-

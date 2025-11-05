@@ -174,32 +174,47 @@ export default function EditarGasto() {
     const payload: any = {};
 
     // Compara y agrega solo si cambió
-    if (data.category !== initial?.category)
-      {payload.categoria_id = data.category;}
-    if (data.date !== initial?.date) {payload.fecha = data.date;}
-    if (data.amount !== initial?.amount)
-      {payload.monto = parseFloat(
+    if (data.category !== initial?.category) {
+      payload.categoria_id = data.category;
+    }
+    if (data.date !== initial?.date) {
+      payload.fecha = data.date;
+    }
+    if (data.amount !== initial?.amount) {
+      payload.monto = parseFloat(
         data.amount.replace(/\./g, '').replace(',', '.'),
-      );}
-    if (data.description !== initial?.description)
-      {payload.glosa = data.description;}
-    if (data.costCenter !== initial?.costCenter)
-      {payload.centro_costo_id = data.costCenter || undefined;}
-    if (data.documentType !== initial?.documentType)
-      {payload.documento_tipo = data.documentType;}
-    if (data.documentNumber !== initial?.documentNumber)
-      {payload.documento_numero = data.documentNumber;}
-    if (data.isRecurring !== initial?.isRecurring)
-      {payload.extraordinario = data.isRecurring;}
-    if (data.recurringPeriod !== initial?.recurringPeriod)
-      {payload.recurring_period = data.recurringPeriod;}
-    if (JSON.stringify(data.tags) !== JSON.stringify(initial?.tags))
-      {payload.tags = data.tags;}
-    if (data.observations !== initial?.observations)
-      {payload.observations = data.observations;}
-    if (data.priority !== initial?.priority) {payload.priority = data.priority;}
-    if (data.requiredApprovals !== initial?.requiredApprovals)
-      {payload.required_approvals = data.requiredApprovals;}
+      );
+    }
+    if (data.description !== initial?.description) {
+      payload.glosa = data.description;
+    }
+    if (data.costCenter !== initial?.costCenter) {
+      payload.centro_costo_id = data.costCenter || undefined;
+    }
+    if (data.documentType !== initial?.documentType) {
+      payload.documento_tipo = data.documentType;
+    }
+    if (data.documentNumber !== initial?.documentNumber) {
+      payload.documento_numero = data.documentNumber;
+    }
+    if (data.isRecurring !== initial?.isRecurring) {
+      payload.extraordinario = data.isRecurring;
+    }
+    if (data.recurringPeriod !== initial?.recurringPeriod) {
+      payload.recurring_period = data.recurringPeriod;
+    }
+    if (JSON.stringify(data.tags) !== JSON.stringify(initial?.tags)) {
+      payload.tags = data.tags;
+    }
+    if (data.observations !== initial?.observations) {
+      payload.observations = data.observations;
+    }
+    if (data.priority !== initial?.priority) {
+      payload.priority = data.priority;
+    }
+    if (data.requiredApprovals !== initial?.requiredApprovals) {
+      payload.required_approvals = data.requiredApprovals;
+    }
 
     return payload;
   };
@@ -315,7 +330,9 @@ export default function EditarGasto() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) {return;}
+    if (!validateForm()) {
+      return;
+    }
     setLoading(true);
     try {
       const payload = mapFormDataToPayload(formData, initialFormData);
@@ -327,7 +344,7 @@ export default function EditarGasto() {
       await updateGasto(Number(id), payload);
       router.push(`/gastos/${id}`);
     } catch (err) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error(err);
       setErrors({ general: 'Error al actualizar gasto' });
     } finally {
@@ -695,15 +712,15 @@ export default function EditarGasto() {
                       onDragOver={handleDrag}
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
-                      onKeyDown={(e) => {
+                      onKeyDown={e => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
                           fileInputRef.current?.click();
                         }
                       }}
-                      role="button"
+                      role='button'
                       tabIndex={0}
-                      aria-label="Haz clic o arrastra archivos para subir"
+                      aria-label='Haz clic o arrastra archivos para subir'
                     >
                       <div className='file-upload-content'>
                         <span className='material-icons file-upload-icon'>

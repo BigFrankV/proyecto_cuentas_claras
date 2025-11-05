@@ -45,7 +45,9 @@ export default function CargoCard({
 
   const formatPeriod = (period: string): string => {
     const [year, month] = period.split('-');
-    if (!year || !month) {return period;}
+    if (!year || !month) {
+      return period;
+    }
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
       month: 'long',
@@ -145,4 +147,3 @@ export default function CargoCard({
     </div>
   );
 }
-

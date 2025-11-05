@@ -90,8 +90,8 @@ export default function Profile() {
           const twoFAStatus = await profileService.check2FAStatus();
           setTotp2FAEnabled(twoFAStatus.enabled);
         } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error checking 2FA status:', error);
+          // eslint-disable-next-line no-console
+          console.error('Error checking 2FA status:', error);
           setTotp2FAEnabled(false);
         } finally {
           setChecking2FA(false);
@@ -327,7 +327,7 @@ console.error('Error checking 2FA status:', error);
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60),
+      (now.getTime() - date.getTime()) / (1000 * 60)
     );
 
     if (diffInMinutes < 60) {
@@ -1255,4 +1255,3 @@ console.error('Error checking 2FA status:', error);
     </ProtectedRoute>
   );
 }
-

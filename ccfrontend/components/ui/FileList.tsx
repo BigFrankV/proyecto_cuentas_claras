@@ -35,17 +35,25 @@ export default function FileList({
       setError(null);
 
       const options: any = {};
-      if (comunidadId) {options.comunidadId = comunidadId;}
-      if (entityType) {options.entityType = entityType;}
-      if (entityId) {options.entityId = entityId;}
-      if (category) {options.category = category;}
+      if (comunidadId) {
+        options.comunidadId = comunidadId;
+      }
+      if (entityType) {
+        options.entityType = entityType;
+      }
+      if (entityId) {
+        options.entityId = entityId;
+      }
+      if (category) {
+        options.category = category;
+      }
 
       const fileList = await fileService.getFiles(options);
 
       setFiles(fileList);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading files:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading files:', error);
       setError('Error cargando archivos');
     } finally {
       setLoading(false);
@@ -64,15 +72,15 @@ console.error('Error loading files:', error);
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error downloading file:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error downloading file:', error);
     }
   };
 
   const handleDelete = async (file: FileListItem) => {
     if (
       !window.confirm(
-        `¿Estás seguro de que quieres eliminar ${file.originalName}?`,
+        `¿Estás seguro de que quieres eliminar ${file.originalName}?`
       )
     ) {
       return;
@@ -83,8 +91,8 @@ console.error('Error downloading file:', error);
       setFiles(files.filter(f => f.id !== file.id));
       onFileDelete?.(file.id);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error deleting file:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error deleting file:', error);
     }
   };
 
@@ -208,4 +216,3 @@ console.error('Error deleting file:', error);
     </div>
   );
 }
-

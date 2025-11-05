@@ -253,7 +253,9 @@ export default function UnidadDetalle() {
 
   // Fetch unidad summary, cargos, pagos, medidores
   useEffect(() => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
     let mounted = true;
     const load = async () => {
       setLoading(true);
@@ -308,27 +310,32 @@ export default function UnidadDetalle() {
 
         // cargos / cuentas
         const cuentasRes = await apiClient.get(`/unidades/${id}/cuentas`);
-        if (mounted) {setCargos(cuentasRes.data || []);}
+        if (mounted) {
+          setCargos(cuentasRes.data || []);
+        }
 
         // pagos
         const pagosRes = await apiClient.get(`/unidades/${id}/pagos`);
-        if (mounted) {setPagos(pagosRes.data || []);}
+        if (mounted) {
+          setPagos(pagosRes.data || []);
+        }
 
         // historial / tickets could be another endpoint; use resumen.history if available
-        if (mounted)
-          {setHistorial(
+        if (mounted) {
+          setHistorial(
             (u.historial || []).map((h: any) => ({
               id: String(h.id),
               fecha: h.fecha,
               tipo: h.tipo,
               descripcion: h.descripcion,
-            })),
-          );}
+            }))
+          );
+        }
       } catch (err: any) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error('Error loading unidad data', err);
         setError(
-          err?.response?.data?.error || err.message || 'Error al cargar unidad',
+          err?.response?.data?.error || err.message || 'Error al cargar unidad'
         );
       } finally {
         setLoading(false);
@@ -789,7 +796,7 @@ export default function UnidadDetalle() {
                               >
                                 {caracteristica}
                               </span>
-                            ),
+                            )
                           )}
                         </div>
                       </div>
@@ -1114,7 +1121,7 @@ export default function UnidadDetalle() {
                               <div className='col-md-8'>
                                 {unidad.medidores.agua.ultimaLectura} m³ (
                                 {formatDateShort(
-                                  unidad.medidores.agua.fechaLectura,
+                                  unidad.medidores.agua.fechaLectura
                                 )}
                                 )
                               </div>
@@ -1178,7 +1185,7 @@ export default function UnidadDetalle() {
                                 {unidad.medidores.electricidad.ultimaLectura}{' '}
                                 kWh (
                                 {formatDateShort(
-                                  unidad.medidores.electricidad.fechaLectura,
+                                  unidad.medidores.electricidad.fechaLectura
                                 )}
                                 )
                               </div>

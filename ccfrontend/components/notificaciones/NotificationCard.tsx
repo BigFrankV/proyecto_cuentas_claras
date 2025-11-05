@@ -236,7 +236,7 @@ export default function NotificationCard({
                 {Math.round(
                   (notification.deliveryStats.opened /
                     notification.deliveryStats.delivered) *
-                    100,
+                    100
                 )}
                 %
               </div>
@@ -326,4 +326,3 @@ export default function NotificationCard({
     </div>
   );
 }
-

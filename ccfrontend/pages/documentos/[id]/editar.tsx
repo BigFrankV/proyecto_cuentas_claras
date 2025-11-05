@@ -56,7 +56,9 @@ export default function EditarDocumento() {
   const [dragActive, setDragActive] = useState(false);
 
   useEffect(() => {
-    if (!id) {return;}
+    if (!id) {
+      return;
+    }
 
     // Mock data
     setTimeout(() => {
@@ -142,7 +144,9 @@ export default function EditarDocumento() {
 
   const handleSubmit = async (e: React.FormEvent, createNewVersion = false) => {
     e.preventDefault();
-    if (!document) {return;}
+    if (!document) {
+      return;
+    }
 
     setSaving(true);
 
@@ -173,12 +177,14 @@ export default function EditarDocumento() {
 
         router.push(`/documentos/${id}`);
       },
-      newFile ? 2500 : 800,
+      newFile ? 2500 : 800
     );
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) {return '0 Bytes';}
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -601,7 +607,7 @@ export default function EditarDocumento() {
                         access_time
                       </i>
                       {new Date(document.uploadedAt).toLocaleDateString(
-                        'es-CL',
+                        'es-CL'
                       )}
                     </div>
                   </div>

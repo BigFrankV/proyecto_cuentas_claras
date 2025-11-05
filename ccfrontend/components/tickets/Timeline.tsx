@@ -33,7 +33,9 @@ export const Timeline: React.FC<TimelineProps> = ({
   showTime = true,
 }) => {
   const getTimelineIcon = (type: string, customIcon?: string) => {
-    if (customIcon) {return customIcon;}
+    if (customIcon) {
+      return customIcon;
+    }
 
     switch (type) {
       case 'created':
@@ -54,7 +56,9 @@ export const Timeline: React.FC<TimelineProps> = ({
   };
 
   const getTimelineColor = (type: string, customColor?: string) => {
-    if (customColor) {return customColor;}
+    if (customColor) {
+      return customColor;
+    }
 
     switch (type) {
       case 'created':
@@ -234,4 +238,3 @@ export const Timeline: React.FC<TimelineProps> = ({
 };
 
 export default Timeline;
-

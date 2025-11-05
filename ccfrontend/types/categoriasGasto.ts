@@ -119,4 +119,3 @@ export interface DashboardDistribucionTipo {
   total_gastado: number;
   porcentaje_del_total: number;
 }
-

@@ -98,7 +98,7 @@ export default function TorreDetalle() {
 
     if (unidadFilter !== 'todas') {
       filtered = filtered.filter(
-        unidad => unidad.estado.toLowerCase() === unidadFilter.toLowerCase(),
+        unidad => unidad.estado.toLowerCase() === unidadFilter.toLowerCase()
       );
     }
 
@@ -111,7 +111,7 @@ export default function TorreDetalle() {
             .includes(unidadSearch.toLowerCase()) ||
           unidad.arrendatario
             ?.toLowerCase()
-            .includes(unidadSearch.toLowerCase()),
+            .includes(unidadSearch.toLowerCase())
       );
     }
 
@@ -156,7 +156,7 @@ export default function TorreDetalle() {
           },
         });
       } catch (err) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error('Error loading torre details:', err);
       }
     })();
@@ -192,7 +192,7 @@ export default function TorreDetalle() {
         }));
         setUnidades(mapped);
       } catch (err) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error('Error loading unidades for torre', err);
       }
     })();
@@ -245,8 +245,12 @@ export default function TorreDetalle() {
   };
 
   const getUnidadTypeIcon = (tipo: string) => {
-    if (tipo.includes('3D')) {return 'king_bed';}
-    if (tipo.includes('2D')) {return 'single_bed';}
+    if (tipo.includes('3D')) {
+      return 'king_bed';
+    }
+    if (tipo.includes('2D')) {
+      return 'single_bed';
+    }
     return 'bed';
   };
 
@@ -422,9 +426,15 @@ export default function TorreDetalle() {
                     className='dropdown-item text-danger'
                     type='button'
                     onClick={() => {
-                      if (confirm('¿Estás seguro de que quieres eliminar esta torre?')) {
+                      if (
+                        confirm(
+                          '¿Estás seguro de que quieres eliminar esta torre?'
+                        )
+                      ) {
                         // TODO: Implementar eliminación de torre
-                        alert('Funcionalidad de eliminación próximamente disponible');
+                        alert(
+                          'Funcionalidad de eliminación próximamente disponible'
+                        );
                       }
                     }}
                     role='menuitem'

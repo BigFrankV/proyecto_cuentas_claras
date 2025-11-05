@@ -51,13 +51,13 @@ jest.mock('react-bootstrap', () => ({
     {
       Control: (p: any) => React.createElement('input', p),
       Select: (p: any) => React.createElement('select', p),
-    },
+    }
   ),
   InputGroup: Object.assign(
     (p: any) => React.createElement('div', p, p.children),
     {
       Text: (p: any) => React.createElement('span', p, p.children),
-    },
+    }
   ),
   Badge: (p: any) => React.createElement('span', p, p.children),
   Row: (p: any) => React.createElement('div', p, p.children),
@@ -114,7 +114,7 @@ test('inspect imports used by lecturas page', async () => {
       'IMPORT-INSPECT:',
       imp.module,
       'export keys=',
-      Object.keys(mod),
+      Object.keys(mod)
     );
     for (const name of imp.names) {
       const val = (mod as any)[name];
@@ -122,7 +122,7 @@ test('inspect imports used by lecturas page', async () => {
         `IMPORT-INSPECT: ${imp.module} -> ${name} typeof=`,
         typeof val,
         Array.isArray(val) ? 'array' : '',
-        val && typeof val === 'object' ? Object.keys(val).slice(0, 10) : val,
+        val && typeof val === 'object' ? Object.keys(val).slice(0, 10) : val
       );
     }
   }
@@ -133,4 +133,3 @@ test('inspect imports used by lecturas page', async () => {
   console.log('LECTURAS PAGE keys', Object.keys(page));
   expect(page).toBeDefined();
 });
-

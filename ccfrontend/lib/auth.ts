@@ -156,12 +156,12 @@ class AuthService {
         } catch (serverError) {
           // eslint-disable-next-line no-console
           console.log(
-            'No se pudo obtener datos completos del servidor, usando datos del token',
+            'No se pudo obtener datos completos del servidor, usando datos del token'
           );
         }
       } catch (jwtError) {
         // eslint-disable-next-line no-console
-console.error('Error decodificando token:', jwtError);
+        console.error('Error decodificando token:', jwtError);
         throw new Error('Token de autenticación inválido');
       }
 
@@ -175,17 +175,17 @@ console.error('Error decodificando token:', jwtError);
       return { token, user };
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error en login:', error);
+      console.error('Error en login:', error);
 
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       } else if (error.response?.status === 401) {
         throw new Error(
-          'Credenciales inválidas. Verifica tu usuario y contraseña.',
+          'Credenciales inválidas. Verifica tu usuario y contraseña.'
         );
       } else if (error.code === 'ECONNREFUSED') {
         throw new Error(
-          'No se pudo conectar con el servidor. Verifica que la API esté ejecutándose.',
+          'No se pudo conectar con el servidor. Verifica que la API esté ejecutándose.'
         );
       } else {
         throw new Error('Error de conexión. Por favor intenta nuevamente.');
@@ -196,7 +196,7 @@ console.error('Error en login:', error);
   // Completar login con código 2FA
   async complete2FALogin(
     tempToken: string,
-    code: string,
+    code: string
   ): Promise<AuthResponse> {
     try {
       const response = await apiClient.post('/auth/2fa/verify', {
@@ -221,7 +221,7 @@ console.error('Error en login:', error);
           id: decodedToken.sub,
           username: decodedToken.username,
           persona_id: decodedToken.persona_id,
-          is_superadmin: Boolean(decodedToken.is_superadmin), // 
+          is_superadmin: Boolean(decodedToken.is_superadmin), //
           roles: decodedToken.roles || [],
           comunidad_id: decodedToken.comunidad_id,
           memberships: decodedToken.memberships || [],
@@ -238,20 +238,17 @@ console.error('Error en login:', error);
             // Combinar datos del token con datos completos del servidor
             user = { ...user, ...fullUserData };
             // eslint-disable-next-line no-console
-            console.log(
-              'Usuario 2FA completo con datos del servidor:',
-              user,
-            );
+            console.log('Usuario 2FA completo con datos del servidor:', user);
           }
         } catch (serverError) {
           // eslint-disable-next-line no-console
           console.log(
-            'No se pudo obtener datos completos del servidor en 2FA, usando datos del token',
+            'No se pudo obtener datos completos del servidor en 2FA, usando datos del token'
           );
         }
       } catch (jwtError) {
         // eslint-disable-next-line no-console
-console.error('Error decodificando token 2FA:', jwtError);
+        console.error('Error decodificando token 2FA:', jwtError);
         throw new Error('Token de autenticación inválido');
       }
 
@@ -266,7 +263,7 @@ console.error('Error decodificando token 2FA:', jwtError);
       return { token, user };
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error en login 2FA:', error);
+      console.error('Error en login 2FA:', error);
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       } else if (error.response?.status === 401) {
@@ -298,17 +295,17 @@ console.error('Error en login 2FA:', error);
       return response.data;
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error en registro:', error);
+      console.error('Error en registro:', error);
 
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       } else if (error.response?.status === 400) {
         throw new Error(
-          'Datos de registro inválidos. Verifica que el usuario tenga al menos 3 caracteres y la contraseña 6.',
+          'Datos de registro inválidos. Verifica que el usuario tenga al menos 3 caracteres y la contraseña 6.'
         );
       } else {
         throw new Error(
-          'Error al registrar usuario. Por favor intenta nuevamente.',
+          'Error al registrar usuario. Por favor intenta nuevamente.'
         );
       }
     }
@@ -323,8 +320,8 @@ console.error('Error en registro:', error);
       // eslint-disable-next-line no-console
       // eslint-disable-next-line no-console
 
-// eslint-disable-next-line no-console
-console.warn('Error al hacer logout en servidor:', error);
+      // eslint-disable-next-line no-console
+      console.warn('Error al hacer logout en servidor:', error);
     } finally {
       // Limpiar datos locales siempre
       if (typeof window !== 'undefined') {
@@ -366,7 +363,7 @@ console.warn('Error al hacer logout en servidor:', error);
       return user;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error obteniendo usuario actual:', error);
+      console.error('Error obteniendo usuario actual:', error);
       return null;
     }
   }
@@ -400,7 +397,7 @@ console.error('Error obteniendo usuario actual:', error);
       return true;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error validando token:', error);
+      console.error('Error validando token:', error);
       // Si hay error decodificando, limpiar datos
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_data');
@@ -429,7 +426,7 @@ console.error('Error validando token:', error);
       return parsedUser;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error parseando datos de usuario:', error);
+      console.error('Error parseando datos de usuario:', error);
       return null;
     }
   }
@@ -438,14 +435,11 @@ console.error('Error parseando datos de usuario:', error);
   debugAuthState(): void {
     if (typeof window === 'undefined') {
       // eslint-disable-next-line no-console
-      console.log(
-        'No se puede acceder a localStorage en el servidor',
-      );
+      console.log('No se puede acceder a localStorage en el servidor');
       return;
     }
     const token = localStorage.getItem('auth_token');
     const userData = localStorage.getItem('user_data');
-
 
     if (token) {
       try {
@@ -460,7 +454,7 @@ console.error('Error parseando datos de usuario:', error);
   // Cambiar contraseña
   async changePassword(
     currentPassword: string,
-    newPassword: string,
+    newPassword: string
   ): Promise<void> {
     try {
       await apiClient.post('/auth/change-password', {
@@ -533,7 +527,7 @@ console.error('Error parseando datos de usuario:', error);
       return response.data;
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error obteniendo preferencias:', error);
+      console.error('Error obteniendo preferencias:', error);
       // Devolver preferencias por defecto si hay error
       return {
         notifications: {
@@ -572,7 +566,7 @@ console.error('Error obteniendo preferencias:', error);
       return response.data.sessions;
     } catch (error: any) {
       // eslint-disable-next-line no-console
-console.error('Error obteniendo sesiones:', error);
+      console.error('Error obteniendo sesiones:', error);
       return [];
     }
   }
@@ -613,7 +607,7 @@ console.error('Error obteniendo sesiones:', error);
       return token;
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error refrescando token:', error);
+      console.error('Error refrescando token:', error);
       return null;
     }
   }
@@ -651,4 +645,3 @@ console.error('Error refrescando token:', error);
 // Exportar instancia única del servicio
 const authService = new AuthService();
 export default authService;
-

@@ -85,8 +85,8 @@ export const getUfByDate = async (fecha: string): Promise<UfApiResponse> => {
     const response = await api.get(`/util/uf?fecha=${fecha}`);
     return response.data;
   } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error('Error al obtener UF por fecha:', error);
+    // eslint-disable-next-line no-console
+    console.error('Error al obtener UF por fecha:', error);
     return {
       fecha,
       valor: 0,
@@ -105,8 +105,8 @@ export const getCurrentUf = async (): Promise<UfApiResponse> => {
     const response = await api.get('/util/uf/current');
     return response.data;
   } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error('Error al obtener UF actual:', error);
+    // eslint-disable-next-line no-console
+    console.error('Error al obtener UF actual:', error);
     return {
       fecha: '',
       valor: 0,
@@ -122,7 +122,7 @@ console.error('Error al obtener UF actual:', error);
  */
 export const getUfHistorico = async (
   fechaInicio: string,
-  fechaFin: string,
+  fechaFin: string
 ): Promise<HistoricoUfResponse> => {
   try {
     const response = await api.get('/util/uf/historico', {
@@ -130,8 +130,8 @@ export const getUfHistorico = async (
     });
     return response.data;
   } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error('Error al obtener histórico UF:', error);
+    // eslint-disable-next-line no-console
+    console.error('Error al obtener histórico UF:', error);
     return {
       data: [],
       success: false,
@@ -148,15 +148,15 @@ console.error('Error al obtener histórico UF:', error);
  */
 export const getUtmByPeriod = async (
   mes: number,
-  ano: number,
+  ano: number
 ): Promise<UtmApiResponse> => {
   try {
     const mesFormatted = mes.toString().padStart(2, '0');
     const response = await api.get(`/util/utm?fecha=${ano}-${mesFormatted}`);
     return response.data;
   } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error('Error al obtener UTM por período:', error);
+    // eslint-disable-next-line no-console
+    console.error('Error al obtener UTM por período:', error);
     return {
       mes,
       ano,
@@ -176,8 +176,8 @@ export const getCurrentUtm = async (): Promise<UtmApiResponse> => {
     const response = await api.get('/util/utm/current');
     return response.data;
   } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error('Error al obtener UTM actual:', error);
+    // eslint-disable-next-line no-console
+    console.error('Error al obtener UTM actual:', error);
     return {
       mes: 0,
       ano: 0,
@@ -193,14 +193,14 @@ console.error('Error al obtener UTM actual:', error);
  * Obtiene histórico de UTM para un año específico
  */
 export const getUtmHistorico = async (
-  ano: number,
+  ano: number
 ): Promise<HistoricoUtmResponse> => {
   try {
     const response = await api.get(`/util/utm/historico?ano=${ano}`);
     return response.data;
   } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error('Error al obtener histórico UTM:', error);
+    // eslint-disable-next-line no-console
+    console.error('Error al obtener histórico UTM:', error);
     return {
       data: [],
       success: false,
@@ -220,8 +220,8 @@ export const getAllIndicadores = async (): Promise<IndicadoresResponse> => {
     const response = await api.get('/util/indicadores');
     return response.data;
   } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error('Error al obtener indicadores:', error);
+    // eslint-disable-next-line no-console
+    console.error('Error al obtener indicadores:', error);
     return {
       indicadores: [],
       success: false,
@@ -235,14 +235,14 @@ console.error('Error al obtener indicadores:', error);
  * Obtiene un indicador específico por su código
  */
 export const getIndicadorByCodigo = async (
-  codigo: string,
+  codigo: string
 ): Promise<IndicadoresResponse> => {
   try {
     const response = await api.get(`/util/indicadores?codigo=${codigo}`);
     return response.data;
   } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error(`Error al obtener indicador ${codigo}:`, error);
+    // eslint-disable-next-line no-console
+    console.error(`Error al obtener indicador ${codigo}:`, error);
     return {
       indicadores: [],
       success: false,
@@ -275,8 +275,8 @@ export const getSyncStatus = async (): Promise<SyncStatusResponse> => {
       },
     };
   } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error('Error al obtener estado de sincronización:', error);
+    // eslint-disable-next-line no-console
+    console.error('Error al obtener estado de sincronización:', error);
     return {
       lastSync: null,
       isRunning: false,
@@ -305,8 +305,8 @@ export const startManualSync = async (): Promise<{
     const response = await api.post('/util/sync/manual');
     return response.data;
   } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error('Error al iniciar sincronización manual:', error);
+    // eslint-disable-next-line no-console
+    console.error('Error al iniciar sincronización manual:', error);
     return {
       success: false,
       message: '',
@@ -328,8 +328,8 @@ export const initializeHistoricalData = async (): Promise<{
     const response = await api.post('/util/sync/init');
     return response.data;
   } catch (error: any) {
-// eslint-disable-next-line no-console
-console.error('Error al inicializar datos históricos:', error);
+    // eslint-disable-next-line no-console
+    console.error('Error al inicializar datos históricos:', error);
     return {
       success: false,
       message: '',
@@ -356,24 +356,20 @@ export const formatPesos = (amount: number): string => {
  * Formatea un valor UF
  */
 export const formatUF = (amount: number): string => {
-  return (
-    `${amount.toLocaleString('es-CL', {
-      minimumFractionDigits: 4,
-      maximumFractionDigits: 4,
-    })} UF`
-  );
+  return `${amount.toLocaleString('es-CL', {
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4,
+  })} UF`;
 };
 
 /**
  * Formatea un valor UTM
  */
 export const formatUTM = (amount: number): string => {
-  return (
-    `${amount.toLocaleString('es-CL', {
-      minimumFractionDigits: 4,
-      maximumFractionDigits: 4,
-    })} UTM`
-  );
+  return `${amount.toLocaleString('es-CL', {
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4,
+  })} UTM`;
 };
 
 /**
@@ -381,7 +377,7 @@ export const formatUTM = (amount: number): string => {
  */
 export const calculateDateDifference = (
   date1: string,
-  date2: string,
+  date2: string
 ): number => {
   const d1 = new Date(date1);
   const d2 = new Date(date2);
@@ -393,7 +389,7 @@ export const calculateDateDifference = (
  * Obtiene el rango de fechas para períodos predefinidos
  */
 export const getDateRange = (
-  period: '7d' | '30d' | '90d' | '1y',
+  period: '7d' | '30d' | '90d' | '1y'
 ): { start: string; end: string } => {
   const end = new Date();
   const start = new Date();
@@ -448,4 +444,3 @@ const indicadoresService = {
 };
 
 export default indicadoresService;
-

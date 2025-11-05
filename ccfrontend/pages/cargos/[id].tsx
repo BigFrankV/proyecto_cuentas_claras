@@ -23,7 +23,9 @@ export default function CargoDetallePage() {
 
   useEffect(() => {
     const fetchCargo = async () => {
-      if (!id || typeof id !== 'string') {return;}
+      if (!id || typeof id !== 'string') {
+        return;
+      }
 
       setLoading(true);
       setError(null);
@@ -72,16 +74,16 @@ export default function CargoDetallePage() {
 
         // eslint-disable-next-line no-console
 
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.log('✅ Cargo mapeado:', mappedCargo);
         setCargo(mappedCargo);
       } catch (err) {
-// eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.error('❌ Error al cargar cargo:', err);
         setError(
           err instanceof Error
             ? err.message
-            : 'Error desconocido al cargar el cargo',
+            : 'Error desconocido al cargar el cargo'
         );
       } finally {
         setLoading(false);

@@ -26,7 +26,9 @@ export default function App({ Component, pageProps }: AppProps) {
       typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     setAxiosAuthToken(token);
     const onStorage = (e: StorageEvent) => {
-      if (e.key === 'token') {setAxiosAuthToken(e.newValue);}
+      if (e.key === 'token') {
+        setAxiosAuthToken(e.newValue);
+      }
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
@@ -38,4 +40,3 @@ export default function App({ Component, pageProps }: AppProps) {
     </AuthProvider>
   );
 }
-

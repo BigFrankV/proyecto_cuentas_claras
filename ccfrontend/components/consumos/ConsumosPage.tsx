@@ -130,7 +130,7 @@ export default function ConsumosPage(): JSX.Element {
       setDetalleData(detalle);
     } catch (error) {
       // eslint-disable-next-line no-console
-console.error('Error fetching data:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -187,7 +187,7 @@ console.error('Error fetching data:', error);
   function initializeCharts() {
     if (mainRef.current) {
       const existingMain = Chart.getChart(
-        mainRef.current as unknown as HTMLCanvasElement,
+        mainRef.current as unknown as HTMLCanvasElement
       );
       if (existingMain) {
         existingMain.destroy();
@@ -228,7 +228,7 @@ console.error('Error fetching data:', error);
 
     if (monthlyRef.current) {
       const existingMonthly = Chart.getChart(
-        monthlyRef.current as unknown as HTMLCanvasElement,
+        monthlyRef.current as unknown as HTMLCanvasElement
       );
       if (existingMonthly) {
         existingMonthly.destroy();
@@ -257,7 +257,7 @@ console.error('Error fetching data:', error);
 
     if (weeklyRef.current) {
       const existingWeekly = Chart.getChart(
-        weeklyRef.current as unknown as HTMLCanvasElement,
+        weeklyRef.current as unknown as HTMLCanvasElement
       );
       if (existingWeekly) {
         existingWeekly.destroy();
@@ -457,7 +457,10 @@ console.error('Error fetching data:', error);
                         <hr className='dropdown-divider' />
                       </li>
                       <li>
-                        <Link className='dropdown-item text-danger' href='/login'>
+                        <Link
+                          className='dropdown-item text-danger'
+                          href='/login'
+                        >
                           Cerrar Sesión
                         </Link>
                       </li>
@@ -713,4 +716,3 @@ console.error('Error fetching data:', error);
     </div>
   );
 }
-

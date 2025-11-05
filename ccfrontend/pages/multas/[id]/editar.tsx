@@ -187,7 +187,7 @@ export default function EditarMulta() {
   // Estados auxiliares que faltaban
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [unidadSeleccionada, setUnidadSeleccionada] = useState<Unidad | null>(
-    null,
+    null
   );
   const [personaSeleccionada, setPersonaSeleccionada] =
     useState<Persona | null>(null);
@@ -248,7 +248,7 @@ export default function EditarMulta() {
   };
 
   const validateChanges = (
-    changes: Partial<FormData>,
+    changes: Partial<FormData>
   ): { valid: boolean; errors: ValidationErrors } => {
     const newErrors: ValidationErrors = {};
 
@@ -317,13 +317,13 @@ export default function EditarMulta() {
 
       // eslint-disable-next-line no-console
 
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.log('✅ Multa cargada:', response);
       setMulta(response);
 
       // Determinar comunidadId desde la propia multa (evita depender de `user` en SSR)
       setComunidadId(
-        response?.comunidad_id ? Number(response.comunidad_id) : null,
+        response?.comunidad_id ? Number(response.comunidad_id) : null
       );
 
       // Verificar si se puede editar
@@ -368,7 +368,7 @@ export default function EditarMulta() {
       // Cargar personas de la unidad
       await loadPersonasUnidad(response.unidad_id);
     } catch (error: any) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('❌ Error cargando multa:', error);
       toast.error(error.message || 'Error al cargar la multa');
       setTimeout(() => router.push('/multas'), 2000);
@@ -528,20 +528,20 @@ export default function EditarMulta() {
 
       // eslint-disable-next-line no-console
 
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.log('📝 Actualizando multa (solo campos modificados):', payload);
 
       const response = await multasService.updateMulta(Number(id), payload);
 
       // eslint-disable-next-line no-console
 
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.log('✅ Multa actualizada:', response);
       toast.success('Multa actualizada exitosamente');
 
       router.push(`/multas/${id}`);
     } catch (error: any) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('❌ Error actualizando multa:', error);
       toast.error(error.message || 'Error al actualizar la multa');
     } finally {
@@ -931,7 +931,7 @@ export default function EditarMulta() {
                           onChange={e =>
                             handleInputChange(
                               'fecha_infraccion',
-                              e.target.value,
+                              e.target.value
                             )
                           }
                           max={new Date().toISOString().split('T')[0]}
@@ -958,7 +958,7 @@ export default function EditarMulta() {
                           onChange={e =>
                             handleInputChange(
                               'fecha_vencimiento',
-                              e.target.value,
+                              e.target.value
                             )
                           }
                           min={formData.fecha_infraccion}

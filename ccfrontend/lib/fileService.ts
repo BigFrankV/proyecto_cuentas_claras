@@ -51,7 +51,7 @@ class FileService {
    */
   async uploadFiles(
     files: FileList | File[],
-    options: FileUploadOptions,
+    options: FileUploadOptions
   ): Promise<UploadedFile[]> {
     try {
       const formData = new FormData();
@@ -64,13 +64,18 @@ class FileService {
 
       // Agregar opciones
       formData.append('comunidadId', options.comunidadId.toString());
-      if (options.entityType) {formData.append('entityType', options.entityType);}
-      if (options.entityId)
-        {formData.append('entityId', options.entityId.toString());}
-      if (options.fileCategory)
-        {formData.append('fileCategory', options.fileCategory);}
-      if (options.description)
-        {formData.append('description', options.description);}
+      if (options.entityType) {
+        formData.append('entityType', options.entityType);
+      }
+      if (options.entityId) {
+        formData.append('entityId', options.entityId.toString());
+      }
+      if (options.fileCategory) {
+        formData.append('fileCategory', options.fileCategory);
+      }
+      if (options.description) {
+        formData.append('description', options.description);
+      }
 
       const response = await api.post(`${this.baseUrl}/upload`, formData, {
         headers: {
@@ -80,8 +85,8 @@ class FileService {
 
       return response.data.files;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error uploading files:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error uploading files:', error);
       throw error;
     }
   }
@@ -91,7 +96,7 @@ console.error('Error uploading files:', error);
    */
   async uploadFile(
     file: File,
-    options: FileUploadOptions,
+    options: FileUploadOptions
   ): Promise<UploadedFile> {
     const files = await this.uploadFiles([file], options);
     if (files.length === 0) {
@@ -106,7 +111,7 @@ console.error('Error uploading files:', error);
   async uploadAvatar(
     file: File,
     personaId: number,
-    comunidadId: number,
+    comunidadId: number
   ): Promise<UploadedFile> {
     return this.uploadFile(file, {
       comunidadId,
@@ -124,7 +129,7 @@ console.error('Error uploading files:', error);
     file: File,
     personaId: number,
     comunidadId: number,
-    description?: string,
+    description?: string
   ): Promise<UploadedFile> {
     return this.uploadFile(file, {
       comunidadId,
@@ -143,7 +148,7 @@ console.error('Error uploading files:', error);
     entityType: 'personas' | 'unidades',
     entityId: number,
     comunidadId: number,
-    description?: string,
+    description?: string
   ): Promise<UploadedFile> {
     return this.uploadFile(file, {
       comunidadId,
@@ -163,21 +168,26 @@ console.error('Error uploading files:', error);
       entityType?: string;
       entityId?: number;
       category?: string;
-    } = {},
+    } = {}
   ): Promise<FileListItem[]> {
     try {
       const params = new URLSearchParams();
 
-      if (options.entityType) {params.append('entityType', options.entityType);}
-      if (options.entityId)
-        {params.append('entityId', options.entityId.toString());}
-      if (options.category) {params.append('category', options.category);}
+      if (options.entityType) {
+        params.append('entityType', options.entityType);
+      }
+      if (options.entityId) {
+        params.append('entityId', options.entityId.toString());
+      }
+      if (options.category) {
+        params.append('category', options.category);
+      }
 
       const response = await api.get(`${this.baseUrl}?${params.toString()}`);
       return response.data.files;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error getting files:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error getting files:', error);
       throw error;
     }
   }
@@ -187,7 +197,7 @@ console.error('Error getting files:', error);
    */
   async getPersonaFiles(
     personaId: number,
-    category?: string,
+    category?: string
   ): Promise<FileListItem[]> {
     const options: any = {
       entityType: 'personas',
@@ -204,7 +214,7 @@ console.error('Error getting files:', error);
    */
   async getUnidadFiles(
     unidadId: number,
-    category?: string,
+    category?: string
   ): Promise<FileListItem[]> {
     const options: any = {
       entityType: 'unidades',
@@ -234,8 +244,8 @@ console.error('Error getting files:', error);
       });
       return response.data;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error downloading file:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error downloading file:', error);
       throw error;
     }
   }
@@ -261,8 +271,8 @@ console.error('Error downloading file:', error);
     try {
       await api.delete(`${this.baseUrl}/${fileId}`);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error deleting file:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error deleting file:', error);
       throw error;
     }
   }
@@ -275,8 +285,8 @@ console.error('Error deleting file:', error);
       const response = await api.get(`${this.baseUrl}/stats`);
       return response.data.stats;
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error getting file stats:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error getting file stats:', error);
       throw error;
     }
   }
@@ -288,8 +298,8 @@ console.error('Error getting file stats:', error);
     try {
       await api.post(`${this.baseUrl}/cleanup`);
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error cleaning up files:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error cleaning up files:', error);
       throw error;
     }
   }
@@ -332,7 +342,9 @@ console.error('Error cleaning up files:', error);
    * Formatear tamaño de archivo
    */
   formatFileSize(bytes: number): string {
-    if (bytes === 0) {return '0 Bytes';}
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
 
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
@@ -345,17 +357,27 @@ console.error('Error cleaning up files:', error);
    * Obtener icono para tipo de archivo
    */
   getFileIcon(mimetype: string): string {
-    if (mimetype.startsWith('image/')) {return 'image';}
-    if (mimetype === 'application/pdf') {return 'picture_as_pdf';}
-    if (mimetype.includes('word')) {return 'description';}
-    if (mimetype.includes('excel') || mimetype.includes('sheet'))
-      {return 'table_chart';}
-    if (mimetype.includes('zip') || mimetype.includes('rar')) {return 'archive';}
-    if (mimetype.startsWith('text/')) {return 'text_snippet';}
+    if (mimetype.startsWith('image/')) {
+      return 'image';
+    }
+    if (mimetype === 'application/pdf') {
+      return 'picture_as_pdf';
+    }
+    if (mimetype.includes('word')) {
+      return 'description';
+    }
+    if (mimetype.includes('excel') || mimetype.includes('sheet')) {
+      return 'table_chart';
+    }
+    if (mimetype.includes('zip') || mimetype.includes('rar')) {
+      return 'archive';
+    }
+    if (mimetype.startsWith('text/')) {
+      return 'text_snippet';
+    }
     return 'attach_file';
   }
 }
 
 export const fileService = new FileService();
 export default fileService;
-

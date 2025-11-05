@@ -10,10 +10,10 @@ let subscribers: ((items: GastoBackend[] | null) => void)[] = [];
 
 export function useGastosShared(
   comunidadId?: number | null,
-  opts: { ttlMs?: number } = {},
+  opts: { ttlMs?: number } = {}
 ) {
   const [data, setData] = useState<GastoBackend[] | null>(
-    () => sharedData?.items ?? null,
+    () => sharedData?.items ?? null
   );
   const ttl = opts.ttlMs ?? 30_000;
 
@@ -40,7 +40,7 @@ export function useGastosShared(
         // ahora soportamos comunidadId undefined/null -> endpoint global (superadmin)
         const resp = await listGastos(
           typeof comunidadId === 'number' ? comunidadId : undefined,
-          { limit: 100, offset: 0 },
+          { limit: 100, offset: 0 }
         );
         const items = Array.isArray(resp.data)
           ? resp.data
@@ -50,8 +50,8 @@ export function useGastosShared(
         sharedData = { timestamp: Date.now(), items };
         notify(items);
       } catch (err) {
-// eslint-disable-next-line no-console
-console.error('useGastosShared error', err);
+        // eslint-disable-next-line no-console
+        console.error('useGastosShared error', err);
         sharedData = { timestamp: Date.now(), items: [] };
         notify([]);
       }
@@ -67,4 +67,3 @@ console.error('useGastosShared error', err);
 
   return { data, loading: data === null };
 }
-

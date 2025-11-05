@@ -5,7 +5,7 @@ import apiClient from './api';
 
 export async function listProveedores(
   comunidadId?: number | null,
-  params: Record<string, any> = {},
+  params: Record<string, any> = {}
 ): Promise<ProveedoresResponse> {
   const endpoint =
     typeof comunidadId === 'number'
@@ -32,7 +32,9 @@ export async function listProveedores(
   } else {
     // fallback: try resp.data.rows or resp.data.items
     data = raw.rows ?? raw.items ?? [];
-    if (raw.pagination) {pagination = raw.pagination;}
+    if (raw.pagination) {
+      pagination = raw.pagination;
+    }
   }
 
   return { data, pagination };
@@ -49,11 +51,11 @@ export async function deleteProveedor(id: number): Promise<void> {
 
 export async function createProveedor(
   comunidadId: number,
-  payload: Partial<Proveedor>,
+  payload: Partial<Proveedor>
 ) {
   const resp = await apiClient.post(
     `/proveedores/comunidad/${comunidadId}`,
-    payload,
+    payload
   );
   return resp.data;
 }
@@ -62,4 +64,3 @@ export async function updateProveedor(id: number, payload: Partial<Proveedor>) {
   const resp = await apiClient.patch(`/proveedores/${id}`, payload);
   return resp.data;
 }
-

@@ -94,13 +94,13 @@ export default function AudienceSelector({
 }: AudienceSelectorProps) {
   const [searchUnits, setSearchUnits] = useState('');
   const [selectedBuildings, setSelectedBuildings] = useState<string[]>(
-    value.buildingIds || [],
+    value.buildingIds || []
   );
   const [selectedUnits, setSelectedUnits] = useState<string[]>(
-    value.unitIds || [],
+    value.unitIds || []
   );
   const [selectedGroups, setSelectedGroups] = useState<string[]>(
-    value.userGroupIds || [],
+    value.userGroupIds || []
   );
 
   const handleTypeChange = (type: AudienceType) => {
@@ -464,4 +464,3 @@ export default function AudienceSelector({
     </div>
   );
 }
-

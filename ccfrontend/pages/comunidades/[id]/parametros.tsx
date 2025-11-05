@@ -137,7 +137,7 @@ export default function ParametrosCobranzaPage() {
       if (id) {
         try {
           const comunidad = await comunidadesService.getComunidadById(
-            Number(id),
+            Number(id)
           );
           setComunidadNombre(comunidad.nombre);
 
@@ -148,7 +148,7 @@ export default function ParametrosCobranzaPage() {
             setParametros(prev => ({ ...prev, ...parametrosExistentes }));
           }
         } catch (error) {
-// eslint-disable-next-line no-console
+          // eslint-disable-next-line no-console
           console.error('Error cargando datos:', error);
         } finally {
           setLoading(false);
@@ -168,7 +168,7 @@ export default function ParametrosCobranzaPage() {
 
   const handleCuentaBancariaChange = (
     field: keyof CuentaBancaria,
-    value: string,
+    value: string
   ) => {
     setParametros(prev => ({
       ...prev,
@@ -187,7 +187,7 @@ export default function ParametrosCobranzaPage() {
       await comunidadesService.updateParametrosCobranza(Number(id), parametros);
       alert('Parámetros de cobranza actualizados correctamente');
     } catch (error) {
-// eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.error('Error guardando parámetros:', error);
       alert('Error al guardar los parámetros');
     } finally {
@@ -264,7 +264,10 @@ export default function ParametrosCobranzaPage() {
                   <nav aria-label='breadcrumb'>
                     <ol className='breadcrumb mb-0'>
                       <li className='breadcrumb-item'>
-                        <Link href='/comunidades' className='text-decoration-none'>
+                        <Link
+                          href='/comunidades'
+                          className='text-decoration-none'
+                        >
                           Comunidades
                         </Link>
                       </li>
@@ -371,7 +374,7 @@ export default function ParametrosCobranzaPage() {
                           onChange={e =>
                             handleInputChange(
                               'diasGracia',
-                              Number(e.target.value),
+                              Number(e.target.value)
                             )
                           }
                         />
@@ -398,7 +401,7 @@ export default function ParametrosCobranzaPage() {
                           onChange={e =>
                             handleInputChange(
                               'tasaMora',
-                              Number(e.target.value),
+                              Number(e.target.value)
                             )
                           }
                         />
@@ -469,7 +472,7 @@ export default function ParametrosCobranzaPage() {
                           onChange={e =>
                             handleInputChange(
                               'interesMaximo',
-                              Number(e.target.value),
+                              Number(e.target.value)
                             )
                           }
                         />
@@ -538,7 +541,7 @@ export default function ParametrosCobranzaPage() {
                         onChange={e =>
                           handleInputChange(
                             'tipoRedondeo',
-                            e.target.value as 'normal' | 'arriba' | 'abajo',
+                            e.target.value as 'normal' | 'arriba' | 'abajo'
                           )
                         }
                       >
@@ -665,7 +668,7 @@ export default function ParametrosCobranzaPage() {
                           onChange={() =>
                             handleInputChange(
                               'ordenAplicacion',
-                              'interes-capital',
+                              'interes-capital'
                             )
                           }
                         />
@@ -688,7 +691,7 @@ export default function ParametrosCobranzaPage() {
                           onChange={() =>
                             handleInputChange(
                               'ordenAplicacion',
-                              'capital-interes',
+                              'capital-interes'
                             )
                           }
                         />
@@ -720,7 +723,7 @@ export default function ParametrosCobranzaPage() {
                           onChange={e =>
                             handleInputChange(
                               'diaEmision',
-                              Number(e.target.value),
+                              Number(e.target.value)
                             )
                           }
                         />
@@ -747,7 +750,7 @@ export default function ParametrosCobranzaPage() {
                           onChange={e =>
                             handleInputChange(
                               'diaVencimiento',
-                              Number(e.target.value),
+                              Number(e.target.value)
                             )
                           }
                         />
@@ -770,7 +773,7 @@ export default function ParametrosCobranzaPage() {
                       onChange={e =>
                         handleInputChange(
                           'notificacionesAuto',
-                          e.target.checked,
+                          e.target.checked
                         )
                       }
                     />
@@ -793,7 +796,7 @@ export default function ParametrosCobranzaPage() {
                             onChange={e =>
                               handleInputChange(
                                 'notificacion3Dias',
-                                e.target.checked,
+                                e.target.checked
                               )
                             }
                           />
@@ -815,7 +818,7 @@ export default function ParametrosCobranzaPage() {
                             onChange={e =>
                               handleInputChange(
                                 'notificacion1Dia',
-                                e.target.checked,
+                                e.target.checked
                               )
                             }
                           />
@@ -837,7 +840,7 @@ export default function ParametrosCobranzaPage() {
                             onChange={e =>
                               handleInputChange(
                                 'notificacionVencido',
-                                e.target.checked,
+                                e.target.checked
                               )
                             }
                           />
@@ -882,7 +885,7 @@ export default function ParametrosCobranzaPage() {
                           onChange={e =>
                             handleInputChange(
                               'pagoTransferencia',
-                              e.target.checked,
+                              e.target.checked
                             )
                           }
                         />
@@ -912,7 +915,7 @@ export default function ParametrosCobranzaPage() {
                                   onChange={e =>
                                     handleCuentaBancariaChange(
                                       'banco',
-                                      e.target.value,
+                                      e.target.value
                                     )
                                   }
                                 >
@@ -948,7 +951,7 @@ export default function ParametrosCobranzaPage() {
                                       e.target.value as
                                         | 'corriente'
                                         | 'vista'
-                                        | 'ahorro',
+                                        | 'ahorro'
                                     )
                                   }
                                 >
@@ -976,7 +979,7 @@ export default function ParametrosCobranzaPage() {
                                   onChange={e =>
                                     handleCuentaBancariaChange(
                                       'numeroCuenta',
-                                      e.target.value,
+                                      e.target.value
                                     )
                                   }
                                 />
@@ -996,7 +999,7 @@ export default function ParametrosCobranzaPage() {
                                   onChange={e =>
                                     handleCuentaBancariaChange(
                                       'rutTitular',
-                                      e.target.value,
+                                      e.target.value
                                     )
                                   }
                                 />
@@ -1018,7 +1021,7 @@ export default function ParametrosCobranzaPage() {
                                   onChange={e =>
                                     handleCuentaBancariaChange(
                                       'emailConfirmacion',
-                                      e.target.value,
+                                      e.target.value
                                     )
                                   }
                                 />

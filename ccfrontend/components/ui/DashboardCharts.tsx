@@ -140,4 +140,3 @@ export default function DashboardCharts({ comunidadId }: DashboardChartsProps) {
     </div>
   );
 }
-

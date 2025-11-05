@@ -136,8 +136,8 @@ export default function NuevoDocumento() {
           prev.map(f =>
             f.id === uploadFile.id
               ? { ...f, progress: Math.min(f.progress + 10, 100) }
-              : f,
-          ),
+              : f
+          )
         );
       }, 200);
 
@@ -145,8 +145,8 @@ export default function NuevoDocumento() {
         clearInterval(interval);
         setSelectedFiles(prev =>
           prev.map(f =>
-            f.id === uploadFile.id ? { ...f, progress: 100, uploaded: true } : f,
-          ),
+            f.id === uploadFile.id ? { ...f, progress: 100, uploaded: true } : f
+          )
         );
       }, 2000);
     });
@@ -157,7 +157,9 @@ export default function NuevoDocumento() {
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) {return '0 Bytes';}
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -427,7 +429,9 @@ export default function NuevoDocumento() {
                             <div className='card-body p-3'>
                               <div className='d-flex align-items-center'>
                                 <div
-                                  className={'category-icon rounded-3 p-2 me-3 text-white'}
+                                  className={
+                                    'category-icon rounded-3 p-2 me-3 text-white'
+                                  }
                                   style={{
                                     backgroundColor:
                                       category.id === 'legal'
@@ -614,4 +618,3 @@ export default function NuevoDocumento() {
     </ProtectedRoute>
   );
 }
-

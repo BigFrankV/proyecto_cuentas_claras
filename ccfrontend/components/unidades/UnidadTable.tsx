@@ -215,4 +215,3 @@ const UnidadTable: React.FC<UnidadTableProps> = ({
 };
 
 export default UnidadTable;
-

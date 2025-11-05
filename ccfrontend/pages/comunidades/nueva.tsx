@@ -68,8 +68,8 @@ export default function NuevaComunidad() {
         setPreviewImage(comunidad.imagen);
       }
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error loading comunidad:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error loading comunidad:', error);
     }
   };
 
@@ -109,7 +109,7 @@ console.error('Error loading comunidad:', error);
       if (formData.rut || formData.dv) {
         const rutError = getRutValidationError(
           formData.rut || '',
-          formData.dv || '',
+          formData.dv || ''
         );
         if (rutError) {
           newErrors.rut = rutError;
@@ -142,7 +142,9 @@ console.error('Error loading comunidad:', error);
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(1)) {return;}
+    if (!validateStep(1)) {
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -154,8 +156,8 @@ console.error('Error loading comunidad:', error);
 
       router.push('/comunidades');
     } catch (error) {
-// eslint-disable-next-line no-console
-console.error('Error saving comunidad:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error saving comunidad:', error);
       alert('Error al guardar la comunidad');
     } finally {
       setIsLoading(false);
@@ -276,7 +278,7 @@ console.error('Error saving comunidad:', error);
                           onChange={e =>
                             handleInputChange(
                               'tipo',
-                              e.target.value as TipoComunidad,
+                              e.target.value as TipoComunidad
                             )
                           }
                         >
@@ -299,7 +301,7 @@ console.error('Error saving comunidad:', error);
                           onChange={e =>
                             handleInputChange(
                               'estado',
-                              e.target.value as EstadoComunidad,
+                              e.target.value as EstadoComunidad
                             )
                           }
                         >
@@ -557,7 +559,7 @@ console.error('Error saving comunidad:', error);
                       onChange={e =>
                         handleInputChange(
                           'totalUnidades',
-                          parseInt(e.target.value) || 0,
+                          parseInt(e.target.value) || 0
                         )
                       }
                       placeholder='120'
@@ -577,7 +579,7 @@ console.error('Error saving comunidad:', error);
                       onChange={e =>
                         handleInputChange(
                           'totalEdificios',
-                          parseInt(e.target.value) || 0,
+                          parseInt(e.target.value) || 0
                         )
                       }
                       placeholder='3'
@@ -597,7 +599,7 @@ console.error('Error saving comunidad:', error);
                       onChange={e =>
                         handleInputChange(
                           'areaComun',
-                          parseFloat(e.target.value) || 0,
+                          parseFloat(e.target.value) || 0
                         )
                       }
                       placeholder='1500'
@@ -641,7 +643,7 @@ console.error('Error saving comunidad:', error);
                                   } else {
                                     handleInputChange(
                                       'amenidades',
-                                      amenidades.filter(a => a !== amenidad),
+                                      amenidades.filter(a => a !== amenidad)
                                     );
                                   }
                                 }}
@@ -865,4 +867,3 @@ console.error('Error saving comunidad:', error);
     </>
   );
 }
-
