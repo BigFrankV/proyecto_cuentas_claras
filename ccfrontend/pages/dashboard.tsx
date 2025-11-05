@@ -23,7 +23,7 @@ export default function Dashboard() {
 
   // Estados para datos dinámicos
   const [selectedComunidad, setSelectedComunidad] = useState<number | null>(
-    null
+    null,
   );
   const [comunidades, setComunidades] = useState<any[]>([]);
   const [searchComunidad, setSearchComunidad] = useState('');
@@ -40,18 +40,20 @@ export default function Dashboard() {
 
     const loadInitialData = async () => {
       try {
-        // eslint-disable-next-line no-console`n        console.log('📊 [Dashboard] loadInitialData - Iniciando');
-        // eslint-disable-next-line no-console`n        console.log('📊 [Dashboard] Usuario actual:', user);
+        // eslint-disable-next-line no-console
+        console.log('📊 [Dashboard] loadInitialData - Iniciando');
+        // eslint-disable-next-line no-console
+        console.log('📊 [Dashboard] Usuario actual:', user);
         console.log(
           '📊 [Dashboard] Token:',
-          localStorage.getItem('auth_token')
+          localStorage.getItem('auth_token'),
         );
 
         // ✅ NUEVA VERIFICACIÓN: Si no hay usuario, no continuar
         if (!user) {
           // eslint-disable-next-line no-console
           console.log(
-            '❌ [Dashboard] Sin usuario autenticado, abortando carga de datos'
+            '❌ [Dashboard] Sin usuario autenticado, abortando carga de datos',
           );
           setIsLoading(false);
           return;
@@ -60,14 +62,15 @@ export default function Dashboard() {
         const comunidadesData = await comunidadesService.getComunidades();
 
         if (!isMounted) {
-          // eslint-disable-next-line no-console`n          console.log('📊 [Dashboard] Componente desmontado, abortando');
+          // eslint-disable-next-line no-console
+          console.log('📊 [Dashboard] Componente desmontado, abortando');
           return;
         }
 
         // eslint-disable-next-line no-console
         console.log(
           '📊 [Dashboard] Comunidades recibidas:',
-          comunidadesData.length
+          comunidadesData.length,
         );
         setComunidades(comunidadesData);
 
@@ -78,7 +81,7 @@ export default function Dashboard() {
             // eslint-disable-next-line no-console
             console.log(
               '📊 [Dashboard] Estableciendo primera comunidad:',
-              primeraComunidad.id
+              primeraComunidad.id,
             );
             setSelectedComunidad(primeraComunidad.id);
           }
@@ -96,7 +99,8 @@ export default function Dashboard() {
         }
       } finally {
         if (isMounted) {
-          // eslint-disable-next-line no-console`n          console.log('📊 [Dashboard] loadInitialData - Completado');
+          // eslint-disable-next-line no-console
+          console.log('📊 [Dashboard] loadInitialData - Completado');
           setIsLoading(false);
         }
       }
@@ -304,7 +308,7 @@ export default function Dashboard() {
                       .filter(c =>
                         c.nombre
                           .toLowerCase()
-                          .includes(searchComunidad.toLowerCase())
+                          .includes(searchComunidad.toLowerCase()),
                       )
                       .map(comunidad => (
                         <button
@@ -347,7 +351,7 @@ export default function Dashboard() {
                     {comunidades.filter(c =>
                       c.nombre
                         .toLowerCase()
-                        .includes(searchComunidad.toLowerCase())
+                        .includes(searchComunidad.toLowerCase()),
                     ).length === 0 && (
                       <div className='px-3 py-2 text-muted text-center'>
                         No se encontraron comunidades
@@ -439,7 +443,7 @@ export default function Dashboard() {
                       </span>
                       <span>
                         {Math.abs(
-                          dashboardData?.kpis?.saldoTotalChange || 0
+                          dashboardData?.kpis?.saldoTotalChange || 0,
                         ).toFixed(1)}
                         % vs mes anterior
                       </span>
@@ -486,7 +490,7 @@ export default function Dashboard() {
                       </span>
                       <span>
                         {Math.abs(
-                          dashboardData?.kpis?.ingresosMesChange || 0
+                          dashboardData?.kpis?.ingresosMesChange || 0,
                         ).toFixed(1)}
                         % vs mes anterior
                       </span>
@@ -528,7 +532,7 @@ export default function Dashboard() {
                       </span>
                       <span>
                         {Math.abs(
-                          dashboardData?.kpis?.gastosMesChange || 0
+                          dashboardData?.kpis?.gastosMesChange || 0,
                         ).toFixed(1)}
                         % vs mes anterior
                       </span>
@@ -573,7 +577,7 @@ export default function Dashboard() {
                       </span>
                       <span>
                         {Math.abs(
-                          dashboardData?.kpis?.tasaMorosidadChange || 0
+                          dashboardData?.kpis?.tasaMorosidadChange || 0,
                         ).toFixed(1)}
                         % vs mes anterior
                       </span>
@@ -730,7 +734,7 @@ export default function Dashboard() {
                           </div>
                         </div>
                       </div>
-                    )
+                    ),
                   ) || (
                     <div className='list-group-item text-center text-muted'>
                       No hay actividades próximas

@@ -79,7 +79,7 @@ export default function GastosListado() {
       console.log('Respuesta del backend:', resp.data); // Verifica si 'estado' es correcto
       const items = resp.data || [];
       const mapped: Expense[] = (Array.isArray(items) ? items : []).map(
-        mapBackendToExpense
+        mapBackendToExpense,
       );
       setExpenses(mapped);
     } catch (error) {
@@ -190,7 +190,7 @@ export default function GastosListado() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedExpenses = filteredExpenses.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   const getActiveFiltersCount = () =>
@@ -212,8 +212,8 @@ export default function GastosListado() {
         }));
         setCategories(
           normalized.sort((a: any, b: any) =>
-            String(a.nombre).localeCompare(String(b.nombre))
-          )
+            String(a.nombre).localeCompare(String(b.nombre)),
+          ),
         );
       })
       .catch(err => {
@@ -290,7 +290,7 @@ export default function GastosListado() {
                   <div className='stat-item'>
                     <div className='stat-number'>
                       {formatCurrency(
-                        expenses.reduce((sum, e) => sum + e.amount, 0)
+                        expenses.reduce((sum, e) => sum + e.amount, 0),
                       )}
                     </div>
                     <div className='stat-label'>Monto Total</div>
@@ -476,7 +476,7 @@ export default function GastosListado() {
                           onChange={e => {
                             if (e.target.checked) {
                               setSelectedExpenses(
-                                paginatedExpenses.map(exp => exp.id)
+                                paginatedExpenses.map(exp => exp.id),
                               );
                             } else {
                               setSelectedExpenses([]);
@@ -514,8 +514,8 @@ export default function GastosListado() {
                               } else {
                                 setSelectedExpenses(
                                   selectedExpenses.filter(
-                                    id => id !== expense.id
-                                  )
+                                    id => id !== expense.id,
+                                  ),
                                 );
                               }
                             }}
@@ -648,7 +648,7 @@ export default function GastosListado() {
                               ]);
                             } else {
                               setSelectedExpenses(
-                                selectedExpenses.filter(id => id !== expense.id)
+                                selectedExpenses.filter(id => id !== expense.id),
                               );
                             }
                           }}

@@ -18,7 +18,7 @@ class ComunidadesService {
       // eslint-disable-next-line no-console
       console.log('[ComunidadesService] getComunidades - Iniciando solicitud');
       // eslint-disable-next-line no-console
-      // eslint-disable-next-line no-console`n      console.log('[ComunidadesService] Filtros:', filtros);
+      console.log('[ComunidadesService] Filtros:', filtros);
 
       const params = new URLSearchParams();
 
@@ -34,17 +34,17 @@ class ComunidadesService {
 
       const url = `${this.baseUrl}${params.toString() ? `?${params.toString()}` : ''}`;
       // eslint-disable-next-line no-console
-      // eslint-disable-next-line no-console`n      console.log('[ComunidadesService] URL completa:', url);
+      console.log('[ComunidadesService] URL completa:', url);
 
       const token = localStorage.getItem('auth_token');
       // eslint-disable-next-line no-console
-      // eslint-disable-next-line no-console`n      console.log('[ComunidadesService] Token presente:', !!token);
+      console.log('[ComunidadesService] Token presente:', !!token);
 
       // ✅ NUEVA VERIFICACIÓN: Si no hay token, no intentar
       if (!token) {
         // eslint-disable-next-line no-console
         console.error(
-          '[ComunidadesService] SIN TOKEN - No se puede acceder a comunidades'
+          '[ComunidadesService] SIN TOKEN - No se puede acceder a comunidades',
         );
         throw new Error('No hay autenticación (token ausente)');
       }
@@ -53,17 +53,17 @@ class ComunidadesService {
       // eslint-disable-next-line no-console
       console.log(
         '[ComunidadesService] Respuesta exitosa. Comunidades:',
-        response.data.length
+        response.data.length,
       );
 
       return response.data.map((comunidad: any) =>
-        this.normalizeComunidad(comunidad)
+        this.normalizeComunidad(comunidad),
       );
     } catch (error: any) {
       // eslint-disable-next-line no-console
       console.error(
         '[ComunidadesService] Error obteniendo comunidades:',
-        error.message
+        error.message,
       );
       // eslint-disable-next-line no-console
       console.error('[ComunidadesService] Status:', error.response?.status);
@@ -74,7 +74,7 @@ class ComunidadesService {
       if (error.response?.status === 401) {
         // eslint-disable-next-line no-console
         console.error(
-          '[ComunidadesService] 401 - Sin autorización. Usuario debe hacer login.'
+          '[ComunidadesService] 401 - Sin autorización. Usuario debe hacer login.',
         );
         throw new Error('No autorizado. Por favor, haz login.');
       }
@@ -166,14 +166,14 @@ class ComunidadesService {
   async getEstadisticasByComunidad(id: number): Promise<any> {
     try {
       const response = await apiClient.get(
-        `${this.baseUrl}/${id}/estadisticas`
+        `${this.baseUrl}/${id}/estadisticas`,
       );
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(
         `Error obteniendo estadisticas para comunidad ${id}:`,
-        error
+        error,
       );
       return {
         totalIngresos: 0,
@@ -221,7 +221,7 @@ class ComunidadesService {
 
   async updateComunidad(
     id: number,
-    data: Partial<ComunidadFormData>
+    data: Partial<ComunidadFormData>,
   ): Promise<Comunidad> {
     try {
       // Mapear campos del frontend al backend
@@ -270,18 +270,18 @@ class ComunidadesService {
 
   // Métodos para parámetros de cobranza
   async getParametrosCobranza(
-    comunidadId: number
+    comunidadId: number,
   ): Promise<ParametrosCobranza> {
     try {
       const response = await apiClient.get(
-        `${this.baseUrl}/${comunidadId}/parametros`
+        `${this.baseUrl}/${comunidadId}/parametros`,
       );
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(
         `Error obteniendo parametros para comunidad ${comunidadId}:`,
-        error
+        error,
       );
       throw error;
     }
@@ -289,19 +289,19 @@ class ComunidadesService {
 
   async updateParametrosCobranza(
     comunidadId: number,
-    parametros: Partial<ParametrosCobranza>
+    parametros: Partial<ParametrosCobranza>,
   ): Promise<ParametrosCobranza> {
     try {
       const response = await apiClient.patch(
         `${this.baseUrl}/${comunidadId}/parametros`,
-        parametros
+        parametros,
       );
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(
         `Error actualizando parametros para comunidad ${comunidadId}:`,
-        error
+        error,
       );
       throw error;
     }
@@ -311,14 +311,14 @@ class ComunidadesService {
   async getEstadisticasComunidad(comunidadId: number): Promise<any> {
     try {
       const response = await apiClient.get(
-        `${this.baseUrl}/${comunidadId}/estadisticas`
+        `${this.baseUrl}/${comunidadId}/estadisticas`,
       );
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(
         `Error obteniendo estadisticas para comunidad ${comunidadId}:`,
-        error
+        error,
       );
       throw error;
     }
@@ -326,18 +326,18 @@ class ComunidadesService {
 
   // Métodos nuevos basados en los endpoints de la API
   async verificarAcceso(
-    comunidadId: number
+    comunidadId: number,
   ): Promise<{ tieneAcceso: boolean; esSuperadmin: boolean }> {
     try {
       const response = await apiClient.get(
-        `${this.baseUrl}/verificar-acceso/${comunidadId}`
+        `${this.baseUrl}/verificar-acceso/${comunidadId}`,
       );
       return response.data;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(
         `Error verificando acceso a comunidad ${comunidadId}:`,
-        error
+        error,
       );
       return { tieneAcceso: false, esSuperadmin: false };
     }

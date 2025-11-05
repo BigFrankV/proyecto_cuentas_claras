@@ -133,7 +133,7 @@ export default function NotificacionesListado() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [selectedNotifications, setSelectedNotifications] = useState<string[]>(
-    []
+    [],
   );
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [searchTerm, setSearchTerm] = useState('');
@@ -255,27 +255,27 @@ export default function NotificacionesListado() {
             .includes(searchTerm.toLowerCase()) ||
           notification.author.name
             .toLowerCase()
-            .includes(searchTerm.toLowerCase())
+            .includes(searchTerm.toLowerCase()),
       );
     }
 
     if (filters.status) {
       filtered = filtered.filter(
-        notification => notification.status === filters.status
+        notification => notification.status === filters.status,
       );
     }
 
     if (filters.type) {
       filtered = filtered.filter(
-        notification => notification.type === filters.type
+        notification => notification.type === filters.type,
       );
     }
 
     if (filters.channel) {
       filtered = filtered.filter(notification =>
         notification.channels.includes(
-          filters.channel as 'email' | 'sms' | 'push' | 'app'
-        )
+          filters.channel as 'email' | 'sms' | 'push' | 'app',
+        ),
       );
     }
 
@@ -286,7 +286,7 @@ export default function NotificacionesListado() {
     const sent = notifications.filter(n => n.status === 'sent').length;
     const draft = notifications.filter(n => n.status === 'draft').length;
     const scheduled = notifications.filter(
-      n => n.status === 'scheduled'
+      n => n.status === 'scheduled',
     ).length;
     const failed = notifications.filter(n => n.status === 'failed').length;
 
@@ -315,13 +315,13 @@ export default function NotificacionesListado() {
     setSelectedNotifications(prev =>
       prev.includes(notificationId)
         ? prev.filter(id => id !== notificationId)
-        : [...prev, notificationId]
+        : [...prev, notificationId],
     );
   };
 
   const handleNotificationAction = async (
     action: string,
-    notificationId: string
+    notificationId: string,
   ) => {
     switch (action) {
       case 'view':
@@ -330,7 +330,7 @@ export default function NotificacionesListado() {
       case 'duplicate': {
         // Crear una copia de la notificación
         const notificationToDuplicate = notifications.find(
-          n => n.id === notificationId
+          n => n.id === notificationId,
         );
         if (notificationToDuplicate) {
           const duplicatedNotification: NotificationData = {
@@ -362,8 +362,8 @@ export default function NotificacionesListado() {
               prev.map(n =>
                 n.id === notificationId
                   ? { ...n, sentAt: new Date().toISOString() }
-                  : n
-              )
+                  : n,
+              ),
             );
           } catch (error) {
             alert('Error al reenviar la notificación');
@@ -373,12 +373,12 @@ export default function NotificacionesListado() {
       case 'delete':
         if (
           confirm(
-            '¿Estás seguro de que quieres eliminar esta notificación? Esta acción no se puede deshacer.'
+            '¿Estás seguro de que quieres eliminar esta notificación? Esta acción no se puede deshacer.',
           )
         ) {
           setNotifications(prev => prev.filter(n => n.id !== notificationId));
           setSelectedNotifications(prev =>
-            prev.filter(id => id !== notificationId)
+            prev.filter(id => id !== notificationId),
           );
           alert('Notificación eliminada');
         }
@@ -399,14 +399,14 @@ export default function NotificacionesListado() {
       case 'resend':
         if (
           confirm(
-            `¿Estás seguro de que quieres reenviar ${selectedNotifications.length} notificación(es)?`
+            `¿Estás seguro de que quieres reenviar ${selectedNotifications.length} notificación(es)?`,
           )
         ) {
           try {
             // Simular API call
             await new Promise(resolve => setTimeout(resolve, 1500));
             alert(
-              `${selectedNotifications.length} notificación(es) reenviada(s) exitosamente`
+              `${selectedNotifications.length} notificación(es) reenviada(s) exitosamente`,
             );
             // Actualizar las notificaciones seleccionadas
             setNotifications(prev =>
@@ -417,8 +417,8 @@ export default function NotificacionesListado() {
                       sentAt: new Date().toISOString(),
                       status: 'sent' as const,
                     }
-                  : n
-              )
+                  : n,
+              ),
             );
             setSelectedNotifications([]);
           } catch (error) {
@@ -429,7 +429,7 @@ export default function NotificacionesListado() {
       case 'archive':
         if (
           confirm(
-            `¿Estás seguro de que quieres archivar ${selectedNotifications.length} notificación(es)?`
+            `¿Estás seguro de que quieres archivar ${selectedNotifications.length} notificación(es)?`,
           )
         ) {
           alert('Funcionalidad de archivo no implementada aún');
@@ -439,28 +439,28 @@ export default function NotificacionesListado() {
       case 'delete':
         if (
           confirm(
-            `¿Estás seguro de que quieres eliminar ${selectedNotifications.length} notificación(es)? Esta acción no se puede deshacer.`
+            `¿Estás seguro de que quieres eliminar ${selectedNotifications.length} notificación(es)? Esta acción no se puede deshacer.`,
           )
         ) {
           setNotifications(prev =>
-            prev.filter(n => !selectedNotifications.includes(n.id))
+            prev.filter(n => !selectedNotifications.includes(n.id)),
           );
           setSelectedNotifications([]);
           alert(
-            `${selectedNotifications.length} notificación(es) eliminada(s)`
+            `${selectedNotifications.length} notificación(es) eliminada(s)`,
           );
         }
         break;
       case 'export': {
         const selectedNotificationData = notifications.filter(n =>
-          selectedNotifications.includes(n.id)
+          selectedNotifications.includes(n.id),
         );
         const csvContent =
           'data:text/csv;charset=utf-8,' +
           `ID,Asunto,Tipo,Estado,Autor,Fecha\n${selectedNotificationData
             .map(
               n =>
-                `${n.id},"${n.subject}",${n.type},${n.status},${n.author.name},${n.createdAt}`
+                `${n.id},"${n.subject}",${n.type},${n.status},${n.author.name},${n.createdAt}`,
             )
             .join('\n')}`;
 
@@ -469,7 +469,7 @@ export default function NotificacionesListado() {
         link.setAttribute('href', encodedUri);
         link.setAttribute(
           'download',
-          `notificaciones_${new Date().toISOString().split('T')[0]}.csv`
+          `notificaciones_${new Date().toISOString().split('T')[0]}.csv`,
         );
         document.body.appendChild(link);
         link.click();
@@ -936,7 +936,7 @@ export default function NotificacionesListado() {
                         `ID,Asunto,Tipo,Estado,Autor,Fecha\n${filteredNotifications
                           .map(
                             n =>
-                              `${n.id},"${n.subject}",${n.type},${n.status},${n.author.name},${n.createdAt}`
+                              `${n.id},"${n.subject}",${n.type},${n.status},${n.author.name},${n.createdAt}`,
                           )
                           .join('\n')}`;
 
@@ -945,7 +945,7 @@ export default function NotificacionesListado() {
                       link.setAttribute('href', encodedUri);
                       link.setAttribute(
                         'download',
-                        `todas_notificaciones_${new Date().toISOString().split('T')[0]}.csv`
+                        `todas_notificaciones_${new Date().toISOString().split('T')[0]}.csv`,
                       );
                       document.body.appendChild(link);
                       link.click();
@@ -1012,7 +1012,7 @@ export default function NotificacionesListado() {
                               className='form-check-input'
                               type='checkbox'
                               checked={selectedNotifications.includes(
-                                notification.id
+                                notification.id,
                               )}
                               onChange={() =>
                                 handleNotificationSelect(notification.id)
@@ -1162,7 +1162,7 @@ export default function NotificacionesListado() {
                                   onClick={() =>
                                     handleNotificationAction(
                                       'view',
-                                      notification.id
+                                      notification.id,
                                     )
                                   }
                                 >
@@ -1178,7 +1178,7 @@ export default function NotificacionesListado() {
                                   onClick={() =>
                                     handleNotificationAction(
                                       'duplicate',
-                                      notification.id
+                                      notification.id,
                                     )
                                   }
                                 >
@@ -1195,7 +1195,7 @@ export default function NotificacionesListado() {
                                     onClick={() =>
                                       handleNotificationAction(
                                         'resend',
-                                        notification.id
+                                        notification.id,
                                       )
                                     }
                                   >
@@ -1213,7 +1213,7 @@ export default function NotificacionesListado() {
                                   onClick={() =>
                                     handleNotificationAction(
                                       'delete',
-                                      notification.id
+                                      notification.id,
                                     )
                                   }
                                 >
@@ -1304,7 +1304,7 @@ export default function NotificacionesListado() {
                               className='form-check-input notification-checkbox'
                               type='checkbox'
                               checked={selectedNotifications.includes(
-                                notification.id
+                                notification.id,
                               )}
                               onChange={() =>
                                 handleNotificationSelect(notification.id)
@@ -1445,7 +1445,7 @@ export default function NotificacionesListado() {
                                   onClick={() =>
                                     handleNotificationAction(
                                       'duplicate',
-                                      notification.id
+                                      notification.id,
                                     )
                                   }
                                 >
@@ -1462,7 +1462,7 @@ export default function NotificacionesListado() {
                                     onClick={() =>
                                       handleNotificationAction(
                                         'resend',
-                                        notification.id
+                                        notification.id,
                                       )
                                     }
                                   >
@@ -1480,7 +1480,7 @@ export default function NotificacionesListado() {
                                   onClick={() =>
                                     handleNotificationAction(
                                       'delete',
-                                      notification.id
+                                      notification.id,
                                     )
                                   }
                                 >

@@ -50,17 +50,17 @@ export default function EdificiosListado() {
     edificiosActivos: edificios.filter(e => e.estado === 'activo').length,
     totalUnidades: edificios.reduce(
       (sum, e) => sum + (e.totalUnidades || 0),
-      0
+      0,
     ),
     unidadesOcupadas: edificios.reduce(
       (sum, e) => sum + (e.totalUnidadesOcupadas || 0),
-      0
+      0,
     ),
     ocupacion:
       edificios.length > 0
         ? (edificios.reduce(
             (sum, e) => sum + (e.totalUnidadesOcupadas || 0),
-            0
+            0,
           ) /
             edificios.reduce((sum, e) => sum + (e.totalUnidades || 1), 0)) *
           100
@@ -68,9 +68,12 @@ export default function EdificiosListado() {
   };
 
   // Debug: log de estadísticas calculadas
-  // eslint-disable-next-line no-console`n  console.log('Edificios cargados:', edificios.length);
-  // eslint-disable-next-line no-console`n  console.log('Estadísticas calculadas:', statsCalculadas);
-  // eslint-disable-next-line no-console`n  console.log('Muestra de edificios:', edificios.slice(0, 2));
+  // eslint-disable-next-line no-console
+  console.log('Edificios cargados:', edificios.length);
+  // eslint-disable-next-line no-console
+  console.log('Estadísticas calculadas:', statsCalculadas);
+  // eslint-disable-next-line no-console
+  console.log('Muestra de edificios:', edificios.slice(0, 2));
 
   const handleFilterChange = (key: keyof EdificioFilters, value: string) => {
     setFilters(prev => ({
@@ -83,7 +86,7 @@ export default function EdificiosListado() {
   const handleDeleteEdificio = async (id: string, nombre: string) => {
     if (
       confirm(
-        `¿Estás seguro de que deseas eliminar el edificio "${nombre}"? Esta acción no se puede deshacer.`
+        `¿Estás seguro de que deseas eliminar el edificio "${nombre}"? Esta acción no se puede deshacer.`,
       )
     ) {
       const success = await deleteEdificio(id);
@@ -135,7 +138,7 @@ export default function EdificiosListado() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedEdificios = filteredEdificios.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   return (
@@ -385,7 +388,7 @@ export default function EdificiosListado() {
                               onChange={e =>
                                 handleSelectEdificio(
                                   edificio.id,
-                                  e.target.checked
+                                  e.target.checked,
                                 )
                               }
                             />
@@ -419,7 +422,7 @@ export default function EdificiosListado() {
                             <span className='badge bg-light text-dark'>
                               {
                                 TIPOS_EDIFICIO.find(
-                                  t => t.value === edificio.tipo
+                                  t => t.value === edificio.tipo,
                                 )?.label
                               }
                             </span>
@@ -430,7 +433,7 @@ export default function EdificiosListado() {
                             >
                               {
                                 ESTADOS_EDIFICIO.find(
-                                  e => e.value === edificio.estado
+                                  e => e.value === edificio.estado,
                                 )?.label
                               }
                             </span>
@@ -494,7 +497,7 @@ export default function EdificiosListado() {
                                 title='Editar'
                                 onClick={() =>
                                   router.push(
-                                    `/edificios/${edificio.id}/editar`
+                                    `/edificios/${edificio.id}/editar`,
                                   )
                                 }
                               >
@@ -506,7 +509,7 @@ export default function EdificiosListado() {
                                 onClick={() =>
                                   handleDeleteEdificio(
                                     edificio.id,
-                                    edificio.nombre
+                                    edificio.nombre,
                                   )
                                 }
                               >
@@ -551,7 +554,7 @@ export default function EdificiosListado() {
                         >
                           {
                             ESTADOS_EDIFICIO.find(
-                              e => e.value === edificio.estado
+                              e => e.value === edificio.estado,
                             )?.label
                           }
                         </span>
@@ -667,7 +670,7 @@ export default function EdificiosListado() {
                         {page}
                       </button>
                     </li>
-                  )
+                  ),
                 )}
                 <li
                   className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}

@@ -469,7 +469,7 @@ export default function EmisionProrrateo() {
                       <span>Progreso total</span>
                       <span>
                         {Math.round(
-                          (emission.paidAmount / emission.totalAmount) * 100
+                          (emission.paidAmount / emission.totalAmount) * 100,
                         )}
                         %
                       </span>
@@ -563,7 +563,7 @@ export default function EmisionProrrateo() {
                               className='btn btn-sm btn-outline-primary'
                               onClick={() =>
                                 setSelectedUnit(
-                                  selectedUnit === unit.id ? null : unit.id
+                                  selectedUnit === unit.id ? null : unit.id,
                                 )
                               }
                             >
@@ -602,20 +602,20 @@ export default function EmisionProrrateo() {
                                             <td>{detail.conceptName}</td>
                                             <td>
                                               {formatCurrency(
-                                                detail.totalAmount
+                                                detail.totalAmount,
                                               )}
                                             </td>
                                             <td>
                                               <span className='badge bg-secondary'>
                                                 {getDistributionTypeText(
-                                                  detail.distributionType
+                                                  detail.distributionType,
                                                 )}
                                               </span>
                                             </td>
                                             <td>
                                               <strong>
                                                 {formatCurrency(
-                                                  detail.unitAmount
+                                                  detail.unitAmount,
                                                 )}
                                               </strong>
                                             </td>
@@ -637,7 +637,7 @@ export default function EmisionProrrateo() {
                                 </div>
                               </td>
                             </tr>
-                          )
+                          ),
                       )}
                     </tbody>
                     <tfoot className='table-light'>
@@ -647,16 +647,16 @@ export default function EmisionProrrateo() {
                           {formatCurrency(
                             units.reduce(
                               (sum, unit) => sum + unit.totalAmount,
-                              0
-                            )
+                              0,
+                            ),
                           )}
                         </th>
                         <th className='text-success'>
                           {formatCurrency(
                             units.reduce(
                               (sum, unit) => sum + unit.paidAmount,
-                              0
-                            )
+                              0,
+                            ),
                           )}
                         </th>
                         <th className='text-warning'>
@@ -664,8 +664,8 @@ export default function EmisionProrrateo() {
                             units.reduce(
                               (sum, unit) =>
                                 sum + (unit.totalAmount - unit.paidAmount),
-                              0
-                            )
+                              0,
+                            ),
                           )}
                         </th>
                         <th colSpan={2}></th>
@@ -713,7 +713,7 @@ export default function EmisionProrrateo() {
                               <span className='label'>Saldo:</span>
                               <span className='value pending'>
                                 {formatCurrency(
-                                  unit.totalAmount - unit.paidAmount
+                                  unit.totalAmount - unit.paidAmount,
                                 )}
                               </span>
                             </div>
@@ -736,7 +736,7 @@ export default function EmisionProrrateo() {
                                 </div>
                                 <small className='text-muted'>
                                   {getDistributionTypeText(
-                                    detail.distributionType
+                                    detail.distributionType,
                                   )}
                                 </small>
                               </div>

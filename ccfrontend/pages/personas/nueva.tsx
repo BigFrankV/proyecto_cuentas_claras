@@ -110,7 +110,7 @@ export default function PersonaNueva() {
         const username =
           `${nombre.toLowerCase()}${apellido.toLowerCase().charAt(0)}`.replace(
             /\s+/g,
-            ''
+            '',
           );
         setFormData(prev => ({ ...prev, username }));
       }
@@ -212,12 +212,12 @@ export default function PersonaNueva() {
 
   const updateUnidadRelacion = (
     unidadId: string,
-    relacion: 'Propietario' | 'Inquilino'
+    relacion: 'Propietario' | 'Inquilino',
   ) => {
     setFormData(prev => ({
       ...prev,
       unidades: prev.unidades.map(u =>
-        u.id === unidadId ? { ...u, relacion } : u
+        u.id === unidadId ? { ...u, relacion } : u,
       ),
     }));
   };
@@ -288,7 +288,8 @@ export default function PersonaNueva() {
       // Si se debe crear cuenta de usuario
       if (formData.crearCuenta && nuevaPersona.id) {
         // Aquí iría la lógica para crear usuario si la API lo soporta
-        // eslint-disable-next-line no-console`n        console.log('Usuario creado:', nuevaPersona);
+        // eslint-disable-next-line no-console
+        console.log('Usuario creado:', nuevaPersona);
       }
 
       // Redirigir a la lista o al detalle
@@ -493,7 +494,7 @@ export default function PersonaNueva() {
                                   >
                                     {getInitials(
                                       formData.nombre,
-                                      formData.apellido
+                                      formData.apellido,
                                     )}
                                   </span>
                                 ) : (
@@ -707,10 +708,10 @@ export default function PersonaNueva() {
                       <div className='row g-2'>
                         {mockUnidades.map(unidad => {
                           const isSelected = formData.unidades.find(
-                            u => u.id === unidad.id
+                            u => u.id === unidad.id,
                           );
                           const selectedUnidad = formData.unidades.find(
-                            u => u.id === unidad.id
+                            u => u.id === unidad.id,
                           );
 
                           return (
@@ -764,7 +765,7 @@ export default function PersonaNueva() {
                                             unidad.id,
                                             e.target.value as
                                               | 'Propietario'
-                                              | 'Inquilino'
+                                              | 'Inquilino',
                                           )
                                         }
                                       >

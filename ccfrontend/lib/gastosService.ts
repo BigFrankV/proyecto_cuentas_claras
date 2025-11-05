@@ -28,7 +28,7 @@ function makeCacheKey(url: string, params: Record<string, any>) {
 
 export async function listGastos(
   comunidadId?: number | null,
-  params: Record<string, any> = {}
+  params: Record<string, any> = {},
 ) {
   const url =
     typeof comunidadId === 'number'
@@ -92,14 +92,15 @@ export async function getGastoById(id: number): Promise<GastoBackend> {
 
 export async function createGasto(comunidadId: number | null, data) {
   const url = comunidadId ? `/gastos/comunidad/${comunidadId}` : '/gastos';
-  // eslint-disable-next-line no-console`n  console.log('[SERVICE] createGasto url:', url, 'data:', data);
+  // eslint-disable-next-line no-console
+  console.log('[SERVICE] createGasto url:', url, 'data:', data);
   const res = await apiClient.post(url, data);
   return res.data;
 }
 
 export async function updateGasto(
   id: number,
-  data: UpdateGastoPayload
+  data: UpdateGastoPayload,
 ): Promise<GastoBackend> {
   const res = await apiClient.patch(`/gastos/${id}`, data);
   return res.data;
@@ -114,7 +115,8 @@ export async function getCategorias(comunidadId?: number | null) {
   const url = comunidadId
     ? `/gastos/listas/categorias/${comunidadId}`
     : '/categorias-gasto';
-  // eslint-disable-next-line no-console`n  console.log('[SERVICE] getCategorias url:', url);
+  // eslint-disable-next-line no-console
+  console.log('[SERVICE] getCategorias url:', url);
   try {
     const res = await apiClient.get(url);
     const payload = (res?.data && (res.data.data ?? res.data)) ?? [];
@@ -123,7 +125,7 @@ export async function getCategorias(comunidadId?: number | null) {
       '[SERVICE] getCategorias normalized length:',
       Array.isArray(payload) ? payload.length : 'not-array',
       'raw:',
-      res?.data
+      res?.data,
     );
     return payload;
   } catch (err: any) {
@@ -131,7 +133,7 @@ export async function getCategorias(comunidadId?: number | null) {
     console.error(
       '[SERVICE] getCategorias error:',
       err?.response?.status,
-      err?.response?.data || err?.message
+      err?.response?.data || err?.message,
     );
     throw err;
   }
@@ -141,7 +143,8 @@ export async function getCentrosCosto(comunidadId?: number | null) {
   const url = comunidadId
     ? `/centros-costo/comunidad/${comunidadId}/dropdown`
     : '/centros-costo';
-  // eslint-disable-next-line no-console`n  console.log('[SERVICE] getCentrosCosto url:', url);
+  // eslint-disable-next-line no-console
+  console.log('[SERVICE] getCentrosCosto url:', url);
   try {
     const res = await apiClient.get(url);
     const payload = (res?.data && (res.data.data ?? res.data)) ?? [];
@@ -150,7 +153,7 @@ export async function getCentrosCosto(comunidadId?: number | null) {
       '[SERVICE] getCentrosCosto normalized length:',
       Array.isArray(payload) ? payload.length : 'not-array',
       'raw:',
-      res?.data
+      res?.data,
     );
     return payload;
   } catch (err: any) {
@@ -158,7 +161,7 @@ export async function getCentrosCosto(comunidadId?: number | null) {
     console.error(
       '[SERVICE] getCentrosCosto error:',
       err?.response?.status,
-      err?.response?.data || err?.message
+      err?.response?.data || err?.message,
     );
     throw err;
   }
@@ -168,7 +171,8 @@ export async function getProveedores(comunidadId?: number | null) {
   const url = comunidadId
     ? `/proveedores/comunidad/${comunidadId}/dropdown`
     : '/proveedores';
-  // eslint-disable-next-line no-console`n  console.log('[SERVICE] getProveedores url:', url);
+  // eslint-disable-next-line no-console
+  console.log('[SERVICE] getProveedores url:', url);
   try {
     const res = await apiClient.get(url);
     const payload = (res?.data && (res.data.data ?? res.data)) ?? [];
@@ -177,7 +181,7 @@ export async function getProveedores(comunidadId?: number | null) {
       '[SERVICE] getProveedores normalized length:',
       Array.isArray(payload) ? payload.length : 'not-array',
       'raw:',
-      res?.data
+      res?.data,
     );
     return payload;
   } catch (err: any) {
@@ -185,7 +189,7 @@ export async function getProveedores(comunidadId?: number | null) {
     console.error(
       '[SERVICE] getProveedores error:',
       err?.response?.status,
-      err?.response?.data || err?.message
+      err?.response?.data || err?.message,
     );
     throw err;
   }
@@ -201,7 +205,7 @@ export async function getAprobaciones(gastoId: number): Promise<any[]> {
     console.error(
       'getAprobaciones error:',
       err?.response?.status,
-      err?.response?.data || err.message
+      err?.response?.data || err.message,
     );
     return []; // tolerancia: devolver vacío para no romper la UI
   }
@@ -209,7 +213,7 @@ export async function getAprobaciones(gastoId: number): Promise<any[]> {
 
 export async function createAprobacion(
   gastoId: number,
-  data: { accion: 'aprobar' | 'rechazar'; observaciones?: string }
+  data: { accion: 'aprobar' | 'rechazar'; observaciones?: string },
 ) {
   const res = await apiClient.post(`/gastos/${gastoId}/aprobaciones`, data);
   return res.data;

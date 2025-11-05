@@ -81,7 +81,7 @@ export default function GastoNuevo() {
   const [costCenters, setCostCenters] = useState([]);
   const [providers, setProviders] = useState([]);
   const [selectedComunidad, setSelectedComunidad] = useState<number | null>(
-    null
+    null,
   );
   const [comunidades, setComunidades] = useState<any[]>([]); // Lista de comunidades
 
@@ -89,66 +89,66 @@ export default function GastoNuevo() {
     const loadLists = async () => {
       // eslint-disable-next-line no-console
       console.log(
-        '[GASTO-NUEVO] idToUse:',
+        'idToUse:',
         comunidadParaEnviar,
         'isSuperUser:',
-        isSuperUser
+        isSuperUser,
       );
       try {
         // eslint-disable-next-line no-console
-        console.log('[GASTO-NUEVO] -> llamando getCategorias...');
+        console.log('-> llamando getCategorias...');
         const cats = await getCategorias(comunidadParaEnviar);
         const catsArray = Array.isArray(cats) ? cats : (cats?.data ?? []);
         // eslint-disable-next-line no-console
         console.log(
-          '[GASTO-NUEVO] <- getCategorias normalized length:',
-          catsArray.length
+          '<- getCategorias normalized length:',
+          catsArray.length,
         );
         setCategories(
           (catsArray || []).map((c: any) => ({
             id: c.id,
             nombre: c.nombre ?? c.name ?? String(c.id),
-          }))
+          })),
         );
 
         // eslint-disable-next-line no-console
-        console.log('[GASTO-NUEVO] -> llamando getCentrosCosto...');
+        console.log('-> llamando getCentrosCosto...');
         const centros = await getCentrosCosto(comunidadParaEnviar);
         const centrosArray = Array.isArray(centros)
           ? centros
           : (centros?.data ?? []);
         // eslint-disable-next-line no-console
         console.log(
-          '[GASTO-NUEVO] <- getCentrosCosto normalized length:',
-          centrosArray.length
+          '<- getCentrosCosto normalized length:',
+          centrosArray.length,
         );
         setCostCenters(
           (centrosArray || []).map((c: any) => ({
             id: c.id,
             nombre: c.nombre ?? String(c.id),
-          }))
+          })),
         );
 
         // eslint-disable-next-line no-console
-        console.log('[GASTO-NUEVO] -> llamando getProveedores...');
+        console.log('-> llamando getProveedores...');
         const provs = await getProveedores(comunidadParaEnviar);
         const provsArray = Array.isArray(provs) ? provs : (provs?.data ?? []);
         // eslint-disable-next-line no-console
         console.log(
-          '[GASTO-NUEVO] <- getProveedores normalized length:',
-          provsArray.length
+          '<- getProveedores normalized length:',
+          provsArray.length,
         );
         setProviders(
           (provsArray || []).map((p: any) => ({
             id: p.id,
             nombre: p.nombre ?? p.razon_social ?? String(p.id),
-          }))
+          })),
         );
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(
-          '[GASTO-NUEVO] Error cargando listas para dropdowns:',
-          err
+          'Error cargando listas para dropdowns:',
+          err,
         );
         setCategories([]);
         setCostCenters([]);
@@ -260,7 +260,7 @@ export default function GastoNuevo() {
 
       if (!allowedTypes.includes(file.type)) {
         alert(
-          `El archivo ${file.name} no es de un tipo permitido. Solo se permiten imágenes (JPG, PNG) y PDF.`
+          `El archivo ${file.name} no es de un tipo permitido. Solo se permiten imágenes (JPG, PNG) y PDF.`,
         );
         return false;
       }
@@ -378,10 +378,10 @@ export default function GastoNuevo() {
       const payload = mapFormDataToPayload(formData);
       // eslint-disable-next-line no-console
       console.log(
-        '[GASTO-NUEVO] creando gasto - comunidadId:',
+        'creando gasto - comunidadId:',
         isSuper ? selectedComunidad : comunidadParaEnviar,
         'payload:',
-        payload
+        payload,
       );
       // eslint-disable-next-line no-console
       console.log(
@@ -390,7 +390,7 @@ export default function GastoNuevo() {
         'currentComunidadId:',
         currentComunidadId,
         'comunidadParaEnviar:',
-        comunidadParaEnviar
+        comunidadParaEnviar,
       );
       const comunidadIdFinal = isSuper
         ? selectedComunidad
@@ -515,7 +515,7 @@ export default function GastoNuevo() {
                             onChange={e =>
                               handleInputChange(
                                 'category',
-                                parseInt(e.target.value)
+                                parseInt(e.target.value),
                               )
                             }
                             isInvalid={!!errors.category}
@@ -543,7 +543,7 @@ export default function GastoNuevo() {
                             onChange={e =>
                               handleInputChange(
                                 'provider',
-                                parseInt(e.target.value)
+                                parseInt(e.target.value),
                               )
                             }
                             isInvalid={!!errors.provider}
@@ -591,7 +591,7 @@ export default function GastoNuevo() {
                             onChange={e =>
                               handleInputChange(
                                 'costCenter',
-                                parseInt(e.target.value)
+                                parseInt(e.target.value),
                               )
                             }
                           >
@@ -653,7 +653,7 @@ export default function GastoNuevo() {
                             onChange={e =>
                               handleInputChange(
                                 'documentNumber',
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             isInvalid={!!errors.documentNumber}
@@ -821,7 +821,7 @@ export default function GastoNuevo() {
                           onChange={e =>
                             handleInputChange(
                               'requiredApprovals',
-                              parseInt(e.target.value)
+                              parseInt(e.target.value),
                             )
                           }
                         >
@@ -850,7 +850,7 @@ export default function GastoNuevo() {
                             onChange={e =>
                               handleInputChange(
                                 'recurringPeriod',
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           >

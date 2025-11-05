@@ -169,7 +169,7 @@ export default function EditarGasto() {
 
   const mapFormDataToPayload = (
     data: ExpenseFormData,
-    initial: ExpenseFormData | null
+    initial: ExpenseFormData | null,
   ) => {
     const payload: any = {};
 
@@ -182,7 +182,7 @@ export default function EditarGasto() {
     }
     if (data.amount !== initial?.amount) {
       payload.monto = parseFloat(
-        data.amount.replace(/\./g, '').replace(',', '.')
+        data.amount.replace(/\./g, '').replace(',', '.'),
       );
     }
     if (data.description !== initial?.description) {
@@ -256,7 +256,7 @@ export default function EditarGasto() {
 
       if (!allowedTypes.includes(file.type)) {
         alert(
-          `El archivo ${file.name} no es de un tipo permitido. Solo se permiten imágenes (JPG, PNG) y PDF.`
+          `El archivo ${file.name} no es de un tipo permitido. Solo se permiten imágenes (JPG, PNG) y PDF.`,
         );
         return false;
       }
@@ -281,7 +281,7 @@ export default function EditarGasto() {
     setFormData(prev => ({
       ...prev,
       existingAttachments: prev.existingAttachments.filter(
-        att => att.id !== attachmentId
+        att => att.id !== attachmentId,
       ),
     }));
   };
@@ -494,7 +494,7 @@ export default function EditarGasto() {
                             onChange={e =>
                               handleInputChange(
                                 'provider',
-                                parseInt(e.target.value)
+                                parseInt(e.target.value),
                               )
                             }
                           >
@@ -595,7 +595,7 @@ export default function EditarGasto() {
                             onChange={e =>
                               handleInputChange(
                                 'documentNumber',
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             isInvalid={!!errors.documentNumber}
@@ -675,7 +675,7 @@ export default function EditarGasto() {
                                 <small className='text-muted'>
                                   {formatFileSize(file.size)} • Subido el{' '}
                                   {new Date(file.uploadedAt).toLocaleDateString(
-                                    'es-CL'
+                                    'es-CL',
                                   )}
                                 </small>
                               </div>
@@ -817,7 +817,7 @@ export default function EditarGasto() {
                           onChange={e =>
                             handleInputChange(
                               'requiredApprovals',
-                              parseInt(e.target.value)
+                              parseInt(e.target.value),
                             )
                           }
                         >
@@ -846,7 +846,7 @@ export default function EditarGasto() {
                             onChange={e =>
                               handleInputChange(
                                 'recurringPeriod',
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           >

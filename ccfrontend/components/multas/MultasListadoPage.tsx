@@ -38,7 +38,8 @@ const MultasListadoPage: React.FC = () => {
   }, [filtros, pagina]);
 
   const cargarMultas = async () => {
-    // eslint-disable-next-line no-console`n    console.log('📡 Cargando multas...');
+    // eslint-disable-next-line no-console
+    console.log('📡 Cargando multas...');
     setLoading(true);
     setError(null);
     try {
@@ -83,15 +84,15 @@ const MultasListadoPage: React.FC = () => {
     try {
       if (action === 'delete') {
         await Promise.all(
-          selectedFines.map(id => multasService.deleteMulta(Number(id)))
+          selectedFines.map(id => multasService.deleteMulta(Number(id))),
         );
         cargarMultas();
       } else if (action === 'cancel') {
         // ✅ Agrega acción para anular
         await Promise.all(
           selectedFines.map(id =>
-            multasService.anularMulta(Number(id), 'Anulada masivamente')
-          )
+            multasService.anularMulta(Number(id), 'Anulada masivamente'),
+          ),
         );
         cargarMultas();
       }

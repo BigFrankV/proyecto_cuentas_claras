@@ -32,7 +32,7 @@ export default function CentrosCostoListado() {
   // modal / selección
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCentro, setSelectedCentro] = useState<CentroCosto | null>(
-    null
+    null,
   );
 
   // filtros locales
@@ -57,7 +57,8 @@ export default function CentrosCostoListado() {
     try {
       setLoading(true);
       const response = await listCentros(resolvedComunidadId);
-      // eslint-disable-next-line no-console`n      console.log('API Response:', response);
+      // eslint-disable-next-line no-console
+      console.log('API Response:', response);
       setCentros(response.data);
       setPagination(response.pagination);
     } catch (err) {

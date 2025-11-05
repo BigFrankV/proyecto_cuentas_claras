@@ -35,7 +35,7 @@ export default function EmisionesListado() {
       const result = await emisionesService.getEmisionesComunidad(
         comunidadId,
         currentPage,
-        itemsPerPage
+        itemsPerPage,
       );
 
       // Mapear los datos de la API al formato del frontend
@@ -52,7 +52,7 @@ export default function EmisionesListado() {
           unitCount: 0, // Se obtendrá después
           description: emision.observaciones || '',
           communityName: 'Comunidad Actual', // Se obtendrá del contexto
-        })
+        }),
       );
 
       setEmissions(mappedEmissions);
@@ -104,14 +104,14 @@ export default function EmisionesListado() {
           (emission.communityName &&
             emission.communityName
               .toLowerCase()
-              .includes(filters.search.toLowerCase()))
+              .includes(filters.search.toLowerCase())),
       );
     }
 
     // Filtro por estado
     if (filters.status !== 'all') {
       filtered = filtered.filter(
-        emission => emission.status === filters.status
+        emission => emission.status === filters.status,
       );
     }
 
@@ -123,20 +123,20 @@ export default function EmisionesListado() {
     // Filtro por período
     if (filters.period !== 'all') {
       filtered = filtered.filter(emission =>
-        emission.period.includes(filters.period)
+        emission.period.includes(filters.period),
       );
     }
 
     // Filtro por fechas
     if (filters.dateFrom) {
       filtered = filtered.filter(
-        emission => new Date(emission.issueDate) >= new Date(filters.dateFrom)
+        emission => new Date(emission.issueDate) >= new Date(filters.dateFrom),
       );
     }
 
     if (filters.dateTo) {
       filtered = filtered.filter(
-        emission => new Date(emission.issueDate) <= new Date(filters.dateTo)
+        emission => new Date(emission.issueDate) <= new Date(filters.dateTo),
       );
     }
 
@@ -161,13 +161,13 @@ export default function EmisionesListado() {
   const handleSelectAll = () => {
     const currentPageEmissions = getCurrentPageEmissions();
     const allSelected = currentPageEmissions.every(emission =>
-      selectedEmissions.includes(emission.id)
+      selectedEmissions.includes(emission.id),
     );
 
     if (allSelected) {
       // Deseleccionar todos de la página actual
       const newSelected = selectedEmissions.filter(
-        id => !currentPageEmissions.some(emission => emission.id === id)
+        id => !currentPageEmissions.some(emission => emission.id === id),
       );
       setSelectedEmissions(newSelected);
     } else {
@@ -183,10 +183,11 @@ export default function EmisionesListado() {
   };
 
   const handleBulkAction = (action: string) => {
-    // eslint-disable-next-line no-console`n    console.log(`Acción masiva: ${action}`, selectedEmissions);
+    // eslint-disable-next-line no-console
+    console.log(`Acción masiva: ${action}`, selectedEmissions);
     // Implementar acciones masivas aquí
     alert(
-      `Acción "${action}" aplicada a ${selectedEmissions.length} emisiones`
+      `Acción "${action}" aplicada a ${selectedEmissions.length} emisiones`,
     );
   };
 
@@ -392,7 +393,7 @@ export default function EmisionesListado() {
                             checked={
                               getCurrentPageEmissions().length > 0 &&
                               getCurrentPageEmissions().every(emission =>
-                                selectedEmissions.includes(emission.id)
+                                selectedEmissions.includes(emission.id),
                               )
                             }
                             onChange={handleSelectAll}

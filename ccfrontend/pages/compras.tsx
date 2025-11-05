@@ -80,7 +80,7 @@ export default function ComprasListado() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(
-    null
+    null,
   );
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
@@ -183,7 +183,7 @@ export default function ComprasListado() {
       const total = resp.pagination.total ?? 0;
       const pages = Math.max(
         1,
-        resp.pagination.pages ?? Math.ceil(total / limit)
+        resp.pagination.pages ?? Math.ceil(total / limit),
       );
       setCurrentPage(resp.pagination.page ?? page);
     } catch (error) {
@@ -308,7 +308,8 @@ export default function ComprasListado() {
   };
 
   const handleBulkAction = (action: string) => {
-    // eslint-disable-next-line no-console`n    console.log(`Bulk action: ${action} on purchases:`, selectedPurchases);
+    // eslint-disable-next-line no-console
+    console.log(`Bulk action: ${action} on purchases:`, selectedPurchases);
     // Implementar acciones masivas
   };
 
@@ -316,7 +317,7 @@ export default function ComprasListado() {
     setSelectedPurchases(prev =>
       prev.includes(purchaseId)
         ? prev.filter(id => id !== purchaseId)
-        : [...prev, purchaseId]
+        : [...prev, purchaseId],
     );
   };
 
@@ -324,7 +325,7 @@ export default function ComprasListado() {
     setSelectedPurchases(prev =>
       prev.length === paginatedPurchases.length
         ? []
-        : paginatedPurchases.map(p => p.id)
+        : paginatedPurchases.map(p => p.id),
     );
   };
 
@@ -352,7 +353,7 @@ export default function ComprasListado() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedPurchases = filteredPurchases.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   const stats = {
@@ -789,7 +790,7 @@ export default function ComprasListado() {
                           <div className='fw-medium'>{purchase.number}</div>
                           <small className='text-muted'>
                             {new Date(
-                              purchase.requestDate
+                              purchase.requestDate,
                             ).toLocaleDateString()}
                           </small>
                         </td>
@@ -825,14 +826,14 @@ export default function ComprasListado() {
                           <div className='fw-medium'>
                             {formatCurrency(
                               purchase.totalAmount,
-                              purchase.currency
+                              purchase.currency,
                             )}
                           </div>
                         </td>
                         <td>
                           <div>
                             {new Date(
-                              purchase.requiredDate
+                              purchase.requiredDate,
                             ).toLocaleDateString()}
                           </div>
                           <small className='text-muted'>
@@ -941,7 +942,7 @@ export default function ComprasListado() {
                             <div className='fw-bold'>
                               {formatCurrency(
                                 purchase.totalAmount,
-                                purchase.currency
+                                purchase.currency,
                               )}
                             </div>
                             <small className='text-muted'>Total</small>

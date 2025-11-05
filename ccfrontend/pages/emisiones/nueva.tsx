@@ -144,15 +144,15 @@ export default function EmisionNueva() {
       prev.map(expense =>
         expense.id === expenseId
           ? { ...expense, selected: !expense.selected }
-          : expense
-      )
+          : expense,
+      ),
     );
   };
 
   const handleSelectAllExpenses = () => {
     const allSelected = expenses.every(expense => expense.selected);
     setExpenses(prev =>
-      prev.map(expense => ({ ...expense, selected: !allSelected }))
+      prev.map(expense => ({ ...expense, selected: !allSelected })),
     );
   };
 
@@ -243,7 +243,7 @@ export default function EmisionNueva() {
       // Call API to create emission
       const nuevaEmision = await emisionesService.createEmision(
         comunidadId,
-        emisionData
+        emisionData,
       );
 
       alert('Emisión creada exitosamente');
@@ -465,7 +465,7 @@ export default function EmisionNueva() {
                             onChange={e =>
                               handleInputChange(
                                 'interestRate',
-                                parseFloat(e.target.value)
+                                parseFloat(e.target.value),
                               )
                             }
                             step='0.1'
@@ -484,7 +484,7 @@ export default function EmisionNueva() {
                             onChange={e =>
                               handleInputChange(
                                 'gracePeriod',
-                                parseInt(e.target.value)
+                                parseInt(e.target.value),
                               )
                             }
                             min='0'
@@ -634,7 +634,7 @@ export default function EmisionNueva() {
                               <td>{expense.supplier}</td>
                               <td>
                                 {new Date(expense.date).toLocaleDateString(
-                                  'es-CL'
+                                  'es-CL',
                                 )}
                               </td>
                               <td>{formatCurrency(expense.amount)}</td>

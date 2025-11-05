@@ -548,7 +548,7 @@ export default function GastoDetalle() {
                         <label>Fecha de Vencimiento</label>
                         <div className='detail-value'>
                           {new Date(expense.dueDate).toLocaleDateString(
-                            'es-CL'
+                            'es-CL',
                           )}
                         </div>
                       </div>
@@ -623,7 +623,7 @@ export default function GastoDetalle() {
                             <div className='attachment-meta'>
                               {formatFileSize(file.size)} •{' '}
                               {new Date(file.uploadedAt).toLocaleDateString(
-                                'es-CL'
+                                'es-CL',
                               )}
                             </div>
                           </div>
@@ -695,7 +695,7 @@ export default function GastoDetalle() {
                               </span>
                               <span className='approval-date'>
                                 {new Date(
-                                  approval.created_at
+                                  approval.created_at,
                                 ).toLocaleDateString('es-CL')}
                               </span>
                             </div>
@@ -842,7 +842,7 @@ export default function GastoDetalle() {
                         </span>
                         <span className='info-list-value'>
                           {new Date(expense.createdAt).toLocaleDateString(
-                            'es-CL'
+                            'es-CL',
                           )}
                         </span>
                       </div>

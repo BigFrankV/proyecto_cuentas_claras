@@ -66,7 +66,7 @@ export default function CategoriasGastoListado() {
         page: response.pagination?.offset
           ? Math.floor(
               (response.pagination.offset || 0) /
-                (response.pagination.limit || 10)
+                (response.pagination.limit || 10),
             ) + 1
           : 1,
         limit: response.pagination?.limit || 10,
@@ -130,7 +130,7 @@ export default function CategoriasGastoListado() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedCategories = filteredCategories.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   const stats = {
@@ -426,7 +426,7 @@ export default function CategoriasGastoListado() {
                       </div>
 
                       <p className='data-card-subtitle mb-3'>
-                        {category.description}
+                        {category.nombre}
                       </p>
 
                       <div className='d-flex justify-content-between align-items-center'>
@@ -532,7 +532,7 @@ export default function CategoriasGastoListado() {
                 </div>
                 <p>
                   ¿Estás seguro de que deseas eliminar la categoría{' '}
-                  <strong>"{selectedCategory.name}"</strong>?
+                  <strong>"{selectedCategory.nombre}"</strong>?
                 </p>
               </>
             )}

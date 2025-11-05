@@ -204,7 +204,7 @@ export default function NuevaCompra() {
   const handleItemChange = (
     itemId: string,
     field: string,
-    value: string | number
+    value: string | number,
   ) => {
     setItems(prev =>
       prev.map(item => {
@@ -220,7 +220,7 @@ export default function NuevaCompra() {
           return updatedItem;
         }
         return item;
-      })
+      }),
     );
   };
 
@@ -283,7 +283,7 @@ export default function NuevaCompra() {
 
     // Validar items
     const validItems = items.filter(
-      item => item.description.trim() && item.quantity > 0 && item.unitPrice > 0
+      item => item.description.trim() && item.quantity > 0 && item.unitPrice > 0,
     );
 
     if (validItems.length === 0) {
@@ -326,7 +326,8 @@ export default function NuevaCompra() {
         requestDate: new Date().toISOString(),
       };
 
-      // eslint-disable-next-line no-console`n      console.log('Nueva compra:', purchaseData);
+      // eslint-disable-next-line no-console
+      console.log('Nueva compra:', purchaseData);
       alert('Compra creada exitosamente');
       router.push('/compras');
     } catch (error) {
@@ -598,7 +599,7 @@ export default function NuevaCompra() {
                                 (Disponible:{' '}
                                 {formatCurrency(
                                   center.budget - center.spent,
-                                  formData.currency
+                                  formData.currency,
                                 )}
                                 )
                               </option>
@@ -642,7 +643,7 @@ export default function NuevaCompra() {
                                 {formatCurrency(
                                   getSelectedCostCenter()!.budget -
                                     getSelectedCostCenter()!.spent,
-                                  formData.currency
+                                  formData.currency,
                                 )}
                               </strong>
                             </div>
@@ -718,7 +719,7 @@ export default function NuevaCompra() {
                                     handleItemChange(
                                       item.id,
                                       'description',
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   size='sm'
@@ -732,7 +733,7 @@ export default function NuevaCompra() {
                                     handleItemChange(
                                       item.id,
                                       'notes',
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   size='sm'
@@ -748,7 +749,7 @@ export default function NuevaCompra() {
                                     handleItemChange(
                                       item.id,
                                       'quantity',
-                                      parseInt(e.target.value) || 1
+                                      parseInt(e.target.value) || 1,
                                     )
                                   }
                                   size='sm'
@@ -761,7 +762,7 @@ export default function NuevaCompra() {
                                     handleItemChange(
                                       item.id,
                                       'unit',
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   size='sm'
@@ -788,7 +789,7 @@ export default function NuevaCompra() {
                                     handleItemChange(
                                       item.id,
                                       'unitPrice',
-                                      parseFloat(e.target.value) || 0
+                                      parseFloat(e.target.value) || 0,
                                     )
                                   }
                                   size='sm'
@@ -820,7 +821,7 @@ export default function NuevaCompra() {
                             <td className='fw-bold'>
                               {formatCurrency(
                                 getTotalAmount(),
-                                formData.currency
+                                formData.currency,
                               )}
                             </td>
                             <td></td>
@@ -866,7 +867,7 @@ export default function NuevaCompra() {
                             onChange={e =>
                               handleInputChange(
                                 'requestJustification',
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
@@ -900,7 +901,7 @@ export default function NuevaCompra() {
                           <div className='stat-value'>
                             {items.reduce(
                               (sum, item) => sum + item.quantity,
-                              0
+                              0,
                             )}
                           </div>
                           <div className='stat-label'>Cantidad Total</div>
@@ -912,7 +913,7 @@ export default function NuevaCompra() {
                           <div className='total-value'>
                             {formatCurrency(
                               getTotalAmount(),
-                              formData.currency
+                              formData.currency,
                             )}
                           </div>
                         </div>
