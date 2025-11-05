@@ -126,19 +126,202 @@ const menuSections = [
 export default function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { isSuperUser, hasPermission, currentRole } = usePermissions();
+  const { isSuperUser, hasPermission, currentRole, isAdmin } = usePermissions();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Obtener el rol normalizado del usuario
+  const userRole = getUserRole(user);
 
   // Función para determinar si una sección debe mostrarse según permisos
   const shouldShowSection = (sectionTitle: string) => {
-    // Mostrar todas las secciones para todos los roles
-    return true;
+    // Superadmin ve todo
+    if (isSuperUser()) {
+      return true;
+    }
+
+    // Reglas por sección según rol
+    switch (sectionTitle) {
+      case 'Dashboard':
+        return true; // Todos ven dashboard
+
+      case 'Estructura':
+        // Todos menos Conserje y Proveedor
+        return !['Conserje', 'Portero', 'Vigilante', 'Proveedor'].includes(
+          userRole,
+        );
+
+      case 'Residentes':
+        // Solo roles administrativos
+        return isAdmin();
+
+      case 'Finanzas':
+        // Administrativos y residentes
+        return (
+          isAdmin() ||
+          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
+        );
+
+      case 'Gastos':
+        // Solo administrativos
+        return isAdmin();
+
+      case 'Servicios':
+        // Administrativos, residentes y conserjes (para lecturas)
+        return (
+          isAdmin() ||
+          ['Propietario', 'Inquilino', 'Residente', 'Conserje'].includes(
+            userRole,
+          )
+        );
+
+      case 'Amenidades':
+        // Todos menos Proveedor
+        return userRole !== 'Proveedor';
+
+      case 'Sanciones':
+        // Administrativos y residentes
+        return (
+          isAdmin() ||
+          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
+        );
+
+      case 'Comunicación':
+        // Todos menos Proveedor (tienen acceso limitado a tickets)
+        return true;
+
+      case 'Utilidades':
+        return true; // Todos pueden usar utilidades
+
+      default:
+        return false;
+    }
   };
 
   // Función para determinar si un item específico debe mostrarse
   const shouldShowItem = (href: string) => {
-    // Mostrar todos los items para todos los roles
-    return true;
+    // Superadmin ve todo
+    if (isSuperUser()) {
+      return true;
+    }
+
+    // Reglas específicas por ruta y rol
+    switch (href) {
+      // DASHBOARD
+      case '/dashboard':
+        return true; // Todos
+      case '/reportes':
+        return (
+          isAdmin() ||
+          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
+        );
+
+      // ESTRUCTURA
+      case '/comunidades':
+      case '/edificios':
+      case '/torres':
+      case '/unidades':
+        // Administrativos y residentes (residentes solo lectura)
+        return (
+          isAdmin() ||
+          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
+        );
+
+      // RESIDENTES
+      case '/personas':
+      case '/membresias':
+        return isAdmin(); // Solo administrativos
+
+      // FINANZAS
+      case '/emisiones':
+      case '/cargos':
+      case '/pagos':
+        // Administrativos y residentes
+        return (
+          isAdmin() ||
+          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
+        );
+      case '/conciliaciones':
+        return isAdmin(); // Solo administrativos
+
+      // GASTOS
+      case '/gastos':
+      case '/categorias-gasto':
+      case '/centros-costo':
+      case '/compras':
+        return isAdmin(); // Solo administrativos
+      case '/proveedores':
+        return isAdmin() || userRole === 'Proveedor'; // Admin o el proveedor mismo
+
+      // SERVICIOS
+      case '/medidores':
+      case '/lecturas':
+        return isAdmin() || userRole === 'Conserje'; // Admin o conserje para registrar
+      case '/consumos':
+        // Administrativos y residentes
+        return (
+          isAdmin() ||
+          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
+        );
+      case '/tarifas':
+        return isAdmin(); // Solo administrativos
+
+      // AMENIDADES
+      case '/amenidades':
+      case '/amenidades-reservas':
+      case '/amenidades-calendario':
+        // Todos menos Proveedor, conserje solo lectura
+        return (
+          isAdmin() ||
+          [
+            'Propietario',
+            'Inquilino',
+            'Residente',
+            'Conserje',
+            'Portero',
+            'Vigilante',
+          ].includes(userRole)
+        );
+
+      // SANCIONES
+      case '/multas':
+      case '/apelaciones':
+        // Administrativos y residentes (ven las propias)
+        return (
+          isAdmin() ||
+          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
+        );
+      case '/multas-nueva':
+        return isAdmin(); // Solo admin crea multas
+      case '/apelaciones-nueva':
+        // Admin o residentes (para apelar sus multas)
+        return (
+          isAdmin() ||
+          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
+        );
+
+      // COMUNICACIÓN
+      case '/tickets':
+        return true; // Todos pueden crear tickets
+      case '/notificaciones':
+        return userRole !== 'Proveedor'; // Todos menos proveedor
+      case '/documentos':
+        // Administrativos y residentes
+        return (
+          isAdmin() ||
+          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
+        );
+      case '/bitacora':
+        return isAdmin(); // Solo administrativos
+
+      // UTILIDADES
+      case '/util-uf':
+      case '/util-utm':
+      case '/util-rut':
+        return true; // Todos
+
+      default:
+        return false; // Por defecto, ocultar
+    }
   };
 
   const isActive = (href: string) => {
@@ -341,11 +524,14 @@ export default function Sidebar() {
                 Mi Perfil
               </Link>
             </li>
-            <li>
-              <Link className='dropdown-item' href='/parametros'>
-                Parámetros
-              </Link>
-            </li>
+            {/* Solo administradores pueden ver Parámetros */}
+            {isAdmin() && (
+              <li>
+                <Link className='dropdown-item' href='/parametros'>
+                  Parámetros
+                </Link>
+              </li>
+            )}
             <li>
               <button type='button' className='dropdown-item'>
                 Preferencias

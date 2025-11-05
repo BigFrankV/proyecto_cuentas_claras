@@ -8,6 +8,7 @@ import Layout from '@/components/layout/Layout';
 import { useCurrentComunidad } from '@/hooks/useComunidad';
 import bitacoraService, { ActivityFilters } from '@/lib/api/bitacora';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedPage, UserRole } from '@/lib/usePermissions';
 
 interface Activity {
   id: string;
@@ -152,11 +153,12 @@ export default function BitacoraListado() {
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Bitácora de Actividades — Cuentas Claras</title>
-      </Head>
+      <ProtectedPage role={UserRole.ADMIN}>
+        <Head>
+          <title>Bitácora de Actividades — Cuentas Claras</title>
+        </Head>
 
-      <Layout title='Bitácora de Actividades'>
+        <Layout title='Bitácora de Actividades'>
         <div className='container-fluid p-4'>
           {/* Header */}
           <div className='d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3'>
@@ -578,6 +580,7 @@ export default function BitacoraListado() {
           }
         `}</style>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 }

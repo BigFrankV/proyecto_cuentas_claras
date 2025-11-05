@@ -9,6 +9,7 @@ import {
   MembresiaFilters,
 } from '@/hooks/useMembresias';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedPage, UserRole } from '@/lib/usePermissions';
 
 const MembresiasListado = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -156,11 +157,12 @@ const MembresiasListado = () => {
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Membresías — Cuentas Claras</title>
-      </Head>
+      <ProtectedPage role={UserRole.ADMIN}>
+        <Head>
+          <title>Membresías — Cuentas Claras</title>
+        </Head>
 
-      <Layout title='Membresías'>
+        <Layout title='Membresías'>
         <div className='container-fluid py-4'>
           {/* Filtros */}
           <div className='row mb-4'>
@@ -911,6 +913,7 @@ const MembresiasListado = () => {
           }
         `}</style>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 };

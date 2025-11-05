@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useRouter } from 'next/router';
 import React from 'react'; // ✅ AGREGAR ESTA LÍNEA
 
 import { useAuth } from './useAuth';
@@ -286,4 +287,117 @@ export function PermissionGuard({
     (!permission && !role); // Si no se especifica permiso/rol, mostrar siempre
 
   return hasAccess ? <>{children}</> : <>{fallback}</>;
+}
+
+// Componente para proteger páginas completas basado en permisos
+interface ProtectedPageProps {
+  permission?: Permission;
+  role?: UserRole;
+  allowedRoles?: string[]; // Roles específicos permitidos (usando getUserRole)
+  children: React.ReactNode;
+  redirectTo?: string; // Ruta a la que redirigir si no tiene acceso
+  showAccessDenied?: boolean; // Mostrar página de acceso denegado en lugar de redirigir
+}
+
+export function ProtectedPage({
+  permission,
+  role,
+  allowedRoles,
+  children,
+  redirectTo = '/dashboard',
+  showAccessDenied = true,
+}: ProtectedPageProps) {
+  const { hasPermission, hasRole, isSuperUser } = usePermissions();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  // Superadmin siempre tiene acceso
+  if (isSuperUser()) {
+    return <>{children}</>;
+  }
+
+  // Verificar acceso basado en parámetros
+  let hasAccess = false;
+
+  if (permission) {
+    hasAccess = hasPermission(permission);
+  } else if (role) {
+    hasAccess = hasRole(role);
+  } else if (allowedRoles && allowedRoles.length > 0) {
+    // Usar getUserRole del módulo roles
+    const { getUserRole } = require('./roles');
+    const currentUserRole = getUserRole(user);
+    hasAccess = allowedRoles.includes(currentUserRole);
+  } else {
+    // Si no se especifica ningún requisito, denegar por defecto
+    hasAccess = false;
+  }
+
+  // Si no tiene acceso
+  if (!hasAccess) {
+    if (showAccessDenied) {
+      // Mostrar página de acceso denegado
+      return (
+        <div className='container-fluid'>
+          <div className='row justify-content-center align-items-center min-vh-100'>
+            <div className='col-12 col-md-8 col-lg-6'>
+              <div className='card shadow-lg border-0'>
+                <div className='card-body text-center p-5'>
+                  <div className='mb-4'>
+                    <span
+                      className='material-icons text-danger'
+                      style={{ fontSize: '80px' }}
+                    >
+                      block
+                    </span>
+                  </div>
+                  <h2 className='card-title mb-3'>Acceso Denegado</h2>
+                  <p className='card-text text-muted mb-4'>
+                    No tienes permisos para acceder a esta página.
+                    <br />
+                    Si crees que esto es un error, contacta al administrador.
+                  </p>
+                  <div className='d-flex gap-2 justify-content-center'>
+                    <button
+                      type='button'
+                      className='btn btn-primary'
+                      onClick={() => router.back()}
+                    >
+                      <span className='material-icons align-middle me-1'>
+                        arrow_back
+                      </span>
+                      Volver Atrás
+                    </button>
+                    <button
+                      type='button'
+                      className='btn btn-outline-primary'
+                      onClick={() => router.push('/dashboard')}
+                    >
+                      <span className='material-icons align-middle me-1'>
+                        home
+                      </span>
+                      Ir al Dashboard
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      // Redirigir a la ruta especificada
+      router.push(redirectTo);
+      return (
+        <div className='d-flex justify-content-center align-items-center min-vh-100'>
+          <div className='spinner-border text-primary' role='status'>
+            <span className='visually-hidden'>Redirigiendo...</span>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // Tiene acceso, mostrar contenido
+  return <>{children}</>;
 }

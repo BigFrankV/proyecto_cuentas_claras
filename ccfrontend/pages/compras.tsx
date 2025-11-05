@@ -16,6 +16,7 @@ import {
 import Layout from '@/components/layout/Layout';
 import { comprasApi } from '@/lib/api/compras';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedPage, UserRole } from '@/lib/usePermissions';
 import { CompraBackend } from '@/types/compras';
 
 interface Purchase {
@@ -367,11 +368,12 @@ export default function ComprasListado() {
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Compras — Cuentas Claras</title>
-      </Head>
+      <ProtectedPage role={UserRole.ADMIN}>
+        <Head>
+          <title>Compras — Cuentas Claras</title>
+        </Head>
 
-      <Layout>
+        <Layout>
         <div className='purchases-container'>
           {/* Header */}
           {/* Hero Section */}
@@ -1090,6 +1092,7 @@ export default function ComprasListado() {
           </Modal.Footer>
         </Modal>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 }

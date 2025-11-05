@@ -7,7 +7,11 @@ import Layout from '@/components/layout/Layout';
 import { listCategorias } from '@/lib/categoriasGastoService';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
-import { usePermissions } from '@/lib/usePermissions';
+import {
+  usePermissions,
+  ProtectedPage,
+  UserRole,
+} from '@/lib/usePermissions';
 import { CategoriaGasto } from '@/types/categoriasGasto';
 
 type ExpenseCategory = CategoriaGasto;
@@ -145,11 +149,12 @@ export default function CategoriasGastoListado() {
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Categorías de Gasto — Cuentas Claras</title>
-      </Head>
+      <ProtectedPage role={UserRole.ADMIN}>
+        <Head>
+          <title>Categorías de Gasto — Cuentas Claras</title>
+        </Head>
 
-      <Layout>
+        <Layout>
         <div className='categories-container'>
           {/* Header */}
           <div className='categories-header'>
@@ -551,6 +556,7 @@ export default function CategoriasGastoListado() {
           </Modal.Footer>
         </Modal>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 }

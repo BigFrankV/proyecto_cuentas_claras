@@ -2,10 +2,12 @@ import Head from 'next/head';
 
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedPage, UserRole } from '@/lib/usePermissions';
 
 export default function TarifasListado() {
   return (
     <ProtectedRoute>
+      <ProtectedPage role={UserRole.ADMIN}>
       <Head>
         <title>Tarifas de Consumo — Cuentas Claras</title>
       </Head>
@@ -39,6 +41,7 @@ export default function TarifasListado() {
           </div>
         </div>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 }

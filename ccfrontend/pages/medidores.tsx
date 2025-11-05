@@ -10,6 +10,7 @@ import {
   deleteMedidor,
 } from '@/lib/medidoresService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { ProtectedPage } from '@/lib/usePermissions';
 import type { Medidor } from '@/types/medidores';
 
 export default function MedidoresListadoPage() {
@@ -192,11 +193,12 @@ export default function MedidoresListadoPage() {
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Medidores — Cuentas Claras</title>
-      </Head>
+      <ProtectedPage allowedRoles={['Superadmin', 'Admin', 'Conserje']}>
+        <Head>
+          <title>Medidores — Cuentas Claras</title>
+        </Head>
 
-      <Layout>
+        <Layout>
         <div className='medidores-container'>
           {/* Header */}
           <div className='page-header'>
@@ -612,6 +614,7 @@ export default function MedidoresListadoPage() {
           </div>
         </div>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 }
