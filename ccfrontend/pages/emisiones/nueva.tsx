@@ -1,10 +1,11 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
-import { useRouter } from 'next/router';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-import emisionesService from '@/lib/emisionesService';
+
+import Layout from '@/components/layout/Layout';
 import comunidadesService from '@/lib/comunidadesService';
+import emisionesService from '@/lib/emisionesService';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 interface Concept {
   id: string;
@@ -27,7 +28,7 @@ interface ExpenseItem {
 
 export default function EmisionNueva() {
   const router = useRouter();
-  
+
   // Form state
   const [formData, setFormData] = useState({
     period: '',
@@ -38,7 +39,7 @@ export default function EmisionNueva() {
     community: '',
     hasInterest: false,
     interestRate: 2.0,
-    gracePeriod: 5
+    gracePeriod: 5,
   });
 
   const [concepts, setConcepts] = useState<Concept[]>([]);
@@ -52,7 +53,7 @@ export default function EmisionNueva() {
     description: '',
     amount: 0,
     distributionType: 'proportional' as const,
-    category: ''
+    category: '',
   });
 
   // Generate mock expenses
@@ -65,7 +66,7 @@ export default function EmisionNueva() {
         category: 'Servicios Básicos',
         supplier: 'CGE',
         date: '2025-09-15',
-        selected: false
+        selected: false,
       },
       {
         id: '2',
@@ -74,7 +75,7 @@ export default function EmisionNueva() {
         category: 'Servicios Básicos',
         supplier: 'ESVAL',
         date: '2025-09-10',
-        selected: false
+        selected: false,
       },
       {
         id: '3',
@@ -83,7 +84,7 @@ export default function EmisionNueva() {
         category: 'Servicios',
         supplier: 'Aseo Total',
         date: '2025-09-01',
-        selected: false
+        selected: false,
       },
       {
         id: '4',
@@ -92,7 +93,7 @@ export default function EmisionNueva() {
         category: 'Mantenimiento',
         supplier: 'Ascensores SA',
         date: '2025-09-05',
-        selected: false
+        selected: false,
       },
       {
         id: '5',
@@ -101,8 +102,8 @@ export default function EmisionNueva() {
         category: 'Servicios',
         supplier: 'Seguridad Total',
         date: '2025-09-01',
-        selected: false
-      }
+        selected: false,
+      },
     ];
     setExpenses(mockExpenses);
   }, []);
@@ -115,12 +116,13 @@ export default function EmisionNueva() {
         const comunidadesData = await comunidadesService.getComunidades();
         setComunidades(comunidadesData);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error loading comunidades:', error);
         // Fallback to mock data if API fails
         setComunidades([
           { id: 1, razon_social: 'Edificio Central' },
           { id: 2, razon_social: 'Torres del Sol' },
-          { id: 3, razon_social: 'Condominio Verde' }
+          { id: 3, razon_social: 'Condominio Verde' },
         ]);
       } finally {
         setLoadingComunidades(false);
@@ -133,46 +135,48 @@ export default function EmisionNueva() {
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleExpenseToggle = (expenseId: string) => {
-    setExpenses(prev => 
-      prev.map(expense => 
-        expense.id === expenseId 
+    setExpenses(prev =>
+      prev.map(expense =>
+        expense.id === expenseId
           ? { ...expense, selected: !expense.selected }
-          : expense
-      )
+          : expense,
+      ),
     );
   };
 
   const handleSelectAllExpenses = () => {
     const allSelected = expenses.every(expense => expense.selected);
-    setExpenses(prev => 
-      prev.map(expense => ({ ...expense, selected: !allSelected }))
+    setExpenses(prev =>
+      prev.map(expense => ({ ...expense, selected: !allSelected })),
     );
   };
 
   const handleAddConcept = () => {
-    if (!newConcept.name.trim() || newConcept.amount <= 0) return;
-    
+    if (!newConcept.name.trim() || newConcept.amount <= 0) {
+      return;
+    }
+
     const concept: Concept = {
       id: Date.now().toString(),
       name: newConcept.name,
       description: newConcept.description,
       amount: newConcept.amount,
       distributionType: newConcept.distributionType,
-      category: newConcept.category
+      category: newConcept.category,
     };
-    
+
     setConcepts(prev => [...prev, concept]);
     setNewConcept({
       name: '',
       description: '',
       amount: 0,
       distributionType: 'proportional',
-      category: ''
+      category: '',
     });
     setShowConceptModal(false);
   };
@@ -198,24 +202,29 @@ export default function EmisionNueva() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP'
+      currency: 'CLP',
     }).format(amount);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.period || !formData.issueDate || !formData.dueDate || !formData.community) {
+
+    if (
+      !formData.period ||
+      !formData.issueDate ||
+      !formData.dueDate ||
+      !formData.community
+    ) {
       alert('Por favor completa todos los campos obligatorios');
       return;
     }
 
     setLoading(true);
-    
+
     try {
       // Convert community string to number
       const comunidadId = parseInt(formData.community);
-      
+
       // Prepare data for API
       const emisionData: {
         periodo: string;
@@ -223,7 +232,7 @@ export default function EmisionNueva() {
         observaciones?: string;
       } = {
         periodo: formData.period,
-        fecha_vencimiento: formData.dueDate
+        fecha_vencimiento: formData.dueDate,
       };
 
       // Add observations only if provided
@@ -232,11 +241,15 @@ export default function EmisionNueva() {
       }
 
       // Call API to create emission
-      const nuevaEmision = await emisionesService.createEmision(comunidadId, emisionData);
-      
+      const nuevaEmision = await emisionesService.createEmision(
+        comunidadId,
+        emisionData,
+      );
+
       alert('Emisión creada exitosamente');
       router.push('/emisiones');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error creating emision:', error);
       alert('Error al crear la emisión. Por favor intenta nuevamente.');
     } finally {
@@ -259,7 +272,9 @@ export default function EmisionNueva() {
                 <i className='fa-solid fa-file-invoice-dollar me-2'></i>
                 Nueva Emisión
               </h1>
-              <p className='text-muted mb-0'>Crear una nueva emisión de gastos comunes</p>
+              <p className='text-muted mb-0'>
+                Crear una nueva emisión de gastos comunes
+              </p>
             </div>
             <div className='d-flex gap-2'>
               <button
@@ -295,7 +310,9 @@ export default function EmisionNueva() {
                           className='form-control'
                           id='period'
                           value={formData.period}
-                          onChange={(e) => handleInputChange('period', e.target.value)}
+                          onChange={e =>
+                            handleInputChange('period', e.target.value)
+                          }
                           placeholder='Ej: Septiembre 2025'
                           required
                         />
@@ -308,7 +325,9 @@ export default function EmisionNueva() {
                           className='form-select'
                           id='type'
                           value={formData.type}
-                          onChange={(e) => handleInputChange('type', e.target.value)}
+                          onChange={e =>
+                            handleInputChange('type', e.target.value)
+                          }
                           required
                         >
                           <option value='gastos_comunes'>Gastos Comunes</option>
@@ -328,15 +347,22 @@ export default function EmisionNueva() {
                           className='form-select'
                           id='community'
                           value={formData.community}
-                          onChange={(e) => handleInputChange('community', e.target.value)}
+                          onChange={e =>
+                            handleInputChange('community', e.target.value)
+                          }
                           required
                           disabled={loadingComunidades}
                         >
                           <option value=''>
-                            {loadingComunidades ? 'Cargando comunidades...' : 'Seleccionar comunidad'}
+                            {loadingComunidades
+                              ? 'Cargando comunidades...'
+                              : 'Seleccionar comunidad'}
                           </option>
-                          {comunidades.map((comunidad) => (
-                            <option key={comunidad.id} value={comunidad.id.toString()}>
+                          {comunidades.map(comunidad => (
+                            <option
+                              key={comunidad.id}
+                              value={comunidad.id.toString()}
+                            >
                               {comunidad.razon_social}
                             </option>
                           ))}
@@ -351,7 +377,9 @@ export default function EmisionNueva() {
                           className='form-control'
                           id='description'
                           value={formData.description}
-                          onChange={(e) => handleInputChange('description', e.target.value)}
+                          onChange={e =>
+                            handleInputChange('description', e.target.value)
+                          }
                           placeholder='Descripción de la emisión'
                         />
                       </div>
@@ -378,7 +406,9 @@ export default function EmisionNueva() {
                           className='form-control'
                           id='issueDate'
                           value={formData.issueDate}
-                          onChange={(e) => handleInputChange('issueDate', e.target.value)}
+                          onChange={e =>
+                            handleInputChange('issueDate', e.target.value)
+                          }
                           required
                         />
                       </div>
@@ -391,7 +421,9 @@ export default function EmisionNueva() {
                           className='form-control'
                           id='dueDate'
                           value={formData.dueDate}
-                          onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                          onChange={e =>
+                            handleInputChange('dueDate', e.target.value)
+                          }
                           required
                         />
                       </div>
@@ -405,9 +437,14 @@ export default function EmisionNueva() {
                             type='checkbox'
                             id='hasInterest'
                             checked={formData.hasInterest}
-                            onChange={(e) => handleInputChange('hasInterest', e.target.checked)}
+                            onChange={e =>
+                              handleInputChange('hasInterest', e.target.checked)
+                            }
                           />
-                          <label className='form-check-label' htmlFor='hasInterest'>
+                          <label
+                            className='form-check-label'
+                            htmlFor='hasInterest'
+                          >
                             Aplicar interés por mora
                           </label>
                         </div>
@@ -425,7 +462,12 @@ export default function EmisionNueva() {
                             className='form-control'
                             id='interestRate'
                             value={formData.interestRate}
-                            onChange={(e) => handleInputChange('interestRate', parseFloat(e.target.value))}
+                            onChange={e =>
+                              handleInputChange(
+                                'interestRate',
+                                parseFloat(e.target.value),
+                              )
+                            }
                             step='0.1'
                             min='0'
                           />
@@ -439,7 +481,12 @@ export default function EmisionNueva() {
                             className='form-control'
                             id='gracePeriod'
                             value={formData.gracePeriod}
-                            onChange={(e) => handleInputChange('gracePeriod', parseInt(e.target.value))}
+                            onChange={e =>
+                              handleInputChange(
+                                'gracePeriod',
+                                parseInt(e.target.value),
+                              )
+                            }
                             min='0'
                           />
                         </div>
@@ -478,14 +525,17 @@ export default function EmisionNueva() {
                             </tr>
                           </thead>
                           <tbody>
-                            {concepts.map((concept) => (
+                            {concepts.map(concept => (
                               <tr key={concept.id}>
                                 <td>{concept.name}</td>
                                 <td>{concept.description}</td>
                                 <td>
                                   <span className='badge bg-secondary'>
-                                    {concept.distributionType === 'proportional' ? 'Proporcional' :
-                                     concept.distributionType === 'equal' ? 'Igualitario' : 'Personalizado'}
+                                    {concept.distributionType === 'proportional'
+                                      ? 'Proporcional'
+                                      : concept.distributionType === 'equal'
+                                        ? 'Igualitario'
+                                        : 'Personalizado'}
                                   </span>
                                 </td>
                                 <td>{formatCurrency(concept.amount)}</td>
@@ -493,7 +543,9 @@ export default function EmisionNueva() {
                                   <button
                                     type='button'
                                     className='btn btn-sm btn-outline-danger'
-                                    onClick={() => handleRemoveConcept(concept.id)}
+                                    onClick={() =>
+                                      handleRemoveConcept(concept.id)
+                                    }
                                   >
                                     <i className='material-icons'>delete</i>
                                   </button>
@@ -505,7 +557,12 @@ export default function EmisionNueva() {
                       </div>
                     ) : (
                       <div className='text-center py-4 text-muted'>
-                        <i className='material-icons mb-2' style={{ fontSize: '3rem' }}>receipt_long</i>
+                        <i
+                          className='material-icons mb-2'
+                          style={{ fontSize: '3rem' }}
+                        >
+                          receipt_long
+                        </i>
                         <p>No hay conceptos agregados</p>
                       </div>
                     )}
@@ -527,7 +584,10 @@ export default function EmisionNueva() {
                         checked={expenses.every(expense => expense.selected)}
                         onChange={handleSelectAllExpenses}
                       />
-                      <label className='form-check-label' htmlFor='selectAllExpenses'>
+                      <label
+                        className='form-check-label'
+                        htmlFor='selectAllExpenses'
+                      >
                         Seleccionar todos
                       </label>
                     </div>
@@ -546,15 +606,22 @@ export default function EmisionNueva() {
                           </tr>
                         </thead>
                         <tbody>
-                          {expenses.map((expense) => (
-                            <tr key={expense.id} className={expense.selected ? 'table-primary' : ''}>
+                          {expenses.map(expense => (
+                            <tr
+                              key={expense.id}
+                              className={
+                                expense.selected ? 'table-primary' : ''
+                              }
+                            >
                               <td>
                                 <div className='form-check'>
                                   <input
                                     className='form-check-input'
                                     type='checkbox'
                                     checked={expense.selected}
-                                    onChange={() => handleExpenseToggle(expense.id)}
+                                    onChange={() =>
+                                      handleExpenseToggle(expense.id)
+                                    }
                                   />
                                 </div>
                               </td>
@@ -565,7 +632,11 @@ export default function EmisionNueva() {
                                 </span>
                               </td>
                               <td>{expense.supplier}</td>
-                              <td>{new Date(expense.date).toLocaleDateString('es-CL')}</td>
+                              <td>
+                                {new Date(expense.date).toLocaleDateString(
+                                  'es-CL',
+                                )}
+                              </td>
                               <td>{formatCurrency(expense.amount)}</td>
                             </tr>
                           ))}
@@ -589,17 +660,27 @@ export default function EmisionNueva() {
                     </div>
                     <div className='card-body'>
                       <div className='summary-item'>
-                        <span className='summary-label'>Gastos seleccionados:</span>
-                        <span className='summary-value'>{formatCurrency(getTotalExpenses())}</span>
+                        <span className='summary-label'>
+                          Gastos seleccionados:
+                        </span>
+                        <span className='summary-value'>
+                          {formatCurrency(getTotalExpenses())}
+                        </span>
                       </div>
                       <div className='summary-item'>
-                        <span className='summary-label'>Conceptos adicionales:</span>
-                        <span className='summary-value'>{formatCurrency(getTotalConcepts())}</span>
+                        <span className='summary-label'>
+                          Conceptos adicionales:
+                        </span>
+                        <span className='summary-value'>
+                          {formatCurrency(getTotalConcepts())}
+                        </span>
                       </div>
                       <hr />
                       <div className='summary-item total'>
                         <span className='summary-label'>Total emisión:</span>
-                        <span className='summary-value'>{formatCurrency(getTotalEmission())}</span>
+                        <span className='summary-value'>
+                          {formatCurrency(getTotalEmission())}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -613,7 +694,10 @@ export default function EmisionNueva() {
                     >
                       {loading ? (
                         <>
-                          <span className='spinner-border spinner-border-sm me-2' role='status'></span>
+                          <span
+                            className='spinner-border spinner-border-sm me-2'
+                            role='status'
+                          ></span>
                           Creando...
                         </>
                       ) : (
@@ -640,7 +724,10 @@ export default function EmisionNueva() {
 
         {/* Modal para agregar concepto */}
         {showConceptModal && (
-          <div className='modal fade show d-block' style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div
+            className='modal fade show d-block'
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          >
             <div className='modal-dialog modal-lg'>
               <div className='modal-content'>
                 <div className='modal-header'>
@@ -654,12 +741,19 @@ export default function EmisionNueva() {
                 <div className='modal-body'>
                   <div className='row mb-3'>
                     <div className='col-md-6'>
-                      <label className='form-label'>Nombre del concepto *</label>
+                      <label className='form-label'>
+                        Nombre del concepto *
+                      </label>
                       <input
                         type='text'
                         className='form-control'
                         value={newConcept.name}
-                        onChange={(e) => setNewConcept(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={e =>
+                          setNewConcept(prev => ({
+                            ...prev,
+                            name: e.target.value,
+                          }))
+                        }
                         placeholder='Ej: Fondo de Reserva'
                       />
                     </div>
@@ -668,7 +762,12 @@ export default function EmisionNueva() {
                       <select
                         className='form-select'
                         value={newConcept.category}
-                        onChange={(e) => setNewConcept(prev => ({ ...prev, category: e.target.value }))}
+                        onChange={e =>
+                          setNewConcept(prev => ({
+                            ...prev,
+                            category: e.target.value,
+                          }))
+                        }
                       >
                         <option value=''>Seleccionar</option>
                         <option value='Administración'>Administración</option>
@@ -686,7 +785,12 @@ export default function EmisionNueva() {
                         type='number'
                         className='form-control'
                         value={newConcept.amount}
-                        onChange={(e) => setNewConcept(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                        onChange={e =>
+                          setNewConcept(prev => ({
+                            ...prev,
+                            amount: parseFloat(e.target.value) || 0,
+                          }))
+                        }
                         min='0'
                         step='1000'
                       />
@@ -696,7 +800,12 @@ export default function EmisionNueva() {
                       <select
                         className='form-select'
                         value={newConcept.distributionType}
-                        onChange={(e) => setNewConcept(prev => ({ ...prev, distributionType: e.target.value as any }))}
+                        onChange={e =>
+                          setNewConcept(prev => ({
+                            ...prev,
+                            distributionType: e.target.value as any,
+                          }))
+                        }
                       >
                         <option value='proportional'>Proporcional</option>
                         <option value='equal'>Igualitario</option>
@@ -710,7 +819,12 @@ export default function EmisionNueva() {
                       className='form-control'
                       rows={3}
                       value={newConcept.description}
-                      onChange={(e) => setNewConcept(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={e =>
+                        setNewConcept(prev => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       placeholder='Descripción del concepto'
                     ></textarea>
                   </div>

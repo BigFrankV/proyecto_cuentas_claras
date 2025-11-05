@@ -80,7 +80,8 @@ router.get('/edificio/:edificioId/listado', authenticate, async (req, res) => {
   try {
     const edificioId = Number(req.params.edificioId);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         t.id,
         t.nombre,
@@ -109,7 +110,9 @@ router.get('/edificio/:edificioId/listado', authenticate, async (req, res) => {
       GROUP BY t.id, t.nombre, t.codigo, t.edificio_id, t.created_at, t.updated_at,
                e.nombre, e.direccion, c.razon_social
       ORDER BY t.codigo ASC
-    `, [edificioId]);
+    `,
+      [edificioId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -162,7 +165,7 @@ router.get('/edificio/:edificioId/buscar', authenticate, async (req, res) => {
     const sortOrder = req.query.sortOrder?.toUpperCase() || 'ASC';
 
     let orderByClause = 't.nombre ASC';
-    
+
     if (sortBy === 'nombre') {
       orderByClause = `t.nombre ${sortOrder}`;
     } else if (sortBy === 'unidades') {
@@ -171,7 +174,8 @@ router.get('/edificio/:edificioId/buscar', authenticate, async (req, res) => {
       orderByClause = `t.created_at ${sortOrder}`;
     }
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         t.id,
         t.nombre,
@@ -195,7 +199,9 @@ router.get('/edificio/:edificioId/buscar', authenticate, async (req, res) => {
         )
       GROUP BY t.id, t.nombre, t.codigo, t.created_at
       ORDER BY ${orderByClause}
-    `, [edificioId, searchTerm, searchTerm, searchTerm]);
+    `,
+      [edificioId, searchTerm, searchTerm, searchTerm]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -236,11 +242,15 @@ router.get('/edificio/:edificioId/buscar', authenticate, async (req, res) => {
  *                 totalUnidadesVacantes:
  *                   type: integer
  */
-router.get('/edificio/:edificioId/estadisticas', authenticate, async (req, res) => {
-  try {
-    const edificioId = Number(req.params.edificioId);
+router.get(
+  '/edificio/:edificioId/estadisticas',
+  authenticate,
+  async (req, res) => {
+    try {
+      const edificioId = Number(req.params.edificioId);
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT 
         COUNT(DISTINCT t.id) AS totalTorres,
         COUNT(DISTINCT u.id) AS totalUnidades,
@@ -262,14 +272,17 @@ router.get('/edificio/:edificioId/estadisticas', authenticate, async (req, res) 
       FROM torre t
       LEFT JOIN unidad u ON u.torre_id = t.id AND u.activa = 1
       WHERE t.edificio_id = ?
-    `, [edificioId]);
+    `,
+        [edificioId]
+      );
 
-    res.json(rows[0] || {});
-  } catch (error) {
-    console.error('Error fetching estadisticas:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas' });
+      res.json(rows[0] || {});
+    } catch (error) {
+      console.error('Error fetching estadisticas:', error);
+      res.status(500).json({ error: 'Error al obtener estadísticas' });
+    }
   }
-});
+);
 
 // ============================================================================
 // ENDPOINTS DE DETALLE DE TORRE
@@ -322,7 +335,8 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
   try {
     const torreId = Number(req.params.id);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         -- 1. Información de la Torre y Entidades Superiores
         t.id,
@@ -379,7 +393,9 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
       GROUP BY t.id, t.nombre, t.codigo, t.edificio_id, t.created_at, t.updated_at,
                e.nombre, e.direccion, e.codigo, c.id, c.razon_social, c.direccion, c.tz,
                adm.username, adm_per.nombres
-    `, [torreId]);
+    `,
+      [torreId]
+    );
 
     if (!rows.length) {
       return res.status(404).json({ error: 'Torre no encontrada' });
@@ -435,7 +451,8 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
   try {
     const torreId = Number(req.params.id);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         u.id,
         u.codigo AS numero,
@@ -478,7 +495,9 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
       GROUP BY u.id, u.codigo, u.m2_utiles, u.m2_terrazas, u.nro_bodega, 
                u.nro_estacionamiento, u.alicuota, u.activa
       ORDER BY piso ASC, u.codigo ASC
-    `, [torreId]);
+    `,
+      [torreId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -516,7 +535,7 @@ router.get('/:id/unidades/filtradas', authenticate, async (req, res) => {
     const estadoFilter = req.query.estado || 'todas';
 
     let whereClause = 'u.torre_id = ? AND u.activa = 1';
-    
+
     if (estadoFilter === 'ocupada') {
       whereClause += ` AND EXISTS (
         SELECT 1 FROM titulares_unidad tu2 
@@ -531,7 +550,8 @@ router.get('/:id/unidades/filtradas', authenticate, async (req, res) => {
       )`;
     }
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         u.id,
         u.codigo AS numero,
@@ -557,7 +577,9 @@ router.get('/:id/unidades/filtradas', authenticate, async (req, res) => {
       WHERE ${whereClause}
       GROUP BY u.id, u.codigo, u.m2_utiles
       ORDER BY u.codigo ASC
-    `, [torreId]);
+    `,
+      [torreId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -604,7 +626,8 @@ router.get('/:id/estadisticas-por-piso', authenticate, async (req, res) => {
   try {
     const torreId = Number(req.params.id);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         CAST(SUBSTRING_INDEX(u.codigo, '-', 1) AS UNSIGNED) AS piso,
         COUNT(u.id) AS totalUnidades,
@@ -622,7 +645,9 @@ router.get('/:id/estadisticas-por-piso', authenticate, async (req, res) => {
         AND u.activa = 1
       GROUP BY piso
       ORDER BY piso ASC
-    `, [torreId]);
+    `,
+      [torreId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -666,27 +691,34 @@ router.get('/:id/estadisticas-por-piso', authenticate, async (req, res) => {
  *       400:
  *         description: Código no proporcionado
  */
-router.get('/edificio/:edificioId/validar-codigo', authenticate, async (req, res) => {
-  try {
-    const edificioId = Number(req.params.edificioId);
-    const codigo = req.query.codigo;
+router.get(
+  '/edificio/:edificioId/validar-codigo',
+  authenticate,
+  async (req, res) => {
+    try {
+      const edificioId = Number(req.params.edificioId);
+      const codigo = req.query.codigo;
 
-    if (!codigo) {
-      return res.status(400).json({ error: 'Código es requerido' });
-    }
+      if (!codigo) {
+        return res.status(400).json({ error: 'Código es requerido' });
+      }
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT COUNT(*) AS existe
       FROM torre
       WHERE edificio_id = ? AND codigo = ?
-    `, [edificioId, codigo]);
+    `,
+        [edificioId, codigo]
+      );
 
-    res.json({ existe: rows[0].existe > 0 });
-  } catch (error) {
-    console.error('Error validando codigo:', error);
-    res.status(500).json({ error: 'Error al validar código' });
+      res.json({ existe: rows[0].existe > 0 });
+    } catch (error) {
+      console.error('Error validando codigo:', error);
+      res.status(500).json({ error: 'Error al validar código' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -715,24 +747,31 @@ router.get('/edificio/:edificioId/validar-codigo', authenticate, async (req, res
  *       500:
  *         description: Error del servidor
  */
-router.get('/edificio/:edificioId/siguiente-codigo', authenticate, async (req, res) => {
-  try {
-    const edificioId = Number(req.params.edificioId);
+router.get(
+  '/edificio/:edificioId/siguiente-codigo',
+  authenticate,
+  async (req, res) => {
+    try {
+      const edificioId = Number(req.params.edificioId);
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT 
         CONCAT('T', LPAD(COALESCE(MAX(CAST(SUBSTRING(codigo, 2) AS UNSIGNED)), 0) + 1, 3, '0')) AS siguienteCodigo
       FROM torre
       WHERE edificio_id = ?
         AND codigo REGEXP '^T[0-9]+$'
-    `, [edificioId]);
+    `,
+        [edificioId]
+      );
 
-    res.json(rows[0] || { siguienteCodigo: 'T001' });
-  } catch (error) {
-    console.error('Error getting siguiente codigo:', error);
-    res.status(500).json({ error: 'Error al obtener siguiente código' });
+      res.json(rows[0] || { siguienteCodigo: 'T001' });
+    } catch (error) {
+      console.error('Error getting siguiente codigo:', error);
+      res.status(500).json({ error: 'Error al obtener siguiente código' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -770,7 +809,8 @@ router.get('/:id/puede-eliminar', authenticate, async (req, res) => {
   try {
     const torreId = Number(req.params.id);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         t.id,
         t.nombre,
@@ -780,7 +820,9 @@ router.get('/:id/puede-eliminar', authenticate, async (req, res) => {
       LEFT JOIN unidad u ON u.torre_id = t.id
       WHERE t.id = ?
       GROUP BY t.id, t.nombre
-    `, [torreId]);
+    `,
+      [torreId]
+    );
 
     if (!rows.length) {
       return res.status(404).json({ error: 'Torre no encontrada' });
@@ -791,11 +833,11 @@ router.get('/:id/puede-eliminar', authenticate, async (req, res) => {
 
     res.json({
       puedeEliminar,
-      mensaje: puedeEliminar 
-        ? 'La torre puede ser eliminada' 
+      mensaje: puedeEliminar
+        ? 'La torre puede ser eliminada'
         : `No se puede eliminar. La torre tiene ${torre.unidades_activas} unidades activas`,
       totalUnidades: torre.total_unidades,
-      unidadesActivas: torre.unidades_activas
+      unidadesActivas: torre.unidades_activas,
     });
   } catch (error) {
     console.error('Error checking puede eliminar:', error);
@@ -864,10 +906,15 @@ router.get('/:id/puede-eliminar', authenticate, async (req, res) => {
  */
 router.get('/reportes/completo', authenticate, async (req, res) => {
   try {
-    const edificioId = req.query.edificioId ? Number(req.query.edificioId) : null;
-    const comunidadId = req.query.comunidadId ? Number(req.query.comunidadId) : null;
+    const edificioId = req.query.edificioId
+      ? Number(req.query.edificioId)
+      : null;
+    const comunidadId = req.query.comunidadId
+      ? Number(req.query.comunidadId)
+      : null;
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         t.id AS torre_id,
         t.nombre AS torre_nombre,
@@ -907,7 +954,9 @@ router.get('/reportes/completo', authenticate, async (req, res) => {
       GROUP BY t.id, t.nombre, t.codigo, e.id, e.nombre, e.codigo, 
                c.id, c.razon_social, t.created_at, t.updated_at
       ORDER BY c.razon_social, e.nombre, t.codigo
-    `, [edificioId, edificioId, comunidadId, comunidadId]);
+    `,
+      [edificioId, edificioId, comunidadId, comunidadId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -956,9 +1005,12 @@ router.get('/reportes/completo', authenticate, async (req, res) => {
  */
 router.get('/reportes/ocupacion', authenticate, async (req, res) => {
   try {
-    const edificioId = req.query.edificioId ? Number(req.query.edificioId) : null;
+    const edificioId = req.query.edificioId
+      ? Number(req.query.edificioId)
+      : null;
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         t.nombre AS torre,
         t.codigo,
@@ -984,7 +1036,9 @@ router.get('/reportes/ocupacion', authenticate, async (req, res) => {
       WHERE (? IS NULL OR t.edificio_id = ?)
       GROUP BY t.id, t.nombre, t.codigo
       ORDER BY porcentaje_ocupacion DESC
-    `, [edificioId, edificioId]);
+    `,
+      [edificioId, edificioId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -1043,10 +1097,13 @@ router.get('/reportes/ocupacion', authenticate, async (req, res) => {
 router.get('/buscar', authenticate, async (req, res) => {
   try {
     const searchTerm = req.query.search || '';
-    const edificioId = req.query.edificioId ? Number(req.query.edificioId) : null;
+    const edificioId = req.query.edificioId
+      ? Number(req.query.edificioId)
+      : null;
     const limit = req.query.limit ? Number(req.query.limit) : 20;
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         t.id,
         t.nombre,
@@ -1064,7 +1121,9 @@ router.get('/buscar', authenticate, async (req, res) => {
       GROUP BY t.id, t.nombre, t.codigo, e.nombre
       ORDER BY t.nombre ASC
       LIMIT ?
-    `, [searchTerm, searchTerm, edificioId, edificioId, limit]);
+    `,
+      [searchTerm, searchTerm, edificioId, edificioId, limit]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -1109,7 +1168,8 @@ router.get('/edificio/:edificioId/dropdown', authenticate, async (req, res) => {
   try {
     const edificioId = Number(req.params.edificioId);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         t.id,
         t.nombre,
@@ -1118,7 +1178,9 @@ router.get('/edificio/:edificioId/dropdown', authenticate, async (req, res) => {
       FROM torre t
       WHERE t.edificio_id = ?
       ORDER BY t.codigo ASC
-    `, [edificioId]);
+    `,
+      [edificioId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -1172,10 +1234,15 @@ router.get('/edificio/:edificioId/dropdown', authenticate, async (req, res) => {
  */
 router.get('/top-unidades', authenticate, async (req, res) => {
   try {
-    const edificioId = req.query.edificioId ? Number(req.query.edificioId) : null;
-    const comunidadId = req.query.comunidadId ? Number(req.query.comunidadId) : null;
+    const edificioId = req.query.edificioId
+      ? Number(req.query.edificioId)
+      : null;
+    const comunidadId = req.query.comunidadId
+      ? Number(req.query.comunidadId)
+      : null;
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         t.nombre,
         t.codigo,
@@ -1197,7 +1264,9 @@ router.get('/top-unidades', authenticate, async (req, res) => {
       GROUP BY t.id, t.nombre, t.codigo, e.nombre
       ORDER BY totalUnidades DESC
       LIMIT 5
-    `, [edificioId, edificioId, comunidadId, comunidadId]);
+    `,
+      [edificioId, edificioId, comunidadId, comunidadId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -1242,9 +1311,12 @@ router.get('/top-unidades', authenticate, async (req, res) => {
  */
 router.get('/estadisticas-globales', authenticate, async (req, res) => {
   try {
-    const comunidadId = req.query.comunidadId ? Number(req.query.comunidadId) : null;
+    const comunidadId = req.query.comunidadId
+      ? Number(req.query.comunidadId)
+      : null;
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         COUNT(DISTINCT t.id) AS total_torres,
         COUNT(DISTINCT e.id) AS total_edificios,
@@ -1268,7 +1340,9 @@ router.get('/estadisticas-globales', authenticate, async (req, res) => {
         GROUP BY torre_id
       ) AS up ON up.torre_id = t.id
       WHERE (? IS NULL OR c.id = ?)
-    `, [comunidadId, comunidadId]);
+    `,
+      [comunidadId, comunidadId]
+    );
 
     res.json(rows[0] || {});
   } catch (error) {
@@ -1309,11 +1383,15 @@ router.get('/estadisticas-globales', authenticate, async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.get('/edificio/:edificioId/distribucion', authenticate, async (req, res) => {
-  try {
-    const edificioId = Number(req.params.edificioId);
+router.get(
+  '/edificio/:edificioId/distribucion',
+  authenticate,
+  async (req, res) => {
+    try {
+      const edificioId = Number(req.params.edificioId);
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT 
         t.nombre AS torre,
         COUNT(u.id) AS total_unidades,
@@ -1325,14 +1403,17 @@ router.get('/edificio/:edificioId/distribucion', authenticate, async (req, res) 
       WHERE t.edificio_id = ?
       GROUP BY t.id, t.nombre
       ORDER BY total_unidades DESC
-    `, [edificioId]);
+    `,
+        [edificioId]
+      );
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching distribucion:', error);
-    res.status(500).json({ error: 'Error al obtener distribución' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error fetching distribucion:', error);
+      res.status(500).json({ error: 'Error al obtener distribución' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1376,11 +1457,15 @@ router.get('/edificio/:edificioId/distribucion', authenticate, async (req, res) 
  * GET /torres/edificio/:edificioId/comparativa-superficies
  * Comparativa de superficies entre torres
  */
-router.get('/edificio/:edificioId/comparativa-superficies', authenticate, async (req, res) => {
-  try {
-    const edificioId = Number(req.params.edificioId);
+router.get(
+  '/edificio/:edificioId/comparativa-superficies',
+  authenticate,
+  async (req, res) => {
+    try {
+      const edificioId = Number(req.params.edificioId);
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT 
         t.nombre AS torre,
         t.codigo,
@@ -1394,14 +1479,19 @@ router.get('/edificio/:edificioId/comparativa-superficies', authenticate, async 
       WHERE t.edificio_id = ?
       GROUP BY t.id, t.nombre, t.codigo
       ORDER BY t.codigo
-    `, [edificioId]);
+    `,
+        [edificioId]
+      );
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching comparativa superficies:', error);
-    res.status(500).json({ error: 'Error al obtener comparativa de superficies' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error fetching comparativa superficies:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener comparativa de superficies' });
+    }
   }
-});
+);
 
 // ============================================================================
 // ENDPOINTS EXISTENTES (mantener compatibilidad)
@@ -1444,14 +1534,17 @@ router.get('/edificio/:edificioId/comparativa-superficies', authenticate, async 
 router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
   try {
     const comunidadId = Number(req.params.comunidadId);
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT t.id, t.nombre, t.edificio_id, e.nombre as edificio_nombre
       FROM torre t
       INNER JOIN edificio e ON e.id = t.edificio_id
       WHERE e.comunidad_id = ?
       ORDER BY e.nombre, t.nombre
       LIMIT 200
-    `, [comunidadId]);
+    `,
+      [comunidadId]
+    );
     res.json(rows);
   } catch (error) {
     console.error('Error fetching torres:', error);
@@ -1491,7 +1584,10 @@ router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
  */
 router.get('/edificio/:edificioId', authenticate, async (req, res) => {
   const edificioId = Number(req.params.edificioId);
-  const [rows] = await db.query('SELECT id, nombre FROM torre WHERE edificio_id = ? LIMIT 200', [edificioId]);
+  const [rows] = await db.query(
+    'SELECT id, nombre FROM torre WHERE edificio_id = ? LIMIT 200',
+    [edificioId]
+  );
   res.json(rows);
 });
 
@@ -1536,22 +1632,48 @@ router.get('/edificio/:edificioId', authenticate, async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.post('/edificio/:edificioId', [authenticate, async (req,res,next)=>{ // small inline check to map edificio->comunidad then requireCommunity
-  const edificioId = Number(req.params.edificioId);
-  try {
-    const [erows] = await db.query('SELECT comunidad_id FROM edificio WHERE id = ? LIMIT 1', [edificioId]);
-    if (!erows.length) return res.status(404).json({ error: 'edificio not found' });
-    req.params.comunidadId = erows[0].comunidad_id;
-    next();
-  } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
-}, requireCommunity('comunidadId', ['admin']), body('nombre').notEmpty()], async (req, res) => {
-  const edificioId = Number(req.params.edificioId);
-  try {
-    const [result] = await db.query('INSERT INTO torre (edificio_id, nombre) VALUES (?,?)', [edificioId, req.body.nombre]);
-    const [row] = await db.query('SELECT id, nombre FROM torre WHERE id = ? LIMIT 1', [result.insertId]);
-    res.status(201).json(row[0]);
-  } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
-});
+router.post(
+  '/edificio/:edificioId',
+  [
+    authenticate,
+    async (req, res, next) => {
+      // small inline check to map edificio->comunidad then requireCommunity
+      const edificioId = Number(req.params.edificioId);
+      try {
+        const [erows] = await db.query(
+          'SELECT comunidad_id FROM edificio WHERE id = ? LIMIT 1',
+          [edificioId]
+        );
+        if (!erows.length)
+          return res.status(404).json({ error: 'edificio not found' });
+        req.params.comunidadId = erows[0].comunidad_id;
+        next();
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'server error' });
+      }
+    },
+    requireCommunity('comunidadId', ['admin']),
+    body('nombre').notEmpty(),
+  ],
+  async (req, res) => {
+    const edificioId = Number(req.params.edificioId);
+    try {
+      const [result] = await db.query(
+        'INSERT INTO torre (edificio_id, nombre) VALUES (?,?)',
+        [edificioId, req.body.nombre]
+      );
+      const [row] = await db.query(
+        'SELECT id, nombre FROM torre WHERE id = ? LIMIT 1',
+        [result.insertId]
+      );
+      res.status(201).json(row[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
+  }
+);
 
 /**
  * @swagger
@@ -1576,7 +1698,14 @@ router.post('/edificio/:edificioId', [authenticate, async (req,res,next)=>{ // s
  *       404:
  *         description: Torre no encontrada
  */
-router.get('/:id', authenticate, async (req, res) => { const id = req.params.id; const [rows] = await db.query('SELECT * FROM torre WHERE id = ? LIMIT 1', [id]); if (!rows.length) return res.status(404).json({ error: 'not found' }); res.json(rows[0]); });
+router.get('/:id', authenticate, async (req, res) => {
+  const id = req.params.id;
+  const [rows] = await db.query('SELECT * FROM torre WHERE id = ? LIMIT 1', [
+    id,
+  ]);
+  if (!rows.length) return res.status(404).json({ error: 'not found' });
+  res.json(rows[0]);
+});
 
 /**
  * @swagger
@@ -1614,7 +1743,39 @@ router.get('/:id', authenticate, async (req, res) => { const id = req.params.id;
  *     security:
  *       - bearerAuth: []
  */
-router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => { const id = req.params.id; const fields = ['nombre']; const updates = []; const values = []; fields.forEach(f => { if (req.body[f] !== undefined) { updates.push(`${f} = ?`); values.push(req.body[f]); } }); if (!updates.length) return res.status(400).json({ error: 'no fields' }); values.push(id); try { await db.query(`UPDATE torre SET ${updates.join(', ')} WHERE id = ?`, values); const [rows] = await db.query('SELECT * FROM torre WHERE id = ? LIMIT 1', [id]); res.json(rows[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
+router.patch(
+  '/:id',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    const id = req.params.id;
+    const fields = ['nombre'];
+    const updates = [];
+    const values = [];
+    fields.forEach((f) => {
+      if (req.body[f] !== undefined) {
+        updates.push(`${f} = ?`);
+        values.push(req.body[f]);
+      }
+    });
+    if (!updates.length) return res.status(400).json({ error: 'no fields' });
+    values.push(id);
+    try {
+      await db.query(
+        `UPDATE torre SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+      const [rows] = await db.query(
+        'SELECT * FROM torre WHERE id = ? LIMIT 1',
+        [id]
+      );
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
+  }
+);
 
 /**
  * @swagger
@@ -1637,10 +1798,23 @@ router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, 
  *     security:
  *       - bearerAuth: []
  */
-router.delete('/:id', authenticate, authorize('superadmin','admin'), async (req, res) => { const id = req.params.id; try { await db.query('DELETE FROM torre WHERE id = ?', [id]); res.status(204).end(); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('superadmin', 'admin'),
+  async (req, res) => {
+    const id = req.params.id;
+    try {
+      await db.query('DELETE FROM torre WHERE id = ?', [id]);
+      res.status(204).end();
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
+  }
+);
 
 module.exports = router;
-
 
 // =========================================
 // ENDPOINTS DE TORRES
@@ -1729,16 +1903,21 @@ router.post('/', authenticate, async (req, res) => {
       tiene_ascensor = false,
       tiene_porteria = false,
       tiene_estacionamiento = false,
-      administrador_id
+      administrador_id,
     } = req.body;
 
     // Validaciones básicas
     if (!edificio_id || !nombre || !codigo) {
-      return res.status(400).json({ error: 'edificio_id, nombre y codigo son requeridos' });
+      return res
+        .status(400)
+        .json({ error: 'edificio_id, nombre y codigo son requeridos' });
     }
 
     // Verificar que el edificio existe
-    const [edificioRows] = await db.query('SELECT id FROM edificio WHERE id = ?', [edificio_id]);
+    const [edificioRows] = await db.query(
+      'SELECT id FROM edificio WHERE id = ?',
+      [edificio_id]
+    );
     if (edificioRows.length === 0) {
       return res.status(400).json({ error: 'Edificio no encontrado' });
     }
@@ -1749,11 +1928,14 @@ router.post('/', authenticate, async (req, res) => {
       [edificio_id, codigo]
     );
     if (codigoRows.length > 0) {
-      return res.status(409).json({ error: 'El código ya existe en este edificio' });
+      return res
+        .status(409)
+        .json({ error: 'El código ya existe en este edificio' });
     }
 
     // Insertar la torre
-    const [result] = await db.query(`
+    const [result] = await db.query(
+      `
       INSERT INTO torre (
         edificio_id,
         nombre,
@@ -1767,23 +1949,24 @@ router.post('/', authenticate, async (req, res) => {
         created_at,
         updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-    `, [
-      edificio_id,
-      nombre,
-      codigo,
-      descripcion || null,
-      num_pisos || null,
-      tiene_ascensor,
-      tiene_porteria,
-      tiene_estacionamiento,
-      administrador_id || null
-    ]);
+    `,
+      [
+        edificio_id,
+        nombre,
+        codigo,
+        descripcion || null,
+        num_pisos || null,
+        tiene_ascensor,
+        tiene_porteria,
+        tiene_estacionamiento,
+        administrador_id || null,
+      ]
+    );
 
     res.status(201).json({
       id: result.insertId,
-      message: 'Torre creada exitosamente'
+      message: 'Torre creada exitosamente',
     });
-
   } catch (error) {
     console.error('Error creando torre:', error);
     res.status(500).json({ error: 'Error al crear la torre' });
@@ -1801,7 +1984,3 @@ router.post('/', authenticate, async (req, res) => {
 // // REPORTES
 // GET: /torres/reportes/completo
 // GET: /torres/reportes/ocupacion
-
-
-
-

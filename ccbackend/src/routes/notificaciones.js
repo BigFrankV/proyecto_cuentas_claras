@@ -57,12 +57,24 @@ const { body, validationResult } = require('express-validator');
  *           type: integer
  *           default: 0
  */
-router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { estado_leida, tipo, persona_id, fecha_desde, fecha_hasta, limit = 50, offset = 0 } = req.query;
+router.get(
+  '/comunidad/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const {
+        estado_leida,
+        tipo,
+        persona_id,
+        fecha_desde,
+        fecha_hasta,
+        limit = 50,
+        offset = 0,
+      } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         n.id,
         n.titulo AS asunto,
@@ -91,44 +103,45 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
       WHERE n.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (estado_leida !== undefined) {
-      query += ` AND n.leida = ?`;
-      params.push(Number(estado_leida));
+      if (estado_leida !== undefined) {
+        query += ` AND n.leida = ?`;
+        params.push(Number(estado_leida));
+      }
+
+      if (tipo) {
+        query += ` AND n.tipo = ?`;
+        params.push(tipo);
+      }
+
+      if (persona_id) {
+        query += ` AND n.persona_id = ?`;
+        params.push(Number(persona_id));
+      }
+
+      if (fecha_desde) {
+        query += ` AND n.fecha_creacion >= ?`;
+        params.push(fecha_desde);
+      }
+
+      if (fecha_hasta) {
+        query += ` AND n.fecha_creacion <= ?`;
+        params.push(fecha_hasta);
+      }
+
+      query += ` ORDER BY n.fecha_creacion DESC, n.id DESC LIMIT ? OFFSET ?`;
+      params.push(Number(limit), Number(offset));
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener notificaciones:', error);
+      res.status(500).json({ error: 'Error al obtener notificaciones' });
     }
-
-    if (tipo) {
-      query += ` AND n.tipo = ?`;
-      params.push(tipo);
-    }
-
-    if (persona_id) {
-      query += ` AND n.persona_id = ?`;
-      params.push(Number(persona_id));
-    }
-
-    if (fecha_desde) {
-      query += ` AND n.fecha_creacion >= ?`;
-      params.push(fecha_desde);
-    }
-
-    if (fecha_hasta) {
-      query += ` AND n.fecha_creacion <= ?`;
-      params.push(fecha_hasta);
-    }
-
-    query += ` ORDER BY n.fecha_creacion DESC, n.id DESC LIMIT ? OFFSET ?`;
-    params.push(Number(limit), Number(offset));
-
-    const [rows] = await db.query(query, params);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener notificaciones:', error);
-    res.status(500).json({ error: 'Error al obtener notificaciones' });
   }
-});
+);
 
 /**
  * @swagger
@@ -137,11 +150,15 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
  *     tags: [Notificaciones]
  *     summary: Estadísticas de notificaciones por comunidad
  */
-router.get('/comunidad/:comunidadId/estadisticas-general', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/estadisticas-general',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         c.razon_social AS comunidad,
         COUNT(n.id) AS total_notificaciones,
@@ -161,14 +178,17 @@ router.get('/comunidad/:comunidadId/estadisticas-general', authenticate, require
       GROUP BY c.id, c.razon_social
     `;
 
-    const [[result]] = await db.query(query, [comunidadId]);
+      const [[result]] = await db.query(query, [comunidadId]);
 
-    res.json(result || {});
-  } catch (error) {
-    console.error('Error al obtener estadísticas de notificaciones:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas de notificaciones' });
+      res.json(result || {});
+    } catch (error) {
+      console.error('Error al obtener estadísticas de notificaciones:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener estadísticas de notificaciones' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -177,11 +197,15 @@ router.get('/comunidad/:comunidadId/estadisticas-general', authenticate, require
  *     tags: [Notificaciones]
  *     summary: Notificaciones no leídas (pendientes)
  */
-router.get('/comunidad/:comunidadId/pendientes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/pendientes',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         n.id,
         n.titulo AS asunto,
@@ -199,14 +223,17 @@ router.get('/comunidad/:comunidadId/pendientes', authenticate, requireCommunity(
       ORDER BY n.fecha_creacion ASC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener notificaciones pendientes:', error);
-    res.status(500).json({ error: 'Error al obtener notificaciones pendientes' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener notificaciones pendientes:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener notificaciones pendientes' });
+    }
   }
-});
+);
 
 // =========================================
 // 2. VISTAS DETALLADAS
@@ -273,11 +300,15 @@ router.get('/:id', authenticate, async (req, res) => {
  *     tags: [Notificaciones]
  *     summary: Listado con información completa (JSON)
  */
-router.get('/comunidad/:comunidadId/listado-completo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/listado-completo',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         n.id,
         n.titulo AS asunto,
@@ -319,14 +350,15 @@ router.get('/comunidad/:comunidadId/listado-completo', authenticate, requireComm
       LIMIT 100
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener listado completo:', error);
-    res.status(500).json({ error: 'Error al obtener listado completo' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener listado completo:', error);
+      res.status(500).json({ error: 'Error al obtener listado completo' });
+    }
   }
-});
+);
 
 // =========================================
 // 3. ESTADÍSTICAS
@@ -569,7 +601,16 @@ router.get('/estadisticas/mensuales', authenticate, async (req, res) => {
  */
 router.get('/buscar', authenticate, async (req, res) => {
   try {
-    const { busqueda, comunidad_id, estado_leida, tipo, fecha_desde, fecha_hasta, limit = 50, offset = 0 } = req.query;
+    const {
+      busqueda,
+      comunidad_id,
+      estado_leida,
+      tipo,
+      fecha_desde,
+      fecha_hasta,
+      limit = 50,
+      offset = 0,
+    } = req.query;
 
     let query = `
       SELECT
@@ -683,7 +724,9 @@ router.get('/por-comunidad', authenticate, async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error('Error al obtener notificaciones por comunidad:', error);
-    res.status(500).json({ error: 'Error al obtener notificaciones por comunidad' });
+    res
+      .status(500)
+      .json({ error: 'Error al obtener notificaciones por comunidad' });
   }
 });
 
@@ -719,7 +762,9 @@ router.get('/por-audiencia', authenticate, async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error('Error al obtener notificaciones por audiencia:', error);
-    res.status(500).json({ error: 'Error al obtener notificaciones por audiencia' });
+    res
+      .status(500)
+      .json({ error: 'Error al obtener notificaciones por audiencia' });
   }
 });
 
@@ -804,7 +849,9 @@ router.get('/exportar/enviadas', authenticate, async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error('Error al exportar notificaciones enviadas:', error);
-    res.status(500).json({ error: 'Error al exportar notificaciones enviadas' });
+    res
+      .status(500)
+      .json({ error: 'Error al exportar notificaciones enviadas' });
   }
 });
 
@@ -815,9 +862,12 @@ router.get('/exportar/enviadas', authenticate, async (req, res) => {
  *     tags: [Notificaciones]
  *     summary: Exportación de estadísticas de entrega por mes
  */
-router.get('/exportar/estadisticas-mensuales', authenticate, async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/exportar/estadisticas-mensuales',
+  authenticate,
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         YEAR(n.fecha_creacion) AS 'Año',
         MONTH(n.fecha_creacion) AS 'Mes',
@@ -838,14 +888,17 @@ router.get('/exportar/estadisticas-mensuales', authenticate, async (req, res) =>
       ORDER BY 1 DESC, 2 DESC
     `;
 
-    const [rows] = await db.query(query);
+      const [rows] = await db.query(query);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al exportar estadísticas mensuales:', error);
-    res.status(500).json({ error: 'Error al exportar estadísticas mensuales' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al exportar estadísticas mensuales:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al exportar estadísticas mensuales' });
+    }
   }
-});
+);
 
 // =========================================
 // 6. VALIDACIONES
@@ -896,14 +949,15 @@ router.get('/validaciones/integridad', authenticate, async (req, res) => {
  *     tags: [Notificaciones]
  *     summary: Crear nueva notificación
  */
-router.post('/',
+router.post(
+  '/',
   authenticate,
   [
     body('comunidad_id').isInt().withMessage('ID de comunidad inválido'),
     body('persona_id').isInt().withMessage('ID de persona inválido'),
     body('titulo').notEmpty().withMessage('El título es requerido'),
     body('mensaje').notEmpty().withMessage('El mensaje es requerido'),
-    body('tipo').notEmpty().withMessage('El tipo es requerido')
+    body('tipo').notEmpty().withMessage('El tipo es requerido'),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -915,20 +969,36 @@ router.post('/',
     try {
       await connection.beginTransaction();
 
-      const { comunidad_id, persona_id, titulo, mensaje, tipo, objeto_tipo, objeto_id } = req.body;
+      const {
+        comunidad_id,
+        persona_id,
+        titulo,
+        mensaje,
+        tipo,
+        objeto_tipo,
+        objeto_id,
+      } = req.body;
 
       const [result] = await connection.query(
         `INSERT INTO notificacion_usuario 
          (comunidad_id, persona_id, titulo, mensaje, tipo, objeto_tipo, objeto_id, leida, fecha_creacion) 
          VALUES (?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
-        [comunidad_id, persona_id, titulo, mensaje, tipo, objeto_tipo || null, objeto_id || null]
+        [
+          comunidad_id,
+          persona_id,
+          titulo,
+          mensaje,
+          tipo,
+          objeto_tipo || null,
+          objeto_id || null,
+        ]
       );
 
       await connection.commit();
 
       res.status(201).json({
         message: 'Notificación creada exitosamente',
-        id: result.insertId
+        id: result.insertId,
       });
     } catch (error) {
       await connection.rollback();
@@ -1051,7 +1121,3 @@ module.exports = router;
 // POST: /notificaciones
 // PATCH: /notificaciones/:id/marcar-leida
 // DELETE: /notificaciones/:id
-
-
-
-

@@ -1,8 +1,20 @@
 import dynamic from 'next/dynamic';
 import React from 'react';
 
-const LecturasPage = dynamic(() => import('@/components/lecturas/LecturasPage'), { ssr: false });
+import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedPage } from '@/lib/usePermissions';
+
+const LecturasPage = dynamic(
+  () => import('@/components/lecturas/LecturasPage'),
+  { ssr: false },
+);
 
 export default function LecturasRoute() {
-  return <LecturasPage />;
+  return (
+    <ProtectedRoute>
+      <ProtectedPage allowedRoles={['Superadmin', 'Admin', 'Conserje']}>
+        <LecturasPage />
+      </ProtectedPage>
+    </ProtectedRoute>
+  );
 }

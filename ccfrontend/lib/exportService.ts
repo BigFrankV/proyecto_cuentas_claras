@@ -1,5 +1,8 @@
-import Papa from 'papaparse';
+/* eslint-disable import/no-anonymous-default-export */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable max-len */
 import moment from 'moment';
+import Papa from 'papaparse';
 
 export interface ExportData {
   [key: string]: any;
@@ -20,7 +23,7 @@ class ExportService {
     const {
       filename = `reporte_${moment().format('YYYY-MM-DD_HH-mm-ss')}.csv`,
       delimiter = ',',
-      headers
+      headers,
     } = options;
 
     try {
@@ -29,21 +32,22 @@ class ExportService {
         delimiter,
         header: true,
         skipEmptyLines: true,
-        columns: headers || Object.keys(data[0] || {})
+        columns: headers || Object.keys(data[0] || {}),
       };
 
       // Convertir a CSV
       const csv = Papa.unparse(data, csvConfig);
 
       // Crear blob y descargar
-      const blob = new Blob(['\uFEFF' + csv], { 
-        type: 'text/csv;charset=utf-8;' 
+      const blob = new Blob([`\uFEFF${csv}`], {
+        type: 'text/csv;charset=utf-8;',
       });
-      
+
       this.downloadBlob(blob, filename);
-      
+
       return { success: true, message: 'Archivo exportado exitosamente' };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error exportando CSV:', error);
       return { success: false, message: 'Error al exportar archivo' };
     }
@@ -54,15 +58,15 @@ class ExportService {
    */
   exportFinancialReport(reportData: any[], communityName: string) {
     const formattedData = reportData.map(item => ({
-      'Mes': moment(item.month).format('MMMM YYYY'),
+      Mes: moment(item.month).format('MMMM YYYY'),
       'Ingresos (CLP)': this.formatCurrency(item.ingresos),
       'Gastos (CLP)': this.formatCurrency(item.gastos),
       'Saldo (CLP)': this.formatCurrency(item.saldo),
-      'Morosidad (%)': item.morosidad.toFixed(2)
+      'Morosidad (%)': item.morosidad.toFixed(2),
     }));
 
     return this.exportToCSV(formattedData, {
-      filename: `reporte_financiero_${this.sanitizeFilename(communityName)}_${moment().format('YYYY-MM-DD')}.csv`
+      filename: `reporte_financiero_${this.sanitizeFilename(communityName)}_${moment().format('YYYY-MM-DD')}.csv`,
     });
   }
 
@@ -71,15 +75,15 @@ class ExportService {
    */
   exportGastosReport(gastos: any[], communityName: string) {
     const formattedData = gastos.map(gasto => ({
-      'Fecha': moment(gasto.fecha).format('DD/MM/YYYY'),
+      Fecha: moment(gasto.fecha).format('DD/MM/YYYY'),
       'Categoría ID': gasto.categoria_id,
-      'Descripción': gasto.glosa,
+      Descripción: gasto.glosa,
       'Monto (CLP)': this.formatCurrency(gasto.monto),
-      'ID Gasto': gasto.id
+      'ID Gasto': gasto.id,
     }));
 
     return this.exportToCSV(formattedData, {
-      filename: `gastos_${this.sanitizeFilename(communityName)}_${moment().format('YYYY-MM-DD')}.csv`
+      filename: `gastos_${this.sanitizeFilename(communityName)}_${moment().format('YYYY-MM-DD')}.csv`,
     });
   }
 
@@ -88,26 +92,19 @@ class ExportService {
    */
   exportMorosidadReport(data: any[], communityName: string) {
     const formattedData = data.map(item => ({
-      'Unidad': item.unidad,
-      'Propietario': item.propietario,
+      Unidad: item.unidad,
+      Propietario: item.propietario,
       'Meses en Mora': item.mesesMora,
       'Deuda Total (CLP)': this.formatCurrency(item.deudaTotal),
-      'Último Pago': item.ultimoPago ? moment(item.ultimoPago).format('DD/MM/YYYY') : 'Sin pagos',
-      'Estado': item.estado
+      'Último Pago': item.ultimoPago
+        ? moment(item.ultimoPago).format('DD/MM/YYYY')
+        : 'Sin pagos',
+      Estado: item.estado,
     }));
 
     return this.exportToCSV(formattedData, {
-      filename: `morosidad_${this.sanitizeFilename(communityName)}_${moment().format('YYYY-MM-DD')}.csv`
+      filename: `morosidad_${this.sanitizeFilename(communityName)}_${moment().format('YYYY-MM-DD')}.csv`,
     });
-  }
-
-  /**
-   * Exportar múltiples reportes en un ZIP (usando JSZip)
-   */
-  async exportMultipleReports(reports: { name: string; data: ExportData[] }[], communityName: string) {
-    // Esta función requeriría JSZip para crear un archivo comprimido
-    // npm install jszip @types/jszip
-    console.log('Exportación múltiple disponible con JSZip');
   }
 
   /**
@@ -115,7 +112,7 @@ class ExportService {
    */
   private downloadBlob(blob: Blob, filename: string) {
     const link = document.createElement('a');
-    
+
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
@@ -134,7 +131,7 @@ class ExportService {
   private formatCurrency(amount: number): string {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP'
+      currency: 'CLP',
     }).format(amount);
   }
 
@@ -152,15 +149,19 @@ class ExportService {
   /**
    * Exportar desde el servidor (API call)
    */
-  async exportFromServer(endpoint: string, params: any = {}, filename?: string) {
+  async exportFromServer(
+    endpoint: string,
+    params: any = {},
+    filename?: string,
+  ) {
     try {
       const response = await fetch(`/api/export/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
         },
-        body: JSON.stringify(params)
+        body: JSON.stringify(params),
       });
 
       if (!response.ok) {
@@ -168,14 +169,19 @@ class ExportService {
       }
 
       const blob = await response.blob();
-      const suggestedFilename = filename || 
-        response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') ||
+      const suggestedFilename =
+        filename ||
+        response.headers
+          .get('Content-Disposition')
+          ?.split('filename=')[1]
+          ?.replace(/"/g, '') ||
         `export_${moment().format('YYYY-MM-DD_HH-mm-ss')}.csv`;
 
       this.downloadBlob(blob, suggestedFilename);
-      
+
       return { success: true, message: 'Archivo exportado desde servidor' };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error exportando desde servidor:', error);
       return { success: false, message: 'Error al exportar desde servidor' };
     }

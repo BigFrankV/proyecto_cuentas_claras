@@ -10,9 +10,18 @@ function isResident(user) {
 function hasManageRole(user) {
   if (!user) return false;
   if (isSuperAdmin(user) || user.is_superadmin) return true;
-  const roles = (user.memberships || []).map(m => String(m.rol_slug || m.rol || '').toLowerCase());
-  const allowed = ['presidente_comite','admin_comunidad','sindico','contador','admin','gestor'];
-  return roles.some(r => allowed.includes(r));
+  const roles = (user.memberships || []).map((m) =>
+    String(m.rol_slug || m.rol || '').toLowerCase()
+  );
+  const allowed = [
+    'presidente_comite',
+    'admin_comunidad',
+    'sindico',
+    'contador',
+    'admin',
+    'gestor',
+  ];
+  return roles.some((r) => allowed.includes(r));
 }
 
 /**
@@ -20,7 +29,8 @@ function hasManageRole(user) {
  */
 exports.canApelar = (req, res, next) => {
   if (!req.user) return res.status(401).json({ error: 'unauthenticated' });
-  if (!isResident(req.user)) return res.status(403).json({ error: 'forbidden' });
+  if (!isResident(req.user))
+    return res.status(403).json({ error: 'forbidden' });
   return next();
 };
 

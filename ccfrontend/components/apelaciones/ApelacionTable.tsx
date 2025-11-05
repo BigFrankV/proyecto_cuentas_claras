@@ -119,6 +119,7 @@ export default function ApelacionTable({
               : 0,
         );
       } catch (err: any) {
+        // eslint-disable-next-line no-console
         console.error('ApelacionTable.list.error', err);
         setError(err?.message || 'Error al cargar apelaciones');
       } finally {
@@ -215,15 +216,15 @@ export default function ApelacionTable({
                               >
                                 Editar
                               </Link>
-                              <a
-                                className='p-2 text-decoration-none text-dark'
-                                href='#'
+                              <button
+                                type='button'
+                                className='p-2 text-decoration-none text-dark bg-transparent border-0 text-start'
                                 onClick={e => {
                                   e.preventDefault(); /* implementar descargue */
                                 }}
                               >
                                 Descargar documentos
-                              </a>
+                              </button>
                             </div>
                           </ActionDropdown>
                         ) : (

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, no-console */
 // Logger personalizado para pruebas
 // Proporciona logging estructurado con timestamps y contexto de prueba
 
@@ -13,11 +14,17 @@ class TestLogger {
   private logs: LogEntry[] = [];
   private isTestEnvironment = typeof jest !== 'undefined';
 
-  private createLogEntry(level: LogEntry['level'], message: string, data?: any): LogEntry {
+  private createLogEntry(
+    level: LogEntry['level'],
+    message: string,
+    data?: any,
+  ): LogEntry {
     return {
       timestamp: new Date().toISOString(),
       level,
-      testName: this.isTestEnvironment ? (global as any).expect?.getState?.()?.currentTestName : undefined,
+      testName: this.isTestEnvironment
+        ? (global as any).expect?.getState?.()?.currentTestName
+        : undefined,
       message,
       data,
     };
@@ -35,9 +42,11 @@ class TestLogger {
     // Mostrar en consola según el nivel
     switch (level) {
       case 'error':
+        // eslint-disable-next-line no-console
         console.error(fullMessage, data || '');
         break;
       case 'warn':
+        // eslint-disable-next-line no-console
         console.warn(fullMessage, data || '');
         break;
       case 'info':
@@ -72,7 +81,7 @@ class TestLogger {
         this.error('Unhandled Promise Rejection', { reason, promise });
       });
 
-      process.on('uncaughtException', (error) => {
+      process.on('uncaughtException', error => {
         this.error('Uncaught Exception', { error });
       });
     }

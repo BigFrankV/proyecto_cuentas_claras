@@ -7,7 +7,11 @@ import Layout from '@/components/layout/Layout';
 import { listCategorias } from '@/lib/categoriasGastoService';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
-import { usePermissions } from '@/lib/usePermissions';
+import {
+  usePermissions,
+  ProtectedPage,
+  UserRole,
+} from '@/lib/usePermissions';
 import { CategoriaGasto } from '@/types/categoriasGasto';
 
 type ExpenseCategory = CategoriaGasto;
@@ -56,17 +60,26 @@ export default function CategoriasGastoListado() {
     try {
       setLoading(true);
       const response = await listCategorias(resolvedComunidadId);
+      // eslint-disable-next-line no-console
       console.log('API Response:', response); // <-- añadir
+      // eslint-disable-next-line no-console
       console.log('Response data:', response.data); // <-- añadir
       setCategories(response.data);
       setPagination({
         total: response.pagination?.total || 0,
-        page: response.pagination?.offset ? Math.floor((response.pagination.offset || 0) / (response.pagination.limit || 10)) + 1 : 1,
+        page: response.pagination?.offset
+          ? Math.floor(
+              (response.pagination.offset || 0) /
+                (response.pagination.limit || 10),
+            ) + 1
+          : 1,
         limit: response.pagination?.limit || 10,
         pages: response.pagination?.pages || 0,
       });
+      // eslint-disable-next-line no-console
       console.log('Categories set:', response.data); // <-- añadir
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading categories:', error);
     } finally {
       setLoading(false);
@@ -104,6 +117,7 @@ export default function CategoriasGastoListado() {
       setSelectedCategory(null);
       alert('Categoría eliminada exitosamente');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error deleting category:', error);
       alert('Error al eliminar la categoría');
     }
@@ -135,11 +149,12 @@ export default function CategoriasGastoListado() {
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Categorías de Gasto — Cuentas Claras</title>
-      </Head>
+      <ProtectedPage role={UserRole.ADMIN}>
+        <Head>
+          <title>Categorías de Gasto — Cuentas Claras</title>
+        </Head>
 
-      <Layout>
+        <Layout>
         <div className='categories-container'>
           {/* Header */}
           <div className='categories-header'>
@@ -416,7 +431,7 @@ export default function CategoriasGastoListado() {
                       </div>
 
                       <p className='data-card-subtitle mb-3'>
-                        {category.description}
+                        {category.nombre}
                       </p>
 
                       <div className='d-flex justify-content-between align-items-center'>
@@ -522,7 +537,7 @@ export default function CategoriasGastoListado() {
                 </div>
                 <p>
                   ¿Estás seguro de que deseas eliminar la categoría{' '}
-                  <strong>"{selectedCategory.name}"</strong>?
+                  <strong>&quot;{selectedCategory.nombre}&quot;</strong>?
                 </p>
               </>
             )}
@@ -541,6 +556,7 @@ export default function CategoriasGastoListado() {
           </Modal.Footer>
         </Modal>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 }

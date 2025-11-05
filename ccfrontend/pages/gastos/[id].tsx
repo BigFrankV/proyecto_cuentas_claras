@@ -1,7 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
-
 import {
   Button,
   Card,
@@ -15,46 +14,37 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
+import {
+  getGastoById,
+  getAprobaciones,
+  createAprobacion,
+  updateGasto,
+} from '@/lib/gastosService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { getGastoById, getAprobaciones, createAprobacion } from '@/lib/gastosService';
-import { mapBackendToExpense } from '@/types/gastos';
+import { mapBackendToExpense, Expense, ApprovalRecord, AttachmentFile } from '@/types/gastos';
 
-interface Expense {
+interface ExpenseFormData {
   id: number;
   description: string;
-  category: string;
-  provider: string;
-  amount: number;
+  category: number;
+  provider: number;
+  amount: string;
   date: string;
-  status: 'pending' | 'approved' | 'rejected' | 'paid' | 'completed';
   dueDate: string;
   documentType: string;
   documentNumber: string;
-  hasAttachments: boolean;
-  createdBy: string;
-  createdAt: string;
-  tags: string[];
-  priority: 'low' | 'medium' | 'high';
-  requiredApprovals: number;
-  currentApprovals: number;
-  costCenter: string;
-  observations: string;
   isRecurring: boolean;
   recurringPeriod: string;
-  paymentMethod: string;
-  approvalHistory: ApprovalRecord[];
-  attachments: AttachmentFile[];
+  costCenter: number;
+  tags: string[];
+  observations: string;
+  priority: 'low' | 'medium' | 'high';
+  requiredApprovals: number;
+  attachments: File[];
+  existingAttachments: ExistingAttachment[];
 }
 
-interface ApprovalRecord {
-  id: number;
-  approver: string;
-  action: 'approved' | 'rejected' | 'requested_changes';
-  date: string;
-  comments: string;
-}
-
-interface AttachmentFile {
+interface ExistingAttachment {
   id: number;
   name: string;
   type: string;
@@ -91,6 +81,7 @@ export default function GastoDetalle() {
       const data = await getGastoById(Number(id));
       setExpense(mapBackendToExpense(data));
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error(err);
     } finally {
       setLoading(false);
@@ -199,7 +190,10 @@ export default function GastoDetalle() {
   const handleApproveExpense = async () => {
     setActionLoading(true);
     try {
-      await createAprobacion(Number(id), { accion: 'aprobar', observaciones: 'Aprobado' });
+      await createAprobacion(Number(id), {
+        accion: 'aprobar',
+        observaciones: 'Aprobado',
+      });
       // Recargar aprobaciones
       const nuevasAprobaciones = await getAprobaciones(Number(id));
       setApprovalHistory(nuevasAprobaciones);
@@ -209,6 +203,7 @@ export default function GastoDetalle() {
       setShowApprovalModal(false);
       alert('Gasto aprobado exitosamente');
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error al aprobar:', err);
       alert('Error al aprobar el gasto');
     } finally {
@@ -219,7 +214,10 @@ export default function GastoDetalle() {
   const handleRejectExpense = async () => {
     setActionLoading(true);
     try {
-      await createAprobacion(Number(id), { accion: 'rechazar', observaciones: 'Rechazado' });
+      await createAprobacion(Number(id), {
+        accion: 'rechazar',
+        observaciones: 'Rechazado',
+      });
       // Recargar aprobaciones
       const nuevasAprobaciones = await getAprobaciones(Number(id));
       setApprovalHistory(nuevasAprobaciones);
@@ -229,6 +227,7 @@ export default function GastoDetalle() {
       setShowApprovalModal(false);
       alert('Gasto rechazado');
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error al rechazar:', err);
       alert('Error al rechazar el gasto');
     } finally {
@@ -246,6 +245,7 @@ export default function GastoDetalle() {
       alert('Gasto eliminado exitosamente');
       router.push('/gastos');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error deleting expense:', error);
       alert('Error al eliminar el gasto');
     } finally {
@@ -271,14 +271,15 @@ export default function GastoDetalle() {
     priority: gasto.priority || 'medium', // Dinámico
     requiredApprovals: gasto.required_aprobaciones || 1,
     attachments: [],
-    existingAttachments: gasto.attachments?.map((a: any) => ({
-      id: a.id,
-      name: a.name,
-      type: a.type,
-      size: a.size,
-      url: a.url,
-      uploadedAt: a.uploadedAt,
-    })) || [],
+    existingAttachments:
+      gasto.attachments?.map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        type: a.type,
+        size: a.size,
+        url: a.url,
+        uploadedAt: a.uploadedAt,
+      })) || [],
   });
 
   const mapFormDataToPayload = (form: any): any => ({
@@ -290,12 +291,6 @@ export default function GastoDetalle() {
     // Agrega otros campos según backend
   });
 
-  useEffect(() => {
-    if (id && comunidadId) {
-      getGastoById(Number(id)).then(data => setExpense(mapToFormData(data)));
-    }
-  }, [id, comunidadId]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // if (!validateForm()) return;
@@ -305,6 +300,7 @@ export default function GastoDetalle() {
       await updateGasto(Number(id), payload);
       router.push(`/gastos/${id}`);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error(err);
       // Manejar error
     } finally {
@@ -648,9 +644,9 @@ export default function GastoDetalle() {
                                   : 'Rechazó'}
                               </span>
                               <span className='approval-date'>
-                                {new Date(approval.created_at).toLocaleDateString(
-                                  'es-CL',
-                                )}
+                                {new Date(
+                                  approval.created_at,
+                                ).toLocaleDateString('es-CL')}
                               </span>
                             </div>
                             {approval.observaciones && (

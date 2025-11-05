@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -8,7 +7,9 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import React from 'react';
 import { Bar } from 'react-chartjs-2';
+
 import { GastoPorCategoria } from '@/lib/dashboardService';
 
 ChartJS.register(
@@ -17,7 +18,7 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 interface GastosPorCategoriaChartProps {
@@ -84,7 +85,7 @@ export default function GastosPorCategoriaChart({
         borderColor: '#ddd',
         borderWidth: 1,
         callbacks: {
-          label: function (context: any) {
+          label(context: any) {
             const value = new Intl.NumberFormat('es-CL', {
               style: 'currency',
               currency: 'CLP',
@@ -113,7 +114,7 @@ export default function GastosPorCategoriaChart({
           color: 'rgba(0, 0, 0, 0.1)',
         },
         ticks: {
-          callback: function (value: any) {
+          callback(value: any) {
             return new Intl.NumberFormat('es-CL', {
               style: 'currency',
               currency: 'CLP',

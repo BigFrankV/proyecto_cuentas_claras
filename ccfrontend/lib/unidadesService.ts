@@ -1,14 +1,22 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Servicio completo para unidades, basado en el backend de unidades.js
 import api from './api';
 
 class UnidadesService {
-
   // ===== LISTADOS Y FILTROS =====
-  async getUnidades(params?: any): Promise<{ data: any[]; totalPaginas?: number }> {
-    console.log('🔍 Frontend: Llamando getUnidades con params:', params);
+  async getUnidades(
+    params?: any,
+  ): Promise<{ data: any[]; totalPaginas?: number }> {
+    // eslint-disable-next-line no-console
+    console.log('Frontend: Llamando getUnidades con params:', params);
     try {
       const response = await api.get('/unidades', { params });
-      console.log('✅ Frontend: Respuesta getUnidades:', response.status, response.data);
+      // eslint-disable-next-line no-console
+      console.log(
+        'Frontend: Respuesta getUnidades:',
+        response.status,
+        response.data,
+      );
       const data = response.data?.data ?? response.data;
       const totalPaginas = response.data?.totalPaginas ?? 1;
       return {
@@ -16,13 +24,23 @@ class UnidadesService {
         totalPaginas,
       };
     } catch (err: any) {
-      console.error('❌ Frontend: Error en getUnidades:', err.response?.status, err.message);
+      // eslint-disable-next-line no-console
+      console.error(
+        'Frontend: Error en getUnidades:',
+        err.response?.status,
+        err.message,
+      );
       throw err;
     }
   }
 
-  async getUnidadesPorComunidad(comunidadId: number, params?: any): Promise<any[]> {
-    const response = await api.get(`/unidades/comunidad/${comunidadId}`, { params });
+  async getUnidadesPorComunidad(
+    comunidadId: number,
+    params?: any,
+  ): Promise<any[]> {
+    const response = await api.get(`/unidades/comunidad/${comunidadId}`, {
+      params,
+    });
     return response.data?.data ?? response.data ?? [];
   }
 
@@ -32,12 +50,22 @@ class UnidadesService {
   }
 
   async validarBodega(comunidadId: number, nroBodega: string): Promise<any> {
-    const response = await api.get('/unidades/validate/bodega', { params: { comunidad_id: comunidadId, nro_bodega: nroBodega } });
+    const response = await api.get('/unidades/validate/bodega', {
+      params: { comunidad_id: comunidadId, nro_bodega: nroBodega },
+    });
     return response.data;
   }
 
-  async validarEstacionamiento(comunidadId: number, nroEstacionamiento: string): Promise<any> {
-    const response = await api.get('/unidades/validate/estacionamiento', { params: { comunidad_id: comunidadId, nro_estacionamiento: nroEstacionamiento } });
+  async validarEstacionamiento(
+    comunidadId: number,
+    nroEstacionamiento: string,
+  ): Promise<any> {
+    const response = await api.get('/unidades/validate/estacionamiento', {
+      params: {
+        comunidad_id: comunidadId,
+        nro_estacionamiento: nroEstacionamiento,
+      },
+    });
     return response.data;
   }
 
@@ -102,7 +130,10 @@ class UnidadesService {
       nro_estacionamiento: data.nro_estacionamiento,
       activa: data.activa,
     };
-    const response = await api.post(`/unidades/comunidad/${comunidadId}`, payload);
+    const response = await api.post(
+      `/unidades/comunidad/${comunidadId}`,
+      payload,
+    );
     return response.data?.data ?? response.data;
   }
 
@@ -153,7 +184,10 @@ class UnidadesService {
   }
 
   async createPagoAplicacion(pagoId: number, data: any): Promise<any> {
-    const response = await api.post(`/unidades/pagos/${pagoId}/aplicaciones`, data);
+    const response = await api.post(
+      `/unidades/pagos/${pagoId}/aplicaciones`,
+      data,
+    );
     return response.data?.data ?? response.data;
   }
 
@@ -177,7 +211,10 @@ class UnidadesService {
   }
 
   async createLecturaMedidor(medidorId: number, data: any): Promise<any> {
-    const response = await api.post(`/unidades/medidores/${medidorId}/lecturas`, data);
+    const response = await api.post(
+      `/unidades/medidores/${medidorId}/lecturas`,
+      data,
+    );
     return response.data?.data ?? response.data;
   }
 
@@ -233,13 +270,18 @@ class UnidadesService {
   }
 
   async addDetalleCuenta(cuentaId: number, data: any): Promise<any> {
-    const response = await api.post(`/unidades/cuentas/${cuentaId}/detalle`, data);
+    const response = await api.post(
+      `/unidades/cuentas/${cuentaId}/detalle`,
+      data,
+    );
     return response.data?.data ?? response.data;
   }
 
   // ===== REPORTES =====
   async getReporteSaldos(comunidadId: number): Promise<any[]> {
-    const response = await api.get('/unidades/report/saldos', { params: { comunidad_id: comunidadId } });
+    const response = await api.get('/unidades/report/saldos', {
+      params: { comunidad_id: comunidadId },
+    });
     return response.data?.data ?? response.data ?? [];
   }
 
@@ -269,7 +311,9 @@ class UnidadesService {
 
   // ===== ADAPTADORES =====
   private adaptUnidadFromBackend(raw: any): any {
-    if (!raw) {return raw;}
+    if (!raw) {
+      return raw;
+    }
     return {
       id: raw.id,
       numero: raw.numero || raw.codigo,
@@ -307,9 +351,13 @@ const unidadesService = new UnidadesService();
 
 export default unidadesService;
 export const getUnidadById = (id: number) => unidadesService.getUnidad(id);
-export const createUnidad = (comunidadId: number, data: any) => unidadesService.createUnidad(comunidadId, data);
-export const updateUnidad = (id: number, data: any) => unidadesService.updateUnidad(id, data);
+export const createUnidad = (comunidadId: number, data: any) =>
+  unidadesService.createUnidad(comunidadId, data);
+export const updateUnidad = (id: number, data: any) =>
+  unidadesService.updateUnidad(id, data);
 export const deleteUnidad = (id: number) => unidadesService.deleteUnidad(id);
-export const getUnidades = (params?: any) => unidadesService.getUnidades(params);
-export const getDropdownComunidades = () => unidadesService.getDropdownComunidades();
+export const getUnidades = (params?: any) =>
+  unidadesService.getUnidades(params);
+export const getDropdownComunidades = () =>
+  unidadesService.getDropdownComunidades();
 // Agrega más exports según necesites

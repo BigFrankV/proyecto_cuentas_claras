@@ -3,7 +3,10 @@ interface MemberSelectorProps {
   disabled?: boolean;
 }
 
-export default function MemberSelector({ onMemberSelect, disabled = false }: MemberSelectorProps) {
+export default function MemberSelector({
+  onMemberSelect,
+  disabled = false,
+}: MemberSelectorProps) {
   // Mock data - reemplazar con búsqueda real
   const mockMembers = [
     {
@@ -12,7 +15,7 @@ export default function MemberSelector({ onMemberSelect, disabled = false }: Mem
       document: '12.345.678-9',
       type: 'Propietario',
       unit: 'Edificio A - Depto 101',
-      email: 'juan.delgado@email.com'
+      email: 'juan.delgado@email.com',
     },
     {
       id: '2',
@@ -20,8 +23,8 @@ export default function MemberSelector({ onMemberSelect, disabled = false }: Mem
       document: '98.765.432-1',
       type: 'Inquilino',
       unit: 'Edificio B - Depto 203',
-      email: 'maria.gonzalez@email.com'
-    }
+      email: 'maria.gonzalez@email.com',
+    },
   ];
 
   return (
@@ -29,15 +32,21 @@ export default function MemberSelector({ onMemberSelect, disabled = false }: Mem
       <div className='mb-3'>
         <div className='input-group'>
           <span className='input-group-text'>
-            <i className='material-icons' style={{ fontSize: '18px' }}>search</i>
+            <i className='material-icons' style={{ fontSize: '18px' }}>
+              search
+            </i>
           </span>
-          <input 
-            type='text' 
-            className='form-control' 
-            placeholder='Buscar persona por nombre, documento o unidad...' 
+          <input
+            type='text'
+            className='form-control'
+            placeholder='Buscar persona por nombre, documento o unidad...'
             disabled={disabled}
           />
-          <button className='btn btn-outline-secondary' type='button' disabled={disabled}>
+          <button
+            className='btn btn-outline-secondary'
+            type='button'
+            disabled={disabled}
+          >
             Buscar
           </button>
         </div>
@@ -49,22 +58,30 @@ export default function MemberSelector({ onMemberSelect, disabled = false }: Mem
       {!disabled && (
         <div className='member-results'>
           <h6 className='mb-3'>Resultados de búsqueda:</h6>
-          {mockMembers.map((member) => (
-            <div 
+          {mockMembers.map(member => (
+            <div
               key={member.id}
               className='member-card'
               onClick={() => onMemberSelect(member)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onMemberSelect(member);
+                }
+              }}
+              role='button'
+              tabIndex={0}
               style={{
                 border: '1px solid #dee2e6',
                 borderRadius: 'var(--radius)',
                 padding: '1rem',
                 marginBottom: '0.75rem',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
               }}
             >
               <div className='d-flex align-items-center'>
-                <div 
+                <div
                   className='avatar me-3'
                   style={{
                     width: '40px',
@@ -76,22 +93,25 @@ export default function MemberSelector({ onMemberSelect, disabled = false }: Mem
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '14px',
-                    fontWeight: '600'
+                    fontWeight: '600',
                   }}
                 >
-                  {member.name.split(' ').map(n => n[0]).join('')}
+                  {member.name
+                    .split(' ')
+                    .map(n => n[0])
+                    .join('')}
                 </div>
                 <div className='flex-grow-1'>
                   <h6 className='mb-1'>{member.name}</h6>
                   <div className='text-muted small'>
                     {member.document} • {member.type} • {member.unit}
                   </div>
-                  <div className='text-muted small'>
-                    {member.email}
-                  </div>
+                  <div className='text-muted small'>{member.email}</div>
                 </div>
                 <div>
-                  <i className='material-icons text-muted'>keyboard_arrow_right</i>
+                  <i className='material-icons text-muted'>
+                    keyboard_arrow_right
+                  </i>
                 </div>
               </div>
             </div>

@@ -27,14 +27,20 @@ describe('Payment Gateway Health Check', () => {
     test('GET /payment-gateway/transaction/:orderId (Detalle de Transacción)', async () => {
       const endpoint = `/payment-gateway/transaction/${orderId}`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /payment-gateway/transaction/${orderId}`, response);
+      categorizeResponse(
+        `GET /payment-gateway/transaction/${orderId}`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
 
     test('GET /payment-gateway/community/:communityId/transactions (Transacciones por Comunidad)', async () => {
       const endpoint = `/payment-gateway/community/${communityId}/transactions`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /payment-gateway/community/${communityId}/transactions`, response);
+      categorizeResponse(
+        `GET /payment-gateway/community/${communityId}/transactions`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
   });

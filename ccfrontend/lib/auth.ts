@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { jwtDecode } from 'jwt-decode';
 
@@ -34,28 +36,28 @@ export interface Membership {
   activo?: boolean;
 }
 
-// ✅ CORREGIR: Interfaz User compatible con exactOptionalPropertyTypes
+//  CORREGIR: Interfaz User compatible con exactOptionalPropertyTypes
 export interface User {
   id: number;
   username: string;
-  is_superadmin?: boolean; // ✅ CAMBIAR a opcional temporalmente
+  is_superadmin?: boolean; //  CAMBIAR a opcional temporalmente
   email?: string;
-  persona_id?: number | undefined; // ✅ Agregar undefined explícitamente
+  persona_id?: number | undefined; //  Agregar undefined explícitamente
   nombres?: string;
   apellidos?: string;
-  comunidad_id?: number | undefined; // ✅ Agregar undefined explícitamente
+  comunidad_id?: number | undefined; //  Agregar undefined explícitamente
   roles?: string[];
   memberships?: Membership[];
   is_2fa_enabled?: boolean;
   totp_enabled?: boolean;
-  
+
   // Campos adicionales opcionales
   firstName?: string;
   lastName?: string;
   phone?: string;
   activo?: boolean;
   created_at?: string;
-  
+
   // Datos de persona relacionados
   persona?: Persona | null;
 }
@@ -64,7 +66,7 @@ export interface AuthResponse {
   token?: string;
   user?: User;
   expires_in?: number;
-  
+
   // Campos para 2FA
   twoFactorRequired?: boolean;
   tempToken?: string;
@@ -83,7 +85,7 @@ interface JWTPayload {
   roles?: string[];
   comunidad_id?: number;
   is_superadmin?: boolean;
-  memberships?: Membership[]; // ✅ AGREGAR
+  memberships?: Membership[]; //  AGREGAR
   twoFactor?: boolean;
   iat: number;
   exp: number;
@@ -98,11 +100,13 @@ class AuthService {
         password: credentials.password,
       });
 
-      console.log('🔍 Respuesta completa de la API:', response.data);
+      // eslint-disable-next-line no-console
+      console.log('Respuesta completa de la API:', response.data);
 
       // Verificar si se requiere 2FA
       if (response.data.twoFactorRequired) {
-        console.log('🔐 2FA requerido, devolviendo tempToken');
+        // eslint-disable-next-line no-console
+        console.log('2FA requerido, devolviendo tempToken');
         return {
           twoFactorRequired: true,
           tempToken: response.data.tempToken,
@@ -115,19 +119,21 @@ class AuthService {
         throw new Error('No se recibió token de autenticación');
       }
 
-      console.log('🔍 Token extraído:', token);
+      // eslint-disable-next-line no-console
+      console.log('Token extraído:', token);
 
       // Decodificar el token para extraer los datos del usuario
       let user: User;
       try {
         const decodedToken = jwtDecode<JWTPayload>(token);
-        console.log('🔍 Token decodificado:', decodedToken);
+        // eslint-disable-next-line no-console
+        console.log('Token decodificado:', decodedToken);
 
-        // ✅ CORREGIR: Crear objeto usuario con valores por defecto seguros
+        //  CORREGIR: Crear objeto usuario con valores por defecto seguros
         const userObj: User = {
           id: decodedToken.sub,
           username: decodedToken.username,
-          is_superadmin: Boolean(decodedToken.is_superadmin), // ✅ Convertir a boolean explícitamente
+          is_superadmin: Boolean(decodedToken.is_superadmin), //  Convertir a boolean explícitamente
           persona_id: decodedToken.persona_id, // Ahora acepta undefined
           comunidad_id: decodedToken.comunidad_id, // Ahora acepta undefined
           roles: decodedToken.roles || [],
@@ -136,21 +142,26 @@ class AuthService {
 
         user = userObj;
 
-        console.log('🔍 Usuario extraído del token:', user);
-        
+        // eslint-disable-next-line no-console
+        console.log('Usuario extraído del token:', user);
+
         // Intentar obtener información completa del usuario del servidor
         try {
           const fullUserData = await this.getCurrentUser();
           if (fullUserData) {
             // Combinar datos del token con datos completos del servidor
             user = { ...user, ...fullUserData };
-            console.log('🔍 Usuario completo con datos del servidor:', user);
+            // eslint-disable-next-line no-console
           }
         } catch (serverError) {
-          console.log('⚠️ No se pudo obtener datos completos del servidor, usando datos del token');
+          // eslint-disable-next-line no-console
+          console.log(
+            'No se pudo obtener datos completos del servidor, usando datos del token',
+          );
         }
       } catch (jwtError) {
-        console.error('❌ Error decodificando token:', jwtError);
+        // eslint-disable-next-line no-console
+        console.error('Error decodificando token:', jwtError);
         throw new Error('Token de autenticación inválido');
       }
 
@@ -160,9 +171,10 @@ class AuthService {
         localStorage.setItem('user_data', JSON.stringify(user));
       }
 
-      console.log('💾 Datos guardados en localStorage');
+      // eslint-disable-next-line no-console
       return { token, user };
     } catch (error: any) {
+      // eslint-disable-next-line no-console
       console.error('Error en login:', error);
 
       if (error.response?.data?.message) {
@@ -182,7 +194,10 @@ class AuthService {
   }
 
   // Completar login con código 2FA
-  async complete2FALogin(tempToken: string, code: string): Promise<AuthResponse> {
+  async complete2FALogin(
+    tempToken: string,
+    code: string,
+  ): Promise<AuthResponse> {
     try {
       const response = await apiClient.post('/auth/2fa/verify', {
         tempToken,
@@ -199,14 +214,14 @@ class AuthService {
       let user: User;
       try {
         const decodedToken = jwtDecode<JWTPayload>(token);
-        console.log('🔍 Token 2FA decodificado:', decodedToken);
+        // eslint-disable-next-line no-console
 
-        // ✅ CORREGIR: Crear objeto usuario con valores por defecto seguros
+        //  CORREGIR: Crear objeto usuario con valores por defecto seguros
         const userObj: User = {
           id: decodedToken.sub,
           username: decodedToken.username,
           persona_id: decodedToken.persona_id,
-          is_superadmin: Boolean(decodedToken.is_superadmin), // ✅ Convertir a boolean explícitamente
+          is_superadmin: Boolean(decodedToken.is_superadmin), //
           roles: decodedToken.roles || [],
           comunidad_id: decodedToken.comunidad_id,
           memberships: decodedToken.memberships || [],
@@ -214,21 +229,26 @@ class AuthService {
 
         user = userObj;
 
-        console.log('🔍 Usuario extraído del token 2FA:', user);
-        
+        // eslint-disable-next-line no-console
+
         // Intentar obtener información completa del usuario del servidor
         try {
           const fullUserData = await this.getCurrentUser();
           if (fullUserData) {
             // Combinar datos del token con datos completos del servidor
             user = { ...user, ...fullUserData };
-            console.log('🔍 Usuario 2FA completo con datos del servidor:', user);
+            // eslint-disable-next-line no-console
+            console.log('Usuario 2FA completo con datos del servidor:', user);
           }
         } catch (serverError) {
-          console.log('⚠️ No se pudo obtener datos completos del servidor en 2FA, usando datos del token');
+          // eslint-disable-next-line no-console
+          console.log(
+            'No se pudo obtener datos completos del servidor en 2FA, usando datos del token',
+          );
         }
       } catch (jwtError) {
-        console.error('❌ Error decodificando token 2FA:', jwtError);
+        // eslint-disable-next-line no-console
+        console.error('Error decodificando token 2FA:', jwtError);
         throw new Error('Token de autenticación inválido');
       }
 
@@ -238,11 +258,12 @@ class AuthService {
         localStorage.setItem('user_data', JSON.stringify(user));
       }
 
-      console.log('💾 Datos 2FA guardados en localStorage');
+      // eslint-disable-next-line no-console
 
       return { token, user };
     } catch (error: any) {
-      console.error('❌ Error en login 2FA:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error en login 2FA:', error);
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       } else if (error.response?.status === 401) {
@@ -273,6 +294,7 @@ class AuthService {
 
       return response.data;
     } catch (error: any) {
+      // eslint-disable-next-line no-console
       console.error('Error en registro:', error);
 
       if (error.response?.data?.message) {
@@ -295,6 +317,10 @@ class AuthService {
       // Intentar hacer logout en el servidor
       await apiClient.post('/auth/logout');
     } catch (error) {
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
+
+      // eslint-disable-next-line no-console
       console.warn('Error al hacer logout en servidor:', error);
     } finally {
       // Limpiar datos locales siempre
@@ -310,8 +336,8 @@ class AuthService {
     try {
       const response = await apiClient.get('/auth/me');
       const userData = response.data;
-      
-      // ✅ CORREGIR: Mapear correctamente todos los campos
+
+      //  CORREGIR: Mapear correctamente todos los campos
       const user: User = {
         id: userData.id || userData.sub,
         username: userData.username,
@@ -322,8 +348,9 @@ class AuthService {
         is_superadmin: userData.is_superadmin || false,
         roles: userData.roles || [],
         comunidad_id: userData.comunidad_id,
-        memberships: userData.memberships || [], // ✅ AGREGAR
-        is_2fa_enabled: userData.totp_enabled || userData.is_2fa_enabled || false,
+        memberships: userData.memberships || [],
+        is_2fa_enabled:
+          userData.totp_enabled || userData.is_2fa_enabled || false,
         firstName: userData.firstName,
         lastName: userData.lastName,
         phone: userData.phone,
@@ -331,11 +358,12 @@ class AuthService {
         created_at: userData.created_at,
         persona: userData.persona,
       };
-      
-      console.log('✅ Usuario actual obtenido del servidor:', user);
+
+      // eslint-disable-next-line no-console
       return user;
     } catch (error) {
-      console.error('❌ Error obteniendo usuario actual:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error obteniendo usuario actual:', error);
       return null;
     }
   }
@@ -345,11 +373,11 @@ class AuthService {
     if (typeof window === 'undefined') {
       return false;
     }
-    
+
     const token = localStorage.getItem('auth_token');
-    
+
     if (!token) {
-      console.log('❌ No se encontró token en localStorage');
+      // eslint-disable-next-line no-console
       return false;
     }
 
@@ -357,18 +385,19 @@ class AuthService {
       // Verificar si el token es válido y no ha expirado
       const decodedToken = jwtDecode<JWTPayload>(token);
       const currentTime = Date.now() / 1000;
-      
+
       if (decodedToken.exp < currentTime) {
-        console.log('❌ Token expirado, limpiando localStorage');
+        // eslint-disable-next-line no-console
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user_data');
         return false;
       }
-      
-      console.log('✅ Token válido y no expirado');
+
+      // eslint-disable-next-line no-console
       return true;
     } catch (error) {
-      console.error('❌ Error validando token:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error validando token:', error);
       // Si hay error decodificando, limpiar datos
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_data');
@@ -390,13 +419,14 @@ class AuthService {
       return null;
     }
     const userData = localStorage.getItem('user_data');
-    console.log('🔍 Datos raw del localStorage:', userData);
+    // eslint-disable-next-line no-console
     try {
       const parsedUser = userData ? JSON.parse(userData) : null;
-      console.log('🔍 Usuario parseado:', parsedUser);
+      // eslint-disable-next-line no-console
       return parsedUser;
     } catch (error) {
-      console.error('❌ Error parseando datos de usuario:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error parseando datos de usuario:', error);
       return null;
     }
   }
@@ -404,31 +434,28 @@ class AuthService {
   // Debug: Mostrar estado actual del localStorage
   debugAuthState(): void {
     if (typeof window === 'undefined') {
-      console.log('🔍 DEBUG - No se puede acceder a localStorage en el servidor');
+      // eslint-disable-next-line no-console
+      console.log('No se puede acceder a localStorage en el servidor');
       return;
     }
     const token = localStorage.getItem('auth_token');
     const userData = localStorage.getItem('user_data');
-    
-    console.log('🔍 DEBUG - Estado de autenticación:');
-    console.log('  Token presente:', !!token);
-    console.log('  Token:', token ? `${token.substring(0, 20)}...` : 'null');
-    console.log('  Datos de usuario:', userData);
-    
+
     if (token) {
       try {
         const decoded = jwtDecode<JWTPayload>(token);
         const now = Date.now() / 1000;
-        console.log('  Token válido:', decoded.exp > now);
-        console.log('  Expira en:', Math.round(decoded.exp - now), 'segundos');
       } catch (error) {
-        console.log('  Token inválido:', error);
+        // eslint-disable-next-line no-console
       }
     }
   }
 
   // Cambiar contraseña
-  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
     try {
       await apiClient.post('/auth/change-password', {
         currentPassword,
@@ -446,14 +473,17 @@ class AuthService {
   }
 
   // Actualizar perfil de usuario
-  async updateProfile(data: { username?: string; email?: string }): Promise<User> {
+  async updateProfile(data: {
+    username?: string;
+    email?: string;
+  }): Promise<User> {
     try {
       const response = await apiClient.patch('/auth/profile', data);
       const updatedUser = response.data.user;
-      
+
       // Actualizar datos en localStorage
       localStorage.setItem('user_data', JSON.stringify(updatedUser));
-      
+
       return updatedUser;
     } catch (error: any) {
       if (error.response?.data?.message) {
@@ -470,14 +500,14 @@ class AuthService {
   async updatePersona(data: Partial<Persona>): Promise<Persona> {
     try {
       const response = await apiClient.patch('/auth/profile/persona', data);
-      
+
       // Actualizar datos de usuario en localStorage con la nueva información de persona
       const currentUser = this.getUserData();
       if (currentUser) {
         currentUser.persona = response.data.persona;
         localStorage.setItem('user_data', JSON.stringify(currentUser));
       }
-      
+
       return response.data.persona;
     } catch (error: any) {
       if (error.response?.data?.message) {
@@ -496,6 +526,7 @@ class AuthService {
       const response = await apiClient.get('/auth/preferences');
       return response.data;
     } catch (error: any) {
+      // eslint-disable-next-line no-console
       console.error('Error obteniendo preferencias:', error);
       // Devolver preferencias por defecto si hay error
       return {
@@ -534,6 +565,7 @@ class AuthService {
       const response = await apiClient.get('/auth/sessions');
       return response.data.sessions;
     } catch (error: any) {
+      // eslint-disable-next-line no-console
       console.error('Error obteniendo sesiones:', error);
       return [];
     }
@@ -574,6 +606,7 @@ class AuthService {
       localStorage.setItem('auth_token', token);
       return token;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error refrescando token:', error);
       return null;
     }

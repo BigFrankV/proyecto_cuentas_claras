@@ -1,9 +1,10 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+
+import Layout from '@/components/layout/Layout';
 import apiClient from '@/lib/api';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 export default function TenenciasUnidad() {
   const router = useRouter();
@@ -12,19 +13,28 @@ export default function TenenciasUnidad() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      return undefined;
+    }
     let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
         const res = await apiClient.get(`/unidades/${id}/tenencias`);
-        if (mounted) setTenencias(res.data || []);
+        if (mounted) {
+          setTenencias(res.data || []);
+        }
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Error loading tenencias', err);
-      } finally { setLoading(false); }
+      } finally {
+        setLoading(false);
+      }
     };
     load();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
   return (
@@ -45,16 +55,24 @@ export default function TenenciasUnidad() {
                   <p className='text-muted'>
                     Lista de propietarios / tenencias de la unidad
                   </p>
-                  {loading && <div className='alert alert-info'>Cargando...</div>}
+                  {loading && (
+                    <div className='alert alert-info'>Cargando...</div>
+                  )}
                   {!loading && tenencias.length === 0 && (
-                    <div className='alert alert-warning'>No se encontraron tenencias</div>
+                    <div className='alert alert-warning'>
+                      No se encontraron tenencias
+                    </div>
                   )}
                   {!loading && tenencias.length > 0 && (
                     <ul className='list-group'>
                       {tenencias.map(t => (
                         <li key={t.id} className='list-group-item'>
-                          <div className='fw-medium'>{t.persona_nombre || t.nombre}</div>
-                          <div className='small text-muted'>Tipo: {t.tipo} - Desde: {t.desde}</div>
+                          <div className='fw-medium'>
+                            {t.persona_nombre || t.nombre}
+                          </div>
+                          <div className='small text-muted'>
+                            Tipo: {t.tipo} - Desde: {t.desde}
+                          </div>
                         </li>
                       ))}
                     </ul>

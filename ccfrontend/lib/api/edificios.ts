@@ -1,55 +1,134 @@
-import { 
-  Edificio, 
-  EdificioFormData, 
-  EdificioFilters, 
+import {
+  Edificio,
+  EdificioFormData,
+  EdificioFilters,
   EdificioStats,
   Torre,
   TorreFormData,
   Unidad,
-  UnidadFormData
+  UnidadFormData,
 } from '@/types/edificios';
+
+// Tipos para respuestas de la API
+interface ApiEdificioResponse {
+  id: number;
+  nombre: string;
+  codigo: string;
+  direccion: string;
+  comunidad_id?: number;
+  comunidad_nombre?: string;
+  estado: string;
+  tipo?: string;
+  fecha_creacion: string;
+  fecha_actualizacion?: string;
+  ano_construccion?: number;
+  numero_torres?: number;
+  total_unidades?: number;
+  unidades_activas?: number;
+  pisos?: number;
+  administrador?: string;
+  telefono_administrador?: string;
+  email_administrador?: string;
+  servicios?: unknown;
+  amenidades?: unknown;
+  latitud?: number;
+  longitud?: number;
+  imagen?: string;
+  observaciones?: string;
+  area_comun?: number;
+  area_privada?: number;
+  parqueaderos?: number;
+  depositos?: number;
+}
+
+interface ApiTorreResponse {
+  id: number;
+  edificio_id: number;
+  nombre: string;
+  codigo: string;
+  pisos: number;
+  unidades_por_piso?: number;
+  total_unidades?: number;
+  unidades_ocupadas?: number;
+  estado: string;
+  fecha_creacion: string;
+  observaciones?: string;
+}
+
+interface ApiUnidadResponse {
+  id: number;
+  edificio_id: number;
+  torre_id?: number;
+  numero: string;
+  piso?: number;
+  estado: string;
+  area?: number;
+  habitaciones?: number;
+  banos?: number;
+  balcon?: boolean;
+  parqueadero?: boolean;
+  deposito?: boolean;
+  fecha_creacion: string;
+  observaciones?: string;
+}
 
 // Base URL para las APIs
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 // Helper para manejar errores de API
-const handleApiError = (error: any) => {
-  console.error('API Error:', error);
-  if (error.response?.data?.error) {
-    throw new Error(error.response.data.error);
+const handleApiError = (error: unknown) => {
+  // En producción, no mostrar detalles del error por seguridad
+  if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
+    console.error('API Error:', error);
+  }
+  if (error && typeof error === 'object' && 'response' in error) {
+    const apiError = error as { response?: { data?: { error?: string } } };
+    if (apiError.response?.data?.error) {
+      throw new Error(apiError.response.data.error);
+    }
   }
   throw new Error('Error de conexión con el servidor');
 };
 
+// Tipos para fetch API
+interface FetchOptions {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string;
+}
+
 // Helper para hacer peticiones autenticadas
-const apiRequest = async (url: string, options: RequestInit = {}) => {
+const apiRequest = async (
+  url: string,
+  options: FetchOptions = {},
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any> => {
   // Obtener token directamente de localStorage para evitar problemas de importación
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-  
-  console.log('🔐 Token obtenido para API:', token ? 'Token presente' : 'No hay token');
-  console.log('🔐 URL de la petición:', `${API_BASE_URL}${url}`);
-  
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
   if (!token) {
-    console.error('❌ No se pudo obtener token para la petición');
     throw new Error('Missing token');
   }
 
-  const config: RequestInit = {
+  const config: Record<string, unknown> = {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...options.headers,
+      Authorization: `Bearer ${token}`,
+      ...((options.headers as Record<string, unknown>) || {}),
     },
   };
 
-  console.log('🔐 Headers de la petición:', config.headers);
-
-  const response = await fetch(`${API_BASE_URL}${url}`, config);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const response = await fetch(`${API_BASE_URL}${url}`, config as any);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    throw new Error(
+      errorData.error || `HTTP error! status: ${response.status}`,
+    );
   }
 
   return response.json();
@@ -64,19 +143,31 @@ export const edificiosApi = {
   getAll: async (filters?: EdificioFilters): Promise<Edificio[]> => {
     try {
       const queryParams = new URLSearchParams();
-      
-      if (filters?.busqueda) queryParams.append('search', filters.busqueda);
-      if (filters?.comunidadId) queryParams.append('comunidadId', filters.comunidadId);
-      if (filters?.estado) queryParams.append('estado', filters.estado);
-      if (filters?.tipo) queryParams.append('tipo', filters.tipo);
-      if (filters?.fechaDesde) queryParams.append('fechaDesde', filters.fechaDesde);
-      if (filters?.fechaHasta) queryParams.append('fechaHasta', filters.fechaHasta);
+
+      if (filters?.busqueda) {
+        queryParams.append('search', filters.busqueda);
+      }
+      if (filters?.comunidadId) {
+        queryParams.append('comunidadId', filters.comunidadId);
+      }
+      if (filters?.estado) {
+        queryParams.append('estado', filters.estado);
+      }
+      if (filters?.tipo) {
+        queryParams.append('tipo', filters.tipo);
+      }
+      if (filters?.fechaDesde) {
+        queryParams.append('fechaDesde', filters.fechaDesde);
+      }
+      if (filters?.fechaHasta) {
+        queryParams.append('fechaHasta', filters.fechaHasta);
+      }
 
       const url = `/edificios${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const data = await apiRequest(url);
-      
+
       // Mapear la respuesta del backend al formato del frontend
-      return data.map((edificio: any) => ({
+      return data.map((edificio: ApiEdificioResponse) => ({
         id: edificio.id.toString(),
         nombre: edificio.nombre,
         codigo: edificio.codigo,
@@ -96,16 +187,34 @@ export const edificiosApi = {
         telefonoAdministrador: edificio.telefono_administrador,
         emailAdministrador: edificio.email_administrador,
         servicios: (() => {
-          if (Array.isArray(edificio.servicios)) return edificio.servicios;
-          if (typeof edificio.servicios === 'string' && edificio.servicios.trim()) {
-            try { return JSON.parse(edificio.servicios); } catch { return []; }
+          if (Array.isArray(edificio.servicios)) {
+            return edificio.servicios;
+          }
+          if (
+            typeof edificio.servicios === 'string' &&
+            edificio.servicios.trim()
+          ) {
+            try {
+              return JSON.parse(edificio.servicios);
+            } catch {
+              return [];
+            }
           }
           return [];
         })(),
         amenidades: (() => {
-          if (Array.isArray(edificio.amenidades)) return edificio.amenidades;
-          if (typeof edificio.amenidades === 'string' && edificio.amenidades.trim()) {
-            try { return JSON.parse(edificio.amenidades); } catch { return []; }
+          if (Array.isArray(edificio.amenidades)) {
+            return edificio.amenidades;
+          }
+          if (
+            typeof edificio.amenidades === 'string' &&
+            edificio.amenidades.trim()
+          ) {
+            try {
+              return JSON.parse(edificio.amenidades);
+            } catch {
+              return [];
+            }
           }
           return [];
         })(),
@@ -116,7 +225,7 @@ export const edificiosApi = {
         areaComun: edificio.area_comun,
         areaPrivada: edificio.area_privada,
         parqueaderos: edificio.parqueaderos,
-        depositos: edificio.depositos
+        depositos: edificio.depositos,
       }));
     } catch (error) {
       handleApiError(error);
@@ -128,7 +237,7 @@ export const edificiosApi = {
   getById: async (id: string): Promise<Edificio | null> => {
     try {
       const data = await apiRequest(`/edificios/${id}`);
-      
+
       return {
         id: data.id.toString(),
         nombre: data.nombre,
@@ -149,16 +258,28 @@ export const edificiosApi = {
         telefonoAdministrador: data.telefono_administrador,
         emailAdministrador: data.email_administrador,
         servicios: (() => {
-          if (Array.isArray(data.servicios)) return data.servicios;
+          if (Array.isArray(data.servicios)) {
+            return data.servicios;
+          }
           if (typeof data.servicios === 'string' && data.servicios.trim()) {
-            try { return JSON.parse(data.servicios); } catch { return []; }
+            try {
+              return JSON.parse(data.servicios);
+            } catch {
+              return [];
+            }
           }
           return [];
         })(),
         amenidades: (() => {
-          if (Array.isArray(data.amenidades)) return data.amenidades;
+          if (Array.isArray(data.amenidades)) {
+            return data.amenidades;
+          }
           if (typeof data.amenidades === 'string' && data.amenidades.trim()) {
-            try { return JSON.parse(data.amenidades); } catch { return []; }
+            try {
+              return JSON.parse(data.amenidades);
+            } catch {
+              return [];
+            }
           }
           return [];
         })(),
@@ -169,7 +290,7 @@ export const edificiosApi = {
         areaComun: data.area_comun,
         areaPrivada: data.area_privada,
         parqueaderos: data.parqueaderos,
-        depositos: data.depositos
+        depositos: data.depositos,
       };
     } catch (error) {
       handleApiError(error);
@@ -200,7 +321,7 @@ export const edificiosApi = {
         areaComun: data.areaComun,
         areaPrivada: data.areaPrivada,
         parqueaderos: data.parqueaderos,
-        depositos: data.depositos
+        depositos: data.depositos,
       };
 
       const result = await apiRequest('/edificios', {
@@ -221,7 +342,7 @@ export const edificiosApi = {
         numeroTorres: data.numeroTorres,
         totalUnidades: 0,
         totalUnidadesOcupadas: 0,
-        pisos: data.pisos
+        pisos: data.pisos,
       };
     } catch (error) {
       handleApiError(error);
@@ -230,30 +351,61 @@ export const edificiosApi = {
   },
 
   // Actualizar edificio
-  update: async (id: string, data: Partial<EdificioFormData>): Promise<Edificio | null> => {
+  update: async (
+    id: string,
+    data: Partial<EdificioFormData>,
+  ): Promise<Edificio | null> => {
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         nombre: data.nombre,
         codigo: data.codigo,
         direccion: data.direccion,
         comunidadId: data.comunidadId,
       };
-      
+
       // Campos opcionales
-      if (data.anoConstructccion !== undefined) payload.anoConstructccion = data.anoConstructccion;
-      if (data.pisos !== undefined) payload.pisos = data.pisos;
-      if (data.administrador !== undefined) payload.administrador = data.administrador;
-      if (data.telefonoAdministrador !== undefined) payload.telefonoAdministrador = data.telefonoAdministrador;
-      if (data.emailAdministrador !== undefined) payload.emailAdministrador = data.emailAdministrador;
-      if (data.servicios !== undefined) payload.servicios = data.servicios;
-      if (data.amenidades !== undefined) payload.amenidades = data.amenidades;
-      if (data.latitud !== undefined) payload.latitud = data.latitud;
-      if (data.longitud !== undefined) payload.longitud = data.longitud;
-      if (data.observaciones !== undefined) payload.observaciones = data.observaciones;
-      if (data.areaComun !== undefined) payload.areaComun = data.areaComun;
-      if (data.areaPrivada !== undefined) payload.areaPrivada = data.areaPrivada;
-      if (data.parqueaderos !== undefined) payload.parqueaderos = data.parqueaderos;
-      if (data.depositos !== undefined) payload.depositos = data.depositos;
+      if (data.anoConstructccion !== undefined) {
+        payload.anoConstructccion = data.anoConstructccion;
+      }
+      if (data.pisos !== undefined) {
+        payload.pisos = data.pisos;
+      }
+      if (data.administrador !== undefined) {
+        payload.administrador = data.administrador;
+      }
+      if (data.telefonoAdministrador !== undefined) {
+        payload.telefonoAdministrador = data.telefonoAdministrador;
+      }
+      if (data.emailAdministrador !== undefined) {
+        payload.emailAdministrador = data.emailAdministrador;
+      }
+      if (data.servicios !== undefined) {
+        payload.servicios = data.servicios;
+      }
+      if (data.amenidades !== undefined) {
+        payload.amenidades = data.amenidades;
+      }
+      if (data.latitud !== undefined) {
+        payload.latitud = data.latitud;
+      }
+      if (data.longitud !== undefined) {
+        payload.longitud = data.longitud;
+      }
+      if (data.observaciones !== undefined) {
+        payload.observaciones = data.observaciones;
+      }
+      if (data.areaComun !== undefined) {
+        payload.areaComun = data.areaComun;
+      }
+      if (data.areaPrivada !== undefined) {
+        payload.areaPrivada = data.areaPrivada;
+      }
+      if (data.parqueaderos !== undefined) {
+        payload.parqueaderos = data.parqueaderos;
+      }
+      if (data.depositos !== undefined) {
+        payload.depositos = data.depositos;
+      }
 
       const result = await apiRequest(`/edificios/${id}`, {
         method: 'PUT',
@@ -285,7 +437,7 @@ export const edificiosApi = {
     } catch (error) {
       handleApiError(error);
     }
-  }
+  },
 };
 
 // =============================================================================
@@ -297,13 +449,13 @@ export const edificiosStatsApi = {
   getStats: async (): Promise<EdificioStats | null> => {
     try {
       const data = await apiRequest('/edificios/stats');
-      
+
       return {
         totalEdificios: data.total_edificios,
         edificiosActivos: data.edificios_activos,
         totalUnidades: data.total_unidades,
         unidadesOcupadas: data.unidades_ocupadas,
-        ocupacion: data.ocupacion
+        ocupacion: data.ocupacion,
       };
     } catch (error) {
       handleApiError(error);
@@ -319,7 +471,7 @@ export const edificiosStatsApi = {
       handleApiError(error);
       return null;
     }
-  }
+  },
 };
 
 // =============================================================================
@@ -331,8 +483,8 @@ export const torresApi = {
   getByEdificio: async (edificioId: string): Promise<Torre[]> => {
     try {
       const data = await apiRequest(`/edificios/${edificioId}/torres`);
-      
-      return data.map((torre: any) => ({
+
+      return data.map((torre: ApiTorreResponse) => ({
         id: torre.id.toString(),
         edificioId: torre.edificio_id.toString(),
         nombre: torre.nombre,
@@ -343,7 +495,7 @@ export const torresApi = {
         unidadesOcupadas: torre.unidades_ocupadas,
         estado: torre.estado,
         fechaCreacion: torre.fecha_creacion,
-        observaciones: torre.observaciones
+        observaciones: torre.observaciones,
       }));
     } catch (error) {
       handleApiError(error);
@@ -352,13 +504,16 @@ export const torresApi = {
   },
 
   // Crear nueva torre
-  create: async (edificioId: string, data: TorreFormData): Promise<Torre | null> => {
+  create: async (
+    edificioId: string,
+    data: TorreFormData,
+  ): Promise<Torre | null> => {
     try {
       const payload = {
         nombre: data.nombre,
         codigo: data.codigo,
         pisos: data.pisos,
-        observaciones: data.observaciones
+        observaciones: data.observaciones,
       };
 
       const result = await apiRequest(`/edificios/${edificioId}/torres`, {
@@ -377,13 +532,13 @@ export const torresApi = {
         unidadesOcupadas: result.unidades_ocupadas || 0,
         estado: result.estado || 'activa',
         fechaCreacion: result.fecha_creacion,
-        observaciones: result.observaciones
+        observaciones: result.observaciones,
       };
     } catch (error) {
       handleApiError(error);
       return null;
     }
-  }
+  },
 };
 
 // =============================================================================
@@ -392,12 +547,17 @@ export const torresApi = {
 
 export const unidadesApi = {
   // Obtener unidades de un edificio
-  getByEdificio: async (edificioId: string, torreId?: string): Promise<Unidad[]> => {
+  getByEdificio: async (
+    edificioId: string,
+    torreId?: string,
+  ): Promise<Unidad[]> => {
     try {
       const queryParams = torreId ? `?torreId=${torreId}` : '';
-      const data = await apiRequest(`/edificios/${edificioId}/unidades${queryParams}`);
-      
-      return data.map((unidad: any) => ({
+      const data = await apiRequest(
+        `/edificios/${edificioId}/unidades${queryParams}`,
+      );
+
+      return data.map((unidad: ApiUnidadResponse) => ({
         id: unidad.id.toString(),
         edificioId: unidad.edificio_id.toString(),
         torreId: unidad.torre_id?.toString(),
@@ -412,7 +572,7 @@ export const unidadesApi = {
         parqueadero: unidad.parqueadero,
         deposito: unidad.deposito,
         fechaCreacion: unidad.fecha_creacion,
-        observaciones: unidad.observaciones
+        observaciones: unidad.observaciones,
       }));
     } catch (error) {
       handleApiError(error);
@@ -421,7 +581,10 @@ export const unidadesApi = {
   },
 
   // Crear nueva unidad
-  create: async (edificioId: string, data: UnidadFormData): Promise<Unidad | null> => {
+  create: async (
+    edificioId: string,
+    data: UnidadFormData,
+  ): Promise<Unidad | null> => {
     try {
       const payload = {
         codigo: data.numero,
@@ -430,7 +593,7 @@ export const unidadesApi = {
         m2_terrazas: data.balcon ? 10 : 0,
         nro_estacionamiento: data.parqueadero ? '1' : null,
         nro_bodega: data.deposito ? '1' : null,
-        activa: true // Por defecto activa
+        activa: true, // Por defecto activa
       };
 
       const result = await apiRequest(`/edificios/${edificioId}/unidades`, {
@@ -447,13 +610,13 @@ export const unidadesApi = {
         tipo: 'apartamento',
         estado: result.estado,
         area: result.area,
-        fechaCreacion: result.fecha_creacion
+        fechaCreacion: result.fecha_creacion,
       };
     } catch (error) {
       handleApiError(error);
       return null;
     }
-  }
+  },
 };
 
 // =============================================================================
@@ -464,7 +627,9 @@ export const edificiosUtilsApi = {
   // Búsqueda rápida
   search: async (query: string, limit = 10) => {
     try {
-      return await apiRequest(`/edificios/buscar?q=${encodeURIComponent(query)}&limit=${limit}`);
+      return await apiRequest(
+        `/edificios/buscar?q=${encodeURIComponent(query)}&limit=${limit}`,
+      );
     } catch (error) {
       handleApiError(error);
     }
@@ -498,9 +663,15 @@ export const edificiosUtilsApi = {
   },
 
   // Validar código único
-  validarCodigo: async (edificioId: string, codigo: string, tipo: 'edificio' | 'torre' | 'unidad') => {
+  validarCodigo: async (
+    edificioId: string,
+    codigo: string,
+    tipo: 'edificio' | 'torre' | 'unidad',
+  ) => {
     try {
-      return await apiRequest(`/edificios/${edificioId}/validar-codigo?codigo=${encodeURIComponent(codigo)}&tipo=${tipo}`);
+      return await apiRequest(
+        `/edificios/${edificioId}/validar-codigo?codigo=${encodeURIComponent(codigo)}&tipo=${tipo}`,
+      );
     } catch (error) {
       handleApiError(error);
     }
@@ -513,17 +684,19 @@ export const edificiosUtilsApi = {
     } catch (error) {
       handleApiError(error);
     }
-  }
+  },
 };
 
 // =============================================================================
 // EXPORTACIONES PRINCIPALES
 // =============================================================================
 
-export default {
+const edificiosApiClient = {
   edificios: edificiosApi,
   stats: edificiosStatsApi,
   torres: torresApi,
   unidades: unidadesApi,
-  utils: edificiosUtilsApi
+  utils: edificiosUtilsApi,
 };
+
+export default edificiosApiClient;

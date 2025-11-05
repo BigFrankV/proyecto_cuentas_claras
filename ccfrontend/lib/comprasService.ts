@@ -1,11 +1,18 @@
-import apiClient from './api';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Compra, ComprasResponse } from '@/types/compras';
 
-export async function listCompras(comunidadId?: number | null, params: Record<string, any> = {}): Promise<ComprasResponse> {
-  if (typeof comunidadId === 'number') params.comunidad_id = comunidadId;
+import apiClient from './api';
+
+export async function listCompras(
+  comunidadId?: number | null,
+  params: Record<string, any> = {},
+): Promise<ComprasResponse> {
+  if (typeof comunidadId === 'number') {
+    params.comunidad_id = comunidadId;
+  }
   const resp = await apiClient.get('/compras', { params });
   const raw = resp.data;
-  const data = Array.isArray(raw) ? raw : raw.data ?? raw.rows ?? [];
+  const data = Array.isArray(raw) ? raw : (raw.data ?? raw.rows ?? []);
   const pagination = raw.pagination ?? undefined;
   return { data, pagination };
 }

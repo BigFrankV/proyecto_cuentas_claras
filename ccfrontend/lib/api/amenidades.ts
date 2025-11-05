@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-undef */
 import {
   Amenidad,
@@ -24,7 +25,8 @@ const handleApiError = (error: unknown) => {
 // Helper para hacer peticiones autenticadas
 const apiRequest = async (url: string, options: RequestInit = {}) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
   if (!token) {
     throw new Error('Missing token');
@@ -34,7 +36,7 @@ const apiRequest = async (url: string, options: RequestInit = {}) => {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       ...options.headers,
     },
   };
@@ -42,7 +44,9 @@ const apiRequest = async (url: string, options: RequestInit = {}) => {
   const response = await fetch(`${API_BASE_URL}${url}`, config);
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: 'Error desconocido' }));
     throw new Error(errorData.error || `Error ${response.status}`);
   }
 
@@ -63,7 +67,10 @@ export const amenidades = {
         params.append('comunidad_id', filters.comunidad_id.toString());
       }
       if (filters?.requiere_aprobacion !== undefined) {
-        params.append('requiere_aprobacion', filters.requiere_aprobacion.toString());
+        params.append(
+          'requiere_aprobacion',
+          filters.requiere_aprobacion.toString(),
+        );
       }
       if (filters?.capacidad_min) {
         params.append('capacidad_min', filters.capacidad_min.toString());
@@ -138,7 +145,10 @@ export const amenidades = {
   },
 
   // Actualizar amenidad
-  update: async (id: string, data: Partial<AmenidadFormData>): Promise<Amenidad | null> => {
+  update: async (
+    id: string,
+    data: Partial<AmenidadFormData>,
+  ): Promise<Amenidad | null> => {
     try {
       return await apiRequest(`/amenidades/${id}`, {
         method: 'PATCH',
@@ -175,7 +185,10 @@ export const amenidades = {
         params.append('comunidad_id', filters.comunidad_id.toString());
       }
       if (filters.requiere_aprobacion !== undefined) {
-        params.append('requiere_aprobacion', filters.requiere_aprobacion.toString());
+        params.append(
+          'requiere_aprobacion',
+          filters.requiere_aprobacion.toString(),
+        );
       }
       if (filters.capacidad_min) {
         params.append('capacidad_min', filters.capacidad_min.toString());
@@ -230,7 +243,10 @@ export const reservasAmenidades = {
   },
 
   // Crear reserva
-  create: async (amenidadId: string, data: ReservaAmenidadFormData): Promise<ReservaAmenidad | null> => {
+  create: async (
+    amenidadId: string,
+    data: ReservaAmenidadFormData,
+  ): Promise<ReservaAmenidad | null> => {
     try {
       return await apiRequest(`/amenidades/${amenidadId}/reservas`, {
         method: 'POST',
@@ -243,7 +259,10 @@ export const reservasAmenidades = {
   },
 
   // Actualizar reserva
-  update: async (id: string, data: Partial<ReservaAmenidadFormData>): Promise<ReservaAmenidad | null> => {
+  update: async (
+    id: string,
+    data: Partial<ReservaAmenidadFormData>,
+  ): Promise<ReservaAmenidad | null> => {
     try {
       return await apiRequest(`/reservas-amenidades/${id}`, {
         method: 'PATCH',

@@ -9,7 +9,7 @@ const { categorizeResponse, getWithAuth } = require('./helpers');
 
 describe('Files Health Check', () => {
   let authToken;
-  let fileId; 
+  let fileId;
 
   beforeAll(() => {
     authToken = getAuthToken();

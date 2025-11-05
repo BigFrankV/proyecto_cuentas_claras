@@ -28,7 +28,7 @@ router.get('/', authenticate, async (req, res) => {
       fecha_inicio,
       fecha_fin,
       limit = 20,
-      offset = 0
+      offset = 0,
     } = req.query;
 
     let query = `
@@ -81,7 +81,10 @@ router.get('/', authenticate, async (req, res) => {
     }
 
     // Obtener total
-    const countQuery = query.replace(/SELECT.*FROM/, 'SELECT COUNT(*) as total FROM');
+    const countQuery = query.replace(
+      /SELECT.*FROM/,
+      'SELECT COUNT(*) as total FROM'
+    );
     const [countResult] = await db.query(countQuery, params);
     const total = countResult[0].total;
 
@@ -96,8 +99,8 @@ router.get('/', authenticate, async (req, res) => {
         total,
         limit: Number(limit),
         offset: Number(offset),
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (err) {
     console.error(err);
@@ -178,12 +181,16 @@ router.get('/:id', authenticate, async (req, res) => {
  *     tags: [Conciliaciones]
  *     summary: Listar conciliaciones de una comunidad específica
  */
-router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { limit = 200 } = req.query;
+router.get(
+  '/comunidad/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { limit = 200 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         cb.id,
         CONCAT('CONC-', YEAR(cb.fecha_mov), '-', LPAD(cb.id, 4, '0')) AS code,
@@ -207,13 +214,14 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
       LIMIT ?
     `;
 
-    const [rows] = await db.query(query, [comunidadId, Number(limit)]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener conciliaciones' });
+      const [rows] = await db.query(query, [comunidadId, Number(limit)]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener conciliaciones' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -227,11 +235,13 @@ router.post(
   [
     authenticate,
     requireCommunity('comunidadId', ['admin', 'contador']),
-    body('fecha_mov').notEmpty().withMessage('Fecha de movimiento es requerida'),
+    body('fecha_mov')
+      .notEmpty()
+      .withMessage('Fecha de movimiento es requerida'),
     body('monto').isNumeric().withMessage('Monto debe ser numérico'),
     body('glosa').optional(),
     body('referencia').optional(),
-    body('pago_id').optional().isInt()
+    body('pago_id').optional().isInt(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -245,7 +255,14 @@ router.post(
 
       const [result] = await db.query(
         'INSERT INTO conciliacion_bancaria (comunidad_id, fecha_mov, monto, glosa, referencia, pago_id) VALUES (?,?,?,?,?,?)',
-        [comunidadId, fecha_mov, monto, glosa || null, referencia || null, pago_id || null]
+        [
+          comunidadId,
+          fecha_mov,
+          monto,
+          glosa || null,
+          referencia || null,
+          pago_id || null,
+        ]
       );
 
       const [row] = await db.query(
@@ -272,11 +289,15 @@ router.post(
  *     tags: [Conciliaciones]
  *     summary: Estadísticas generales de conciliaciones por comunidad
  */
-router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/estadisticas',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         COUNT(*) AS totalMovements,
         COUNT(CASE WHEN cb.estado = 'conciliado' THEN 1 END) AS reconciledMovements,
@@ -292,13 +313,14 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
       WHERE cb.comunidad_id = ?
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener estadísticas' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener estadísticas' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -307,11 +329,15 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
  *     tags: [Conciliaciones]
  *     summary: Movimientos bancarios pendientes de conciliación
  */
-router.get('/comunidad/:comunidadId/pendientes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/pendientes',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         cb.id,
         CONCAT('CONC-', YEAR(cb.fecha_mov), '-', LPAD(cb.id, 4, '0')) AS code,
@@ -330,13 +356,16 @@ router.get('/comunidad/:comunidadId/pendientes', authenticate, requireCommunity(
       ORDER BY cb.fecha_mov ASC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener movimientos pendientes' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener movimientos pendientes' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -345,11 +374,15 @@ router.get('/comunidad/:comunidadId/pendientes', authenticate, requireCommunity(
  *     tags: [Conciliaciones]
  *     summary: Conciliaciones agrupadas por estado
  */
-router.get('/comunidad/:comunidadId/por-estado', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/por-estado',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         CASE
           WHEN cb.estado = 'pendiente' THEN 'pending'
@@ -372,13 +405,14 @@ router.get('/comunidad/:comunidadId/por-estado', authenticate, requireCommunity(
         END
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al agrupar por estado' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al agrupar por estado' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -387,11 +421,15 @@ router.get('/comunidad/:comunidadId/por-estado', authenticate, requireCommunity(
  *     tags: [Conciliaciones]
  *     summary: Conciliaciones agrupadas por tipo de movimiento
  */
-router.get('/comunidad/:comunidadId/por-tipo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/por-tipo',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         COALESCE(p.medio, 'Movimiento No Pagado') AS type,
         COUNT(cb.id) AS count,
@@ -405,13 +443,14 @@ router.get('/comunidad/:comunidadId/por-tipo', authenticate, requireCommunity('c
       ORDER BY totalAmount DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al agrupar por tipo' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al agrupar por tipo' });
+    }
   }
-});
+);
 
 // =========================================
 // 4. ANÁLISIS DE DIFERENCIAS
@@ -424,11 +463,15 @@ router.get('/comunidad/:comunidadId/por-tipo', authenticate, requireCommunity('c
  *     tags: [Conciliaciones]
  *     summary: Movimientos con diferencias entre banco y pago
  */
-router.get('/comunidad/:comunidadId/con-diferencias', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/con-diferencias',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         cb.id,
         CONCAT('CONC-', YEAR(cb.fecha_mov), '-', LPAD(cb.id, 4, '0')) AS code,
@@ -449,13 +492,14 @@ router.get('/comunidad/:comunidadId/con-diferencias', authenticate, requireCommu
       ORDER BY ABS(cb.monto - COALESCE(p.monto, 0)) DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener diferencias' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener diferencias' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -464,11 +508,15 @@ router.get('/comunidad/:comunidadId/con-diferencias', authenticate, requireCommu
  *     tags: [Conciliaciones]
  *     summary: Movimientos bancarios sin pagos asociados
  */
-router.get('/comunidad/:comunidadId/sin-pago', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/sin-pago',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         cb.id,
         CONCAT('CONC-', YEAR(cb.fecha_mov), '-', LPAD(cb.id, 4, '0')) AS code,
@@ -492,13 +540,14 @@ router.get('/comunidad/:comunidadId/sin-pago', authenticate, requireCommunity('c
       ORDER BY cb.fecha_mov DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener movimientos sin pago' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener movimientos sin pago' });
+    }
   }
-});
+);
 
 // =========================================
 // 5. REPORTES HISTÓRICOS
@@ -511,11 +560,15 @@ router.get('/comunidad/:comunidadId/sin-pago', authenticate, requireCommunity('c
  *     tags: [Conciliaciones]
  *     summary: Historial de conciliaciones por período (mes/año)
  */
-router.get('/comunidad/:comunidadId/historial-periodo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/historial-periodo',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         YEAR(cb.fecha_mov) AS year,
         MONTH(cb.fecha_mov) AS month,
@@ -535,13 +588,14 @@ router.get('/comunidad/:comunidadId/historial-periodo', authenticate, requireCom
       ORDER BY year DESC, month DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener historial' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener historial' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -550,11 +604,15 @@ router.get('/comunidad/:comunidadId/historial-periodo', authenticate, requireCom
  *     tags: [Conciliaciones]
  *     summary: Comparación de saldos bancarios vs contables
  */
-router.get('/comunidad/:comunidadId/saldos', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/saldos',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         YEAR(cb.fecha_mov) AS year,
         MONTH(cb.fecha_mov) AS month,
@@ -577,13 +635,14 @@ router.get('/comunidad/:comunidadId/saldos', authenticate, requireCommunity('com
       ORDER BY year DESC, month DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al calcular saldos' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al calcular saldos' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -592,11 +651,15 @@ router.get('/comunidad/:comunidadId/saldos', authenticate, requireCommunity('com
  *     tags: [Conciliaciones]
  *     summary: Análisis de precisión de conciliación por período
  */
-router.get('/comunidad/:comunidadId/analisis-precision', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/analisis-precision',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         YEAR(cb.fecha_mov) AS year,
         MONTH(cb.fecha_mov) AS month,
@@ -617,13 +680,14 @@ router.get('/comunidad/:comunidadId/analisis-precision', authenticate, requireCo
       ORDER BY year DESC, month DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al analizar precisión' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al analizar precisión' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -632,11 +696,15 @@ router.get('/comunidad/:comunidadId/analisis-precision', authenticate, requireCo
  *     tags: [Conciliaciones]
  *     summary: Resumen consolidado de conciliaciones por comunidad
  */
-router.get('/comunidad/:comunidadId/resumen', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/resumen',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         c.razon_social AS communityName,
         COUNT(cb.id) AS totalMovements,
@@ -658,13 +726,14 @@ router.get('/comunidad/:comunidadId/resumen', authenticate, requireCommunity('co
       GROUP BY c.id, c.razon_social
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows[0] || {});
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener resumen' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows[0] || {});
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener resumen' });
+    }
   }
-});
+);
 
 // =========================================
 // 6. VALIDACIONES
@@ -677,11 +746,15 @@ router.get('/comunidad/:comunidadId/resumen', authenticate, requireCommunity('co
  *     tags: [Conciliaciones]
  *     summary: Validar que las conciliaciones tienen datos necesarios
  */
-router.get('/comunidad/:comunidadId/validar', authenticate, requireCommunity('comunidadId', ['admin', 'contador']), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/validar',
+  authenticate,
+  requireCommunity('comunidadId', ['admin', 'contador']),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         cb.id,
         CASE
@@ -701,13 +774,14 @@ router.get('/comunidad/:comunidadId/validar', authenticate, requireCommunity('co
       ORDER BY cb.id
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al validar conciliaciones' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al validar conciliaciones' });
+    }
   }
-});
+);
 
 // =========================================
 // 7. ACTUALIZACIÓN DE CONCILIACIONES
@@ -720,55 +794,60 @@ router.get('/comunidad/:comunidadId/validar', authenticate, requireCommunity('co
  *     tags: [Conciliaciones]
  *     summary: Actualizar estado de conciliación
  */
-router.patch('/:id', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { estado, pago_id, glosa } = req.body;
+router.patch(
+  '/:id',
+  authenticate,
+  authorize('admin', 'superadmin', 'contador'),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { estado, pago_id, glosa } = req.body;
 
-    const updates = [];
-    const values = [];
+      const updates = [];
+      const values = [];
 
-    if (estado !== undefined) {
-      if (!ESTADOS_CONCILIACION.includes(estado)) {
-        return res.status(400).json({ error: 'Estado inválido' });
+      if (estado !== undefined) {
+        if (!ESTADOS_CONCILIACION.includes(estado)) {
+          return res.status(400).json({ error: 'Estado inválido' });
+        }
+        updates.push('estado = ?');
+        values.push(estado);
       }
-      updates.push('estado = ?');
-      values.push(estado);
+
+      if (pago_id !== undefined) {
+        updates.push('pago_id = ?');
+        values.push(pago_id);
+      }
+
+      if (glosa !== undefined) {
+        updates.push('glosa = ?');
+        values.push(glosa);
+      }
+
+      if (!updates.length) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
+      }
+
+      updates.push('updated_at = CURRENT_TIMESTAMP');
+      values.push(id);
+
+      await db.query(
+        `UPDATE conciliacion_bancaria SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+
+      const [rows] = await db.query(
+        'SELECT id, fecha_mov, monto, glosa, referencia, estado, pago_id FROM conciliacion_bancaria WHERE id = ?',
+        [id]
+      );
+
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al actualizar conciliación' });
     }
-
-    if (pago_id !== undefined) {
-      updates.push('pago_id = ?');
-      values.push(pago_id);
-    }
-
-    if (glosa !== undefined) {
-      updates.push('glosa = ?');
-      values.push(glosa);
-    }
-
-    if (!updates.length) {
-      return res.status(400).json({ error: 'No hay campos para actualizar' });
-    }
-
-    updates.push('updated_at = CURRENT_TIMESTAMP');
-    values.push(id);
-
-    await db.query(
-      `UPDATE conciliacion_bancaria SET ${updates.join(', ')} WHERE id = ?`,
-      values
-    );
-
-    const [rows] = await db.query(
-      'SELECT id, fecha_mov, monto, glosa, referencia, estado, pago_id FROM conciliacion_bancaria WHERE id = ?',
-      [id]
-    );
-
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al actualizar conciliación' });
   }
-});
+);
 
 /**
  * @swagger
@@ -777,31 +856,36 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin', 'contador'),
  *     tags: [Conciliaciones]
  *     summary: Conciliar un movimiento con un pago
  */
-router.patch('/:id/conciliar', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { pago_id } = req.body;
+router.patch(
+  '/:id/conciliar',
+  authenticate,
+  authorize('admin', 'superadmin', 'contador'),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { pago_id } = req.body;
 
-    if (!pago_id) {
-      return res.status(400).json({ error: 'pago_id es requerido' });
+      if (!pago_id) {
+        return res.status(400).json({ error: 'pago_id es requerido' });
+      }
+
+      await db.query(
+        'UPDATE conciliacion_bancaria SET estado = ?, pago_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        ['conciliado', pago_id, id]
+      );
+
+      const [rows] = await db.query(
+        'SELECT id, fecha_mov, monto, glosa, referencia, estado, pago_id FROM conciliacion_bancaria WHERE id = ?',
+        [id]
+      );
+
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al conciliar movimiento' });
     }
-
-    await db.query(
-      'UPDATE conciliacion_bancaria SET estado = ?, pago_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      ['conciliado', pago_id, id]
-    );
-
-    const [rows] = await db.query(
-      'SELECT id, fecha_mov, monto, glosa, referencia, estado, pago_id FROM conciliacion_bancaria WHERE id = ?',
-      [id]
-    );
-
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al conciliar movimiento' });
   }
-});
+);
 
 /**
  * @swagger
@@ -810,38 +894,43 @@ router.patch('/:id/conciliar', authenticate, authorize('admin', 'superadmin', 'c
  *     tags: [Conciliaciones]
  *     summary: Descartar un movimiento
  */
-router.patch('/:id/descartar', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { glosa } = req.body;
+router.patch(
+  '/:id/descartar',
+  authenticate,
+  authorize('admin', 'superadmin', 'contador'),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { glosa } = req.body;
 
-    const updates = ['estado = ?'];
-    const values = ['descartado'];
+      const updates = ['estado = ?'];
+      const values = ['descartado'];
 
-    if (glosa) {
-      updates.push('glosa = ?');
-      values.push(glosa);
+      if (glosa) {
+        updates.push('glosa = ?');
+        values.push(glosa);
+      }
+
+      updates.push('updated_at = CURRENT_TIMESTAMP');
+      values.push(id);
+
+      await db.query(
+        `UPDATE conciliacion_bancaria SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+
+      const [rows] = await db.query(
+        'SELECT id, fecha_mov, monto, glosa, referencia, estado, pago_id FROM conciliacion_bancaria WHERE id = ?',
+        [id]
+      );
+
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al descartar movimiento' });
     }
-
-    updates.push('updated_at = CURRENT_TIMESTAMP');
-    values.push(id);
-
-    await db.query(
-      `UPDATE conciliacion_bancaria SET ${updates.join(', ')} WHERE id = ?`,
-      values
-    );
-
-    const [rows] = await db.query(
-      'SELECT id, fecha_mov, monto, glosa, referencia, estado, pago_id FROM conciliacion_bancaria WHERE id = ?',
-      [id]
-    );
-
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al descartar movimiento' });
   }
-});
+);
 
 /**
  * @swagger
@@ -850,60 +939,65 @@ router.patch('/:id/descartar', authenticate, authorize('admin', 'superadmin', 'c
  *     tags: [Conciliaciones]
  *     summary: Actualizar estado de una transacción individual
  */
-router.patch('/transaccion/:txId', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
-  try {
-    const { txId } = req.params;
-    const { estado, pago_id, glosa, referencia } = req.body;
+router.patch(
+  '/transaccion/:txId',
+  authenticate,
+  authorize('admin', 'superadmin', 'contador'),
+  async (req, res) => {
+    try {
+      const { txId } = req.params;
+      const { estado, pago_id, glosa, referencia } = req.body;
 
-    const updates = [];
-    const values = [];
+      const updates = [];
+      const values = [];
 
-    if (estado !== undefined) {
-      if (!ESTADOS_CONCILIACION.includes(estado)) {
-        return res.status(400).json({ error: 'Estado inválido' });
+      if (estado !== undefined) {
+        if (!ESTADOS_CONCILIACION.includes(estado)) {
+          return res.status(400).json({ error: 'Estado inválido' });
+        }
+        updates.push('estado = ?');
+        values.push(estado);
       }
-      updates.push('estado = ?');
-      values.push(estado);
+
+      if (pago_id !== undefined) {
+        updates.push('pago_id = ?');
+        values.push(pago_id);
+      }
+
+      if (glosa !== undefined) {
+        updates.push('glosa = ?');
+        values.push(glosa);
+      }
+
+      if (referencia !== undefined) {
+        updates.push('referencia = ?');
+        values.push(referencia);
+      }
+
+      if (!updates.length) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
+      }
+
+      updates.push('updated_at = CURRENT_TIMESTAMP');
+      values.push(txId);
+
+      await db.query(
+        `UPDATE conciliacion_bancaria SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+
+      const [rows] = await db.query(
+        'SELECT id, fecha_mov, monto, glosa, referencia, estado, pago_id FROM conciliacion_bancaria WHERE id = ?',
+        [txId]
+      );
+
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al actualizar transacción' });
     }
-
-    if (pago_id !== undefined) {
-      updates.push('pago_id = ?');
-      values.push(pago_id);
-    }
-
-    if (glosa !== undefined) {
-      updates.push('glosa = ?');
-      values.push(glosa);
-    }
-
-    if (referencia !== undefined) {
-      updates.push('referencia = ?');
-      values.push(referencia);
-    }
-
-    if (!updates.length) {
-      return res.status(400).json({ error: 'No hay campos para actualizar' });
-    }
-
-    updates.push('updated_at = CURRENT_TIMESTAMP');
-    values.push(txId);
-
-    await db.query(
-      `UPDATE conciliacion_bancaria SET ${updates.join(', ')} WHERE id = ?`,
-      values
-    );
-
-    const [rows] = await db.query(
-      'SELECT id, fecha_mov, monto, glosa, referencia, estado, pago_id FROM conciliacion_bancaria WHERE id = ?',
-      [txId]
-    );
-
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al actualizar transacción' });
   }
-});
+);
 
 /**
  * @swagger
@@ -912,32 +1006,37 @@ router.patch('/transaccion/:txId', authenticate, authorize('admin', 'superadmin'
  *     tags: [Conciliaciones]
  *     summary: Actualizar notas de una conciliación
  */
-router.patch('/:id/notas', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { notas } = req.body;
+router.patch(
+  '/:id/notas',
+  authenticate,
+  authorize('admin', 'superadmin', 'contador'),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { notas } = req.body;
 
-    if (notas === undefined) {
-      return res.status(400).json({ error: 'Las notas son requeridas' });
+      if (notas === undefined) {
+        return res.status(400).json({ error: 'Las notas son requeridas' });
+      }
+
+      // Por ahora usamos glosa como campo de notas hasta que se agregue columna notas
+      await db.query(
+        'UPDATE conciliacion_bancaria SET glosa = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [notas, id]
+      );
+
+      const [rows] = await db.query(
+        'SELECT id, glosa as notas FROM conciliacion_bancaria WHERE id = ?',
+        [id]
+      );
+
+      res.json({ id: rows[0].id, notas: rows[0].notas });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al actualizar notas' });
     }
-
-    // Por ahora usamos glosa como campo de notas hasta que se agregue columna notas
-    await db.query(
-      'UPDATE conciliacion_bancaria SET glosa = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [notas, id]
-    );
-
-    const [rows] = await db.query(
-      'SELECT id, glosa as notas FROM conciliacion_bancaria WHERE id = ?',
-      [id]
-    );
-
-    res.json({ id: rows[0].id, notas: rows[0].notas });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al actualizar notas' });
   }
-});
+);
 
 /**
  * @swagger
@@ -952,15 +1051,13 @@ router.get('/bancos/cuentas', authenticate, async (req, res) => {
     const bankAccounts = {
       'banco-chile': [
         { value: '12345678-9', label: 'Cuenta Corriente 12345678-9' },
-        { value: '87654321-0', label: 'Cuenta Corriente 87654321-0' }
+        { value: '87654321-0', label: 'Cuenta Corriente 87654321-0' },
       ],
       'banco-santander': [
         { value: '11223344-5', label: 'Cuenta Corriente 11223344-5' },
-        { value: '99887766-3', label: 'Cuenta Vista 99887766-3' }
+        { value: '99887766-3', label: 'Cuenta Vista 99887766-3' },
       ],
-      'banco-estado': [
-        { value: '55667788-1', label: 'CuentaRUT 55667788-1' }
-      ]
+      'banco-estado': [{ value: '55667788-1', label: 'CuentaRUT 55667788-1' }],
     };
 
     res.json(bankAccounts);
@@ -971,7 +1068,6 @@ router.get('/bancos/cuentas', authenticate, async (req, res) => {
 });
 
 module.exports = router;
-
 
 // =========================================
 // ENDPOINTS DE CONCILIACIONES
@@ -1018,7 +1114,3 @@ module.exports = router;
 
 // // 8. BANCOS
 // GET: /bancos/cuentas
-
-
-
-

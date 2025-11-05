@@ -102,11 +102,16 @@ const { requireCommunity } = require('../middleware/tenancy');
  *       500:
  *         description: Error del servidor
  */
-router.get('/emisiones/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/emisiones/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT
         id AS emision_id,
         periodo,
@@ -120,14 +125,19 @@ router.get('/emisiones/:comunidadId', authenticate, requireCommunity('comunidadI
         comunidad_id = ?
       ORDER BY
         periodo DESC
-    `, [comunidadId]);
+    `,
+        [comunidadId]
+      );
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching emisiones:', error);
-    res.status(500).json({ error: 'Error al obtener emisiones de gastos comunes' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error fetching emisiones:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener emisiones de gastos comunes' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -159,7 +169,8 @@ router.get('/emision/:emisionId/detalles', authenticate, async (req, res) => {
   try {
     const emisionId = Number(req.params.emisionId);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         deg.id AS detalle_emision_gasto_id,
         g.glosa AS glosa_gasto,
@@ -182,7 +193,9 @@ router.get('/emision/:emisionId/detalles', authenticate, async (req, res) => {
         deg.emision_id = ?
       ORDER BY
         cg.nombre, g.fecha
-    `, [emisionId]);
+    `,
+      [emisionId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -225,7 +238,8 @@ router.get('/emision/:emisionId/cuentas', authenticate, async (req, res) => {
   try {
     const emisionId = Number(req.params.emisionId);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         ccu.id AS cuenta_cobro_id,
         u.codigo AS unidad_codigo,
@@ -251,7 +265,9 @@ router.get('/emision/:emisionId/cuentas', authenticate, async (req, res) => {
         ccu.emision_id = ?
       ORDER BY
         u.codigo
-    `, [emisionId]);
+    `,
+      [emisionId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -303,7 +319,8 @@ router.get('/cuenta/:cuentaId/detalles', authenticate, async (req, res) => {
   try {
     const cuentaId = Number(req.params.cuentaId);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         dcu.id AS detalle_cargo_id,
         cg.nombre AS categoria_nombre,
@@ -319,7 +336,9 @@ router.get('/cuenta/:cuentaId/detalles', authenticate, async (req, res) => {
         dcu.cuenta_cobro_unidad_id = ?
       ORDER BY
         dcu.origen, cg.nombre
-    `, [cuentaId]);
+    `,
+      [cuentaId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -378,7 +397,8 @@ router.get('/emision/:emisionId/pagos', authenticate, async (req, res) => {
   try {
     const emisionId = Number(req.params.emisionId);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         p.id AS pago_id,
         u.codigo AS unidad_codigo,
@@ -403,7 +423,9 @@ router.get('/emision/:emisionId/pagos', authenticate, async (req, res) => {
         p.id, u.codigo, cb.estado
       ORDER BY
         p.fecha DESC
-    `, [emisionId]);
+    `,
+      [emisionId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -469,7 +491,8 @@ router.get('/emision/:emisionId/resumen', authenticate, async (req, res) => {
   try {
     const emisionId = Number(req.params.emisionId);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         e.id,
         e.periodo AS period,
@@ -493,7 +516,9 @@ router.get('/emision/:emisionId/resumen', authenticate, async (req, res) => {
       GROUP BY
         e.id, c.razon_social
       LIMIT 1
-    `, [emisionId]);
+    `,
+      [emisionId]
+    );
 
     if (!rows.length) {
       return res.status(404).json({ error: 'Emisión no encontrada' });
@@ -541,7 +566,8 @@ router.get('/emision/:emisionId/conceptos', authenticate, async (req, res) => {
   try {
     const emisionId = Number(req.params.emisionId);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         cg.nombre AS conceptName,
         COALESCE(SUM(deg.monto), 0.00) AS totalAmount
@@ -555,7 +581,9 @@ router.get('/emision/:emisionId/conceptos', authenticate, async (req, res) => {
         cg.nombre
       ORDER BY
         totalAmount DESC
-    `, [emisionId]);
+    `,
+      [emisionId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -613,7 +641,8 @@ router.get('/emision/:emisionId/unidades', authenticate, async (req, res) => {
   try {
     const emisionId = Number(req.params.emisionId);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         ccu.id AS id,
         u.codigo AS unitNumber,
@@ -638,7 +667,9 @@ router.get('/emision/:emisionId/unidades', authenticate, async (req, res) => {
         ccu.emision_id = ?
       ORDER BY
         u.codigo
-    `, [emisionId]);
+    `,
+      [emisionId]
+    );
 
     res.json(rows);
   } catch (error) {
@@ -686,11 +717,15 @@ router.get('/emision/:emisionId/unidades', authenticate, async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.get('/emision/:emisionId/conceptos-detallados', authenticate, async (req, res) => {
-  try {
-    const emisionId = Number(req.params.emisionId);
+router.get(
+  '/emision/:emisionId/conceptos-detallados',
+  authenticate,
+  async (req, res) => {
+    try {
+      const emisionId = Number(req.params.emisionId);
 
-    const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
       SELECT
         dcu.id AS conceptId,
         cg.nombre AS conceptName,
@@ -721,17 +756,18 @@ router.get('/emision/:emisionId/conceptos-detallados', authenticate, async (req,
         ccu.emision_id = ?
       ORDER BY
         ccu_id, conceptName
-    `, [emisionId]);
+    `,
+        [emisionId]
+      );
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching conceptos detallados:', error);
-    res.status(500).json({ error: 'Error al obtener conceptos detallados de la emisión' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error fetching conceptos detallados:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener conceptos detallados de la emisión' });
+    }
   }
-});
+);
 
 module.exports = router;
-
-
-
-

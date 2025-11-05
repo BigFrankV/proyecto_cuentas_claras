@@ -12,9 +12,15 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
+import {
+  getGastoById,
+  updateGasto,
+  getCategorias,
+  getCentrosCosto,
+  getProveedores,
+} from '@/lib/gastosService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { usePermissions } from '@/lib/usePermissions';
-import { getGastoById, updateGasto, getCategorias, getCentrosCosto, getProveedores } from '@/lib/gastosService';
 
 interface ExpenseFormData {
   id: number;
@@ -55,18 +61,6 @@ export default function EditarGasto() {
   const { isSuperUser, currentRole } = usePermissions();
   const comunidadId = currentComunidadId;
 
-  // Verificar permisos: Solo superadmin o admin puede editar
-  const canEdit = isSuperUser || currentRole === 'admin';
-  if (!canEdit) {
-    return (
-      <ProtectedRoute>
-        <Layout>
-          <Alert variant='danger'>No tienes permisos para editar gastos.</Alert>
-        </Layout>
-      </ProtectedRoute>
-    );
-  }
-
   const [formData, setFormData] = useState<ExpenseFormData>({
     id: 0,
     description: '',
@@ -88,7 +82,8 @@ export default function EditarGasto() {
     existingAttachments: [],
   });
 
-  const [initialFormData, setInitialFormData] = useState<ExpenseFormData | null>(null);
+  const [initialFormData, setInitialFormData] =
+    useState<ExpenseFormData | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -99,6 +94,24 @@ export default function EditarGasto() {
   const [categories, setCategories] = useState([]);
   const [providers, setProviders] = useState([]);
   const [costCenters, setCostCenters] = useState([]);
+
+  useEffect(() => {
+    if (id) {
+      getGastoById(Number(id))
+        .then(data => {
+          const mappedData = mapToFormData(data);
+          setFormData(mappedData);
+          setInitialFormData(mappedData); // Guarda iniciales
+          setInitialLoading(false);
+        })
+        .catch(() => setInitialLoading(false));
+
+      // Cargar listas con comunidadId opcional
+      getCategorias(comunidadId || undefined).then(setCategories);
+      getCentrosCosto(comunidadId || undefined).then(setCostCenters);
+      getProveedores(comunidadId || undefined).then(setProviders);
+    }
+  }, [id, comunidadId]); // Mantener dependencias
 
   const documentTypes = [
     { value: 'factura', label: 'Factura' },
@@ -113,21 +126,17 @@ export default function EditarGasto() {
     { value: 'otro', label: 'Otro' },
   ];
 
-  useEffect(() => {
-    if (id) {
-      getGastoById(Number(id)).then(data => {
-        const mappedData = mapToFormData(data);
-        setFormData(mappedData);
-        setInitialFormData(mappedData); // Guarda iniciales
-        setInitialLoading(false);
-      }).catch(() => setInitialLoading(false));
-
-      // Cargar listas con comunidadId opcional
-      getCategorias(comunidadId || undefined).then(setCategories);
-      getCentrosCosto(comunidadId || undefined).then(setCostCenters);
-      getProveedores(comunidadId || undefined).then(setProviders);
-    }
-  }, [id, comunidadId]);  // Mantener dependencias
+  // Verificar permisos: Solo superadmin o admin puede editar
+  const canEdit = isSuperUser || currentRole === 'admin';
+  if (!canEdit) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <Alert variant='danger'>No tienes permisos para editar gastos.</Alert>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   const mapToFormData = (gasto: any): ExpenseFormData => ({
     id: gasto.id,
@@ -147,33 +156,65 @@ export default function EditarGasto() {
     priority: gasto.priority || 'medium',
     requiredApprovals: gasto.required_approvals || 1,
     attachments: [],
-    existingAttachments: gasto.attachments?.map((a: any) => ({
-      id: a.id,
-      name: a.name,
-      type: a.type,
-      size: a.size,
-      url: a.url,
-      uploadedAt: a.uploadedAt,
-    })) || [],
+    existingAttachments:
+      gasto.attachments?.map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        type: a.type,
+        size: a.size,
+        url: a.url,
+        uploadedAt: a.uploadedAt,
+      })) || [],
   });
 
-  const mapFormDataToPayload = (data: ExpenseFormData, initial: ExpenseFormData | null) => {
+  const mapFormDataToPayload = (
+    data: ExpenseFormData,
+    initial: ExpenseFormData | null,
+  ) => {
     const payload: any = {};
 
     // Compara y agrega solo si cambió
-    if (data.category !== initial?.category) payload.categoria_id = data.category;
-    if (data.date !== initial?.date) payload.fecha = data.date;
-    if (data.amount !== initial?.amount) payload.monto = parseFloat(data.amount.replace(/\./g, '').replace(',', '.'));
-    if (data.description !== initial?.description) payload.glosa = data.description;
-    if (data.costCenter !== initial?.costCenter) payload.centro_costo_id = data.costCenter || undefined;
-    if (data.documentType !== initial?.documentType) payload.documento_tipo = data.documentType;
-    if (data.documentNumber !== initial?.documentNumber) payload.documento_numero = data.documentNumber;
-    if (data.isRecurring !== initial?.isRecurring) payload.extraordinario = data.isRecurring;
-    if (data.recurringPeriod !== initial?.recurringPeriod) payload.recurring_period = data.recurringPeriod;
-    if (JSON.stringify(data.tags) !== JSON.stringify(initial?.tags)) payload.tags = data.tags;
-    if (data.observations !== initial?.observations) payload.observations = data.observations;
-    if (data.priority !== initial?.priority) payload.priority = data.priority;
-    if (data.requiredApprovals !== initial?.requiredApprovals) payload.required_approvals = data.requiredApprovals;
+    if (data.category !== initial?.category) {
+      payload.categoria_id = data.category;
+    }
+    if (data.date !== initial?.date) {
+      payload.fecha = data.date;
+    }
+    if (data.amount !== initial?.amount) {
+      payload.monto = parseFloat(
+        data.amount.replace(/\./g, '').replace(',', '.'),
+      );
+    }
+    if (data.description !== initial?.description) {
+      payload.glosa = data.description;
+    }
+    if (data.costCenter !== initial?.costCenter) {
+      payload.centro_costo_id = data.costCenter || undefined;
+    }
+    if (data.documentType !== initial?.documentType) {
+      payload.documento_tipo = data.documentType;
+    }
+    if (data.documentNumber !== initial?.documentNumber) {
+      payload.documento_numero = data.documentNumber;
+    }
+    if (data.isRecurring !== initial?.isRecurring) {
+      payload.extraordinario = data.isRecurring;
+    }
+    if (data.recurringPeriod !== initial?.recurringPeriod) {
+      payload.recurring_period = data.recurringPeriod;
+    }
+    if (JSON.stringify(data.tags) !== JSON.stringify(initial?.tags)) {
+      payload.tags = data.tags;
+    }
+    if (data.observations !== initial?.observations) {
+      payload.observations = data.observations;
+    }
+    if (data.priority !== initial?.priority) {
+      payload.priority = data.priority;
+    }
+    if (data.requiredApprovals !== initial?.requiredApprovals) {
+      payload.required_approvals = data.requiredApprovals;
+    }
 
     return payload;
   };
@@ -283,15 +324,15 @@ export default function EditarGasto() {
   };
 
   const validateForm = (): boolean => {
-
-
     setErrors({});
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
     setLoading(true);
     try {
       const payload = mapFormDataToPayload(formData, initialFormData);
@@ -303,6 +344,7 @@ export default function EditarGasto() {
       await updateGasto(Number(id), payload);
       router.push(`/gastos/${id}`);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error(err);
       setErrors({ general: 'Error al actualizar gasto' });
     } finally {
@@ -381,7 +423,7 @@ export default function EditarGasto() {
             <Alert variant='info' className='mb-0'>
               <span className='material-icons me-2'>info</span>
               Estás editando un gasto existente. Los cambios se guardarán cuando
-              presiones "Actualizar Gasto".
+              presiones &quot;Actualizar Gasto&quot;.
             </Alert>
           </div>
 
@@ -449,7 +491,12 @@ export default function EditarGasto() {
                           <Form.Label>Proveedor</Form.Label>
                           <Form.Select
                             value={formData.provider}
-                            onChange={e => handleInputChange('provider', parseInt(e.target.value))}
+                            onChange={e =>
+                              handleInputChange(
+                                'provider',
+                                parseInt(e.target.value),
+                              )
+                            }
                           >
                             <option value={0}>Selecciona un proveedor</option>
                             {providers.map(prov => (
@@ -665,6 +712,15 @@ export default function EditarGasto() {
                       onDragOver={handleDrag}
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          fileInputRef.current?.click();
+                        }
+                      }}
+                      role='button'
+                      tabIndex={0}
+                      aria-label='Haz clic o arrastra archivos para subir'
                     >
                       <div className='file-upload-content'>
                         <span className='material-icons file-upload-icon'>

@@ -8,8 +8,8 @@
 ## ❌ Error Reportado
 
 ```
-#1064 - You have an error in your SQL syntax; 
-check the manual that corresponds to your MySQL server version 
+#1064 - You have an error in your SQL syntax;
+check the manual that corresponds to your MySQL server version
 for the right syntax to use near '--------------------------------------------------------
 
 CREATE TABLE `emisio' at line 1
@@ -21,7 +21,8 @@ El placeholder para la vista `emision_gasto_comun` tenía una definición de tab
 
 ### Ubicación del Problema
 
-**Línea ~279:** 
+**Línea ~279:**
+
 ```sql
 CREATE TABLE `emision_gasto_comun` (
 `comunidad_id` bigint
@@ -36,8 +37,9 @@ CREATE TABLE `emision_gasto_comun` (
 ```
 
 **Línea ~980:** Vista real
+
 ```sql
-CREATE VIEW `emision_gasto_comun` AS 
+CREATE VIEW `emision_gasto_comun` AS
 SELECT ... FROM `emision_gastos_comunes`;
 ```
 
@@ -53,19 +55,20 @@ Se reemplazó el placeholder de tabla por un comentario:
 
 ## 📊 Resumen de Todas las Correcciones en ER.sql
 
-| # | Línea | Vista/Tabla | Estado | Acción |
-|---|-------|-------------|--------|--------|
-| 1 | ~498 | `ticket` | ❌ Vacía | ✅ Eliminada (corregida anteriormente) |
-| 2 | ~279 | `emision_gasto_comun` | ❌ Placeholder | ✅ Eliminada (corregida ahora) |
-| 3 | ~75 | `bitacora_conserjeria` | ✅ OK | Sin cambios (tiene columnas) |
-| 4 | ~86 | `cargo_financiero_unidad` | ✅ OK | Sin cambios (tiene columnas) |
-| 5 | ~184 | `detalle_cargo_unidad` | ✅ OK | Sin cambios (tiene columnas) |
-| 6 | ~522 | `titularidad_unidad` | ✅ OK | Sin cambios (tiene columnas) |
-| 7 | ~593 | `usuario_miembro_comunidad` | ✅ OK | Sin cambios (tiene columnas) |
+| #   | Línea | Vista/Tabla                 | Estado         | Acción                                 |
+| --- | ----- | --------------------------- | -------------- | -------------------------------------- |
+| 1   | ~498  | `ticket`                    | ❌ Vacía       | ✅ Eliminada (corregida anteriormente) |
+| 2   | ~279  | `emision_gasto_comun`       | ❌ Placeholder | ✅ Eliminada (corregida ahora)         |
+| 3   | ~75   | `bitacora_conserjeria`      | ✅ OK          | Sin cambios (tiene columnas)           |
+| 4   | ~86   | `cargo_financiero_unidad`   | ✅ OK          | Sin cambios (tiene columnas)           |
+| 5   | ~184  | `detalle_cargo_unidad`      | ✅ OK          | Sin cambios (tiene columnas)           |
+| 6   | ~522  | `titularidad_unidad`        | ✅ OK          | Sin cambios (tiene columnas)           |
+| 7   | ~593  | `usuario_miembro_comunidad` | ✅ OK          | Sin cambios (tiene columnas)           |
 
 ## 🎯 Estado Final
 
 ### ✅ Archivo Corregido
+
 - **Total de errores encontrados:** 2
 - **Total de errores corregidos:** 2
 - **Estado:** ✅ LISTO PARA IMPORTAR
@@ -100,34 +103,34 @@ Después de importar, verifica que todo esté correcto:
 
 ```sql
 -- 1. Verificar tablas
-SELECT COUNT(*) as 'Total Tablas' 
-FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_SCHEMA = 'cuentasclaras' 
+SELECT COUNT(*) as 'Total Tablas'
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'cuentasclaras'
 AND TABLE_TYPE = 'BASE TABLE';
 
 -- 2. Verificar vistas
-SELECT COUNT(*) as 'Total Vistas' 
-FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_SCHEMA = 'cuentasclaras' 
+SELECT COUNT(*) as 'Total Vistas'
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'cuentasclaras'
 AND TABLE_TYPE = 'VIEW';
 
 -- 3. Listar todas las vistas
-SELECT TABLE_NAME as 'Vista' 
-FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_SCHEMA = 'cuentasclaras' 
+SELECT TABLE_NAME as 'Vista'
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'cuentasclaras'
 AND TABLE_TYPE = 'VIEW'
 ORDER BY TABLE_NAME;
 ```
 
 ## 🔄 Comparación con cuentasclaras.sql
 
-| Aspecto | cuentasclaras.sql | ER.sql |
-|---------|-------------------|--------|
-| Errores encontrados | 2 | 2 |
-| Errores corregidos | ✅ 2 | ✅ 2 |
-| Contiene datos | ✅ Sí | ❌ No |
-| Propósito | Esquema completo + datos | Solo esquema (ER) |
-| Estado final | ✅ Corregido | ✅ Corregido |
+| Aspecto             | cuentasclaras.sql        | ER.sql            |
+| ------------------- | ------------------------ | ----------------- |
+| Errores encontrados | 2                        | 2                 |
+| Errores corregidos  | ✅ 2                     | ✅ 2              |
+| Contiene datos      | ✅ Sí                    | ❌ No             |
+| Propósito           | Esquema completo + datos | Solo esquema (ER) |
+| Estado final        | ✅ Corregido             | ✅ Corregido      |
 
 ## 💡 Lecciones Aprendidas
 
@@ -141,15 +144,17 @@ ORDER BY TABLE_NAME;
 ### ¿Cómo evitarlo en el futuro?
 
 1. **Al exportar con mysqldump:**
+
    ```bash
    # Opción 1: Sin placeholders
    mysqldump --skip-opt --no-create-info --no-data [db] > schema.sql
-   
+
    # Opción 2: Solo vistas al final
    mysqldump --no-create-info --skip-triggers [db] > views.sql
    ```
 
 2. **Usar scripts de creación de vistas separados:**
+
    - Mantener `crear_vistas_simple.sql` actualizado
    - Ejecutar después de importar el esquema base
 

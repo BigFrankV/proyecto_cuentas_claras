@@ -43,20 +43,20 @@ router.get('/actual', authenticate, async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No hay valores UTM disponibles'
+        message: 'No hay valores UTM disponibles',
       });
     }
 
     res.json({
       success: true,
-      data: rows[0]
+      data: rows[0],
     });
   } catch (error) {
     logger.error('Error al obtener valor UTM actual:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener el valor UTM actual',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -79,18 +79,19 @@ router.get('/periodo/:mes/:ano', authenticate, async (req, res) => {
     if (mesNum < 1 || mesNum > 12) {
       return res.status(400).json({
         success: false,
-        message: 'El mes debe estar entre 1 y 12'
+        message: 'El mes debe estar entre 1 y 12',
       });
     }
 
     if (anoNum < 2000 || anoNum > 2100) {
       return res.status(400).json({
         success: false,
-        message: 'Año inválido'
+        message: 'Año inválido',
       });
     }
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         fecha,
         valor,
@@ -101,25 +102,27 @@ router.get('/periodo/:mes/:ano', authenticate, async (req, res) => {
       WHERE YEAR(fecha) = ? AND MONTH(fecha) = ?
       ORDER BY fecha DESC
       LIMIT 1
-    `, [anoNum, mesNum]);
+    `,
+      [anoNum, mesNum]
+    );
 
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: `No hay valores UTM disponibles para ${mes}/${ano}`
+        message: `No hay valores UTM disponibles para ${mes}/${ano}`,
       });
     }
 
     res.json({
       success: true,
-      data: rows[0]
+      data: rows[0],
     });
   } catch (error) {
     logger.error('Error al obtener valor UTM por período:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener el valor UTM',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -134,7 +137,8 @@ router.get('/rango', authenticate, async (req, res) => {
   try {
     const meses = Math.min(parseInt(req.query.meses) || 12, 60);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         fecha,
         valor,
@@ -144,20 +148,22 @@ router.get('/rango', authenticate, async (req, res) => {
       FROM utm_valor
       WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
       ORDER BY fecha DESC
-    `, [meses]);
+    `,
+      [meses]
+    );
 
     res.json({
       success: true,
       cantidad: rows.length,
       meses_solicitados: meses,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     logger.error('Error al obtener rango de valores UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener el rango de valores UTM',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -180,11 +186,12 @@ router.get('/historico/:ano', authenticate, async (req, res) => {
     if (anoNum < 2000 || anoNum > 2100) {
       return res.status(400).json({
         success: false,
-        message: 'Año inválido'
+        message: 'Año inválido',
       });
     }
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         fecha,
         valor,
@@ -194,20 +201,22 @@ router.get('/historico/:ano', authenticate, async (req, res) => {
       FROM utm_valor
       WHERE YEAR(fecha) = ?
       ORDER BY fecha ASC
-    `, [anoNum]);
+    `,
+      [anoNum]
+    );
 
     res.json({
       success: true,
       ano: anoNum,
       cantidad: rows.length,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     logger.error('Error al obtener histórico anual UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener el histórico anual',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -223,7 +232,8 @@ router.get('/resumen-anual/:ano', authenticate, async (req, res) => {
     const { ano } = req.params;
     const anoNum = parseInt(ano);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         YEAR(fecha) as ano,
         COUNT(*) as total_registros,
@@ -238,25 +248,27 @@ router.get('/resumen-anual/:ano', authenticate, async (req, res) => {
       FROM utm_valor
       WHERE YEAR(fecha) = ?
       GROUP BY YEAR(fecha)
-    `, [anoNum]);
+    `,
+      [anoNum]
+    );
 
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: `No hay datos disponibles para el año ${ano}`
+        message: `No hay datos disponibles para el año ${ano}`,
       });
     }
 
     res.json({
       success: true,
-      data: rows[0]
+      data: rows[0],
     });
   } catch (error) {
     logger.error('Error al obtener resumen anual UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener el resumen anual',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -288,14 +300,14 @@ router.get('/resumen-anos', authenticate, async (req, res) => {
     res.json({
       success: true,
       cantidad: rows.length,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     logger.error('Error al obtener resumen de años UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener el resumen de años',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -314,7 +326,8 @@ router.get('/variacion-mensual', authenticate, async (req, res) => {
   try {
     const meses = Math.min(parseInt(req.query.meses) || 12, 24);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         t1.fecha,
         t1.valor as valor_actual,
@@ -353,19 +366,21 @@ router.get('/variacion-mensual', authenticate, async (req, res) => {
       ) t2 ON DATE_FORMAT(t1.fecha, '%Y-%m') = DATE_FORMAT(t2.fecha_siguiente, '%Y-%m')
       ORDER BY t1.fecha DESC
       LIMIT ?
-    `, [meses + 1, meses]);
+    `,
+      [meses + 1, meses]
+    );
 
     res.json({
       success: true,
       cantidad: rows.length,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     logger.error('Error al obtener variación mensual UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener la variación mensual',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -382,7 +397,8 @@ router.get('/variacion-interanual/:ano', authenticate, async (req, res) => {
     const anoNum = parseInt(ano);
     const anoAnterior = anoNum - 1;
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         t1.fecha as fecha_actual,
         t1.valor as valor_actual,
@@ -415,21 +431,23 @@ router.get('/variacion-interanual/:ano', authenticate, async (req, res) => {
         WHERE YEAR(fecha) = ?
       ) t2 ON t1.mes = t2.mes
       ORDER BY t1.fecha ASC
-    `, [anoNum, anoAnterior]);
+    `,
+      [anoNum, anoAnterior]
+    );
 
     res.json({
       success: true,
       ano_actual: anoNum,
       ano_comparacion: anoAnterior,
       cantidad: rows.length,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     logger.error('Error al obtener variación interanual UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener la variación interanual',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -448,7 +466,8 @@ router.get('/trimestral', authenticate, async (req, res) => {
   try {
     const meses = Math.min(parseInt(req.query.meses) || 24, 60);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         ano,
         trimestre,
@@ -473,19 +492,21 @@ router.get('/trimestral', authenticate, async (req, res) => {
         GROUP BY YEAR(fecha), QUARTER(fecha)
       ) as trimestral
       ORDER BY ano DESC, trimestre DESC
-    `, [meses]);
+    `,
+      [meses]
+    );
 
     res.json({
       success: true,
       cantidad: rows.length,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     logger.error('Error al obtener análisis trimestral UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener el análisis trimestral',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -499,9 +520,10 @@ router.get('/trimestral', authenticate, async (req, res) => {
 router.get('/semestral', authenticate, async (req, res) => {
   try {
     const currentYear = new Date().getFullYear();
-    const desde = parseInt(req.query.desde) || (currentYear - 3);
+    const desde = parseInt(req.query.desde) || currentYear - 3;
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         ano,
         semestre_num,
@@ -524,20 +546,22 @@ router.get('/semestral', authenticate, async (req, res) => {
         GROUP BY YEAR(fecha), IF(MONTH(fecha) <= 6, 1, 2)
       ) as semestral
       ORDER BY ano DESC, semestre_num DESC
-    `, [desde]);
+    `,
+      [desde]
+    );
 
     res.json({
       success: true,
       desde_ano: desde,
       cantidad: rows.length,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     logger.error('Error al obtener análisis semestral UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener el análisis semestral',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -555,27 +579,36 @@ router.get('/semestral', authenticate, async (req, res) => {
 router.get('/comparacion-anos', authenticate, async (req, res) => {
   try {
     const { anos } = req.query;
-    
+
     // Si no se especifican años, usar los últimos 5
     let anosArray;
     if (anos) {
-      anosArray = anos.split(',').map(a => parseInt(a.trim())).filter(a => !isNaN(a));
+      anosArray = anos
+        .split(',')
+        .map((a) => parseInt(a.trim()))
+        .filter((a) => !isNaN(a));
     } else {
       const currentYear = new Date().getFullYear();
-      anosArray = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3, currentYear - 4];
+      anosArray = [
+        currentYear,
+        currentYear - 1,
+        currentYear - 2,
+        currentYear - 3,
+        currentYear - 4,
+      ];
     }
 
     if (anosArray.length === 0 || anosArray.length > 10) {
       return res.status(400).json({
         success: false,
-        message: 'Debe especificar entre 1 y 10 años para comparar'
+        message: 'Debe especificar entre 1 y 10 años para comparar',
       });
     }
 
     // Construir consulta dinámica con CASE para cada año
-    const caseClauses = anosArray.map(ano => 
-      `MAX(CASE WHEN ano = ${ano} THEN valor END) as '${ano}'`
-    ).join(',\n        ');
+    const caseClauses = anosArray
+      .map((ano) => `MAX(CASE WHEN ano = ${ano} THEN valor END) as '${ano}'`)
+      .join(',\n        ');
 
     const query = `
       SELECT 
@@ -602,14 +635,14 @@ router.get('/comparacion-anos', authenticate, async (req, res) => {
       success: true,
       anos_comparados: anosArray,
       cantidad: rows.length,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     logger.error('Error al comparar años UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al comparar años',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -629,7 +662,8 @@ router.get('/top-valores', authenticate, async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 10, 50);
 
     // Valores más altos
-    const [mayores] = await db.query(`
+    const [mayores] = await db.query(
+      `
       SELECT 
         fecha,
         valor,
@@ -639,10 +673,13 @@ router.get('/top-valores', authenticate, async (req, res) => {
       FROM utm_valor
       ORDER BY valor DESC
       LIMIT ?
-    `, [limit]);
+    `,
+      [limit]
+    );
 
     // Valores más bajos
-    const [menores] = await db.query(`
+    const [menores] = await db.query(
+      `
       SELECT 
         fecha,
         valor,
@@ -652,20 +689,22 @@ router.get('/top-valores', authenticate, async (req, res) => {
       FROM utm_valor
       ORDER BY valor ASC
       LIMIT ?
-    `, [limit]);
+    `,
+      [limit]
+    );
 
     res.json({
       success: true,
       limit,
       mayores: mayores,
-      menores: menores
+      menores: menores,
     });
   } catch (error) {
     logger.error('Error al obtener top valores UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener los valores extremos',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -694,14 +733,14 @@ router.get('/estadisticas', authenticate, async (req, res) => {
     res.json({
       success: true,
       cantidad: rows.length,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     logger.error('Error al obtener estadísticas UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener estadísticas',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -720,7 +759,8 @@ router.get('/dashboard', authenticate, async (req, res) => {
   try {
     const meses = Math.min(parseInt(req.query.meses) || 12, 24);
 
-    const [kpis] = await db.query(`
+    const [kpis] = await db.query(
+      `
       SELECT 
         COUNT(*) as meses_registrados,
         MIN(valor) as valor_minimo,
@@ -734,7 +774,9 @@ router.get('/dashboard', authenticate, async (req, res) => {
         DATE_FORMAT(MAX(fecha), '%M %Y') as periodo_hasta
       FROM utm_valor
       WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
-    `, [meses]);
+    `,
+      [meses]
+    );
 
     // Últimos 5 valores con variación
     const [ultimos] = await db.query(`
@@ -761,14 +803,14 @@ router.get('/dashboard', authenticate, async (req, res) => {
     res.json({
       success: true,
       kpis: kpis[0],
-      ultimos_valores: ultimos
+      ultimos_valores: ultimos,
     });
   } catch (error) {
     logger.error('Error al obtener dashboard UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener datos del dashboard',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -783,7 +825,8 @@ router.get('/grafico', authenticate, async (req, res) => {
   try {
     const meses = Math.min(parseInt(req.query.meses) || 24, 60);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         fecha,
         valor,
@@ -794,19 +837,21 @@ router.get('/grafico', authenticate, async (req, res) => {
       FROM utm_valor
       WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
       ORDER BY fecha ASC
-    `, [meses]);
+    `,
+      [meses]
+    );
 
     res.json({
       success: true,
       cantidad: rows.length,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     logger.error('Error al obtener datos para gráfico UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener datos para el gráfico',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -843,20 +888,20 @@ router.get('/conversion/tabla', authenticate, async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No hay valores UTM disponibles'
+        message: 'No hay valores UTM disponibles',
       });
     }
 
     res.json({
       success: true,
-      data: rows[0]
+      data: rows[0],
     });
   } catch (error) {
     logger.error('Error al obtener tabla de conversión UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener la tabla de conversión',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -874,13 +919,14 @@ router.get('/conversion/pesos-a-utm', authenticate, async (req, res) => {
     if (!pesos || isNaN(pesos)) {
       return res.status(400).json({
         success: false,
-        message: 'Debe especificar un monto válido en pesos'
+        message: 'Debe especificar un monto válido en pesos',
       });
     }
 
     const montoPesos = parseFloat(pesos);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         ? as monto_pesos,
         valor as valor_utm,
@@ -890,25 +936,27 @@ router.get('/conversion/pesos-a-utm', authenticate, async (req, res) => {
       FROM utm_valor
       ORDER BY fecha DESC
       LIMIT 1
-    `, [montoPesos, montoPesos]);
+    `,
+      [montoPesos, montoPesos]
+    );
 
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No hay valores UTM disponibles para realizar la conversión'
+        message: 'No hay valores UTM disponibles para realizar la conversión',
       });
     }
 
     res.json({
       success: true,
-      data: rows[0]
+      data: rows[0],
     });
   } catch (error) {
     logger.error('Error al convertir pesos a UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al realizar la conversión',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -926,13 +974,14 @@ router.get('/conversion/utm-a-pesos', authenticate, async (req, res) => {
     if (!utm || isNaN(utm)) {
       return res.status(400).json({
         success: false,
-        message: 'Debe especificar una cantidad válida de UTM'
+        message: 'Debe especificar una cantidad válida de UTM',
       });
     }
 
     const cantidadUtm = parseFloat(utm);
 
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT 
         ? as cantidad_utm,
         valor as valor_utm,
@@ -942,25 +991,27 @@ router.get('/conversion/utm-a-pesos', authenticate, async (req, res) => {
       FROM utm_valor
       ORDER BY fecha DESC
       LIMIT 1
-    `, [cantidadUtm, cantidadUtm]);
+    `,
+      [cantidadUtm, cantidadUtm]
+    );
 
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No hay valores UTM disponibles para realizar la conversión'
+        message: 'No hay valores UTM disponibles para realizar la conversión',
       });
     }
 
     res.json({
       success: true,
-      data: rows[0]
+      data: rows[0],
     });
   } catch (error) {
     logger.error('Error al convertir UTM a pesos:', error);
     res.status(500).json({
       success: false,
       message: 'Error al realizar la conversión',
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -997,20 +1048,19 @@ router.get('/disponibilidad', authenticate, async (req, res) => {
     res.json({
       success: true,
       cantidad: rows.length,
-      data: rows
+      data: rows,
     });
   } catch (error) {
     logger.error('Error al obtener disponibilidad UTM:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener disponibilidad de datos',
-      error: error.message
+      error: error.message,
     });
   }
 });
 
 module.exports = router;
-
 
 // =========================================
 // ENDPOINTS DE VALOR UTM
@@ -1052,7 +1102,3 @@ module.exports = router;
 
 // // 9. DISPONIBILIDAD DE DATOS
 // GET: /valor-utm/disponibilidad
-
-
-
-

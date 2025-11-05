@@ -1,10 +1,16 @@
-import apiClient from './api';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Proveedor, ProveedoresResponse } from '@/types/proveedores';
 
-export async function listProveedores(comunidadId?: number | null, params: Record<string, any> = {}): Promise<ProveedoresResponse> {
-  const endpoint = typeof comunidadId === 'number'
-    ? `/proveedores/comunidad/${comunidadId}`
-    : `/proveedores`; // global (superadmin / filtrado por middleware en backend)
+import apiClient from './api';
+
+export async function listProveedores(
+  comunidadId?: number | null,
+  params: Record<string, any> = {},
+): Promise<ProveedoresResponse> {
+  const endpoint =
+    typeof comunidadId === 'number'
+      ? `/proveedores/comunidad/${comunidadId}`
+      : '/proveedores'; // global (superadmin / filtrado por middleware en backend)
 
   const resp = await apiClient.get(endpoint, { params });
 
@@ -26,7 +32,9 @@ export async function listProveedores(comunidadId?: number | null, params: Recor
   } else {
     // fallback: try resp.data.rows or resp.data.items
     data = raw.rows ?? raw.items ?? [];
-    if (raw.pagination) pagination = raw.pagination;
+    if (raw.pagination) {
+      pagination = raw.pagination;
+    }
   }
 
   return { data, pagination };
@@ -41,8 +49,14 @@ export async function deleteProveedor(id: number): Promise<void> {
   await apiClient.delete(`/proveedores/${id}`);
 }
 
-export async function createProveedor(comunidadId: number, payload: Partial<Proveedor>) {
-  const resp = await apiClient.post(`/proveedores/comunidad/${comunidadId}`, payload);
+export async function createProveedor(
+  comunidadId: number,
+  payload: Partial<Proveedor>,
+) {
+  const resp = await apiClient.post(
+    `/proveedores/comunidad/${comunidadId}`,
+    payload,
+  );
   return resp.data;
 }
 

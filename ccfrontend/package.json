@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Frontend para Cuentas Claras - Sistema de administración de comunidades",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev -p 5173",
     "build": "next build",
@@ -11,6 +12,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "type-check": "tsc --noEmit",
+    "type-check:all": "tsc --noEmit --pretty false | findstr /C:\"error TS\"",
     "test": "jest --verbose",
     "test:watch": "jest --watch --verbose",
     "test:coverage": "jest --coverage --verbose",

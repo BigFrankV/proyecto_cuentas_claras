@@ -14,18 +14,21 @@ Este documento describe la implementación del sistema de pasarelas de pago inte
 ## 📋 Pasarelas Soportadas
 
 ### 1. Webpay Plus (Transbank) - ⭐ Principal
+
 - **Tipo**: Tarjetas de crédito y débito
 - **Tiempo de procesamiento**: Inmediato
 - **Uso recomendado**: Pasarela principal para Chile
 - **Documentación**: [Transbank Developers](https://www.transbankdevelopers.cl/)
 
 ### 2. Khipu
+
 - **Tipo**: Transferencias bancarias
 - **Tiempo de procesamiento**: 1-2 días hábiles
 - **Uso recomendado**: Alternativa para transferencias
 - **Documentación**: [Khipu API](https://khipu.com/page/api-doc)
 
 ### 3. MercadoPago
+
 - **Tipo**: Múltiples métodos de pago
 - **Tiempo de procesamiento**: Inmediato
 - **Uso recomendado**: Alternativa con más opciones
@@ -47,22 +50,26 @@ chmod +x install-payment-gateways.sh
 ### Opción 2: Instalación Manual
 
 1. **Instalar dependencias NPM**:
+
 ```bash
 npm install transbank-sdk axios node-cron
 ```
 
 2. **Ejecutar migración de base de datos**:
+
 ```bash
 mysql -u[usuario] -p[password] [database] < migrations/add_payment_gateways.sql
 ```
 
 3. **Configurar variables de entorno**:
+
 ```bash
 cp .env.payment.example .env
 # Editar .env con sus credenciales
 ```
 
 4. **Agregar rutas al app.js**:
+
 ```javascript
 app.use('/api/gateway', require('./routes/paymentGateway'));
 ```
@@ -112,7 +119,7 @@ GET    /api/gateway/community/:id/transactions  # Listar transacciones de comuni
 
 ```
 POST   /api/gateway/webhook/webpay              # Webhook Webpay
-POST   /api/gateway/webhook/khipu               # Webhook Khipu  
+POST   /api/gateway/webhook/khipu               # Webhook Khipu
 POST   /api/gateway/webhook/mercadopago         # Webhook MercadoPago
 ```
 
@@ -129,7 +136,7 @@ import PaymentComponent from '@/components/PaymentComponent';
   description="Pago de gastos comunes"
   onSuccess={(transactionId) => console.log('Pago exitoso:', transactionId)}
   onError={(error) => console.error('Error:', error)}
-/>
+/>;
 ```
 
 ### Ejemplo de Implementación
@@ -140,15 +147,15 @@ const response = await fetch('/api/gateway/create-payment', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
+    Authorization: `Bearer ${token}`,
   },
   body: JSON.stringify({
     communityId: 1,
     amount: 50000,
     gateway: 'webpay',
     description: 'Pago de gastos comunes',
-    payerEmail: 'usuario@email.com'
-  })
+    payerEmail: 'usuario@email.com',
+  }),
 });
 
 const { paymentUrl, orderId } = await response.json();
@@ -160,16 +167,19 @@ window.location.href = paymentUrl;
 ## 🗄️ Estructura de Base de Datos
 
 ### Tabla `payment_transaction`
+
 - Almacena todas las transacciones de pago
 - Estados: pending, approved, rejected, cancelled, expired
 - Información completa de la transacción
 
 ### Tabla `community_payment_config`
+
 - Configuración por comunidad
 - Pasarelas habilitadas por comunidad
 - Configuraciones específicas
 
 ### Tabla `payment_attempt_log`
+
 - Log de auditoría de todos los intentos
 - Incluye requests, responses y errores
 - Para debugging y compliance
@@ -214,10 +224,12 @@ window.location.href = paymentUrl;
 ### Problemas Comunes
 
 1. **Error 503**: Pasarela no configurada
+
    - Verificar variables de entorno
    - Confirmar credenciales válidas
 
-2. **Timeout en pagos**: 
+2. **Timeout en pagos**:
+
    - Verificar conectividad
    - Revisar logs de la pasarela
 
@@ -258,6 +270,7 @@ curl -H "Authorization: Bearer TOKEN" http://localhost:3001/api/gateway/availabl
 ### Contacto del Proyecto
 
 Para soporte específico del proyecto Cuentas Claras:
+
 - Revisar issues en GitHub
 - Consultar documentación del proyecto
 - Verificar logs de aplicación

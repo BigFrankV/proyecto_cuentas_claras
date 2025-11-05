@@ -28,14 +28,20 @@ describe('Prorrateo Health Check', () => {
     test('GET /prorrateo/emision/:emisionId/detalles (Detalles de Emisión)', async () => {
       const endpoint = `/prorrateo/emision/${emisionId}/detalles`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /prorrateo/emision/${emisionId}/detalles`, response);
+      categorizeResponse(
+        `GET /prorrateo/emision/${emisionId}/detalles`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
 
     test('GET /prorrateo/emision/:emisionId/cuentas (Cuentas de Emisión)', async () => {
       const endpoint = `/prorrateo/emision/${emisionId}/cuentas`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /prorrateo/emision/${emisionId}/cuentas`, response);
+      categorizeResponse(
+        `GET /prorrateo/emision/${emisionId}/cuentas`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
   });
@@ -44,7 +50,10 @@ describe('Prorrateo Health Check', () => {
     test('GET /prorrateo/cuenta/:cuentaId/detalles (Detalles de Cuenta)', async () => {
       const endpoint = `/prorrateo/cuenta/${cuentaId}/detalles`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /prorrateo/cuenta/${cuentaId}/detalles`, response);
+      categorizeResponse(
+        `GET /prorrateo/cuenta/${cuentaId}/detalles`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
 
@@ -58,7 +67,10 @@ describe('Prorrateo Health Check', () => {
     test('GET /prorrateo/emision/:emisionId/resumen (Resumen de Emisión)', async () => {
       const endpoint = `/prorrateo/emision/${emisionId}/resumen`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /prorrateo/emision/${emisionId}/resumen`, response);
+      categorizeResponse(
+        `GET /prorrateo/emision/${emisionId}/resumen`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
   });
@@ -67,21 +79,30 @@ describe('Prorrateo Health Check', () => {
     test('GET /prorrateo/emision/:emisionId/conceptos (Conceptos de Emisión)', async () => {
       const endpoint = `/prorrateo/emision/${emisionId}/conceptos`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /prorrateo/emision/${emisionId}/conceptos`, response);
+      categorizeResponse(
+        `GET /prorrateo/emision/${emisionId}/conceptos`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
 
     test('GET /prorrateo/emision/:emisionId/unidades (Unidades de Emisión)', async () => {
       const endpoint = `/prorrateo/emision/${emisionId}/unidades`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /prorrateo/emision/${emisionId}/unidades`, response);
+      categorizeResponse(
+        `GET /prorrateo/emision/${emisionId}/unidades`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
 
     test('GET /prorrateo/emision/:emisionId/conceptos-detallados (Conceptos Detallados)', async () => {
       const endpoint = `/prorrateo/emision/${emisionId}/conceptos-detallados`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /prorrateo/emision/${emisionId}/conceptos-detallados`, response);
+      categorizeResponse(
+        `GET /prorrateo/emision/${emisionId}/conceptos-detallados`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
   });

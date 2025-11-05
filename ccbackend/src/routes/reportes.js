@@ -28,12 +28,16 @@ const { requireCommunity } = require('../middleware/tenancy');
  *           type: integer
  *           default: 12
  */
-router.get('/comunidad/:comunidadId/resumen-financiero', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { meses = 12 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/resumen-financiero',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { meses = 12 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         c.id as comunidad_id,
         c.razon_social as comunidad,
@@ -57,14 +61,15 @@ router.get('/comunidad/:comunidadId/resumen-financiero', authenticate, requireCo
       ORDER BY periodo DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId, Number(meses)]);
+      const [rows] = await db.query(query, [comunidadId, Number(meses)]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener resumen financiero:', error);
-    res.status(500).json({ error: 'Error al obtener resumen financiero' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener resumen financiero:', error);
+      res.status(500).json({ error: 'Error al obtener resumen financiero' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -73,11 +78,15 @@ router.get('/comunidad/:comunidadId/resumen-financiero', authenticate, requireCo
  *     tags: [Reportes]
  *     summary: KPIs financieros de la comunidad
  */
-router.get('/comunidad/:comunidadId/kpis-financieros', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/kpis-financieros',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         c.id as comunidad_id,
         c.razon_social as comunidad,
@@ -115,14 +124,15 @@ router.get('/comunidad/:comunidadId/kpis-financieros', authenticate, requireComm
       WHERE c.id = ?
     `;
 
-    const [[result]] = await db.query(query, [comunidadId]);
+      const [[result]] = await db.query(query, [comunidadId]);
 
-    res.json(result || {});
-  } catch (error) {
-    console.error('Error al obtener KPIs financieros:', error);
-    res.status(500).json({ error: 'Error al obtener KPIs financieros' });
+      res.json(result || {});
+    } catch (error) {
+      console.error('Error al obtener KPIs financieros:', error);
+      res.status(500).json({ error: 'Error al obtener KPIs financieros' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -131,11 +141,15 @@ router.get('/comunidad/:comunidadId/kpis-financieros', authenticate, requireComm
  *     tags: [Reportes]
  *     summary: Análisis de tendencias (últimos 12 meses)
  */
-router.get('/comunidad/:comunidadId/tendencias-mensuales', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/tendencias-mensuales',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         c.id as comunidad_id,
         c.razon_social as comunidad,
@@ -160,14 +174,15 @@ router.get('/comunidad/:comunidadId/tendencias-mensuales', authenticate, require
       ORDER BY periodo DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener tendencias mensuales:', error);
-    res.status(500).json({ error: 'Error al obtener tendencias mensuales' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener tendencias mensuales:', error);
+      res.status(500).json({ error: 'Error al obtener tendencias mensuales' });
+    }
   }
-});
+);
 
 // =========================================
 // 2. REPORTES DE MOROSIDAD
@@ -186,12 +201,16 @@ router.get('/comunidad/:comunidadId/tendencias-mensuales', authenticate, require
  *           type: string
  *           enum: [todos, al_dia, moroso_reciente, moroso_medio, moroso_cronico]
  */
-router.get('/comunidad/:comunidadId/morosidad-unidades', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { categoria } = req.query;
+router.get(
+  '/comunidad/:comunidadId/morosidad-unidades',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { categoria } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         c.id as comunidad_id,
         c.razon_social as comunidad,
@@ -223,33 +242,36 @@ router.get('/comunidad/:comunidadId/morosidad-unidades', authenticate, requireCo
         AND egc.estado = 'emitido'
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (categoria && categoria !== 'todos') {
-      const categoriaMap = {
-        'al_dia': "ccu.saldo = 0",
-        'moroso_reciente': "ccu.saldo > 0 AND DATEDIFF(CURRENT_DATE, egc.fecha_vencimiento) <= 30",
-        'moroso_medio': "DATEDIFF(CURRENT_DATE, egc.fecha_vencimiento) BETWEEN 31 AND 90",
-        'moroso_cronico': "DATEDIFF(CURRENT_DATE, egc.fecha_vencimiento) > 90"
-      };
-      
-      if (categoriaMap[categoria]) {
-        query += ` AND ${categoriaMap[categoria]}`;
+      if (categoria && categoria !== 'todos') {
+        const categoriaMap = {
+          al_dia: 'ccu.saldo = 0',
+          moroso_reciente:
+            'ccu.saldo > 0 AND DATEDIFF(CURRENT_DATE, egc.fecha_vencimiento) <= 30',
+          moroso_medio:
+            'DATEDIFF(CURRENT_DATE, egc.fecha_vencimiento) BETWEEN 31 AND 90',
+          moroso_cronico: 'DATEDIFF(CURRENT_DATE, egc.fecha_vencimiento) > 90',
+        };
+
+        if (categoriaMap[categoria]) {
+          query += ` AND ${categoriaMap[categoria]}`;
+        }
+      } else {
+        query += ` AND ccu.saldo > 0`;
       }
-    } else {
-      query += ` AND ccu.saldo > 0`;
+
+      query += ` ORDER BY dias_vencidos DESC, saldo_pendiente DESC`;
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener morosidad de unidades:', error);
+      res.status(500).json({ error: 'Error al obtener morosidad de unidades' });
     }
-
-    query += ` ORDER BY dias_vencidos DESC, saldo_pendiente DESC`;
-
-    const [rows] = await db.query(query, params);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener morosidad de unidades:', error);
-    res.status(500).json({ error: 'Error al obtener morosidad de unidades' });
   }
-});
+);
 
 /**
  * @swagger
@@ -258,11 +280,15 @@ router.get('/comunidad/:comunidadId/morosidad-unidades', authenticate, requireCo
  *     tags: [Reportes]
  *     summary: Estadísticas de morosidad agrupadas
  */
-router.get('/comunidad/:comunidadId/estadisticas-morosidad', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/estadisticas-morosidad',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         CASE
           WHEN ccu.saldo = 0 THEN 'Al día'
@@ -291,14 +317,17 @@ router.get('/comunidad/:comunidadId/estadisticas-morosidad', authenticate, requi
         END
     `;
 
-    const [rows] = await db.query(query, [comunidadId, comunidadId]);
+      const [rows] = await db.query(query, [comunidadId, comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener estadísticas de morosidad:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas de morosidad' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener estadísticas de morosidad:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener estadísticas de morosidad' });
+    }
   }
-});
+);
 
 // =========================================
 // 3. REPORTES DE GASTOS
@@ -331,12 +360,16 @@ router.get('/comunidad/:comunidadId/estadisticas-morosidad', authenticate, requi
  *           type: integer
  *           default: 100
  */
-router.get('/comunidad/:comunidadId/gastos-detallados', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fecha_desde, fecha_hasta, categoria_id, limit = 100 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/gastos-detallados',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { fecha_desde, fecha_hasta, categoria_id, limit = 100 } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         g.id,
         g.numero,
@@ -364,34 +397,35 @@ router.get('/comunidad/:comunidadId/gastos-detallados', authenticate, requireCom
       WHERE g.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (fecha_desde) {
-      query += ` AND g.fecha >= ?`;
-      params.push(fecha_desde);
+      if (fecha_desde) {
+        query += ` AND g.fecha >= ?`;
+        params.push(fecha_desde);
+      }
+
+      if (fecha_hasta) {
+        query += ` AND g.fecha <= ?`;
+        params.push(fecha_hasta);
+      }
+
+      if (categoria_id) {
+        query += ` AND g.categoria_id = ?`;
+        params.push(Number(categoria_id));
+      }
+
+      query += ` ORDER BY g.fecha DESC LIMIT ?`;
+      params.push(Number(limit));
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener gastos detallados:', error);
+      res.status(500).json({ error: 'Error al obtener gastos detallados' });
     }
-
-    if (fecha_hasta) {
-      query += ` AND g.fecha <= ?`;
-      params.push(fecha_hasta);
-    }
-
-    if (categoria_id) {
-      query += ` AND g.categoria_id = ?`;
-      params.push(Number(categoria_id));
-    }
-
-    query += ` ORDER BY g.fecha DESC LIMIT ?`;
-    params.push(Number(limit));
-
-    const [rows] = await db.query(query, params);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener gastos detallados:', error);
-    res.status(500).json({ error: 'Error al obtener gastos detallados' });
   }
-});
+);
 
 /**
  * @swagger
@@ -400,11 +434,15 @@ router.get('/comunidad/:comunidadId/gastos-detallados', authenticate, requireCom
  *     tags: [Reportes]
  *     summary: Resumen de gastos por categoría
  */
-router.get('/comunidad/:comunidadId/gastos-por-categoria', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/gastos-por-categoria',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         cg.id as categoria_id,
         cg.nombre as categoria,
@@ -426,14 +464,19 @@ router.get('/comunidad/:comunidadId/gastos-por-categoria', authenticate, require
       ORDER BY total_gastos DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId, comunidadId, comunidadId]);
+      const [rows] = await db.query(query, [
+        comunidadId,
+        comunidadId,
+        comunidadId,
+      ]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener gastos por categoría:', error);
-    res.status(500).json({ error: 'Error al obtener gastos por categoría' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener gastos por categoría:', error);
+      res.status(500).json({ error: 'Error al obtener gastos por categoría' });
+    }
   }
-});
+);
 
 // =========================================
 // 4. REPORTES DE CONSUMOS
@@ -457,12 +500,16 @@ router.get('/comunidad/:comunidadId/gastos-por-categoria', authenticate, require
  *           type: string
  *           format: YYYY-MM
  */
-router.get('/comunidad/:comunidadId/consumo-servicios', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { tipo, periodo } = req.query;
+router.get(
+  '/comunidad/:comunidadId/consumo-servicios',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { tipo, periodo } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         m.id as medidor_id,
         m.tipo as servicio,
@@ -484,28 +531,29 @@ router.get('/comunidad/:comunidadId/consumo-servicios', authenticate, requireCom
       WHERE m.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (tipo) {
-      query += ` AND m.tipo = ?`;
-      params.push(tipo);
+      if (tipo) {
+        query += ` AND m.tipo = ?`;
+        params.push(tipo);
+      }
+
+      if (periodo) {
+        query += ` AND lm.periodo = ?`;
+        params.push(periodo);
+      }
+
+      query += ` ORDER BY lm.periodo DESC, u.codigo, m.tipo`;
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener consumo de servicios:', error);
+      res.status(500).json({ error: 'Error al obtener consumo de servicios' });
     }
-
-    if (periodo) {
-      query += ` AND lm.periodo = ?`;
-      params.push(periodo);
-    }
-
-    query += ` ORDER BY lm.periodo DESC, u.codigo, m.tipo`;
-
-    const [rows] = await db.query(query, params);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener consumo de servicios:', error);
-    res.status(500).json({ error: 'Error al obtener consumo de servicios' });
   }
-});
+);
 
 /**
  * @swagger
@@ -514,11 +562,15 @@ router.get('/comunidad/:comunidadId/consumo-servicios', authenticate, requireCom
  *     tags: [Reportes]
  *     summary: Estadísticas de consumo por tipo de servicio
  */
-router.get('/comunidad/:comunidadId/estadisticas-consumo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/estadisticas-consumo',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         m.tipo as servicio,
         COUNT(DISTINCT m.id) as cantidad_medidores,
@@ -534,14 +586,17 @@ router.get('/comunidad/:comunidadId/estadisticas-consumo', authenticate, require
       ORDER BY m.tipo
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener estadísticas de consumo:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas de consumo' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener estadísticas de consumo:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener estadísticas de consumo' });
+    }
   }
-});
+);
 
 // =========================================
 // 5. REPORTES DE TICKETS
@@ -563,12 +618,16 @@ router.get('/comunidad/:comunidadId/estadisticas-consumo', authenticate, require
  *         schema:
  *           type: string
  */
-router.get('/comunidad/:comunidadId/tickets-soporte', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { estado, prioridad } = req.query;
+router.get(
+  '/comunidad/:comunidadId/tickets-soporte',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { estado, prioridad } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         ts.id,
         ts.comunidad_id,
@@ -595,28 +654,29 @@ router.get('/comunidad/:comunidadId/tickets-soporte', authenticate, requireCommu
       WHERE ts.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (estado) {
-      query += ` AND ts.estado = ?`;
-      params.push(estado);
+      if (estado) {
+        query += ` AND ts.estado = ?`;
+        params.push(estado);
+      }
+
+      if (prioridad) {
+        query += ` AND ts.prioridad = ?`;
+        params.push(prioridad);
+      }
+
+      query += ` ORDER BY ts.created_at DESC`;
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener tickets de soporte:', error);
+      res.status(500).json({ error: 'Error al obtener tickets de soporte' });
     }
-
-    if (prioridad) {
-      query += ` AND ts.prioridad = ?`;
-      params.push(prioridad);
-    }
-
-    query += ` ORDER BY ts.created_at DESC`;
-
-    const [rows] = await db.query(query, params);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener tickets de soporte:', error);
-    res.status(500).json({ error: 'Error al obtener tickets de soporte' });
   }
-});
+);
 
 // =========================================
 // 6. REPORTES DE AMENIDADES
@@ -644,12 +704,16 @@ router.get('/comunidad/:comunidadId/tickets-soporte', authenticate, requireCommu
  *         schema:
  *           type: string
  */
-router.get('/comunidad/:comunidadId/reservas-amenidades', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fecha_desde, fecha_hasta, estado } = req.query;
+router.get(
+  '/comunidad/:comunidadId/reservas-amenidades',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { fecha_desde, fecha_hasta, estado } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         ra.id,
         ra.comunidad_id,
@@ -677,33 +741,36 @@ router.get('/comunidad/:comunidadId/reservas-amenidades', authenticate, requireC
       WHERE ra.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (fecha_desde) {
-      query += ` AND DATE(ra.inicio) >= ?`;
-      params.push(fecha_desde);
+      if (fecha_desde) {
+        query += ` AND DATE(ra.inicio) >= ?`;
+        params.push(fecha_desde);
+      }
+
+      if (fecha_hasta) {
+        query += ` AND DATE(ra.inicio) <= ?`;
+        params.push(fecha_hasta);
+      }
+
+      if (estado) {
+        query += ` AND ra.estado = ?`;
+        params.push(estado);
+      }
+
+      query += ` ORDER BY ra.inicio DESC`;
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener reservas de amenidades:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener reservas de amenidades' });
     }
-
-    if (fecha_hasta) {
-      query += ` AND DATE(ra.inicio) <= ?`;
-      params.push(fecha_hasta);
-    }
-
-    if (estado) {
-      query += ` AND ra.estado = ?`;
-      params.push(estado);
-    }
-
-    query += ` ORDER BY ra.inicio DESC`;
-
-    const [rows] = await db.query(query, params);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener reservas de amenidades:', error);
-    res.status(500).json({ error: 'Error al obtener reservas de amenidades' });
   }
-});
+);
 
 /**
  * @swagger
@@ -712,11 +779,15 @@ router.get('/comunidad/:comunidadId/reservas-amenidades', authenticate, requireC
  *     tags: [Reportes]
  *     summary: Resumen de ingresos por amenidades
  */
-router.get('/comunidad/:comunidadId/ingresos-amenidades', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/ingresos-amenidades',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         a.nombre as amenidad,
         COUNT(ra.id) as total_reservas,
@@ -734,14 +805,17 @@ router.get('/comunidad/:comunidadId/ingresos-amenidades', authenticate, requireC
       ORDER BY ingreso_total DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener ingresos de amenidades:', error);
-    res.status(500).json({ error: 'Error al obtener ingresos de amenidades' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener ingresos de amenidades:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener ingresos de amenidades' });
+    }
   }
-});
+);
 
 // =========================================
 // 7. REPORTES DE MULTAS
@@ -759,12 +833,16 @@ router.get('/comunidad/:comunidadId/ingresos-amenidades', authenticate, requireC
  *         schema:
  *           type: string
  */
-router.get('/comunidad/:comunidadId/multas-sanciones', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { estado } = req.query;
+router.get(
+  '/comunidad/:comunidadId/multas-sanciones',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { estado } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         m.id,
         m.comunidad_id,
@@ -794,23 +872,24 @@ router.get('/comunidad/:comunidadId/multas-sanciones', authenticate, requireComm
       WHERE m.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (estado) {
-      query += ` AND m.estado = ?`;
-      params.push(estado);
+      if (estado) {
+        query += ` AND m.estado = ?`;
+        params.push(estado);
+      }
+
+      query += ` ORDER BY m.fecha DESC`;
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener multas y sanciones:', error);
+      res.status(500).json({ error: 'Error al obtener multas y sanciones' });
     }
-
-    query += ` ORDER BY m.fecha DESC`;
-
-    const [rows] = await db.query(query, params);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener multas y sanciones:', error);
-    res.status(500).json({ error: 'Error al obtener multas y sanciones' });
   }
-});
+);
 
 /**
  * @swagger
@@ -819,11 +898,15 @@ router.get('/comunidad/:comunidadId/multas-sanciones', authenticate, requireComm
  *     tags: [Reportes]
  *     summary: Estadísticas de multas
  */
-router.get('/comunidad/:comunidadId/estadisticas-multas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/estadisticas-multas',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         COUNT(*) as total_multas,
         COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as multas_pendientes,
@@ -838,14 +921,17 @@ router.get('/comunidad/:comunidadId/estadisticas-multas', authenticate, requireC
       WHERE comunidad_id = ?
     `;
 
-    const [[result]] = await db.query(query, [comunidadId]);
+      const [[result]] = await db.query(query, [comunidadId]);
 
-    res.json(result || {});
-  } catch (error) {
-    console.error('Error al obtener estadísticas de multas:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas de multas' });
+      res.json(result || {});
+    } catch (error) {
+      console.error('Error al obtener estadísticas de multas:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener estadísticas de multas' });
+    }
   }
-});
+);
 
 // =========================================
 // 8. REPORTES DE CONSERJERÍA
@@ -873,12 +959,16 @@ router.get('/comunidad/:comunidadId/estadisticas-multas', authenticate, requireC
  *         schema:
  *           type: string
  */
-router.get('/comunidad/:comunidadId/bitacora-conserjeria', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fecha_desde, fecha_hasta, tipo_evento } = req.query;
+router.get(
+  '/comunidad/:comunidadId/bitacora-conserjeria',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { fecha_desde, fecha_hasta, tipo_evento } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         rc.id,
         rc.comunidad_id,
@@ -902,39 +992,42 @@ router.get('/comunidad/:comunidadId/bitacora-conserjeria', authenticate, require
       WHERE rc.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (fecha_desde) {
-      query += ` AND DATE(rc.fecha_hora) >= ?`;
-      params.push(fecha_desde);
-    }
+      if (fecha_desde) {
+        query += ` AND DATE(rc.fecha_hora) >= ?`;
+        params.push(fecha_desde);
+      }
 
-    if (fecha_hasta) {
-      query += ` AND DATE(rc.fecha_hora) <= ?`;
-      params.push(fecha_hasta);
-    }
+      if (fecha_hasta) {
+        query += ` AND DATE(rc.fecha_hora) <= ?`;
+        params.push(fecha_hasta);
+      }
 
-    if (tipo_evento) {
-      query += ` AND CASE
+      if (tipo_evento) {
+        query += ` AND CASE
           WHEN rc.evento LIKE '%entrega%' THEN 'Entrega'
           WHEN rc.evento LIKE '%visita%' THEN 'Visita'
           WHEN rc.evento LIKE '%reporte%' THEN 'Reporte'
           WHEN rc.evento LIKE '%retiro%' THEN 'Retiro'
           ELSE 'Otro'
         END = ?`;
-      params.push(tipo_evento);
+        params.push(tipo_evento);
+      }
+
+      query += ` ORDER BY rc.fecha_hora DESC LIMIT 500`;
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener bitácora de conserjería:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener bitácora de conserjería' });
     }
-
-    query += ` ORDER BY rc.fecha_hora DESC LIMIT 500`;
-
-    const [rows] = await db.query(query, params);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener bitácora de conserjería:', error);
-    res.status(500).json({ error: 'Error al obtener bitácora de conserjería' });
   }
-});
+);
 
 // =========================================
 // 9. REPORTES PERSONALIZADOS/EXPORTACIÓN
@@ -947,21 +1040,26 @@ router.get('/comunidad/:comunidadId/bitacora-conserjeria', authenticate, require
  *     tags: [Reportes]
  *     summary: Reporte completo de la comunidad (para exportar)
  */
-router.get('/comunidad/:comunidadId/reporte-completo', authenticate, requireCommunity('comunidadId', ['admin', 'superadmin', 'contador']), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/reporte-completo',
+  authenticate,
+  requireCommunity('comunidadId', ['admin', 'superadmin', 'contador']),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    // Ejecutar todas las consultas en paralelo
-    const [
-      [kpis],
-      [resumenFinanciero],
-      [morosidad],
-      [gastosPorCategoria],
-      [[estadisticasMultas]],
-      [tickets]
-    ] = await Promise.all([
-      // KPIs
-      db.query(`
+      // Ejecutar todas las consultas en paralelo
+      const [
+        [kpis],
+        [resumenFinanciero],
+        [morosidad],
+        [gastosPorCategoria],
+        [[estadisticasMultas]],
+        [tickets],
+      ] = await Promise.all([
+        // KPIs
+        db.query(
+          `
         SELECT
           (SELECT COALESCE(SUM(monto), 0) FROM pago WHERE comunidad_id = ? AND estado = 'aplicado'
            AND YEAR(fecha) = YEAR(CURRENT_DATE) AND MONTH(fecha) = MONTH(CURRENT_DATE)) as ingresos_mes_actual,
@@ -969,10 +1067,13 @@ router.get('/comunidad/:comunidadId/reporte-completo', authenticate, requireComm
            AND YEAR(fecha) = YEAR(CURRENT_DATE) AND MONTH(fecha) = MONTH(CURRENT_DATE)) as gastos_mes_actual,
           (SELECT COUNT(*) FROM unidad WHERE comunidad_id = ? AND activa = 1) as total_unidades,
           (SELECT COUNT(*) FROM ticket_soporte WHERE comunidad_id = ? AND estado IN ('abierto', 'en_progreso')) as tickets_activos
-      `, [comunidadId, comunidadId, comunidadId, comunidadId]),
-      
-      // Resumen financiero (últimos 6 meses)
-      db.query(`
+      `,
+          [comunidadId, comunidadId, comunidadId, comunidadId]
+        ),
+
+        // Resumen financiero (últimos 6 meses)
+        db.query(
+          `
         SELECT DATE_FORMAT(mov.fecha, '%Y-%m') as periodo,
                SUM(CASE WHEN mov.tipo = 'ingreso' THEN mov.monto ELSE 0 END) as ingresos,
                SUM(CASE WHEN mov.tipo = 'gasto' THEN mov.monto ELSE 0 END) as gastos
@@ -984,10 +1085,13 @@ router.get('/comunidad/:comunidadId/reporte-completo', authenticate, requireComm
         WHERE mov.fecha >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
         GROUP BY DATE_FORMAT(mov.fecha, '%Y-%m')
         ORDER BY periodo DESC
-      `, [comunidadId, comunidadId]),
-      
-      // Morosidad
-      db.query(`
+      `,
+          [comunidadId, comunidadId]
+        ),
+
+        // Morosidad
+        db.query(
+          `
         SELECT u.codigo, SUM(ccu.saldo) as deuda
         FROM cuenta_cobro_unidad ccu
         JOIN unidad u ON ccu.unidad_id = u.id
@@ -996,10 +1100,13 @@ router.get('/comunidad/:comunidadId/reporte-completo', authenticate, requireComm
         GROUP BY u.id, u.codigo
         ORDER BY deuda DESC
         LIMIT 10
-      `, [comunidadId]),
-      
-      // Gastos por categoría
-      db.query(`
+      `,
+          [comunidadId]
+        ),
+
+        // Gastos por categoría
+        db.query(
+          `
         SELECT cg.nombre as categoria, COALESCE(SUM(g.monto), 0) as total
         FROM categoria_gasto cg
         LEFT JOIN gasto g ON cg.id = g.categoria_id AND g.estado = 'aprobado'
@@ -1008,39 +1115,48 @@ router.get('/comunidad/:comunidadId/reporte-completo', authenticate, requireComm
         HAVING total > 0
         ORDER BY total DESC
         LIMIT 10
-      `, [comunidadId]),
-      
-      // Estadísticas de multas
-      db.query(`
+      `,
+          [comunidadId]
+        ),
+
+        // Estadísticas de multas
+        db.query(
+          `
         SELECT COUNT(*) as total, SUM(monto) as monto_total,
                COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as pendientes
         FROM multa WHERE comunidad_id = ?
-      `, [comunidadId]),
-      
-      // Tickets
-      db.query(`
+      `,
+          [comunidadId]
+        ),
+
+        // Tickets
+        db.query(
+          `
         SELECT estado, COUNT(*) as cantidad
         FROM ticket_soporte
         WHERE comunidad_id = ?
         GROUP BY estado
-      `, [comunidadId])
-    ]);
+      `,
+          [comunidadId]
+        ),
+      ]);
 
-    res.json({
-      comunidad_id: comunidadId,
-      fecha_generacion: new Date().toISOString(),
-      kpis: kpis[0] || {},
-      resumen_financiero: resumenFinanciero,
-      unidades_morosas: morosidad,
-      gastos_por_categoria: gastosPorCategoria,
-      estadisticas_multas: estadisticasMultas || {},
-      tickets_por_estado: tickets
-    });
-  } catch (error) {
-    console.error('Error al generar reporte completo:', error);
-    res.status(500).json({ error: 'Error al generar reporte completo' });
+      res.json({
+        comunidad_id: comunidadId,
+        fecha_generacion: new Date().toISOString(),
+        kpis: kpis[0] || {},
+        resumen_financiero: resumenFinanciero,
+        unidades_morosas: morosidad,
+        gastos_por_categoria: gastosPorCategoria,
+        estadisticas_multas: estadisticasMultas || {},
+        tickets_por_estado: tickets,
+      });
+    } catch (error) {
+      console.error('Error al generar reporte completo:', error);
+      res.status(500).json({ error: 'Error al generar reporte completo' });
+    }
   }
-});
+);
 
 module.exports = router;
 
@@ -1081,7 +1197,3 @@ module.exports = router;
 
 // // 9. REPORTES PERSONALIZADOS/EXPORTACIÓN
 // GET: /reportes/comunidad/:comunidadId/reporte-completo
-
-
-
-

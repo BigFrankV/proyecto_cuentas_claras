@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "es2020"
-    ],
+    "lib": ["dom", "dom.iterable", "es2020"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -30,33 +26,15 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@/components/*": [
-        "components/*"
-      ],
-      "@/pages/*": [
-        "pages/*"
-      ],
-      "@/lib/*": [
-        "lib/*"
-      ],
-      "@/styles/*": [
-        "styles/*"
-      ],
-      "@/types/*": [
-        "types/*"
-      ],
-      "@/hooks/*": [
-        "hooks/*"
-      ],
-      "@/utils/*": [
-        "utils/*"
-      ],
-      "@/public/*": [
-        "public/*"
-      ]
+      "@/*": ["./*"],
+      "@/components/*": ["components/*"],
+      "@/pages/*": ["pages/*"],
+      "@/lib/*": ["lib/*"],
+      "@/styles/*": ["styles/*"],
+      "@/types/*": ["types/*"],
+      "@/hooks/*": ["hooks/*"],
+      "@/utils/*": ["utils/*"],
+      "@/public/*": ["public/*"]
     },
     "noImplicitAny": false,
     "strictNullChecks": false
@@ -68,9 +46,5 @@
     "types/**/*.d.ts",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "pages/comunidades/nueva_backup.tsx",
-    "__tests__"
-  ]
+  "exclude": ["node_modules", "pages/comunidades/nueva_backup.tsx", "__tests__"]
 }

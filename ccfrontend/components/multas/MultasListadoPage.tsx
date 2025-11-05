@@ -9,12 +9,14 @@ import { ProtectedRoute } from '@/lib/useAuth'; // Agrega si no está
 import { usePermissions } from '@/lib/usePermissions';
 
 const MultasListadoPage: React.FC = () => {
+  // eslint-disable-next-line no-console
   console.log('🚀 MultasListadoPage - Componente montado'); // ✅ Agrega esto
 
   const router = useRouter();
   const { user } = useAuth();
   const { canManageFinances } = usePermissions();
 
+  // eslint-disable-next-line no-console
   console.log('👤 Usuario en MultasListadoPage:', user); // ✅ Agrega esto
 
   const [multas, setMultas] = useState([]);
@@ -30,11 +32,13 @@ const MultasListadoPage: React.FC = () => {
   const [totalPaginas, setTotalPaginas] = useState(1);
 
   useEffect(() => {
+    // eslint-disable-next-line no-console
     console.log('🔄 useEffect ejecutado en MultasListadoPage'); // ✅ Agrega esto
     cargarMultas();
   }, [filtros, pagina]);
 
   const cargarMultas = async () => {
+    // eslint-disable-next-line no-console
     console.log('📡 Cargando multas...');
     setLoading(true);
     setError(null);
@@ -45,6 +49,7 @@ const MultasListadoPage: React.FC = () => {
       setTotalPaginas(response.totalPaginas || 1);
     } catch (err) {
       setError('Error al cargar multas');
+      // eslint-disable-next-line no-console
       console.error('Error en cargarMultas:', err);
     } finally {
       setLoading(false);
@@ -94,6 +99,7 @@ const MultasListadoPage: React.FC = () => {
       // ✅ Agrega más si es necesario
     } catch (err) {
       setError('Error en acción masiva');
+      // eslint-disable-next-line no-console
       console.error('Error en handleBulkAction:', err);
     }
   };

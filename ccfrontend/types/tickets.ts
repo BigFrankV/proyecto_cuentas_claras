@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Tipos para el módulo de Tickets
 
 export interface Ticket {

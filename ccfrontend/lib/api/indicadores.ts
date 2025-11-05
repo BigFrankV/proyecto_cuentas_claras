@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 import axios from 'axios';
 
 // Configuración base de la API
@@ -83,12 +85,14 @@ export const getUfByDate = async (fecha: string): Promise<UfApiResponse> => {
     const response = await api.get(`/util/uf?fecha=${fecha}`);
     return response.data;
   } catch (error: any) {
+    // eslint-disable-next-line no-console
     console.error('Error al obtener UF por fecha:', error);
     return {
       fecha,
       valor: 0,
       success: false,
-      error: error.response?.data?.error || error.message || 'Error de conexión'
+      error:
+        error.response?.data?.error || error.message || 'Error de conexión',
     };
   }
 };
@@ -101,12 +105,14 @@ export const getCurrentUf = async (): Promise<UfApiResponse> => {
     const response = await api.get('/util/uf/current');
     return response.data;
   } catch (error: any) {
+    // eslint-disable-next-line no-console
     console.error('Error al obtener UF actual:', error);
     return {
       fecha: '',
       valor: 0,
       success: false,
-      error: error.response?.data?.error || error.message || 'Error de conexión'
+      error:
+        error.response?.data?.error || error.message || 'Error de conexión',
     };
   }
 };
@@ -115,20 +121,22 @@ export const getCurrentUf = async (): Promise<UfApiResponse> => {
  * Obtiene histórico de UF para un rango de fechas
  */
 export const getUfHistorico = async (
-  fechaInicio: string, 
-  fechaFin: string
+  fechaInicio: string,
+  fechaFin: string,
 ): Promise<HistoricoUfResponse> => {
   try {
     const response = await api.get('/util/uf/historico', {
-      params: { fechaInicio, fechaFin }
+      params: { fechaInicio, fechaFin },
     });
     return response.data;
   } catch (error: any) {
+    // eslint-disable-next-line no-console
     console.error('Error al obtener histórico UF:', error);
     return {
       data: [],
       success: false,
-      error: error.response?.data?.error || error.message || 'Error de conexión'
+      error:
+        error.response?.data?.error || error.message || 'Error de conexión',
     };
   }
 };
@@ -138,19 +146,24 @@ export const getUfHistorico = async (
 /**
  * Obtiene el valor de UTM para un mes y año específicos
  */
-export const getUtmByPeriod = async (mes: number, ano: number): Promise<UtmApiResponse> => {
+export const getUtmByPeriod = async (
+  mes: number,
+  ano: number,
+): Promise<UtmApiResponse> => {
   try {
     const mesFormatted = mes.toString().padStart(2, '0');
     const response = await api.get(`/util/utm?fecha=${ano}-${mesFormatted}`);
     return response.data;
   } catch (error: any) {
+    // eslint-disable-next-line no-console
     console.error('Error al obtener UTM por período:', error);
     return {
       mes,
       ano,
       valor: 0,
       success: false,
-      error: error.response?.data?.error || error.message || 'Error de conexión'
+      error:
+        error.response?.data?.error || error.message || 'Error de conexión',
     };
   }
 };
@@ -163,13 +176,15 @@ export const getCurrentUtm = async (): Promise<UtmApiResponse> => {
     const response = await api.get('/util/utm/current');
     return response.data;
   } catch (error: any) {
+    // eslint-disable-next-line no-console
     console.error('Error al obtener UTM actual:', error);
     return {
       mes: 0,
       ano: 0,
       valor: 0,
       success: false,
-      error: error.response?.data?.error || error.message || 'Error de conexión'
+      error:
+        error.response?.data?.error || error.message || 'Error de conexión',
     };
   }
 };
@@ -177,16 +192,20 @@ export const getCurrentUtm = async (): Promise<UtmApiResponse> => {
 /**
  * Obtiene histórico de UTM para un año específico
  */
-export const getUtmHistorico = async (ano: number): Promise<HistoricoUtmResponse> => {
+export const getUtmHistorico = async (
+  ano: number,
+): Promise<HistoricoUtmResponse> => {
   try {
     const response = await api.get(`/util/utm/historico?ano=${ano}`);
     return response.data;
   } catch (error: any) {
+    // eslint-disable-next-line no-console
     console.error('Error al obtener histórico UTM:', error);
     return {
       data: [],
       success: false,
-      error: error.response?.data?.error || error.message || 'Error de conexión'
+      error:
+        error.response?.data?.error || error.message || 'Error de conexión',
     };
   }
 };
@@ -201,11 +220,13 @@ export const getAllIndicadores = async (): Promise<IndicadoresResponse> => {
     const response = await api.get('/util/indicadores');
     return response.data;
   } catch (error: any) {
+    // eslint-disable-next-line no-console
     console.error('Error al obtener indicadores:', error);
     return {
       indicadores: [],
       success: false,
-      error: error.response?.data?.error || error.message || 'Error de conexión'
+      error:
+        error.response?.data?.error || error.message || 'Error de conexión',
     };
   }
 };
@@ -213,16 +234,20 @@ export const getAllIndicadores = async (): Promise<IndicadoresResponse> => {
 /**
  * Obtiene un indicador específico por su código
  */
-export const getIndicadorByCodigo = async (codigo: string): Promise<IndicadoresResponse> => {
+export const getIndicadorByCodigo = async (
+  codigo: string,
+): Promise<IndicadoresResponse> => {
   try {
     const response = await api.get(`/util/indicadores?codigo=${codigo}`);
     return response.data;
   } catch (error: any) {
+    // eslint-disable-next-line no-console
     console.error(`Error al obtener indicador ${codigo}:`, error);
     return {
       indicadores: [],
       success: false,
-      error: error.response?.data?.error || error.message || 'Error de conexión'
+      error:
+        error.response?.data?.error || error.message || 'Error de conexión',
     };
   }
 };
@@ -236,7 +261,7 @@ export const getSyncStatus = async (): Promise<SyncStatusResponse> => {
   try {
     const response = await api.get('/util/sync/status');
     const backendData = response.data;
-    
+
     // Mapear datos del backend al formato esperado por el frontend
     return {
       success: backendData.success,
@@ -246,10 +271,11 @@ export const getSyncStatus = async (): Promise<SyncStatusResponse> => {
         uf_records: backendData.data?.uf_count || 0,
         utm_records: backendData.data?.utm_count || 0,
         otros_records: 0, // No disponible en el backend aún
-        last_update: backendData.data?.timestamp || null
-      }
+        last_update: backendData.data?.timestamp || null,
+      },
     };
   } catch (error: any) {
+    // eslint-disable-next-line no-console
     console.error('Error al obtener estado de sincronización:', error);
     return {
       lastSync: null,
@@ -258,10 +284,11 @@ export const getSyncStatus = async (): Promise<SyncStatusResponse> => {
         uf_records: 0,
         utm_records: 0,
         otros_records: 0,
-        last_update: null
+        last_update: null,
       },
       success: false,
-      error: error.response?.data?.error || error.message || 'Error de conexión'
+      error:
+        error.response?.data?.error || error.message || 'Error de conexión',
     };
   }
 };
@@ -269,16 +296,22 @@ export const getSyncStatus = async (): Promise<SyncStatusResponse> => {
 /**
  * Inicia una sincronización manual
  */
-export const startManualSync = async (): Promise<{ success: boolean; message: string; error?: string }> => {
+export const startManualSync = async (): Promise<{
+  success: boolean;
+  message: string;
+  error?: string;
+}> => {
   try {
     const response = await api.post('/util/sync/manual');
     return response.data;
   } catch (error: any) {
+    // eslint-disable-next-line no-console
     console.error('Error al iniciar sincronización manual:', error);
     return {
       success: false,
       message: '',
-      error: error.response?.data?.error || error.message || 'Error de conexión'
+      error:
+        error.response?.data?.error || error.message || 'Error de conexión',
     };
   }
 };
@@ -286,16 +319,22 @@ export const startManualSync = async (): Promise<{ success: boolean; message: st
 /**
  * Inicializa la base de datos con datos históricos
  */
-export const initializeHistoricalData = async (): Promise<{ success: boolean; message: string; error?: string }> => {
+export const initializeHistoricalData = async (): Promise<{
+  success: boolean;
+  message: string;
+  error?: string;
+}> => {
   try {
     const response = await api.post('/util/sync/init');
     return response.data;
   } catch (error: any) {
+    // eslint-disable-next-line no-console
     console.error('Error al inicializar datos históricos:', error);
     return {
       success: false,
       message: '',
-      error: error.response?.data?.error || error.message || 'Error de conexión'
+      error:
+        error.response?.data?.error || error.message || 'Error de conexión',
     };
   }
 };
@@ -309,7 +348,7 @@ export const formatPesos = (amount: number): string => {
   return new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
-    minimumFractionDigits: 0
+    minimumFractionDigits: 0,
   }).format(amount);
 };
 
@@ -317,26 +356,29 @@ export const formatPesos = (amount: number): string => {
  * Formatea un valor UF
  */
 export const formatUF = (amount: number): string => {
-  return amount.toLocaleString('es-CL', {
+  return `${amount.toLocaleString('es-CL', {
     minimumFractionDigits: 4,
-    maximumFractionDigits: 4
-  }) + ' UF';
+    maximumFractionDigits: 4,
+  })} UF`;
 };
 
 /**
  * Formatea un valor UTM
  */
 export const formatUTM = (amount: number): string => {
-  return amount.toLocaleString('es-CL', {
+  return `${amount.toLocaleString('es-CL', {
     minimumFractionDigits: 4,
-    maximumFractionDigits: 4
-  }) + ' UTM';
+    maximumFractionDigits: 4,
+  })} UTM`;
 };
 
 /**
  * Calcula la diferencia de días entre dos fechas
  */
-export const calculateDateDifference = (date1: string, date2: string): number => {
+export const calculateDateDifference = (
+  date1: string,
+  date2: string,
+): number => {
   const d1 = new Date(date1);
   const d2 = new Date(date2);
   const timeDiff = Math.abs(d2.getTime() - d1.getTime());
@@ -346,10 +388,12 @@ export const calculateDateDifference = (date1: string, date2: string): number =>
 /**
  * Obtiene el rango de fechas para períodos predefinidos
  */
-export const getDateRange = (period: '7d' | '30d' | '90d' | '1y'): { start: string; end: string } => {
+export const getDateRange = (
+  period: '7d' | '30d' | '90d' | '1y',
+): { start: string; end: string } => {
   const end = new Date();
   const start = new Date();
-  
+
   switch (period) {
     case '7d':
       start.setDate(end.getDate() - 7);
@@ -364,37 +408,39 @@ export const getDateRange = (period: '7d' | '30d' | '90d' | '1y'): { start: stri
       start.setFullYear(end.getFullYear() - 1);
       break;
   }
-  
+
   return {
     start: start.toISOString().split('T')[0] as string,
-    end: end.toISOString().split('T')[0] as string
+    end: end.toISOString().split('T')[0] as string,
   };
 };
 
-export default {
+const indicadoresService = {
   // UF Services
   getUfByDate,
   getCurrentUf,
   getUfHistorico,
-  
+
   // UTM Services
   getUtmByPeriod,
   getCurrentUtm,
   getUtmHistorico,
-  
+
   // General Services
   getAllIndicadores,
   getIndicadorByCodigo,
-  
+
   // Sync Services
   getSyncStatus,
   startManualSync,
   initializeHistoricalData,
-  
+
   // Utils
   formatPesos,
   formatUF,
   formatUTM,
   calculateDateDifference,
-  getDateRange
+  getDateRange,
 };
+
+export default indicadoresService;

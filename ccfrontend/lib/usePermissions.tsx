@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useRouter } from 'next/router';
 import React from 'react'; // ✅ AGREGAR ESTA LÍNEA
+
 import { useAuth } from './useAuth';
 
 // Definición de roles del sistema
@@ -72,7 +75,9 @@ export function usePermissions() {
 
   // Determinar el rol del usuario
   const getUserRole = (): UserRole => {
-    if (!user) return UserRole.USER;
+    if (!user) {
+      return UserRole.USER;
+    }
 
     // Verificar si es superadmin desde el token
     if (user.is_superadmin) {
@@ -82,14 +87,23 @@ export function usePermissions() {
     // Si tiene roles específicos, usar el más alto
     if (user.roles && user.roles.length > 0) {
       const roles = user.roles.map((r: any) => r.toLowerCase()); // ✅ AGREGAR tipo any
-      
-      if (roles.includes('admin')) return UserRole.ADMIN;
-      if (roles.includes('manager') || roles.includes('comite')) return UserRole.MANAGER;
-      if (roles.includes('propietario') || roles.includes('residente')) return UserRole.USER;
+
+      if (roles.includes('admin')) {
+        return UserRole.ADMIN;
+      }
+      if (roles.includes('manager') || roles.includes('comite')) {
+        return UserRole.MANAGER;
+      }
+      if (roles.includes('propietario') || roles.includes('residente')) {
+        return UserRole.USER;
+      }
     }
 
     // Patrick es superuser por defecto (fallback para compatibilidad)
-    if (user.username === 'patrick' || user.username === 'patricio.quintanilla') {
+    if (
+      user.username === 'patrick' ||
+      user.username === 'patricio.quintanilla'
+    ) {
       return UserRole.SUPERUSER;
     }
 
@@ -103,52 +117,78 @@ export function usePermissions() {
   // ✅ NUEVO: Verificar acceso a comunidad específica
   const hasAccessToCommunity = (communityId?: number): boolean => {
     // Superadmin ve todas las comunidades
-    if (user?.is_superadmin) return true;
-    
+    if (user?.is_superadmin) {
+      return true;
+    }
+
     // Si no hay comunidad específica, permitir
-    if (!communityId) return true;
-    
+    if (!communityId) {
+      return true;
+    }
+
     // Verificar si el usuario pertenece a esa comunidad
     if (user?.memberships && Array.isArray(user.memberships)) {
-      return user.memberships.some((membership: any) => 
-        membership.comunidadId === communityId
+      return user.memberships.some(
+        (membership: any) => membership.comunidadId === communityId,
       );
     }
-    
+
     // Fallback: verificar comunidad_id principal
     return user?.comunidad_id === communityId;
   };
 
   // ✅ NUEVO: Obtener comunidades del usuario
-  const getUserCommunities = (): Array<{comunidadId: number, rol: string}> => {
-    if (user?.is_superadmin) return []; // Superadmin ve todas
+  const getUserCommunities = (): Array<{
+    comunidadId: number;
+    rol: string;
+  }> => {
+    if (user?.is_superadmin) {
+      return [];
+    } // Superadmin ve todas
     return user?.memberships || [];
   };
 
   // ✅ NUEVO: Verificar si tiene un rol específico en una comunidad
-  const hasRoleInCommunity = (communityId: number, roleToCheck: string): boolean => {
-    if (user?.is_superadmin) return true;
-    
-    return user?.memberships?.some((membership: any) => 
-      membership.comunidadId === communityId && 
-      membership.rol.toLowerCase() === roleToCheck.toLowerCase()
-    ) || false;
+  const hasRoleInCommunity = (
+    communityId: number,
+    roleToCheck: string,
+  ): boolean => {
+    if (user?.is_superadmin) {
+      return true;
+    }
+
+    return (
+      user?.memberships?.some(
+        (membership: any) =>
+          membership.comunidadId === communityId &&
+          membership.rol.toLowerCase() === roleToCheck.toLowerCase(),
+      ) || false
+    );
   };
 
   // ✅ MODIFICADO: Verificar permisos con contexto de comunidad
-  const hasPermission = (permission: Permission, communityId?: number): boolean => {
+  const hasPermission = (
+    permission: Permission,
+    communityId?: number,
+  ): boolean => {
     const rolePermissions = ROLE_PERMISSIONS[currentRole] || [];
     const hasBasePermission = rolePermissions.includes(permission);
-    
+
     // Si no tiene el permiso base, denegar
-    if (!hasBasePermission) return false;
-    
+    if (!hasBasePermission) {
+      return false;
+    }
+
     // Si es superadmin, permitir siempre
-    if (user?.is_superadmin) return true;
-    
+    if (user?.is_superadmin) {
+      return true;
+    }
+
     // Si no se especifica comunidad, verificar solo el permiso base
-    if (!communityId) return true;
-    
+    if (!communityId) {
+      return true;
+    }
+
     // Verificar acceso a la comunidad específica
     return hasAccessToCommunity(communityId);
   };
@@ -187,7 +227,7 @@ export function usePermissions() {
     return hasPermission(Permission.MANAGE_COMMUNITIES, communityId);
   };
 
-  // ✅ NUEVO: Verificar si puede ver finanzas de una comunidad específica  
+  // ✅ NUEVO: Verificar si puede ver finanzas de una comunidad específica
   const canViewCommunityFinances = (communityId?: number): boolean => {
     return hasPermission(Permission.VIEW_FINANCES, communityId);
   };
@@ -204,7 +244,7 @@ export function usePermissions() {
     isSuperUser,
     isAdmin,
     getUserPermissions,
-    
+
     // ✅ NUEVAS FUNCIONES para multi-tenancy
     hasAccessToCommunity,
     getUserCommunities,
@@ -212,7 +252,7 @@ export function usePermissions() {
     canManageCommunity,
     canViewCommunityFinances,
     canManageCommunityUsers,
-    
+
     // Helpers para UI (actualizados para soportar comunidad específica)
     canManageCommunities: hasPermission(Permission.MANAGE_COMMUNITIES),
     canManageFinances: hasPermission(Permission.MANAGE_FINANCES),
@@ -247,4 +287,117 @@ export function PermissionGuard({
     (!permission && !role); // Si no se especifica permiso/rol, mostrar siempre
 
   return hasAccess ? <>{children}</> : <>{fallback}</>;
+}
+
+// Componente para proteger páginas completas basado en permisos
+interface ProtectedPageProps {
+  permission?: Permission;
+  role?: UserRole;
+  allowedRoles?: string[]; // Roles específicos permitidos (usando getUserRole)
+  children: React.ReactNode;
+  redirectTo?: string; // Ruta a la que redirigir si no tiene acceso
+  showAccessDenied?: boolean; // Mostrar página de acceso denegado en lugar de redirigir
+}
+
+export function ProtectedPage({
+  permission,
+  role,
+  allowedRoles,
+  children,
+  redirectTo = '/dashboard',
+  showAccessDenied = true,
+}: ProtectedPageProps) {
+  const { hasPermission, hasRole, isSuperUser } = usePermissions();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  // Superadmin siempre tiene acceso
+  if (isSuperUser()) {
+    return <>{children}</>;
+  }
+
+  // Verificar acceso basado en parámetros
+  let hasAccess = false;
+
+  if (permission) {
+    hasAccess = hasPermission(permission);
+  } else if (role) {
+    hasAccess = hasRole(role);
+  } else if (allowedRoles && allowedRoles.length > 0) {
+    // Usar getUserRole del módulo roles
+    const { getUserRole } = require('./roles');
+    const currentUserRole = getUserRole(user);
+    hasAccess = allowedRoles.includes(currentUserRole);
+  } else {
+    // Si no se especifica ningún requisito, denegar por defecto
+    hasAccess = false;
+  }
+
+  // Si no tiene acceso
+  if (!hasAccess) {
+    if (showAccessDenied) {
+      // Mostrar página de acceso denegado
+      return (
+        <div className='container-fluid'>
+          <div className='row justify-content-center align-items-center min-vh-100'>
+            <div className='col-12 col-md-8 col-lg-6'>
+              <div className='card shadow-lg border-0'>
+                <div className='card-body text-center p-5'>
+                  <div className='mb-4'>
+                    <span
+                      className='material-icons text-danger'
+                      style={{ fontSize: '80px' }}
+                    >
+                      block
+                    </span>
+                  </div>
+                  <h2 className='card-title mb-3'>Acceso Denegado</h2>
+                  <p className='card-text text-muted mb-4'>
+                    No tienes permisos para acceder a esta página.
+                    <br />
+                    Si crees que esto es un error, contacta al administrador.
+                  </p>
+                  <div className='d-flex gap-2 justify-content-center'>
+                    <button
+                      type='button'
+                      className='btn btn-primary'
+                      onClick={() => router.back()}
+                    >
+                      <span className='material-icons align-middle me-1'>
+                        arrow_back
+                      </span>
+                      Volver Atrás
+                    </button>
+                    <button
+                      type='button'
+                      className='btn btn-outline-primary'
+                      onClick={() => router.push('/dashboard')}
+                    >
+                      <span className='material-icons align-middle me-1'>
+                        home
+                      </span>
+                      Ir al Dashboard
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      // Redirigir a la ruta especificada
+      router.push(redirectTo);
+      return (
+        <div className='d-flex justify-content-center align-items-center min-vh-100'>
+          <div className='spinner-border text-primary' role='status'>
+            <span className='visually-hidden'>Redirigiendo...</span>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // Tiene acceso, mostrar contenido
+  return <>{children}</>;
 }

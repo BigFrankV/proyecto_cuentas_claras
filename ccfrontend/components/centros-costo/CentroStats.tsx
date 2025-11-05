@@ -17,10 +17,10 @@ export default function CentroStats({
   const fmt = (v: number) =>
     isFinite(v) && !Number.isNaN(v)
       ? v.toLocaleString('es-CL', {
-        style: 'currency',
-        currency: 'CLP',
-        maximumFractionDigits: 0,
-      })
+          style: 'currency',
+          currency: 'CLP',
+          maximumFractionDigits: 0,
+        })
       : '$0';
 
   return (

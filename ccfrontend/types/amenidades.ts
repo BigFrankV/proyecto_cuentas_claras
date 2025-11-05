@@ -45,7 +45,12 @@ export interface AmenidadFilters {
 // TIPOS PARA RESERVAS DE AMENIDADES
 // =========================================
 
-export type EstadoReserva = 'solicitada' | 'aprobada' | 'rechazada' | 'cancelada' | 'cumplida';
+export type EstadoReserva =
+  | 'solicitada'
+  | 'aprobada'
+  | 'rechazada'
+  | 'cancelada'
+  | 'cumplida';
 
 export interface ReservaAmenidad {
   id: number;

@@ -40,6 +40,7 @@ export default function ApelacionDetallePage({ inicialApelacion }: any) {
         const r = await getApelacion(Number(id), token);
         setApelacion(r?.data ?? r);
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('getApelacion.error', err);
       } finally {
         setLoading(false);

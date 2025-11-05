@@ -9,7 +9,10 @@ import { categoriasGastoApi } from '@/lib/api/categoriasGasto';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
 import { usePermissions } from '@/lib/usePermissions';
-import { CategoriaGasto, ActualizarCategoriaRequest } from '@/types/categoriasGasto';
+import {
+  CategoriaGasto,
+  ActualizarCategoriaRequest,
+} from '@/types/categoriasGasto';
 
 interface FormData {
   nombre: string;
@@ -53,7 +56,9 @@ export default function EditarCategoriaGasto() {
 
   // Cargar datos de la categoría
   useEffect(() => {
-    if (!id || !isAuthenticated || authLoading) return;
+    if (!id || !isAuthenticated || authLoading) {
+      return;
+    }
 
     const loadCategoria = async () => {
       try {
@@ -71,6 +76,7 @@ export default function EditarCategoriaGasto() {
         setFormData(formDataFromCategoria);
         setOriginalData(formDataFromCategoria);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error al cargar categoría:', error);
         toast.error('Error al cargar la categoría');
         router.push('/categorias-gasto');
@@ -102,7 +108,9 @@ export default function EditarCategoriaGasto() {
 
   // Verificar si hay cambios
   const hasChanges = (): boolean => {
-    if (!originalData) return false;
+    if (!originalData) {
+      return false;
+    }
 
     return (
       formData.nombre !== originalData.nombre ||
@@ -113,7 +121,10 @@ export default function EditarCategoriaGasto() {
   };
 
   // Manejar cambios en el formulario
-  const handleInputChange = (field: keyof FormData, value: string | boolean) => {
+  const handleInputChange = (
+    field: keyof FormData,
+    value: string | boolean,
+  ) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -132,7 +143,9 @@ export default function EditarCategoriaGasto() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm() || !categoria) return;
+    if (!validateForm() || !categoria) {
+      return;
+    }
 
     try {
       setSaving(true);
@@ -149,6 +162,7 @@ export default function EditarCategoriaGasto() {
       toast.success('Categoría actualizada exitosamente');
       router.push('/categorias-gasto');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error al actualizar categoría:', error);
       toast.error('Error al actualizar la categoría');
     } finally {
@@ -159,7 +173,11 @@ export default function EditarCategoriaGasto() {
   // Cancelar edición
   const handleCancel = () => {
     if (hasChanges()) {
-      if (window.confirm('¿Estás seguro de que quieres cancelar? Los cambios se perderán.')) {
+      if (
+        window.confirm(
+          '¿Estás seguro de que quieres cancelar? Los cambios se perderán.',
+        )
+      ) {
         router.push('/categorias-gasto');
       }
     } else {
@@ -170,14 +188,14 @@ export default function EditarCategoriaGasto() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <Layout title="Editar Categoría de Gasto">
-          <div className="container-fluid p-4">
-            <div className="row justify-content-center">
-              <div className="col-12 col-md-8 col-lg-6">
+        <Layout title='Editar Categoría de Gasto'>
+          <div className='container-fluid p-4'>
+            <div className='row justify-content-center'>
+              <div className='col-12 col-md-8 col-lg-6'>
                 <Card>
-                  <Card.Body className="text-center py-5">
-                    <Spinner animation="border" />
-                    <p className="mt-3">Cargando categoría...</p>
+                  <Card.Body className='text-center py-5'>
+                    <Spinner animation='border' />
+                    <p className='mt-3'>Cargando categoría...</p>
                   </Card.Body>
                 </Card>
               </div>
@@ -191,12 +209,12 @@ export default function EditarCategoriaGasto() {
   if (!categoria) {
     return (
       <ProtectedRoute>
-        <Layout title="Editar Categoría de Gasto">
-          <div className="container-fluid p-4">
-            <div className="row justify-content-center">
-              <div className="col-12 col-md-8 col-lg-6">
-                <Alert variant="danger">
-                  <i className="material-icons me-2">error</i>
+        <Layout title='Editar Categoría de Gasto'>
+          <div className='container-fluid p-4'>
+            <div className='row justify-content-center'>
+              <div className='col-12 col-md-8 col-lg-6'>
+                <Alert variant='danger'>
+                  <i className='material-icons me-2'>error</i>
                   No se pudo cargar la categoría
                 </Alert>
               </div>
@@ -213,20 +231,20 @@ export default function EditarCategoriaGasto() {
         <title>Editar Categoría de Gasto — Cuentas Claras</title>
       </Head>
 
-      <Layout title="Editar Categoría de Gasto">
-        <div className="container-fluid p-4">
-          <div className="row justify-content-center">
-            <div className="col-12 col-md-8 col-lg-6">
+      <Layout title='Editar Categoría de Gasto'>
+        <div className='container-fluid p-4'>
+          <div className='row justify-content-center'>
+            <div className='col-12 col-md-8 col-lg-6'>
               <Card>
                 <Card.Header>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h5 className="mb-0">Editar Categoría</h5>
+                  <div className='d-flex justify-content-between align-items-center'>
+                    <h5 className='mb-0'>Editar Categoría</h5>
                     <Button
-                      variant="outline-secondary"
-                      size="sm"
+                      variant='outline-secondary'
+                      size='sm'
                       onClick={handleCancel}
                     >
-                      <i className="material-icons me-1">arrow_back</i>
+                      <i className='material-icons me-1'>arrow_back</i>
                       Volver
                     </Button>
                   </div>
@@ -235,109 +253,123 @@ export default function EditarCategoriaGasto() {
                 <Card.Body>
                   <Form onSubmit={handleSubmit}>
                     {/* Nombre */}
-                    <Form.Group className="mb-3">
+                    <Form.Group className='mb-3'>
                       <Form.Label>Nombre *</Form.Label>
                       <Form.Control
-                        type="text"
+                        type='text'
                         value={formData.nombre}
-                        onChange={(e) => handleInputChange('nombre', e.target.value)}
+                        onChange={e =>
+                          handleInputChange('nombre', e.target.value)
+                        }
                         isInvalid={!!errors.nombre}
-                        placeholder="Ingrese el nombre de la categoría"
+                        placeholder='Ingrese el nombre de la categoría'
                       />
-                      <Form.Control.Feedback type="invalid">
+                      <Form.Control.Feedback type='invalid'>
                         {errors.nombre}
                       </Form.Control.Feedback>
                     </Form.Group>
 
                     {/* Tipo */}
-                    <Form.Group className="mb-3">
+                    <Form.Group className='mb-3'>
                       <Form.Label>Tipo *</Form.Label>
                       <Form.Select
                         value={formData.tipo}
-                        onChange={(e) => handleInputChange('tipo', e.target.value)}
+                        onChange={e =>
+                          handleInputChange('tipo', e.target.value)
+                        }
                         isInvalid={!!errors.tipo}
                       >
-                        <option value="">Seleccione un tipo</option>
-                        {TIPOS_CATEGORIA.map((tipo) => (
+                        <option value=''>Seleccione un tipo</option>
+                        {TIPOS_CATEGORIA.map(tipo => (
                           <option key={tipo.value} value={tipo.value}>
                             {tipo.label}
                           </option>
                         ))}
                       </Form.Select>
-                      <Form.Control.Feedback type="invalid">
+                      <Form.Control.Feedback type='invalid'>
                         {errors.tipo}
                       </Form.Control.Feedback>
                     </Form.Group>
 
                     {/* Cuenta Contable */}
-                    <Form.Group className="mb-3">
+                    <Form.Group className='mb-3'>
                       <Form.Label>Cuenta Contable</Form.Label>
                       <Form.Control
-                        type="text"
+                        type='text'
                         value={formData.cta_contable}
-                        onChange={(e) => handleInputChange('cta_contable', e.target.value)}
-                        placeholder="Código de cuenta contable (opcional)"
+                        onChange={e =>
+                          handleInputChange('cta_contable', e.target.value)
+                        }
+                        placeholder='Código de cuenta contable (opcional)'
                       />
-                      <Form.Text className="text-muted">
+                      <Form.Text className='text-muted'>
                         Código opcional para integración contable
                       </Form.Text>
                     </Form.Group>
 
                     {/* Estado Activa */}
-                    <Form.Group className="mb-4">
+                    <Form.Group className='mb-4'>
                       <Form.Check
-                        type="switch"
-                        id="activa-switch"
-                        label="Categoría activa"
+                        type='switch'
+                        id='activa-switch'
+                        label='Categoría activa'
                         checked={formData.activa}
-                        onChange={(e) => handleInputChange('activa', e.target.checked)}
+                        onChange={e =>
+                          handleInputChange('activa', e.target.checked)
+                        }
                       />
-                      <Form.Text className="text-muted">
-                        Las categorías inactivas no se pueden usar en nuevos gastos
+                      <Form.Text className='text-muted'>
+                        Las categorías inactivas no se pueden usar en nuevos
+                        gastos
                       </Form.Text>
                     </Form.Group>
 
                     {/* Información de la categoría */}
-                    <div className="mb-4 p-3 bg-light rounded">
-                      <h6 className="text-muted mb-2">Información de la Categoría</h6>
-                      <div className="row text-sm">
-                        <div className="col-6">
+                    <div className='mb-4 p-3 bg-light rounded'>
+                      <h6 className='text-muted mb-2'>
+                        Información de la Categoría
+                      </h6>
+                      <div className='row text-sm'>
+                        <div className='col-6'>
                           <strong>ID:</strong> {categoria.id}
                         </div>
-                        <div className="col-6">
-                          <strong>Comunidad:</strong> {categoria.comunidad_nombre}
+                        <div className='col-6'>
+                          <strong>Comunidad:</strong>{' '}
+                          {categoria.comunidad_nombre}
                         </div>
-                        <div className="col-6">
-                          <strong>Creada:</strong> {new Date(categoria.created_at).toLocaleDateString()}
+                        <div className='col-6'>
+                          <strong>Creada:</strong>{' '}
+                          {new Date(categoria.created_at).toLocaleDateString()}
                         </div>
-                        <div className="col-6">
-                          <strong>Actualizada:</strong> {new Date(categoria.updated_at).toLocaleDateString()}
+                        <div className='col-6'>
+                          <strong>Actualizada:</strong>{' '}
+                          {new Date(categoria.updated_at).toLocaleDateString()}
                         </div>
                       </div>
                     </div>
 
                     {/* Botones */}
-                    <div className="d-flex gap-2 justify-content-end">
+                    <div className='d-flex gap-2 justify-content-end'>
                       <Button
-                        variant="outline-secondary"
+                        variant='outline-secondary'
                         onClick={handleCancel}
                         disabled={saving}
                       >
                         Cancelar
                       </Button>
                       <Button
-                        type="submit"
-                        variant="primary"
+                        type='submit'
+                        variant='primary'
                         disabled={saving || !hasChanges()}
                       >
                         {saving ? (
                           <>
-                            <Spinner size="sm" className="me-2" />
+                            <Spinner size='sm' className='me-2' />
                             Guardando...
                           </>
                         ) : (
                           <>
-                            <i className="material-icons me-1">save</i>
+                            <i className='material-icons me-1'>save</i>
                             Guardar Cambios
                           </>
                         )}

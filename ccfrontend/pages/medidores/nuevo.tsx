@@ -141,6 +141,7 @@ export default function NuevoMedidor() {
 
       setCommunities(mockCommunities);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading initial data:', error);
     }
   };
@@ -157,6 +158,7 @@ export default function NuevoMedidor() {
 
       setBuildings(mockBuildings);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading buildings:', error);
     }
   };
@@ -175,6 +177,7 @@ export default function NuevoMedidor() {
 
       setUnits(mockUnits);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading units:', error);
     }
   };
@@ -273,6 +276,7 @@ export default function NuevoMedidor() {
       alert('Medidor creado exitosamente');
       router.push('/medidores');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error creating meter:', error);
       alert('Error al crear el medidor');
     } finally {
@@ -364,6 +368,13 @@ export default function NuevoMedidor() {
                               <div
                                 className={`type-selection-card ${formData.type === type ? 'active' : ''} type-${type}`}
                                 onClick={() => handleInputChange('type', type)}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    handleInputChange('type', type);
+                                  }
+                                }}
+                                role='button'
+                                tabIndex={0}
                               >
                                 <span className='material-icons'>
                                   {getTypeIcon(type)}
@@ -1170,8 +1181,8 @@ export default function NuevoMedidor() {
                       <strong>Fecha:</strong>{' '}
                       {formData.installationDate
                         ? new Date(
-                          formData.installationDate,
-                        ).toLocaleDateString()
+                            formData.installationDate,
+                          ).toLocaleDateString()
                         : '-'}
                     </li>
                     <li>

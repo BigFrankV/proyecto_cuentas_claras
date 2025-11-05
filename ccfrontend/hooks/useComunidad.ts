@@ -8,12 +8,16 @@ export function useCurrentComunidad(): number | null {
   // En ese caso, devolver null o la primera membresía activa
   if (user?.is_superadmin) {
     // Para superadmin, devolver la primera membresía activa o null
-    const activeMembership = user.memberships?.find((m: Membership) => m.activo !== false);
+    const activeMembership = user.memberships?.find(
+      (m: Membership) => m.activo !== false,
+    );
     return activeMembership?.comunidadId || null;
   }
 
   // Para usuarios normales, devolver la primera membresía activa
-  const activeMembership = user?.memberships?.find((m: Membership) => m.activo !== false);
+  const activeMembership = user?.memberships?.find(
+    (m: Membership) => m.activo !== false,
+  );
   return activeMembership?.comunidadId || null;
 }
 

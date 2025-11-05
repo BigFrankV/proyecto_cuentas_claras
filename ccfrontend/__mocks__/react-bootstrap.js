@@ -6,7 +6,8 @@ const React = require('react');
 // because some code accesses them as properties on the import.
 
 function make(name, tag = 'div') {
-  const Comp = (props) => React.createElement(tag, props, props && props.children);
+  const Comp = props =>
+    React.createElement(tag, props, props && props.children);
   Comp.displayName = `Mock${name}`;
   return Comp;
 }

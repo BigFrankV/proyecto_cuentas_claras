@@ -6,7 +6,7 @@ const fs = require('fs').promises;
 const ALLOWED_FILE_TYPES = {
   images: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
   documents: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'],
-  archives: ['.zip', '.rar', '.7z']
+  archives: ['.zip', '.rar', '.7z'],
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -16,7 +16,7 @@ const ensureDirectoryExists = async (dirPath) => {
   try {
     await fs.mkdir(dirPath, { recursive: true });
   } catch (error) {
-    console.error('Error creating directory:', error);
+    console.error('Error al crear directorio:', error);
   }
 };
 
@@ -24,20 +24,28 @@ const ensureDirectoryExists = async (dirPath) => {
 const storage = multer.diskStorage({
   destination: async function (req, file, cb) {
     const baseDir = process.env.UPLOAD_DIR || 'uploads';
-    
+
     // Extraer información del contexto
     const { comunidadId, entityType, entityId, fileCategory } = req.body;
-    
+
     if (!comunidadId) {
       return cb(new Error('comunidadId es requerido'), null);
     }
 
     // Construir ruta según el tipo de entidad
-    let destinationPath = path.join(baseDir, 'comunidades', comunidadId.toString());
-    
+    let destinationPath = path.join(
+      baseDir,
+      'comunidades',
+      comunidadId.toString()
+    );
+
     if (entityType && entityId) {
-      destinationPath = path.join(destinationPath, entityType, entityId.toString());
-      
+      destinationPath = path.join(
+        destinationPath,
+        entityType,
+        entityId.toString()
+      );
+
       if (fileCategory) {
         destinationPath = path.join(destinationPath, fileCategory);
       }
@@ -47,7 +55,7 @@ const storage = multer.diskStorage({
 
     // Crear directorio si no existe
     await ensureDirectoryExists(destinationPath);
-    
+
     cb(null, destinationPath);
   },
   filename: function (req, file, cb) {
@@ -57,10 +65,10 @@ const storage = multer.diskStorage({
     const basename = path.basename(originalName, ext);
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 8);
-    
+
     const filename = `${basename}_${timestamp}_${randomStr}${ext}`;
     cb(null, filename);
-  }
+  },
 });
 
 // Filtro de archivos
@@ -69,9 +77,9 @@ const fileFilter = (req, file, cb) => {
   const allowedExts = [
     ...ALLOWED_FILE_TYPES.images,
     ...ALLOWED_FILE_TYPES.documents,
-    ...ALLOWED_FILE_TYPES.archives
+    ...ALLOWED_FILE_TYPES.archives,
   ];
-  
+
   if (allowedExts.includes(ext)) {
     cb(null, true);
   } else {
@@ -85,25 +93,31 @@ const upload = multer({
   fileFilter,
   limits: {
     fileSize: MAX_FILE_SIZE,
-    files: 10 // Máximo 10 archivos por request
-  }
+    files: 10, // Máximo 10 archivos por request
+  },
 });
 
 // Middleware para validar contexto de subida
 const validateUploadContext = (req, res, next) => {
   const { comunidadId, entityType } = req.body;
-  
+
   if (!comunidadId) {
     return res.status(400).json({
-      error: 'comunidadId es requerido'
+      error: 'comunidadId es requerido',
     });
   }
 
   // Validar tipos de entidad permitidos
-  const validEntityTypes = ['personas', 'unidades', 'gastos', 'documentos', 'reportes'];
+  const validEntityTypes = [
+    'personas',
+    'unidades',
+    'gastos',
+    'documentos',
+    'reportes',
+  ];
   if (entityType && !validEntityTypes.includes(entityType)) {
     return res.status(400).json({
-      error: `Tipo de entidad no válido: ${entityType}`
+      error: `Tipo de entidad no válido: ${entityType}`,
     });
   }
 
@@ -112,8 +126,9 @@ const validateUploadContext = (req, res, next) => {
 
 // Función para obtener información del archivo
 const getFileInfo = (file, req) => {
-  const { comunidadId, entityType, entityId, fileCategory, description } = req.body;
-  
+  const { comunidadId, entityType, entityId, fileCategory, description } =
+    req.body;
+
   return {
     originalName: file.originalname,
     filename: file.filename,
@@ -126,7 +141,7 @@ const getFileInfo = (file, req) => {
     category: fileCategory || 'general',
     description: description || null,
     uploadedAt: new Date(),
-    uploadedBy: req.user?.id || null
+    uploadedBy: req.user?.id || null,
   };
 };
 
@@ -135,5 +150,5 @@ module.exports = {
   validateUploadContext,
   getFileInfo,
   ALLOWED_FILE_TYPES,
-  MAX_FILE_SIZE
+  MAX_FILE_SIZE,
 };

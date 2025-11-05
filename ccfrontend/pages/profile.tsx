@@ -1,5 +1,9 @@
+/* eslint-disable max-len */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 import Head from 'next/head';
-import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useState, useEffect, useCallback } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import TwoFactorModal from '@/components/ui/TwoFactorModal';
@@ -21,7 +25,10 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(false);
   const [userProfile, setUserProfile] = useState<UserExtended | null>(null);
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
 
   // Estados para formularios
   const [profileForm, setProfileForm] = useState<ProfileFormData>({
@@ -59,6 +66,7 @@ export default function Profile() {
   // Cargar datos iniciales
   useEffect(() => {
     loadProfileData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sincronizar estado 2FA con los datos del usuario
@@ -74,7 +82,7 @@ export default function Profile() {
       // Cargar perfil
       const profile = await profileService.getProfile();
       setUserProfile(profile);
-      
+
       // Verificar estado del 2FA solo si no tenemos la info del usuario o es inconsistente
       if (user?.totp_enabled === undefined && !checking2FA) {
         setChecking2FA(true);
@@ -82,17 +90,26 @@ export default function Profile() {
           const twoFAStatus = await profileService.check2FAStatus();
           setTotp2FAEnabled(twoFAStatus.enabled);
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error('Error checking 2FA status:', error);
           setTotp2FAEnabled(false);
         } finally {
           setChecking2FA(false);
         }
       }
-      
+
       // Mapear datos del perfil al formulario, priorizando datos de persona si existen
       setProfileForm({
-        firstName: user?.persona?.nombres || profile.firstName || user?.username?.split(' ')[0] || '',
-        lastName: user?.persona?.apellidos || profile.lastName || user?.username?.split(' ')[1] || '',
+        firstName:
+          user?.persona?.nombres ||
+          profile.firstName ||
+          user?.username?.split(' ')[0] ||
+          '',
+        lastName:
+          user?.persona?.apellidos ||
+          profile.lastName ||
+          user?.username?.split(' ')[1] ||
+          '',
         email: user?.email || profile.email || '',
         phone: user?.persona?.telefono || profile.phone || '',
       });
@@ -100,7 +117,6 @@ export default function Profile() {
       // Cargar sesiones activas
       const activeSessions = await profileService.getActiveSessions();
       setSessions(activeSessions);
-
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
     } finally {
@@ -120,26 +136,35 @@ export default function Profile() {
           const authService = (await import('@/lib/auth')).default;
           await authService.updateProfile({ email: profileForm.email });
         }
-        
+
         // Actualizar datos de persona
         const personaData: {
           nombres?: string;
           apellidos?: string;
           telefono?: string;
         } = {};
-        
-        if (profileForm.firstName) {personaData.nombres = profileForm.firstName;}
-        if (profileForm.lastName) {personaData.apellidos = profileForm.lastName;}
-        if (profileForm.phone) {personaData.telefono = profileForm.phone;}
-        
+
+        if (profileForm.firstName) {
+          personaData.nombres = profileForm.firstName;
+        }
+        if (profileForm.lastName) {
+          personaData.apellidos = profileForm.lastName;
+        }
+        if (profileForm.phone) {
+          personaData.telefono = profileForm.phone;
+        }
+
         const authService = (await import('@/lib/auth')).default;
         await authService.updatePersona(personaData);
       } else {
         // Usuario sin persona vinculada, usar servicio de perfil tradicional
         await profileService.updateProfile(profileForm);
       }
-      
-      setMessage({ type: 'success', text: '¡Perfil actualizado correctamente!' });
+
+      setMessage({
+        type: 'success',
+        text: '¡Perfil actualizado correctamente!',
+      });
       await refreshUser();
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
@@ -151,22 +176,32 @@ export default function Profile() {
   // Manejar cambio de contraseña
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setMessage({ type: 'error', text: 'Las contraseñas no coinciden' });
       return;
     }
 
     if (passwordForm.newPassword.length < 8) {
-      setMessage({ type: 'error', text: 'La contraseña debe tener al menos 8 caracteres' });
+      setMessage({
+        type: 'error',
+        text: 'La contraseña debe tener al menos 8 caracteres',
+      });
       return;
     }
 
     setIsLoading(true);
     try {
       await profileService.changePassword(passwordForm);
-      setMessage({ type: 'success', text: '¡Contraseña actualizada correctamente!' });
-      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setMessage({
+        type: 'success',
+        text: '¡Contraseña actualizada correctamente!',
+      });
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
     } finally {
@@ -205,8 +240,10 @@ export default function Profile() {
 
   // Activar 2FA
   const handleEnable2FA = async (code: string) => {
-    if (!totpSetup) {return;}
-    
+    if (!totpSetup) {
+      return;
+    }
+
     setIsLoading(true);
     try {
       await profileService.enable2FA({ code, base32: totpSetup.base32 });
@@ -269,11 +306,16 @@ export default function Profile() {
 
   // Cerrar todas las sesiones
   const handleCloseAllSessions = async () => {
-    if (!confirm('¿Estás seguro de que quieres cerrar todas las sesiones?')) {return;}
-    
+    if (!confirm('¿Estás seguro de que quieres cerrar todas las sesiones?')) {
+      return;
+    }
+
     try {
       await profileService.closeAllSessions();
-      setMessage({ type: 'success', text: 'Todas las sesiones han sido cerradas' });
+      setMessage({
+        type: 'success',
+        text: 'Todas las sesiones han sido cerradas',
+      });
       await loadProfileData();
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
@@ -284,8 +326,10 @@ export default function Profile() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+    const diffInMinutes = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60),
+    );
+
     if (diffInMinutes < 60) {
       return `Hace ${diffInMinutes} minutos`;
     } else if (diffInMinutes < 1440) {
@@ -304,9 +348,15 @@ export default function Profile() {
 
   // Obtener ícono del dispositivo
   const getDeviceIcon = (device: string) => {
-    if (device.toLowerCase().includes('iphone') || device.toLowerCase().includes('mobile')) {
+    if (
+      device.toLowerCase().includes('iphone') ||
+      device.toLowerCase().includes('mobile')
+    ) {
       return 'fa-mobile-alt';
-    } else if (device.toLowerCase().includes('ipad') || device.toLowerCase().includes('tablet')) {
+    } else if (
+      device.toLowerCase().includes('ipad') ||
+      device.toLowerCase().includes('tablet')
+    ) {
       return 'fa-tablet-alt';
     } else {
       return 'fa-laptop';
@@ -317,7 +367,7 @@ export default function Profile() {
     // Priorizar datos de persona si existen
     const firstName = user?.persona?.nombres || profileForm.firstName?.trim();
     const lastName = user?.persona?.apellidos || profileForm.lastName?.trim();
-    
+
     if (firstName && lastName && firstName.length > 0 && lastName.length > 0) {
       return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
     }
@@ -327,12 +377,14 @@ export default function Profile() {
   const getCommunityBadges = () => {
     if (userProfile?.communities && userProfile.communities.length > 0) {
       return userProfile.communities.map((community, index) => (
-        <span key={index} className="badge bg-primary me-1">
+        <span key={index} className='badge bg-primary me-1'>
           {community.name}
         </span>
       ));
     }
-    return <span className="badge bg-primary me-1">Sin comunidades asignadas</span>;
+    return (
+      <span className='badge bg-primary me-1'>Sin comunidades asignadas</span>
+    );
   };
 
   return (
@@ -348,10 +400,17 @@ export default function Profile() {
             <div className='d-flex align-items-center justify-content-between'>
               <div>
                 <h1 className='h2 mb-1 fw-bold'>Mi Perfil</h1>
-                <p className='mb-0 opacity-75'>Gestiona tu información personal y preferencias de cuenta</p>
+                <p className='mb-0 opacity-75'>
+                  Gestiona tu información personal y preferencias de cuenta
+                </p>
               </div>
               <div className='d-none d-md-block'>
-                <span className='material-icons' style={{ fontSize: '4rem', opacity: '0.3' }}>account_circle</span>
+                <span
+                  className='material-icons'
+                  style={{ fontSize: '4rem', opacity: '0.3' }}
+                >
+                  account_circle
+                </span>
               </div>
             </div>
           </div>
@@ -360,13 +419,23 @@ export default function Profile() {
           <nav aria-label='breadcrumb' className='mb-4'>
             <ol className='breadcrumb'>
               <li className='breadcrumb-item'>
-                <a href='/dashboard' className='text-decoration-none'>
-                  <span className='material-icons me-1' style={{ fontSize: '16px' }}>dashboard</span>
+                <Link href='/dashboard' className='text-decoration-none'>
+                  <span
+                    className='material-icons me-1'
+                    style={{ fontSize: '16px' }}
+                  >
+                    dashboard
+                  </span>
                   Dashboard
-                </a>
+                </Link>
               </li>
               <li className='breadcrumb-item active' aria-current='page'>
-                <span className='material-icons me-1' style={{ fontSize: '16px' }}>person</span>
+                <span
+                  className='material-icons me-1'
+                  style={{ fontSize: '16px' }}
+                >
+                  person
+                </span>
                 Mi Perfil
               </li>
             </ol>
@@ -374,19 +443,28 @@ export default function Profile() {
 
           {/* Mensaje de estado */}
           {message && (
-            <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show shadow-sm border-0`} role="alert">
+            <div
+              className={`alert alert-${message.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show shadow-sm border-0`}
+              role='alert'
+            >
               <div className='d-flex align-items-center'>
-                <span className="material-icons me-2" style={{ fontSize: '20px' }}>
+                <span
+                  className='material-icons me-2'
+                  style={{ fontSize: '20px' }}
+                >
                   {message.type === 'success' ? 'check_circle' : 'error'}
                 </span>
                 <div className='flex-grow-1'>
-                  <strong>{message.type === 'success' ? '¡Éxito!' : 'Error'}</strong> {message.text}
+                  <strong>
+                    {message.type === 'success' ? '¡Éxito!' : 'Error'}
+                  </strong>{' '}
+                  {message.text}
                 </div>
                 <button
-                  type="button"
-                  className="btn-close"
+                  type='button'
+                  className='btn-close'
                   onClick={() => setMessage(null)}
-                  aria-label="Close"
+                  aria-label='Close'
                 ></button>
               </div>
             </div>
@@ -404,7 +482,8 @@ export default function Profile() {
                       style={{
                         width: '120px',
                         height: '120px',
-                        background: 'linear-gradient(135deg, var(--color-accent), var(--color-primary))',
+                        background:
+                          'linear-gradient(135deg, var(--color-accent), var(--color-primary))',
                         color: 'white',
                         fontSize: '48px',
                         fontWeight: 'bold',
@@ -416,8 +495,15 @@ export default function Profile() {
                       {profileForm.firstName} {profileForm.lastName}
                     </h4>
                     <p className='text-muted mb-3 small'>{profileForm.email}</p>
-                    <span className={`badge ${user?.is_superadmin ? 'bg-danger' : 'bg-primary'} fs-6 px-3 py-2 rounded-pill`}>
-                      <span className='material-icons me-1' style={{ fontSize: '16px' }}>badge</span>
+                    <span
+                      className={`badge ${user?.is_superadmin ? 'bg-danger' : 'bg-primary'} fs-6 px-3 py-2 rounded-pill`}
+                    >
+                      <span
+                        className='material-icons me-1'
+                        style={{ fontSize: '16px' }}
+                      >
+                        badge
+                      </span>
                       {getUserRole(user)}
                     </span>
                   </div>
@@ -427,38 +513,58 @@ export default function Profile() {
                   <div className='profile-info'>
                     <div className='d-flex align-items-center mb-3'>
                       <div className='info-icon me-3'>
-                        <span className='material-icons text-primary' style={{ fontSize: '20px' }}>phone</span>
+                        <span
+                          className='material-icons text-primary'
+                          style={{ fontSize: '20px' }}
+                        >
+                          phone
+                        </span>
                       </div>
                       <div className='flex-grow-1'>
-                        <label className='form-label fw-semibold small mb-0 text-muted'>Teléfono</label>
-                        <p className='mb-0 fw-medium'>{profileForm.phone || 'No especificado'}</p>
+                        <label className='form-label fw-semibold small mb-0 text-muted'>
+                          Teléfono
+                        </label>
+                        <p className='mb-0 fw-medium'>
+                          {profileForm.phone || 'No especificado'}
+                        </p>
                       </div>
                     </div>
 
                     <div className='d-flex align-items-center mb-3'>
                       <div className='info-icon me-3'>
-                        <span className='material-icons text-success' style={{ fontSize: '20px' }}>access_time</span>
+                        <span
+                          className='material-icons text-success'
+                          style={{ fontSize: '20px' }}
+                        >
+                          access_time
+                        </span>
                       </div>
                       <div className='flex-grow-1'>
-                        <label className='form-label fw-semibold small mb-0 text-muted'>Última conexión</label>
+                        <label className='form-label fw-semibold small mb-0 text-muted'>
+                          Última conexión
+                        </label>
                         <p className='mb-0 fw-medium'>
                           {userProfile?.lastConnection
                             ? formatDate(userProfile.lastConnection)
-                            : 'Sesión actual'
-                          }
+                            : 'Sesión actual'}
                         </p>
                       </div>
                     </div>
 
                     <div className='d-flex align-items-start'>
                       <div className='info-icon me-3 mt-1'>
-                        <span className='material-icons text-info' style={{ fontSize: '20px' }}>business</span>
+                        <span
+                          className='material-icons text-info'
+                          style={{ fontSize: '20px' }}
+                        >
+                          business
+                        </span>
                       </div>
                       <div className='flex-grow-1'>
-                        <label className='form-label fw-semibold small mb-2 text-muted'>Comunidades que administra</label>
-                        <div className='mb-0'>
-                          {getCommunityBadges()}
-                        </div>
+                        <label className='form-label fw-semibold small mb-2 text-muted'>
+                          Comunidades que administra
+                        </label>
+                        <div className='mb-0'>{getCommunityBadges()}</div>
                       </div>
                     </div>
                   </div>
@@ -471,10 +577,19 @@ export default function Profile() {
               <div className='app-card h-100 shadow-sm border-0 rounded-3 overflow-hidden'>
                 <div className='card-header bg-white border-bottom-0 py-4 px-4'>
                   <div className='d-flex align-items-center'>
-                    <span className='material-icons text-primary me-3' style={{ fontSize: '28px' }}>edit</span>
+                    <span
+                      className='material-icons text-primary me-3'
+                      style={{ fontSize: '28px' }}
+                    >
+                      edit
+                    </span>
                     <div>
-                      <h4 className='mb-1 fw-bold text-dark'>Editar Información de Perfil</h4>
-                      <p className='mb-0 text-muted small'>Actualiza tus datos personales y credenciales</p>
+                      <h4 className='mb-1 fw-bold text-dark'>
+                        Editar Información de Perfil
+                      </h4>
+                      <p className='mb-0 text-muted small'>
+                        Actualiza tus datos personales y credenciales
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -483,30 +598,45 @@ export default function Profile() {
                     {/* Información Personal */}
                     <div className='mb-4'>
                       <h5 className='fw-bold text-dark mb-3 d-flex align-items-center'>
-                        <span className='material-icons me-2 text-primary' style={{ fontSize: '20px' }}>person</span>
+                        <span
+                          className='material-icons me-2 text-primary'
+                          style={{ fontSize: '20px' }}
+                        >
+                          person
+                        </span>
                         Información Personal
                       </h5>
                       <div className='row g-3'>
                         <div className='col-md-6'>
-                          <label className='form-label fw-semibold required'>Nombre</label>
+                          <label className='form-label fw-semibold required'>
+                            Nombre
+                          </label>
                           <input
                             type='text'
                             className='form-control form-control-lg'
                             value={profileForm.firstName}
-                            onChange={(e) =>
-                              setProfileForm({ ...profileForm, firstName: e.target.value })
+                            onChange={e =>
+                              setProfileForm({
+                                ...profileForm,
+                                firstName: e.target.value,
+                              })
                             }
                             required
                           />
                         </div>
                         <div className='col-md-6'>
-                          <label className='form-label fw-semibold required'>Apellido</label>
+                          <label className='form-label fw-semibold required'>
+                            Apellido
+                          </label>
                           <input
                             type='text'
                             className='form-control form-control-lg'
                             value={profileForm.lastName}
-                            onChange={(e) =>
-                              setProfileForm({ ...profileForm, lastName: e.target.value })
+                            onChange={e =>
+                              setProfileForm({
+                                ...profileForm,
+                                lastName: e.target.value,
+                              })
                             }
                             required
                           />
@@ -517,30 +647,45 @@ export default function Profile() {
                     {/* Información de Contacto */}
                     <div className='mb-4'>
                       <h5 className='fw-bold text-dark mb-3 d-flex align-items-center'>
-                        <span className='material-icons me-2 text-primary' style={{ fontSize: '20px' }}>contact_mail</span>
+                        <span
+                          className='material-icons me-2 text-primary'
+                          style={{ fontSize: '20px' }}
+                        >
+                          contact_mail
+                        </span>
                         Información de Contacto
                       </h5>
                       <div className='row g-3'>
                         <div className='col-md-6'>
-                          <label className='form-label fw-semibold required'>Email</label>
+                          <label className='form-label fw-semibold required'>
+                            Email
+                          </label>
                           <input
                             type='email'
                             className='form-control form-control-lg'
                             value={profileForm.email}
-                            onChange={(e) =>
-                              setProfileForm({ ...profileForm, email: e.target.value })
+                            onChange={e =>
+                              setProfileForm({
+                                ...profileForm,
+                                email: e.target.value,
+                              })
                             }
                             required
                           />
                         </div>
                         <div className='col-md-6'>
-                          <label className='form-label fw-semibold'>Teléfono</label>
+                          <label className='form-label fw-semibold'>
+                            Teléfono
+                          </label>
                           <input
                             type='tel'
                             className='form-control form-control-lg'
                             value={profileForm.phone}
-                            onChange={(e) =>
-                              setProfileForm({ ...profileForm, phone: e.target.value })
+                            onChange={e =>
+                              setProfileForm({
+                                ...profileForm,
+                                phone: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -552,32 +697,46 @@ export default function Profile() {
                     {/* Cambio de Contraseña */}
                     <div className='mb-4'>
                       <h5 className='fw-bold text-dark mb-3 d-flex align-items-center'>
-                        <span className='material-icons me-2 text-warning' style={{ fontSize: '20px' }}>lock</span>
+                        <span
+                          className='material-icons me-2 text-warning'
+                          style={{ fontSize: '20px' }}
+                        >
+                          lock
+                        </span>
                         Cambiar Contraseña
                       </h5>
 
                       <div className='row g-3'>
                         <div className='col-md-6'>
-                          <label className='form-label fw-semibold'>Contraseña Actual</label>
+                          <label className='form-label fw-semibold'>
+                            Contraseña Actual
+                          </label>
                           <input
                             type='password'
                             className='form-control form-control-lg'
                             value={passwordForm.currentPassword}
-                            onChange={(e) =>
-                              setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
+                            onChange={e =>
+                              setPasswordForm({
+                                ...passwordForm,
+                                currentPassword: e.target.value,
+                              })
                             }
                           />
                         </div>
+                        <div className='col-md-6'></div>
                         <div className='col-md-6'>
-                        </div>
-                        <div className='col-md-6'>
-                          <label className='form-label fw-semibold'>Nueva Contraseña</label>
+                          <label className='form-label fw-semibold'>
+                            Nueva Contraseña
+                          </label>
                           <input
                             type='password'
                             className='form-control form-control-lg'
                             value={passwordForm.newPassword}
-                            onChange={(e) =>
-                              setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+                            onChange={e =>
+                              setPasswordForm({
+                                ...passwordForm,
+                                newPassword: e.target.value,
+                              })
                             }
                           />
                           <div className='form-text'>
@@ -592,8 +751,11 @@ export default function Profile() {
                             type='password'
                             className='form-control form-control-lg'
                             value={passwordForm.confirmPassword}
-                            onChange={(e) =>
-                              setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+                            onChange={e =>
+                              setPasswordForm({
+                                ...passwordForm,
+                                confirmPassword: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -606,24 +768,53 @@ export default function Profile() {
                         className='btn btn-outline-secondary px-4'
                         onClick={() => {
                           setProfileForm({
-                            firstName: user?.persona?.nombres || userProfile?.firstName || user?.username?.split(' ')[0] || '',
-                            lastName: user?.persona?.apellidos || userProfile?.lastName || user?.username?.split(' ')[1] || '',
+                            firstName:
+                              user?.persona?.nombres ||
+                              userProfile?.firstName ||
+                              user?.username?.split(' ')[0] ||
+                              '',
+                            lastName:
+                              user?.persona?.apellidos ||
+                              userProfile?.lastName ||
+                              user?.username?.split(' ')[1] ||
+                              '',
                             email: user?.email || userProfile?.email || '',
-                            phone: user?.persona?.telefono || userProfile?.phone || '',
+                            phone:
+                              user?.persona?.telefono ||
+                              userProfile?.phone ||
+                              '',
                           });
-                          setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                          setPasswordForm({
+                            currentPassword: '',
+                            newPassword: '',
+                            confirmPassword: '',
+                          });
                         }}
                       >
-                        <span className='material-icons me-2' style={{ fontSize: '16px' }}>refresh</span>
+                        <span
+                          className='material-icons me-2'
+                          style={{ fontSize: '16px' }}
+                        >
+                          refresh
+                        </span>
                         Cancelar
                       </button>
                       <button
                         type='button'
                         className='btn btn-secondary px-4'
                         onClick={handlePasswordSubmit}
-                        disabled={!passwordForm.currentPassword || !passwordForm.newPassword || isLoading}
+                        disabled={
+                          !passwordForm.currentPassword ||
+                          !passwordForm.newPassword ||
+                          isLoading
+                        }
                       >
-                        <span className='material-icons me-2' style={{ fontSize: '16px' }}>lock_reset</span>
+                        <span
+                          className='material-icons me-2'
+                          style={{ fontSize: '16px' }}
+                        >
+                          lock_reset
+                        </span>
                         {isLoading ? 'Cambiando...' : 'Cambiar Contraseña'}
                       </button>
                       <button
@@ -631,7 +822,12 @@ export default function Profile() {
                         className='btn btn-primary px-4'
                         disabled={isLoading}
                       >
-                        <span className='material-icons me-2' style={{ fontSize: '16px' }}>save</span>
+                        <span
+                          className='material-icons me-2'
+                          style={{ fontSize: '16px' }}
+                        >
+                          save
+                        </span>
                         {isLoading ? 'Guardando...' : 'Guardar Cambios'}
                       </button>
                     </div>
@@ -646,30 +842,48 @@ export default function Profile() {
                 <div className='card-header bg-white border-bottom-0 py-4 px-4'>
                   <div className='d-flex align-items-center justify-content-between'>
                     <div className='d-flex align-items-center'>
-                      <span className='material-icons text-info me-3' style={{ fontSize: '28px' }}>security</span>
+                      <span
+                        className='material-icons text-info me-3'
+                        style={{ fontSize: '28px' }}
+                      >
+                        security
+                      </span>
                       <div>
-                        <h5 className='mb-1 fw-bold text-dark'>Autenticación 2FA</h5>
-                        <p className='mb-0 text-muted small'>Seguridad adicional</p>
+                        <h5 className='mb-1 fw-bold text-dark'>
+                          Autenticación 2FA
+                        </h5>
+                        <p className='mb-0 text-muted small'>
+                          Seguridad adicional
+                        </p>
                       </div>
                     </div>
-                    <span className={`badge fs-6 px-3 py-2 rounded-pill ${
-                      totp2FAEnabled ? 'bg-success' : 'bg-warning text-dark'
-                    }`}>
+                    <span
+                      className={`badge fs-6 px-3 py-2 rounded-pill ${
+                        totp2FAEnabled ? 'bg-success' : 'bg-warning text-dark'
+                      }`}
+                    >
                       {totp2FAEnabled ? 'Activado' : 'Desactivado'}
                     </span>
                   </div>
                 </div>
                 <div className='card-body p-4'>
                   <p className='text-muted mb-4'>
-                    Agrega una capa extra de seguridad a tu cuenta usando Google Authenticator
-                    o una aplicación compatible.
+                    Agrega una capa extra de seguridad a tu cuenta usando Google
+                    Authenticator o una aplicación compatible.
                   </p>
 
                   {!totp2FAEnabled ? (
                     <div className='text-center py-3'>
                       <div className='d-flex align-items-center justify-content-center mb-3 text-warning'>
-                        <span className='material-icons me-2' style={{ fontSize: '24px' }}>warning</span>
-                        <span className='fw-medium'>Tu cuenta no tiene 2FA activado</span>
+                        <span
+                          className='material-icons me-2'
+                          style={{ fontSize: '24px' }}
+                        >
+                          warning
+                        </span>
+                        <span className='fw-medium'>
+                          Tu cuenta no tiene 2FA activado
+                        </span>
                       </div>
                       <button
                         type='button'
@@ -677,15 +891,24 @@ export default function Profile() {
                         onClick={handleSetup2FA}
                         disabled={isLoading}
                       >
-                        <span className='material-icons me-2'>add_moderator</span>
+                        <span className='material-icons me-2'>
+                          add_moderator
+                        </span>
                         Activar 2FA
                       </button>
                     </div>
                   ) : (
                     <div className='text-center py-3'>
                       <div className='d-flex align-items-center justify-content-center mb-3 text-success'>
-                        <span className='material-icons me-2' style={{ fontSize: '24px' }}>verified_user</span>
-                        <span className='fw-medium'>2FA está activado en tu cuenta</span>
+                        <span
+                          className='material-icons me-2'
+                          style={{ fontSize: '24px' }}
+                        >
+                          verified_user
+                        </span>
+                        <span className='fw-medium'>
+                          2FA está activado en tu cuenta
+                        </span>
                       </div>
                       <button
                         type='button'
@@ -693,7 +916,9 @@ export default function Profile() {
                         onClick={showDisable2FAModal}
                         disabled={isLoading}
                       >
-                        <span className='material-icons me-2'>remove_moderator</span>
+                        <span className='material-icons me-2'>
+                          remove_moderator
+                        </span>
                         Desactivar 2FA
                       </button>
                     </div>
@@ -707,10 +932,17 @@ export default function Profile() {
               <div className='app-card shadow-sm border-0 rounded-3 overflow-hidden h-100'>
                 <div className='card-header bg-white border-bottom-0 py-4 px-4'>
                   <div className='d-flex align-items-center'>
-                    <span className='material-icons text-secondary me-3' style={{ fontSize: '28px' }}>settings</span>
+                    <span
+                      className='material-icons text-secondary me-3'
+                      style={{ fontSize: '28px' }}
+                    >
+                      settings
+                    </span>
                     <div>
                       <h5 className='mb-1 fw-bold text-dark'>Preferencias</h5>
-                      <p className='mb-0 text-muted small'>Personaliza tu experiencia</p>
+                      <p className='mb-0 text-muted small'>
+                        Personaliza tu experiencia
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -719,7 +951,12 @@ export default function Profile() {
                     {/* Notificaciones */}
                     <div className='mb-4'>
                       <h6 className='fw-bold text-dark mb-3 d-flex align-items-center'>
-                        <span className='material-icons me-2 text-primary' style={{ fontSize: '18px' }}>notifications</span>
+                        <span
+                          className='material-icons me-2 text-primary'
+                          style={{ fontSize: '18px' }}
+                        >
+                          notifications
+                        </span>
                         Notificaciones
                       </h6>
 
@@ -731,11 +968,17 @@ export default function Profile() {
                               type='checkbox'
                               id='emailNoti'
                               checked={preferences.emailNotifications}
-                              onChange={(e) =>
-                                setPreferences({ ...preferences, emailNotifications: e.target.checked })
+                              onChange={e =>
+                                setPreferences({
+                                  ...preferences,
+                                  emailNotifications: e.target.checked,
+                                })
                               }
                             />
-                            <label className='form-check-label fw-medium mb-0 flex-grow-1' htmlFor='emailNoti'>
+                            <label
+                              className='form-check-label fw-medium mb-0 flex-grow-1'
+                              htmlFor='emailNoti'
+                            >
                               Notificaciones por email
                             </label>
                           </div>
@@ -748,11 +991,17 @@ export default function Profile() {
                               type='checkbox'
                               id='paymentNoti'
                               checked={preferences.paymentNotifications}
-                              onChange={(e) =>
-                                setPreferences({ ...preferences, paymentNotifications: e.target.checked })
+                              onChange={e =>
+                                setPreferences({
+                                  ...preferences,
+                                  paymentNotifications: e.target.checked,
+                                })
                               }
                             />
-                            <label className='form-check-label fw-medium mb-0 flex-grow-1' htmlFor='paymentNoti'>
+                            <label
+                              className='form-check-label fw-medium mb-0 flex-grow-1'
+                              htmlFor='paymentNoti'
+                            >
                               Alertas de pagos
                             </label>
                           </div>
@@ -765,11 +1014,17 @@ export default function Profile() {
                               type='checkbox'
                               id='reportNoti'
                               checked={preferences.weeklyReports}
-                              onChange={(e) =>
-                                setPreferences({ ...preferences, weeklyReports: e.target.checked })
+                              onChange={e =>
+                                setPreferences({
+                                  ...preferences,
+                                  weeklyReports: e.target.checked,
+                                })
                               }
                             />
-                            <label className='form-check-label fw-medium mb-0 flex-grow-1' htmlFor='reportNoti'>
+                            <label
+                              className='form-check-label fw-medium mb-0 flex-grow-1'
+                              htmlFor='reportNoti'
+                            >
                               Resúmenes semanales
                             </label>
                           </div>
@@ -780,18 +1035,28 @@ export default function Profile() {
                     {/* Visualización */}
                     <div className='mb-4'>
                       <h6 className='fw-bold text-dark mb-3 d-flex align-items-center'>
-                        <span className='material-icons me-2 text-info' style={{ fontSize: '18px' }}>visibility</span>
+                        <span
+                          className='material-icons me-2 text-info'
+                          style={{ fontSize: '18px' }}
+                        >
+                          visibility
+                        </span>
                         Visualización
                       </h6>
 
                       <div className='row g-3'>
                         <div className='col-12'>
-                          <label className='form-label fw-semibold small'>Zona horaria</label>
+                          <label className='form-label fw-semibold small'>
+                            Zona horaria
+                          </label>
                           <select
                             className='form-select'
                             value={preferences.timezone}
-                            onChange={(e) =>
-                              setPreferences({ ...preferences, timezone: e.target.value })
+                            onChange={e =>
+                              setPreferences({
+                                ...preferences,
+                                timezone: e.target.value,
+                              })
                             }
                           >
                             <option>(GMT-4) Santiago de Chile</option>
@@ -802,12 +1067,17 @@ export default function Profile() {
                         </div>
 
                         <div className='col-12'>
-                          <label className='form-label fw-semibold small'>Formato de fecha</label>
+                          <label className='form-label fw-semibold small'>
+                            Formato de fecha
+                          </label>
                           <select
                             className='form-select'
                             value={preferences.dateFormat}
-                            onChange={(e) =>
-                              setPreferences({ ...preferences, dateFormat: e.target.value })
+                            onChange={e =>
+                              setPreferences({
+                                ...preferences,
+                                dateFormat: e.target.value,
+                              })
                             }
                           >
                             <option>DD/MM/AAAA</option>
@@ -824,7 +1094,12 @@ export default function Profile() {
                         className='btn btn-primary px-4'
                         disabled={isLoading}
                       >
-                        <span className='material-icons me-2' style={{ fontSize: '16px' }}>save</span>
+                        <span
+                          className='material-icons me-2'
+                          style={{ fontSize: '16px' }}
+                        >
+                          save
+                        </span>
                         {isLoading ? 'Guardando...' : 'Guardar'}
                       </button>
                     </div>
@@ -839,10 +1114,19 @@ export default function Profile() {
                 <div className='card-header bg-white border-bottom-0 py-4 px-4'>
                   <div className='d-flex align-items-center justify-content-between'>
                     <div className='d-flex align-items-center'>
-                      <span className='material-icons text-warning me-3' style={{ fontSize: '28px' }}>devices</span>
+                      <span
+                        className='material-icons text-warning me-3'
+                        style={{ fontSize: '28px' }}
+                      >
+                        devices
+                      </span>
                       <div>
-                        <h5 className='mb-1 fw-bold text-dark'>Sesiones Activas</h5>
-                        <p className='mb-0 text-muted small'>Dispositivos conectados a tu cuenta</p>
+                        <h5 className='mb-1 fw-bold text-dark'>
+                          Sesiones Activas
+                        </h5>
+                        <p className='mb-0 text-muted small'>
+                          Dispositivos conectados a tu cuenta
+                        </p>
                       </div>
                     </div>
                     <button
@@ -850,7 +1134,12 @@ export default function Profile() {
                       onClick={handleCloseAllSessions}
                       disabled={isLoading}
                     >
-                      <span className='material-icons me-2' style={{ fontSize: '16px' }}>logout</span>
+                      <span
+                        className='material-icons me-2'
+                        style={{ fontSize: '16px' }}
+                      >
+                        logout
+                      </span>
                       Cerrar Todas
                     </button>
                   </div>
@@ -860,37 +1149,63 @@ export default function Profile() {
                     <table className='table table-hover mb-0'>
                       <thead className='table-light'>
                         <tr>
-                          <th className='border-0 fw-semibold py-3 px-4'>Dispositivo</th>
-                          <th className='border-0 fw-semibold py-3 px-4'>Ubicación</th>
+                          <th className='border-0 fw-semibold py-3 px-4'>
+                            Dispositivo
+                          </th>
+                          <th className='border-0 fw-semibold py-3 px-4'>
+                            Ubicación
+                          </th>
                           <th className='border-0 fw-semibold py-3 px-4'>IP</th>
-                          <th className='border-0 fw-semibold py-3 px-4'>Último Acceso</th>
-                          <th className='border-0 fw-semibold py-3 px-4 text-end'>Acciones</th>
+                          <th className='border-0 fw-semibold py-3 px-4'>
+                            Último Acceso
+                          </th>
+                          <th className='border-0 fw-semibold py-3 px-4 text-end'>
+                            Acciones
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {sessions.map((session) => (
-                          <tr key={session.id} className='border-bottom border-light'>
+                        {sessions.map(session => (
+                          <tr
+                            key={session.id}
+                            className='border-bottom border-light'
+                          >
                             <td className='py-3 px-4'>
                               <div className='d-flex align-items-center'>
-                                <i className={`fa ${getDeviceIcon(session.device)} me-3 text-muted`}
-                                  style={{ fontSize: '18px' }}></i>
-                                <span className='fw-medium'>{session.device}</span>
+                                <i
+                                  className={`fa ${getDeviceIcon(session.device)} me-3 text-muted`}
+                                  style={{ fontSize: '18px' }}
+                                ></i>
+                                <span className='fw-medium'>
+                                  {session.device}
+                                </span>
                               </div>
                             </td>
                             <td className='py-3 px-4'>
-                              <span className='text-muted'>{session.location}</span>
+                              <span className='text-muted'>
+                                {session.location}
+                              </span>
                             </td>
                             <td className='py-3 px-4'>
-                              <code className='bg-light px-2 py-1 rounded small'>{session.ip}</code>
+                              <code className='bg-light px-2 py-1 rounded small'>
+                                {session.ip}
+                              </code>
                             </td>
                             <td className='py-3 px-4'>
                               {session.isCurrent ? (
                                 <span className='badge bg-success px-3 py-2 rounded-pill'>
-                                  <span className='material-icons me-1' style={{ fontSize: '14px' }}>radio_button_checked</span>
+                                  <span
+                                    className='material-icons me-1'
+                                    style={{ fontSize: '14px' }}
+                                  >
+                                    radio_button_checked
+                                  </span>
                                   Actual
                                 </span>
                               ) : (
-                                <span className='text-muted small'>{formatDate(session.lastAccess)}</span>
+                                <span className='text-muted small'>
+                                  {formatDate(session.lastAccess)}
+                                </span>
                               )}
                             </td>
                             <td className='py-3 px-4 text-end'>
@@ -903,7 +1218,12 @@ export default function Profile() {
                                   disabled={isLoading}
                                   title='Cerrar sesión'
                                 >
-                                  <span className='material-icons' style={{ fontSize: '16px' }}>logout</span>
+                                  <span
+                                    className='material-icons'
+                                    style={{ fontSize: '16px' }}
+                                  >
+                                    logout
+                                  </span>
                                 </button>
                               )}
                             </td>

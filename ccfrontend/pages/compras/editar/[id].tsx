@@ -14,8 +14,8 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import { comprasApi } from '@/lib/api/compras';
+import { ProtectedRoute } from '@/lib/useAuth';
 import { CompraBackend } from '@/types/compras';
 
 // Función para formatear moneda chilena
@@ -178,7 +178,7 @@ export default function EditarCompra() {
         items: [], // por ahora vacío
         totalAmount: Number(compra.total ?? 0),
         currency: 'clp',
-        requiredDate: compra.fecha_emision ?? (compra.created_at ?? ''),
+        requiredDate: compra.fecha_emision ?? compra.created_at ?? '',
         requestedBy: '',
         requestedDate: compra.created_at ?? '',
         notes: '',
@@ -220,6 +220,7 @@ export default function EditarCompra() {
         items: mappedPurchase.items,
       });
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading purchase data:', error);
       setPurchase(null);
     } finally {
@@ -319,6 +320,7 @@ export default function EditarCompra() {
       setCostCenters(mockCostCenters);
       setCategories(mockCategories);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading initial data:', error);
     }
   };
@@ -483,6 +485,9 @@ export default function EditarCompra() {
         status: requiresReapproval ? 'pending' : purchase?.status,
       };
 
+      // eslint-disable-next-line no-console
+
+      // eslint-disable-next-line no-console
       console.log('Compra actualizada:', updatedData);
 
       if (requiresReapproval) {
@@ -495,6 +500,7 @@ export default function EditarCompra() {
 
       router.push(`/compras/${id}`);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error updating purchase:', error);
       alert('Error al actualizar la compra');
     } finally {
@@ -595,8 +601,9 @@ export default function EditarCompra() {
             </span>
             <h4>Compra no editable</h4>
             <p className='text-muted'>
-              Esta compra está en estado "{getStatusInfo(purchase.status).label}
-              " y no puede ser editada.
+              Esta compra está en estado &quot;
+              {getStatusInfo(purchase.status).label}
+              &quot; y no puede ser editada.
             </p>
             <div className='d-flex gap-2 justify-content-center'>
               <Button variant='outline-secondary' onClick={() => router.back()}>
@@ -678,7 +685,7 @@ export default function EditarCompra() {
               <span className='material-icons me-2'>warning</span>
               <strong>Atención:</strong> Esta compra ya está aprobada. Los
               cambios significativos requerirán re-aprobación y volverán el
-              estado a "Pendiente".
+              estado a &quot;Pendiente&quot;.
             </Alert>
           )}
 
@@ -1311,8 +1318,8 @@ export default function EditarCompra() {
               realizaste requieren una nueva aprobación.
             </p>
             <p>
-              ¿Deseas continuar? El estado cambiará a "Pendiente" y deberá ser
-              aprobada nuevamente.
+              ¿Deseas continuar? El estado cambiará a &quot;Pendiente&quot; y
+              deberá ser aprobada nuevamente.
             </p>
           </Modal.Body>
           <Modal.Footer>

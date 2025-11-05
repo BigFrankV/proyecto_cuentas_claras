@@ -107,20 +107,37 @@
 }
 
 /* Make stat-card contents centered vertically and horizontally on small screens */
-.stats-grid { align-items: stretch; }
-.stats-grid .stat-card { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-.stats-grid .stat-card .stat-value { width: 100%; }
-
+.stats-grid {
+  align-items: stretch;
+}
+.stats-grid .stat-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.stats-grid .stat-card .stat-value {
+  width: 100%;
+}
 
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
 }
 
-.stat-card.total { border-left-color: #6c757d; }
-.stat-card.active { border-left-color: #28a745; }
-.stat-card.inactive { border-left-color: #dc3545; }
-.stat-card.maintenance { border-left-color: #ffc107; }
+.stat-card.total {
+  border-left-color: #6c757d;
+}
+.stat-card.active {
+  border-left-color: #28a745;
+}
+.stat-card.inactive {
+  border-left-color: #dc3545;
+}
+.stat-card.maintenance {
+  border-left-color: #ffc107;
+}
 
 .stat-header {
   display: flex;
@@ -153,20 +170,32 @@
 
 /* Scale up on larger viewports */
 @media (min-width: 768px) {
-  .stat-value { font-size: 1.75rem; }
+  .stat-value {
+    font-size: 1.75rem;
+  }
 }
 
 @media (min-width: 576px) {
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (min-width: 992px) {
-  .stats-grid { grid-template-columns: repeat(3, 1fr); }
-  .stats-grid .stat-card { align-items: flex-start; text-align: left; justify-content: space-between; }
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .stats-grid .stat-card {
+    align-items: flex-start;
+    text-align: left;
+    justify-content: space-between;
+  }
 }
 
 @media (min-width: 1200px) {
-  .stat-value { font-size: 2rem; }
+  .stat-value {
+    font-size: 2rem;
+  }
 }
 
 .stat-label {
@@ -320,9 +349,15 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
 }
 
-.meter-card.type-electric { border-left-color: #ffc107; }
-.meter-card.type-water { border-left-color: #007bff; }
-.meter-card.type-gas { border-left-color: #dc3545; }
+.meter-card.type-electric {
+  border-left-color: #ffc107;
+}
+.meter-card.type-water {
+  border-left-color: #007bff;
+}
+.meter-card.type-gas {
+  border-left-color: #dc3545;
+}
 
 .card-header {
   display: flex;
@@ -393,7 +428,8 @@
 }
 
 /* ---------- STATUS & TYPE BADGES ---------- */
-.status-badge, .type-badge {
+.status-badge,
+.type-badge {
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
   font-size: 0.75rem;

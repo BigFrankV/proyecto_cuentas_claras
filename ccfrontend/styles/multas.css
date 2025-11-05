@@ -25,33 +25,33 @@
 }
 
 .fine-status.pending {
-  background-color: #FFF8E1;
-  color: #F57F17;
-  border: 1px solid #FFEB3B;
+  background-color: #fff8e1;
+  color: #f57f17;
+  border: 1px solid #ffeb3b;
 }
 
 .fine-status.paid {
-  background-color: #E8F5E9;
-  color: #2E7D32;
-  border: 1px solid #4CAF50;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #4caf50;
 }
 
 .fine-status.overdue {
-  background-color: #FFEBEE;
-  color: #C62828;
-  border: 1px solid #F44336;
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #f44336;
 }
 
 .fine-status.appealed {
-  background-color: #F3E5F5;
-  color: #7B1FA2;
-  border: 1px solid #9C27B0;
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+  border: 1px solid #9c27b0;
 }
 
 .fine-status.cancelled {
-  background-color: #F5F5F5;
+  background-color: #f5f5f5;
   color: #757575;
-  border: 1px solid #9E9E9E;
+  border: 1px solid #9e9e9e;
 }
 
 /* Info cards */
@@ -115,7 +115,7 @@
 
 .nav-tabs .nav-link:hover {
   border: none;
-  background-color: rgba(253,93,20,0.05);
+  background-color: rgba(253, 93, 20, 0.05);
   color: var(--color-primary);
 }
 
@@ -142,7 +142,7 @@
 }
 
 .timeline::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0.75rem;
   top: 0;
@@ -157,7 +157,7 @@
 }
 
 .timeline-item::before {
-  content: '';
+  content: "";
   position: absolute;
   left: -0.5rem;
   top: 0.5rem;
@@ -239,7 +239,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
   padding: 1rem;
   color: white;
   display: flex;
@@ -326,18 +326,18 @@
 }
 
 .communication-type.email {
-  background-color: #E3F2FD;
-  color: #1976D2;
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
 .communication-type.sms {
-  background-color: #F3E5F5;
-  color: #7B1FA2;
+  background-color: #f3e5f5;
+  color: #7b1fa2;
 }
 
 .communication-type.notification {
-  background-color: #FFF8E1;
-  color: #F57F17;
+  background-color: #fff8e1;
+  color: #f57f17;
 }
 
 /* Action buttons */
@@ -405,7 +405,9 @@
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   border-left: 4px solid transparent;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .fine-card:hover {
@@ -414,19 +416,19 @@
 }
 
 .fine-card.pending {
-  border-left-color: #FFC107;
+  border-left-color: #ffc107;
 }
 
 .fine-card.paid {
-  border-left-color: #28A745;
+  border-left-color: #28a745;
 }
 
 .fine-card.overdue {
-  border-left-color: #DC3545;
+  border-left-color: #dc3545;
 }
 
 .fine-card.appealed {
-  border-left-color: #6F42C1;
+  border-left-color: #6f42c1;
 }
 
 .fine-header {
@@ -476,27 +478,27 @@
 }
 
 .status-pending {
-  background-color: #FFF8E1;
-  color: #F57F17;
+  background-color: #fff8e1;
+  color: #f57f17;
 }
 
 .status-paid {
-  background-color: #E8F5E9;
-  color: #2E7D32;
+  background-color: #e8f5e9;
+  color: #2e7d32;
 }
 
 .status-overdue {
-  background-color: #FFEBEE;
-  color: #C62828;
+  background-color: #ffebee;
+  color: #c62828;
 }
 
 .status-appealed {
-  background-color: #F3E5F5;
-  color: #7B1FA2;
+  background-color: #f3e5f5;
+  color: #7b1fa2;
 }
 
 .status-cancelled {
-  background-color: #F5F5F5;
+  background-color: #f5f5f5;
   color: #757575;
 }
 
@@ -510,18 +512,18 @@
 }
 
 .priority-low {
-  background-color: #E8F5E9;
-  color: #2E7D32;
+  background-color: #e8f5e9;
+  color: #2e7d32;
 }
 
 .priority-medium {
-  background-color: #FFF8E1;
-  color: #F57F17;
+  background-color: #fff8e1;
+  color: #f57f17;
 }
 
 .priority-high {
-  background-color: #FFEBEE;
-  color: #C62828;
+  background-color: #ffebee;
+  color: #c62828;
 }
 
 /* Filters panel */
@@ -575,7 +577,7 @@
 }
 
 .table tbody tr:hover {
-  background-color: rgba(253,93,20,0.02);
+  background-color: rgba(253, 93, 20, 0.02);
 }
 
 /* Mobile cards view */
@@ -643,7 +645,7 @@
 }
 
 .wizard-steps::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 20px;
   left: 20px;
@@ -718,12 +720,12 @@
 
 .violation-type-card:hover {
   border-color: var(--color-primary);
-  background-color: rgba(253,93,20,0.02);
+  background-color: rgba(253, 93, 20, 0.02);
 }
 
 .violation-type-card.selected {
   border-color: var(--color-primary);
-  background-color: rgba(253,93,20,0.05);
+  background-color: rgba(253, 93, 20, 0.05);
 }
 
 .violation-type-card .violation-icon {
@@ -762,12 +764,12 @@
 }
 
 .unit-search-result:hover {
-  background-color: rgba(253,93,20,0.02);
+  background-color: rgba(253, 93, 20, 0.02);
   border-color: var(--color-primary);
 }
 
 .unit-search-result.selected {
-  background-color: rgba(253,93,20,0.05);
+  background-color: rgba(253, 93, 20, 0.05);
   border-color: var(--color-primary);
 }
 
@@ -800,12 +802,12 @@
 
 .evidence-upload-zone:hover {
   border-color: var(--color-primary);
-  background-color: rgba(253,93,20,0.02);
+  background-color: rgba(253, 93, 20, 0.02);
 }
 
 .evidence-upload-zone.dragover {
   border-color: var(--color-primary);
-  background-color: rgba(253,93,20,0.05);
+  background-color: rgba(253, 93, 20, 0.05);
 }
 
 .uploaded-file {
@@ -955,7 +957,7 @@
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-radius: 12px;
   border: 1px solid #dee2e6;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .primary-fine-action {
@@ -990,13 +992,18 @@
 }
 
 .primary-fine-action .btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
   transition: left 0.5s;
 }
 
@@ -1023,7 +1030,7 @@
 
 .secondary-fine-actions .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .secondary-fine-actions .btn:active {
@@ -1158,12 +1165,12 @@
   padding: 0.875rem 2rem;
   font-size: 1rem;
   font-weight: 600;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
 .primary-action .action-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
 .secondary-actions {
@@ -1183,7 +1190,7 @@
     font-size: 0.8rem;
     min-width: 100px;
   }
-  
+
   .action-button .material-icons {
     font-size: 1rem;
     margin-right: 0.25rem;

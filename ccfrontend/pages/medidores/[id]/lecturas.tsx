@@ -320,6 +320,13 @@ export default function LecturasMedidor() {
                         key={meter.id}
                         className={`meter-option mb-2 ${meter.id === selectedMeter.id ? 'selected' : ''}`}
                         onClick={() => handleMeterSelect(meter)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            handleMeterSelect(meter);
+                          }
+                        }}
+                        role='button'
+                        tabIndex={0}
                         style={{ cursor: 'pointer' }}
                       >
                         <div className='d-flex justify-content-between align-items-start'>
@@ -430,6 +437,13 @@ export default function LecturasMedidor() {
                         onClick={() =>
                           document.getElementById('photoInput')?.click()
                         }
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            document.getElementById('photoInput')?.click();
+                          }
+                        }}
+                        role='button'
+                        tabIndex={0}
                       >
                         <PhotoCamera
                           style={{ fontSize: 32, color: '#6c757d' }}
@@ -448,6 +462,7 @@ export default function LecturasMedidor() {
                       />
                       {photoPreview && (
                         <div>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={photoPreview}
                             alt='Foto del medidor'
@@ -632,11 +647,14 @@ export default function LecturasMedidor() {
           >
             <Modal.Body>
               {showPhotoModal && (
-                <img
-                  src={showPhotoModal}
-                  alt='Foto de lectura'
-                  style={{ width: '100%' }}
-                />
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={showPhotoModal}
+                    alt='Foto de lectura'
+                    style={{ width: '100%' }}
+                  />
+                </>
               )}
             </Modal.Body>
           </Modal>

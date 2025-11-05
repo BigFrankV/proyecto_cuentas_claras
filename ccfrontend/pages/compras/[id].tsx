@@ -16,8 +16,8 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import { comprasApi } from '@/lib/api/compras';
+import { ProtectedRoute } from '@/lib/useAuth';
 import { CompraBackend } from '@/types/compras';
 
 // Función para formatear moneda chilena
@@ -185,7 +185,7 @@ export default function DetallePurchase() {
         items: [], // por ahora vacío, podría mapearse si hay detalle de items
         totalAmount: Number(compra.total ?? 0),
         currency: 'clp',
-        requiredDate: compra.fecha_emision ?? (compra.created_at ?? ''),
+        requiredDate: compra.fecha_emision ?? compra.created_at ?? '',
         requestedBy: '', // no hay campo específico en la vista
         requestedDate: compra.created_at ?? '',
         documentsCount: 0, // por ahora 0
@@ -195,6 +195,7 @@ export default function DetallePurchase() {
       setPurchase(mappedPurchase);
       setDocuments([]); // por ahora vacío
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading purchase data:', error);
       setPurchase(null);
       setDocuments([]);
@@ -278,6 +279,7 @@ export default function DetallePurchase() {
         alert('Compra aprobada exitosamente');
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error approving purchase:', error);
       alert('Error al aprobar la compra');
     }
@@ -316,6 +318,7 @@ export default function DetallePurchase() {
         alert('Compra rechazada');
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error rejecting purchase:', error);
       alert('Error al rechazar la compra');
     }
@@ -349,6 +352,7 @@ export default function DetallePurchase() {
         setNewNote('');
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error adding note:', error);
     }
   };
@@ -882,10 +886,12 @@ export default function DetallePurchase() {
                               <strong>Aprobada por:</strong>{' '}
                               {purchase.approvedBy}
                             </div>
-                            <div>
-                              <strong>Fecha:</strong>{' '}
-                              {formatDate(purchase.approvedDate!)}
-                            </div>
+                            {purchase.approvedDate && (
+                              <div>
+                                <strong>Fecha:</strong>{' '}
+                                {formatDate(purchase.approvedDate)}
+                              </div>
+                            )}
                           </div>
                         )}
                         {purchase.rejectedBy && (
@@ -894,10 +900,12 @@ export default function DetallePurchase() {
                               <strong>Rechazada por:</strong>{' '}
                               {purchase.rejectedBy}
                             </div>
-                            <div>
-                              <strong>Fecha:</strong>{' '}
-                              {formatDate(purchase.rejectedDate!)}
-                            </div>
+                            {purchase.rejectedDate && (
+                              <div>
+                                <strong>Fecha:</strong>{' '}
+                                {formatDate(purchase.rejectedDate)}
+                              </div>
+                            )}
                             {purchase.rejectionReason && (
                               <div className='mt-2'>
                                 <strong>Motivo:</strong>

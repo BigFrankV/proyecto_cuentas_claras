@@ -12,23 +12,23 @@ erDiagram
     comunidad ||--o{ proveedor : "tiene proveedores (0..N)"
     comunidad ||--o{ categoria_gasto : "clasifica gastos (0..N)"
     comunidad ||--o{ centro_costo : "define centros (0..N)"
-    
+
     proveedor ||--o{ documento_compra : "emite documentos (0..N)"
     documento_compra ||--o{ gasto : "respalda gasto (0..1)"
-    
+
     gasto }o--|| categoria_gasto : "pertenece a (1..1)"
     gasto }o--|| centro_costo : "se imputa a (0..1)"
     gasto }o--|| documento_compra : "respaldado por (0..1)"
-    
+
     gasto ||--o{ detalle_emision : "se incluye en (0..N)"
-    
+
     comunidad {
         bigint id PK
         varchar razon_social "NOT NULL"
         varchar rut UK "NOT NULL"
         char dv UK "NOT NULL"
     }
-    
+
     proveedor {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -43,7 +43,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     documento_compra {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -59,7 +59,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     categoria_gasto {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -70,7 +70,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     centro_costo {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -79,7 +79,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     gasto {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -93,7 +93,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     detalle_emision {
         bigint id PK
         bigint emision_id FK "NOT NULL"
@@ -148,12 +148,12 @@ CONSUMOS INDIVIDUALES (tipo='consumo')
 
 **Escenarios:**
 
-| Situación | documento_compra_id | Validez |
-|-----------|---------------------|---------|
-| Gasto con factura | NOT NULL | ✅ Válido - Respaldo tributario completo |
-| Gasto sin documento | NULL | ✅ Válido - Ej: Remuneraciones, multas internas |
-| Gasto con boleta | NOT NULL | ✅ Válido - Respaldo parcial |
-| Gasto con nota de crédito | NOT NULL | ✅ Válido - Ajuste negativo |
+| Situación                 | documento_compra_id | Validez                                         |
+| ------------------------- | ------------------- | ----------------------------------------------- |
+| Gasto con factura         | NOT NULL            | ✅ Válido - Respaldo tributario completo        |
+| Gasto sin documento       | NULL                | ✅ Válido - Ej: Remuneraciones, multas internas |
+| Gasto con boleta          | NOT NULL            | ✅ Válido - Respaldo parcial                    |
+| Gasto con nota de crédito | NOT NULL            | ✅ Válido - Ajuste negativo                     |
 
 **Ejemplo práctico:**
 
@@ -204,10 +204,10 @@ ADD CONSTRAINT uq_doc_compra UNIQUE (comunidad_id, proveedor_id, tipo_doc, folio
 
 INSERT INTO documento_compra (comunidad_id, proveedor_id, tipo_doc, folio, fecha_emision, neto, iva, exento, total)
 VALUES (
-  1, 
-  5, 
-  'factura', 
-  '789456', 
+  1,
+  5,
+  'factura',
+  '789456',
   '2025-10-15',
   840336,           -- Neto
   159664,           -- IVA (840336 × 0.19)
@@ -216,13 +216,13 @@ VALUES (
 );
 
 -- Verificar IVA correcto
-SELECT 
+SELECT
   folio,
   neto,
   iva,
   total,
   ROUND(neto * 0.19, 0) as iva_calculado,
-  CASE 
+  CASE
     WHEN ABS(iva - ROUND(neto * 0.19, 0)) <= 1 THEN 'OK'
     ELSE 'ERROR IVA'
   END as validacion
@@ -232,11 +232,11 @@ WHERE tipo_doc = 'factura' AND iva > 0;
 
 **Tipos de documento:**
 
-| Tipo | Descripción | IVA | Uso |
-|------|-------------|-----|-----|
-| **factura** | Documento tributario afecto a IVA | SÍ | Servicios, compras con IVA |
-| **boleta** | Comprobante de venta | Puede incluir IVA | Compras menores, retail |
-| **nota_credito** | Ajuste negativo (devolución) | Según doc. original | Corrección de errores, devoluciones |
+| Tipo             | Descripción                       | IVA                 | Uso                                 |
+| ---------------- | --------------------------------- | ------------------- | ----------------------------------- |
+| **factura**      | Documento tributario afecto a IVA | SÍ                  | Servicios, compras con IVA          |
+| **boleta**       | Comprobante de venta              | Puede incluir IVA   | Compras menores, retail             |
+| **nota_credito** | Ajuste negativo (devolución)      | Según doc. original | Corrección de errores, devoluciones |
 
 ---
 
@@ -313,13 +313,13 @@ VALUES (
 );
 
 -- Query para listar gastos extraordinarios pendientes de distribución
-SELECT 
+SELECT
   g.fecha,
   g.monto,
   g.glosa,
   cg.nombre as categoria,
-  CASE 
-    WHEN EXISTS (SELECT 1 FROM detalle_emision WHERE gasto_id = g.id) 
+  CASE
+    WHEN EXISTS (SELECT 1 FROM detalle_emision WHERE gasto_id = g.id)
     THEN 'Distribuido'
     ELSE 'Pendiente'
   END as estado_distribucion
@@ -351,7 +351,7 @@ VALUES (
 );
 
 -- Verificar unicidad de RUT en comunidad
-SELECT 
+SELECT
   p.razon_social,
   p.rut || '-' || p.dv as rut_completo,
   p.activo
@@ -370,10 +370,10 @@ SET @proveedor_id = (SELECT id FROM proveedor WHERE rut = '76543210' AND comunid
 
 -- Paso 2: Registrar factura
 INSERT INTO documento_compra (
-  comunidad_id, 
-  proveedor_id, 
-  tipo_doc, 
-  folio, 
+  comunidad_id,
+  proveedor_id,
+  tipo_doc,
+  folio,
   fecha_emision,
   neto,
   iva,
@@ -543,7 +543,7 @@ SET @comunidad_id = 1;
 
 -- Categorías operacionales
 INSERT INTO categoria_gasto (comunidad_id, nombre, tipo, cta_contable, activa)
-VALUES 
+VALUES
 (@comunidad_id, 'Luz', 'operacional', '5101-001', 1),
 (@comunidad_id, 'Agua', 'operacional', '5101-002', 1),
 (@comunidad_id, 'Gas', 'operacional', '5101-003', 1),
@@ -554,23 +554,23 @@ VALUES
 
 -- Categorías extraordinarias
 INSERT INTO categoria_gasto (comunidad_id, nombre, tipo, cta_contable, activa)
-VALUES 
+VALUES
 (@comunidad_id, 'Reparaciones Mayores', 'extraordinario', '5501-001', 1),
 (@comunidad_id, 'Obras de Mejora', 'extraordinario', '5501-002', 1);
 
 -- Fondo de reserva
 INSERT INTO categoria_gasto (comunidad_id, nombre, tipo, cta_contable, activa)
-VALUES 
+VALUES
 (@comunidad_id, 'Fondo de Mantención', 'fondo_reserva', '2101-001', 1);
 
 -- Multas
 INSERT INTO categoria_gasto (comunidad_id, nombre, tipo, cta_contable, activa)
-VALUES 
+VALUES
 (@comunidad_id, 'Multas Reglamento', 'multas', '4201-001', 1);
 
 -- Consumos individuales
 INSERT INTO categoria_gasto (comunidad_id, nombre, tipo, cta_contable, activa)
-VALUES 
+VALUES
 (@comunidad_id, 'Agua Caliente Individual', 'consumo', '5101-010', 1),
 (@comunidad_id, 'Gas Individual', 'consumo', '5101-011', 1);
 ```
@@ -584,7 +584,7 @@ SET @comunidad_id = 1;
 
 -- Centros de costo por edificio/área
 INSERT INTO centro_costo (comunidad_id, nombre, codigo)
-VALUES 
+VALUES
 (@comunidad_id, 'Administración General', 'ADM-001'),
 (@comunidad_id, 'Edificio A', 'EDF-A'),
 (@comunidad_id, 'Edificio B', 'EDF-B'),
@@ -603,7 +603,7 @@ VALUES
 ### **Q1: Resumen de Gastos por Mes**
 
 ```sql
-SELECT 
+SELECT
   DATE_FORMAT(g.fecha, '%Y-%m') as periodo,
   cg.tipo as tipo_gasto,
   COUNT(*) as cantidad_gastos,
@@ -622,7 +622,7 @@ ORDER BY periodo DESC, cg.tipo;
 ### **Q2: Gastos por Categoría (Mes Actual)**
 
 ```sql
-SELECT 
+SELECT
   cg.nombre as categoria,
   cg.tipo,
   COUNT(g.id) as cantidad,
@@ -632,8 +632,8 @@ SELECT
     '%'
   ) as porcentaje_del_total
 FROM categoria_gasto cg
-LEFT JOIN gasto g 
-  ON g.categoria_id = cg.id 
+LEFT JOIN gasto g
+  ON g.categoria_id = cg.id
   AND g.comunidad_id = ?
   AND MONTH(g.fecha) = MONTH(CURDATE())
   AND YEAR(g.fecha) = YEAR(CURDATE())
@@ -648,7 +648,7 @@ ORDER BY total DESC;
 ### **Q3: Gastos por Centro de Costo**
 
 ```sql
-SELECT 
+SELECT
   cc.nombre as centro_costo,
   cc.codigo,
   COUNT(g.id) as cantidad_gastos,
@@ -668,7 +668,7 @@ ORDER BY total_gastado DESC;
 ### **Q4: Proveedores con Mayor Facturación**
 
 ```sql
-SELECT 
+SELECT
   p.razon_social,
   p.rut || '-' || p.dv as rut,
   p.giro,
@@ -689,7 +689,7 @@ LIMIT 10;
 ### **Q5: Detalle de Gasto con Documento**
 
 ```sql
-SELECT 
+SELECT
   g.fecha,
   g.monto,
   g.glosa,
@@ -718,12 +718,12 @@ WHERE g.comunidad_id = ?
 ### **Q6: Gastos sin Documento de Respaldo**
 
 ```sql
-SELECT 
+SELECT
   g.fecha,
   g.monto,
   g.glosa,
   cg.nombre as categoria,
-  CASE 
+  CASE
     WHEN g.extraordinario = 1 THEN 'Extraordinario'
     ELSE 'Operacional'
   END as tipo,
@@ -742,7 +742,7 @@ ORDER BY g.fecha DESC;
 
 ```sql
 -- Facturas con IVA mal calculado (diferencia > $1)
-SELECT 
+SELECT
   dc.folio,
   p.razon_social as proveedor,
   dc.fecha_emision,
@@ -765,12 +765,12 @@ ORDER BY diferencia DESC;
 ### **Q8: Gastos Extraordinarios Pendientes de Distribución**
 
 ```sql
-SELECT 
+SELECT
   g.fecha,
   g.monto,
   g.glosa,
   cg.nombre as categoria,
-  CASE 
+  CASE
     WHEN EXISTS (
       SELECT 1 FROM detalle_emision de WHERE de.gasto_id = g.id
     ) THEN 'Distribuido'
@@ -797,13 +797,13 @@ BEFORE INSERT ON documento_compra
 FOR EACH ROW
 BEGIN
   DECLARE iva_calculado DECIMAL(12,2);
-  
+
   IF NEW.tipo_doc = 'factura' AND NEW.neto > 0 THEN
     SET iva_calculado = ROUND(NEW.neto * 0.19, 2);
-    
+
     -- Validar que IVA esté en rango aceptable (±$2 por redondeo)
     IF ABS(NEW.iva - iva_calculado) > 2 THEN
-      SIGNAL SQLSTATE '45000' 
+      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'IVA no coincide con neto × 19% (permitido ±$2 por redondeo)';
     END IF;
   END IF;
@@ -814,12 +814,12 @@ BEFORE UPDATE ON documento_compra
 FOR EACH ROW
 BEGIN
   DECLARE iva_calculado DECIMAL(12,2);
-  
+
   IF NEW.tipo_doc = 'factura' AND NEW.neto > 0 THEN
     SET iva_calculado = ROUND(NEW.neto * 0.19, 2);
-    
+
     IF ABS(NEW.iva - iva_calculado) > 2 THEN
-      SIGNAL SQLSTATE '45000' 
+      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'IVA no coincide con neto × 19% (permitido ±$2 por redondeo)';
     END IF;
   END IF;
@@ -838,11 +838,11 @@ BEFORE INSERT ON documento_compra
 FOR EACH ROW
 BEGIN
   DECLARE total_calculado DECIMAL(12,2);
-  
+
   SET total_calculado = NEW.neto + NEW.iva + NEW.exento;
-  
+
   IF ABS(NEW.total - total_calculado) > 1 THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Total no coincide con neto + iva + exento';
   END IF;
 END$$
@@ -852,11 +852,11 @@ BEFORE UPDATE ON documento_compra
 FOR EACH ROW
 BEGIN
   DECLARE total_calculado DECIMAL(12,2);
-  
+
   SET total_calculado = NEW.neto + NEW.iva + NEW.exento;
-  
+
   IF ABS(NEW.total - total_calculado) > 1 THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Total no coincide con neto + iva + exento';
   END IF;
 END$$
@@ -874,15 +874,15 @@ BEFORE INSERT ON gasto
 FOR EACH ROW
 BEGIN
   DECLARE total_doc DECIMAL(12,2);
-  
+
   IF NEW.documento_compra_id IS NOT NULL THEN
     SELECT total INTO total_doc
     FROM documento_compra
     WHERE id = NEW.documento_compra_id;
-    
+
     -- Permitir diferencia de ±$10 por redondeo
     IF ABS(NEW.monto - total_doc) > 10 THEN
-      SIGNAL SQLSTATE '45000' 
+      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Monto del gasto difiere significativamente del documento asociado';
     END IF;
   END IF;
@@ -932,7 +932,7 @@ DELIMITER ;
 ### **R1: Estado de Resultados (Mensual)**
 
 ```sql
-SELECT 
+SELECT
   'INGRESOS' as seccion,
   'Gastos Comunes Cobrados' as concepto,
   COALESCE(SUM(ccu.monto_total), 0) as monto
@@ -943,12 +943,12 @@ WHERE ccu.comunidad_id = ?
 
 UNION ALL
 
-SELECT 
+SELECT
   'EGRESOS',
   cg.nombre,
   COALESCE(SUM(g.monto), 0)
 FROM categoria_gasto cg
-LEFT JOIN gasto g 
+LEFT JOIN gasto g
   ON g.categoria_id = cg.id
   AND g.comunidad_id = ?
   AND MONTH(g.fecha) = MONTH(CURDATE())
@@ -958,7 +958,7 @@ GROUP BY cg.id, cg.nombre
 
 UNION ALL
 
-SELECT 
+SELECT
   'RESULTADO',
   'Superávit/Déficit del Mes',
   (
@@ -981,13 +981,13 @@ SELECT
 ### **R2: Comparativo Anual por Categoría**
 
 ```sql
-SELECT 
+SELECT
   cg.nombre as categoria,
   SUM(CASE WHEN YEAR(g.fecha) = YEAR(CURDATE()) THEN g.monto ELSE 0 END) as ano_actual,
   SUM(CASE WHEN YEAR(g.fecha) = YEAR(CURDATE()) - 1 THEN g.monto ELSE 0 END) as ano_anterior,
   CONCAT(
     ROUND(
-      (SUM(CASE WHEN YEAR(g.fecha) = YEAR(CURDATE()) THEN g.monto ELSE 0 END) - 
+      (SUM(CASE WHEN YEAR(g.fecha) = YEAR(CURDATE()) THEN g.monto ELSE 0 END) -
        SUM(CASE WHEN YEAR(g.fecha) = YEAR(CURDATE()) - 1 THEN g.monto ELSE 0 END)) /
       NULLIF(SUM(CASE WHEN YEAR(g.fecha) = YEAR(CURDATE()) - 1 THEN g.monto ELSE 0 END), 0) * 100,
       2

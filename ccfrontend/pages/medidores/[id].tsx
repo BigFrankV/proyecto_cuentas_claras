@@ -73,24 +73,31 @@ export default function MedidorDetallePage() {
   };
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      return undefined;
+    }
     let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
         const data = await getMedidor(Number(id));
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
         setMedidor(data);
         const lecResp = await listLecturas(Number(id), { limit: 24 });
-        setLecturas(lecResp.data ?? lecResp);
+        setLecturas(Array.isArray(lecResp) ? lecResp : (lecResp?.data ?? []));
         const consResp = await getConsumos(Number(id));
         setConsumos(consResp.data ?? []);
         // mantenimiento permanece maqueteado (maintenanceHistory)
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('load medidor err', err);
         alert('Error cargando medidor');
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
     load();
@@ -100,18 +107,24 @@ export default function MedidorDetallePage() {
   }, [id]);
 
   const canManage = () => {
-    if (!user) return false;
-    if (user.is_superadmin) return true;
-    return !!user.comunidades?.find(
-      (c: any) =>
-        c.id === medidor?.comunidad_id &&
-        (c.role === 'admin' || c.role === 'gestor'),
+    if (!user) {
+      return false;
+    }
+    if (user.is_superadmin) {
+      return true;
+    }
+    return !!user.memberships?.find(
+      (m: any) =>
+        m.comunidad_id === medidor?.comunidad_id &&
+        (m.rol === 'admin' || m.rol === 'gestor'),
     );
   };
 
   const submitLectura = async (e: any) => {
     e.preventDefault();
-    if (!id) return;
+    if (!id) {
+      return;
+    }
     if (!form.fecha || form.lectura === '' || !form.periodo) {
       alert('Completa fecha, lectura y periodo');
       return;
@@ -125,16 +138,20 @@ export default function MedidorDetallePage() {
       });
       alert('Lectura creada');
       const lecResp = await listLecturas(Number(id), { limit: 24 });
-      setLecturas(lecResp.data ?? lecResp);
+      setLecturas(Array.isArray(lecResp) ? lecResp : (lecResp?.data ?? []));
       const data = await getMedidor(Number(id));
       setMedidor(data);
       setForm({ fecha: '', lectura: '', periodo: '' });
     } catch (err: any) {
+      // eslint-disable-next-line no-console
       console.error('create lectura err', err);
-      if (err?.response?.status === 409)
+      if (err?.response?.status === 409) {
         alert('Ya existe una lectura para ese periodo');
-      else if (err?.response?.status === 403) alert('No autorizado');
-      else alert('Error al crear lectura');
+      } else if (err?.response?.status === 403) {
+        alert('No autorizado');
+      } else {
+        alert('Error al crear lectura');
+      }
     } finally {
       setLoading(false);
     }
@@ -146,10 +163,14 @@ export default function MedidorDetallePage() {
     setLoading(true);
     try {
       const resp = await deleteMedidor(medidor.id);
-      if (resp?.softDeleted) alert('Medidor desactivado (soft-delete)');
-      else alert('Medidor eliminado');
+      if (resp?.softDeleted) {
+        alert('Medidor desactivado (soft-delete)');
+      } else {
+        alert('Medidor eliminado');
+      }
       router.push('/medidores');
     } catch (err: any) {
+      // eslint-disable-next-line no-console
       console.error('delete medidor err', err);
       alert('Error al eliminar medidor');
     } finally {

@@ -85,6 +85,7 @@ export default function CentroCostoDetalle() {
 
       setCostCenter(mockCenter);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading cost center:', error);
     } finally {
       setLoading(false);
@@ -139,6 +140,7 @@ export default function CentroCostoDetalle() {
 
       setExpenses(mockExpenses);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading expenses:', error);
     }
   };
@@ -177,6 +179,7 @@ export default function CentroCostoDetalle() {
       alert('Centro de costo eliminado exitosamente');
       router.push('/centros-costo');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error deleting cost center:', error);
       alert('Error al eliminar el centro de costo');
     }
@@ -618,7 +621,7 @@ export default function CentroCostoDetalle() {
             </div>
             <p>
               ¿Estás seguro de que deseas eliminar el centro de costo{' '}
-              <strong>"{costCenter.name}"</strong>?
+              <strong>&quot;{costCenter.name}&quot;</strong>?
             </p>
             <p className='text-muted'>
               Esto también eliminará toda la información relacionada, incluyendo

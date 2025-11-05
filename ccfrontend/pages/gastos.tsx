@@ -26,7 +26,11 @@ import {
   getProveedores,
 } from '@/lib/gastosService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { usePermissions } from '@/lib/usePermissions';
+import {
+  usePermissions,
+  ProtectedPage,
+  UserRole,
+} from '@/lib/usePermissions';
 import { Expense, mapBackendToExpense } from '@/types/gastos';
 
 export default function GastosListado() {
@@ -71,7 +75,11 @@ export default function GastosListado() {
 
     try {
       setLoading(true);
-      const resp = await listGastos(resolvedComunidadId, { limit: 100, offset: 0 });
+      const resp = await listGastos(resolvedComunidadId, {
+        limit: 100,
+        offset: 0,
+      });
+      // eslint-disable-next-line no-console
       console.log('Respuesta del backend:', resp.data); // Verifica si 'estado' es correcto
       const items = resp.data || [];
       const mapped: Expense[] = (Array.isArray(items) ? items : []).map(
@@ -79,6 +87,7 @@ export default function GastosListado() {
       );
       setExpenses(mapped);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading expenses from API:', error);
       setExpenses([]);
     } finally {
@@ -169,8 +178,11 @@ export default function GastosListado() {
 
   const filteredExpenses = expenses.filter(expense => {
     return (
-      expense.description.toLowerCase().includes(filters.search.toLowerCase()) &&
-      (filters.category === '' || expense.categoryId === Number(filters.category)) &&
+      expense.description
+        .toLowerCase()
+        .includes(filters.search.toLowerCase()) &&
+      (filters.category === '' ||
+        expense.categoryId === Number(filters.category)) &&
       (filters.status === '' || expense.status === filters.status) &&
       (filters.provider === '' ||
         expense.provider.toLowerCase().includes(filters.provider.toLowerCase()))
@@ -202,9 +214,14 @@ export default function GastosListado() {
           id: c.id,
           nombre: c.nombre ?? c.name ?? c.label,
         }));
-        setCategories(normalized.sort((a: any, b: any) => String(a.nombre).localeCompare(String(b.nombre))));
+        setCategories(
+          normalized.sort((a: any, b: any) =>
+            String(a.nombre).localeCompare(String(b.nombre)),
+          ),
+        );
       })
       .catch(err => {
+        // eslint-disable-next-line no-console
         console.error('Error getCategorias', err);
         setCategories([]);
       });
@@ -218,6 +235,7 @@ export default function GastosListado() {
         setCostCenters(normalized);
       })
       .catch(err => {
+        // eslint-disable-next-line no-console
         console.error('Error getCentrosCosto', err);
         setCostCenters([]);
       });
@@ -231,6 +249,7 @@ export default function GastosListado() {
         setProviders(normalized);
       })
       .catch(err => {
+        // eslint-disable-next-line no-console
         console.error('Error getProveedores', err);
         setProviders([]);
       });
@@ -238,11 +257,12 @@ export default function GastosListado() {
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Gastos — Cuentas Claras</title>
-      </Head>
+      <ProtectedPage role={UserRole.ADMIN}>
+        <Head>
+          <title>Gastos — Cuentas Claras</title>
+        </Head>
 
-      <Layout>
+        <Layout>
         <div className='expenses-container'>
           {/* Header */}
           <div className='expenses-header'>
@@ -364,7 +384,9 @@ export default function GastosListado() {
                       <option value=''>Todas las categorías</option>
                       {categories.map(category => (
                         <option key={category.id} value={category.id}>
-                          {category.nombre ?? category.name ?? String(category.id)}
+                          {category.nombre ??
+                            category.name ??
+                            String(category.id)}
                         </option>
                       ))}
                     </Form.Select>
@@ -608,6 +630,13 @@ export default function GastosListado() {
                   <div
                     className='data-card'
                     onClick={() => handleExpenseClick(expense.id)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        handleExpenseClick(expense.id);
+                      }
+                    }}
+                    role='button'
+                    tabIndex={0}
                   >
                     <div className='card-body'>
                       <div className='data-card-header'>
@@ -758,6 +787,7 @@ export default function GastosListado() {
           </div>
         </div>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 }

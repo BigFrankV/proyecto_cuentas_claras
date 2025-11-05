@@ -12,7 +12,7 @@ const { requireCommunity } = require('../middleware/tenancy');
  *   - name: Cargos
  *     description: |
  *       Gestión de cuentas de cobro por unidad (anteriormente "cargos").
- *       
+ *
  *       **Cambio de nomenclatura**: La tabla `cargo_unidad` ahora se llama `cuenta_cobro_unidad`.
  *       Representa los montos totales a cobrar a cada unidad por período (gastos comunes, multas, consumos, etc.).
  */
@@ -120,16 +120,30 @@ const { requireCommunity } = require('../middleware/tenancy');
  */
 
 // list cargos by comunidad with filters (members)
-router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = Number(req.params.comunidadId);
-  const { estado, unidad, periodo, page=1, limit=100 } = req.query;
-  const offset = (page-1)*limit;
-  const conditions = ['ccu.comunidad_id = ?']; const params = [comunidadId];
-  if (estado) { conditions.push('ccu.estado = ?'); params.push(estado); }
-  if (unidad) { conditions.push('u.id = ?'); params.push(unidad); }
-  if (periodo) { conditions.push("egc.periodo = ?"); params.push(periodo); }
-  
-  const sql = `
+router.get(
+  '/comunidad/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = Number(req.params.comunidadId);
+    const { estado, unidad, periodo, page = 1, limit = 100 } = req.query;
+    const offset = (page - 1) * limit;
+    const conditions = ['ccu.comunidad_id = ?'];
+    const params = [comunidadId];
+    if (estado) {
+      conditions.push('ccu.estado = ?');
+      params.push(estado);
+    }
+    if (unidad) {
+      conditions.push('u.id = ?');
+      params.push(unidad);
+    }
+    if (periodo) {
+      conditions.push('egc.periodo = ?');
+      params.push(periodo);
+    }
+
+    const sql = `
     SELECT
       ccu.id,
       CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
@@ -178,10 +192,11 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
     ORDER BY ccu.created_at DESC
     LIMIT ? OFFSET ?
   `;
-  params.push(Number(limit), Number(offset));
-  const [rows] = await db.query(sql, params);
-  res.json(rows);
-});
+    params.push(Number(limit), Number(offset));
+    const [rows] = await db.query(sql, params);
+    res.json(rows);
+  }
+);
 
 /**
  * @swagger
@@ -257,8 +272,8 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
  *         $ref: '#/components/responses/UnauthorizedError'
  */
 
-router.get('/:id', authenticate, async (req, res) => { 
-  const id = req.params.id; 
+router.get('/:id', authenticate, async (req, res) => {
+  const id = req.params.id;
   const sql = `
     SELECT
       ccu.id,
@@ -309,9 +324,9 @@ router.get('/:id', authenticate, async (req, res) => {
     LEFT JOIN persona p ON tu.persona_id = p.id
     WHERE ccu.id = ?
   `;
-  const [rows] = await db.query(sql, [id]); 
-  if (!rows.length) return res.status(404).json({ error: 'not found' }); 
-  res.json(rows[0]); 
+  const [rows] = await db.query(sql, [id]);
+  if (!rows.length) return res.status(404).json({ error: 'not found' });
+  res.json(rows[0]);
 });
 
 /**
@@ -382,8 +397,8 @@ router.get('/:id', authenticate, async (req, res) => {
  *         $ref: '#/components/responses/UnauthorizedError'
  */
 
-router.get('/unidad/:id', authenticate, async (req, res) => { 
-  const unidadId = req.params.id; 
+router.get('/unidad/:id', authenticate, async (req, res) => {
+  const unidadId = req.params.id;
   const sql = `
     SELECT
       ccu.id,
@@ -417,8 +432,8 @@ router.get('/unidad/:id', authenticate, async (req, res) => {
     WHERE ccu.unidad_id = ?
     ORDER BY ccu.created_at DESC
   `;
-  const [rows] = await db.query(sql, [unidadId]); 
-  res.json(rows); 
+  const [rows] = await db.query(sql, [unidadId]);
+  res.json(rows);
 });
 
 /**
@@ -514,29 +529,35 @@ router.get('/unidad/:id', authenticate, async (req, res) => {
  *         description: Unidad no encontrada
  */
 
-router.post('/', [
-  authenticate,
-  authorize('admin', 'superadmin'),
-  body('concept').notEmpty().withMessage('El concepto es obligatorio'),
-  body('type').isIn(['administration', 'maintenance', 'service', 'insurance', 'other']).withMessage('Tipo de cargo inválido'),
-  body('amount').isNumeric().withMessage('El monto debe ser numérico'),
-  body('dueDate').isISO8601().withMessage('Fecha de vencimiento inválida'),
-  body('unit').notEmpty().withMessage('La unidad es obligatoria')
-], async (req, res) => {
-  try {
-    // Validar datos de entrada
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Datos inválidos',
-        details: errors.array()
-      });
-    }
+router.post(
+  '/',
+  [
+    authenticate,
+    authorize('admin', 'superadmin'),
+    body('concept').notEmpty().withMessage('El concepto es obligatorio'),
+    body('type')
+      .isIn(['administration', 'maintenance', 'service', 'insurance', 'other'])
+      .withMessage('Tipo de cargo inválido'),
+    body('amount').isNumeric().withMessage('El monto debe ser numérico'),
+    body('dueDate').isISO8601().withMessage('Fecha de vencimiento inválida'),
+    body('unit').notEmpty().withMessage('La unidad es obligatoria'),
+  ],
+  async (req, res) => {
+    try {
+      // Validar datos de entrada
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Datos inválidos',
+          details: errors.array(),
+        });
+      }
 
-    const { concept, type, amount, dueDate, unit, description } = req.body;
+      const { concept, type, amount, dueDate, unit, description } = req.body;
 
-    // Buscar la unidad por código
-    const [unitRows] = await db.query(`
+      // Buscar la unidad por código
+      const [unitRows] = await db.query(
+        `
       SELECT u.id, u.comunidad_id, u.alicuota, c.razon_social as nombre_comunidad,
              CONCAT(p.nombres, ' ', p.apellidos) as propietario
       FROM unidad u
@@ -544,27 +565,30 @@ router.post('/', [
       LEFT JOIN titulares_unidad tu ON u.id = tu.unidad_id AND tu.tipo = 'propietario' AND tu.hasta IS NULL
       LEFT JOIN persona p ON tu.persona_id = p.id
       WHERE u.codigo = ? AND u.activa = 1
-    `, [unit]);
+    `,
+        [unit]
+      );
 
-    if (unitRows.length === 0) {
-      return res.status(404).json({
-        error: 'Unidad no encontrada',
-        message: `La unidad con código '${unit}' no existe o no está activa`
-      });
-    }
+      if (unitRows.length === 0) {
+        return res.status(404).json({
+          error: 'Unidad no encontrada',
+          message: `La unidad con código '${unit}' no existe o no está activa`,
+        });
+      }
 
-    const unitData = unitRows[0];
+      const unitData = unitRows[0];
 
-    // Verificar que el usuario tiene acceso a esta comunidad
-    if (!req.user.comunidades?.includes(unitData.comunidad_id)) {
-      return res.status(403).json({
-        error: 'Acceso denegado',
-        message: 'No tiene permisos para crear cargos en esta comunidad'
-      });
-    }
+      // Verificar que el usuario tiene acceso a esta comunidad
+      if (!req.user.comunidades?.includes(unitData.comunidad_id)) {
+        return res.status(403).json({
+          error: 'Acceso denegado',
+          message: 'No tiene permisos para crear cargos en esta comunidad',
+        });
+      }
 
-    // Crear emisión de gastos comunes para este cargo individual
-    const [emisionResult] = await db.query(`
+      // Crear emisión de gastos comunes para este cargo individual
+      const [emisionResult] = await db.query(
+        `
       INSERT INTO emision_gastos_comunes (
         comunidad_id,
         periodo,
@@ -573,17 +597,20 @@ router.post('/', [
         observaciones,
         created_at
       ) VALUES (?, ?, ?, 'emitido', ?, NOW())
-    `, [
-      unitData.comunidad_id,
-      concept, // Usar el concepto como período
-      dueDate,
-      description || concept
-    ]);
+    `,
+        [
+          unitData.comunidad_id,
+          concept, // Usar el concepto como período
+          dueDate,
+          description || concept,
+        ]
+      );
 
-    const emisionId = emisionResult.insertId;
+      const emisionId = emisionResult.insertId;
 
-    // Crear el cargo
-    const [cargoResult] = await db.query(`
+      // Crear el cargo
+      const [cargoResult] = await db.query(
+        `
       INSERT INTO cuenta_cobro_unidad (
         emision_id,
         comunidad_id,
@@ -593,18 +620,15 @@ router.post('/', [
         estado,
         interes_acumulado
       ) VALUES (?, ?, ?, ?, ?, 'pendiente', 0)
-    `, [
-      emisionId,
-      unitData.comunidad_id,
-      unitData.id,
-      amount,
-      amount
-    ]);
+    `,
+        [emisionId, unitData.comunidad_id, unitData.id, amount, amount]
+      );
 
-    const cargoId = cargoResult.insertId;
+      const cargoId = cargoResult.insertId;
 
-    // Crear detalle del cargo
-    await db.query(`
+      // Crear detalle del cargo
+      await db.query(
+        `
       INSERT INTO detalle_cuenta_unidad (
         cuenta_cobro_unidad_id,
         categoria_id,
@@ -613,10 +637,13 @@ router.post('/', [
         origen,
         iva_incluido
       ) VALUES (?, 1, ?, ?, 'ajuste', 1)
-    `, [cargoId, description || concept, amount]);
+    `,
+        [cargoId, description || concept, amount]
+      );
 
-    // Obtener el cargo creado con todos los datos
-    const [cargoRows] = await db.query(`
+      // Obtener el cargo creado con todos los datos
+      const [cargoRows] = await db.query(
+        `
       SELECT
         ccu.id,
         CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
@@ -645,18 +672,20 @@ router.post('/', [
       LEFT JOIN titulares_unidad tu ON u.id = tu.unidad_id AND tu.tipo = 'propietario' AND tu.hasta IS NULL
       LEFT JOIN persona p ON tu.persona_id = p.id
       WHERE ccu.id = ?
-    `, [type, type, type, type, cargoId]);
+    `,
+        [type, type, type, type, cargoId]
+      );
 
-    res.status(201).json(cargoRows[0]);
-
-  } catch (error) {
-    console.error('Error creando cargo:', error);
-    res.status(500).json({
-      error: 'Error interno del servidor',
-      message: 'No se pudo crear el cargo'
-    });
+      res.status(201).json(cargoRows[0]);
+    } catch (error) {
+      console.error('Error creando cargo:', error);
+      res.status(500).json({
+        error: 'Error interno del servidor',
+        message: 'No se pudo crear el cargo',
+      });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -881,9 +910,13 @@ router.get('/:id/pagos', authenticate, async (req, res) => {
  *         description: No es miembro de la comunidad
  */
 
-router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = req.params.comunidadId;
-  const sql = `
+router.get(
+  '/comunidad/:comunidadId/estadisticas',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = req.params.comunidadId;
+    const sql = `
     SELECT
       COUNT(*) as total_cargos,
       SUM(ccu.monto_total) as monto_total,
@@ -899,9 +932,10 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
     FROM cuenta_cobro_unidad ccu
     WHERE ccu.comunidad_id = ?
   `;
-  const [rows] = await db.query(sql, [comunidadId]);
-  res.json(rows[0]);
-});
+    const [rows] = await db.query(sql, [comunidadId]);
+    res.json(rows[0]);
+  }
+);
 
 /**
  * @swagger
@@ -961,9 +995,13 @@ router.get('/comunidad/:comunidadId/estadisticas', authenticate, requireCommunit
  *         description: No es miembro de la comunidad
  */
 
-router.get('/comunidad/:comunidadId/periodo/:periodo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const { comunidadId, periodo } = req.params;
-  const sql = `
+router.get(
+  '/comunidad/:comunidadId/periodo/:periodo',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const { comunidadId, periodo } = req.params;
+    const sql = `
     SELECT
       egc.periodo as periodo,
       COUNT(ccu.id) as cantidad_cargos,
@@ -979,9 +1017,10 @@ router.get('/comunidad/:comunidadId/periodo/:periodo', authenticate, requireComm
     GROUP BY egc.periodo, egc.id
     ORDER BY egc.periodo DESC
   `;
-  const [rows] = await db.query(sql, [comunidadId, periodo]);
-  res.json(rows);
-});
+    const [rows] = await db.query(sql, [comunidadId, periodo]);
+    res.json(rows);
+  }
+);
 
 /**
  * @swagger
@@ -1041,9 +1080,13 @@ router.get('/comunidad/:comunidadId/periodo/:periodo', authenticate, requireComm
  *         description: No es miembro de la comunidad
  */
 
-router.get('/comunidad/:comunidadId/vencidos', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = req.params.comunidadId;
-  const sql = `
+router.get(
+  '/comunidad/:comunidadId/vencidos',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = req.params.comunidadId;
+    const sql = `
     SELECT
       ccu.id,
       CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
@@ -1079,9 +1122,10 @@ router.get('/comunidad/:comunidadId/vencidos', authenticate, requireCommunity('c
       AND ccu.comunidad_id = ?
     ORDER BY egc.fecha_vencimiento ASC, ccu.saldo DESC
   `;
-  const [rows] = await db.query(sql, [comunidadId]);
-  res.json(rows);
-});
+    const [rows] = await db.query(sql, [comunidadId]);
+    res.json(rows);
+  }
+);
 
 /**
  * @swagger
@@ -1221,9 +1265,13 @@ router.get('/:id/historial-pagos', authenticate, async (req, res) => {
  *         description: No es miembro de la comunidad
  */
 
-router.get('/comunidad/:comunidadId/por-estado', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = req.params.comunidadId;
-  const sql = `
+router.get(
+  '/comunidad/:comunidadId/por-estado',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = req.params.comunidadId;
+    const sql = `
     SELECT
       CASE
         WHEN ccu.estado = 'pendiente' THEN 'pending'
@@ -1248,9 +1296,10 @@ router.get('/comunidad/:comunidadId/por-estado', authenticate, requireCommunity(
         ELSE 5
       END
   `;
-  const [rows] = await db.query(sql, [comunidadId]);
-  res.json(rows);
-});
+    const [rows] = await db.query(sql, [comunidadId]);
+    res.json(rows);
+  }
+);
 
 /**
  * @swagger
@@ -1296,9 +1345,13 @@ router.get('/comunidad/:comunidadId/por-estado', authenticate, requireCommunity(
  *         description: No es miembro de la comunidad
  */
 
-router.get('/comunidad/:comunidadId/validacion', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = req.params.comunidadId;
-  const sql = `
+router.get(
+  '/comunidad/:comunidadId/validacion',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = req.params.comunidadId;
+    const sql = `
     SELECT
       ccu.id,
       CASE
@@ -1321,9 +1374,10 @@ router.get('/comunidad/:comunidadId/validacion', authenticate, requireCommunity(
     HAVING estado_validacion != 'Valid'
     ORDER BY ccu.id
   `;
-  const [rows] = await db.query(sql, [comunidadId]);
-  res.json(rows);
-});
+    const [rows] = await db.query(sql, [comunidadId]);
+    res.json(rows);
+  }
+);
 
 /**
  * @swagger
@@ -1381,9 +1435,13 @@ router.get('/comunidad/:comunidadId/validacion', authenticate, requireCommunity(
  *         description: No es miembro de la comunidad
  */
 
-router.get('/comunidad/:comunidadId/con-interes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = req.params.comunidadId;
-  const sql = `
+router.get(
+  '/comunidad/:comunidadId/con-interes',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = req.params.comunidadId;
+    const sql = `
     SELECT
       ccu.id,
       CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
@@ -1417,9 +1475,10 @@ router.get('/comunidad/:comunidadId/con-interes', authenticate, requireCommunity
       AND ccu.comunidad_id = ?
     ORDER BY ccu.interes_acumulado DESC
   `;
-  const [rows] = await db.query(sql, [comunidadId]);
-  res.json(rows);
-});
+    const [rows] = await db.query(sql, [comunidadId]);
+    res.json(rows);
+  }
+);
 
 /**
  * @swagger
@@ -1473,9 +1532,13 @@ router.get('/comunidad/:comunidadId/con-interes', authenticate, requireCommunity
  *         description: No es miembro de la comunidad
  */
 
-router.get('/comunidad/:comunidadId/resumen-pagos', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = req.params.comunidadId;
-  const sql = `
+router.get(
+  '/comunidad/:comunidadId/resumen-pagos',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = req.params.comunidadId;
+    const sql = `
     SELECT
       ccu.id as chargeId,
       CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concept,
@@ -1498,9 +1561,10 @@ router.get('/comunidad/:comunidadId/resumen-pagos', authenticate, requireCommuni
     GROUP BY ccu.id, ccu.monto_total, ccu.saldo, ccu.created_at, egc.fecha_vencimiento
     ORDER BY ccu.created_at DESC
   `;
-  const [rows] = await db.query(sql, [comunidadId]);
-  res.json(rows);
-});
+    const [rows] = await db.query(sql, [comunidadId]);
+    res.json(rows);
+  }
+);
 
 /**
  * @swagger
@@ -1550,9 +1614,13 @@ router.get('/comunidad/:comunidadId/resumen-pagos', authenticate, requireCommuni
  *         description: No es miembro de la comunidad
  */
 
-router.get('/comunidad/:comunidadId/por-categoria', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  const comunidadId = req.params.comunidadId;
-  const sql = `
+router.get(
+  '/comunidad/:comunidadId/por-categoria',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    const comunidadId = req.params.comunidadId;
+    const sql = `
     SELECT
       cg.nombre as nombre_categoria,
       cg.tipo as tipo_categoria,
@@ -1567,72 +1635,94 @@ router.get('/comunidad/:comunidadId/por-categoria', authenticate, requireCommuni
     WHERE cg.comunidad_id = ?
     GROUP BY cg.id, cg.nombre, cg.tipo
   `;
-  const [rows] = await db.query(sql, [comunidadId]);
-  res.json(rows);
-});
+    const [rows] = await db.query(sql, [comunidadId]);
+    res.json(rows);
+  }
+);
 
-router.post('/:id/recalcular-interes', authenticate, authorize('admin','superadmin'), async (req, res) => {
-  const cargoId = req.params.id;
-  
-  try {
-    // Obtener información del cargo
-    const [cargoRows] = await db.query(`
+router.post(
+  '/:id/recalcular-interes',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    const cargoId = req.params.id;
+
+    try {
+      // Obtener información del cargo
+      const [cargoRows] = await db.query(
+        `
       SELECT ccu.id, ccu.monto_total, ccu.saldo, ccu.interes_acumulado, egc.fecha_vencimiento
       FROM cuenta_cobro_unidad ccu
       LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
       WHERE ccu.id = ?
-    `, [cargoId]);
+    `,
+        [cargoId]
+      );
 
-    if (cargoRows.length === 0) {
-      return res.status(404).json({ error: 'Cargo no encontrado' });
-    }
+      if (cargoRows.length === 0) {
+        return res.status(404).json({ error: 'Cargo no encontrado' });
+      }
 
-    const cargo = cargoRows[0];
-    
-    if (!cargo.fecha_vencimiento) {
-      return res.status(400).json({ error: 'El cargo no tiene fecha de vencimiento' });
-    }
+      const cargo = cargoRows[0];
 
-    // Calcular días de vencimiento
-    const [diasRows] = await db.query(`
+      if (!cargo.fecha_vencimiento) {
+        return res
+          .status(400)
+          .json({ error: 'El cargo no tiene fecha de vencimiento' });
+      }
+
+      // Calcular días de vencimiento
+      const [diasRows] = await db.query(
+        `
       SELECT DATEDIFF(CURDATE(), ?) as dias_vencido
-    `, [cargo.fecha_vencimiento]);
+    `,
+        [cargo.fecha_vencimiento]
+      );
 
-    const diasVencido = Math.max(0, diasRows[0].dias_vencido);
-    
-    // Tasa de interés mensual (ejemplo: 2% mensual)
-    const tasaInteresMensual = 0.02;
-    const tasaInteresDiaria = tasaInteresMensual / 30;
-    
-    // Calcular interés acumulado
-    const interesCalculado = cargo.saldo * tasaInteresDiaria * diasVencido;
-    
-    // Actualizar el interés acumulado
-    await db.query(`
+      const diasVencido = Math.max(0, diasRows[0].dias_vencido);
+
+      // Tasa de interés mensual (ejemplo: 2% mensual)
+      const tasaInteresMensual = 0.02;
+      const tasaInteresDiaria = tasaInteresMensual / 30;
+
+      // Calcular interés acumulado
+      const interesCalculado = cargo.saldo * tasaInteresDiaria * diasVencido;
+
+      // Actualizar el interés acumulado
+      await db.query(
+        `
       UPDATE cuenta_cobro_unidad 
       SET interes_acumulado = ?
       WHERE id = ?
-    `, [interesCalculado, cargoId]);
+    `,
+        [interesCalculado, cargoId]
+      );
 
-    res.json({
-      success: true,
-      message: 'Interés recalculado exitosamente',
-      cargoId: cargoId,
-      diasVencido: diasVencido,
-      interesAcumulado: interesCalculado
-    });
-  } catch (error) {
-    console.error('Error recalculando interés:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      res.json({
+        success: true,
+        message: 'Interés recalculado exitosamente',
+        cargoId: cargoId,
+        diasVencido: diasVencido,
+        interesAcumulado: interesCalculado,
+      });
+    } catch (error) {
+      console.error('Error recalculando interés:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
-router.post('/:id/notificar', authenticate, authorize('admin','superadmin'), async (req, res) => {
-  const cargoId = req.params.id;
-  
-  try {
-    // Obtener información del cargo y propietario
-    const [cargoRows] = await db.query(`
+router.post(
+  '/:id/notificar',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    const cargoId = req.params.id;
+
+    try {
+      // Obtener información del cargo y propietario
+      const [cargoRows] = await db.query(
+        `
       SELECT 
         ccu.id,
         CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
@@ -1648,44 +1738,46 @@ router.post('/:id/notificar', authenticate, authorize('admin','superadmin'), asy
       LEFT JOIN titulares_unidad tu ON u.id = tu.unidad_id AND tu.tipo = 'propietario' AND tu.hasta IS NULL
       LEFT JOIN persona p ON tu.persona_id = p.id
       WHERE ccu.id = ?
-    `, [cargoId]);
+    `,
+        [cargoId]
+      );
 
-    if (cargoRows.length === 0) {
-      return res.status(404).json({ error: 'Cargo no encontrado' });
+      if (cargoRows.length === 0) {
+        return res.status(404).json({ error: 'Cargo no encontrado' });
+      }
+
+      const cargo = cargoRows[0];
+
+      // Aquí se implementaría el envío de notificación (email, SMS, etc.)
+      // Por ahora, solo registramos la notificación
+      console.log('Notificación enviada para cargo:', {
+        cargoId: cargo.id,
+        concepto: cargo.concepto,
+        monto: cargo.monto_total,
+        saldo: cargo.saldo,
+        propietario: cargo.nombre_propietario,
+        email: cargo.email_propietario,
+        telefono: cargo.telefono_propietario,
+      });
+
+      // Podríamos guardar un registro de notificación en la base de datos
+      // await db.query('INSERT INTO notificaciones (...) VALUES (...)', [...]);
+
+      res.json({
+        success: true,
+        message: 'Notificación enviada exitosamente',
+        cargoId: cargoId,
+        notificadoA: cargo.nombre_propietario,
+        email: cargo.email_propietario,
+      });
+    } catch (error) {
+      console.error('Error enviando notificación:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
-
-    const cargo = cargoRows[0];
-
-    // Aquí se implementaría el envío de notificación (email, SMS, etc.)
-    // Por ahora, solo registramos la notificación
-    console.log('Notificación enviada para cargo:', {
-      cargoId: cargo.id,
-      concepto: cargo.concepto,
-      monto: cargo.monto_total,
-      saldo: cargo.saldo,
-      propietario: cargo.nombre_propietario,
-      email: cargo.email_propietario,
-      telefono: cargo.telefono_propietario
-    });
-
-    // Podríamos guardar un registro de notificación en la base de datos
-    // await db.query('INSERT INTO notificaciones (...) VALUES (...)', [...]);
-
-    res.json({
-      success: true,
-      message: 'Notificación enviada exitosamente',
-      cargoId: cargoId,
-      notificadoA: cargo.nombre_propietario,
-      email: cargo.email_propietario
-    });
-  } catch (error) {
-    console.error('Error enviando notificación:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
   }
-});
+);
 
 module.exports = router;
-
 
 // // =========================================
 // // ENDPOINTS DE CUENTAS DE COBRO (CARGOS)
@@ -1715,7 +1807,3 @@ module.exports = router;
 // POST: /cargos/:id/recalcular-interes
 // POST: /cargos/:id/notificar
 // GET: /cargos/comunidad/:comunidadId/validacion
-
-
-
-

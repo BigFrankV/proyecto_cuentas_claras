@@ -107,11 +107,14 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
   // Fechas: usar created_at para "Fecha y Hora" (timestamp real),
   // y usar fecha_infraccion como fecha de referencia
   const fechaCreada = multa
-    ? parseDateSafe(multa.created_at) ?? parseDateSafe(multa.fecha_infraccion) ?? new Date()
+    ? (parseDateSafe(multa.created_at) ??
+      parseDateSafe(multa.fecha_infraccion) ??
+      new Date())
     : new Date();
   // Si tienes fecha_vencimiento en BD úsala; si no, calcular desde la infracción
   const fechaVencBD = multa
-    ? parseDateSafe(multa.fecha_vencimiento) ?? parseDateSafe(multa.fecha_infraccion)
+    ? (parseDateSafe(multa.fecha_vencimiento) ??
+      parseDateSafe(multa.fecha_infraccion))
     : null;
   const fechaVencimiento =
     fechaVencBD ?? new Date(fechaCreada.getTime() + 15 * 24 * 60 * 60 * 1000);
@@ -173,7 +176,9 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
 
         if (activeTab === 'evidence' && documents === null) {
           try {
-            const res: any = await multasService.getDocumentos(Number(multa.id));
+            const res: any = await multasService.getDocumentos(
+              Number(multa.id),
+            );
             if (!mounted) {
               return;
             }
@@ -186,7 +191,9 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
 
         if (activeTab === 'appeals' && appeals === null) {
           try {
-            const res: any = await multasService.getApelaciones(Number(multa.id));
+            const res: any = await multasService.getApelaciones(
+              Number(multa.id),
+            );
             if (!mounted) {
               return;
             }
@@ -210,6 +217,7 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
           }
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('Error cargando tab:', e);
       } finally {
         if (mounted) {
@@ -269,6 +277,7 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
       }
       alert('Pago registrado correctamente');
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error registrando pago:', err);
       alert('Error registrando pago');
     } finally {
@@ -324,6 +333,7 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
         }
       }
     } catch (err: any) {
+      // eslint-disable-next-line no-console
       console.error('Error creando apelación:', err);
       setAppealError(err?.message ?? 'Error del servidor');
     } finally {
@@ -358,7 +368,8 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
                 </small>
               </div>
               <h2 className='h5 mb-0'>
-                Multa {multa.numero} — {multa.tipo_infraccion ?? 'Sin especificar'}
+                Multa {multa.numero} —{' '}
+                {multa.tipo_infraccion ?? 'Sin especificar'}
               </h2>
               <small className='text-muted'>
                 Emitida {formatDate(fechaCreada)} • Vence{' '}
@@ -761,7 +772,9 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
               </div>
               <div className='info-item'>
                 <span className='info-label'>Última Multa:</span>
-                <span className='info-value'>{formatDate(multa.fecha_infraccion)}</span>
+                <span className='info-value'>
+                  {formatDate(multa.fecha_infraccion)}
+                </span>
               </div>
             </div>
 

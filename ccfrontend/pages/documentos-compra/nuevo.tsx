@@ -1,10 +1,11 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useRef } from 'react';
+
 import { TypeBadge, FileIcon } from '@/components/documentos';
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 interface DocumentItem {
   id: string;
@@ -32,15 +33,17 @@ interface AttachedFile {
 export default function NuevoDocumentoCompra() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const [documentType, setDocumentType] = useState<'invoice' | 'receipt' | 'quote' | 'order'>('invoice');
+
+  const [documentType, setDocumentType] = useState<
+    'invoice' | 'receipt' | 'quote' | 'order'
+  >('invoice');
   const [documentNumber, setDocumentNumber] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [documentDate, setDocumentDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [description, setDescription] = useState('');
   const [items, setItems] = useState<DocumentItem[]>([
-    { id: '1', description: '', quantity: 1, unitPrice: 0, total: 0 }
+    { id: '1', description: '', quantity: 1, unitPrice: 0, total: 0 },
   ]);
   const [taxRate, setTaxRate] = useState(19);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
@@ -50,10 +53,34 @@ export default function NuevoDocumentoCompra() {
 
   // Mock providers
   const providers: Provider[] = [
-    { id: '1', name: 'Empresa de Servicios ABC', rut: '12.345.678-9', email: 'contacto@abc.cl', phone: '+56 9 1234 5678' },
-    { id: '2', name: 'Ferretería El Constructor', rut: '98.765.432-1', email: 'ventas@constructor.cl', phone: '+56 9 8765 4321' },
-    { id: '3', name: 'Pinturas y Acabados Ltda.', rut: '55.444.333-2', email: 'info@pinturas.cl', phone: '+56 9 5544 3332' },
-    { id: '4', name: 'Suministros Industriales SA', rut: '11.222.333-4', email: 'pedidos@suministros.cl', phone: '+56 9 1122 3334' }
+    {
+      id: '1',
+      name: 'Empresa de Servicios ABC',
+      rut: '12.345.678-9',
+      email: 'contacto@abc.cl',
+      phone: '+56 9 1234 5678',
+    },
+    {
+      id: '2',
+      name: 'Ferretería El Constructor',
+      rut: '98.765.432-1',
+      email: 'ventas@constructor.cl',
+      phone: '+56 9 8765 4321',
+    },
+    {
+      id: '3',
+      name: 'Pinturas y Acabados Ltda.',
+      rut: '55.444.333-2',
+      email: 'info@pinturas.cl',
+      phone: '+56 9 5544 3332',
+    },
+    {
+      id: '4',
+      name: 'Suministros Industriales SA',
+      rut: '11.222.333-4',
+      email: 'pedidos@suministros.cl',
+      phone: '+56 9 1122 3334',
+    },
   ];
 
   const costCenters = [
@@ -61,7 +88,7 @@ export default function NuevoDocumentoCompra() {
     { id: '2', name: 'Servicios Básicos', icon: 'electric_bolt' },
     { id: '3', name: 'Seguridad', icon: 'security' },
     { id: '4', name: 'Jardines y Áreas Comunes', icon: 'park' },
-    { id: '5', name: 'Administración', icon: 'business' }
+    { id: '5', name: 'Administración', icon: 'business' },
   ];
 
   const addItem = () => {
@@ -70,7 +97,7 @@ export default function NuevoDocumentoCompra() {
       description: '',
       quantity: 1,
       unitPrice: 0,
-      total: 0
+      total: 0,
     };
     setItems([...items, newItem]);
   };
@@ -81,17 +108,23 @@ export default function NuevoDocumentoCompra() {
     }
   };
 
-  const updateItem = (id: string, field: keyof DocumentItem, value: string | number) => {
-    setItems(items.map(item => {
-      if (item.id === id) {
-        const updatedItem = { ...item, [field]: value };
-        if (field === 'quantity' || field === 'unitPrice') {
-          updatedItem.total = updatedItem.quantity * updatedItem.unitPrice;
+  const updateItem = (
+    id: string,
+    field: keyof DocumentItem,
+    value: string | number,
+  ) => {
+    setItems(
+      items.map(item => {
+        if (item.id === id) {
+          const updatedItem = { ...item, [field]: value };
+          if (field === 'quantity' || field === 'unitPrice') {
+            updatedItem.total = updatedItem.quantity * updatedItem.unitPrice;
+          }
+          return updatedItem;
         }
-        return updatedItem;
-      }
-      return item;
-    }));
+        return item;
+      }),
+    );
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,7 +139,7 @@ export default function NuevoDocumentoCompra() {
       id: Math.random().toString(36).substr(2, 9),
       file,
       progress: 0,
-      uploaded: false
+      uploaded: false,
     }));
 
     setAttachedFiles(prev => [...prev, ...newFiles]);
@@ -114,20 +147,22 @@ export default function NuevoDocumentoCompra() {
     // Simulate upload progress
     newFiles.forEach(uploadFile => {
       const interval = setInterval(() => {
-        setAttachedFiles(prev => prev.map(f => 
-          f.id === uploadFile.id 
-            ? { ...f, progress: Math.min(f.progress + 20, 100) }
-            : f
-        ));
+        setAttachedFiles(prev =>
+          prev.map(f =>
+            f.id === uploadFile.id
+              ? { ...f, progress: Math.min(f.progress + 20, 100) }
+              : f,
+          ),
+        );
       }, 200);
 
       setTimeout(() => {
         clearInterval(interval);
-        setAttachedFiles(prev => prev.map(f => 
-          f.id === uploadFile.id 
-            ? { ...f, progress: 100, uploaded: true }
-            : f
-        ));
+        setAttachedFiles(prev =>
+          prev.map(f =>
+            f.id === uploadFile.id ? { ...f, progress: 100, uploaded: true } : f,
+          ),
+        );
       }, 1000);
     });
   };
@@ -143,21 +178,23 @@ export default function NuevoDocumentoCompra() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP'
+      currency: 'CLP',
     }).format(amount);
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!documentNumber) {
       alert('Debes ingresar el número del documento');
       return;
@@ -198,13 +235,18 @@ export default function NuevoDocumentoCompra() {
         <div className='container-fluid py-4'>
           {/* Header */}
           <div className='d-flex align-items-center mb-4'>
-            <Link href='/documentos-compra' className='btn btn-outline-secondary me-3'>
+            <Link
+              href='/documentos-compra'
+              className='btn btn-outline-secondary me-3'
+            >
               <i className='material-icons me-2'>arrow_back</i>
               Volver
             </Link>
             <div>
               <h1 className='h3 mb-1'>Crear Documento de Compra</h1>
-              <p className='text-muted mb-0'>Registra una nueva factura, boleta, cotización u orden de compra</p>
+              <p className='text-muted mb-0'>
+                Registra una nueva factura, boleta, cotización u orden de compra
+              </p>
             </div>
           </div>
 
@@ -215,17 +257,21 @@ export default function NuevoDocumentoCompra() {
                 <div className='form-card card shadow-sm mb-4'>
                   <div className='card-body'>
                     <div className='form-section-title d-flex align-items-center mb-4'>
-                      <i className='material-icons me-2 text-primary'>receipt</i>
+                      <i className='material-icons me-2 text-primary'>
+                        receipt
+                      </i>
                       <h5 className='mb-0'>Información del Documento</h5>
                     </div>
 
                     <div className='row g-3'>
                       <div className='col-md-3'>
-                        <label className='form-label'>Tipo de documento *</label>
+                        <label className='form-label'>
+                          Tipo de documento *
+                        </label>
                         <select
                           className='form-select'
                           value={documentType}
-                          onChange={(e) => setDocumentType(e.target.value as any)}
+                          onChange={e => setDocumentType(e.target.value as any)}
                           required
                         >
                           <option value='invoice'>Factura</option>
@@ -242,7 +288,7 @@ export default function NuevoDocumentoCompra() {
                           className='form-control'
                           placeholder='FC-2024-001'
                           value={documentNumber}
-                          onChange={(e) => setDocumentNumber(e.target.value)}
+                          onChange={e => setDocumentNumber(e.target.value)}
                           required
                         />
                       </div>
@@ -253,7 +299,7 @@ export default function NuevoDocumentoCompra() {
                           type='date'
                           className='form-control'
                           value={documentDate}
-                          onChange={(e) => setDocumentDate(e.target.value)}
+                          onChange={e => setDocumentDate(e.target.value)}
                           required
                         />
                       </div>
@@ -264,7 +310,7 @@ export default function NuevoDocumentoCompra() {
                           type='date'
                           className='form-control'
                           value={dueDate}
-                          onChange={(e) => setDueDate(e.target.value)}
+                          onChange={e => setDueDate(e.target.value)}
                         />
                       </div>
 
@@ -273,11 +319,11 @@ export default function NuevoDocumentoCompra() {
                         <select
                           className='form-select'
                           value={selectedProvider}
-                          onChange={(e) => setSelectedProvider(e.target.value)}
+                          onChange={e => setSelectedProvider(e.target.value)}
                           required
                         >
                           <option value=''>Seleccionar proveedor</option>
-                          {providers.map((provider) => (
+                          {providers.map(provider => (
                             <option key={provider.id} value={provider.id}>
                               {provider.name} - {provider.rut}
                             </option>
@@ -290,10 +336,10 @@ export default function NuevoDocumentoCompra() {
                         <select
                           className='form-select'
                           value={costCenter}
-                          onChange={(e) => setCostCenter(e.target.value)}
+                          onChange={e => setCostCenter(e.target.value)}
                         >
                           <option value=''>Sin centro de costo</option>
-                          {costCenters.map((center) => (
+                          {costCenters.map(center => (
                             <option key={center.id} value={center.id}>
                               {center.name}
                             </option>
@@ -302,13 +348,15 @@ export default function NuevoDocumentoCompra() {
                       </div>
 
                       <div className='col-12'>
-                        <label className='form-label'>Descripción general</label>
+                        <label className='form-label'>
+                          Descripción general
+                        </label>
                         <textarea
                           className='form-control'
                           rows={2}
                           placeholder='Describe brevemente el propósito de este documento...'
                           value={description}
-                          onChange={(e) => setDescription(e.target.value)}
+                          onChange={e => setDescription(e.target.value)}
                         ></textarea>
                       </div>
                     </div>
@@ -353,7 +401,13 @@ export default function NuevoDocumentoCompra() {
                                   className='form-control'
                                   placeholder='Descripción del ítem...'
                                   value={item.description}
-                                  onChange={(e) => updateItem(item.id, 'description', e.target.value)}
+                                  onChange={e =>
+                                    updateItem(
+                                      item.id,
+                                      'description',
+                                      e.target.value,
+                                    )
+                                  }
                                 />
                               </td>
                               <td>
@@ -362,7 +416,13 @@ export default function NuevoDocumentoCompra() {
                                   className='form-control'
                                   min='1'
                                   value={item.quantity}
-                                  onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0)}
+                                  onChange={e =>
+                                    updateItem(
+                                      item.id,
+                                      'quantity',
+                                      parseInt(e.target.value) || 0,
+                                    )
+                                  }
                                 />
                               </td>
                               <td>
@@ -372,7 +432,13 @@ export default function NuevoDocumentoCompra() {
                                   min='0'
                                   step='0.01'
                                   value={item.unitPrice}
-                                  onChange={(e) => updateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                                  onChange={e =>
+                                    updateItem(
+                                      item.id,
+                                      'unitPrice',
+                                      parseFloat(e.target.value) || 0,
+                                    )
+                                  }
                                 />
                               </td>
                               <td>
@@ -422,16 +488,23 @@ export default function NuevoDocumentoCompra() {
                 <div className='form-card card shadow-sm mb-4'>
                   <div className='card-body'>
                     <div className='form-section-title d-flex align-items-center mb-4'>
-                      <i className='material-icons me-2 text-primary'>attach_file</i>
+                      <i className='material-icons me-2 text-primary'>
+                        attach_file
+                      </i>
                       <h5 className='mb-0'>Archivos Adjuntos</h5>
                     </div>
 
                     <div className='attachments-container'>
                       <div className='text-center py-4'>
-                        <i className='material-icons mb-2 text-muted' style={{ fontSize: '2rem' }}>
+                        <i
+                          className='material-icons mb-2 text-muted'
+                          style={{ fontSize: '2rem' }}
+                        >
                           cloud_upload
                         </i>
-                        <p className='mb-2'>Arrastra archivos aquí o haz clic para seleccionar</p>
+                        <p className='mb-2'>
+                          Arrastra archivos aquí o haz clic para seleccionar
+                        </p>
                         <button
                           type='button'
                           className='btn btn-outline-primary'
@@ -441,7 +514,8 @@ export default function NuevoDocumentoCompra() {
                           Seleccionar archivos
                         </button>
                         <p className='text-muted small mt-2'>
-                          Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (máx. 10MB)
+                          Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, JPG,
+                          PNG (máx. 10MB)
                         </p>
                       </div>
 
@@ -458,18 +532,28 @@ export default function NuevoDocumentoCompra() {
                     {/* Attached Files List */}
                     {attachedFiles.length > 0 && (
                       <div className='mt-4'>
-                        <h6 className='mb-3'>Archivos adjuntos ({attachedFiles.length})</h6>
-                        {attachedFiles.map((fileItem) => (
-                          <div key={fileItem.id} className='attachment-item d-flex align-items-center p-2 mb-2 border rounded'>
+                        <h6 className='mb-3'>
+                          Archivos adjuntos ({attachedFiles.length})
+                        </h6>
+                        {attachedFiles.map(fileItem => (
+                          <div
+                            key={fileItem.id}
+                            className='attachment-item d-flex align-items-center p-2 mb-2 border rounded'
+                          >
                             <FileIcon fileName={fileItem.file.name} size='sm' />
-                            
+
                             <div className='attachment-info flex-grow-1 ms-3'>
-                              <div className='attachment-name'>{fileItem.file.name}</div>
+                              <div className='attachment-name'>
+                                {fileItem.file.name}
+                              </div>
                               <div className='attachment-meta text-muted small'>
                                 {formatFileSize(fileItem.file.size)}
                               </div>
                               {!fileItem.uploaded && (
-                                <div className='progress mt-1' style={{ height: '3px' }}>
+                                <div
+                                  className='progress mt-1'
+                                  style={{ height: '3px' }}
+                                >
                                   <div
                                     className='progress-bar'
                                     role='progressbar'
@@ -517,7 +601,7 @@ export default function NuevoDocumentoCompra() {
                       rows={4}
                       placeholder='Agrega cualquier información adicional sobre este documento...'
                       value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
+                      onChange={e => setNotes(e.target.value)}
                     ></textarea>
                   </div>
                 </div>
@@ -525,10 +609,15 @@ export default function NuevoDocumentoCompra() {
 
               <div className='col-lg-4'>
                 {/* Document Preview */}
-                <div className='form-card card shadow-sm mb-4 sticky-top' style={{ top: '1rem' }}>
+                <div
+                  className='form-card card shadow-sm mb-4 sticky-top'
+                  style={{ top: '1rem' }}
+                >
                   <div className='card-body'>
                     <div className='form-section-title d-flex align-items-center mb-4'>
-                      <i className='material-icons me-2 text-primary'>preview</i>
+                      <i className='material-icons me-2 text-primary'>
+                        preview
+                      </i>
                       <h5 className='mb-0'>Vista Previa</h5>
                     </div>
 
@@ -538,25 +627,25 @@ export default function NuevoDocumentoCompra() {
 
                     <div className='preview-container'>
                       <div className='mb-3'>
-                        <strong>Número:</strong> {documentNumber || 'Sin número'}
+                        <strong>Número:</strong>{' '}
+                        {documentNumber || 'Sin número'}
                       </div>
                       <div className='mb-3'>
-                        <strong>Proveedor:</strong> {
-                          selectedProvider 
-                            ? providers.find(p => p.id === selectedProvider)?.name 
-                            : 'No seleccionado'
-                        }
+                        <strong>Proveedor:</strong>{' '}
+                        {selectedProvider
+                          ? providers.find(p => p.id === selectedProvider)?.name
+                          : 'No seleccionado'}
                       </div>
                       <div className='mb-3'>
-                        <strong>Fecha:</strong> {
-                          documentDate 
-                            ? new Date(documentDate).toLocaleDateString('es-CL')
-                            : 'No especificada'
-                        }
+                        <strong>Fecha:</strong>{' '}
+                        {documentDate
+                          ? new Date(documentDate).toLocaleDateString('es-CL')
+                          : 'No especificada'}
                       </div>
                       {dueDate && (
                         <div className='mb-3'>
-                          <strong>Vencimiento:</strong> {new Date(dueDate).toLocaleDateString('es-CL')}
+                          <strong>Vencimiento:</strong>{' '}
+                          {new Date(dueDate).toLocaleDateString('es-CL')}
                         </div>
                       )}
                       <div className='mb-3'>
@@ -567,8 +656,12 @@ export default function NuevoDocumentoCompra() {
                       </div>
                       <hr />
                       <div className='text-center'>
-                        <div className='h4 text-primary mb-0'>{formatCurrency(total)}</div>
-                        <small className='text-muted'>Total del documento</small>
+                        <div className='h4 text-primary mb-0'>
+                          {formatCurrency(total)}
+                        </div>
+                        <small className='text-muted'>
+                          Total del documento
+                        </small>
                       </div>
                     </div>
                   </div>
@@ -578,7 +671,10 @@ export default function NuevoDocumentoCompra() {
 
             {/* Action Buttons */}
             <div className='d-flex gap-3 justify-content-end py-4 border-top'>
-              <Link href='/documentos-compra' className='btn btn-outline-secondary'>
+              <Link
+                href='/documentos-compra'
+                className='btn btn-outline-secondary'
+              >
                 Cancelar
               </Link>
               <button
@@ -588,7 +684,10 @@ export default function NuevoDocumentoCompra() {
               >
                 {submitting ? (
                   <>
-                    <span className='spinner-border spinner-border-sm me-2' role='status'></span>
+                    <span
+                      className='spinner-border spinner-border-sm me-2'
+                      role='status'
+                    ></span>
                     Guardando...
                   </>
                 ) : (

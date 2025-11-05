@@ -15,15 +15,21 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 const handleApiError = (error: unknown) => {
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as { response?: { data?: { error?: string } } };
-    throw new Error(apiError.response?.data?.error || 'Error de conexión con el servidor');
+    throw new Error(
+      apiError.response?.data?.error || 'Error de conexión con el servidor',
+    );
   }
   throw new Error('Error de conexión con el servidor');
 };
 
 // Helper para hacer peticiones autenticadas
-const apiRequest = async (url: string, options: Record<string, unknown> = {}) => {
+const apiRequest = async (
+  url: string,
+  options: Record<string, unknown> = {},
+) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
   if (!token) {
     throw new Error('Missing token');
@@ -33,8 +39,8 @@ const apiRequest = async (url: string, options: Record<string, unknown> = {}) =>
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...(options.headers as Record<string, unknown> || {}),
+      Authorization: `Bearer ${token}`,
+      ...((options.headers as Record<string, unknown>) || {}),
     },
   };
 
@@ -42,7 +48,9 @@ const apiRequest = async (url: string, options: Record<string, unknown> = {}) =>
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    throw new Error(
+      errorData.error || `HTTP error! status: ${response.status}`,
+    );
   }
 
   return response.json();
@@ -77,48 +85,52 @@ export const pagosApi = {
       const response = await apiRequest(url);
 
       // Map backend response to frontend format
-      const pagos: Pago[] = response.data.map((item: {
-        id: number;
-        order_id: string;
-        amount: number;
-        payment_date: string;
-        status: string;
-        payment_method: string;
-        reference: string;
-        receipt_number: string;
-        community_name: string;
-        unit_number: string;
-        resident_name: string;
-        resident_email: string;
-        created_at: string;
-        updated_at: string;
-      }) => ({
-        id: item.id,
-        concepto: item.reference || item.order_id,
-        monto: item.amount,
-        fecha: item.payment_date,
-        estado: item.status,
-        metodoPago: item.payment_method,
-        personaId: 0, // Not available in this endpoint
-        comunidadId,
-        transactionId: item.order_id,
-        gateway: item.payment_method,
-        // Additional fields from backend
-        orderId: item.order_id,
-        paymentDate: item.payment_date,
-        reference: item.reference,
-        receiptNumber: item.receipt_number,
-        communityName: item.community_name,
-        unitNumber: item.unit_number,
-        residentName: item.resident_name,
-        residentEmail: item.resident_email,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at,
-      }));
+      const pagos: Pago[] = response.data.map(
+        (item: {
+          id: number;
+          order_id: string;
+          amount: number;
+          payment_date: string;
+          status: string;
+          payment_method: string;
+          reference: string;
+          receipt_number: string;
+          community_name: string;
+          unit_number: string;
+          resident_name: string;
+          resident_email: string;
+          created_at: string;
+          updated_at: string;
+        }) => ({
+          id: item.id,
+          concepto: item.reference || item.order_id,
+          monto: item.amount,
+          fecha: item.payment_date,
+          estado: item.status,
+          metodoPago: item.payment_method,
+          personaId: 0, // Not available in this endpoint
+          comunidadId,
+          transactionId: item.order_id,
+          gateway: item.payment_method,
+          // Additional fields from backend
+          orderId: item.order_id,
+          paymentDate: item.payment_date,
+          reference: item.reference,
+          receiptNumber: item.receipt_number,
+          communityName: item.community_name,
+          unitNumber: item.unit_number,
+          residentName: item.resident_name,
+          residentEmail: item.resident_email,
+          createdAt: item.created_at,
+          updatedAt: item.updated_at,
+        }),
+      );
 
       // Ensure pagination data is correct
-      const totalRecords = response.pagination?.total || response.total || pagos.length;
-      const hasMore = response.pagination?.hasMore || (offset + pagos.length < totalRecords);
+      const totalRecords =
+        response.pagination?.total || response.total || pagos.length;
+      const hasMore =
+        response.pagination?.hasMore || offset + pagos.length < totalRecords;
 
       const paginationData = {
         total: totalRecords,
@@ -178,7 +190,9 @@ export const pagosApi = {
   // Estadísticas generales de pagos por comunidad
   getEstadisticas: async (comunidadId: number): Promise<PaymentStats> => {
     try {
-      const data = await apiRequest(`/pagos/comunidad/${comunidadId}/estadisticas`);
+      const data = await apiRequest(
+        `/pagos/comunidad/${comunidadId}/estadisticas`,
+      );
 
       return {
         totalPayments: data.total_payments,
@@ -198,9 +212,13 @@ export const pagosApi = {
   },
 
   // Estadísticas agrupadas por estado
-  getEstadisticasPorEstado: async (comunidadId: number): Promise<EstadisticaPorEstado[]> => {
+  getEstadisticasPorEstado: async (
+    comunidadId: number,
+  ): Promise<EstadisticaPorEstado[]> => {
     try {
-      const data = await apiRequest(`/pagos/comunidad/${comunidadId}/estadisticas/estado`);
+      const data = await apiRequest(
+        `/pagos/comunidad/${comunidadId}/estadisticas/estado`,
+      );
       return data;
     } catch (error) {
       handleApiError(error);
@@ -209,9 +227,13 @@ export const pagosApi = {
   },
 
   // Estadísticas agrupadas por método de pago
-  getEstadisticasPorMetodo: async (comunidadId: number): Promise<EstadisticaPorMetodo[]> => {
+  getEstadisticasPorMetodo: async (
+    comunidadId: number,
+  ): Promise<EstadisticaPorMetodo[]> => {
     try {
-      const data = await apiRequest(`/pagos/comunidad/${comunidadId}/estadisticas/metodo`);
+      const data = await apiRequest(
+        `/pagos/comunidad/${comunidadId}/estadisticas/metodo`,
+      );
       return data;
     } catch (error) {
       handleApiError(error);

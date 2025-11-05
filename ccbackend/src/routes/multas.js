@@ -15,11 +15,15 @@ const MultasPermissions = require('../middleware/multasPermissions');
 // ============================================
 // HELPER: Obtener comunidades del usuario
 // ============================================
-async function obtenerComunidadesUsuario(usuarioId, personaId, isSuperAdmin = false) {
+async function obtenerComunidadesUsuario(
+  usuarioId,
+  personaId,
+  isSuperAdmin = false
+) {
   if (isSuperAdmin) {
     // La tabla comunidad no tiene columna "activo" -> devolver todas las comunidades
     const [all] = await db.query(`SELECT id FROM comunidad`);
-    return Array.isArray(all) ? all.map(r => Number(r.id)) : [];
+    return Array.isArray(all) ? all.map((r) => Number(r.id)) : [];
   }
 
   // por rol en usuariorolcomunidad (mantener filtro de activo y vigencia aquí)
@@ -45,33 +49,42 @@ async function obtenerComunidadesUsuario(usuarioId, personaId, isSuperAdmin = fa
   );
 
   const ids = new Set();
-  porRol.forEach(r => ids.add(Number(r.comunidad_id)));
-  porMiembro.forEach(r => ids.add(Number(r.comunidad_id)));
+  porRol.forEach((r) => ids.add(Number(r.comunidad_id)));
+  porMiembro.forEach((r) => ids.add(Number(r.comunidad_id)));
   return Array.from(ids);
 }
 
 // ============================================
 // HELPER: Registrar en historial
 // ============================================
-async function registrarHistorial(multaId, usuarioId, accion, descripcion, extras = {}) {
+async function registrarHistorial(
+  multaId,
+  usuarioId,
+  accion,
+  descripcion,
+  extras = {}
+) {
   try {
-    await db.query(`
+    await db.query(
+      `
       INSERT INTO multa_historial (
         multa_id, usuario_id, accion, estado_anterior, estado_nuevo, 
         campo_modificado, valor_anterior, valor_nuevo, descripcion, ip_address
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      multaId,
-      usuarioId,
-      accion,
-      extras.estado_anterior || null,
-      extras.estado_nuevo || null,
-      extras.campo_modificado || null,
-      extras.valor_anterior ? JSON.stringify(extras.valor_anterior) : null,
-      extras.valor_nuevo ? JSON.stringify(extras.valor_nuevo) : null,
-      descripcion,
-      extras.ip_address || null
-    ]);
+    `,
+      [
+        multaId,
+        usuarioId,
+        accion,
+        extras.estado_anterior || null,
+        extras.estado_nuevo || null,
+        extras.campo_modificado || null,
+        extras.valor_anterior ? JSON.stringify(extras.valor_anterior) : null,
+        extras.valor_nuevo ? JSON.stringify(extras.valor_nuevo) : null,
+        descripcion,
+        extras.ip_address || null,
+      ]
+    );
     console.log(`📝 Historial registrado: ${accion} para multa ${multaId}`);
   } catch (error) {
     console.error('❌ Error registrando historial:', error);
@@ -95,7 +108,7 @@ async function generarNumeroMulta(comunidadId) {
        WHERE comunidad_id = ? AND numero LIKE ?
        ORDER BY CAST(SUBSTRING_INDEX(numero, '-', -1) AS UNSIGNED) DESC
        LIMIT 1
-       FOR UPDATE`,  // Bloquea para evitar lecturas simultáneas
+       FOR UPDATE`, // Bloquea para evitar lecturas simultáneas
       [comunidadId, likePattern]
     );
 
@@ -125,7 +138,10 @@ async function resolveMultaId(idOrNumero) {
   if (!idOrNumero) return null;
   if (!isNaN(Number(idOrNumero))) return Number(idOrNumero);
   try {
-    const [rows] = await db.query('SELECT id FROM multa WHERE numero = ? LIMIT 1', [idOrNumero]);
+    const [rows] = await db.query(
+      'SELECT id FROM multa WHERE numero = ? LIMIT 1',
+      [idOrNumero]
+    );
     if (!rows.length) return null;
     return rows[0].id;
   } catch (e) {
@@ -137,21 +153,36 @@ async function resolveMultaId(idOrNumero) {
 // ============================================
 // GET /multas - LISTAR MULTAS
 // ============================================
-router.get('/',
+router.get(
+  '/',
   authenticate,
   MultasPermissions.canView,
   [
-    query('estado').optional().isIn(['pendiente', 'pagado', 'vencido', 'apelada', 'anulada']),
+    query('estado')
+      .optional()
+      .isIn(['pendiente', 'pagado', 'vencido', 'apelada', 'anulada']),
     query('prioridad').optional().isIn(['baja', 'media', 'alta', 'critica']),
     query('page').optional().isInt({ min: 1 }),
-    query('limit').optional().isInt({ min: 1, max: 200 })
+    query('limit').optional().isInt({ min: 1, max: 200 }),
   ],
   async (req, res) => {
     try {
-      const { estado, prioridad, unidad_id, search, page = 1, limit = 50 } = req.query;
+      const {
+        estado,
+        prioridad,
+        unidad_id,
+        search,
+        page = 1,
+        limit = 50,
+      } = req.query;
       const offset = (page - 1) * limit;
 
-      console.log('🔍 GET /multas - Usuario:', req.user?.username, 'ID:', req.user?.sub);
+      console.log(
+        '🔍 GET /multas - Usuario:',
+        req.user?.username,
+        'ID:',
+        req.user?.sub
+      );
 
       let sql = `
          SELECT 
@@ -181,7 +212,9 @@ router.get('/',
         // Usuario solo ve sus propias multas
         sql += ' AND m.persona_id = ?';
         params.push(req.user.persona_id);
-        console.log(`🔒 Filtro aplicado: solo multas de persona_id=${req.user.persona_id}`);
+        console.log(
+          `🔒 Filtro aplicado: solo multas de persona_id=${req.user.persona_id}`
+        );
       } else if (!req.user?.is_superadmin) {
         // Cargar comunidades desde BD
         const comunidadIds = await obtenerComunidadesUsuario(
@@ -196,7 +229,7 @@ router.get('/',
           console.log('⚠️ Usuario sin comunidades asignadas');
           return res.status(403).json({
             success: false,
-            error: 'Sin permisos para ver multas (sin comunidades asignadas)'
+            error: 'Sin permisos para ver multas (sin comunidades asignadas)',
           });
         }
 
@@ -225,12 +258,16 @@ router.get('/',
 
       if (search) {
         const s = `%${search}%`;
-        sql += ' AND (u.codigo LIKE ? OR m.motivo LIKE ? OR CONCAT(p.nombres, " ", p.apellidos) LIKE ?)';
+        sql +=
+          ' AND (u.codigo LIKE ? OR m.motivo LIKE ? OR CONCAT(p.nombres, " ", p.apellidos) LIKE ?)';
         params.push(s, s, s);
       }
 
       // Total count
-      const countQuery = sql.replace(/SELECT[\s\S]*?FROM/i, 'SELECT COUNT(*) as total FROM');
+      const countQuery = sql.replace(
+        /SELECT[\s\S]*?FROM/i,
+        'SELECT COUNT(*) as total FROM'
+      );
       const [countResult] = await db.query(countQuery, params);
       const total = countResult[0].total;
 
@@ -253,16 +290,15 @@ router.get('/',
           page: parseInt(page),
           limit: parseInt(limit),
           total,
-          pages: Math.ceil(total / limit)
-        }
+          pages: Math.ceil(total / limit),
+        },
       });
-
     } catch (error) {
       console.error('❌ Error en GET /multas:', error);
       res.status(500).json({
         success: false,
         error: 'Error del servidor',
-        message: error.message
+        message: error.message,
       });
     }
   }
@@ -271,7 +307,8 @@ router.get('/',
 // ============================================
 // GET /multas/estadisticas - ESTADÍSTICAS
 // ============================================
-router.get('/estadisticas',
+router.get(
+  '/estadisticas',
   authenticate,
   MultasPermissions.canView,
   async (req, res) => {
@@ -292,7 +329,9 @@ router.get('/estadisticas',
         );
 
         if (comunidadIds.length === 0) {
-          return res.status(403).json({ success: false, error: 'Sin permisos' });
+          return res
+            .status(403)
+            .json({ success: false, error: 'Sin permisos' });
         }
 
         const placeholders = comunidadIds.map(() => '?').join(',');
@@ -305,7 +344,8 @@ router.get('/estadisticas',
         params.push(req.query.comunidad_id);
       }
 
-      const [stats] = await db.query(`
+      const [stats] = await db.query(
+        `
         SELECT 
           COUNT(*) as total,
           COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as pendientes,
@@ -323,7 +363,9 @@ router.get('/estadisticas',
           COALESCE(SUM(monto), 0) as monto_total
         FROM multa 
         ${whereClause}
-      `, params);
+      `,
+        params
+      );
 
       const estadisticas = {
         total: stats[0].total,
@@ -336,25 +378,24 @@ router.get('/estadisticas',
           baja: stats[0].prioridad_baja,
           media: stats[0].prioridad_media,
           alta: stats[0].prioridad_alta,
-          critica: stats[0].prioridad_critica
+          critica: stats[0].prioridad_critica,
         },
         montos: {
           total: parseFloat(stats[0].monto_total || 0),
           pendiente: parseFloat(stats[0].monto_pendiente || 0),
           vencido: parseFloat(stats[0].monto_vencido || 0),
-          recaudado: parseFloat(stats[0].monto_recaudado || 0)
-        }
+          recaudado: parseFloat(stats[0].monto_recaudado || 0),
+        },
       };
 
       console.log('✅ Estadísticas calculadas:', estadisticas);
       res.json({ success: true, data: estadisticas });
-
     } catch (error) {
       console.error('❌ Error en estadísticas:', error);
       res.status(500).json({
         success: false,
         error: 'Error del servidor',
-        message: error.message
+        message: error.message,
       });
     }
   }
@@ -363,28 +404,52 @@ router.get('/estadisticas',
 // ============================================
 // POST /multas - CREAR MULTA
 // ============================================
-router.post('/',
+router.post(
+  '/',
   authenticate,
   MultasPermissions.canCreate,
   [
-    body('unidad_id').notEmpty().isInt().withMessage('unidad_id es requerido y debe ser un número'),
-    body('tipo_infraccion').notEmpty().isLength({ min: 5, max: 120 }).withMessage('tipo_infraccion es requerido (5-120 caracteres)'),
-    body('monto').isFloat({ min: 0.01 }).withMessage('monto debe ser mayor a 0'),
-    body('fecha_infraccion').optional().isISO8601().withMessage('fecha_infraccion debe ser una fecha válida')
-      .custom(fecha => {
+    body('unidad_id')
+      .notEmpty()
+      .isInt()
+      .withMessage('unidad_id es requerido y debe ser un número'),
+    body('tipo_infraccion')
+      .notEmpty()
+      .isLength({ min: 5, max: 120 })
+      .withMessage('tipo_infraccion es requerido (5-120 caracteres)'),
+    body('monto')
+      .isFloat({ min: 0.01 })
+      .withMessage('monto debe ser mayor a 0'),
+    body('fecha_infraccion')
+      .optional()
+      .isISO8601()
+      .withMessage('fecha_infraccion debe ser una fecha válida')
+      .custom((fecha) => {
         if (fecha && new Date(fecha) > new Date()) {
           throw new Error('fecha_infraccion no puede ser futura');
         }
         return true;
       }),
-    body('fecha_vencimiento').optional().isISO8601().withMessage('fecha_vencimiento debe ser una fecha válida')
+    body('fecha_vencimiento')
+      .optional()
+      .isISO8601()
+      .withMessage('fecha_vencimiento debe ser una fecha válida')
       .custom((fecha_venc, { req }) => {
-        if (fecha_venc && req.body.fecha_infraccion && new Date(fecha_venc) <= new Date(req.body.fecha_infraccion)) {
-          throw new Error('fecha_vencimiento debe ser mayor a fecha_infraccion');
+        if (
+          fecha_venc &&
+          req.body.fecha_infraccion &&
+          new Date(fecha_venc) <= new Date(req.body.fecha_infraccion)
+        ) {
+          throw new Error(
+            'fecha_vencimiento debe ser mayor a fecha_infraccion'
+          );
         }
         return true;
       }),
-    body('prioridad').optional().isIn(['baja', 'media', 'alta', 'critica']).withMessage('prioridad inválida')
+    body('prioridad')
+      .optional()
+      .isIn(['baja', 'media', 'alta', 'critica'])
+      .withMessage('prioridad inválida'),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -392,7 +457,7 @@ router.post('/',
       return res.status(400).json({
         success: false,
         error: 'Validación fallida',
-        details: errors.array()
+        details: errors.array(),
       });
     }
 
@@ -404,7 +469,7 @@ router.post('/',
       monto,
       fecha_infraccion,
       fecha_vencimiento,
-      prioridad = 'media'
+      prioridad = 'media',
     } = req.body;
 
     try {
@@ -420,7 +485,7 @@ router.post('/',
       if (!unidadRows.length) {
         return res.status(404).json({
           success: false,
-          error: 'Unidad no encontrada'
+          error: 'Unidad no encontrada',
         });
       }
 
@@ -437,7 +502,7 @@ router.post('/',
         if (!comunidadIds.includes(comunidad_id)) {
           return res.status(403).json({
             success: false,
-            error: 'Sin permisos para crear multas en esta comunidad'
+            error: 'Sin permisos para crear multas en esta comunidad',
           });
         }
       }
@@ -447,7 +512,10 @@ router.post('/',
       try {
         if (req.body.tipo_infraccion_id) {
           tipo_infraccion_id = Number(req.body.tipo_infraccion_id);
-        } else if (typeof tipo_infraccion === 'string' && tipo_infraccion.trim()) {
+        } else if (
+          typeof tipo_infraccion === 'string' &&
+          tipo_infraccion.trim()
+        ) {
           const [tRows] = await db.query(
             `SELECT id FROM tipo_infraccion 
              WHERE (clave = ? OR nombre = ?) 
@@ -469,7 +537,9 @@ router.post('/',
 
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          console.log(`🔄 Intento ${attempt}/${maxRetries} con número: ${numeroGenerado}`);
+          console.log(
+            `🔄 Intento ${attempt}/${maxRetries} con número: ${numeroGenerado}`
+          );
           const [resInsert] = await db.query(
             `INSERT INTO multa (
               numero, comunidad_id, unidad_id, persona_id, motivo, descripcion, 
@@ -487,15 +557,19 @@ router.post('/',
               fecha_vencimiento,
               prioridad,
               tipo_infraccion_id,
-              req.user ? req.user.sub : null
+              req.user ? req.user.sub : null,
             ]
           );
           insertResult = resInsert;
-          console.log(`✅ Multa creada exitosamente con número: ${numeroGenerado}`);
+          console.log(
+            `✅ Multa creada exitosamente con número: ${numeroGenerado}`
+          );
           break; // Salir del bucle si inserta correctamente
         } catch (err) {
           if (err.code === 'ER_DUP_ENTRY' && attempt < maxRetries) {
-            console.warn(`⚠️ Conflicto número ${numeroGenerado}, reintentando con siguiente...`);
+            console.warn(
+              `⚠️ Conflicto número ${numeroGenerado}, reintentando con siguiente...`
+            );
             // Incrementar el número en 1
             const m = numeroGenerado.match(/M-(\d{4})-(\d{4})/);
             if (m) {
@@ -514,7 +588,9 @@ router.post('/',
       }
 
       if (!insertResult) {
-        throw new Error('No se pudo insertar multa: se agotaron los reintentos por conflicto en número.');
+        throw new Error(
+          'No se pudo insertar multa: se agotaron los reintentos por conflicto en número.'
+        );
       }
 
       const result = insertResult;
@@ -527,12 +603,13 @@ router.post('/',
         `Multa ${numeroGenerado} creada`,
         {
           estado_nuevo: 'pendiente',
-          ip_address: req.ip
+          ip_address: req.ip,
         }
       );
 
       // Obtener multa completa con JOINs
-      const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
         SELECT 
           m.*,
           m.motivo as tipo_infraccion,
@@ -543,22 +620,23 @@ router.post('/',
         LEFT JOIN unidad u ON m.unidad_id = u.id
         LEFT JOIN comunidad c ON m.comunidad_id = c.id
         WHERE m.id = ?
-      `, [result.insertId]);
+      `,
+        [result.insertId]
+      );
 
       console.log('✅ Multa creada exitosamente:', rows[0].numero);
 
       res.status(201).json({
         success: true,
         data: rows[0],
-        message: `Multa ${rows[0].numero} creada exitosamente`
+        message: `Multa ${rows[0].numero} creada exitosamente`,
       });
-
     } catch (err) {
       console.error('❌ Error creando multa:', err);
       res.status(500).json({
         success: false,
         error: 'Error del servidor',
-        message: err.message
+        message: err.message,
       });
     }
   }
@@ -568,15 +646,26 @@ router.post('/',
 // GET /multas/tipos-infraccion
 router.get('/tipos-infraccion', authenticate, async (req, res) => {
   try {
-    const comunidadId = req.query.comunidadId ? Number(req.query.comunidadId) : null;
+    const comunidadId = req.query.comunidadId
+      ? Number(req.query.comunidadId)
+      : null;
     const isSuperAdmin = !!req.user?.is_superadmin;
     const userId = req.user?.sub;
     const personaId = req.user?.persona_id;
 
-    const comunidadIds = await obtenerComunidadesUsuario(userId, personaId, isSuperAdmin);
+    const comunidadIds = await obtenerComunidadesUsuario(
+      userId,
+      personaId,
+      isSuperAdmin
+    );
 
     if (comunidadId && !isSuperAdmin && !comunidadIds.includes(comunidadId)) {
-      return res.status(403).json({ success: false, error: 'Sin permisos para ver tipos en esta comunidad' });
+      return res
+        .status(403)
+        .json({
+          success: false,
+          error: 'Sin permisos para ver tipos en esta comunidad',
+        });
     }
 
     let sql = `
@@ -604,7 +693,13 @@ router.get('/tipos-infraccion', authenticate, async (req, res) => {
     res.json({ success: true, data: rows });
   } catch (err) {
     console.error('❌ Error GET /multas/tipos-infraccion:', err);
-    res.status(500).json({ success: false, error: 'Error del servidor', message: err.message });
+    res
+      .status(500)
+      .json({
+        success: false,
+        error: 'Error del servidor',
+        message: err.message,
+      });
   }
 });
 // -------------------- FIN NUEVO --------------------
@@ -612,7 +707,8 @@ router.get('/tipos-infraccion', authenticate, async (req, res) => {
 // ============================================
 // GET /multas/:id - DETALLE DE MULTA
 // ============================================
-router.get('/:id',
+router.get(
+  '/:id',
   authenticate,
   MultasPermissions.canView,
   param('id').notEmpty(),
@@ -620,7 +716,10 @@ router.get('/:id',
     const idParam = req.params.id;
     try {
       const id = await resolveMultaId(idParam);
-      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+      if (!id)
+        return res
+          .status(404)
+          .json({ success: false, error: 'Multa no encontrada' });
 
       console.log(`🔍 GET /multas/${id} - Usuario:`, req.user?.username);
 
@@ -659,19 +758,18 @@ router.get('/:id',
       if (!rows.length) {
         return res.status(404).json({
           success: false,
-          error: 'Multa no encontrada o sin permisos'
+          error: 'Multa no encontrada o sin permisos',
         });
       }
 
       console.log('✅ Multa encontrada:', rows[0].numero);
       res.json({ success: true, data: rows[0] });
-
     } catch (error) {
       console.error(`❌ Error obteniendo multa ${idParam}:`, error);
       res.status(500).json({
         success: false,
         error: 'Error del servidor',
-        message: error.message
+        message: error.message,
       });
     }
   }
@@ -680,7 +778,8 @@ router.get('/:id',
 // ============================================
 // PATCH /multas/:id - EDITAR MULTA
 // ============================================
-router.patch('/:id',
+router.patch(
+  '/:id',
   authenticate,
   MultasPermissions.canEdit,
   [
@@ -689,13 +788,16 @@ router.patch('/:id',
     body('monto').optional().isFloat({ min: 0.01 }),
     body('prioridad').optional().isIn(['baja', 'media', 'alta', 'critica']),
     body('fecha_infraccion').optional().isISO8601(),
-    body('fecha_vencimiento').optional().isISO8601()
+    body('fecha_vencimiento').optional().isISO8601(),
   ],
   async (req, res) => {
     const idParam = req.params.id;
     try {
       const id = await resolveMultaId(idParam);
-      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+      if (!id)
+        return res
+          .status(404)
+          .json({ success: false, error: 'Multa no encontrada' });
 
       console.log(`📝 PATCH /multas/${id} - Usuario:`, req.user?.username);
       console.log('📝 Datos recibidos:', req.body);
@@ -708,7 +810,7 @@ router.patch('/:id',
       if (!existingRows.length) {
         return res.status(404).json({
           success: false,
-          error: 'Multa no encontrada'
+          error: 'Multa no encontrada',
         });
       }
 
@@ -717,25 +819,29 @@ router.patch('/:id',
       if (['pagado', 'anulada'].includes(multaAnterior.estado)) {
         return res.status(400).json({
           success: false,
-          error: `No se puede editar una multa ${multaAnterior.estado}`
+          error: `No se puede editar una multa ${multaAnterior.estado}`,
         });
       }
 
       const fieldMapping = {
-        'tipo_infraccion': 'motivo',
-        'fecha_infraccion': 'fecha'
+        tipo_infraccion: 'motivo',
+        fecha_infraccion: 'fecha',
       };
 
       const allowedFields = [
-        'tipo_infraccion', 'descripcion', 'monto',
-        'prioridad', 'fecha_infraccion', 'fecha_vencimiento'
+        'tipo_infraccion',
+        'descripcion',
+        'monto',
+        'prioridad',
+        'fecha_infraccion',
+        'fecha_vencimiento',
       ];
 
       const updates = [];
       const values = [];
       const cambios = [];
 
-      allowedFields.forEach(field => {
+      allowedFields.forEach((field) => {
         if (req.body[field] !== undefined) {
           const dbField = fieldMapping[field] || field;
           updates.push(`${dbField} = ?`);
@@ -743,7 +849,7 @@ router.patch('/:id',
           cambios.push({
             campo: field,
             anterior: multaAnterior[dbField],
-            nuevo: req.body[field]
+            nuevo: req.body[field],
           });
         }
       });
@@ -751,7 +857,7 @@ router.patch('/:id',
       if (!updates.length) {
         return res.status(400).json({
           success: false,
-          error: 'No hay campos para actualizar'
+          error: 'No hay campos para actualizar',
         });
       }
 
@@ -770,28 +876,30 @@ router.patch('/:id',
         {
           valor_anterior: cambios,
           valor_nuevo: req.body,
-          ip_address: req.ip
+          ip_address: req.ip,
         }
       );
 
-      const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
         SELECT 
           m.*,
           m.motivo as tipo_infraccion,
           m.fecha as fecha_infraccion
         FROM multa m
         WHERE m.id = ?
-      `, [id]);
+      `,
+        [id]
+      );
 
       console.log('✅ Multa actualizada exitosamente');
       res.json({ success: true, data: rows[0] });
-
     } catch (err) {
       console.error(`❌ Error actualizando multa ${idParam}:`, err);
       res.status(500).json({
         success: false,
         error: 'Error del servidor',
-        message: err.message
+        message: err.message,
       });
     }
   }
@@ -800,12 +908,15 @@ router.patch('/:id',
 // ============================================
 // PATCH /multas/:id/anular - ANULAR MULTA
 // ============================================
-router.patch('/:id/anular',
+router.patch(
+  '/:id/anular',
   authenticate,
   MultasPermissions.canAnular,
   [
     param('id').notEmpty(),
-    body('motivo_anulacion').notEmpty().withMessage('motivo_anulacion es requerido')
+    body('motivo_anulacion')
+      .notEmpty()
+      .withMessage('motivo_anulacion es requerido'),
   ],
   async (req, res) => {
     const idParam = req.params.id;
@@ -814,7 +925,7 @@ router.patch('/:id/anular',
       return res.status(400).json({
         success: false,
         error: 'Validación fallida',
-        details: errors.array()
+        details: errors.array(),
       });
     }
 
@@ -822,9 +933,15 @@ router.patch('/:id/anular',
 
     try {
       const id = await resolveMultaId(idParam);
-      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+      if (!id)
+        return res
+          .status(404)
+          .json({ success: false, error: 'Multa no encontrada' });
 
-      console.log(`🚫 PATCH /multas/${id}/anular - Usuario:`, req.user?.username);
+      console.log(
+        `🚫 PATCH /multas/${id}/anular - Usuario:`,
+        req.user?.username
+      );
 
       const [existingRows] = await db.query(
         'SELECT * FROM multa WHERE id = ?',
@@ -834,7 +951,7 @@ router.patch('/:id/anular',
       if (!existingRows.length) {
         return res.status(404).json({
           success: false,
-          error: 'Multa no encontrada'
+          error: 'Multa no encontrada',
         });
       }
 
@@ -843,14 +960,14 @@ router.patch('/:id/anular',
       if (multa.estado === 'anulada') {
         return res.status(400).json({
           success: false,
-          error: 'La multa ya está anulada'
+          error: 'La multa ya está anulada',
         });
       }
 
       if (multa.estado === 'pagado') {
         return res.status(400).json({
           success: false,
-          error: 'No se puede anular una multa pagada'
+          error: 'No se puede anular una multa pagada',
         });
       }
 
@@ -874,28 +991,24 @@ router.patch('/:id/anular',
         {
           estado_anterior: multa.estado,
           estado_nuevo: 'anulada',
-          ip_address: req.ip
+          ip_address: req.ip,
         }
       );
 
-      const [rows] = await db.query(
-        'SELECT * FROM multa WHERE id = ?',
-        [id]
-      );
+      const [rows] = await db.query('SELECT * FROM multa WHERE id = ?', [id]);
 
       console.log('✅ Multa anulada exitosamente');
 
       res.json({
         success: true,
         data: rows[0],
-        message: `Multa ${multa.numero} anulada exitosamente`
+        message: `Multa ${multa.numero} anulada exitosamente`,
       });
-
     } catch (error) {
       console.error(`❌ Error anulando multa ${idParam}:`, error);
       res.status(500).json({
         success: false,
-        error: 'Error del servidor'
+        error: 'Error del servidor',
       });
     }
   }
@@ -904,14 +1017,17 @@ router.patch('/:id/anular',
 // ============================================
 // POST /multas/:id/registrar-pago - REGISTRAR PAGO
 // ============================================
-router.post('/:id/registrar-pago',
+router.post(
+  '/:id/registrar-pago',
   authenticate,
   MultasPermissions.canRegistrarPago,
   [
     param('id').notEmpty(),
-    body('fecha_pago').isISO8601().withMessage('fecha_pago debe ser una fecha válida'),
+    body('fecha_pago')
+      .isISO8601()
+      .withMessage('fecha_pago debe ser una fecha válida'),
     body('metodo_pago').optional().isString(),
-    body('referencia').optional().isString()
+    body('referencia').optional().isString(),
   ],
   async (req, res) => {
     const idParam = req.params.id;
@@ -920,7 +1036,7 @@ router.post('/:id/registrar-pago',
       return res.status(400).json({
         success: false,
         error: 'Validación fallida',
-        details: errors.array()
+        details: errors.array(),
       });
     }
 
@@ -928,9 +1044,15 @@ router.post('/:id/registrar-pago',
 
     try {
       const id = await resolveMultaId(idParam);
-      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+      if (!id)
+        return res
+          .status(404)
+          .json({ success: false, error: 'Multa no encontrada' });
 
-      console.log(`💰 POST /multas/${id}/registrar-pago - Usuario:`, req.user?.username);
+      console.log(
+        `💰 POST /multas/${id}/registrar-pago - Usuario:`,
+        req.user?.username
+      );
 
       const [existingRows] = await db.query(
         'SELECT * FROM multa WHERE id = ?',
@@ -940,7 +1062,7 @@ router.post('/:id/registrar-pago',
       if (!existingRows.length) {
         return res.status(404).json({
           success: false,
-          error: 'Multa no encontrada'
+          error: 'Multa no encontrada',
         });
       }
 
@@ -949,14 +1071,14 @@ router.post('/:id/registrar-pago',
       if (multa.estado === 'pagado') {
         return res.status(400).json({
           success: false,
-          error: 'La multa ya está pagada'
+          error: 'La multa ya está pagada',
         });
       }
 
       if (multa.estado === 'anulada') {
         return res.status(400).json({
           success: false,
-          error: 'No se puede registrar pago de una multa anulada'
+          error: 'No se puede registrar pago de una multa anulada',
         });
       }
 
@@ -977,28 +1099,24 @@ router.post('/:id/registrar-pago',
           estado_anterior: multa.estado,
           estado_nuevo: 'pagado',
           valor_nuevo: { fecha_pago, metodo_pago, referencia },
-          ip_address: req.ip
+          ip_address: req.ip,
         }
       );
 
-      const [rows] = await db.query(
-        'SELECT * FROM multa WHERE id = ?',
-        [id]
-      );
+      const [rows] = await db.query('SELECT * FROM multa WHERE id = ?', [id]);
 
       console.log('✅ Pago registrado exitosamente');
 
       res.json({
         success: true,
         data: rows[0],
-        message: `Pago de multa ${multa.numero} registrado exitosamente`
+        message: `Pago de multa ${multa.numero} registrado exitosamente`,
       });
-
     } catch (error) {
       console.error(`❌ Error registrando pago ${idParam}:`, error);
       res.status(500).json({
         success: false,
-        error: 'Error del servidor'
+        error: 'Error del servidor',
       });
     }
   }
@@ -1007,7 +1125,8 @@ router.post('/:id/registrar-pago',
 // ============================================
 // GET /multas/:id/historial - VER HISTORIAL
 // ============================================
-router.get('/:id/historial',
+router.get(
+  '/:id/historial',
   authenticate,
   MultasPermissions.canView,
   param('id').notEmpty(),
@@ -1015,11 +1134,18 @@ router.get('/:id/historial',
     const idParam = req.params.id;
     try {
       const id = await resolveMultaId(idParam);
-      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+      if (!id)
+        return res
+          .status(404)
+          .json({ success: false, error: 'Multa no encontrada' });
 
-      console.log(`📜 GET /multas/${id}/historial - Usuario:`, req.user?.username);
+      console.log(
+        `📜 GET /multas/${id}/historial - Usuario:`,
+        req.user?.username
+      );
 
-      const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
         SELECT 
           h.*,
           u.username,
@@ -1029,21 +1155,22 @@ router.get('/:id/historial',
         LEFT JOIN persona p ON u.persona_id = p.id
         WHERE h.multa_id = ?
         ORDER BY h.created_at DESC
-      `, [id]);
+      `,
+        [id]
+      );
 
       console.log(`✅ ${rows.length} registros de historial encontrados`);
 
       res.json({
         success: true,
         data: rows,
-        count: rows.length
+        count: rows.length,
       });
-
     } catch (error) {
       console.error(`❌ Error obteniendo historial ${idParam}:`, error);
       res.status(500).json({
         success: false,
-        error: 'Error del servidor'
+        error: 'Error del servidor',
       });
     }
   }
@@ -1052,13 +1179,17 @@ router.get('/:id/historial',
 // ============================================
 // POST /multas/:id/apelacion - CREAR APELACIÓN
 // ============================================
-router.post('/:id/apelacion',
+router.post(
+  '/:id/apelacion',
   authenticate,
   MultasPermissions.canApelar,
   [
     param('id').notEmpty(),
-    body('motivo').notEmpty().isLength({ min: 20 }).withMessage('motivo debe tener al menos 20 caracteres'),
-    body('documentos_json').optional().isArray()
+    body('motivo')
+      .notEmpty()
+      .isLength({ min: 20 })
+      .withMessage('motivo debe tener al menos 20 caracteres'),
+    body('documentos_json').optional().isArray(),
   ],
   async (req, res) => {
     const idParam = req.params.id;
@@ -1067,7 +1198,7 @@ router.post('/:id/apelacion',
       return res.status(400).json({
         success: false,
         error: 'Validación fallida',
-        details: errors.array()
+        details: errors.array(),
       });
     }
 
@@ -1075,19 +1206,24 @@ router.post('/:id/apelacion',
 
     try {
       const id = await resolveMultaId(idParam);
-      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+      if (!id)
+        return res
+          .status(404)
+          .json({ success: false, error: 'Multa no encontrada' });
 
-      console.log(`📝 POST /multas/${id}/apelacion - Usuario:`, req.user?.username);
-
-      const [multaRows] = await db.query(
-        'SELECT * FROM multa WHERE id = ?',
-        [id]
+      console.log(
+        `📝 POST /multas/${id}/apelacion - Usuario:`,
+        req.user?.username
       );
+
+      const [multaRows] = await db.query('SELECT * FROM multa WHERE id = ?', [
+        id,
+      ]);
 
       if (!multaRows.length) {
         return res.status(404).json({
           success: false,
-          error: 'Multa no encontrada'
+          error: 'Multa no encontrada',
         });
       }
 
@@ -1096,14 +1232,14 @@ router.post('/:id/apelacion',
       if (multa.estado === 'pagado') {
         return res.status(400).json({
           success: false,
-          error: 'No se puede apelar una multa pagada'
+          error: 'No se puede apelar una multa pagada',
         });
       }
 
       if (multa.estado === 'anulada') {
         return res.status(400).json({
           success: false,
-          error: 'No se puede apelar una multa anulada'
+          error: 'No se puede apelar una multa anulada',
         });
       }
 
@@ -1115,7 +1251,7 @@ router.post('/:id/apelacion',
       if (existingApelacion.length > 0) {
         return res.status(400).json({
           success: false,
-          error: 'Ya existe una apelación pendiente para esta multa'
+          error: 'Ya existe una apelación pendiente para esta multa',
         });
       }
 
@@ -1134,14 +1270,11 @@ router.post('/:id/apelacion',
           req.user.sub,
           multa.persona_id || null,
           multa.comunidad_id || null,
-          motivo
+          motivo,
         ]
       );
 
-      await db.query(
-        "UPDATE multa SET estado = 'apelada' WHERE id = ?",
-        [id]
-      );
+      await db.query("UPDATE multa SET estado = 'apelada' WHERE id = ?", [id]);
 
       await registrarHistorial(
         id,
@@ -1151,7 +1284,7 @@ router.post('/:id/apelacion',
         {
           estado_anterior: multa.estado,
           estado_nuevo: 'apelada',
-          ip_address: req.ip
+          ip_address: req.ip,
         }
       );
 
@@ -1165,14 +1298,13 @@ router.post('/:id/apelacion',
       res.status(201).json({
         success: true,
         data: rows[0],
-        message: `Apelación para multa ${multa.numero} creada exitosamente`
+        message: `Apelación para multa ${multa.numero} creada exitosamente`,
       });
-
     } catch (error) {
       console.error(`❌ Error creando apelación ${idParam}:`, error);
       res.status(500).json({
         success: false,
-        error: 'Error del servidor'
+        error: 'Error del servidor',
       });
     }
   }
@@ -1181,7 +1313,8 @@ router.post('/:id/apelacion',
 // ============================================
 // DELETE /multas/:id - ELIMINAR MULTA
 // ============================================
-router.delete('/:id',
+router.delete(
+  '/:id',
   authenticate,
   MultasPermissions.canDelete,
   param('id').notEmpty(),
@@ -1189,7 +1322,10 @@ router.delete('/:id',
     const idParam = req.params.id;
     try {
       const id = await resolveMultaId(idParam);
-      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
+      if (!id)
+        return res
+          .status(404)
+          .json({ success: false, error: 'Multa no encontrada' });
 
       console.log(`🗑️ DELETE /multas/${id} - Usuario:`, req.user?.username);
 
@@ -1201,7 +1337,7 @@ router.delete('/:id',
       if (!existingRows.length) {
         return res.status(404).json({
           success: false,
-          error: 'Multa no encontrada'
+          error: 'Multa no encontrada',
         });
       }
 
@@ -1210,7 +1346,8 @@ router.delete('/:id',
       if (multa.estado === 'pagado') {
         return res.status(400).json({
           success: false,
-          error: 'No se puede eliminar una multa pagada. Use anular en su lugar.'
+          error:
+            'No se puede eliminar una multa pagada. Use anular en su lugar.',
         });
       }
 
@@ -1222,7 +1359,7 @@ router.delete('/:id',
         {
           estado_anterior: multa.estado,
           valor_anterior: multa,
-          ip_address: req.ip
+          ip_address: req.ip,
         }
       );
 
@@ -1232,14 +1369,13 @@ router.delete('/:id',
 
       res.status(200).json({
         success: true,
-        message: `Multa ${multa.numero} eliminada exitosamente`
+        message: `Multa ${multa.numero} eliminada exitosamente`,
       });
-
     } catch (err) {
       console.error(`❌ Error eliminando multa ${idParam}:`, err);
       res.status(500).json({
         success: false,
-        error: 'Error del servidor'
+        error: 'Error del servidor',
       });
     }
   }
@@ -1248,23 +1384,22 @@ router.delete('/:id',
 // ============================================
 // GET /multas/unidad/:unidadId - MULTAS DE UNA UNIDAD
 // ============================================
-router.get('/unidad/:unidadId',
-  authenticate,
-  async (req, res) => {
-    const unidadId = req.params.unidadId;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        error: 'Validación fallida',
-        details: errors.array()
-      });
-    }
+router.get('/unidad/:unidadId', authenticate, async (req, res) => {
+  const unidadId = req.params.unidadId;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      error: 'Validación fallida',
+      details: errors.array(),
+    });
+  }
 
-    try {
-      console.log(`🔍 GET /multas/unidad/${unidadId}`);
+  try {
+    console.log(`🔍 GET /multas/unidad/${unidadId}`);
 
-      const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
         SELECT 
           m.id, 
           m.numero,
@@ -1278,25 +1413,26 @@ router.get('/unidad/:unidadId',
         WHERE m.unidad_id = ? 
         ORDER BY m.fecha DESC 
         LIMIT 200
-      `, [unidadId]);
+      `,
+      [unidadId]
+    );
 
-      console.log(`✅ ${rows.length} multas encontradas para unidad ${unidadId}`);
-      res.json({ success: true, data: rows });
-
-    } catch (error) {
-      console.error('❌ Error obteniendo multas de unidad:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Error del servidor'
-      });
-    }
+    console.log(`✅ ${rows.length} multas encontradas para unidad ${unidadId}`);
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error('❌ Error obteniendo multas de unidad:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error del servidor',
+    });
   }
-);
+});
 
 // ============================================
 // GET /multas/:id/apelaciones
 // ============================================
-router.get('/:id/apelaciones',
+router.get(
+  '/:id/apelaciones',
   authenticate,
   MultasPermissions.canView,
   param('id').notEmpty(),
@@ -1304,8 +1440,14 @@ router.get('/:id/apelaciones',
     const idParam = req.params.id;
     try {
       const id = await resolveMultaId(idParam);
-      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
-      const [rows] = await db.query('SELECT * FROM multa_apelacion WHERE multa_id = ? ORDER BY created_at DESC', [id]);
+      if (!id)
+        return res
+          .status(404)
+          .json({ success: false, error: 'Multa no encontrada' });
+      const [rows] = await db.query(
+        'SELECT * FROM multa_apelacion WHERE multa_id = ? ORDER BY created_at DESC',
+        [id]
+      );
       res.json({ success: true, data: rows });
     } catch (err) {
       console.error(err);
@@ -1317,7 +1459,8 @@ router.get('/:id/apelaciones',
 // ============================================
 // GET /multas/:id/documentos
 // ============================================
-router.get('/:id/documentos',
+router.get(
+  '/:id/documentos',
   authenticate,
   MultasPermissions.canView,
   param('id').notEmpty(),
@@ -1325,8 +1468,14 @@ router.get('/:id/documentos',
     const idParam = req.params.id;
     try {
       const id = await resolveMultaId(idParam);
-      if (!id) return res.status(404).json({ success: false, error: 'Multa no encontrada' });
-      const [rows] = await db.query('SELECT * FROM documento_multa WHERE multa_id = ? ORDER BY created_at DESC', [id]);
+      if (!id)
+        return res
+          .status(404)
+          .json({ success: false, error: 'Multa no encontrada' });
+      const [rows] = await db.query(
+        'SELECT * FROM documento_multa WHERE multa_id = ? ORDER BY created_at DESC',
+        [id]
+      );
       res.json({ success: true, data: rows });
     } catch (err) {
       console.error(err);
@@ -1334,9 +1483,6 @@ router.get('/:id/documentos',
     }
   }
 );
-
-
-
 
 module.exports = router;
 // =========================================
@@ -1378,7 +1524,3 @@ module.exports = router;
 // PATCH: /multas/:id
 // PATCH: /multas/:id/anular
 // DELETE: /multas/:id
-
-
-
-

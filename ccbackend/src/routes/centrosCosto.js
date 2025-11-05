@@ -17,11 +17,15 @@ const { requireCommunity } = require('../middleware/tenancy');
  *     tags: [CentrosCosto]
  *     summary: Listado básico de centros de costo con información completa
  */
-router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         cc.id,
         cc.comunidad_id,
@@ -36,13 +40,14 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
       ORDER BY cc.nombre
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener centros de costo' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener centros de costo' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -51,16 +56,16 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
  *     tags: [CentrosCosto]
  *     summary: Listado con filtros avanzados y estadísticas
  */
-router.get('/comunidad/:comunidadId/filtrar', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { 
-      busqueda, 
-      limit = 50, 
-      offset = 0 
-    } = req.query;
+router.get(
+  '/comunidad/:comunidadId/filtrar',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { busqueda, limit = 50, offset = 0 } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         cc.id,
         cc.nombre,
@@ -86,37 +91,41 @@ router.get('/comunidad/:comunidadId/filtrar', authenticate, requireCommunity('co
       WHERE cc.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (busqueda) {
-      query += ' AND (cc.nombre LIKE ? OR cc.codigo LIKE ?)';
-      params.push(`%${busqueda}%`, `%${busqueda}%`);
-    }
-
-    // Obtener total
-    const countQuery = query.replace(/SELECT.*FROM/, 'SELECT COUNT(DISTINCT cc.id) as total FROM');
-    const [countResult] = await db.query(countQuery, params);
-    const total = countResult[0].total;
-
-    query += ' ORDER BY cc.nombre LIMIT ? OFFSET ?';
-    params.push(Number(limit), Number(offset));
-
-    const [rows] = await db.query(query, params);
-
-    res.json({
-      data: rows,
-      pagination: {
-        total,
-        limit: Number(limit),
-        offset: Number(offset),
-        pages: Math.ceil(total / limit)
+      if (busqueda) {
+        query += ' AND (cc.nombre LIKE ? OR cc.codigo LIKE ?)';
+        params.push(`%${busqueda}%`, `%${busqueda}%`);
       }
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al filtrar centros de costo' });
+
+      // Obtener total
+      const countQuery = query.replace(
+        /SELECT.*FROM/,
+        'SELECT COUNT(DISTINCT cc.id) as total FROM'
+      );
+      const [countResult] = await db.query(countQuery, params);
+      const total = countResult[0].total;
+
+      query += ' ORDER BY cc.nombre LIMIT ? OFFSET ?';
+      params.push(Number(limit), Number(offset));
+
+      const [rows] = await db.query(query, params);
+
+      res.json({
+        data: rows,
+        pagination: {
+          total,
+          limit: Number(limit),
+          offset: Number(offset),
+          pages: Math.ceil(total / limit),
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al filtrar centros de costo' });
+    }
   }
-});
+);
 
 // =========================================
 // 2. DETALLE DE CENTRO DE COSTO ESPECÍFICO
@@ -182,7 +191,9 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
     res.json(rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Error al obtener detalle del centro de costo' });
+    res
+      .status(500)
+      .json({ error: 'Error al obtener detalle del centro de costo' });
   }
 });
 
@@ -221,7 +232,9 @@ router.get('/:id/gastos', authenticate, async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Error al obtener gastos del centro de costo' });
+    res
+      .status(500)
+      .json({ error: 'Error al obtener gastos del centro de costo' });
   }
 });
 
@@ -276,7 +289,7 @@ router.post(
     authenticate,
     requireCommunity('comunidadId', ['admin']),
     body('nombre').notEmpty().withMessage('Nombre es requerido'),
-    body('codigo').optional()
+    body('codigo').optional(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -302,7 +315,11 @@ router.post(
     } catch (err) {
       console.error(err);
       if (err.code === 'ER_DUP_ENTRY') {
-        return res.status(409).json({ error: 'Ya existe un centro de costo con ese nombre o código' });
+        return res
+          .status(409)
+          .json({
+            error: 'Ya existe un centro de costo con ese nombre o código',
+          });
       }
       res.status(500).json({ error: 'Error al crear centro de costo' });
     }
@@ -342,47 +359,54 @@ router.get('/:id', authenticate, async (req, res) => {
  *     tags: [CentrosCosto]
  *     summary: Actualizar centro de costo
  */
-router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { nombre, codigo, comunidad_id } = req.body;
+router.patch(
+  '/:id',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { nombre, codigo, comunidad_id } = req.body;
 
-    const updates = [];
-    const values = [];
+      const updates = [];
+      const values = [];
 
-    if (nombre !== undefined) {
-      updates.push('nombre = ?');
-      values.push(nombre);
+      if (nombre !== undefined) {
+        updates.push('nombre = ?');
+        values.push(nombre);
+      }
+
+      if (codigo !== undefined) {
+        updates.push('codigo = ?');
+        values.push(codigo);
+      }
+
+      if (!updates.length) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
+      }
+
+      updates.push('updated_at = CURRENT_TIMESTAMP');
+
+      let query = `UPDATE centro_costo SET ${updates.join(', ')} WHERE id = ?`;
+      values.push(id);
+
+      if (comunidad_id) {
+        query += ' AND comunidad_id = ?';
+        values.push(comunidad_id);
+      }
+
+      await db.query(query, values);
+
+      const [rows] = await db.query('SELECT * FROM centro_costo WHERE id = ?', [
+        id,
+      ]);
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al actualizar centro de costo' });
     }
-
-    if (codigo !== undefined) {
-      updates.push('codigo = ?');
-      values.push(codigo);
-    }
-
-    if (!updates.length) {
-      return res.status(400).json({ error: 'No hay campos para actualizar' });
-    }
-
-    updates.push('updated_at = CURRENT_TIMESTAMP');
-
-    let query = `UPDATE centro_costo SET ${updates.join(', ')} WHERE id = ?`;
-    values.push(id);
-
-    if (comunidad_id) {
-      query += ' AND comunidad_id = ?';
-      values.push(comunidad_id);
-    }
-
-    await db.query(query, values);
-
-    const [rows] = await db.query('SELECT * FROM centro_costo WHERE id = ?', [id]);
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al actualizar centro de costo' });
   }
-});
+);
 
 /**
  * @swagger
@@ -391,26 +415,31 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin'), async (req,
  *     tags: [CentrosCosto]
  *     summary: Eliminar centro de costo
  */
-router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { comunidad_id } = req.query;
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('superadmin', 'admin'),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { comunidad_id } = req.query;
 
-    let query = 'DELETE FROM centro_costo WHERE id = ?';
-    const params = [id];
+      let query = 'DELETE FROM centro_costo WHERE id = ?';
+      const params = [id];
 
-    if (comunidad_id) {
-      query += ' AND comunidad_id = ?';
-      params.push(comunidad_id);
+      if (comunidad_id) {
+        query += ' AND comunidad_id = ?';
+        params.push(comunidad_id);
+      }
+
+      await db.query(query, params);
+      res.status(204).end();
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al eliminar centro de costo' });
     }
-
-    await db.query(query, params);
-    res.status(204).end();
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al eliminar centro de costo' });
   }
-});
+);
 
 // =========================================
 // 4. ESTADÍSTICAS Y REPORTES
@@ -423,11 +452,15 @@ router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req
  *     tags: [CentrosCosto]
  *     summary: Estadísticas generales de centros de costo
  */
-router.get('/comunidad/:comunidadId/estadisticas/generales', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/estadisticas/generales',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         COUNT(*) AS total_centros,
         COUNT(DISTINCT comunidad_id) AS comunidades_distintas,
@@ -446,13 +479,16 @@ router.get('/comunidad/:comunidadId/estadisticas/generales', authenticate, requi
       WHERE cc.comunidad_id = ?
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener estadísticas generales' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener estadísticas generales' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -461,12 +497,16 @@ router.get('/comunidad/:comunidadId/estadisticas/generales', authenticate, requi
  *     tags: [CentrosCosto]
  *     summary: Centros de costo más utilizados por cantidad de gastos
  */
-router.get('/comunidad/:comunidadId/mas-utilizados', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fecha_inicio, fecha_fin } = req.query;
+router.get(
+  '/comunidad/:comunidadId/mas-utilizados',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { fecha_inicio, fecha_fin } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         cc.nombre AS centro_costo,
         cc.codigo,
@@ -479,26 +519,29 @@ router.get('/comunidad/:comunidadId/mas-utilizados', authenticate, requireCommun
       WHERE cc.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (fecha_inicio && fecha_fin) {
-      query += ' AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_inicio, fecha_fin);
-    }
+      if (fecha_inicio && fecha_fin) {
+        query += ' AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_inicio, fecha_fin);
+      }
 
-    query += `
+      query += `
       GROUP BY cc.id, cc.nombre, cc.codigo
       HAVING COUNT(g.id) > 0
       ORDER BY cantidad_gastos DESC
     `;
 
-    const [rows] = await db.query(query, params);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener centros más utilizados' });
+      const [rows] = await db.query(query, params);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener centros más utilizados' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -507,12 +550,16 @@ router.get('/comunidad/:comunidadId/mas-utilizados', authenticate, requireCommun
  *     tags: [CentrosCosto]
  *     summary: Centros de costo más costosos por monto total
  */
-router.get('/comunidad/:comunidadId/mas-costosos', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fecha_inicio, fecha_fin } = req.query;
+router.get(
+  '/comunidad/:comunidadId/mas-costosos',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { fecha_inicio, fecha_fin } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         cc.nombre AS centro_costo,
         cc.codigo,
@@ -526,26 +573,27 @@ router.get('/comunidad/:comunidadId/mas-costosos', authenticate, requireCommunit
       WHERE cc.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (fecha_inicio && fecha_fin) {
-      query += ' AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_inicio, fecha_fin);
-    }
+      if (fecha_inicio && fecha_fin) {
+        query += ' AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_inicio, fecha_fin);
+      }
 
-    query += `
+      query += `
       GROUP BY cc.id, cc.nombre, cc.codigo
       HAVING SUM(g.monto) > 0
       ORDER BY total_monto DESC
     `;
 
-    const [rows] = await db.query(query, params);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener centros más costosos' });
+      const [rows] = await db.query(query, params);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener centros más costosos' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -554,12 +602,16 @@ router.get('/comunidad/:comunidadId/mas-costosos', authenticate, requireCommunit
  *     tags: [CentrosCosto]
  *     summary: Centros de costo sin uso en período
  */
-router.get('/comunidad/:comunidadId/sin-uso', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { dias = 30 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/sin-uso',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { dias = 30 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         cc.nombre AS centro_costo,
         cc.codigo,
@@ -573,13 +625,14 @@ router.get('/comunidad/:comunidadId/sin-uso', authenticate, requireCommunity('co
       ORDER BY dias_sin_uso DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId, Number(dias)]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener centros sin uso' });
+      const [rows] = await db.query(query, [comunidadId, Number(dias)]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener centros sin uso' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -588,12 +641,16 @@ router.get('/comunidad/:comunidadId/sin-uso', authenticate, requireCommunity('co
  *     tags: [CentrosCosto]
  *     summary: Análisis de gastos por centro de costo y categoría
  */
-router.get('/comunidad/:comunidadId/analisis-por-categoria', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fecha_inicio, fecha_fin } = req.query;
+router.get(
+  '/comunidad/:comunidadId/analisis-por-categoria',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { fecha_inicio, fecha_fin } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         cc.nombre AS centro_costo,
         cat.nombre AS categoria,
@@ -607,25 +664,28 @@ router.get('/comunidad/:comunidadId/analisis-por-categoria', authenticate, requi
       WHERE cc.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (fecha_inicio && fecha_fin) {
-      query += ' AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_inicio, fecha_fin);
-    }
+      if (fecha_inicio && fecha_fin) {
+        query += ' AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_inicio, fecha_fin);
+      }
 
-    query += `
+      query += `
       GROUP BY cc.id, cc.nombre, cat.id, cat.nombre
       ORDER BY cc.nombre, total_monto DESC
     `;
 
-    const [rows] = await db.query(query, params);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener análisis por categoría' });
+      const [rows] = await db.query(query, params);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener análisis por categoría' });
+    }
   }
-});
+);
 
 // =========================================
 // 5. VALIDACIONES
@@ -666,34 +726,39 @@ router.get('/:id/existe', authenticate, async (req, res) => {
  *     tags: [CentrosCosto]
  *     summary: Verificar si existe centro con el mismo nombre
  */
-router.get('/comunidad/:comunidadId/validar-nombre', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { nombre, excluir_id } = req.query;
+router.get(
+  '/comunidad/:comunidadId/validar-nombre',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { nombre, excluir_id } = req.query;
 
-    if (!nombre) {
-      return res.status(400).json({ error: 'Nombre es requerido' });
-    }
+      if (!nombre) {
+        return res.status(400).json({ error: 'Nombre es requerido' });
+      }
 
-    let query = `
+      let query = `
       SELECT COUNT(*) > 0 AS existe_duplicado
       FROM centro_costo
       WHERE comunidad_id = ? AND nombre = ?
     `;
-    const params = [comunidadId, nombre];
+      const params = [comunidadId, nombre];
 
-    if (excluir_id) {
-      query += ' AND id != ?';
-      params.push(excluir_id);
+      if (excluir_id) {
+        query += ' AND id != ?';
+        params.push(excluir_id);
+      }
+
+      const [rows] = await db.query(query, params);
+      res.json({ existe_duplicado: rows[0].existe_duplicado === 1 });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al validar nombre' });
     }
-
-    const [rows] = await db.query(query, params);
-    res.json({ existe_duplicado: rows[0].existe_duplicado === 1 });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al validar nombre' });
   }
-});
+);
 
 /**
  * @swagger
@@ -702,34 +767,41 @@ router.get('/comunidad/:comunidadId/validar-nombre', authenticate, requireCommun
  *     tags: [CentrosCosto]
  *     summary: Verificar si existe centro con el mismo código
  */
-router.get('/comunidad/:comunidadId/validar-codigo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { codigo, excluir_id } = req.query;
+router.get(
+  '/comunidad/:comunidadId/validar-codigo',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { codigo, excluir_id } = req.query;
 
-    if (!codigo) {
-      return res.status(400).json({ error: 'Código es requerido' });
-    }
+      if (!codigo) {
+        return res.status(400).json({ error: 'Código es requerido' });
+      }
 
-    let query = `
+      let query = `
       SELECT COUNT(*) > 0 AS existe_duplicado_codigo
       FROM centro_costo
       WHERE comunidad_id = ? AND codigo = ?
     `;
-    const params = [comunidadId, codigo];
+      const params = [comunidadId, codigo];
 
-    if (excluir_id) {
-      query += ' AND id != ?';
-      params.push(excluir_id);
+      if (excluir_id) {
+        query += ' AND id != ?';
+        params.push(excluir_id);
+      }
+
+      const [rows] = await db.query(query, params);
+      res.json({
+        existe_duplicado_codigo: rows[0].existe_duplicado_codigo === 1,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al validar código' });
     }
-
-    const [rows] = await db.query(query, params);
-    res.json({ existe_duplicado_codigo: rows[0].existe_duplicado_codigo === 1 });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al validar código' });
   }
-});
+);
 
 /**
  * @swagger
@@ -742,7 +814,8 @@ router.get('/:id/tiene-gastos', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const query = 'SELECT COUNT(*) > 0 AS tiene_gastos FROM gasto WHERE centro_costo_id = ?';
+    const query =
+      'SELECT COUNT(*) > 0 AS tiene_gastos FROM gasto WHERE centro_costo_id = ?';
     const [rows] = await db.query(query, [id]);
 
     res.json({ tiene_gastos: rows[0].tiene_gastos === 1 });
@@ -763,11 +836,15 @@ router.get('/:id/tiene-gastos', authenticate, async (req, res) => {
  *     tags: [CentrosCosto]
  *     summary: Lista de centros de costo para dropdowns
  */
-router.get('/comunidad/:comunidadId/dropdown', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/dropdown',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         id,
         nombre,
@@ -778,13 +855,16 @@ router.get('/comunidad/:comunidadId/dropdown', authenticate, requireCommunity('c
       ORDER BY nombre
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener lista de centros de costo' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener lista de centros de costo' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -793,11 +873,15 @@ router.get('/comunidad/:comunidadId/dropdown', authenticate, requireCommunity('c
  *     tags: [CentrosCosto]
  *     summary: Lista de centros de costo con estadísticas
  */
-router.get('/comunidad/:comunidadId/con-estadisticas', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/con-estadisticas',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         cc.id,
         cc.nombre,
@@ -818,13 +902,16 @@ router.get('/comunidad/:comunidadId/con-estadisticas', authenticate, requireComm
       ORDER BY cc.nombre
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener centros con estadísticas' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener centros con estadísticas' });
+    }
   }
-});
+);
 
 // =========================================
 // 7. REPORTES AVANZADOS
@@ -837,16 +924,22 @@ router.get('/comunidad/:comunidadId/con-estadisticas', authenticate, requireComm
  *     tags: [CentrosCosto]
  *     summary: Reporte de uso de centros de costo por mes
  */
-router.get('/comunidad/:comunidadId/reporte/por-mes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fecha_inicio, fecha_fin } = req.query;
+router.get(
+  '/comunidad/:comunidadId/reporte/por-mes',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { fecha_inicio, fecha_fin } = req.query;
 
-    if (!fecha_inicio || !fecha_fin) {
-      return res.status(400).json({ error: 'Fechas de inicio y fin son requeridas' });
-    }
+      if (!fecha_inicio || !fecha_fin) {
+        return res
+          .status(400)
+          .json({ error: 'Fechas de inicio y fin son requeridas' });
+      }
 
-    const query = `
+      const query = `
       SELECT
         cc.nombre AS centro_costo,
         cc.codigo,
@@ -863,13 +956,18 @@ router.get('/comunidad/:comunidadId/reporte/por-mes', authenticate, requireCommu
       ORDER BY cc.nombre, anio DESC, mes DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId, fecha_inicio, fecha_fin]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al generar reporte por mes' });
+      const [rows] = await db.query(query, [
+        comunidadId,
+        fecha_inicio,
+        fecha_fin,
+      ]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al generar reporte por mes' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -878,11 +976,15 @@ router.get('/comunidad/:comunidadId/reporte/por-mes', authenticate, requireCommu
  *     tags: [CentrosCosto]
  *     summary: Análisis comparativo de centros (último mes vs mes anterior)
  */
-router.get('/comunidad/:comunidadId/reporte/comparativo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/reporte/comparativo',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         cc.nombre AS centro_costo,
         cc.codigo,
@@ -899,13 +1001,14 @@ router.get('/comunidad/:comunidadId/reporte/comparativo', authenticate, requireC
       ORDER BY total_monto DESC
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al generar reporte comparativo' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al generar reporte comparativo' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -914,12 +1017,16 @@ router.get('/comunidad/:comunidadId/reporte/comparativo', authenticate, requireC
  *     tags: [CentrosCosto]
  *     summary: Centros con mayor variabilidad en gastos
  */
-router.get('/comunidad/:comunidadId/reporte/variabilidad', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fecha_inicio, fecha_fin } = req.query;
+router.get(
+  '/comunidad/:comunidadId/reporte/variabilidad',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { fecha_inicio, fecha_fin } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         cc.nombre AS centro_costo,
         cc.codigo,
@@ -934,26 +1041,29 @@ router.get('/comunidad/:comunidadId/reporte/variabilidad', authenticate, require
       WHERE cc.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (fecha_inicio && fecha_fin) {
-      query += ' AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_inicio, fecha_fin);
-    }
+      if (fecha_inicio && fecha_fin) {
+        query += ' AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_inicio, fecha_fin);
+      }
 
-    query += `
+      query += `
       GROUP BY cc.id, cc.nombre, cc.codigo
       HAVING COUNT(g.id) >= 3 AND AVG(g.monto) IS NOT NULL
       ORDER BY coeficiente_variacion DESC
     `;
 
-    const [rows] = await db.query(query, params);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al generar reporte de variabilidad' });
+      const [rows] = await db.query(query, params);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: 'Error al generar reporte de variabilidad' });
+    }
   }
-});
+);
 
 // =========================================
 // 8. EXPORTACIÓN
@@ -966,11 +1076,16 @@ router.get('/comunidad/:comunidadId/reporte/variabilidad', authenticate, require
  *     tags: [CentrosCosto]
  *     summary: Exportación completa para Excel/CSV
  */
-router.get('/comunidad/:comunidadId/exportar', authenticate, requireCommunity('comunidadId'), authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/exportar',
+  authenticate,
+  requireCommunity('comunidadId'),
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         cc.id AS 'ID Centro Costo',
         c.razon_social AS 'Comunidad',
@@ -1000,13 +1115,14 @@ router.get('/comunidad/:comunidadId/exportar', authenticate, requireCommunity('c
       ORDER BY cc.nombre
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al exportar centros de costo' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al exportar centros de costo' });
+    }
   }
-});
+);
 
 // =========================================
 // 9. DASHBOARD
@@ -1019,11 +1135,15 @@ router.get('/comunidad/:comunidadId/exportar', authenticate, requireCommunity('c
  *     tags: [CentrosCosto]
  *     summary: Resumen de centros de costo para dashboard
  */
-router.get('/comunidad/:comunidadId/dashboard/resumen', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/dashboard/resumen',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         COUNT(*) AS total_centros,
         COUNT(DISTINCT comunidad_id) AS comunidades,
@@ -1041,13 +1161,14 @@ router.get('/comunidad/:comunidadId/dashboard/resumen', authenticate, requireCom
       WHERE cc.comunidad_id = ?
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener resumen' });
+      const [rows] = await db.query(query, [comunidadId]);
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener resumen' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1056,12 +1177,16 @@ router.get('/comunidad/:comunidadId/dashboard/resumen', authenticate, requireCom
  *     tags: [CentrosCosto]
  *     summary: Top centros por gasto en el último mes
  */
-router.get('/comunidad/:comunidadId/dashboard/top-mes', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { limit = 5 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/dashboard/top-mes',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { limit = 5 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         cc.nombre AS centro_costo,
         cc.codigo,
@@ -1076,13 +1201,14 @@ router.get('/comunidad/:comunidadId/dashboard/top-mes', authenticate, requireCom
       LIMIT ?
     `;
 
-    const [rows] = await db.query(query, [comunidadId, Number(limit)]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener top centros' });
+      const [rows] = await db.query(query, [comunidadId, Number(limit)]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener top centros' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1091,12 +1217,16 @@ router.get('/comunidad/:comunidadId/dashboard/top-mes', authenticate, requireCom
  *     tags: [CentrosCosto]
  *     summary: Centros sin uso reciente
  */
-router.get('/comunidad/:comunidadId/dashboard/sin-uso-reciente', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { dias = 30, limit = 10 } = req.query;
+router.get(
+  '/comunidad/:comunidadId/dashboard/sin-uso-reciente',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { dias = 30, limit = 10 } = req.query;
 
-    const query = `
+      const query = `
       SELECT
         cc.nombre AS centro_costo,
         cc.codigo,
@@ -1111,13 +1241,20 @@ router.get('/comunidad/:comunidadId/dashboard/sin-uso-reciente', authenticate, r
       LIMIT ?
     `;
 
-    const [rows] = await db.query(query, [comunidadId, Number(dias), Number(limit)]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener centros sin uso reciente' });
+      const [rows] = await db.query(query, [
+        comunidadId,
+        Number(dias),
+        Number(limit),
+      ]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: 'Error al obtener centros sin uso reciente' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1126,12 +1263,16 @@ router.get('/comunidad/:comunidadId/dashboard/sin-uso-reciente', authenticate, r
  *     tags: [CentrosCosto]
  *     summary: Distribución de gastos por centro de costo
  */
-router.get('/comunidad/:comunidadId/dashboard/distribucion', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { fecha_inicio, fecha_fin } = req.query;
+router.get(
+  '/comunidad/:comunidadId/dashboard/distribucion',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { fecha_inicio, fecha_fin } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         cc.nombre AS centro_costo,
         cc.codigo,
@@ -1140,65 +1281,77 @@ router.get('/comunidad/:comunidadId/dashboard/distribucion', authenticate, requi
         (SUM(g.monto) / NULLIF((SELECT SUM(monto) FROM gasto WHERE comunidad_id = cc.comunidad_id
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (fecha_inicio && fecha_fin) {
-      query += ' AND fecha BETWEEN ? AND ?';
-      params.push(fecha_inicio, fecha_fin);
-    }
+      if (fecha_inicio && fecha_fin) {
+        query += ' AND fecha BETWEEN ? AND ?';
+        params.push(fecha_inicio, fecha_fin);
+      }
 
-    query += `), 0)) * 100 AS porcentaje_total
+      query += `), 0)) * 100 AS porcentaje_total
       FROM centro_costo cc
       LEFT JOIN gasto g ON cc.id = g.centro_costo_id
       WHERE cc.comunidad_id = ?
     `;
 
-    params.push(comunidadId);
+      params.push(comunidadId);
 
-    if (fecha_inicio && fecha_fin) {
-      query += ' AND g.fecha BETWEEN ? AND ?';
-      params.push(fecha_inicio, fecha_fin);
-    }
+      if (fecha_inicio && fecha_fin) {
+        query += ' AND g.fecha BETWEEN ? AND ?';
+        params.push(fecha_inicio, fecha_fin);
+      }
 
-    query += `
+      query += `
       GROUP BY cc.id, cc.nombre, cc.codigo, cc.comunidad_id
       HAVING SUM(g.monto) > 0
       ORDER BY total_monto DESC
     `;
 
-    const [rows] = await db.query(query, params);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener distribución' });
+      const [rows] = await db.query(query, params);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener distribución' });
+    }
   }
-});
+);
 
 /**
  * GET /centros-costo
  * Lista global de centros de costo (superadmin) o filtrada por comunidades asignadas (otros roles).
  */
-router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conserje', 'contador', 'proveedor_servicio', 'residente', 'propietario', 'inquilino', 'tesorero', 'presidente_comite'), async (req, res) => {
-  try {
-    const { 
-      page = 1,
-      limit = 100,
-      nombre_busqueda = ''
-    } = req.query; // <-- quitar tipo_filtro, activa_filtro
+router.get(
+  '/',
+  authenticate,
+  authorize(
+    'superadmin',
+    'admin_comunidad',
+    'conserje',
+    'contador',
+    'proveedor_servicio',
+    'residente',
+    'propietario',
+    'inquilino',
+    'tesorero',
+    'presidente_comite'
+  ),
+  async (req, res) => {
+    try {
+      const { page = 1, limit = 100, nombre_busqueda = '' } = req.query; // <-- quitar tipo_filtro, activa_filtro
 
-    const offset = (page - 1) * limit;
+      const offset = (page - 1) * limit;
 
-    let whereClauses = [];
-    const params = [];
+      let whereClauses = [];
+      const params = [];
 
-    if (nombre_busqueda) {
-      whereClauses.push('cc.nombre LIKE ?');
-      params.push(`%${nombre_busqueda}%`);
-    }
+      if (nombre_busqueda) {
+        whereClauses.push('cc.nombre LIKE ?');
+        params.push(`%${nombre_busqueda}%`);
+      }
 
-    // Quitar filtros tipo_filtro y activa_filtro
+      // Quitar filtros tipo_filtro y activa_filtro
 
-    let query = `
+      let query = `
       SELECT
         cc.id,
         cc.nombre,
@@ -1209,47 +1362,50 @@ router.get('/', authenticate, authorize('superadmin', 'admin_comunidad', 'conser
       INNER JOIN comunidad c ON cc.comunidad_id = c.id
     `;
 
-    // Filtro por comunidades asignadas si no es superadmin
-    if (!req.user.is_superadmin) {
-      whereClauses.push(`cc.comunidad_id IN (
+      // Filtro por comunidades asignadas si no es superadmin
+      if (!req.user.is_superadmin) {
+        whereClauses.push(`cc.comunidad_id IN (
         SELECT umc.comunidad_id
         FROM usuario_miembro_comunidad umc
         WHERE umc.persona_id = ? AND umc.activo = 1 AND (umc.hasta IS NULL OR umc.hasta > CURDATE())
       )`);
-      params.push(req.user.persona_id);
-    }
-
-    if (whereClauses.length > 0) {
-      query += ' WHERE ' + whereClauses.join(' AND ');
-    }
-
-    // Obtener total
-    const countQuery = query.replace(/SELECT.*FROM/, 'SELECT COUNT(*) as total FROM');
-    const [countResult] = await db.query(countQuery, params);
-    const total = countResult[0].total;
-
-    query += ' ORDER BY cc.nombre LIMIT ? OFFSET ?';
-    params.push(Number(limit), Number(offset));
-
-    const [rows] = await db.query(query, params);
-    console.log('Centros rows:', rows); // <-- añadir para debug
-    res.json({
-      data: rows,
-      pagination: {
-        total,
-        page: Number(page),
-        limit: Number(limit),
-        pages: Math.ceil(total / limit)
+        params.push(req.user.persona_id);
       }
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al obtener centros de costo' });
+
+      if (whereClauses.length > 0) {
+        query += ' WHERE ' + whereClauses.join(' AND ');
+      }
+
+      // Obtener total
+      const countQuery = query.replace(
+        /SELECT.*FROM/,
+        'SELECT COUNT(*) as total FROM'
+      );
+      const [countResult] = await db.query(countQuery, params);
+      const total = countResult[0].total;
+
+      query += ' ORDER BY cc.nombre LIMIT ? OFFSET ?';
+      params.push(Number(limit), Number(offset));
+
+      const [rows] = await db.query(query, params);
+      console.log('Centros rows:', rows); // <-- añadir para debug
+      res.json({
+        data: rows,
+        pagination: {
+          total,
+          page: Number(page),
+          limit: Number(limit),
+          pages: Math.ceil(total / limit),
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener centros de costo' });
+    }
   }
-});
+);
 
 module.exports = router;
-
 
 // =========================================
 // ENDPOINTS DE CENTROS DE COSTO
@@ -1300,7 +1456,3 @@ module.exports = router;
 // GET: /centros-costo/comunidad/:comunidadId/dashboard/top-mes
 // GET: /centros-costo/comunidad/:comunidadId/dashboard/sin-uso-reciente
 // GET: /centros-costo/comunidad/:comunidadId/dashboard/distribucion
-
-
-
-

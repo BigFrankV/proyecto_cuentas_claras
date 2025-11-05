@@ -19,5 +19,9 @@ export type { TimelineProps, TimelineItem } from './Timeline';
 export type { FilterCardProps, FilterOptions } from './FilterCard';
 export type { CargoCardProps, Cargo } from './CargoCard';
 export type { CargosListadoProps } from './CargosListado';
-export type { CargoDetalleProps, PaymentRecord, Document } from './CargoDetalle';
+export type {
+  CargoDetalleProps,
+  PaymentRecord,
+  Document,
+} from './CargoDetalle';
 export type { CargosUnidadProps, UnitInfo } from './CargosUnidad';

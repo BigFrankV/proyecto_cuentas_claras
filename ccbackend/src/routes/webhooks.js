@@ -22,12 +22,30 @@ const db = require('../db');
  */
 router.post('/pagos/webpay', async (req, res) => {
   const payload = req.body;
-  try { await db.query('INSERT INTO webhook_pago (comunidad_id, proveedor, payload_json, procesado) VALUES (?,?,?,?)', [payload.comunidad_id || null, 'webpay', JSON.stringify(payload), 0]); res.status(200).json({ ok: true }); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
+  try {
+    await db.query(
+      'INSERT INTO webhook_pago (comunidad_id, proveedor, payload_json, procesado) VALUES (?,?,?,?)',
+      [payload.comunidad_id || null, 'webpay', JSON.stringify(payload), 0]
+    );
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error('Error al procesar webhook de Webpay:', err);
+    res.status(500).json({ error: 'server error' });
+  }
 });
 
 router.post('/pagos/khipu', async (req, res) => {
   const payload = req.body;
-  try { await db.query('INSERT INTO webhook_pago (comunidad_id, proveedor, payload_json, procesado) VALUES (?,?,?,?)', [payload.comunidad_id || null, 'khipu', JSON.stringify(payload), 0]); res.status(200).json({ ok: true }); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
+  try {
+    await db.query(
+      'INSERT INTO webhook_pago (comunidad_id, proveedor, payload_json, procesado) VALUES (?,?,?,?)',
+      [payload.comunidad_id || null, 'khipu', JSON.stringify(payload), 0]
+    );
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error('Error al procesar webhook de Khipu:', err);
+    res.status(500).json({ error: 'server error' });
+  }
 });
 
 /**
@@ -48,7 +66,6 @@ router.post('/pagos/khipu', async (req, res) => {
  *         description: OK
  */
 module.exports = router;
-
 
 // =========================================
 // ENDPOINTS DE WEBHOOKS

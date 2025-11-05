@@ -184,6 +184,7 @@ export default function NuevaCompra() {
       setCostCenters(mockCostCenters);
       setCategories(mockCategories);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading initial data:', error);
     }
   };
@@ -325,10 +326,12 @@ export default function NuevaCompra() {
         requestDate: new Date().toISOString(),
       };
 
+      // eslint-disable-next-line no-console
       console.log('Nueva compra:', purchaseData);
       alert('Compra creada exitosamente');
       router.push('/compras');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error creating purchase:', error);
       alert('Error al crear la compra');
     } finally {
@@ -542,17 +545,17 @@ export default function NuevaCompra() {
                           <div className='provider-selected-info'>
                             <div className='d-flex align-items-center'>
                               <div className='provider-logo me-3'>
-                                {getSelectedProvider()!
-                                  .name.substring(0, 2)
+                                {getSelectedProvider()
+                                  ?.name.substring(0, 2)
                                   .toUpperCase()}
                               </div>
                               <div>
                                 <h6 className='mb-1'>
-                                  {getSelectedProvider()!.name}
+                                  {getSelectedProvider()?.name}
                                 </h6>
                                 <small className='text-muted'>
-                                  Categoría: {getSelectedProvider()!.category} •
-                                  Rating: ⭐ {getSelectedProvider()!.rating}
+                                  Categoría: {getSelectedProvider()?.category} •
+                                  Rating: ⭐ {getSelectedProvider()?.rating}
                                 </small>
                               </div>
                             </div>
@@ -638,8 +641,8 @@ export default function NuevaCompra() {
                               <span>Presupuesto disponible:</span>
                               <strong>
                                 {formatCurrency(
-                                  getSelectedCostCenter()!.budget -
-                                    getSelectedCostCenter()!.spent,
+                                  (getSelectedCostCenter()?.budget ?? 0) -
+                                    (getSelectedCostCenter()?.spent ?? 0),
                                   formData.currency,
                                 )}
                               </strong>
@@ -648,7 +651,7 @@ export default function NuevaCompra() {
                               <div
                                 className='progress-bar'
                                 style={{
-                                  width: `${(getSelectedCostCenter()!.spent / getSelectedCostCenter()!.budget) * 100}%`,
+                                  width: `${((getSelectedCostCenter()?.spent ?? 0) / (getSelectedCostCenter()?.budget ?? 1)) * 100}%`,
                                 }}
                               />
                             </div>
@@ -922,16 +925,16 @@ export default function NuevaCompra() {
                         <h6>Proveedor Seleccionado</h6>
                         <div className='d-flex align-items-center'>
                           <div className='provider-logo me-2'>
-                            {getSelectedProvider()!
-                              .name.substring(0, 2)
+                            {getSelectedProvider()
+                              ?.name.substring(0, 2)
                               .toUpperCase()}
                           </div>
                           <div>
                             <div className='fw-medium'>
-                              {getSelectedProvider()!.name}
+                              {getSelectedProvider()?.name}
                             </div>
                             <small className='text-muted'>
-                              ⭐ {getSelectedProvider()!.rating}
+                              ⭐ {getSelectedProvider()?.rating}
                             </small>
                           </div>
                         </div>
@@ -942,10 +945,10 @@ export default function NuevaCompra() {
                       <div className='mt-3 pt-3 border-top'>
                         <h6>Centro de Costo</h6>
                         <div className='fw-medium'>
-                          {getSelectedCostCenter()!.name}
+                          {getSelectedCostCenter()?.name}
                         </div>
                         <small className='text-muted'>
-                          {getSelectedCostCenter()!.department}
+                          {getSelectedCostCenter()?.department}
                         </small>
                       </div>
                     )}
@@ -1057,6 +1060,15 @@ export default function NuevaCompra() {
                     handleInputChange('providerId', provider.id.toString());
                     setShowProviderModal(false);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleInputChange('providerId', provider.id.toString());
+                      setShowProviderModal(false);
+                    }
+                  }}
+                  role='button'
+                  tabIndex={0}
                 >
                   <div className='d-flex align-items-center'>
                     <div className='provider-logo me-3'>

@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 export default function MobileNavbar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -69,9 +69,15 @@ export default function MobileNavbar() {
                 </Link>
               </li>
               <li>
-                <a className='dropdown-item' href='#'>
+                <button
+                  type='button'
+                  className='dropdown-item'
+                  onClick={() => {
+                    /* TODO: implementar configuración */
+                  }}
+                >
                   Configuración
-                </a>
+                </button>
               </li>
               <li>
                 <hr className='dropdown-divider' />
@@ -91,6 +97,13 @@ export default function MobileNavbar() {
         className='sidebar-backdrop'
         id='sidebar-backdrop'
         onClick={toggleSidebar}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            toggleSidebar();
+          }
+        }}
+        role='button'
+        tabIndex={0}
         style={{
           position: 'fixed',
           top: 0,

@@ -80,10 +80,7 @@ export default function DashboardCharts({ comunidadId }: DashboardChartsProps) {
             </div>
           </div>
           <div className='chart-container'>
-            <TendenciasEmisionesChart
-              data={emisionesData}
-              loading={loading}
-            />
+            <TendenciasEmisionesChart data={emisionesData} loading={loading} />
           </div>
         </div>
       </div>

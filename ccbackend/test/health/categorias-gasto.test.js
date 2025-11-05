@@ -9,12 +9,12 @@ const { categorizeResponse, getWithAuth } = require('./helpers');
 describe('Categorias Gasto Health Check', () => {
   let authToken;
   let comunidadId;
-  let categoriaId; 
+  let categoriaId;
 
   beforeAll(() => {
     authToken = getAuthToken();
     comunidadId = testIds.comunidadId;
-    categoriaId = testIds.categoriaId; 
+    categoriaId = testIds.categoriaId;
   });
 
   // =========================================
@@ -27,7 +27,7 @@ describe('Categorias Gasto Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/filtrar', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/filtrar`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -48,7 +48,7 @@ describe('Categorias Gasto Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/:id (Detalle Simple)', async () => {
       const endpoint = `/categorias-gasto/${categoriaId}`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -67,28 +67,28 @@ describe('Categorias Gasto Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/estadisticas/por-tipo', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/estadisticas/por-tipo`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/mas-utilizadas', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/mas-utilizadas`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/mas-costosas', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/mas-costosas`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/sin-uso', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/sin-uso`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -101,23 +101,23 @@ describe('Categorias Gasto Health Check', () => {
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       // Espera 400 por falta de fechas/parametros o 200 si el mock los maneja
-      expect([200, 400, 401, 403, 500]).toContain(response.status); 
+      expect([200, 400, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/reporte/comparativo', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/reporte/comparativo`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/reporte/variabilidad', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/reporte/variabilidad`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/exportar (Añadido)', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/exportar`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -136,13 +136,13 @@ describe('Categorias Gasto Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/validar-nombre (Debe fallar sin nombre)', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/validar-nombre`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       // Espera 400 por falta de parámetro 'nombre'
-      expect([400, 401, 403, 500]).toContain(response.status); 
+      expect([400, 401, 403, 500]).toContain(response.status);
     });
 
     test('GET /categorias-gasto/:id/tiene-gastos', async () => {
@@ -151,13 +151,13 @@ describe('Categorias Gasto Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/validar-tipo (Debe fallar sin tipo)', async () => {
       const endpoint = `/categorias-gasto/validar-tipo`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       // Espera 400 por falta de parámetro 'tipo'
-      expect([400, 401, 500]).toContain(response.status); 
+      expect([400, 401, 500]).toContain(response.status);
     });
 
     test('GET /categorias-gasto/comunidad/:comunidadId/activas', async () => {
@@ -166,14 +166,14 @@ describe('Categorias Gasto Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/tipos', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/tipos`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/por-tipo/:tipo', async () => {
       const tipo = 'operacional';
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/por-tipo/${tipo}`;
@@ -193,21 +193,21 @@ describe('Categorias Gasto Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/dashboard/top-mes', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/dashboard/top-mes`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/dashboard/sin-uso-reciente', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/dashboard/sin-uso-reciente`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /categorias-gasto/comunidad/:comunidadId/dashboard/distribucion-tipo', async () => {
       const endpoint = `/categorias-gasto/comunidad/${comunidadId}/dashboard/distribucion-tipo`;
       const response = await getWithAuth(app, endpoint, authToken);

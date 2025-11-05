@@ -13,15 +13,15 @@ erDiagram
     edificio ||--o{ torre : "contiene (0..N)"
     edificio ||--o{ unidad : "alberga (0..N)"
     torre ||--o{ unidad : "agrupa (0..N)"
-    
+
     unidad ||--o{ titulares_unidad : "es habitada por (0..N)"
     persona ||--o{ titulares_unidad : "habita/posee (0..N)"
-    
+
     persona ||--o{ usuario : "tiene credenciales (0..1)"
     usuario ||--o{ usuario_comunidad_rol : "tiene roles en (0..N)"
     comunidad ||--o{ usuario_comunidad_rol : "autoriza acceso (0..N)"
     rol ||--o{ usuario_comunidad_rol : "define permisos (0..N)"
-    
+
     comunidad {
         bigint id PK
         varchar razon_social "NOT NULL"
@@ -33,7 +33,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     edificio {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -43,7 +43,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     torre {
         bigint id PK
         bigint edificio_id FK "NOT NULL"
@@ -52,7 +52,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     unidad {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -68,7 +68,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     titulares_unidad {
         bigint id PK
         bigint comunidad_id FK "NOT NULL"
@@ -81,7 +81,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     persona {
         bigint id PK
         varchar rut UK "NOT NULL"
@@ -94,7 +94,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     usuario {
         bigint id PK
         bigint persona_id FK "NOT NULL - RESTRICT"
@@ -105,7 +105,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     usuario_comunidad_rol {
         bigint id PK
         bigint usuario_id FK "NOT NULL"
@@ -117,7 +117,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     rol {
         int id PK
         varchar codigo UK "NOT NULL"
@@ -151,6 +151,7 @@ COMUNIDAD (Raíz obligatoria)
 ```
 
 **Validaciones:**
+
 - ✅ `comunidad` → `unidad` (obligatorio, al menos 1)
 - ✅ `edificio` → `unidad` (opcional, puede ser directo)
 - ✅ `torre` → `unidad` (opcional, requiere edificio)
@@ -185,18 +186,18 @@ VALUES (1, 1, 1, 'A-501', 0.015);
 
 ### **R2: Códigos Únicos y Jerarquía de Identificadores**
 
-| Nivel | Unicidad | Ejemplo |
-|-------|----------|---------|
-| **Comunidad** | RUT único en todo el sistema | `76123456-7` |
-| **Edificio** | Código único dentro de comunidad | `EDF-A`, `EDF-B` |
-| **Torre** | Código único dentro de edificio | `TN`, `TS`, `TO` |
-| **Unidad** | Código único dentro de comunidad | `101`, `A-501`, `CASA-12` |
+| Nivel         | Unicidad                         | Ejemplo                   |
+| ------------- | -------------------------------- | ------------------------- |
+| **Comunidad** | RUT único en todo el sistema     | `76123456-7`              |
+| **Edificio**  | Código único dentro de comunidad | `EDF-A`, `EDF-B`          |
+| **Torre**     | Código único dentro de edificio  | `TN`, `TS`, `TO`          |
+| **Unidad**    | Código único dentro de comunidad | `101`, `A-501`, `CASA-12` |
 
 **Query de validación:**
 
 ```sql
 -- Verificar duplicados de código de unidad
-SELECT 
+SELECT
   comunidad_id,
   codigo,
   COUNT(*) as duplicados
@@ -211,9 +212,11 @@ HAVING COUNT(*) > 1;
 ### **R3: Alícuotas (Coeficiente de Participación)**
 
 **Concepto chileno:**
+
 > La alícuota es el porcentaje de participación de cada unidad en los gastos comunes, definido en el reglamento de copropiedad.
 
 **Fórmula:**
+
 ```
 Alícuota = Participación de la unidad / Participación total
 
@@ -227,7 +230,7 @@ Suma de todas las alícuotas activas = 1.0 (100%)
 -- Alícuota = 1.0 / 10 = 0.1 cada uno
 
 INSERT INTO unidad (comunidad_id, codigo, alicuota, m2_utiles)
-VALUES 
+VALUES
 (1, '101', 0.1, 75.5),
 (1, '102', 0.1, 75.5),
 (1, '103', 0.1, 75.5),
@@ -248,7 +251,7 @@ SELECT SUM(alicuota) as total FROM unidad WHERE comunidad_id = 1 AND activa = 1;
 -- Alícuota pequeña: 50/1000 = 0.05
 
 INSERT INTO unidad (comunidad_id, codigo, alicuota, m2_utiles)
-VALUES 
+VALUES
 -- Grandes
 (1, '101', 0.10, 100.0),
 (1, '102', 0.10, 100.0),
@@ -267,38 +270,38 @@ VALUES
 
 **Tipos de tenencia:**
 
-| Tipo | Descripción | Vigencia | Porcentaje |
-|------|-------------|----------|------------|
-| **propietario** | Dueño legal de la unidad | Indefinida (hasta=NULL) | Suma debe ser 100% |
-| **arrendatario** | Inquilino temporal | Temporal (hasta definido) | Siempre 100% |
+| Tipo             | Descripción              | Vigencia                  | Porcentaje         |
+| ---------------- | ------------------------ | ------------------------- | ------------------ |
+| **propietario**  | Dueño legal de la unidad | Indefinida (hasta=NULL)   | Suma debe ser 100% |
+| **arrendatario** | Inquilino temporal       | Temporal (hasta definido) | Siempre 100%       |
 
 **Reglas de validación:**
 
 ```sql
 -- V1: Suma de porcentajes de propietarios = 100%
-SELECT 
+SELECT
   unidad_id,
   SUM(porcentaje) as total
 FROM titulares_unidad
-WHERE tipo = 'propietario' 
+WHERE tipo = 'propietario'
   AND hasta IS NULL
 GROUP BY unidad_id
 HAVING SUM(porcentaje) != 100;
 -- Si retorna filas → ERROR
 
 -- V2: Solo UN arrendatario activo por unidad
-SELECT 
+SELECT
   unidad_id,
   COUNT(*) as arrendatarios_activos
 FROM titulares_unidad
-WHERE tipo = 'arrendatario' 
+WHERE tipo = 'arrendatario'
   AND (hasta IS NULL OR hasta >= CURDATE())
 GROUP BY unidad_id
 HAVING COUNT(*) > 1;
 -- Si retorna filas → ERROR
 
 -- V3: Fechas de arrendamiento NO pueden solaparse
-SELECT 
+SELECT
   t1.unidad_id,
   t1.persona_id as persona1,
   t2.persona_id as persona2,
@@ -307,10 +310,10 @@ SELECT
   t2.desde as inicio2,
   t2.hasta as fin2
 FROM titulares_unidad t1
-INNER JOIN titulares_unidad t2 
-  ON t1.unidad_id = t2.unidad_id 
+INNER JOIN titulares_unidad t2
+  ON t1.unidad_id = t2.unidad_id
   AND t1.id < t2.id
-  AND t1.tipo = 'arrendatario' 
+  AND t1.tipo = 'arrendatario'
   AND t2.tipo = 'arrendatario'
 WHERE (t1.desde <= COALESCE(t2.hasta, '9999-12-31'))
   AND (COALESCE(t1.hasta, '9999-12-31') >= t2.desde);
@@ -326,7 +329,7 @@ VALUES (1, 101, 5, 'propietario', '2025-01-01', 100.00);
 
 -- CASO 2: Copropiedad (2 dueños)
 INSERT INTO titulares_unidad (comunidad_id, unidad_id, persona_id, tipo, desde, porcentaje)
-VALUES 
+VALUES
 (1, 102, 6, 'propietario', '2025-01-01', 60.00),  -- Juan 60%
 (1, 102, 7, 'propietario', '2025-01-01', 40.00);  -- María 40%
 
@@ -340,7 +343,7 @@ VALUES (1, 103, 9, 'arrendatario', '2025-03-01', '2026-02-28', 100.00);
 
 -- CASO 4: Cambio de propietario (venta)
 -- Finalizar tenencia anterior
-UPDATE titulares_unidad 
+UPDATE titulares_unidad
 SET hasta = '2025-06-30'
 WHERE unidad_id = 104 AND persona_id = 10 AND hasta IS NULL;
 
@@ -402,15 +405,15 @@ VALUES (@usuario_id, 1, (SELECT id FROM rol WHERE codigo='propietario'), '2025-0
 
 ### **R6: Sistema de Roles Jerárquico**
 
-| Nivel | Código | Nombre | Tipo | Permisos |
-|-------|--------|--------|------|----------|
-| 100 | `superadmin` | Super Administrador | Sistema | Acceso total, todas las comunidades |
-| 80 | `admin` | Administrador | Comunidad | Administración completa de su comunidad |
-| 70 | `comite` | Comité | Comunidad | Aprobar gastos, ver finanzas |
-| 60 | `contador` | Contador | Comunidad | Ver finanzas, reportes, auditoría |
-| 40 | `conserje` | Conserje | Comunidad | Bitácora, multas, solicitudes |
-| 30 | `propietario` | Propietario | Comunidad | Ver su cuenta, pagar, reservar |
-| 20 | `residente` | Arrendatario | Comunidad | Consultas limitadas |
+| Nivel | Código        | Nombre              | Tipo      | Permisos                                |
+| ----- | ------------- | ------------------- | --------- | --------------------------------------- |
+| 100   | `superadmin`  | Super Administrador | Sistema   | Acceso total, todas las comunidades     |
+| 80    | `admin`       | Administrador       | Comunidad | Administración completa de su comunidad |
+| 70    | `comite`      | Comité              | Comunidad | Aprobar gastos, ver finanzas            |
+| 60    | `contador`    | Contador            | Comunidad | Ver finanzas, reportes, auditoría       |
+| 40    | `conserje`    | Conserje            | Comunidad | Bitácora, multas, solicitudes           |
+| 30    | `propietario` | Propietario         | Comunidad | Ver su cuenta, pagar, reservar          |
+| 20    | `residente`   | Arrendatario        | Comunidad | Consultas limitadas                     |
 
 **Roles de SISTEMA vs COMUNIDAD:**
 
@@ -434,7 +437,7 @@ SELECT * FROM rol WHERE es_rol_sistema = 0;
 -- - Rol 'propietario' en Comunidad Los Robles (activo)
 -- - Rol 'contador' en Comunidad Los Olivos (inactivo)
 
-SELECT 
+SELECT
   u.username,
   c.razon_social as comunidad,
   r.nombre as rol,
@@ -471,7 +474,7 @@ SET @comunidad_id = LAST_INSERT_ID();
 
 -- Paso 2: Crear edificios
 INSERT INTO edificio (comunidad_id, nombre, codigo)
-VALUES 
+VALUES
 (@comunidad_id, 'Edificio A', 'EDF-A'),
 (@comunidad_id, 'Edificio B', 'EDF-B');
 
@@ -480,14 +483,14 @@ SET @edificio_b = (SELECT id FROM edificio WHERE codigo = 'EDF-B' AND comunidad_
 
 -- Paso 3: Crear torres
 INSERT INTO torre (edificio_id, nombre, codigo)
-VALUES 
+VALUES
 (@edificio_a, 'Torre Norte', 'TN'),
 (@edificio_a, 'Torre Sur', 'TS'),
 (@edificio_b, 'Torre Oriente', 'TO');
 
 -- Paso 4: Crear unidades (40 deptos, alícuota 0.025 cada uno)
 INSERT INTO unidad (comunidad_id, edificio_id, torre_id, codigo, alicuota, m2_utiles)
-SELECT 
+SELECT
   @comunidad_id,
   @edificio_a,
   (SELECT id FROM torre WHERE edificio_id = @edificio_a LIMIT 1),
@@ -501,10 +504,10 @@ FROM (
 ) numbers;
 
 -- Paso 5: Verificar suma de alícuotas
-SELECT 
+SELECT
   COUNT(*) as total_unidades,
   SUM(alicuota) as suma_alicuotas,
-  CASE 
+  CASE
     WHEN ABS(SUM(alicuota) - 1.0) < 0.00001 THEN 'OK'
     ELSE 'ERROR'
   END as estado
@@ -571,12 +574,12 @@ SET @ana_id = LAST_INSERT_ID();
 
 -- Asignar copropietarios
 INSERT INTO titulares_unidad (comunidad_id, unidad_id, persona_id, tipo, desde, porcentaje)
-VALUES 
+VALUES
 (@comunidad_id, @unidad_id, @carlos_id, 'propietario', '2025-01-15', 60.00),
 (@comunidad_id, @unidad_id, @ana_id, 'propietario', '2025-01-15', 40.00);
 
 -- Verificar suma = 100%
-SELECT 
+SELECT
   u.codigo,
   SUM(tu.porcentaje) as total_porcentaje,
   GROUP_CONCAT(CONCAT(p.nombres, ' ', p.apellidos, ' (', tu.porcentaje, '%)') SEPARATOR ', ') as propietarios
@@ -642,8 +645,8 @@ SET @carolina_id = 25;  -- Compradora
 -- Paso 1: Finalizar tenencia de Juan
 UPDATE titulares_unidad
 SET hasta = '2025-10-31'
-WHERE unidad_id = @unidad_id 
-  AND persona_id = @juan_id 
+WHERE unidad_id = @unidad_id
+  AND persona_id = @juan_id
   AND hasta IS NULL;
 
 -- Paso 2: Crear tenencia de Carolina
@@ -653,10 +656,10 @@ VALUES (@comunidad_id, @unidad_id, @carolina_id, 'propietario', '2025-11-01', 10
 -- Paso 3: Actualizar rol de usuario de Juan (si no es propietario en otra unidad)
 -- Verificar si Juan tiene otras unidades
 SET @otras_unidades = (
-  SELECT COUNT(*) 
-  FROM titulares_unidad 
-  WHERE persona_id = @juan_id 
-    AND comunidad_id = @comunidad_id 
+  SELECT COUNT(*)
+  FROM titulares_unidad
+  WHERE persona_id = @juan_id
+    AND comunidad_id = @comunidad_id
     AND hasta IS NULL
 );
 
@@ -690,7 +693,7 @@ VALUES (
 ### **Q1: Vista Completa de Comunidad**
 
 ```sql
-SELECT 
+SELECT
   c.razon_social as comunidad,
   c.rut,
   c.dv,
@@ -716,7 +719,7 @@ ORDER BY e.nombre, t.nombre, u.codigo;
 ### **Q2: Propietarios Actuales por Comunidad**
 
 ```sql
-SELECT 
+SELECT
   u.codigo as unidad,
   CONCAT(p.nombres, ' ', p.apellidos) as propietario,
   p.rut,
@@ -727,7 +730,7 @@ SELECT
   tu.porcentaje,
   tu.desde,
   tu.hasta,
-  CASE 
+  CASE
     WHEN tu.hasta IS NULL THEN 'VIGENTE'
     WHEN tu.hasta >= CURDATE() THEN 'VIGENTE'
     ELSE 'FINALIZADO'
@@ -745,7 +748,7 @@ ORDER BY u.codigo, tu.tipo DESC, tu.porcentaje DESC;
 ### **Q3: Usuarios con Acceso a Comunidad**
 
 ```sql
-SELECT 
+SELECT
   CONCAT(p.nombres, ' ', p.apellidos) as nombre_completo,
   p.rut,
   p.dv,
@@ -756,7 +759,7 @@ SELECT
   ucr.desde,
   ucr.hasta,
   ucr.activo,
-  CASE 
+  CASE
     WHEN ucr.activo = 1 AND (ucr.hasta IS NULL OR ucr.hasta >= CURDATE()) THEN 'ACTIVO'
     WHEN ucr.hasta < CURDATE() THEN 'EXPIRADO'
     ELSE 'INACTIVO'
@@ -774,12 +777,12 @@ ORDER BY r.nivel_acceso DESC, p.apellidos, p.nombres;
 ### **Q4: Validar Suma de Alícuotas**
 
 ```sql
-SELECT 
+SELECT
   c.razon_social as comunidad,
   COUNT(u.id) as total_unidades_activas,
   SUM(u.alicuota) as suma_alicuotas,
   ROUND(ABS(SUM(u.alicuota) - 1.0), 6) as diferencia,
-  CASE 
+  CASE
     WHEN ABS(SUM(u.alicuota) - 1.0) < 0.00001 THEN '✅ OK'
     ELSE '❌ ERROR: No suma 1.0'
   END as validacion
@@ -795,7 +798,7 @@ GROUP BY c.id, c.razon_social;
 
 ```sql
 -- Ver todos los propietarios/arrendatarios que ha tenido una unidad
-SELECT 
+SELECT
   u.codigo as unidad,
   CONCAT(p.nombres, ' ', p.apellidos) as persona,
   tu.tipo,
@@ -803,7 +806,7 @@ SELECT
   tu.desde,
   COALESCE(tu.hasta, 'Actual') as hasta,
   TIMESTAMPDIFF(MONTH, tu.desde, COALESCE(tu.hasta, CURDATE())) as meses_duracion,
-  CASE 
+  CASE
     WHEN tu.hasta IS NULL THEN 'VIGENTE'
     ELSE 'FINALIZADO'
   END as estado
@@ -821,7 +824,7 @@ ORDER BY tu.desde DESC, tu.tipo;
 
 ```sql
 -- Unidades activas sin titular actual
-SELECT 
+SELECT
   u.codigo,
   u.alicuota,
   u.m2_utiles,
@@ -831,8 +834,8 @@ SELECT
 FROM unidad u
 LEFT JOIN edificio e ON e.id = u.edificio_id
 LEFT JOIN torre t ON t.id = u.torre_id
-LEFT JOIN titulares_unidad tu 
-  ON tu.unidad_id = u.id 
+LEFT JOIN titulares_unidad tu
+  ON tu.unidad_id = u.id
   AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
 WHERE u.comunidad_id = ?
   AND u.activa = 1
@@ -846,7 +849,7 @@ ORDER BY u.codigo;
 
 ```sql
 -- Unidades con más de 1 propietario
-SELECT 
+SELECT
   u.codigo as unidad,
   COUNT(*) as cantidad_propietarios,
   SUM(tu.porcentaje) as suma_porcentajes,
@@ -856,8 +859,8 @@ SELECT
     SEPARATOR ', '
   ) as propietarios
 FROM unidad u
-INNER JOIN titulares_unidad tu 
-  ON tu.unidad_id = u.id 
+INNER JOIN titulares_unidad tu
+  ON tu.unidad_id = u.id
   AND tu.tipo = 'propietario'
   AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
 INNER JOIN persona p ON p.id = tu.persona_id
@@ -880,7 +883,7 @@ BEFORE INSERT ON unidad
 FOR EACH ROW
 BEGIN
   IF NEW.torre_id IS NOT NULL AND NEW.edificio_id IS NULL THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Una unidad no puede tener torre sin edificio asociado';
   END IF;
 END$$
@@ -890,7 +893,7 @@ BEFORE UPDATE ON unidad
 FOR EACH ROW
 BEGIN
   IF NEW.torre_id IS NOT NULL AND NEW.edificio_id IS NULL THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Una unidad no puede tener torre sin edificio asociado';
   END IF;
 END$$
@@ -908,7 +911,7 @@ BEFORE INSERT ON unidad
 FOR EACH ROW
 BEGIN
   IF NEW.alicuota < 0 OR NEW.alicuota > 1 THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Alícuota debe estar entre 0 y 1 (0% y 100%)';
   END IF;
 END$$
@@ -918,7 +921,7 @@ BEFORE UPDATE ON unidad
 FOR EACH ROW
 BEGIN
   IF NEW.alicuota < 0 OR NEW.alicuota > 1 THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Alícuota debe estar entre 0 y 1 (0% y 100%)';
   END IF;
 END$$
@@ -936,16 +939,16 @@ AFTER INSERT ON titulares_unidad
 FOR EACH ROW
 BEGIN
   DECLARE total_porcentaje DECIMAL(5,2);
-  
+
   IF NEW.tipo = 'propietario' THEN
     SELECT SUM(porcentaje) INTO total_porcentaje
     FROM titulares_unidad
-    WHERE unidad_id = NEW.unidad_id 
+    WHERE unidad_id = NEW.unidad_id
       AND tipo = 'propietario'
       AND (hasta IS NULL OR hasta >= CURDATE());
-    
+
     IF total_porcentaje > 100 THEN
-      SIGNAL SQLSTATE '45000' 
+      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'La suma de porcentajes de propietarios no puede exceder 100%';
     END IF;
   END IF;
@@ -956,16 +959,16 @@ AFTER UPDATE ON titulares_unidad
 FOR EACH ROW
 BEGIN
   DECLARE total_porcentaje DECIMAL(5,2);
-  
+
   IF NEW.tipo = 'propietario' THEN
     SELECT SUM(porcentaje) INTO total_porcentaje
     FROM titulares_unidad
-    WHERE unidad_id = NEW.unidad_id 
+    WHERE unidad_id = NEW.unidad_id
       AND tipo = 'propietario'
       AND (hasta IS NULL OR hasta >= CURDATE());
-    
+
     IF total_porcentaje > 100 THEN
-      SIGNAL SQLSTATE '45000' 
+      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'La suma de porcentajes de propietarios no puede exceder 100%';
     END IF;
   END IF;
@@ -984,16 +987,16 @@ BEFORE INSERT ON titulares_unidad
 FOR EACH ROW
 BEGIN
   DECLARE arrendatarios_activos INT;
-  
+
   IF NEW.tipo = 'arrendatario' THEN
     SELECT COUNT(*) INTO arrendatarios_activos
     FROM titulares_unidad
     WHERE unidad_id = NEW.unidad_id
       AND tipo = 'arrendatario'
       AND (hasta IS NULL OR hasta >= NEW.desde);
-    
+
     IF arrendatarios_activos > 0 THEN
-      SIGNAL SQLSTATE '45000' 
+      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Ya existe un arrendatario activo en esta unidad';
     END IF;
   END IF;
@@ -1012,7 +1015,7 @@ BEFORE INSERT ON usuario
 FOR EACH ROW
 BEGIN
   IF NEW.persona_id IS NULL THEN
-    SIGNAL SQLSTATE '45000' 
+    SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Un usuario debe estar asociado a una persona';
   END IF;
 END$$
@@ -1026,7 +1029,7 @@ DELIMITER ;
 ### **R1: Dashboard de Comunidad**
 
 ```sql
-SELECT 
+SELECT
   c.razon_social as comunidad,
   c.rut || '-' || c.dv as rut_completo,
   c.direccion,
@@ -1056,7 +1059,7 @@ GROUP BY c.id, c.razon_social, c.rut, c.dv, c.direccion, c.email_contacto, c.tel
 ### **R2: Resumen por Edificio/Torre**
 
 ```sql
-SELECT 
+SELECT
   e.nombre as edificio,
   t.nombre as torre,
   COUNT(u.id) as total_unidades,

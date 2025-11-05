@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* Filtros de consola mejorados para desarrollo */
 
 // Función para filtrar mensajes de extensiones en desarrollo

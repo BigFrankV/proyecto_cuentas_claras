@@ -7,7 +7,7 @@ import Layout from '@/components/layout/Layout';
 import api from '@/lib/api';
 import multasService from '@/lib/multasService';
 import { ProtectedRoute } from '@/lib/useAuth';
-import useAuth from '@/lib/useAuth'; // <-- import faltante
+import {useAuth} from '@/lib/useAuth'; // <-- import faltante
 
 // ============================================
 // TIPOS E INTERFACES
@@ -310,10 +310,14 @@ export default function EditarMulta() {
   const loadMulta = async () => {
     try {
       setLoading(true);
+      // eslint-disable-next-line no-console
       console.log(`🔍 Cargando multa ${id}...`);
 
       const response = await multasService.getMulta(Number(id));
 
+      // eslint-disable-next-line no-console
+
+      // eslint-disable-next-line no-console
       console.log('✅ Multa cargada:', response);
       setMulta(response);
 
@@ -364,6 +368,7 @@ export default function EditarMulta() {
       // Cargar personas de la unidad
       await loadPersonasUnidad(response.unidad_id);
     } catch (error: any) {
+      // eslint-disable-next-line no-console
       console.error('❌ Error cargando multa:', error);
       toast.error(error.message || 'Error al cargar la multa');
       setTimeout(() => router.push('/multas'), 2000);
@@ -521,15 +526,22 @@ export default function EditarMulta() {
         payload.monto = parseFloat(String(payload.monto));
       }
 
+      // eslint-disable-next-line no-console
+
+      // eslint-disable-next-line no-console
       console.log('📝 Actualizando multa (solo campos modificados):', payload);
 
       const response = await multasService.updateMulta(Number(id), payload);
 
+      // eslint-disable-next-line no-console
+
+      // eslint-disable-next-line no-console
       console.log('✅ Multa actualizada:', response);
       toast.success('Multa actualizada exitosamente');
 
       router.push(`/multas/${id}`);
     } catch (error: any) {
+      // eslint-disable-next-line no-console
       console.error('❌ Error actualizando multa:', error);
       toast.error(error.message || 'Error al actualizar la multa');
     } finally {
@@ -785,6 +797,14 @@ export default function EditarMulta() {
                               : ''
                           }`}
                           onClick={() => handleSelectTipoInfraccion(tipo.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleSelectTipoInfraccion(tipo.value);
+                            }
+                          }}
+                          role='button'
+                          tabIndex={0}
                         >
                           <div
                             className='infraction-icon'
@@ -878,6 +898,14 @@ export default function EditarMulta() {
                             onClick={() =>
                               handleSelectPrioridad(prioridad.value)
                             }
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleSelectPrioridad(prioridad.value);
+                              }
+                            }}
+                            role='button'
+                            tabIndex={0}
                             style={{ borderColor: prioridad.color }}
                           >
                             <div
@@ -1078,6 +1106,14 @@ export default function EditarMulta() {
                         key={unidad.id}
                         className='selectable-card'
                         onClick={() => handleSelectUnidad(unidad)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleSelectUnidad(unidad);
+                          }
+                        }}
+                        role='button'
+                        tabIndex={0}
                       >
                         <div className='card-icon'>
                           <i className='material-icons'>apartment</i>
@@ -1147,6 +1183,14 @@ export default function EditarMulta() {
                           key={persona.id}
                           className='list-item'
                           onClick={() => handleSelectPersona(persona)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleSelectPersona(persona);
+                            }
+                          }}
+                          role='button'
+                          tabIndex={0}
                         >
                           <i className='material-icons'>person</i>
                           <div className='list-item-content'>

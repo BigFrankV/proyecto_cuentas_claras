@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { useEffect, useState } from 'react';
 
 import { GastoBackend } from '@/types/gastos';
@@ -41,10 +42,15 @@ export function useGastosShared(
           typeof comunidadId === 'number' ? comunidadId : undefined,
           { limit: 100, offset: 0 },
         );
-        const items = Array.isArray(resp.data) ? resp.data : (resp.data ? [resp.data] : []);
+        const items = Array.isArray(resp.data)
+          ? resp.data
+          : resp.data
+            ? [resp.data]
+            : [];
         sharedData = { timestamp: Date.now(), items };
         notify(items);
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('useGastosShared error', err);
         sharedData = { timestamp: Date.now(), items: [] };
         notify([]);

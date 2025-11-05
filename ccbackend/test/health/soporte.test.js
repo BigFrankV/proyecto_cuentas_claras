@@ -20,7 +20,10 @@ describe('Soporte Health Check', () => {
     test('GET /soporte/comunidad/:comunidadId/tickets (Tickets por Comunidad)', async () => {
       const endpoint = `/soporte/comunidad/${comunidadId}/tickets`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /soporte/comunidad/${comunidadId}/tickets`, response);
+      categorizeResponse(
+        `GET /soporte/comunidad/${comunidadId}/tickets`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
 
@@ -36,28 +39,40 @@ describe('Soporte Health Check', () => {
     test('GET /soporte/comunidad/:comunidadId/notificaciones (Notificaciones por Comunidad)', async () => {
       const endpoint = `/soporte/comunidad/${comunidadId}/notificaciones`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /soporte/comunidad/${comunidadId}/notificaciones`, response);
+      categorizeResponse(
+        `GET /soporte/comunidad/${comunidadId}/notificaciones`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
 
     test('GET /soporte/comunidad/:comunidadId/documentos (Documentos por Comunidad)', async () => {
       const endpoint = `/soporte/comunidad/${comunidadId}/documentos`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /soporte/comunidad/${comunidadId}/documentos`, response);
+      categorizeResponse(
+        `GET /soporte/comunidad/${comunidadId}/documentos`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
 
     test('GET /soporte/comunidad/:comunidadId/bitacora (Bitácora por Comunidad)', async () => {
       const endpoint = `/soporte/comunidad/${comunidadId}/bitacora`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /soporte/comunidad/${comunidadId}/bitacora`, response);
+      categorizeResponse(
+        `GET /soporte/comunidad/${comunidadId}/bitacora`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
 
     test('GET /soporte/comunidad/:comunidadId/parametros-cobranza (Parámetros de Cobranza)', async () => {
       const endpoint = `/soporte/comunidad/${comunidadId}/parametros-cobranza`;
       const response = await getWithAuth(app, endpoint, authToken);
-      categorizeResponse(`GET /soporte/comunidad/${comunidadId}/parametros-cobranza`, response);
+      categorizeResponse(
+        `GET /soporte/comunidad/${comunidadId}/parametros-cobranza`,
+        response
+      );
       expect([200, 401, 403, 404]).toContain(response.status);
     });
   });

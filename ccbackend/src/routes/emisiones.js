@@ -11,11 +11,11 @@ const { authorize } = require('../middleware/authorize');
  *   - name: Emisiones
  *     description: |
  *       Gestión de emisiones de gastos comunes mensuales.
- *       
+ *
  *       **Cambios importantes**:
  *       - La tabla `emision_gasto_comun` ahora se llama `emision_gastos_comunes`
  *       - Los detalles se guardan en `detalle_emision` (antes `emision_gasto_comun_detalle`)
- *       
+ *
  *       Una emisión consolida todos los gastos del mes y genera las cuentas de cobro para cada unidad.
  */
 
@@ -79,8 +79,13 @@ const { authorize } = require('../middleware/authorize');
  */
 
 router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
-  const comunidadId = req.params.comunidadId; const { page=1, limit=100 } = req.query; const offset=(page-1)*limit;
-  const [rows] = await db.query('SELECT id, periodo, estado, fecha_vencimiento FROM emision_gastos_comunes WHERE comunidad_id = ? ORDER BY periodo DESC LIMIT ? OFFSET ?', [comunidadId, Number(limit), Number(offset)]);
+  const comunidadId = req.params.comunidadId;
+  const { page = 1, limit = 100 } = req.query;
+  const offset = (page - 1) * limit;
+  const [rows] = await db.query(
+    'SELECT id, periodo, estado, fecha_vencimiento FROM emision_gastos_comunes WHERE comunidad_id = ? ORDER BY periodo DESC LIMIT ? OFFSET ?',
+    [comunidadId, Number(limit), Number(offset)]
+  );
   res.json(rows);
 });
 /**
@@ -113,7 +118,10 @@ router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
 router.get('/comunidad/:comunidadId/count', authenticate, async (req, res) => {
   const comunidadId = req.params.comunidadId;
   try {
-    const [[row]] = await db.query('SELECT COUNT(DISTINCT egc.id) as total FROM emision_gastos_comunes egc WHERE egc.comunidad_id = ?', [comunidadId]);
+    const [[row]] = await db.query(
+      'SELECT COUNT(DISTINCT egc.id) as total FROM emision_gastos_comunes egc WHERE egc.comunidad_id = ?',
+      [comunidadId]
+    );
     res.json({ total: row.total });
   } catch (err) {
     console.error(err);
@@ -184,10 +192,14 @@ router.get('/comunidad/:comunidadId/count', authenticate, async (req, res) => {
  */
 
 // resumen de emisiones con métricas consolidadas
-router.get('/comunidad/:comunidadId/resumen', authenticate, async (req, res) => {
-  const comunidadId = req.params.comunidadId;
-  try {
-    const [rows] = await db.query(`
+router.get(
+  '/comunidad/:comunidadId/resumen',
+  authenticate,
+  async (req, res) => {
+    const comunidadId = req.params.comunidadId;
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         e.id AS emision_id,
         e.periodo,
@@ -217,13 +229,16 @@ router.get('/comunidad/:comunidadId/resumen', authenticate, async (req, res) => 
         e.id, e.periodo, e.estado, e.created_at, e.fecha_vencimiento, c.razon_social
       ORDER BY
         e.periodo DESC
-    `, [comunidadId]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+    `,
+        [comunidadId]
+      );
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -256,11 +271,36 @@ router.get('/comunidad/:comunidadId/resumen', authenticate, async (req, res) => 
  *       201:
  *         description: Created
  */
-router.post('/comunidad/:comunidadId', [authenticate, authorize('admin','superadmin'), body('periodo').notEmpty(), body('fecha_vencimiento').notEmpty()], async (req, res) => {
-  const errors = validationResult(req); if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const comunidadId = req.params.comunidadId; const { periodo, fecha_vencimiento, observaciones } = req.body;
-  try { const [result] = await db.query('INSERT INTO emision_gastos_comunes (comunidad_id, periodo, fecha_vencimiento, observaciones) VALUES (?,?,?,?)', [comunidadId, periodo, fecha_vencimiento, observaciones || null]); const [row] = await db.query('SELECT id, periodo, estado FROM emision_gastos_comunes WHERE id = ? LIMIT 1', [result.insertId]); res.status(201).json(row[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
-});
+router.post(
+  '/comunidad/:comunidadId',
+  [
+    authenticate,
+    authorize('admin', 'superadmin'),
+    body('periodo').notEmpty(),
+    body('fecha_vencimiento').notEmpty(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    const comunidadId = req.params.comunidadId;
+    const { periodo, fecha_vencimiento, observaciones } = req.body;
+    try {
+      const [result] = await db.query(
+        'INSERT INTO emision_gastos_comunes (comunidad_id, periodo, fecha_vencimiento, observaciones) VALUES (?,?,?,?)',
+        [comunidadId, periodo, fecha_vencimiento, observaciones || null]
+      );
+      const [row] = await db.query(
+        'SELECT id, periodo, estado FROM emision_gastos_comunes WHERE id = ? LIMIT 1',
+        [result.insertId]
+      );
+      res.status(201).json(row[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
+  }
+);
 
 /**
  * @swagger
@@ -283,7 +323,15 @@ router.post('/comunidad/:comunidadId', [authenticate, authorize('admin','superad
  *       404:
  *         description: No encontrado
  */
-router.get('/:id', authenticate, async (req, res) => { const id = req.params.id; const [rows] = await db.query('SELECT * FROM emision_gastos_comunes WHERE id = ? LIMIT 1', [id]); if (!rows.length) return res.status(404).json({ error: 'not found' }); res.json(rows[0]); });
+router.get('/:id', authenticate, async (req, res) => {
+  const id = req.params.id;
+  const [rows] = await db.query(
+    'SELECT * FROM emision_gastos_comunes WHERE id = ? LIMIT 1',
+    [id]
+  );
+  if (!rows.length) return res.status(404).json({ error: 'not found' });
+  res.json(rows[0]);
+});
 
 // enhanced get by id (include totals, interest params)
 /**
@@ -310,7 +358,8 @@ router.get('/:id', authenticate, async (req, res) => { const id = req.params.id;
 router.get('/:id/detalle-completo', authenticate, async (req, res) => {
   const id = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         egc.id,
         egc.periodo,
@@ -346,7 +395,9 @@ router.get('/:id/detalle-completo', authenticate, async (req, res) => {
       WHERE egc.id = ?
       GROUP BY egc.id, egc.periodo, egc.estado, egc.created_at, egc.fecha_vencimiento, egc.observaciones, c.razon_social, pc.tasa_mora_mensual, pc.dias_gracia, egc.updated_at
       LIMIT 1
-    `, [id]);
+    `,
+      [id]
+    );
     if (!rows.length) return res.status(404).json({ error: 'not found' });
     res.json(rows[0]);
   } catch (err) {
@@ -355,14 +406,71 @@ router.get('/:id/detalle-completo', authenticate, async (req, res) => {
   }
 });
 
-router.patch('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => { const id = req.params.id; if (!req.body.estado) return res.status(400).json({ error: 'estado required' }); try { await db.query('UPDATE emision_gastos_comunes SET estado = ? WHERE id = ?', [req.body.estado, id]); const [rows] = await db.query('SELECT id, periodo, estado FROM emision_gastos_comunes WHERE id = ? LIMIT 1',[id]); res.json(rows[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); } });
+router.patch(
+  '/:id',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    const id = req.params.id;
+    if (!req.body.estado)
+      return res.status(400).json({ error: 'estado required' });
+    try {
+      await db.query(
+        'UPDATE emision_gastos_comunes SET estado = ? WHERE id = ?',
+        [req.body.estado, id]
+      );
+      const [rows] = await db.query(
+        'SELECT id, periodo, estado FROM emision_gastos_comunes WHERE id = ? LIMIT 1',
+        [id]
+      );
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
+  }
+);
 
 // add detalle
-router.post('/:id/detalles', [authenticate, authorize('admin','superadmin'), body('categoria_id').isInt(), body('monto').isNumeric(), body('regla_prorrateo').notEmpty()], async (req, res) => {
-  const errors = validationResult(req); if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const emisionId = req.params.id; const { gasto_id, categoria_id, monto, regla_prorrateo, metadata_json } = req.body;
-  try { const [result] = await db.query('INSERT INTO detalle_emision_gastos (emision_id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json) VALUES (?,?,?,?,?,?)', [emisionId, gasto_id || null, categoria_id, monto, regla_prorrateo, metadata_json || null]); const [row] = await db.query('SELECT id, categoria_id, monto, regla_prorrateo FROM detalle_emision_gastos WHERE id = ? LIMIT 1', [result.insertId]); res.status(201).json(row[0]); } catch (err) { console.error(err); res.status(500).json({ error: 'server error' }); }
-});
+router.post(
+  '/:id/detalles',
+  [
+    authenticate,
+    authorize('admin', 'superadmin'),
+    body('categoria_id').isInt(),
+    body('monto').isNumeric(),
+    body('regla_prorrateo').notEmpty(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+    const emisionId = req.params.id;
+    const { gasto_id, categoria_id, monto, regla_prorrateo, metadata_json } =
+      req.body;
+    try {
+      const [result] = await db.query(
+        'INSERT INTO detalle_emision_gastos (emision_id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json) VALUES (?,?,?,?,?,?)',
+        [
+          emisionId,
+          gasto_id || null,
+          categoria_id,
+          monto,
+          regla_prorrateo,
+          metadata_json || null,
+        ]
+      );
+      const [row] = await db.query(
+        'SELECT id, categoria_id, monto, regla_prorrateo FROM detalle_emision_gastos WHERE id = ? LIMIT 1',
+        [result.insertId]
+      );
+      res.status(201).json(row[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
+  }
+);
 
 /**
  * @swagger
@@ -388,7 +496,8 @@ router.post('/:id/detalles', [authenticate, authorize('admin','superadmin'), bod
 router.get('/:id/detalles', authenticate, async (req, res) => {
   const emisionId = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         deg.id,
         cg.nombre as nombre,
@@ -407,7 +516,9 @@ router.get('/:id/detalles', authenticate, async (req, res) => {
       JOIN categoria_gasto cg ON deg.categoria_id = cg.id
       WHERE deg.emision_id = ?
       ORDER BY deg.created_at
-    `, [emisionId]);
+    `,
+      [emisionId]
+    );
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -438,7 +549,8 @@ router.get('/:id/detalles', authenticate, async (req, res) => {
 router.get('/:id/gastos', authenticate, async (req, res) => {
   const emisionId = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         g.id,
         g.glosa as descripcion,
@@ -455,7 +567,9 @@ router.get('/:id/gastos', authenticate, async (req, res) => {
       LEFT JOIN proveedor p ON dc.proveedor_id = p.id
       WHERE deg.emision_id = ? AND deg.gasto_id IS NOT NULL
       ORDER BY g.fecha DESC
-    `, [emisionId]);
+    `,
+      [emisionId]
+    );
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -486,7 +600,8 @@ router.get('/:id/gastos', authenticate, async (req, res) => {
 router.get('/:id/unidades', authenticate, async (req, res) => {
   const emisionId = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         u.id,
         u.codigo as numero,
@@ -520,7 +635,9 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
       LEFT JOIN persona p ON tu.persona_id = p.id
       WHERE ccu.emision_id = ?
       ORDER BY u.codigo
-    `, [emisionId]);
+    `,
+      [emisionId]
+    );
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -551,7 +668,8 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
 router.get('/:id/pagos', authenticate, async (req, res) => {
   const emisionId = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         p.id,
         DATE_FORMAT(p.fecha, '%Y-%m-%d') as fecha,
@@ -579,7 +697,9 @@ router.get('/:id/pagos', authenticate, async (req, res) => {
       JOIN unidad u ON ccu.unidad_id = u.id
       WHERE ccu.emision_id = ?
       ORDER BY p.fecha DESC, p.created_at DESC
-    `, [emisionId]);
+    `,
+      [emisionId]
+    );
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -610,7 +730,8 @@ router.get('/:id/pagos', authenticate, async (req, res) => {
 router.get('/:id/auditoria', authenticate, async (req, res) => {
   const emisionId = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         a.id,
         DATE_FORMAT(a.created_at, '%Y-%m-%d %H:%i:%s') as date,
@@ -632,7 +753,9 @@ router.get('/:id/auditoria', authenticate, async (req, res) => {
       LEFT JOIN usuario u ON a.usuario_id = u.id
       WHERE a.tabla = 'emision_gastos_comunes' AND a.registro_id = ?
       ORDER BY a.created_at DESC
-    `, [emisionId]);
+    `,
+      [emisionId]
+    );
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -660,29 +783,52 @@ router.get('/:id/auditoria', authenticate, async (req, res) => {
  *         description: Eliminado con éxito
  */
 // eliminar emision y dependencias (admin)
-router.delete('/:id', authenticate, authorize('admin','superadmin'), async (req, res) => {
-  const emisionId = req.params.id;
-  const conn = await db.getConnection();
-  try {
-    await conn.beginTransaction();
-    // delete pago_aplicacion
-    await conn.query('DELETE pa FROM pago_aplicacion pa JOIN cuenta_cobro_unidad ccu ON pa.cuenta_cobro_unidad_id = ccu.id WHERE ccu.emision_id = ?', [emisionId]);
-    // delete cuenta_cobro_unidad
-    await conn.query('DELETE FROM cuenta_cobro_unidad WHERE emision_id = ?', [emisionId]);
-    // delete detalle_emision_gastos
-    await conn.query('DELETE FROM detalle_emision_gastos WHERE emision_id = ?', [emisionId]);
-    // delete emision
-    await conn.query('DELETE FROM emision_gastos_comunes WHERE id = ?', [emisionId]);
-    await conn.commit();
-    res.json({ ok: true });
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    const emisionId = req.params.id;
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+      // delete pago_aplicacion
+      await conn.query(
+        'DELETE pa FROM pago_aplicacion pa JOIN cuenta_cobro_unidad ccu ON pa.cuenta_cobro_unidad_id = ccu.id WHERE ccu.emision_id = ?',
+        [emisionId]
+      );
+      // delete cuenta_cobro_unidad
+      await conn.query('DELETE FROM cuenta_cobro_unidad WHERE emision_id = ?', [
+        emisionId,
+      ]);
+      // delete detalle_emision_gastos
+      await conn.query(
+        'DELETE FROM detalle_emision_gastos WHERE emision_id = ?',
+        [emisionId]
+      );
+      // delete emision
+      await conn.query('DELETE FROM emision_gastos_comunes WHERE id = ?', [
+        emisionId,
+      ]);
+      await conn.commit();
+      res.json({ ok: true });
     } catch (err) {
-    console.error(err);
-    try { await conn.rollback(); } catch (e) { console.error(e); }
-    res.status(500).json({ error: 'server error' });
-  } finally {
-    try { conn.release(); } catch (e) { console.error(e); }
+      console.error(err);
+      try {
+        await conn.rollback();
+      } catch (e) {
+        console.error(e);
+      }
+      res.status(500).json({ error: 'server error' });
+    } finally {
+      try {
+        conn.release();
+      } catch (e) {
+        console.error(e);
+      }
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -810,9 +956,13 @@ router.get('/estadisticas/cobranza', authenticate, async (req, res) => {
 // validaciones
 router.get('/validar/existencia', authenticate, async (req, res) => {
   const { comunidad_id, periodo } = req.query;
-  if (!comunidad_id || !periodo) return res.status(400).json({ error: 'comunidad_id and periodo required' });
+  if (!comunidad_id || !periodo)
+    return res.status(400).json({ error: 'comunidad_id and periodo required' });
   try {
-    const [[row]] = await db.query('SELECT COUNT(*) as existe_emision FROM emision_gastos_comunes WHERE comunidad_id = ? AND periodo = ?', [comunidad_id, periodo]);
+    const [[row]] = await db.query(
+      'SELECT COUNT(*) as existe_emision FROM emision_gastos_comunes WHERE comunidad_id = ? AND periodo = ?',
+      [comunidad_id, periodo]
+    );
     res.json({ existe_emision: row.existe_emision });
   } catch (err) {
     console.error(err);
@@ -839,7 +989,8 @@ router.get('/validar/existencia', authenticate, async (req, res) => {
 router.get('/validar/gastos/:id', authenticate, async (req, res) => {
   const emisionId = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         deg.emision_id,
         COUNT(*) as total_gastos_incluidos,
@@ -848,8 +999,14 @@ router.get('/validar/gastos/:id', authenticate, async (req, res) => {
       LEFT JOIN gasto g ON deg.gasto_id = g.id
       WHERE deg.emision_id = ?
       GROUP BY deg.emision_id
-    `, [emisionId]);
-    res.json(rows.length ? rows[0] : { total_gastos_incluidos: 0, gastos_inexistentes: 0 });
+    `,
+      [emisionId]
+    );
+    res.json(
+      rows.length
+        ? rows[0]
+        : { total_gastos_incluidos: 0, gastos_inexistentes: 0 }
+    );
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });
@@ -875,7 +1032,8 @@ router.get('/validar/gastos/:id', authenticate, async (req, res) => {
 router.get('/validar/cuentas/:id', authenticate, async (req, res) => {
   const emisionId = req.params.id;
   try {
-    const [rows] = await db.query(`
+    const [rows] = await db.query(
+      `
       SELECT
         'cuentas_cobro' as tipo_verificacion,
         COUNT(*) as total_registros,
@@ -883,8 +1041,16 @@ router.get('/validar/cuentas/:id', authenticate, async (req, res) => {
         SUM(CASE WHEN ccu.saldo > ccu.monto_total THEN 1 ELSE 0 END) as saldos_invalidos
       FROM cuenta_cobro_unidad ccu
       WHERE ccu.emision_id = ?
-    `, [emisionId]);
-    res.json(rows[0] || { total_registros: 0, montos_invalidos: 0, saldos_invalidos: 0 });
+    `,
+      [emisionId]
+    );
+    res.json(
+      rows[0] || {
+        total_registros: 0,
+        montos_invalidos: 0,
+        saldos_invalidos: 0,
+      }
+    );
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });
@@ -912,10 +1078,14 @@ router.get('/validar/cuentas/:id', authenticate, async (req, res) => {
  *       200:
  *         description: Resultado de validación
  */
-router.get('/validar/cobertura/:comunidadId/:emisionId', authenticate, async (req, res) => {
-  const { comunidadId, emisionId } = req.params;
-  try {
-    const [rows] = await db.query(`
+router.get(
+  '/validar/cobertura/:comunidadId/:emisionId',
+  authenticate,
+  async (req, res) => {
+    const { comunidadId, emisionId } = req.params;
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         'cobertura_unidades' as tipo_verificacion,
         COUNT(DISTINCT u.id) as unidades_activas,
@@ -924,47 +1094,79 @@ router.get('/validar/cobertura/:comunidadId/:emisionId', authenticate, async (re
       FROM unidad u
       LEFT JOIN cuenta_cobro_unidad ccu ON u.id = ccu.unidad_id AND ccu.emision_id = ?
       WHERE u.activa = 1 AND u.comunidad_id = ?
-    `, [emisionId, comunidadId]);
-    res.json(rows[0] || { unidades_activas: 0, unidades_con_cobro: 0, unidades_faltantes: 0 });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+    `,
+        [emisionId, comunidadId]
+      );
+      res.json(
+        rows[0] || {
+          unidades_activas: 0,
+          unidades_con_cobro: 0,
+          unidades_faltantes: 0,
+        }
+      );
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // preview prorrateo - stub: return example distribution
 router.get('/:id/previsualizar-prorrateo', authenticate, async (req, res) => {
   const emisionId = req.params.id;
   try {
     // load emision and detalles
-    const [emRows] = await db.query('SELECT comunidad_id, periodo FROM emision_gastos_comunes WHERE id = ? LIMIT 1', [emisionId]);
-    if (!emRows.length) return res.status(404).json({ error: 'emision not found' });
+    const [emRows] = await db.query(
+      'SELECT comunidad_id, periodo FROM emision_gastos_comunes WHERE id = ? LIMIT 1',
+      [emisionId]
+    );
+    if (!emRows.length)
+      return res.status(404).json({ error: 'emision not found' });
     const comunidadId = emRows[0].comunidad_id;
-    const [detalles] = await db.query('SELECT id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json FROM detalle_emision_gastos WHERE emision_id = ?', [emisionId]);
+    const [detalles] = await db.query(
+      'SELECT id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json FROM detalle_emision_gastos WHERE emision_id = ?',
+      [emisionId]
+    );
 
     // load unidades for comunidad
-    const [unidades] = await db.query('SELECT id, codigo, alicuota FROM unidad WHERE comunidad_id = ? AND activa = 1', [comunidadId]);
-    if (!unidades.length) return res.status(200).json({ preview: [], note: 'no active unidades' });
+    const [unidades] = await db.query(
+      'SELECT id, codigo, alicuota FROM unidad WHERE comunidad_id = ? AND activa = 1',
+      [comunidadId]
+    );
+    if (!unidades.length)
+      return res.status(200).json({ preview: [], note: 'no active unidades' });
 
-    const totalAlicuota = unidades.reduce((s,u) => s + Number(u.alicuota || 0), 0) || 0;
+    const totalAlicuota =
+      unidades.reduce((s, u) => s + Number(u.alicuota || 0), 0) || 0;
     const nUnits = unidades.length;
 
     // prepare preview structure: map unidadId => { detalleId -> monto }
-    const preview = unidades.map(u => ({ unidad_id: u.id, codigo: u.codigo, distribucion: [], total: 0 }));
+    const preview = unidades.map((u) => ({
+      unidad_id: u.id,
+      codigo: u.codigo,
+      distribucion: [],
+      total: 0,
+    }));
 
     for (const d of detalles) {
       const rule = d.regla_prorrateo || 'partes_iguales';
       if (rule === 'consumo') {
         // consumption requires medidor readings — mark as requires data
         // For now we cannot compute consumption-based prorrateo without readings.
-        return res.json({ preview: [], note: 'consumo-based prorrateo requires medidor data; not implemented in preview' });
+        return res.json({
+          preview: [],
+          note: 'consumo-based prorrateo requires medidor data; not implemented in preview',
+        });
       }
 
       if (rule === 'coeficiente') {
         // distribute by alicuota proportionally
         for (const p of preview) {
-          const unidad = unidades.find(u => u.id === p.unidad_id);
-          const share = totalAlicuota > 0 ? (Number(unidad.alicuota || 0) / totalAlicuota) * Number(d.monto) : 0;
+          const unidad = unidades.find((u) => u.id === p.unidad_id);
+          const share =
+            totalAlicuota > 0
+              ? (Number(unidad.alicuota || 0) / totalAlicuota) * Number(d.monto)
+              : 0;
           const val = Number(share.toFixed(2));
           p.distribucion.push({ detalle_id: d.id, monto: val });
           p.total = Number((p.total + val).toFixed(2));
@@ -976,7 +1178,9 @@ router.get('/:id/previsualizar-prorrateo', authenticate, async (req, res) => {
         let remainder = Number(d.monto) - per * nUnits;
         for (let i = 0; i < preview.length; i++) {
           let val = per;
-          if (remainder !== 0 && i === 0) { val = Number((val + remainder).toFixed(2)); }
+          if (remainder !== 0 && i === 0) {
+            val = Number((val + remainder).toFixed(2));
+          }
           preview[i].distribucion.push({ detalle_id: d.id, monto: val });
           preview[i].total = Number((preview[i].total + val).toFixed(2));
         }
@@ -994,74 +1198,145 @@ router.get('/:id/previsualizar-prorrateo', authenticate, async (req, res) => {
 });
 
 // generar cargos - stub
-router.post('/:id/generar-cargos', authenticate, authorize('admin','superadmin'), async (req, res) => {
-  const emisionId = req.params.id;
-  const conn = await db.getConnection();
-  try {
-    await conn.beginTransaction();
-    const [emRows] = await conn.query('SELECT comunidad_id FROM emision_gastos_comunes WHERE id = ? LIMIT 1', [emisionId]);
-    if (!emRows.length) { await conn.rollback(); return res.status(404).json({ error: 'emision not found' }); }
-    const comunidadId = emRows[0].comunidad_id;
-
-    const [detalles] = await conn.query('SELECT id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json FROM detalle_emision_gastos WHERE emision_id = ?', [emisionId]);
-    const [unidades] = await conn.query('SELECT id, codigo, alicuota FROM unidad WHERE comunidad_id = ? AND activa = 1', [comunidadId]);
-    if (!unidades.length) { await conn.rollback(); return res.status(400).json({ error: 'no active unidades' }); }
-
-    // compute preview using same logic as preview endpoint
-    const totalAlicuota = unidades.reduce((s,u) => s + Number(u.alicuota || 0), 0) || 0;
-    const nUnits = unidades.length;
-    const distrib = unidades.map(u => ({ unidad_id: u.id, detalles: [], total: 0 }));
-
-    for (const d of detalles) {
-      const rule = d.regla_prorrateo || 'partes_iguales';
-      if (rule === 'consumo') {
+router.post(
+  '/:id/generar-cargos',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    const emisionId = req.params.id;
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [emRows] = await conn.query(
+        'SELECT comunidad_id FROM emision_gastos_comunes WHERE id = ? LIMIT 1',
+        [emisionId]
+      );
+      if (!emRows.length) {
         await conn.rollback();
-        return res.status(400).json({ error: 'consumo-based prorrateo requires medidor data; not supported in generate' });
+        return res.status(404).json({ error: 'emision not found' });
       }
-      if (rule === 'coeficiente') {
-        for (const p of distrib) {
-          const unidad = unidades.find(u => u.id === p.unidad_id);
-          const share = totalAlicuota > 0 ? (Number(unidad.alicuota || 0) / totalAlicuota) * Number(d.monto) : 0;
-          const val = Number(share.toFixed(2));
-          p.detalles.push({ detalle_id: d.id, monto: val, categoria_id: d.categoria_id, gasto_id: d.gasto_id });
-          p.total = Number((p.total + val).toFixed(2));
+      const comunidadId = emRows[0].comunidad_id;
+
+      const [detalles] = await conn.query(
+        'SELECT id, gasto_id, categoria_id, monto, regla_prorrateo, metadata_json FROM detalle_emision_gastos WHERE emision_id = ?',
+        [emisionId]
+      );
+      const [unidades] = await conn.query(
+        'SELECT id, codigo, alicuota FROM unidad WHERE comunidad_id = ? AND activa = 1',
+        [comunidadId]
+      );
+      if (!unidades.length) {
+        await conn.rollback();
+        return res.status(400).json({ error: 'no active unidades' });
+      }
+
+      // compute preview using same logic as preview endpoint
+      const totalAlicuota =
+        unidades.reduce((s, u) => s + Number(u.alicuota || 0), 0) || 0;
+      const nUnits = unidades.length;
+      const distrib = unidades.map((u) => ({
+        unidad_id: u.id,
+        detalles: [],
+        total: 0,
+      }));
+
+      for (const d of detalles) {
+        const rule = d.regla_prorrateo || 'partes_iguales';
+        if (rule === 'consumo') {
+          await conn.rollback();
+          return res
+            .status(400)
+            .json({
+              error:
+                'consumo-based prorrateo requires medidor data; not supported in generate',
+            });
         }
-      } else if (rule === 'fijo_por_unidad' || rule === 'partes_iguales') {
-        const per = Number((Number(d.monto) / nUnits).toFixed(2));
-        let remainder = Number(d.monto) - per * nUnits;
-        for (let i = 0; i < distrib.length; i++) {
-          let val = per;
-          if (remainder !== 0 && i === 0) { val = Number((val + remainder).toFixed(2)); }
-          distrib[i].detalles.push({ detalle_id: d.id, monto: val, categoria_id: d.categoria_id, gasto_id: d.gasto_id });
-          distrib[i].total = Number((distrib[i].total + val).toFixed(2));
+        if (rule === 'coeficiente') {
+          for (const p of distrib) {
+            const unidad = unidades.find((u) => u.id === p.unidad_id);
+            const share =
+              totalAlicuota > 0
+                ? (Number(unidad.alicuota || 0) / totalAlicuota) *
+                  Number(d.monto)
+                : 0;
+            const val = Number(share.toFixed(2));
+            p.detalles.push({
+              detalle_id: d.id,
+              monto: val,
+              categoria_id: d.categoria_id,
+              gasto_id: d.gasto_id,
+            });
+            p.total = Number((p.total + val).toFixed(2));
+          }
+        } else if (rule === 'fijo_por_unidad' || rule === 'partes_iguales') {
+          const per = Number((Number(d.monto) / nUnits).toFixed(2));
+          let remainder = Number(d.monto) - per * nUnits;
+          for (let i = 0; i < distrib.length; i++) {
+            let val = per;
+            if (remainder !== 0 && i === 0) {
+              val = Number((val + remainder).toFixed(2));
+            }
+            distrib[i].detalles.push({
+              detalle_id: d.id,
+              monto: val,
+              categoria_id: d.categoria_id,
+              gasto_id: d.gasto_id,
+            });
+            distrib[i].total = Number((distrib[i].total + val).toFixed(2));
+          }
         }
+      }
+
+      // create cuenta_cobro_unidad rows and detalle_cuenta_unidad
+      const created = [];
+      for (const d of distrib) {
+        const [r] = await conn.query(
+          'INSERT INTO cuenta_cobro_unidad (emision_id, comunidad_id, unidad_id, monto_total, saldo) VALUES (?,?,?,?,?)',
+          [emisionId, comunidadId, d.unidad_id, d.total, d.total]
+        );
+        const cuentaId = r.insertId;
+        for (const det of d.detalles) {
+          await conn.query(
+            'INSERT INTO detalle_cuenta_unidad (cuenta_cobro_unidad_id, categoria_id, glosa, monto, origen, origen_id, iva_incluido) VALUES (?,?,?,?,?,?,?)',
+            [
+              cuentaId,
+              det.categoria_id,
+              `detalle ${det.detalle_id}`,
+              det.monto,
+              'gasto',
+              det.gasto_id || null,
+              1,
+            ]
+          );
+        }
+        created.push({
+          unidad_id: d.unidad_id,
+          cuenta_cobro_unidad_id: cuentaId,
+          monto_total: d.total,
+        });
+      }
+
+      await conn.commit();
+      res.status(201).json({ ok: true, created });
+    } catch (err) {
+      console.error(err);
+      try {
+        await conn.rollback();
+      } catch (e) {
+        console.error(e);
+      }
+      res.status(500).json({ error: 'server error' });
+    } finally {
+      try {
+        conn.release();
+      } catch (e) {
+        console.error(e);
       }
     }
-
-    // create cuenta_cobro_unidad rows and detalle_cuenta_unidad
-    const created = [];
-    for (const d of distrib) {
-      const [r] = await conn.query('INSERT INTO cuenta_cobro_unidad (emision_id, comunidad_id, unidad_id, monto_total, saldo) VALUES (?,?,?,?,?)', [emisionId, comunidadId, d.unidad_id, d.total, d.total]);
-      const cuentaId = r.insertId;
-      for (const det of d.detalles) {
-        await conn.query('INSERT INTO detalle_cuenta_unidad (cuenta_cobro_unidad_id, categoria_id, glosa, monto, origen, origen_id, iva_incluido) VALUES (?,?,?,?,?,?,?)', [cuentaId, det.categoria_id, `detalle ${det.detalle_id}`, det.monto, 'gasto', det.gasto_id || null, 1]);
-      }
-      created.push({ unidad_id: d.unidad_id, cuenta_cobro_unidad_id: cuentaId, monto_total: d.total });
-    }
-
-    await conn.commit();
-    res.status(201).json({ ok: true, created });
-  } catch (err) {
-    console.error(err);
-    try { await conn.rollback(); } catch (e) { console.error(e); }
-    res.status(500).json({ error: 'server error' });
-  } finally {
-    try { conn.release(); } catch (e) { console.error(e); }
   }
-});
+);
 
 module.exports = router;
-
 
 // =========================================
 // ENDPOINTS DE EMISIONES
@@ -1099,7 +1374,3 @@ module.exports = router;
 // GET: /emisiones/validar/gastos/:id
 // GET: /emisiones/validar/cuentas/:id
 // GET: /emisiones/validar/cobertura/:comunidadId/:emisionId
-
-
-
-

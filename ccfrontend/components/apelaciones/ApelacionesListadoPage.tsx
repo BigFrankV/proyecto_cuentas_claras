@@ -124,6 +124,7 @@ const ApelacionesListadoPage: React.FC = () => {
       setAppeals(rows);
       // aquí podrías manejar la paginación si es necesario, usando el total
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('load apelaciones error', err);
       setAppeals(sampleAppeals);
     } finally {
@@ -210,7 +211,10 @@ const ApelacionesListadoPage: React.FC = () => {
                 Nueva Apelación
               </button>
             )}
-            <button className='btn btn-outline-secondary' onClick={() => load()}>
+            <button
+              className='btn btn-outline-secondary'
+              onClick={() => load()}
+            >
               {loading ? 'Cargando...' : 'Refrescar'}
             </button>
           </div>
@@ -220,41 +224,41 @@ const ApelacionesListadoPage: React.FC = () => {
         <div className='filters-panel mb-4'>
           <div className='d-flex flex-wrap align-items-center'>
             <span className='me-3 fw-bold'>Filtros:</span>
-            <a
-              href='#'
+            <button
+              type='button'
               className={`filter-chip ${filter === 'all' ? 'active' : ''}`}
               onClick={() => setFilter('all')}
             >
               Todas
-            </a>
-            <a
-              href='#'
+            </button>
+            <button
+              type='button'
               className={`filter-chip ${filter === 'pending' ? 'active' : ''}`}
               onClick={() => setFilter('pending')}
             >
               Pendientes
-            </a>
-            <a
-              href='#'
+            </button>
+            <button
+              type='button'
               className={`filter-chip ${filter === 'under_review' ? 'active' : ''}`}
               onClick={() => setFilter('under_review')}
             >
               En Revisión
-            </a>
-            <a
-              href='#'
+            </button>
+            <button
+              type='button'
               className={`filter-chip ${filter === 'approved' ? 'active' : ''}`}
               onClick={() => setFilter('approved')}
             >
               Aprobadas
-            </a>
-            <a
-              href='#'
+            </button>
+            <button
+              type='button'
               className={`filter-chip ${filter === 'rejected' ? 'active' : ''}`}
               onClick={() => setFilter('rejected')}
             >
               Rechazadas
-            </a>
+            </button>
           </div>
         </div>
 
@@ -439,29 +443,29 @@ const ApelacionesListadoPage: React.FC = () => {
         <nav aria-label='Paginación de apelaciones' className='mt-4'>
           <ul className='pagination justify-content-center'>
             <li className='page-item disabled'>
-              <a className='page-link' href='#'>
+              <button type='button' className='page-link' disabled>
                 Anterior
-              </a>
+              </button>
             </li>
             <li className='page-item active'>
-              <a className='page-link' href='#'>
+              <button type='button' className='page-link'>
                 1
-              </a>
+              </button>
             </li>
             <li className='page-item'>
-              <a className='page-link' href='#'>
+              <button type='button' className='page-link'>
                 2
-              </a>
+              </button>
             </li>
             <li className='page-item'>
-              <a className='page-link' href='#'>
+              <button type='button' className='page-link'>
                 3
-              </a>
+              </button>
             </li>
             <li className='page-item'>
-              <a className='page-link' href='#'>
+              <button type='button' className='page-link'>
                 Siguiente
-              </a>
+              </button>
             </li>
           </ul>
         </nav>
@@ -505,10 +509,20 @@ const ApelacionesListadoPage: React.FC = () => {
                   <h6>Evidencia Adjunta</h6>
                   <ul>
                     <li>
-                      <a href='#'>documento_prueba.pdf</a>
+                      <button
+                        type='button'
+                        className='btn btn-link p-0 text-start'
+                      >
+                        documento_prueba.pdf
+                      </button>
                     </li>
                     <li>
-                      <a href='#'>foto_evidencia.jpg</a>
+                      <button
+                        type='button'
+                        className='btn btn-link p-0 text-start'
+                      >
+                        foto_evidencia.jpg
+                      </button>
                     </li>
                   </ul>
                 </div>

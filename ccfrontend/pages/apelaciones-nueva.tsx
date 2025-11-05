@@ -30,7 +30,7 @@ export default function ApelacionesNueva() {
                 <div className='card-body'>
                   <ApelacionForm
                     token={token}
-                    onCreated={(res) => {
+                    onCreated={res => {
                       // Redirect to the detail page of the created appeal
                       router.push(`/apelaciones/${res.id}`);
                     }}

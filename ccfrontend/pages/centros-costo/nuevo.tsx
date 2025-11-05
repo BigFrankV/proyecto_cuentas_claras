@@ -125,6 +125,7 @@ export default function CentroCostoNuevo() {
       alert('Centro de costo creado exitosamente');
       router.push('/centros-costo');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error creating cost center:', error);
       alert('Error al crear el centro de costo');
     } finally {
@@ -393,9 +394,9 @@ export default function CentroCostoNuevo() {
                             Mensual: $
                             {formData.budget
                               ? (parseInt(formData.budget) / 12).toLocaleString(
-                                undefined,
-                                { maximumFractionDigits: 0 },
-                              )
+                                  undefined,
+                                  { maximumFractionDigits: 0 },
+                                )
                               : '0'}
                           </small>
                         </div>
@@ -425,6 +426,14 @@ export default function CentroCostoNuevo() {
                             className={`icon-option ${formData.icon === icon ? 'selected' : ''}`}
                             style={{ backgroundColor: formData.color }}
                             onClick={() => handleInputChange('icon', icon)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleInputChange('icon', icon);
+                              }
+                            }}
+                            role='button'
+                            tabIndex={0}
                           >
                             <span className='material-icons'>{icon}</span>
                           </div>
@@ -441,6 +450,15 @@ export default function CentroCostoNuevo() {
                             className={`color-option ${formData.color === color ? 'selected' : ''}`}
                             style={{ backgroundColor: color }}
                             onClick={() => handleInputChange('color', color)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleInputChange('color', color);
+                              }
+                            }}
+                            role='button'
+                            tabIndex={0}
+                            aria-label={`Select color ${color}`}
                           />
                         ))}
                       </div>

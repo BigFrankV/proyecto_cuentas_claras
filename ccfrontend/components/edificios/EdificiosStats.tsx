@@ -5,7 +5,10 @@ interface EdificiosStatsProps {
   loading?: boolean;
 }
 
-export default function EdificiosStats({ stats, loading = false }: EdificiosStatsProps) {
+export default function EdificiosStats({
+  stats,
+  loading = false,
+}: EdificiosStatsProps) {
   if (loading) {
     return (
       <div className='row mb-4'>
@@ -99,30 +102,32 @@ export default function EdificiosStats({ stats, loading = false }: EdificiosStat
 
       <style jsx>{`
         .stat-card {
-          transition: transform 0.15s ease, box-shadow 0.15s ease;
+          transition:
+            transform 0.15s ease,
+            box-shadow 0.15s ease;
         }
-        
+
         .stat-card:hover {
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        
+
         .stat-icon {
           width: 48px;
           height: 48px;
           border-radius: 12px;
-          background-color: rgba(3,14,39,0.05);
+          background-color: rgba(3, 14, 39, 0.05);
           display: flex;
           align-items: center;
           justify-content: center;
         }
-        
+
         .stat-value {
           font-size: 1.5rem;
           font-weight: 700;
           margin-bottom: 0.25rem;
         }
-        
+
         .stat-label {
           font-size: 0.875rem;
         }

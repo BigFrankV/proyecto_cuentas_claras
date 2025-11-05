@@ -1,29 +1,63 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState, useEffect, AwaitedReactNode, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from 'react';
 import { useRouter } from 'next/router';
+import {
+  useState,
+  useEffect,
+  AwaitedReactNode,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+} from 'react';
+
+import Layout from '@/components/layout/Layout';
 import { ticketsApi } from '@/lib/api/tickets';
+import { ProtectedRoute } from '@/lib/useAuth';
 import type { TicketDetalle as TicketDetailType } from '@/types/tickets';
 
 const statusConfig = {
-  abierto: { label: 'Abierto', class: 'open', color: '#1565C0', bg: '#E3F2FD', border: '#2196F3' },
-  en_progreso: { label: 'En Progreso', class: 'in-progress', color: '#F57F17', bg: '#FFF8E1', border: '#FFEB3B' },
-  resuelto: { label: 'Resuelto', class: 'resolved', color: '#2E7D32', bg: '#E8F5E9', border: '#4CAF50' },
-  cerrado: { label: 'Cerrado', class: 'closed', color: '#757575', bg: '#F5F5F5', border: '#9E9E9E' }
+  abierto: {
+    label: 'Abierto',
+    class: 'open',
+    color: '#1565C0',
+    bg: '#E3F2FD',
+    border: '#2196F3',
+  },
+  en_progreso: {
+    label: 'En Progreso',
+    class: 'in-progress',
+    color: '#F57F17',
+    bg: '#FFF8E1',
+    border: '#FFEB3B',
+  },
+  resuelto: {
+    label: 'Resuelto',
+    class: 'resolved',
+    color: '#2E7D32',
+    bg: '#E8F5E9',
+    border: '#4CAF50',
+  },
+  cerrado: {
+    label: 'Cerrado',
+    class: 'closed',
+    color: '#757575',
+    bg: '#F5F5F5',
+    border: '#9E9E9E',
+  },
 };
 
 const priorityConfig = {
   baja: { label: 'Baja', class: 'low', color: '#2E7D32', bg: '#E8F5E9' },
   media: { label: 'Media', class: 'medium', color: '#F57F17', bg: '#FFF8E1' },
-  alta: { label: 'Alta', class: 'high', color: '#C62828', bg: '#FFEBEE' }
+  alta: { label: 'Alta', class: 'high', color: '#C62828', bg: '#FFEBEE' },
 };
 
 export default function TicketDetalle() {
   const router = useRouter();
   const { id } = router.query;
-  
+
   const [ticket, setTicket] = useState<TicketDetailType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,8 +78,11 @@ export default function TicketDetalle() {
       const ticketData = await ticketsApi.getById(Number(id));
       setTicket(ticketData);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error loading ticket:', err);
-      setError(err instanceof Error ? err.message : 'Error al cargar el ticket');
+      setError(
+        err instanceof Error ? err.message : 'Error al cargar el ticket',
+      );
     } finally {
       setLoading(false);
     }
@@ -57,45 +94,54 @@ export default function TicketDetalle() {
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
   const handleAddComment = async () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim()) {
+      return;
+    }
 
     setIsAddingComment(true);
     try {
       // Mock API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const comment = {
         id: Date.now().toString(),
         content: newComment,
         author: {
           name: 'Usuario Actual',
           avatar: 'UC',
-          type: 'admin' as const
+          type: 'admin' as const,
         },
         createdAt: new Date().toISOString(),
-        isInternal: false
+        isInternal: false,
       };
 
-      setTicket(prev => prev ? {
-        ...prev,
-        comments: [...prev.comments, comment]
-      } : null);
+      setTicket(prev =>
+        prev
+          ? {
+              ...prev,
+              comments: [...prev.comments, comment],
+            }
+          : null,
+      );
 
       setNewComment('');
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error adding comment:', error);
     } finally {
       setIsAddingComment(false);
@@ -159,7 +205,9 @@ export default function TicketDetalle() {
           <div className='container-fluid py-4'>
             <div className='text-center'>
               <h3>Ticket no encontrado</h3>
-              <p className='text-muted'>El ticket solicitado no existe o no tienes permisos para verlo.</p>
+              <p className='text-muted'>
+                El ticket solicitado no existe o no tienes permisos para verlo.
+              </p>
               <Link href='/tickets' className='btn btn-primary'>
                 Volver al listado
               </Link>
@@ -173,7 +221,9 @@ export default function TicketDetalle() {
   return (
     <ProtectedRoute>
       <Head>
-        <title>{ticket.numero} — {ticket.titulo} — Cuentas Claras</title>
+        <title>
+          {ticket.numero} — {ticket.titulo} — Cuentas Claras
+        </title>
       </Head>
 
       <Layout title={`Ticket ${ticket.numero}`}>
@@ -182,7 +232,10 @@ export default function TicketDetalle() {
           <div className='d-flex justify-content-between align-items-start mb-4'>
             <div>
               <div className='d-flex align-items-center mb-2'>
-                <Link href='/tickets' className='btn btn-outline-secondary btn-sm me-3'>
+                <Link
+                  href='/tickets'
+                  className='btn btn-outline-secondary btn-sm me-3'
+                >
                   <i className='material-icons me-1'>arrow_back</i>
                   Volver
                 </Link>
@@ -199,7 +252,7 @@ export default function TicketDetalle() {
                     padding: '0.25rem 0.75rem',
                     borderRadius: '1rem',
                     fontSize: '0.75rem',
-                    fontWeight: '500'
+                    fontWeight: '500',
                   }}
                 >
                   {statusConfig[ticket.estado].label}
@@ -212,7 +265,7 @@ export default function TicketDetalle() {
                     padding: '0.25rem 0.5rem',
                     borderRadius: '0.375rem',
                     fontSize: '0.75rem',
-                    fontWeight: '500'
+                    fontWeight: '500',
                   }}
                 >
                   {priorityConfig[ticket.prioridad].label}
@@ -231,10 +284,26 @@ export default function TicketDetalle() {
                   Cambiar Estado
                 </button>
                 <ul className='dropdown-menu'>
-                  <li><a className='dropdown-item' href='#'>En Progreso</a></li>
-                  <li><a className='dropdown-item' href='#'>Resuelto</a></li>
-                  <li><a className='dropdown-item' href='#'>Cerrado</a></li>
-                  <li><a className='dropdown-item' href='#'>Escalado</a></li>
+                  <li>
+                    <button className='dropdown-item' type='button'>
+                      En Progreso
+                    </button>
+                  </li>
+                  <li>
+                    <button className='dropdown-item' type='button'>
+                      Resuelto
+                    </button>
+                  </li>
+                  <li>
+                    <button className='dropdown-item' type='button'>
+                      Cerrado
+                    </button>
+                  </li>
+                  <li>
+                    <button className='dropdown-item' type='button'>
+                      Escalado
+                    </button>
+                  </li>
                 </ul>
               </div>
               <button className='btn btn-outline-primary'>
@@ -269,14 +338,21 @@ export default function TicketDetalle() {
                 <div className='card-header d-flex justify-content-between align-items-center'>
                   <h5 className='card-title mb-0'>
                     <i className='material-icons me-2'>forum</i>
-                    Comentarios ({ticket.comments.filter((c: { isInternal: any; }) => !c.isInternal || showInternalComments).length})
+                    Comentarios (
+                    {
+                      ticket.comments.filter(
+                        (c: { isInternal: any }) =>
+                          !c.isInternal || showInternalComments,
+                      ).length
+                    }
+                    )
                   </h5>
                   <div className='form-check form-switch'>
                     <input
                       className='form-check-input'
                       type='checkbox'
                       checked={showInternalComments}
-                      onChange={(e) => setShowInternalComments(e.target.checked)}
+                      onChange={e => setShowInternalComments(e.target.checked)}
                     />
                     <label className='form-check-label'>
                       Mostrar comentarios internos
@@ -287,51 +363,119 @@ export default function TicketDetalle() {
                   {/* Comments List */}
                   <div className='comments-list mb-4'>
                     {ticket.comments
-                      .filter((comment: { isInternal: any; }) => !comment.isInternal || showInternalComments)
-                      .map((comment: { id: Key | null | undefined; isInternal: any; author: { type: string; avatar: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }; createdAt: string; content: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }) => (
-                        <div key={comment.id} className='comment mb-3' style={{
-                          backgroundColor: comment.isInternal ? '#fff3cd' : '#f8f9fa',
-                          border: comment.isInternal ? '1px solid #ffeaa7' : '1px solid #e9ecef',
-                          borderRadius: 'var(--radius)',
-                          padding: '1rem'
-                        }}>
-                          <div className='d-flex align-items-start'>
-                            <div
-                              className='comment-avatar me-3'
-                              style={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '50%',
-                                backgroundColor: comment.author.type === 'admin' ? 'var(--color-primary)' : '#6c757d',
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '0.875rem',
-                                fontWeight: '600',
-                                flexShrink: 0
-                              }}
-                            >
-                              {comment.author.avatar}
-                            </div>
-                            <div className='flex-grow-1'>
-                              <div className='d-flex justify-content-between align-items-start mb-2'>
-                                <div>
-                                  <h6 className='mb-0'>
-                                    {comment.author.name}
-                                    {comment.isInternal && (
-                                      <span className='badge bg-warning ms-2'>Interno</span>
-                                    )}
-                                  </h6>
-                                  <small className='text-muted'>{formatDate(comment.createdAt)}</small>
-                                </div>
+                      .filter(
+                        (comment: { isInternal: any }) =>
+                          !comment.isInternal || showInternalComments,
+                      )
+                      .map(
+                        (comment: {
+                          id: Key | null | undefined;
+                          isInternal: any;
+                          author: {
+                            type: string;
+                            avatar:
+                              | string
+                              | number
+                              | bigint
+                              | boolean
+                              | ReactElement<
+                                  any,
+                                  string | JSXElementConstructor<any>
+                                >
+                              | Iterable<ReactNode>
+                              | ReactPortal
+                              | Promise<AwaitedReactNode>
+                              | null
+                              | undefined;
+                            name:
+                              | string
+                              | number
+                              | bigint
+                              | boolean
+                              | ReactElement<
+                                  any,
+                                  string | JSXElementConstructor<any>
+                                >
+                              | Iterable<ReactNode>
+                              | ReactPortal
+                              | Promise<AwaitedReactNode>
+                              | null
+                              | undefined;
+                          };
+                          createdAt: string;
+                          content:
+                            | string
+                            | number
+                            | bigint
+                            | boolean
+                            | ReactElement<
+                                any,
+                                string | JSXElementConstructor<any>
+                              >
+                            | Iterable<ReactNode>
+                            | ReactPortal
+                            | Promise<AwaitedReactNode>
+                            | null
+                            | undefined;
+                        }) => (
+                          <div
+                            key={comment.id}
+                            className='comment mb-3'
+                            style={{
+                              backgroundColor: comment.isInternal
+                                ? '#fff3cd'
+                                : '#f8f9fa',
+                              border: comment.isInternal
+                                ? '1px solid #ffeaa7'
+                                : '1px solid #e9ecef',
+                              borderRadius: 'var(--radius)',
+                              padding: '1rem',
+                            }}
+                          >
+                            <div className='d-flex align-items-start'>
+                              <div
+                                className='comment-avatar me-3'
+                                style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  borderRadius: '50%',
+                                  backgroundColor:
+                                    comment.author.type === 'admin'
+                                      ? 'var(--color-primary)'
+                                      : '#6c757d',
+                                  color: 'white',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '600',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {comment.author.avatar}
                               </div>
-                              <p className='mb-0'>{comment.content}</p>
+                              <div className='flex-grow-1'>
+                                <div className='d-flex justify-content-between align-items-start mb-2'>
+                                  <div>
+                                    <h6 className='mb-0'>
+                                      {comment.author.name}
+                                      {comment.isInternal && (
+                                        <span className='badge bg-warning ms-2'>
+                                          Interno
+                                        </span>
+                                      )}
+                                    </h6>
+                                    <small className='text-muted'>
+                                      {formatDate(comment.createdAt)}
+                                    </small>
+                                  </div>
+                                </div>
+                                <p className='mb-0'>{comment.content}</p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))
-                    }
+                        ),
+                      )}
                   </div>
 
                   {/* Add Comment */}
@@ -343,13 +487,20 @@ export default function TicketDetalle() {
                         rows={3}
                         placeholder='Escribe tu comentario...'
                         value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
+                        onChange={e => setNewComment(e.target.value)}
                       />
                     </div>
                     <div className='d-flex justify-content-between'>
                       <div className='form-check'>
-                        <input className='form-check-input' type='checkbox' id='internalComment' />
-                        <label className='form-check-label' htmlFor='internalComment'>
+                        <input
+                          className='form-check-input'
+                          type='checkbox'
+                          id='internalComment'
+                        />
+                        <label
+                          className='form-check-label'
+                          htmlFor='internalComment'
+                        >
                           Comentario interno
                         </label>
                       </div>
@@ -360,7 +511,10 @@ export default function TicketDetalle() {
                       >
                         {isAddingComment ? (
                           <>
-                            <span className='spinner-border spinner-border-sm me-2' role='status'></span>
+                            <span
+                              className='spinner-border spinner-border-sm me-2'
+                              role='status'
+                            ></span>
                             Agregando...
                           </>
                         ) : (
@@ -385,53 +539,103 @@ export default function TicketDetalle() {
                 </div>
                 <div className='card-body'>
                   <div className='timeline'>
-                    {ticket.timeline.map((item: { id: Key | null | undefined; type: string; content: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; timestamp: string; user: { name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }; }, index: number) => (
-                      <div key={item.id} className='timeline-item d-flex' style={{
-                        paddingBottom: index === ticket.timeline.length - 1 ? '0' : '1.5rem',
-                        position: 'relative'
-                      }}>
-                        {index !== ticket.timeline.length - 1 && (
-                          <div
-                            className='timeline-line'
-                            style={{
-                              position: 'absolute',
-                              left: '20px',
-                              top: '40px',
-                              bottom: '-1.5rem',
-                              width: '2px',
-                              backgroundColor: '#e9ecef'
-                            }}
-                          />
-                        )}
+                    {ticket.timeline.map(
+                      (
+                        item: {
+                          id: Key | null | undefined;
+                          type: string;
+                          content:
+                            | string
+                            | number
+                            | bigint
+                            | boolean
+                            | ReactElement<
+                                any,
+                                string | JSXElementConstructor<any>
+                              >
+                            | Iterable<ReactNode>
+                            | ReactPortal
+                            | Promise<AwaitedReactNode>
+                            | null
+                            | undefined;
+                          timestamp: string;
+                          user: {
+                            name:
+                              | string
+                              | number
+                              | bigint
+                              | boolean
+                              | ReactElement<
+                                  any,
+                                  string | JSXElementConstructor<any>
+                                >
+                              | Iterable<ReactNode>
+                              | ReactPortal
+                              | Promise<AwaitedReactNode>
+                              | null
+                              | undefined;
+                          };
+                        },
+                        index: number,
+                      ) => (
                         <div
-                          className='timeline-icon me-3'
+                          key={item.id}
+                          className='timeline-item d-flex'
                           style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            backgroundColor: getTimelineColor(item.type),
-                            color: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '20px',
-                            zIndex: 1,
-                            flexShrink: 0
+                            paddingBottom:
+                              index === ticket.timeline.length - 1
+                                ? '0'
+                                : '1.5rem',
+                            position: 'relative',
                           }}
                         >
-                          <i className='material-icons'>{getTimelineIcon(item.type)}</i>
-                        </div>
-                        <div className='timeline-content flex-grow-1'>
-                          <div className='d-flex justify-content-between align-items-start mb-1'>
-                            <h6 className='mb-0'>{item.content}</h6>
-                            <small className='text-muted'>{formatDate(item.timestamp)}</small>
+                          {index !== ticket.timeline.length - 1 && (
+                            <div
+                              className='timeline-line'
+                              style={{
+                                position: 'absolute',
+                                left: '20px',
+                                top: '40px',
+                                bottom: '-1.5rem',
+                                width: '2px',
+                                backgroundColor: '#e9ecef',
+                              }}
+                            />
+                          )}
+                          <div
+                            className='timeline-icon me-3'
+                            style={{
+                              width: '40px',
+                              height: '40px',
+                              borderRadius: '50%',
+                              backgroundColor: getTimelineColor(item.type),
+                              color: 'white',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '20px',
+                              zIndex: 1,
+                              flexShrink: 0,
+                            }}
+                          >
+                            <i className='material-icons'>
+                              {getTimelineIcon(item.type)}
+                            </i>
                           </div>
-                          <p className='text-muted mb-0'>
-                            por {item.user.name}
-                          </p>
+                          <div className='timeline-content flex-grow-1'>
+                            <div className='d-flex justify-content-between align-items-start mb-1'>
+                              <h6 className='mb-0'>{item.content}</h6>
+                              <small className='text-muted'>
+                                {formatDate(item.timestamp)}
+                              </small>
+                            </div>
+                            <p className='text-muted mb-0'>
+                              por {item.user.name}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </div>
               </div>
@@ -449,35 +653,76 @@ export default function TicketDetalle() {
                 </div>
                 <div className='card-body'>
                   <div className='info-item mb-3'>
-                    <label className='form-label text-muted'>Número de Ticket</label>
+                    <label className='form-label text-muted'>
+                      Número de Ticket
+                    </label>
                     <div className='fw-semibold'>{ticket.numero}</div>
-                  </div>
-                  
-                  <div className='info-item mb-3'>
-                    <label className='form-label text-muted'>Fecha de Creación</label>
-                    <div>{new Date(ticket.fecha_creacion).toLocaleDateString('es-ES')}</div>
                   </div>
 
                   <div className='info-item mb-3'>
-                    <label className='form-label text-muted'>Última Actualización</label>
-                    <div>{new Date(ticket.fecha_actualizacion).toLocaleDateString('es-ES')}</div>
+                    <label className='form-label text-muted'>
+                      Fecha de Creación
+                    </label>
+                    <div>
+                      {new Date(ticket.fecha_creacion).toLocaleDateString(
+                        'es-ES',
+                      )}
+                    </div>
+                  </div>
+
+                  <div className='info-item mb-3'>
+                    <label className='form-label text-muted'>
+                      Última Actualización
+                    </label>
+                    <div>
+                      {new Date(ticket.fecha_actualizacion).toLocaleDateString(
+                        'es-ES',
+                      )}
+                    </div>
                   </div>
 
                   {ticket.fecha_vencimiento && (
                     <div className='info-item mb-3'>
-                      <label className='form-label text-muted'>Fecha Límite</label>
-                      <div className='text-warning fw-semibold'>{new Date(ticket.fecha_vencimiento).toLocaleDateString('es-ES')}</div>
+                      <label className='form-label text-muted'>
+                        Fecha Límite
+                      </label>
+                      <div className='text-warning fw-semibold'>
+                        {new Date(ticket.fecha_vencimiento).toLocaleDateString(
+                          'es-ES',
+                        )}
+                      </div>
                     </div>
                   )}
 
                   <div className='info-item mb-3'>
                     <label className='form-label text-muted'>Etiquetas</label>
                     <div className='d-flex flex-wrap gap-1'>
-                      {ticket.tags.map((tag: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined, index: Key | null | undefined) => (
-                        <span key={index} className='badge bg-light text-dark'>
-                          {tag}
-                        </span>
-                      ))}
+                      {ticket.tags.map(
+                        (
+                          tag:
+                            | string
+                            | number
+                            | bigint
+                            | boolean
+                            | ReactElement<
+                                any,
+                                string | JSXElementConstructor<any>
+                              >
+                            | Iterable<ReactNode>
+                            | ReactPortal
+                            | Promise<AwaitedReactNode>
+                            | null
+                            | undefined,
+                          index: Key | null | undefined,
+                        ) => (
+                          <span
+                            key={index}
+                            className='badge bg-light text-dark'
+                          >
+                            {tag}
+                          </span>
+                        ),
+                      )}
                     </div>
                   </div>
                 </div>
@@ -506,17 +751,19 @@ export default function TicketDetalle() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: '1.25rem',
-                          fontWeight: '600'
+                          fontWeight: '600',
                         }}
                       >
                         {ticket.requester.avatar}
                       </div>
                       <div>
                         <h6 className='mb-1'>{ticket.requester.name}</h6>
-                        <p className='text-muted mb-0'>{ticket.requester.email}</p>
+                        <p className='text-muted mb-0'>
+                          {ticket.requester.email}
+                        </p>
                       </div>
                     </div>
-                    
+
                     {ticket.requester.unit && (
                       <div className='info-item'>
                         <label className='form-label text-muted'>Unidad</label>
@@ -550,14 +797,16 @@ export default function TicketDetalle() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: '1.25rem',
-                          fontWeight: '600'
+                          fontWeight: '600',
                         }}
                       >
                         {ticket.assignee.avatar}
                       </div>
                       <div>
                         <h6 className='mb-1'>{ticket.assignee.name}</h6>
-                        <p className='text-muted mb-0'>{ticket.assignee.email}</p>
+                        <p className='text-muted mb-0'>
+                          {ticket.assignee.email}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -577,32 +826,74 @@ export default function TicketDetalle() {
                     <p className='text-muted mb-0'>No hay archivos adjuntos</p>
                   ) : (
                     <div className='attachments-list'>
-                      {ticket.attachments.map((attachment: { id: Key | null | undefined; type: string; name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; size: number; uploadedBy: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }) => (
-                        <div key={attachment.id} className='attachment-item d-flex align-items-center p-2 border rounded mb-2'>
-                          <div className='attachment-icon me-3'>
-                            <i className='material-icons text-primary'>
-                              {attachment.type.startsWith('image/') ? 'image' : 'description'}
-                            </i>
+                      {ticket.attachments.map(
+                        (attachment: {
+                          id: Key | null | undefined;
+                          type: string;
+                          name:
+                            | string
+                            | number
+                            | bigint
+                            | boolean
+                            | ReactElement<
+                                any,
+                                string | JSXElementConstructor<any>
+                              >
+                            | Iterable<ReactNode>
+                            | ReactPortal
+                            | Promise<AwaitedReactNode>
+                            | null
+                            | undefined;
+                          size: number;
+                          uploadedBy:
+                            | string
+                            | number
+                            | bigint
+                            | boolean
+                            | ReactElement<
+                                any,
+                                string | JSXElementConstructor<any>
+                              >
+                            | Iterable<ReactNode>
+                            | ReactPortal
+                            | Promise<AwaitedReactNode>
+                            | null
+                            | undefined;
+                        }) => (
+                          <div
+                            key={attachment.id}
+                            className='attachment-item d-flex align-items-center p-2 border rounded mb-2'
+                          >
+                            <div className='attachment-icon me-3'>
+                              <i className='material-icons text-primary'>
+                                {attachment.type.startsWith('image/')
+                                  ? 'image'
+                                  : 'description'}
+                              </i>
+                            </div>
+                            <div className='flex-grow-1'>
+                              <div className='fw-semibold'>
+                                {attachment.name}
+                              </div>
+                              <small className='text-muted'>
+                                {formatFileSize(attachment.size)} • por{' '}
+                                {attachment.uploadedBy}
+                              </small>
+                            </div>
+                            <div className='attachment-actions'>
+                              <button className='btn btn-sm btn-outline-primary me-1'>
+                                <i className='material-icons'>download</i>
+                              </button>
+                              <button className='btn btn-sm btn-outline-secondary'>
+                                <i className='material-icons'>visibility</i>
+                              </button>
+                            </div>
                           </div>
-                          <div className='flex-grow-1'>
-                            <div className='fw-semibold'>{attachment.name}</div>
-                            <small className='text-muted'>
-                              {formatFileSize(attachment.size)} • por {attachment.uploadedBy}
-                            </small>
-                          </div>
-                          <div className='attachment-actions'>
-                            <button className='btn btn-sm btn-outline-primary me-1'>
-                              <i className='material-icons'>download</i>
-                            </button>
-                            <button className='btn btn-sm btn-outline-secondary'>
-                              <i className='material-icons'>visibility</i>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                        ),
+                      )}
                     </div>
                   )}
-                  
+
                   <div className='mt-3'>
                     <button className='btn btn-outline-primary btn-sm w-100'>
                       <i className='material-icons me-2'>add</i>

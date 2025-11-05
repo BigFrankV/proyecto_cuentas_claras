@@ -130,9 +130,13 @@ export default function PaymentDetail() {
     setShowReverseModal(true);
   };
 
-  const handleViewDocument = (
-    doc: { id: number; name: string; type: string; size: string; url: string },
-  ) => {
+  const handleViewDocument = (doc: {
+    id: number;
+    name: string;
+    type: string;
+    size: string;
+    url: string;
+  }) => {
     // Implementar visualización de documento
     window.open(doc.url, '_blank');
   };

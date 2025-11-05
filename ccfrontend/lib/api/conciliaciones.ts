@@ -63,7 +63,9 @@ class ConciliacionesApi {
         params.append('offset', filtros.offset.toString());
       }
 
-      const response = await apiClient.get(`${this.baseURL}?${params.toString()}`);
+      const response = await apiClient.get(
+        `${this.baseURL}?${params.toString()}`,
+      );
       return response.data;
     } catch {
       throw new Error('Error al obtener las conciliaciones');
@@ -131,9 +133,15 @@ class ConciliacionesApi {
   /**
    * Crear nueva conciliación bancaria
    */
-  async create(comunidadId: number, data: ConciliacionFormData): Promise<ConciliacionDetalle> {
+  async create(
+    comunidadId: number,
+    data: ConciliacionFormData,
+  ): Promise<ConciliacionDetalle> {
     try {
-      const response = await apiClient.post(`${this.baseURL}/comunidad/${comunidadId}`, data);
+      const response = await apiClient.post(
+        `${this.baseURL}/comunidad/${comunidadId}`,
+        data,
+      );
       return response.data;
     } catch {
       throw new Error('Error al crear la conciliación');
@@ -147,9 +155,13 @@ class ConciliacionesApi {
   /**
    * Estadísticas generales de conciliaciones por comunidad
    */
-  async getEstadisticas(comunidadId: number): Promise<EstadisticasConciliaciones> {
+  async getEstadisticas(
+    comunidadId: number,
+  ): Promise<EstadisticasConciliaciones> {
     try {
-      const response = await apiClient.get(`${this.baseURL}/comunidad/${comunidadId}/estadisticas`);
+      const response = await apiClient.get(
+        `${this.baseURL}/comunidad/${comunidadId}/estadisticas`,
+      );
       return response.data;
     } catch {
       throw new Error('Error al obtener las estadísticas');
@@ -161,7 +173,9 @@ class ConciliacionesApi {
    */
   async getPendientes(comunidadId: number): Promise<ConciliacionPendiente[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/comunidad/${comunidadId}/pendientes`);
+      const response = await axios.get(
+        `${this.baseURL}/comunidad/${comunidadId}/pendientes`,
+      );
       return response.data;
     } catch {
       throw new Error('Error al obtener los movimientos pendientes');
@@ -173,7 +187,9 @@ class ConciliacionesApi {
    */
   async getPorEstado(comunidadId: number): Promise<ConciliacionPorEstado[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/comunidad/${comunidadId}/por-estado`);
+      const response = await axios.get(
+        `${this.baseURL}/comunidad/${comunidadId}/por-estado`,
+      );
       return response.data;
     } catch {
       throw new Error('Error al obtener las conciliaciones por estado');
@@ -185,7 +201,9 @@ class ConciliacionesApi {
    */
   async getPorTipo(comunidadId: number): Promise<ConciliacionPorTipo[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/comunidad/${comunidadId}/por-tipo`);
+      const response = await axios.get(
+        `${this.baseURL}/comunidad/${comunidadId}/por-tipo`,
+      );
       return response.data;
     } catch {
       throw new Error('Error al obtener las conciliaciones por tipo');
@@ -199,9 +217,13 @@ class ConciliacionesApi {
   /**
    * Movimientos con diferencias entre banco y pago
    */
-  async getConDiferencias(comunidadId: number): Promise<MovimientoConDiferencias[]> {
+  async getConDiferencias(
+    comunidadId: number,
+  ): Promise<MovimientoConDiferencias[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/comunidad/${comunidadId}/con-diferencias`);
+      const response = await axios.get(
+        `${this.baseURL}/comunidad/${comunidadId}/con-diferencias`,
+      );
       return response.data;
     } catch {
       throw new Error('Error al obtener los movimientos con diferencias');
@@ -213,7 +235,9 @@ class ConciliacionesApi {
    */
   async getSinPago(comunidadId: number): Promise<MovimientoSinPago[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/comunidad/${comunidadId}/sin-pago`);
+      const response = await axios.get(
+        `${this.baseURL}/comunidad/${comunidadId}/sin-pago`,
+      );
       return response.data;
     } catch {
       throw new Error('Error al obtener los movimientos sin pago');
@@ -229,11 +253,12 @@ class ConciliacionesApi {
    */
   async getHistorialPeriodo(comunidadId: number): Promise<HistorialPeriodo[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/comunidad/${comunidadId}/historial-periodo`);
+      const response = await axios.get(
+        `${this.baseURL}/comunidad/${comunidadId}/historial-periodo`,
+      );
       return response.data;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      
       throw new Error('Error al obtener el historial por período');
     }
   }
@@ -243,10 +268,11 @@ class ConciliacionesApi {
    */
   async getSaldos(comunidadId: number): Promise<SaldosComparacion[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/comunidad/${comunidadId}/saldos`);
+      const response = await axios.get(
+        `${this.baseURL}/comunidad/${comunidadId}/saldos`,
+      );
       return response.data;
     } catch (error) {
-      
       throw new Error('Error al obtener la comparación de saldos');
     }
   }
@@ -254,12 +280,15 @@ class ConciliacionesApi {
   /**
    * Análisis de precisión de conciliación por período
    */
-  async getAnalisisPrecision(comunidadId: number): Promise<AnalisisPrecision[]> {
+  async getAnalisisPrecision(
+    comunidadId: number,
+  ): Promise<AnalisisPrecision[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/comunidad/${comunidadId}/analisis-precision`);
+      const response = await axios.get(
+        `${this.baseURL}/comunidad/${comunidadId}/analisis-precision`,
+      );
       return response.data;
     } catch (error) {
-      
       throw new Error('Error al obtener el análisis de precisión');
     }
   }
@@ -269,10 +298,11 @@ class ConciliacionesApi {
    */
   async getResumen(comunidadId: number): Promise<ResumenConciliacion> {
     try {
-      const response = await axios.get(`${this.baseURL}/comunidad/${comunidadId}/resumen`);
+      const response = await axios.get(
+        `${this.baseURL}/comunidad/${comunidadId}/resumen`,
+      );
       return response.data;
     } catch (error) {
-      
       throw new Error('Error al obtener el resumen de conciliaciones');
     }
   }
@@ -286,10 +316,11 @@ class ConciliacionesApi {
    */
   async validar(comunidadId: number): Promise<ValidacionConciliacion> {
     try {
-      const response = await axios.get(`${this.baseURL}/comunidad/${comunidadId}/validar`);
+      const response = await axios.get(
+        `${this.baseURL}/comunidad/${comunidadId}/validar`,
+      );
       return response.data;
     } catch (error) {
-      
       throw new Error('Error al validar las conciliaciones');
     }
   }
@@ -301,12 +332,14 @@ class ConciliacionesApi {
   /**
    * Actualizar estado de conciliación
    */
-  async updateEstado(id: number, estado: 'pendiente' | 'conciliado' | 'descartado'): Promise<ConciliacionDetalle> {
+  async updateEstado(
+    id: number,
+    estado: 'pendiente' | 'conciliado' | 'descartado',
+  ): Promise<ConciliacionDetalle> {
     try {
       const response = await axios.patch(`${this.baseURL}/${id}`, { estado });
       return response.data;
     } catch (error) {
-      
       throw new Error('Error al actualizar el estado de la conciliación');
     }
   }
@@ -316,10 +349,11 @@ class ConciliacionesApi {
    */
   async conciliar(id: number, pagoId: number): Promise<ConciliacionDetalle> {
     try {
-      const response = await axios.patch(`${this.baseURL}/${id}/conciliar`, { pago_id: pagoId });
+      const response = await axios.patch(`${this.baseURL}/${id}/conciliar`, {
+        pago_id: pagoId,
+      });
       return response.data;
     } catch (error) {
-      
       throw new Error('Error al conciliar el movimiento');
     }
   }
@@ -331,9 +365,8 @@ class ConciliacionesApi {
     try {
       const response = await axios.patch(`${this.baseURL}/${id}/descartar`);
       return response.data;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      
       throw new Error('Error al descartar el movimiento');
     }
   }
@@ -344,22 +377,25 @@ class ConciliacionesApi {
   async updateTransaccion(
     txId: number,
     data: {
-      estado?: 'pendiente' | 'conciliado' | 'descartado',
-      pago_id?: number,
-      glosa?: string,
-      referencia?: string
+      estado?: 'pendiente' | 'conciliado' | 'descartado';
+      pago_id?: number;
+      glosa?: string;
+      referencia?: string;
     },
   ): Promise<{
-    id: number,
-    fecha_mov: string,
-    monto: number,
-    glosa: string,
-    referencia: string,
-    estado: string,
-    pago_id: number | null
+    id: number;
+    fecha_mov: string;
+    monto: number;
+    glosa: string;
+    referencia: string;
+    estado: string;
+    pago_id: number | null;
   }> {
     try {
-      const response = await axios.patch(`${this.baseURL}/transaccion/${txId}`, data);
+      const response = await axios.patch(
+        `${this.baseURL}/transaccion/${txId}`,
+        data,
+      );
       return response.data;
     } catch (error) {
       throw new Error('Error al actualizar la transacción');
@@ -369,9 +405,14 @@ class ConciliacionesApi {
   /**
    * Actualizar notas de conciliación
    */
-  async updateNotas(id: number, notas: string): Promise<{ id: number, notas: string }> {
+  async updateNotas(
+    id: number,
+    notas: string,
+  ): Promise<{ id: number; notas: string }> {
     try {
-      const response = await axios.patch(`${this.baseURL}/${id}/notas`, { notas });
+      const response = await axios.patch(`${this.baseURL}/${id}/notas`, {
+        notas,
+      });
       return response.data;
     } catch (error) {
       throw new Error('Error al actualizar las notas');
@@ -381,7 +422,9 @@ class ConciliacionesApi {
   /**
    * Obtener cuentas bancarias disponibles
    */
-  async getCuentasBancarias(): Promise<Record<string, Array<{ value: string, label: string }>>> {
+  async getCuentasBancarias(): Promise<
+    Record<string, Array<{ value: string; label: string }>>
+  > {
     try {
       const response = await axios.get(`${this.baseURL}/bancos/cuentas`);
       return response.data;

@@ -55,12 +55,22 @@ const { requireCommunity } = require('../middleware/tenancy');
  *           type: integer
  *           default: 0
  */
-router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { tipo, periodo_desde, periodo_hasta, limit = 100, offset = 0 } = req.query;
+router.get(
+  '/comunidad/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const {
+        tipo,
+        periodo_desde,
+        periodo_hasta,
+        limit = 100,
+        offset = 0,
+      } = req.query;
 
-    let query = `
+      let query = `
       SELECT
         t.id,
         c.razon_social AS comunidad_nombre,
@@ -78,34 +88,35 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
       WHERE t.comunidad_id = ?
     `;
 
-    const params = [comunidadId];
+      const params = [comunidadId];
 
-    if (tipo) {
-      query += ` AND t.tipo = ?`;
-      params.push(tipo);
+      if (tipo) {
+        query += ` AND t.tipo = ?`;
+        params.push(tipo);
+      }
+
+      if (periodo_desde) {
+        query += ` AND t.periodo_desde >= ?`;
+        params.push(periodo_desde);
+      }
+
+      if (periodo_hasta) {
+        query += ` AND t.periodo_desde <= ?`;
+        params.push(periodo_hasta);
+      }
+
+      query += ` ORDER BY t.periodo_desde DESC, t.tipo ASC LIMIT ? OFFSET ?`;
+      params.push(Number(limit), Number(offset));
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al listar tarifas:', error);
+      res.status(500).json({ error: 'Error al listar tarifas' });
     }
-
-    if (periodo_desde) {
-      query += ` AND t.periodo_desde >= ?`;
-      params.push(periodo_desde);
-    }
-
-    if (periodo_hasta) {
-      query += ` AND t.periodo_desde <= ?`;
-      params.push(periodo_hasta);
-    }
-
-    query += ` ORDER BY t.periodo_desde DESC, t.tipo ASC LIMIT ? OFFSET ?`;
-    params.push(Number(limit), Number(offset));
-
-    const [rows] = await db.query(query, params);
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al listar tarifas:', error);
-    res.status(500).json({ error: 'Error al listar tarifas' });
   }
-});
+);
 
 /**
  * @swagger
@@ -114,11 +125,15 @@ router.get('/comunidad/:comunidadId', authenticate, requireCommunity('comunidadI
  *     tags: [Tarifas de Consumo]
  *     summary: Listado de tarifas agrupadas por tipo
  */
-router.get('/comunidad/:comunidadId/por-tipo', authenticate, requireCommunity('comunidadId'), async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
+router.get(
+  '/comunidad/:comunidadId/por-tipo',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
 
-    const query = `
+      const query = `
       SELECT
         c.razon_social AS comunidad,
         t.tipo AS servicio,
@@ -132,14 +147,15 @@ router.get('/comunidad/:comunidadId/por-tipo', authenticate, requireCommunity('c
       ORDER BY t.tipo
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al agrupar tarifas por tipo:', error);
-    res.status(500).json({ error: 'Error al agrupar tarifas por tipo' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al agrupar tarifas por tipo:', error);
+      res.status(500).json({ error: 'Error al agrupar tarifas por tipo' });
+    }
   }
-});
+);
 
 // =========================================
 // 2. VISTAS DETALLADAS
@@ -295,7 +311,9 @@ router.get('/estadisticas/por-servicio', authenticate, async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error('Error al obtener estadísticas por servicio:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas por servicio' });
+    res
+      .status(500)
+      .json({ error: 'Error al obtener estadísticas por servicio' });
   }
 });
 
@@ -381,7 +399,16 @@ router.get('/estadisticas/precios', authenticate, async (req, res) => {
  */
 router.get('/busqueda/avanzada', authenticate, async (req, res) => {
   try {
-    const { busqueda, tipo, periodo_desde, periodo_hasta, precio_min, precio_max, limit = 100, offset = 0 } = req.query;
+    const {
+      busqueda,
+      tipo,
+      periodo_desde,
+      periodo_hasta,
+      precio_min,
+      precio_max,
+      limit = 100,
+      offset = 0,
+    } = req.query;
 
     let query = `
       SELECT
@@ -486,9 +513,13 @@ router.get('/busqueda/por-rango-precio', authenticate, async (req, res) => {
  *     tags: [Tarifas de Consumo]
  *     summary: Exportación completa de tarifas para Excel/CSV
  */
-router.get('/export/completo', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/export/completo',
+  authenticate,
+  authorize('admin', 'superadmin', 'contador'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         t.id AS 'ID',
         c.razon_social AS 'Comunidad',
@@ -506,14 +537,15 @@ router.get('/export/completo', authenticate, authorize('admin', 'superadmin', 'c
       ORDER BY c.razon_social, t.periodo_desde DESC
     `;
 
-    const [rows] = await db.query(query);
+      const [rows] = await db.query(query);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al exportar tarifas:', error);
-    res.status(500).json({ error: 'Error al exportar tarifas' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al exportar tarifas:', error);
+      res.status(500).json({ error: 'Error al exportar tarifas' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -522,9 +554,13 @@ router.get('/export/completo', authenticate, authorize('admin', 'superadmin', 'c
  *     tags: [Tarifas de Consumo]
  *     summary: Exportación de precios por servicio y período
  */
-router.get('/export/por-servicio', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/export/por-servicio',
+  authenticate,
+  authorize('admin', 'superadmin', 'contador'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         c.razon_social AS 'Comunidad',
         t.tipo AS 'Servicio',
@@ -536,14 +572,15 @@ router.get('/export/por-servicio', authenticate, authorize('admin', 'superadmin'
       ORDER BY t.tipo, t.periodo_desde DESC
     `;
 
-    const [rows] = await db.query(query);
+      const [rows] = await db.query(query);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al exportar por servicio:', error);
-    res.status(500).json({ error: 'Error al exportar por servicio' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al exportar por servicio:', error);
+      res.status(500).json({ error: 'Error al exportar por servicio' });
+    }
   }
-});
+);
 
 // =========================================
 // 6. VALIDACIONES
@@ -556,9 +593,13 @@ router.get('/export/por-servicio', authenticate, authorize('admin', 'superadmin'
  *     tags: [Tarifas de Consumo]
  *     summary: Validar integridad de tarifas
  */
-router.get('/validacion/integridad', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/validacion/integridad',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         'Tarifas sin comunidad' AS validacion,
         COUNT(*) AS cantidad
@@ -579,14 +620,15 @@ router.get('/validacion/integridad', authenticate, authorize('admin', 'superadmi
       WHERE cargo_fijo < 0
     `;
 
-    const [rows] = await db.query(query);
+      const [rows] = await db.query(query);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al validar integridad:', error);
-    res.status(500).json({ error: 'Error al validar integridad' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al validar integridad:', error);
+      res.status(500).json({ error: 'Error al validar integridad' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -595,9 +637,13 @@ router.get('/validacion/integridad', authenticate, authorize('admin', 'superadmi
  *     tags: [Tarifas de Consumo]
  *     summary: Validar solapamiento de períodos por comunidad y tipo
  */
-router.get('/validacion/solapamiento', authenticate, authorize('admin', 'superadmin'), async (req, res) => {
-  try {
-    const query = `
+router.get(
+  '/validacion/solapamiento',
+  authenticate,
+  authorize('admin', 'superadmin'),
+  async (req, res) => {
+    try {
+      const query = `
       SELECT
         t1.comunidad_id,
         c.razon_social AS comunidad,
@@ -616,14 +662,15 @@ router.get('/validacion/solapamiento', authenticate, authorize('admin', 'superad
       ORDER BY t1.comunidad_id, t1.tipo, t1.periodo_desde
     `;
 
-    const [rows] = await db.query(query);
+      const [rows] = await db.query(query);
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al validar solapamiento:', error);
-    res.status(500).json({ error: 'Error al validar solapamiento' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al validar solapamiento:', error);
+      res.status(500).json({ error: 'Error al validar solapamiento' });
+    }
   }
-});
+);
 
 // =========================================
 // 7. CRUD BÁSICO
@@ -636,38 +683,55 @@ router.get('/validacion/solapamiento', authenticate, authorize('admin', 'superad
  *     tags: [Tarifas de Consumo]
  *     summary: Crear nueva tarifa de consumo
  */
-router.post('/comunidad/:comunidadId', [
-  authenticate,
-  requireCommunity('comunidadId', ['admin', 'superadmin', 'contador']),
-  body('tipo').notEmpty().isIn(['agua', 'gas', 'electricidad']),
-  body('periodo_desde').notEmpty(),
-  body('precio_por_unidad').isNumeric()
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+router.post(
+  '/comunidad/:comunidadId',
+  [
+    authenticate,
+    requireCommunity('comunidadId', ['admin', 'superadmin', 'contador']),
+    body('tipo').notEmpty().isIn(['agua', 'gas', 'electricidad']),
+    body('periodo_desde').notEmpty(),
+    body('precio_por_unidad').isNumeric(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const {
+        tipo,
+        periodo_desde,
+        periodo_hasta,
+        precio_por_unidad,
+        cargo_fijo,
+      } = req.body;
+
+      const [result] = await db.query(
+        'INSERT INTO tarifa_consumo (comunidad_id, tipo, periodo_desde, periodo_hasta, precio_por_unidad, cargo_fijo) VALUES (?,?,?,?,?,?)',
+        [
+          comunidadId,
+          tipo,
+          periodo_desde,
+          periodo_hasta || null,
+          precio_por_unidad,
+          cargo_fijo || 0,
+        ]
+      );
+
+      const [row] = await db.query(
+        'SELECT id, tipo, periodo_desde, precio_por_unidad FROM tarifa_consumo WHERE id = ? LIMIT 1',
+        [result.insertId]
+      );
+
+      res.status(201).json(row[0]);
+    } catch (error) {
+      console.error('Error al crear tarifa:', error);
+      res.status(500).json({ error: 'Error al crear tarifa' });
+    }
   }
-
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const { tipo, periodo_desde, periodo_hasta, precio_por_unidad, cargo_fijo } = req.body;
-
-    const [result] = await db.query(
-      'INSERT INTO tarifa_consumo (comunidad_id, tipo, periodo_desde, periodo_hasta, precio_por_unidad, cargo_fijo) VALUES (?,?,?,?,?,?)',
-      [comunidadId, tipo, periodo_desde, periodo_hasta || null, precio_por_unidad, cargo_fijo || 0]
-    );
-
-    const [row] = await db.query(
-      'SELECT id, tipo, periodo_desde, precio_por_unidad FROM tarifa_consumo WHERE id = ? LIMIT 1',
-      [result.insertId]
-    );
-
-    res.status(201).json(row[0]);
-  } catch (error) {
-    console.error('Error al crear tarifa:', error);
-    res.status(500).json({ error: 'Error al crear tarifa' });
-  }
-});
+);
 
 /**
  * @swagger
@@ -676,38 +740,52 @@ router.post('/comunidad/:comunidadId', [
  *     tags: [Tarifas de Consumo]
  *     summary: Actualizar tarifa
  */
-router.patch('/:id', authenticate, authorize('admin', 'superadmin', 'contador'), async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const fields = ['tipo', 'periodo_desde', 'periodo_hasta', 'precio_por_unidad', 'cargo_fijo'];
-    const updates = [];
-    const values = [];
+router.patch(
+  '/:id',
+  authenticate,
+  authorize('admin', 'superadmin', 'contador'),
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const fields = [
+        'tipo',
+        'periodo_desde',
+        'periodo_hasta',
+        'precio_por_unidad',
+        'cargo_fijo',
+      ];
+      const updates = [];
+      const values = [];
 
-    fields.forEach(f => {
-      if (req.body[f] !== undefined) {
-        updates.push(`${f} = ?`);
-        values.push(req.body[f]);
+      fields.forEach((f) => {
+        if (req.body[f] !== undefined) {
+          updates.push(`${f} = ?`);
+          values.push(req.body[f]);
+        }
+      });
+
+      if (!updates.length) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
       }
-    });
 
-    if (!updates.length) {
-      return res.status(400).json({ error: 'No hay campos para actualizar' });
+      values.push(id);
+      await db.query(
+        `UPDATE tarifa_consumo SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+
+      const [rows] = await db.query(
+        'SELECT id, tipo, periodo_desde, precio_por_unidad FROM tarifa_consumo WHERE id = ? LIMIT 1',
+        [id]
+      );
+
+      res.json(rows[0]);
+    } catch (error) {
+      console.error('Error al actualizar tarifa:', error);
+      res.status(500).json({ error: 'Error al actualizar tarifa' });
     }
-
-    values.push(id);
-    await db.query(`UPDATE tarifa_consumo SET ${updates.join(', ')} WHERE id = ?`, values);
-
-    const [rows] = await db.query(
-      'SELECT id, tipo, periodo_desde, precio_por_unidad FROM tarifa_consumo WHERE id = ? LIMIT 1',
-      [id]
-    );
-
-    res.json(rows[0]);
-  } catch (error) {
-    console.error('Error al actualizar tarifa:', error);
-    res.status(500).json({ error: 'Error al actualizar tarifa' });
   }
-});
+);
 
 /**
  * @swagger
@@ -716,21 +794,25 @@ router.patch('/:id', authenticate, authorize('admin', 'superadmin', 'contador'),
  *     tags: [Tarifas de Consumo]
  *     summary: Eliminar tarifa
  */
-router.delete('/:id', authenticate, authorize('superadmin', 'admin'), async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('superadmin', 'admin'),
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
 
-    await db.query('DELETE FROM tarifa_consumo WHERE id = ?', [id]);
+      await db.query('DELETE FROM tarifa_consumo WHERE id = ?', [id]);
 
-    res.status(204).end();
-  } catch (error) {
-    console.error('Error al eliminar tarifa:', error);
-    res.status(500).json({ error: 'Error al eliminar tarifa' });
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error al eliminar tarifa:', error);
+      res.status(500).json({ error: 'Error al eliminar tarifa' });
+    }
   }
-});
+);
 
 module.exports = router;
-
 
 // =========================================
 // ENDPOINTS DE TARIFAS DE CONSUMO
@@ -765,7 +847,3 @@ module.exports = router;
 // POST: /tarifas-consumo/comunidad/:comunidadId
 // PATCH: /tarifas-consumo/:id
 // DELETE: /tarifas-consumo/:id
-
-
-
-

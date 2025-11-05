@@ -12,7 +12,7 @@ describe('Membresias Health Check', () => {
 
   beforeAll(() => {
     authToken = getAuthToken();
-    membresiaId = testIds.membresiaId || 1; 
+    membresiaId = testIds.membresiaId || 1;
   });
 
   describe('Membresias Endpoints', () => {

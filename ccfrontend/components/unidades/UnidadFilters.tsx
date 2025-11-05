@@ -57,10 +57,14 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
 }) => {
   const { user } = useAuth();
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
-  const [selectedComunidad, setSelectedComunidad] = useState<string | null>(null);
+  const [selectedComunidad, setSelectedComunidad] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
-    if (user === undefined || user === null) {return;} // esperar auth
+    if (user === undefined || user === null) {
+      return;
+    } // esperar auth
     async function load() {
       try {
         const res = await api.get('/unidades/dropdowns/comunidades');
@@ -71,10 +75,16 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
           onFilterChange('comunidad', String(user.comunidad_id));
         }
       } catch (err: any) {
+        // eslint-disable-next-line no-console
         console.error('Error loading comunidades dropdown', err);
         // fallback si backend devuelve 403: usar comunidad_id del user si existe
         if (err?.response?.status === 403 && user?.comunidad_id) {
-          const fallback = [{ id: String(user.comunidad_id), nombre: String(user.comunidad_id) }];
+          const fallback = [
+            {
+              id: String(user.comunidad_id),
+              nombre: String(user.comunidad_id),
+            },
+          ];
           setComunidades(fallback);
           if (fallback.length === 1) {
             setSelectedComunidad(fallback[0].id);
@@ -87,21 +97,26 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
   }, [user, onFilterChange]);
 
   // Filtrar edificios según comunidad seleccionada
-  const availableEdificios = edificios.filter(edificio => 
-    !filters.comunidad || edificio.comunidadId === filters.comunidad,
+  const availableEdificios = edificios.filter(
+    edificio => !filters.comunidad || edificio.comunidadId === filters.comunidad,
   );
 
   // Filtrar torres según edificio seleccionado
-  const availableTorres = torres.filter(torre => 
-    !filters.edificio || torre.edificioId === filters.edificio,
+  const availableTorres = torres.filter(
+    torre => !filters.edificio || torre.edificioId === filters.edificio,
   );
 
-  const isAdmin = user?.is_superadmin === true || (Array.isArray(user?.roles) && user.roles.includes('admin'));
+  const isAdmin =
+    user?.is_superadmin === true ||
+    (Array.isArray(user?.roles) && user.roles.includes('admin'));
 
   // Si es superadmin, ocultar filtros de comunidad/edificio/torre
   if (user?.is_superadmin) {
     return (
-      <div className='p-3 mb-4' style={{ backgroundColor: '#f8f9fa', borderRadius: 'var(--radius)' }}>
+      <div
+        className='p-3 mb-4'
+        style={{ backgroundColor: '#f8f9fa', borderRadius: 'var(--radius)' }}
+      >
         {/* Mostrar solo búsqueda y vista */}
         <div className='row g-3'>
           <div className='col-md-4'>
@@ -110,14 +125,16 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
               className='form-control'
               placeholder='Buscar por código o persona...'
               value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={e => onSearchChange(e.target.value)}
             />
           </div>
           <div className='col-md-4'>
             <select
               className='form-select'
               value={viewMode}
-              onChange={(e) => onViewModeChange(e.target.value as 'table' | 'cards')}
+              onChange={e =>
+                onViewModeChange(e.target.value as 'table' | 'cards')
+              }
             >
               <option value='table'>Vista Tabla</option>
               <option value='cards'>Vista Tarjetas</option>
@@ -134,69 +151,85 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
   }
 
   return (
-    <div 
+    <div
       className='p-3 mb-4'
-      style={{ 
-        backgroundColor: '#f8f9fa', 
+      style={{
+        backgroundColor: '#f8f9fa',
         borderRadius: 'var(--radius)',
       }}
     >
       <div className='row g-3'>
         <div className='col-md-3'>
-          <label htmlFor='comunidadFilter' className='form-label small'>Comunidad</label>
-          <select 
-            className='form-select form-select-sm' 
+          <label htmlFor='comunidadFilter' className='form-label small'>
+            Comunidad
+          </label>
+          <select
+            className='form-select form-select-sm'
             id='comunidadFilter'
             value={filters.comunidad}
-            onChange={(e) => onFilterChange('comunidad', e.target.value)}
+            onChange={e => onFilterChange('comunidad', e.target.value)}
           >
             {user?.is_superadmin ? (
               <option value=''>Todas las comunidades</option>
             ) : (
-              <option value='' disabled>Seleccione comunidad</option>
+              <option value='' disabled>
+                Seleccione comunidad
+              </option>
             )}
             {comunidades.map(comunidad => (
-              <option key={comunidad.id} value={comunidad.id}>{comunidad.nombre}</option>
+              <option key={comunidad.id} value={comunidad.id}>
+                {comunidad.nombre}
+              </option>
             ))}
           </select>
         </div>
         <div className='col-md-3'>
-          <label htmlFor='edificioFilter' className='form-label small'>Edificio</label>
-          <select 
-            className='form-select form-select-sm' 
+          <label htmlFor='edificioFilter' className='form-label small'>
+            Edificio
+          </label>
+          <select
+            className='form-select form-select-sm'
             id='edificioFilter'
             value={filters.edificio}
-            onChange={(e) => onFilterChange('edificio', e.target.value)}
+            onChange={e => onFilterChange('edificio', e.target.value)}
             disabled={!filters.comunidad}
           >
             <option value=''>Todos los edificios</option>
             {availableEdificios.map(edificio => (
-              <option key={edificio.id} value={edificio.id}>{edificio.nombre}</option>
+              <option key={edificio.id} value={edificio.id}>
+                {edificio.nombre}
+              </option>
             ))}
           </select>
         </div>
         <div className='col-md-2'>
-          <label htmlFor='torreFilter' className='form-label small'>Torre</label>
-          <select 
-            className='form-select form-select-sm' 
+          <label htmlFor='torreFilter' className='form-label small'>
+            Torre
+          </label>
+          <select
+            className='form-select form-select-sm'
             id='torreFilter'
             value={filters.torre}
-            onChange={(e) => onFilterChange('torre', e.target.value)}
+            onChange={e => onFilterChange('torre', e.target.value)}
             disabled={!filters.edificio}
           >
             <option value=''>Todas las torres</option>
             {availableTorres.map(torre => (
-              <option key={torre.id} value={torre.id}>{torre.nombre}</option>
+              <option key={torre.id} value={torre.id}>
+                {torre.nombre}
+              </option>
             ))}
           </select>
         </div>
         <div className='col-md-2'>
-          <label htmlFor='estadoFilter' className='form-label small'>Estado</label>
-          <select 
-            className='form-select form-select-sm' 
+          <label htmlFor='estadoFilter' className='form-label small'>
+            Estado
+          </label>
+          <select
+            className='form-select form-select-sm'
             id='estadoFilter'
             value={filters.estado}
-            onChange={(e) => onFilterChange('estado', e.target.value)}
+            onChange={e => onFilterChange('estado', e.target.value)}
           >
             <option value=''>Todos los estados</option>
             <option value='Activa'>Activa</option>
@@ -205,12 +238,14 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
           </select>
         </div>
         <div className='col-md-2'>
-          <label htmlFor='tipoFilter' className='form-label small'>Tipo</label>
-          <select 
-            className='form-select form-select-sm' 
+          <label htmlFor='tipoFilter' className='form-label small'>
+            Tipo
+          </label>
+          <select
+            className='form-select form-select-sm'
             id='tipoFilter'
             value={filters.tipo}
-            onChange={(e) => onFilterChange('tipo', e.target.value)}
+            onChange={e => onFilterChange('tipo', e.target.value)}
           >
             <option value=''>Todos los tipos</option>
             <option value='Departamento'>Departamento</option>
@@ -220,43 +255,43 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
           </select>
         </div>
       </div>
-      
+
       <div className='row g-3 mt-2'>
         <div className='col-md-6'>
           <div className='position-relative'>
-            <i 
-              className='material-icons position-absolute' 
-              style={{ 
-                top: '50%', 
-                left: '10px', 
-                transform: 'translateY(-50%)', 
+            <i
+              className='material-icons position-absolute'
+              style={{
+                top: '50%',
+                left: '10px',
+                transform: 'translateY(-50%)',
                 color: '#6c757d',
                 fontSize: '20px',
               }}
             >
               search
             </i>
-            <input 
-              type='text' 
-              className='form-control form-control-sm' 
-              placeholder='Buscar por número, propietario o residente...' 
+            <input
+              type='text'
+              className='form-control form-control-sm'
+              placeholder='Buscar por número, propietario o residente...'
               style={{ paddingLeft: '35px' }}
               value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={e => onSearchChange(e.target.value)}
             />
           </div>
         </div>
         <div className='col-md-6 d-flex justify-content-end align-items-end'>
           <div className='btn-group' role='group'>
-            <button 
-              type='button' 
+            <button
+              type='button'
               className={`btn btn-outline-secondary btn-sm ${viewMode === 'table' ? 'active' : ''}`}
               onClick={() => onViewModeChange('table')}
             >
               <i className='material-icons'>view_list</i>
             </button>
-            <button 
-              type='button' 
+            <button
+              type='button'
               className={`btn btn-outline-secondary btn-sm ${viewMode === 'cards' ? 'active' : ''}`}
               onClick={() => onViewModeChange('cards')}
             >

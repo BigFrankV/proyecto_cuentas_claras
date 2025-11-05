@@ -14,7 +14,7 @@ services:
       - db_data:/var/lib/mysql
       - ./base:/docker-entrypoint-initdb.d:ro
     ports:
-      - "3306:3306"
+      - '3306:3306'
 
   api:
     build: .
@@ -31,7 +31,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change_me}
       PORT: ${PORT:-3000}
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - ./:/usr/src/app:cached
     command: npm start
@@ -47,7 +47,7 @@ services:
       PMA_USER: ${DB_USER:-api_admin}
       PMA_PASSWORD: ${DB_PASSWORD:-apipassword}
     ports:
-      - "8080:80"
+      - '8080:80'
 
 volumes:
   db_data:

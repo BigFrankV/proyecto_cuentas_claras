@@ -10,8 +10,8 @@ const { categorizeResponse, getWithAuth } = require('./helpers');
 describe('Pagos Health Check', () => {
   let authToken;
   let comunidadId;
-  let pagoId; 
-  let unidadId; 
+  let pagoId;
+  let unidadId;
 
   beforeAll(() => {
     authToken = getAuthToken();
@@ -44,14 +44,14 @@ describe('Pagos Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /pagos/unidad/:unidadId/historial', async () => {
       const endpoint = `/pagos/unidad/${unidadId}/historial`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /pagos/comunidad/:comunidadId/pendientes', async () => {
       const endpoint = `/pagos/comunidad/${comunidadId}/pendientes`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -70,28 +70,28 @@ describe('Pagos Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /pagos/comunidad/:comunidadId/estadisticas/estado', async () => {
       const endpoint = `/pagos/comunidad/${comunidadId}/estadisticas/estado`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /pagos/comunidad/:comunidadId/estadisticas/metodo', async () => {
       const endpoint = `/pagos/comunidad/${comunidadId}/estadisticas/metodo`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /pagos/comunidad/:comunidadId/estadisticas/periodo', async () => {
       const endpoint = `/pagos/comunidad/${comunidadId}/estadisticas/periodo`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /pagos/comunidad/:comunidadId/por-residente', async () => {
       const endpoint = `/pagos/comunidad/${comunidadId}/por-residente`;
       const response = await getWithAuth(app, endpoint, authToken);
@@ -99,7 +99,7 @@ describe('Pagos Health Check', () => {
       expect([200, 401, 403, 500]).toContain(response.status);
     });
   });
-  
+
   // =========================================
   // 3. Conciliación y Validaciones
   // =========================================
@@ -110,14 +110,14 @@ describe('Pagos Health Check', () => {
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 403, 500]).toContain(response.status);
     });
-    
+
     test('GET /pagos/:id/webhooks', async () => {
       const endpoint = `/pagos/${pagoId}/webhooks`;
       const response = await getWithAuth(app, endpoint, authToken);
       categorizeResponse(endpoint, response.status);
       expect([200, 401, 404, 500]).toContain(response.status);
     });
-    
+
     test('GET /pagos/comunidad/:comunidadId/validar', async () => {
       const endpoint = `/pagos/comunidad/${comunidadId}/validar`;
       const response = await getWithAuth(app, endpoint, authToken);

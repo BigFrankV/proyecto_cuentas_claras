@@ -1,14 +1,16 @@
 import Head from 'next/head';
-import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import comunidadesService from '@/lib/comunidadesService';
 import {
   listMedidores,
   listAllMedidores,
-  deleteMedidor
+  deleteMedidor,
 } from '@/lib/medidoresService';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { ProtectedPage } from '@/lib/usePermissions';
 import type { Medidor } from '@/types/medidores';
 
 export default function MedidoresListadoPage() {
@@ -23,32 +25,44 @@ export default function MedidoresListadoPage() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
-  const [pagination, setPagination] = useState({ total: 0, pages: 1, offset: 0 });
+  const [pagination, setPagination] = useState({
+    total: 0,
+    pages: 1,
+    offset: 0,
+  });
 
   // filtros UI
   const [search, setSearch] = useState('');
   const [filterTipo, setFilterTipo] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
   const [filterMarca, setFilterMarca] = useState('');
+  const [currentView, setCurrentView] = useState<'table' | 'grid'>('table');
 
   // comunidad del usuario (si no es superadmin)
-  const comunidadUsuarioId = user?.comunidades?.[0]?.id ?? null;
+  const comunidadUsuarioId = user?.comunidad_id ?? null;
 
   // cargar comunidades para selector (superadmin)
   useEffect(() => {
-    if (!isSuper) return;
+    if (!isSuper) {
+      return undefined;
+    }
     let mounted = true;
     (async () => {
       try {
-        const resp = await comunidadesService.listComunidades?.();
-        const list = Array.isArray(resp) ? resp : resp?.data ?? [];
-        if (!mounted) return;
+        const resp = await comunidadesService.getComunidades();
+        const list = Array.isArray(resp) ? resp : ((resp as any)?.data ?? []);
+        if (!mounted) {
+          return;
+        }
         setComunidades(list);
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Error cargando comunidades', err);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [isSuper]);
 
   // carga medidores (usa endpoint global para superadmin)
@@ -57,14 +71,25 @@ export default function MedidoresListadoPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const params: any = { page, limit, search, tipo: filterTipo, estado: filterEstado, marca: filterMarca };
+        const params: any = {
+          page,
+          limit,
+          search,
+          tipo: filterTipo,
+          estado: filterEstado,
+          marca: filterMarca,
+        };
         if (isSuper) {
-          if (selectedComunidad?.id) params.comunidad_id = selectedComunidad.id;
+          if (selectedComunidad?.id) {
+            params.comunidad_id = selectedComunidad.id;
+          }
           const resp = await listAllMedidores(params);
-          if (!mounted) return;
+          if (!mounted) {
+            return;
+          }
           setMedidores(resp.data || []);
           setPagination({
-            total: resp.pagination?.total ?? (resp.data?.length ?? 0),
+            total: resp.pagination?.total ?? resp.data?.length ?? 0,
             pages: resp.pagination?.pages ?? 1,
             offset: resp.pagination?.offset ?? (page - 1) * limit,
           });
@@ -78,46 +103,83 @@ export default function MedidoresListadoPage() {
           return;
         }
         const resp = await listMedidores(comunidadUsuarioId, params);
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
         setMedidores(resp.data || []);
         setPagination({
-          total: resp.pagination?.total ?? (resp.data?.length ?? 0),
+          total: resp.pagination?.total ?? resp.data?.length ?? 0,
           pages: resp.pagination?.pages ?? 1,
           offset: resp.pagination?.offset ?? (page - 1) * limit,
         });
-      } catch (err:any) {
+      } catch (err: any) {
+        // eslint-disable-next-line no-console
         console.error('Error cargando medidores', err);
-        if (err?.response?.status === 403) alert('No autorizado');
-        else alert('Error cargando medidores');
+        if (err?.response?.status === 403) {
+          alert('No autorizado');
+        } else {
+          alert('Error cargando medidores');
+        }
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
     load();
-    return () => { mounted = false; };
-  }, [isSuper, selectedComunidad, comunidadUsuarioId, page, limit, search, filterTipo, filterEstado, filterMarca]);
+    return () => {
+      mounted = false;
+    };
+  }, [
+    isSuper,
+    selectedComunidad,
+    comunidadUsuarioId,
+    page,
+    limit,
+    search,
+    filterTipo,
+    filterEstado,
+    filterMarca,
+  ]);
 
   const canManage = (medidor?: Medidor) => {
-    if (!user) return false;
-    if (user.is_superadmin) return true;
+    if (!user) {
+      return false;
+    }
+    if (user.is_superadmin) {
+      return true;
+    }
     const comunidadId = medidor?.comunidad_id ?? comunidadUsuarioId;
-    return !!user.comunidades?.some((c:any) => c.id === comunidadId && (c.role === 'admin' || c.role === 'gestor'));
+    return !!user.memberships?.some(
+      (m: any) =>
+        m.comunidad_id === comunidadId && (m.rol === 'admin' || m.rol === 'gestor'),
+    );
   };
 
-  const handleView = (id:number) => router.push(`/medidores/${id}`);
+  const handleView = (id: number) => router.push(`/medidores/${id}`);
   const handleNew = () => router.push('/medidores/nuevo');
 
-  const handleDelete = async (id:number) => {
-    if (!confirm('¿Eliminar medidor? (si tiene lecturas quedará desactivado)')) return;
+  const handleDelete = async (id: number) => {
+    if (
+      !confirm('¿Eliminar medidor? (si tiene lecturas quedará desactivado)')
+    ) {
+      return;
+    }
     setLoading(true);
     try {
       const resp = await deleteMedidor(id);
-      if (resp?.softDeleted) alert('Medidor desactivado (soft-delete).');
+      if (resp?.softDeleted) {
+        alert('Medidor desactivado (soft-delete).');
+      }
       setMedidores(prev => prev.filter(m => m.id !== id));
-    } catch (err:any) {
+    } catch (err: any) {
+      // eslint-disable-next-line no-console
       console.error('delete err', err);
-      if (err?.response?.status === 403) alert('No autorizado.');
-      else alert('Error al eliminar medidor.');
+      if (err?.response?.status === 403) {
+        alert('No autorizado.');
+      } else {
+        alert('Error al eliminar medidor.');
+      }
     } finally {
       setLoading(false);
     }
@@ -125,16 +187,18 @@ export default function MedidoresListadoPage() {
 
   // debug temporal: memberships en consola
   useEffect(() => {
-    console.debug('DEBUG user memberships:', user?.comunidades);
+    // eslint-disable-next-line no-console
+    console.debug('DEBUG user memberships:', user?.memberships);
   }, [user]);
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Medidores — Cuentas Claras</title>
-      </Head>
+      <ProtectedPage allowedRoles={['Superadmin', 'Admin', 'Conserje']}>
+        <Head>
+          <title>Medidores — Cuentas Claras</title>
+        </Head>
 
-      <Layout>
+        <Layout>
         <div className='medidores-container'>
           {/* Header */}
           <div className='page-header'>
@@ -151,11 +215,12 @@ export default function MedidoresListadoPage() {
                     Gestión de Medidores
                   </h1>
                   <p className='page-subtitle'>
-                    Control y monitoreo integral de medidores de servicios básicos
+                    Control y monitoreo integral de medidores de servicios
+                    básicos
                   </p>
                 </div>
                 <div className='col-auto'>
-                  { (user && (user.is_superadmin || canManage())) && (
+                  {user && (user.is_superadmin || canManage()) && (
                     <button
                       className='btn btn-primary'
                       onClick={() => router.push('/medidores/nuevo')}
@@ -180,7 +245,10 @@ export default function MedidoresListadoPage() {
                         <div className='stat-value'>{pagination.total}</div>
                         <div className='stat-label'>Total Medidores</div>
                       </div>
-                      <div className='stat-icon' style={{ backgroundColor: '#f8f9fa', color: '#6c757d' }}>
+                      <div
+                        className='stat-icon'
+                        style={{ backgroundColor: '#f8f9fa', color: '#6c757d' }}
+                      >
                         <span className='material-icons'>speed</span>
                       </div>
                     </div>
@@ -197,11 +265,19 @@ export default function MedidoresListadoPage() {
                         </div>
                         <div className='stat-label'>Activos</div>
                         <div className='stat-change positive'>
-                          <span className='material-icons' style={{ fontSize: '14px' }}>trending_up</span>
+                          <span
+                            className='material-icons'
+                            style={{ fontSize: '14px' }}
+                          >
+                            trending_up
+                          </span>
                           +2% vs mes anterior
                         </div>
                       </div>
-                      <div className='stat-icon' style={{ backgroundColor: '#d4edda', color: '#155724' }}>
+                      <div
+                        className='stat-icon'
+                        style={{ backgroundColor: '#d4edda', color: '#155724' }}
+                      >
                         <span className='material-icons'>check_circle</span>
                       </div>
                     </div>
@@ -214,15 +290,30 @@ export default function MedidoresListadoPage() {
                     <div className='stat-header'>
                       <div>
                         <div className='stat-value'>
-                          {medidores.filter(m => m.estado === 'mantenimiento').length}
+                          {
+                            medidores.filter(m => m.estado === 'mantenimiento')
+                              .length
+                          }
                         </div>
                         <div className='stat-label'>En mantenimiento</div>
                         <div className='stat-change'>
-                          <span className='material-icons' style={{ fontSize: '14px' }}>schedule</span>
-                          {medidores.filter(m => m.estado === 'mantenimiento').length} pendientes
+                          <span
+                            className='material-icons'
+                            style={{ fontSize: '14px' }}
+                          >
+                            schedule
+                          </span>
+                          {
+                            medidores.filter(m => m.estado === 'mantenimiento')
+                              .length
+                          }{' '}
+                          pendientes
                         </div>
                       </div>
-                      <div className='stat-icon' style={{ backgroundColor: '#fff3cd', color: '#856404' }}>
+                      <div
+                        className='stat-icon'
+                        style={{ backgroundColor: '#fff3cd', color: '#856404' }}
+                      >
                         <span className='material-icons'>build</span>
                       </div>
                     </div>
@@ -234,15 +325,27 @@ export default function MedidoresListadoPage() {
                   <div className='card-body'>
                     <div className='stat-header'>
                       <div>
-                        <div className='stat-value'>{medidores.filter(m => m.alertas?.length > 0).length}</div>
+                        <div className='stat-value'>
+                          0
+                        </div>
                         <div className='stat-label'>Con Alertas</div>
                         <div className='stat-change negative'>
-                          <span className='material-icons' style={{ fontSize: '14px' }}>warning</span>
+                          <span
+                            className='material-icons'
+                            style={{ fontSize: '14px' }}
+                          >
+                            warning
+                          </span>
                           Requieren atención
                         </div>
                       </div>
-                      <div className='stat-icon' style={{ backgroundColor: '#f8d7da', color: '#721c24' }}>
-                        <span className='material-icons'>notification_important</span>
+                      <div
+                        className='stat-icon'
+                        style={{ backgroundColor: '#f8d7da', color: '#721c24' }}
+                      >
+                        <span className='material-icons'>
+                          notification_important
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -262,13 +365,29 @@ export default function MedidoresListadoPage() {
                 <div className='col-md-4'>
                   <div className='form-group'>
                     <label>Buscar medidor</label>
-                    <input type='text' className='form-control' placeholder='Código, serie o ubicación...' value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
+                    <input
+                      type='text'
+                      className='form-control'
+                      placeholder='Código, serie o ubicación...'
+                      value={search}
+                      onChange={e => {
+                        setSearch(e.target.value);
+                        setPage(1);
+                      }}
+                    />
                   </div>
                 </div>
                 <div className='col-md-2'>
                   <div className='form-group'>
                     <label>Tipo</label>
-                    <select className='form-select' value={filterTipo} onChange={e => { setFilterTipo(e.target.value); setPage(1); }}>
+                    <select
+                      className='form-select'
+                      value={filterTipo}
+                      onChange={e => {
+                        setFilterTipo(e.target.value);
+                        setPage(1);
+                      }}
+                    >
                       <option value=''>Todos</option>
                       <option value='electricidad'>Eléctrico</option>
                       <option value='agua'>Agua</option>
@@ -279,7 +398,14 @@ export default function MedidoresListadoPage() {
                 <div className='col-md-2'>
                   <div className='form-group'>
                     <label>Estado</label>
-                    <select className='form-select' value={filterEstado} onChange={e => { setFilterEstado(e.target.value); setPage(1); }}>
+                    <select
+                      className='form-select'
+                      value={filterEstado}
+                      onChange={e => {
+                        setFilterEstado(e.target.value);
+                        setPage(1);
+                      }}
+                    >
                       <option value=''>Todos</option>
                       <option value='activo'>Activo</option>
                       <option value='inactivo'>Inactivo</option>
@@ -290,13 +416,28 @@ export default function MedidoresListadoPage() {
                 <div className='col-md-2'>
                   <div className='form-group'>
                     <label>Edificio</label>
-                    <input type='text' className='form-control' placeholder='Torre, edificio...' value={''} onChange={e => {}} />
+                    <input
+                      type='text'
+                      className='form-control'
+                      placeholder='Torre, edificio...'
+                      value={''}
+                      onChange={e => {}}
+                    />
                   </div>
                 </div>
                 <div className='col-md-2'>
                   <div className='form-group'>
                     <label>Marca</label>
-                    <input type='text' className='form-control' placeholder='Schneider, Elster...' value={filterMarca} onChange={e => { setFilterMarca(e.target.value); setPage(1); }} />
+                    <input
+                      type='text'
+                      className='form-control'
+                      placeholder='Schneider, Elster...'
+                      value={filterMarca}
+                      onChange={e => {
+                        setFilterMarca(e.target.value);
+                        setPage(1);
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -305,15 +446,23 @@ export default function MedidoresListadoPage() {
             {/* Controles de vista */}
             <div className='view-controls'>
               <div className='d-flex align-items-center gap-3'>
-                <span className='text-muted'>{pagination.total} medidores encontrados</span>
+                <span className='text-muted'>
+                  {pagination.total} medidores encontrados
+                </span>
               </div>
               <div className='d-flex align-items-center gap-2'>
                 <span className='text-muted small'>Vista:</span>
                 <div className='btn-group' role='group'>
-                  <button className={`btn btn-sm ${'table' === 'table' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => {}}>
+                  <button
+                    className={`btn btn-sm ${currentView === 'table' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => setCurrentView('table')}
+                  >
                     <span className='material-icons'>view_list</span>
                   </button>
-                  <button className={`btn btn-sm ${'grid' === 'table' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => {}}>
+                  <button
+                    className={`btn btn-sm ${currentView === 'grid' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => setCurrentView('grid')}
+                  >
                     <span className='material-icons'>grid_view</span>
                   </button>
                 </div>
@@ -324,29 +473,48 @@ export default function MedidoresListadoPage() {
             {isSuper && (
               <div className='mb-3'>
                 <label className='me-2'>Comunidad:</label>
-                <select value={selectedComunidad?.id ?? ''} onChange={e => {
-                  const v = e.target.value === '' ? null : Number(e.target.value);
-                  setSelectedComunidad(comunidades.find(c => c.id === v) ?? null);
-                  setPage(1);
-                }} className='form-select' style={{ width: 320 }}>
+                <select
+                  value={selectedComunidad?.id ?? ''}
+                  onChange={e => {
+                    const v =
+                      e.target.value === '' ? null : Number(e.target.value);
+                    setSelectedComunidad(
+                      comunidades.find(c => c.id === v) ?? null,
+                    );
+                    setPage(1);
+                  }}
+                  className='form-select'
+                  style={{ width: 320 }}
+                >
                   <option value=''>Todas las comunidades</option>
-                  {comunidades.map(c => <option key={c.id} value={c.id}>{c.razon_social ?? c.nombre ?? c.name}</option>)}
+                  {comunidades.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.razon_social ?? c.nombre ?? c.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}
 
             {/* Aviso si usuario no es superadmin y no tiene comunidades */}
-            {!isSuper && (!user?.comunidades || user.comunidades.length === 0) && (
-              <div className="alert alert-warning">
-                No estás asignado a ninguna comunidad. Contacta al administrador para asignar tu rol/comunidad.
-              </div>
-            )}
+            {!isSuper &&
+              (!user?.memberships || user.memberships.length === 0) && (
+                <div className='alert alert-warning'>
+                  No estás asignado a ninguna comunidad. Contacta al
+                  administrador para asignar tu rol/comunidad.
+                </div>
+              )}
 
             {/* Vista de tabla */}
             <div className='medidores-table'>
               <div className='table-header'>
-                <h5 className='table-title'><span className='material-icons'>speed</span> Medidores</h5>
-                <button className='btn btn-outline-secondary btn-sm'><span className='material-icons me-1'>file_download</span> Exportar</button>
+                <h5 className='table-title'>
+                  <span className='material-icons'>speed</span> Medidores
+                </h5>
+                <button className='btn btn-outline-secondary btn-sm'>
+                  <span className='material-icons me-1'>file_download</span>{' '}
+                  Exportar
+                </button>
               </div>
               <div className='table-responsive'>
                 <table className='table table-hover mb-0'>
@@ -366,22 +534,54 @@ export default function MedidoresListadoPage() {
                       <tr key={m.id} className='data-row'>
                         <td>{m.id}</td>
                         <td>
-                          <div className='fw-medium'>{m.medidor_codigo ?? (m as any).codigo ?? '-'}</div>
-                          <small className='text-muted'>S/N: {m.serial_number ?? (m as any).serialNumber ?? (m as any).numero_serie ?? '-'}</small>
+                          <div className='fw-medium'>
+                            {m.medidor_codigo ?? (m as any).codigo ?? '-'}
+                          </div>
+                          <small className='text-muted'>
+                            S/N:{' '}
+                            {m.serial_number ??
+                              (m as any).serialNumber ??
+                              (m as any).numero_serie ??
+                              '-'}
+                          </small>
                         </td>
                         <td>{m.unidad_codigo ?? m.unidad_id ?? '-'}</td>
                         <td>{m.tipo ?? '-'}</td>
-                        <td><div className='fw-medium'>{m.ultima_lectura ?? '-'}</div></td>
-                        <td>{m.estado ?? (m.activo ? 'activo' : 'inactivo') ?? '-'}</td>
+                        <td>
+                          <div className='fw-medium'>
+                            {m.ultima_lectura ?? '-'}
+                          </div>
+                        </td>
+                        <td>
+                          {m.estado ?? (m.activo ? 'activo' : 'inactivo')}
+                        </td>
                         <td className='text-end'>
                           <div className='d-flex gap-1 justify-content-end'>
-                            <button className='btn btn-outline-info btn-sm' onClick={() => handleView(m.id)}><span className='material-icons'>visibility</span></button>
-                            {canManage(m) && <button className='btn btn-outline-danger btn-sm' onClick={() => handleDelete(m.id)}><span className='material-icons'>delete</span></button>}
+                            <button
+                              className='btn btn-outline-info btn-sm'
+                              onClick={() => handleView(m.id)}
+                            >
+                              <span className='material-icons'>visibility</span>
+                            </button>
+                            {canManage(m) && (
+                              <button
+                                className='btn btn-outline-danger btn-sm'
+                                onClick={() => handleDelete(m.id)}
+                              >
+                                <span className='material-icons'>delete</span>
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
                     ))}
-                    {medidores.length === 0 && <tr><td colSpan={7} className='text-center'>Sin registros</td></tr>}
+                    {medidores.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className='text-center'>
+                          Sin registros
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -390,14 +590,31 @@ export default function MedidoresListadoPage() {
             {/* Paginación */}
             {pagination.pages > 1 && (
               <div className='d-flex justify-content-between align-items-center mt-4'>
-                <button className='btn btn-outline-primary btn-sm' onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>Anterior</button>
-                <span className='text-muted'>Página {page} / {pagination.pages}</span>
-                <button className='btn btn-outline-primary btn-sm' onClick={() => setPage(p => Math.min(pagination.pages, p + 1))} disabled={page >= pagination.pages}>Siguiente</button>
+                <button
+                  className='btn btn-outline-primary btn-sm'
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                >
+                  Anterior
+                </button>
+                <span className='text-muted'>
+                  Página {page} / {pagination.pages}
+                </span>
+                <button
+                  className='btn btn-outline-primary btn-sm'
+                  onClick={() =>
+                    setPage(p => Math.min(pagination.pages, p + 1))
+                  }
+                  disabled={page >= pagination.pages}
+                >
+                  Siguiente
+                </button>
               </div>
             )}
           </div>
         </div>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 }

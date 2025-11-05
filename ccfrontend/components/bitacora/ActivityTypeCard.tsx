@@ -4,45 +4,49 @@ interface ActivityTypeCardProps {
   onSelect: (type: string) => void;
 }
 
-export default function ActivityTypeCard({ type, selected, onSelect }: ActivityTypeCardProps) {
+export default function ActivityTypeCard({
+  type,
+  selected,
+  onSelect,
+}: ActivityTypeCardProps) {
   const getConfig = (activityType: string) => {
     const configs = {
       system: {
         title: 'Sistema',
         description: 'Eventos automáticos del sistema',
         icon: 'settings',
-        bgColor: '#17a2b8'
+        bgColor: '#17a2b8',
       },
       user: {
         title: 'Usuario',
         description: 'Actividades de usuarios',
         icon: 'person',
-        bgColor: '#28a745'
+        bgColor: '#28a745',
       },
       security: {
         title: 'Seguridad',
         description: 'Eventos de seguridad y acceso',
         icon: 'security',
-        bgColor: '#dc3545'
+        bgColor: '#dc3545',
       },
       maintenance: {
         title: 'Mantenimiento',
         description: 'Actividades de mantenimiento',
         icon: 'build',
-        bgColor: '#ffc107'
+        bgColor: '#ffc107',
       },
       admin: {
         title: 'Administración',
         description: 'Gestión administrativa',
         icon: 'admin_panel_settings',
-        bgColor: '#6f42c1'
+        bgColor: '#6f42c1',
       },
       financial: {
         title: 'Financiero',
         description: 'Actividades financieras',
         icon: 'attach_money',
-        bgColor: '#fd7e14'
-      }
+        bgColor: '#fd7e14',
+      },
     };
     return configs[activityType as keyof typeof configs] || configs.system;
   };
@@ -53,9 +57,20 @@ export default function ActivityTypeCard({ type, selected, onSelect }: ActivityT
     <div
       className={`activity-type-card ${type} ${selected ? 'selected' : ''}`}
       onClick={() => onSelect(type)}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect(type);
+        }
+      }}
       style={{ cursor: 'pointer' }}
+      role='button'
+      tabIndex={0}
     >
-      <div className='activity-type-icon' style={{ backgroundColor: config.bgColor }}>
+      <div
+        className='activity-type-icon'
+        style={{ backgroundColor: config.bgColor }}
+      >
         <i className='material-icons'>{config.icon}</i>
       </div>
       <div className='activity-type-title'>{config.title}</div>
