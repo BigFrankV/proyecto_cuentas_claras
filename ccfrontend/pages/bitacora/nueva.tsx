@@ -953,3 +953,4 @@ export default function BitacoraNueva() {
     </ProtectedRoute>
   );
 }
+

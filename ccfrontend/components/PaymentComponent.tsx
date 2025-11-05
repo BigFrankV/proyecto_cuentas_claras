@@ -190,7 +190,8 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
           onError?.('Tiempo de espera agotado');
         }
       } catch (error) {
-        console.error('Error polling transaction status:', error);
+// eslint-disable-next-line no-console
+console.error('Error polling transaction status:', error);
         attempts++;
         if (attempts < maxAttempts) {
           setTimeout(poll, 10000);
@@ -422,3 +423,4 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
 };
 
 export default PaymentComponent;
+

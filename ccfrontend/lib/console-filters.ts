@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* Filtros de consola mejorados para desarrollo */
 
 // Función para filtrar mensajes de extensiones en desarrollo
@@ -74,3 +75,4 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
 }
 
 export {};
+

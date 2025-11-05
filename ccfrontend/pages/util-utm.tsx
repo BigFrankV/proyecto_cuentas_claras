@@ -187,6 +187,7 @@ const ConsultorUTMRenovado: React.FC = () => {
       setDashboardData(data);
     } catch (err: any) {
       setError(err.message);
+      // eslint-disable-next-line no-console
       console.error('Error al cargar dashboard:', err);
     } finally {
       setLoading(false);
@@ -198,6 +199,7 @@ const ConsultorUTMRenovado: React.FC = () => {
       const data = await apiRequest(`/api/valor-utm/grafico?meses=${meses}`);
       setGraficoData(data.data || []);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error al cargar gráfico:', err);
     }
   };
@@ -209,6 +211,7 @@ const ConsultorUTMRenovado: React.FC = () => {
       );
       setVariacionMensual(data.data || []);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error al cargar variación mensual:', err);
     }
   };
@@ -221,6 +224,7 @@ const ConsultorUTMRenovado: React.FC = () => {
       const data = await apiRequest(endpoint);
       setComparacionAnos(data.data || []);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error al cargar comparación de años:', err);
     }
   };
@@ -232,6 +236,7 @@ const ConsultorUTMRenovado: React.FC = () => {
       );
       setTopValores(data);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error al cargar top valores:', err);
     }
   };
@@ -253,6 +258,7 @@ const ConsultorUTMRenovado: React.FC = () => {
       const data = await apiRequest(`/api/valor-utm/trimestral?meses=${meses}`);
       setTrimestralData(data.data || []);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error al cargar datos trimestrales:', err);
     }
   };
@@ -265,6 +271,7 @@ const ConsultorUTMRenovado: React.FC = () => {
       const data = await apiRequest(endpoint);
       setSemestralData(data.data || []);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error al cargar datos semestrales:', err);
     }
   };
@@ -274,6 +281,7 @@ const ConsultorUTMRenovado: React.FC = () => {
       const data = await apiRequest('/api/valor-utm/estadisticas');
       setEstadisticas(data.data || []);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error al cargar estadísticas:', err);
     }
   };
@@ -283,6 +291,7 @@ const ConsultorUTMRenovado: React.FC = () => {
       const data = await apiRequest('/api/valor-utm/resumen-anos');
       setResumenAnos(data.data || []);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error al cargar resumen de años:', err);
     }
   };
@@ -1614,3 +1623,4 @@ const ConsultorUTMRenovado: React.FC = () => {
 };
 
 export default ConsultorUTMRenovado;
+

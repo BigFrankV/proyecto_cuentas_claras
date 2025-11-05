@@ -35,6 +35,7 @@ export default function MedidoresListadoPage() {
   const [filterTipo, setFilterTipo] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
   const [filterMarca, setFilterMarca] = useState('');
+  const [currentView, setCurrentView] = useState<'table' | 'grid'>('table');
 
   // comunidad del usuario (si no es superadmin)
   const comunidadUsuarioId = user?.comunidades?.[0]?.id ?? null;
@@ -50,7 +51,8 @@ export default function MedidoresListadoPage() {
         if (!mounted) {return;}
         setComunidades(list);
       } catch (err) {
-        console.error('Error cargando comunidades', err);
+// eslint-disable-next-line no-console
+console.error('Error cargando comunidades', err);
       }
     })();
     return () => {
@@ -100,7 +102,8 @@ export default function MedidoresListadoPage() {
           offset: resp.pagination?.offset ?? (page - 1) * limit,
         });
       } catch (err: any) {
-        console.error('Error cargando medidores', err);
+// eslint-disable-next-line no-console
+console.error('Error cargando medidores', err);
         if (err?.response?.status === 403) {alert('No autorizado');}
         else {alert('Error cargando medidores');}
       } finally {
@@ -145,7 +148,8 @@ export default function MedidoresListadoPage() {
       if (resp?.softDeleted) {alert('Medidor desactivado (soft-delete).');}
       setMedidores(prev => prev.filter(m => m.id !== id));
     } catch (err: any) {
-      console.error('delete err', err);
+// eslint-disable-next-line no-console
+console.error('delete err', err);
       if (err?.response?.status === 403) {alert('No autorizado.');}
       else {alert('Error al eliminar medidor.');}
     } finally {
@@ -155,6 +159,7 @@ export default function MedidoresListadoPage() {
 
   // debug temporal: memberships en consola
   useEffect(() => {
+    // eslint-disable-next-line no-console
     console.debug('DEBUG user memberships:', user?.comunidades);
   }, [user]);
 
@@ -420,14 +425,14 @@ export default function MedidoresListadoPage() {
                 <span className='text-muted small'>Vista:</span>
                 <div className='btn-group' role='group'>
                   <button
-                    className={`btn btn-sm ${'table' === 'table' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => {}}
+                    className={`btn btn-sm ${currentView === 'table' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => setCurrentView('table')}
                   >
                     <span className='material-icons'>view_list</span>
                   </button>
                   <button
-                    className={`btn btn-sm ${'grid' === 'table' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => {}}
+                    className={`btn btn-sm ${currentView === 'grid' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => setCurrentView('grid')}
                   >
                     <span className='material-icons'>grid_view</span>
                   </button>
@@ -585,3 +590,4 @@ export default function MedidoresListadoPage() {
     </ProtectedRoute>
   );
 }
+

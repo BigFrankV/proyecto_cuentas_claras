@@ -179,7 +179,8 @@ export default function ComprasListado() {
       );
       setCurrentPage(resp.pagination.page ?? page);
     } catch (error) {
-      console.error('Error loading purchases:', error);
+// eslint-disable-next-line no-console
+console.error('Error loading purchases:', error);
       setPurchases([]);
     } finally {
       setLoading(false);
@@ -292,13 +293,14 @@ export default function ComprasListado() {
       setSelectedPurchase(null);
       alert('Compra eliminada exitosamente');
     } catch (error) {
-      console.error('Error deleting purchase:', error);
+// eslint-disable-next-line no-console
+console.error('Error deleting purchase:', error);
       alert('Error al eliminar la compra');
     }
   };
 
   const handleBulkAction = (action: string) => {
-    console.log(`Bulk action: ${action} on purchases:`, selectedPurchases);
+    // eslint-disable-next-line no-console`n    console.log(`Bulk action: ${action} on purchases:`, selectedPurchases);
     // Implementar acciones masivas
   };
 
@@ -1082,3 +1084,4 @@ export default function ComprasListado() {
     </ProtectedRoute>
   );
 }
+

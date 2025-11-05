@@ -8,3 +8,4 @@ const AmenidadesCalendarioPage = dynamic(
 export default function AmenidadesCalendario() {
   return <AmenidadesCalendarioPage />;
 }
+

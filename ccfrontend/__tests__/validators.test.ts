@@ -39,3 +39,4 @@ describe('validators utilities', () => {
     expect(getIdentifierHelpText('email')).toContain('Ejemplo');
   });
 });
+

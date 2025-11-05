@@ -54,3 +54,4 @@ test('find offending object-type element without $$typeof', () => {
     (React as any).createElement = orig;
   }
 });
+

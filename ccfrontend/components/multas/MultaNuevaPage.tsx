@@ -65,6 +65,7 @@ const MultaNuevaPage: React.FC = () => {
           method: 'GET',
         });
         if (!resp.ok) {
+// eslint-disable-next-line no-console
           console.warn(
             'No se pudieron cargar comunidades (status):',
             resp.status,
@@ -79,7 +80,8 @@ const MultaNuevaPage: React.FC = () => {
           setSelectedComunidadGlobal(Number(data[0].id));
         }
       } catch (err) {
-        console.error('Error cargando comunidades:', err);
+// eslint-disable-next-line no-console
+console.error('Error cargando comunidades:', err);
       } finally {
         setComunidadesLoading(false);
       }
@@ -108,7 +110,8 @@ const MultaNuevaPage: React.FC = () => {
         }));
         setUnits(mappedData);
       } catch (err) {
-        console.error('Error cargando unidades:', err);
+// eslint-disable-next-line no-console
+console.error('Error cargando unidades:', err);
         setUnits([]);
       } finally {
         setLoadingUnits(false);
@@ -184,7 +187,8 @@ const MultaNuevaPage: React.FC = () => {
         );
       }
     } catch (err) {
-      console.error('Error recargando tipos por comunidad:', err);
+// eslint-disable-next-line no-console
+console.error('Error recargando tipos por comunidad:', err);
     }
   };
 
@@ -241,7 +245,8 @@ const MultaNuevaPage: React.FC = () => {
           })),
         );
       } catch (e) {
-        console.error('Error cargando tipos:', e);
+// eslint-disable-next-line no-console
+console.error('Error cargando tipos:', e);
         setViolationTypes([
           {
             id: 1,
@@ -331,7 +336,10 @@ const MultaNuevaPage: React.FC = () => {
       const createdMulta = await multasService.createMulta(payload);
       const multaId = createdMulta?.id;
       if (!multaId) {
-        console.warn('Respuesta creación multa inesperada:', createdMulta);
+        // eslint-disable-next-line no-console
+
+// eslint-disable-next-line no-console
+console.warn('Respuesta creación multa inesperada:', createdMulta);
         window.alert('Multa creada pero no se obtuvo id. Revisa logs.');
         router.push('/multas');
         return;
@@ -341,7 +349,8 @@ const MultaNuevaPage: React.FC = () => {
         try {
           await multasService.uploadDocumentos(multaId, uploadedFiles);
         } catch (err) {
-          console.error('Error en upload:', err);
+// eslint-disable-next-line no-console
+console.error('Error en upload:', err);
           window.alert('Multa creada pero fallo la subida de archivos.');
         }
       }
@@ -349,7 +358,8 @@ const MultaNuevaPage: React.FC = () => {
       window.alert('Multa creada correctamente.');
       router.push(`/multas/${multaId}`);
     } catch (err) {
-      console.error('Error creando multa:', err);
+// eslint-disable-next-line no-console
+console.error('Error creando multa:', err);
       window.alert('Error al crear la multa. Revisa la consola.');
     }
   };
@@ -756,3 +766,4 @@ const MultaNuevaPage: React.FC = () => {
 };
 
 export default MultaNuevaPage;
+

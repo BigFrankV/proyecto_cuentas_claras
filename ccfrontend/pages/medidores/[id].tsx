@@ -51,6 +51,7 @@ export default function MedidorDetallePage() {
         const consResp = await getConsumos(Number(id));
         setConsumos(consResp.data ?? []);
       } catch (err) {
+// eslint-disable-next-line no-console
         console.error('load medidor err', err);
         alert('Error cargando medidor');
       } finally {
@@ -95,6 +96,7 @@ export default function MedidorDetallePage() {
       setMedidor(data);
       setForm({ fecha: '', lectura: '', periodo: '' });
     } catch (err: any) {
+// eslint-disable-next-line no-console
       console.error('create lectura err', err);
       if (err?.response?.status === 409)
         {alert('Ya existe una lectura para ese periodo');}
@@ -116,6 +118,7 @@ export default function MedidorDetallePage() {
       else {alert('Medidor eliminado');}
       router.push('/medidores');
     } catch (err: any) {
+// eslint-disable-next-line no-console
       console.error('delete medidor err', err);
       alert('Error al eliminar medidor');
     } finally {

@@ -116,7 +116,8 @@ export default function EmisionNueva() {
         const comunidadesData = await comunidadesService.getComunidades();
         setComunidades(comunidadesData);
       } catch (error) {
-        console.error('Error loading comunidades:', error);
+// eslint-disable-next-line no-console
+console.error('Error loading comunidades:', error);
         // Fallback to mock data if API fails
         setComunidades([
           { id: 1, razon_social: 'Edificio Central' },
@@ -246,7 +247,8 @@ export default function EmisionNueva() {
       alert('Emisión creada exitosamente');
       router.push('/emisiones');
     } catch (error) {
-      console.error('Error creating emision:', error);
+// eslint-disable-next-line no-console
+console.error('Error creating emision:', error);
       alert('Error al crear la emisión. Por favor intenta nuevamente.');
     } finally {
       setLoading(false);
@@ -948,3 +950,4 @@ export default function EmisionNueva() {
     </ProtectedRoute>
   );
 }
+

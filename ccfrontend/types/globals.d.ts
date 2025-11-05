@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Declaraciones de tipos para módulos externos
 declare module 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
@@ -11,3 +12,4 @@ declare global {
 }
 
 export {};
+

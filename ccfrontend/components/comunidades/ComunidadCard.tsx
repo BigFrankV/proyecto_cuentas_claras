@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 
@@ -30,13 +31,15 @@ const ComunidadCard: React.FC<ComunidadCardProps> = ({
       <div className='card comunidad-card app-card h-100'>
         {/* Imagen de la comunidad */}
         <div className='position-relative'>
-          <img
+          <Image
             src={
               comunidad.imagen ||
               'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
             }
             className='card-img-top'
             alt={comunidad.nombre}
+            width={800}
+            height={180}
             style={{ height: '180px', objectFit: 'cover' }}
           />
 
@@ -195,3 +198,4 @@ const ComunidadCard: React.FC<ComunidadCardProps> = ({
 };
 
 export default ComunidadCard;
+

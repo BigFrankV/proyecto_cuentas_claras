@@ -53,7 +53,8 @@ export const CommentForm: React.FC<CommentFormProps> = ({
       setIsInternal(false);
       setAttachments([]);
     } catch (error) {
-      console.error('Error submitting comment:', error);
+// eslint-disable-next-line no-console
+console.error('Error submitting comment:', error);
     }
   };
 
@@ -313,3 +314,4 @@ export const CommentForm: React.FC<CommentFormProps> = ({
 };
 
 export default CommentForm;
+

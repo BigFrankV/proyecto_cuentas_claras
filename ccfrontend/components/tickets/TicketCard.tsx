@@ -304,3 +304,4 @@ export const TicketCard: React.FC<TicketCardProps> = ({
 };
 
 export default TicketCard;
+

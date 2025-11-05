@@ -341,29 +341,29 @@ export default function AmenidadesPage(): JSX.Element {
                   <nav>
                     <ul className='pagination mb-0'>
                       <li className='page-item disabled'>
-                        <a className='page-link' href='#'>
+                        <button className='page-link' disabled>
                           «
-                        </a>
+                        </button>
                       </li>
                       <li className='page-item active'>
-                        <a className='page-link' href='#'>
+                        <button className='page-link' disabled>
                           1
-                        </a>
+                        </button>
                       </li>
                       <li className='page-item'>
-                        <a className='page-link' href='#'>
+                        <button className='page-link'>
                           2
-                        </a>
+                        </button>
                       </li>
                       <li className='page-item'>
-                        <a className='page-link' href='#'>
+                        <button className='page-link'>
                           3
-                        </a>
+                        </button>
                       </li>
                       <li className='page-item'>
-                        <a className='page-link' href='#'>
+                        <button className='page-link'>
                           »
-                        </a>
+                        </button>
                       </li>
                     </ul>
                   </nav>
@@ -376,3 +376,4 @@ export default function AmenidadesPage(): JSX.Element {
     </div>
   );
 }
+

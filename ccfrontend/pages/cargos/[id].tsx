@@ -29,6 +29,7 @@ export default function CargoDetallePage() {
       setError(null);
 
       try {
+        // eslint-disable-next-line no-console
         console.log('🔍 Cargando detalle del cargo:', id);
 
         // Obtener el cargo desde la API
@@ -69,9 +70,13 @@ export default function CargoDetallePage() {
           observaciones: `Propietario: ${cargoData.propietario || 'N/A'}`,
         };
 
+        // eslint-disable-next-line no-console
+
+// eslint-disable-next-line no-console
         console.log('✅ Cargo mapeado:', mappedCargo);
         setCargo(mappedCargo);
       } catch (err) {
+// eslint-disable-next-line no-console
         console.error('❌ Error al cargar cargo:', err);
         setError(
           err instanceof Error

@@ -105,7 +105,8 @@ export default function EdificioNuevo() {
         router.push('/edificios');
       }
     } catch (error) {
-      console.error('Error al crear edificio:', error);
+// eslint-disable-next-line no-console
+console.error('Error al crear edificio:', error);
     }
   };
 
@@ -740,3 +741,4 @@ export default function EdificioNuevo() {
     </ProtectedRoute>
   );
 }
+

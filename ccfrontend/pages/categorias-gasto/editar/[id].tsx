@@ -74,6 +74,7 @@ export default function EditarCategoriaGasto() {
         setFormData(formDataFromCategoria);
         setOriginalData(formDataFromCategoria);
       } catch (error) {
+// eslint-disable-next-line no-console
         console.error('Error al cargar categoría:', error);
         toast.error('Error al cargar la categoría');
         router.push('/categorias-gasto');
@@ -155,6 +156,7 @@ export default function EditarCategoriaGasto() {
       toast.success('Categoría actualizada exitosamente');
       router.push('/categorias-gasto');
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error al actualizar categoría:', error);
       toast.error('Error al actualizar la categoría');
     } finally {

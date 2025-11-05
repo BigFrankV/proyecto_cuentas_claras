@@ -149,7 +149,8 @@ export default function Sidebar() {
     try {
       await logout();
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+// eslint-disable-next-line no-console
+console.error('Error al cerrar sesión:', error);
     }
   };
 
@@ -398,3 +399,4 @@ export default function Sidebar() {
     </>
   );
 }
+

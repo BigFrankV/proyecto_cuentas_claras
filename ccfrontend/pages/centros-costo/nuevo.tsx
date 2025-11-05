@@ -125,7 +125,8 @@ export default function CentroCostoNuevo() {
       alert('Centro de costo creado exitosamente');
       router.push('/centros-costo');
     } catch (error) {
-      console.error('Error creating cost center:', error);
+// eslint-disable-next-line no-console
+console.error('Error creating cost center:', error);
       alert('Error al crear el centro de costo');
     } finally {
       setIsSubmitting(false);
@@ -566,3 +567,4 @@ export default function CentroCostoNuevo() {
     </ProtectedRoute>
   );
 }
+

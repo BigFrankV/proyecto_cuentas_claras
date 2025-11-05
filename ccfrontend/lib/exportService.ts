@@ -1,3 +1,6 @@
+/* eslint-disable import/no-anonymous-default-export */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable max-len */
 import moment from 'moment';
 import Papa from 'papaparse';
 
@@ -44,7 +47,8 @@ class ExportService {
 
       return { success: true, message: 'Archivo exportado exitosamente' };
     } catch (error) {
-      console.error('Error exportando CSV:', error);
+      // eslint-disable-next-line no-console
+console.error('Error exportando CSV:', error);
       return { success: false, message: 'Error al exportar archivo' };
     }
   }
@@ -103,17 +107,6 @@ class ExportService {
     });
   }
 
-  /**
-   * Exportar múltiples reportes en un ZIP (usando JSZip)
-   */
-  async exportMultipleReports(
-    reports: { name: string; data: ExportData[] }[],
-    communityName: string,
-  ) {
-    // Esta función requeriría JSZip para crear un archivo comprimido
-    // npm install jszip @types/jszip
-    console.log('Exportación múltiple disponible con JSZip');
-  }
 
   /**
    * Descargar blob como archivo
@@ -189,10 +182,12 @@ class ExportService {
 
       return { success: true, message: 'Archivo exportado desde servidor' };
     } catch (error) {
-      console.error('Error exportando desde servidor:', error);
+      // eslint-disable-next-line no-console
+console.error('Error exportando desde servidor:', error);
       return { success: false, message: 'Error al exportar desde servidor' };
     }
   }
 }
 
 export default new ExportService();
+

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Proveedor, ProveedoresResponse } from '@/types/proveedores';
 
 import apiClient from './api';
@@ -61,3 +62,4 @@ export async function updateProveedor(id: number, payload: Partial<Proveedor>) {
   const resp = await apiClient.patch(`/proveedores/${id}`, payload);
   return resp.data;
 }
+

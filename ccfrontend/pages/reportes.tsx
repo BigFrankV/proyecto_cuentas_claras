@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-css-tags */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Chart as ChartJS,
@@ -40,7 +41,7 @@ ChartJS.register(
 
 // Interfaces para tipos de datos
 interface ReportData {
-  period: string; // '2024-Q1', '2024-10', etc.
+  month: string; // '2024-01', '2024-02', etc.
   ingresos: number;
   gastos: number;
   saldo: number;
@@ -132,6 +133,7 @@ export default function ReportesDashboard() {
         setSelectedCommunity(response.data[0].id);
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading communities:', error);
     }
   }, [selectedCommunity]);
@@ -180,6 +182,7 @@ export default function ReportesDashboard() {
             return copy;
           });
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.warn('No se pudieron cargar KPIs financieros:', err);
         }
 
@@ -190,10 +193,12 @@ export default function ReportesDashboard() {
           const tendenciasRes = await apiClient.get(resumenUrl, {
             params: { meses },
           });
+          // eslint-disable-next-line no-console
           console.log('Tendencias financieras response:', tendenciasRes.data);
           // Expecting an array like [{ month: '2025-08', ingresos: 123, gastos: 45, saldo: 78 }, ...]
           setReportData(tendenciasRes.data || []);
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.warn('No se pudieron cargar tendencias financieras:', err);
         }
       } else if (activeTab === 'gastos') {
@@ -208,6 +213,7 @@ export default function ReportesDashboard() {
           const gastosRes = await apiClient.get(gastosUrl, { params });
           setGastos(gastosRes.data || []);
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.error('Error cargando gastos detallados:', err);
         }
       } else if (activeTab === 'morosidad') {
@@ -223,6 +229,7 @@ export default function ReportesDashboard() {
           // you may want to render this in a dedicated state; we'll place into pagos for now
           setPagos(morosRes.data || []);
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.error('Error cargando morosidad:', err);
         }
       } else if (activeTab === 'operacional') {
@@ -236,6 +243,7 @@ export default function ReportesDashboard() {
           // Example: tickets soporte
           const ticketsUrl = `/api/reportes/comunidad/${selectedCommunity}/tickets-soporte`;
           const ticketsRes = await apiClient.get(ticketsUrl, { params });
+          // eslint-disable-next-line no-console
           console.log('Tickets soporte response:', ticketsRes.data);
           setTickets(ticketsRes.data || []);
           // derive simple summary
@@ -250,15 +258,18 @@ export default function ReportesDashboard() {
           // reservas amenidades
           const reservasUrl = `/api/reportes/comunidad/${selectedCommunity}/reservas-amenidades`;
           const reservasRes = await apiClient.get(reservasUrl, { params });
+          // eslint-disable-next-line no-console
           console.log('Reservas amenidades response:', reservasRes.data);
           setReservas(reservasRes.data || []);
 
           // bitacora conserjeria
           const bitacoraUrl = `/api/reportes/comunidad/${selectedCommunity}/bitacora-conserjeria`;
           const bitacoraRes = await apiClient.get(bitacoraUrl, { params });
+          // eslint-disable-next-line no-console
           console.log('Bitacora conserjeria response:', bitacoraRes.data);
           setBitacora(bitacoraRes.data || []);
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.warn(
             'No hay datos operacionales o el endpoint no respondió:',
             err,
@@ -273,19 +284,23 @@ export default function ReportesDashboard() {
           };
           const resumenUrl = `/api/consumos/comunidad/${selectedCommunity}/resumen`;
           const resumenRes = await apiClient.get(resumenUrl, { params });
+          // eslint-disable-next-line no-console
           console.log('Consumos resumen response:', resumenRes.data);
           setConsumosResumen(resumenRes.data || null);
 
           const servicioUrl = `/api/reportes/comunidad/${selectedCommunity}/consumo-servicios`;
           const servicioRes = await apiClient.get(servicioUrl, { params });
+          // eslint-disable-next-line no-console
           console.log('Consumo servicios response:', servicioRes.data);
           setConsumoServicios(servicioRes.data || []);
 
           const lecturasUrl = `/api/consumos/comunidad/${selectedCommunity}/lecturas-recientes`;
           const lecturasRes = await apiClient.get(lecturasUrl, { params });
+          // eslint-disable-next-line no-console
           console.log('Lecturas recientes response:', lecturasRes.data);
           setLecturasRecientes(lecturasRes.data || []);
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.error('Error cargando consumos/lecturas:', err);
         }
       } else if (activeTab === 'accesos') {
@@ -297,9 +312,11 @@ export default function ReportesDashboard() {
           };
           const accesosUrl = `/api/reportes/comunidad/${selectedCommunity}/accesos-visitas`;
           const accesosRes = await apiClient.get(accesosUrl, { params });
+          // eslint-disable-next-line no-console
           console.log('Accesos visitas response:', accesosRes.data);
           setAccesosVisitas(accesosRes.data || []);
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.error('Error cargando accesos:', err);
         }
       }
@@ -307,9 +324,11 @@ export default function ReportesDashboard() {
       try {
         const flujoUrl = `/comunidades/${selectedCommunity}/flujo-caja`;
         const flujoRes = await apiClient.get(flujoUrl);
+        // eslint-disable-next-line no-console
         console.log('Flujo caja response:', flujoRes.data);
         setFlujoCaja(flujoRes.data || []);
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.warn('No se pudieron cargar flujo de caja:', err);
       }
       try {
@@ -321,9 +340,11 @@ export default function ReportesDashboard() {
             periodo: selectedPeriod,
           },
         });
+        // eslint-disable-next-line no-console
         console.log('Ingresos detallados response:', ingresosRes.data);
         setIngresosDetallados(ingresosRes.data || []);
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.warn('No se pudieron cargar ingresos detallados:', err);
       }
       try {
@@ -335,9 +356,11 @@ export default function ReportesDashboard() {
             periodo: selectedPeriod,
           },
         });
+        // eslint-disable-next-line no-console
         console.log('Estadísticas morosidad response:', morosRes.data);
         setEstadisticasMorosidad(morosRes.data || null);
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.warn('No se pudieron cargar estadísticas de morosidad:', err);
       }
       try {
@@ -349,12 +372,15 @@ export default function ReportesDashboard() {
             periodo: selectedPeriod,
           },
         });
+        // eslint-disable-next-line no-console
         console.log('Centros costo response:', centrosRes.data);
         setCentrosCostoResumen(centrosRes.data || []);
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.warn('No se pudieron cargar centros de costo:', err);
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading report data:', error);
     } finally {
       setIsLoading(false);
@@ -401,7 +427,8 @@ export default function ReportesDashboard() {
         setTimeout(() => setExportMessage(null), 3000);
       })
       .catch(err => {
-        console.error('Error exportando reporte financiero:', err);
+// eslint-disable-next-line no-console
+console.error('Error exportando reporte financiero:', err);
         setExportMessage({
           type: 'error',
           text: 'Error al exportar reporte financiero',
@@ -439,7 +466,8 @@ export default function ReportesDashboard() {
         setTimeout(() => setExportMessage(null), 3000);
       })
       .catch(err => {
-        console.error('Error exportando gastos:', err);
+// eslint-disable-next-line no-console
+console.error('Error exportando gastos:', err);
         setExportMessage({
           type: 'error',
           text: 'Error al exportar detalle de gastos',
@@ -478,7 +506,8 @@ export default function ReportesDashboard() {
         setTimeout(() => setExportMessage(null), 3000);
       })
       .catch(err => {
-        console.error('Error exportando todos los reportes:', err);
+// eslint-disable-next-line no-console
+console.error('Error exportando todos los reportes:', err);
         setExportMessage({ type: 'error', text: 'Error al exportar reportes' });
         setTimeout(() => setExportMessage(null), 3000);
       });
@@ -1622,3 +1651,6 @@ export default function ReportesDashboard() {
     </ProtectedRoute>
   );
 }
+
+
+

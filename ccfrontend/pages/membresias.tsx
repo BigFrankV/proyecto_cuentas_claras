@@ -48,7 +48,8 @@ const MembresiasListado = () => {
       setRoles(rolesData);
       setComunidades(comunidadesData);
     } catch (err) {
-      console.error('Error al cargar catálogos:', err);
+// eslint-disable-next-line no-console
+console.error('Error al cargar catálogos:', err);
     }
   };
 
@@ -71,7 +72,8 @@ const MembresiasListado = () => {
       setMembresias(response.data);
       setTotal(response.meta.total);
     } catch (err) {
-      console.error('Error al cargar membresías:', err);
+// eslint-disable-next-line no-console
+console.error('Error al cargar membresías:', err);
     }
   };
 
@@ -903,3 +905,4 @@ const MembresiasListado = () => {
 };
 
 export default MembresiasListado;
+

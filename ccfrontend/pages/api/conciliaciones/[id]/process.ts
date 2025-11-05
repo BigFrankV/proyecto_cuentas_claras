@@ -75,6 +75,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         });
       }, 2000);
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error processing file:', error);
       res.status(500).json({
         error: 'Error al procesar el archivo',

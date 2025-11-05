@@ -1,4 +1,8 @@
+/* eslint-disable max-len */
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Head from 'next/head';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useRef } from 'react';
@@ -93,9 +97,6 @@ export default function PersonaNueva() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [avatarPreview, setAvatarPreview] = useState<string>('');
-  const [validationStates, setValidationStates] = useState<
-    Record<string, boolean>
-  >({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = async (field: keyof FormData, value: any) => {
@@ -119,7 +120,6 @@ export default function PersonaNueva() {
     if (field === 'nroDoc' && value) {
       try {
         const result = await validarCampo('rut', value);
-        setValidationStates(prev => ({ ...prev, nroDoc: result.valido }));
         if (!result.valido) {
           setErrors(prev => ({
             ...prev,
@@ -129,14 +129,14 @@ export default function PersonaNueva() {
           setErrors(prev => ({ ...prev, nroDoc: '' }));
         }
       } catch (err) {
-        console.error('Error validando RUT:', err);
+// eslint-disable-next-line no-console
+console.error('Error validando RUT:', err);
       }
     }
 
     if (field === 'email' && value) {
       try {
         const result = await validarCampo('email', value);
-        setValidationStates(prev => ({ ...prev, email: result.valido }));
         if (!result.valido) {
           setErrors(prev => ({
             ...prev,
@@ -146,14 +146,14 @@ export default function PersonaNueva() {
           setErrors(prev => ({ ...prev, email: '' }));
         }
       } catch (err) {
-        console.error('Error validando email:', err);
+// eslint-disable-next-line no-console
+console.error('Error validando email:', err);
       }
     }
 
     if (field === 'username' && value && formData.crearCuenta) {
       try {
         const result = await validarCampo('username', value);
-        setValidationStates(prev => ({ ...prev, username: result.valido }));
         if (!result.valido) {
           setErrors(prev => ({
             ...prev,
@@ -163,7 +163,8 @@ export default function PersonaNueva() {
           setErrors(prev => ({ ...prev, username: '' }));
         }
       } catch (err) {
-        console.error('Error validando username:', err);
+// eslint-disable-next-line no-console
+console.error('Error validando username:', err);
       }
     }
 
@@ -271,13 +272,14 @@ export default function PersonaNueva() {
       // Si se debe crear cuenta de usuario
       if (formData.crearCuenta && nuevaPersona.id) {
         // Aquí iría la lógica para crear usuario si la API lo soporta
-        console.log('Usuario creado:', nuevaPersona);
+        // eslint-disable-next-line no-console`n        console.log('Usuario creado:', nuevaPersona);
       }
 
       // Redirigir a la lista o al detalle
       router.push('/personas');
     } catch (err) {
-      console.error('Error al crear persona:', err);
+// eslint-disable-next-line no-console
+console.error('Error al crear persona:', err);
       setErrors({ submit: 'Error al crear la persona. Intente nuevamente.' });
     }
   };
@@ -368,8 +370,23 @@ export default function PersonaNueva() {
                       {tiposPersona.map(tipo => (
                         <div key={tipo.key} className='col-12 col-md-4'>
                           <div
-                            className={`card h-100 cursor-pointer ${formData.tipo === tipo.key ? 'border-primary bg-primary bg-opacity-10' : ''}`}
+                            className={
+                              `card h-100 cursor-pointer ${
+                                formData.tipo === tipo.key
+                                  ? 'border-primary bg-primary bg-opacity-10'
+                                  : ''
+                              }`
+                            }
                             onClick={() => handleInputChange('tipo', tipo.key)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleInputChange('tipo', tipo.key);
+                              }
+                            }}
+                            tabIndex={0}
+                            role="button"
+                            aria-label={`Seleccionar tipo ${tipo.title}`}
                             style={{
                               cursor: 'pointer',
                               transition: 'all 0.2s ease',
@@ -419,21 +436,33 @@ export default function PersonaNueva() {
                             className='position-relative'
                             style={{ cursor: 'pointer' }}
                             onClick={() => fileInputRef.current?.click()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                fileInputRef.current?.click();
+                              }
+                            }}
+                            tabIndex={0}
+                            role="button"
+                            aria-label="Seleccionar foto de perfil"
                           >
                             {avatarPreview ? (
-                              <img
+                              <Image
                                 src={avatarPreview}
                                 alt='Avatar'
+                                width={120}
+                                height={120}
                                 style={{
-                                  width: '120px',
-                                  height: '120px',
                                   borderRadius: '50%',
                                   objectFit: 'cover',
                                 }}
                               />
                             ) : (
                               <div
-                                className='d-flex align-items-center justify-content-center bg-light border border-2 border-dashed'
+                                className={
+                                  'd-flex align-items-center justify-content-center ' +
+                                  'bg-light border border-2 border-dashed'
+                                }
                                 style={{
                                   width: '120px',
                                   height: '120px',
@@ -673,8 +702,23 @@ export default function PersonaNueva() {
                           return (
                             <div key={unidad.id} className='col-12'>
                               <div
-                                className={`p-3 border rounded cursor-pointer ${isSelected ? 'border-primary bg-primary bg-opacity-10' : 'border-secondary'}`}
+                                className={
+                                  `p-3 border rounded cursor-pointer ${
+                                    isSelected
+                                      ? 'border-primary bg-primary bg-opacity-10'
+                                      : 'border-secondary'
+                                  }`
+                                }
                                 onClick={() => toggleUnidad(unidad)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    toggleUnidad(unidad);
+                                  }
+                                }}
+                                tabIndex={0}
+                                role="button"
+                                aria-label={`Seleccionar unidad ${unidad.nombre}`}
                                 style={{ cursor: 'pointer' }}
                               >
                                 <div className='d-flex justify-content-between align-items-center'>
@@ -692,7 +736,11 @@ export default function PersonaNueva() {
                                     </div>
                                   </div>
                                   {isSelected && (
-                                    <div onClick={e => e.stopPropagation()}>
+                                    <div
+                                      onClick={e => e.stopPropagation()}
+                                      role="presentation"
+                                      aria-hidden="true"
+                                    >
                                       <select
                                         className='form-select form-select-sm'
                                         value={
@@ -856,3 +904,4 @@ export default function PersonaNueva() {
     </ProtectedRoute>
   );
 }
+

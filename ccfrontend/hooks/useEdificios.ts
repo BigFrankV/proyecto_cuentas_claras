@@ -37,7 +37,8 @@ export const useEdificios = () => {
         setError(
           err instanceof Error ? err.message : 'Error al cargar los edificios',
         );
-        console.error('Error fetching edificios:', err);
+// eslint-disable-next-line no-console
+console.error('Error fetching edificios:', err);
       } finally {
         setLoading(false);
       }
@@ -65,7 +66,8 @@ export const useEdificios = () => {
         setError(
           err instanceof Error ? err.message : 'Error al crear el edificio',
         );
-        console.error('Error creating edificio:', err);
+// eslint-disable-next-line no-console
+console.error('Error creating edificio:', err);
         return false;
       } finally {
         setLoading(false);
@@ -98,7 +100,8 @@ export const useEdificios = () => {
         setError(
           err instanceof Error ? err.message : 'Error al actualizar el edificio',
         );
-        console.error('Error updating edificio:', err);
+// eslint-disable-next-line no-console
+console.error('Error updating edificio:', err);
         return false;
       } finally {
         setLoading(false);
@@ -124,7 +127,8 @@ export const useEdificios = () => {
         setError(
           err instanceof Error ? err.message : 'Error al eliminar el edificio',
         );
-        console.error('Error deleting edificio:', err);
+// eslint-disable-next-line no-console
+console.error('Error deleting edificio:', err);
         return false;
       } finally {
         setLoading(false);
@@ -149,7 +153,8 @@ export const useEdificios = () => {
         setError(
           err instanceof Error ? err.message : 'Error al cargar el edificio',
         );
-        console.error('Error getting edificio by id:', err);
+// eslint-disable-next-line no-console
+console.error('Error getting edificio by id:', err);
         return null;
       } finally {
         setLoading(false);
@@ -167,7 +172,8 @@ export const useEdificios = () => {
         const api = await getApi();
         return await api.edificios.checkDependencies(id);
       } catch (err) {
-        console.error('Error checking dependencies:', err);
+// eslint-disable-next-line no-console
+console.error('Error checking dependencies:', err);
         return {};
       }
     },
@@ -182,7 +188,8 @@ export const useEdificios = () => {
       const api = await getApi();
       return await api.stats.getStats();
     } catch (err) {
-      console.error('Error getting stats:', err);
+// eslint-disable-next-line no-console
+console.error('Error getting stats:', err);
       return null;
     }
   }, [getApi]);
@@ -258,7 +265,8 @@ export const useEdificiosStats = () => {
       setError(
         err instanceof Error ? err.message : 'Error al cargar estadísticas',
       );
-      console.error('Error fetching stats:', err);
+// eslint-disable-next-line no-console
+console.error('Error fetching stats:', err);
     } finally {
       setLoading(false);
     }
@@ -290,7 +298,8 @@ export const useTorres = (edificioId: string) => {
       setTorres(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar torres');
-      console.error('Error fetching torres:', err);
+// eslint-disable-next-line no-console
+console.error('Error fetching torres:', err);
     } finally {
       setLoading(false);
     }
@@ -313,7 +322,8 @@ export const useTorres = (edificioId: string) => {
         return false;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al crear torre');
-        console.error('Error creating torre:', err);
+// eslint-disable-next-line no-console
+console.error('Error creating torre:', err);
         return false;
       } finally {
         setLoading(false);
@@ -349,7 +359,8 @@ export const useUnidades = (edificioId: string, torreId?: string) => {
       setUnidades(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar unidades');
-      console.error('Error fetching unidades:', err);
+// eslint-disable-next-line no-console
+console.error('Error fetching unidades:', err);
     } finally {
       setLoading(false);
     }
@@ -372,7 +383,8 @@ export const useUnidades = (edificioId: string, torreId?: string) => {
         return false;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al crear unidad');
-        console.error('Error creating unidad:', err);
+// eslint-disable-next-line no-console
+console.error('Error creating unidad:', err);
         return false;
       } finally {
         setLoading(false);
@@ -399,7 +411,8 @@ export const useEdificiosUtils = () => {
       const { default: api } = await import('@/lib/api/edificios');
       return await api.utils.search(query, limit);
     } catch (err) {
-      console.error('Error searching edificios:', err);
+// eslint-disable-next-line no-console
+console.error('Error searching edificios:', err);
       return [];
     }
   }, []);
@@ -411,7 +424,8 @@ export const useEdificiosUtils = () => {
       const { default: api } = await import('@/lib/api/edificios');
       return await api.utils.getComunidadesOpciones();
     } catch (err) {
-      console.error('Error getting comunidades opciones:', err);
+// eslint-disable-next-line no-console
+console.error('Error getting comunidades opciones:', err);
       return [];
     }
   }, []);
@@ -428,7 +442,8 @@ export const useEdificiosUtils = () => {
         const { default: api } = await import('@/lib/api/edificios');
         return await api.utils.validarCodigo(edificioId, codigo, tipo);
       } catch (err) {
-        console.error('Error validating codigo:', err);
+// eslint-disable-next-line no-console
+console.error('Error validating codigo:', err);
         return false;
       }
     },
@@ -528,3 +543,4 @@ export const useEdificioForm = () => {
     isValid: Object.keys(errors).length === 0,
   };
 };
+

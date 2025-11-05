@@ -102,3 +102,4 @@ export default function MultaTable({ multas, onAction }: any) {
     </table>
   );
 }
+

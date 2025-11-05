@@ -30,3 +30,4 @@ export function useIsSuperAdmin(): boolean {
   const { user } = useAuth();
   return user?.is_superadmin || false;
 }
+

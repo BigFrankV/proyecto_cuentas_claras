@@ -27,7 +27,8 @@ const ApelacionDetail = ({
         onResolved(apelacion.id);
       }
     } catch (err) {
-      console.error('resolve.error', err);
+// eslint-disable-next-line no-console
+console.error('resolve.error', err);
       alert('Error al resolver la apelación');
     } finally {
       setLoading(false);
@@ -114,3 +115,4 @@ const ApelacionDetail = ({
 };
 
 export default ApelacionDetail;
+

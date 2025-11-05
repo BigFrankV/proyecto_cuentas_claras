@@ -62,3 +62,4 @@ export default function AccessBadge({ access, size = 'md' }: AccessBadgeProps) {
     </span>
   );
 }
+

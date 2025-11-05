@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import Head from 'next/head';
 import { useState } from 'react';
 import { Modal, Button } from 'react-bootstrap';
@@ -288,3 +289,4 @@ export default function TarifasListado() {
     </ProtectedRoute>
   );
 }
+

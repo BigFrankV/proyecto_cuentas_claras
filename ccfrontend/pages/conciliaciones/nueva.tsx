@@ -112,7 +112,8 @@ export default function NuevaConciliacion() {
         const accounts = await conciliacionesApi.getCuentasBancarias();
         setBankAccounts(accounts);
       } catch (error) {
-        console.error('Error loading bank accounts:', error);
+// eslint-disable-next-line no-console
+console.error('Error loading bank accounts:', error);
         // Fallback to hardcoded data if API fails
         setBankAccounts({
           'banco-chile': [
@@ -870,3 +871,4 @@ export default function NuevaConciliacion() {
     </ProtectedRoute>
   );
 }
+

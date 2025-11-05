@@ -1,5 +1,9 @@
+/* eslint-disable max-len */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 import Head from 'next/head';
-import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useState, useEffect, useCallback } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import TwoFactorModal from '@/components/ui/TwoFactorModal';
@@ -62,6 +66,7 @@ export default function Profile() {
   // Cargar datos iniciales
   useEffect(() => {
     loadProfileData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sincronizar estado 2FA con los datos del usuario
@@ -85,7 +90,8 @@ export default function Profile() {
           const twoFAStatus = await profileService.check2FAStatus();
           setTotp2FAEnabled(twoFAStatus.enabled);
         } catch (error) {
-          console.error('Error checking 2FA status:', error);
+// eslint-disable-next-line no-console
+console.error('Error checking 2FA status:', error);
           setTotp2FAEnabled(false);
         } finally {
           setChecking2FA(false);
@@ -413,7 +419,7 @@ export default function Profile() {
           <nav aria-label='breadcrumb' className='mb-4'>
             <ol className='breadcrumb'>
               <li className='breadcrumb-item'>
-                <a href='/dashboard' className='text-decoration-none'>
+                <Link href='/dashboard' className='text-decoration-none'>
                   <span
                     className='material-icons me-1'
                     style={{ fontSize: '16px' }}
@@ -421,7 +427,7 @@ export default function Profile() {
                     dashboard
                   </span>
                   Dashboard
-                </a>
+                </Link>
               </li>
               <li className='breadcrumb-item active' aria-current='page'>
                 <span
@@ -1249,3 +1255,4 @@ export default function Profile() {
     </ProtectedRoute>
   );
 }
+

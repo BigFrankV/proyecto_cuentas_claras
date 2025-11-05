@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 import api from './api';
 
 export interface FileUploadOptions {
@@ -77,7 +80,8 @@ class FileService {
 
       return response.data.files;
     } catch (error) {
-      console.error('Error uploading files:', error);
+// eslint-disable-next-line no-console
+console.error('Error uploading files:', error);
       throw error;
     }
   }
@@ -172,7 +176,8 @@ class FileService {
       const response = await api.get(`${this.baseUrl}?${params.toString()}`);
       return response.data.files;
     } catch (error) {
-      console.error('Error getting files:', error);
+// eslint-disable-next-line no-console
+console.error('Error getting files:', error);
       throw error;
     }
   }
@@ -229,7 +234,8 @@ class FileService {
       });
       return response.data;
     } catch (error) {
-      console.error('Error downloading file:', error);
+// eslint-disable-next-line no-console
+console.error('Error downloading file:', error);
       throw error;
     }
   }
@@ -255,7 +261,8 @@ class FileService {
     try {
       await api.delete(`${this.baseUrl}/${fileId}`);
     } catch (error) {
-      console.error('Error deleting file:', error);
+// eslint-disable-next-line no-console
+console.error('Error deleting file:', error);
       throw error;
     }
   }
@@ -268,7 +275,8 @@ class FileService {
       const response = await api.get(`${this.baseUrl}/stats`);
       return response.data.stats;
     } catch (error) {
-      console.error('Error getting file stats:', error);
+// eslint-disable-next-line no-console
+console.error('Error getting file stats:', error);
       throw error;
     }
   }
@@ -280,7 +288,8 @@ class FileService {
     try {
       await api.post(`${this.baseUrl}/cleanup`);
     } catch (error) {
-      console.error('Error cleaning up files:', error);
+// eslint-disable-next-line no-console
+console.error('Error cleaning up files:', error);
       throw error;
     }
   }
@@ -349,3 +358,4 @@ class FileService {
 
 export const fileService = new FileService();
 export default fileService;
+

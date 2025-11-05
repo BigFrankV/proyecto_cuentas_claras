@@ -33,6 +33,7 @@ export default function Home() {
 
   // Redirigir si ya está autenticado
   useEffect(() => {
+    // eslint-disable-next-line no-console
     console.log(
       '🏠 Estado auth en login page - autenticado:',
       isAuthenticated,
@@ -40,6 +41,7 @@ export default function Home() {
       authLoading,
     );
     if (isAuthenticated && !authLoading) {
+      // eslint-disable-next-line no-console
       console.log('✅ Usuario autenticado, redirigiendo al dashboard...');
       router.push('/dashboard');
     }
@@ -608,3 +610,4 @@ export default function Home() {
     </>
   );
 }
+

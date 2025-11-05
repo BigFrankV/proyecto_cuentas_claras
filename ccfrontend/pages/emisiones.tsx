@@ -58,7 +58,8 @@ export default function EmisionesListado() {
       setEmissions(mappedEmissions);
       setFilteredEmissions(mappedEmissions);
     } catch (error) {
-      console.error('Error loading emissions:', error);
+// eslint-disable-next-line no-console
+console.error('Error loading emissions:', error);
       // Mostrar estado vacío si falla la API
       setEmissions([]);
       setFilteredEmissions([]);
@@ -182,7 +183,7 @@ export default function EmisionesListado() {
   };
 
   const handleBulkAction = (action: string) => {
-    console.log(`Acción masiva: ${action}`, selectedEmissions);
+    // eslint-disable-next-line no-console`n    console.log(`Acción masiva: ${action}`, selectedEmissions);
     // Implementar acciones masivas aquí
     alert(
       `Acción "${action}" aplicada a ${selectedEmissions.length} emisiones`,
@@ -529,3 +530,4 @@ export default function EmisionesListado() {
     </ProtectedRoute>
   );
 }
+

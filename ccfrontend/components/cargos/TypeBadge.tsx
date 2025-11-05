@@ -35,3 +35,4 @@ export default function TypeBadge({ type, className = '' }: TypeBadgeProps) {
     <span className={`${config.className} ${className}`}>{config.label}</span>
   );
 }
+

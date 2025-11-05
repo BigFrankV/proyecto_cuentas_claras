@@ -124,7 +124,8 @@ const ApelacionesListadoPage: React.FC = () => {
       setAppeals(rows);
       // aquí podrías manejar la paginación si es necesario, usando el total
     } catch (err) {
-      console.error('load apelaciones error', err);
+// eslint-disable-next-line no-console
+console.error('load apelaciones error', err);
       setAppeals(sampleAppeals);
     } finally {
       setLoading(false);
@@ -548,3 +549,4 @@ const ApelacionesListadoPage: React.FC = () => {
 };
 
 export default ApelacionesListadoPage;
+

@@ -9,3 +9,4 @@ const ConsumosPage = dynamic(
 export default function ConsumosRoute() {
   return <ConsumosPage />;
 }
+

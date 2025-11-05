@@ -144,7 +144,8 @@ export default function UnidadesListado() {
         if (!mounted) {return;}
         setComunidadesState(res.data || []);
       } catch (err) {
-        console.error('Error loading comunidades dropdown', err);
+// eslint-disable-next-line no-console
+console.error('Error loading comunidades dropdown', err);
       }
     })();
     return () => {
@@ -167,7 +168,8 @@ export default function UnidadesListado() {
         if (!mounted) {return;}
         setAvailableEdificios(res.data || []);
       } catch (err) {
-        console.error('Error loading edificios dropdown', err);
+// eslint-disable-next-line no-console
+console.error('Error loading edificios dropdown', err);
       }
     })();
     return () => {
@@ -190,7 +192,8 @@ export default function UnidadesListado() {
         if (!mounted) {return;}
         setAvailableTorres(res.data || []);
       } catch (err) {
-        console.error('Error loading torres dropdown', err);
+// eslint-disable-next-line no-console
+console.error('Error loading torres dropdown', err);
       }
     })();
     return () => {
@@ -389,7 +392,8 @@ export default function UnidadesListado() {
         setUnidades(mapped);
         setFilteredUnidades(mapped);
       } catch (err: any) {
-        console.error('Error fetching unidades', err);
+// eslint-disable-next-line no-console
+console.error('Error fetching unidades', err);
         setError(
           err?.response?.data?.error ||
             err.message ||
@@ -821,6 +825,7 @@ export default function UnidadesListado() {
                       e.currentTarget.style.transform = 'translateY(0)';
                       e.currentTarget.style.boxShadow = '';
                     }}
+                    role="presentation"
                   >
                     <div className='position-absolute top-0 end-0 p-2'>
                       <span
@@ -938,3 +943,4 @@ export default function UnidadesListado() {
     </ProtectedRoute>
   );
 }
+

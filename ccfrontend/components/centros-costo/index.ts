@@ -5,3 +5,4 @@ import CentroTable from './CentroTable';
 
 export { CentroFilters, CentroStats, CentroTable, CentroCard };
 export default { CentroFilters, CentroStats, CentroTable, CentroCard };
+

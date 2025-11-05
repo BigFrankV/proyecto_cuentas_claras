@@ -82,3 +82,4 @@ export interface CargoDetalle extends Cargo {
   documentos?: Document[];
   historial?: TimelineItem[];
 }
+

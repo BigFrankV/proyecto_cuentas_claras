@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 import axios from 'axios';
 
 // Configuración base de la API
@@ -83,7 +85,8 @@ export const getUfByDate = async (fecha: string): Promise<UfApiResponse> => {
     const response = await api.get(`/util/uf?fecha=${fecha}`);
     return response.data;
   } catch (error: any) {
-    console.error('Error al obtener UF por fecha:', error);
+// eslint-disable-next-line no-console
+console.error('Error al obtener UF por fecha:', error);
     return {
       fecha,
       valor: 0,
@@ -102,7 +105,8 @@ export const getCurrentUf = async (): Promise<UfApiResponse> => {
     const response = await api.get('/util/uf/current');
     return response.data;
   } catch (error: any) {
-    console.error('Error al obtener UF actual:', error);
+// eslint-disable-next-line no-console
+console.error('Error al obtener UF actual:', error);
     return {
       fecha: '',
       valor: 0,
@@ -126,7 +130,8 @@ export const getUfHistorico = async (
     });
     return response.data;
   } catch (error: any) {
-    console.error('Error al obtener histórico UF:', error);
+// eslint-disable-next-line no-console
+console.error('Error al obtener histórico UF:', error);
     return {
       data: [],
       success: false,
@@ -150,7 +155,8 @@ export const getUtmByPeriod = async (
     const response = await api.get(`/util/utm?fecha=${ano}-${mesFormatted}`);
     return response.data;
   } catch (error: any) {
-    console.error('Error al obtener UTM por período:', error);
+// eslint-disable-next-line no-console
+console.error('Error al obtener UTM por período:', error);
     return {
       mes,
       ano,
@@ -170,7 +176,8 @@ export const getCurrentUtm = async (): Promise<UtmApiResponse> => {
     const response = await api.get('/util/utm/current');
     return response.data;
   } catch (error: any) {
-    console.error('Error al obtener UTM actual:', error);
+// eslint-disable-next-line no-console
+console.error('Error al obtener UTM actual:', error);
     return {
       mes: 0,
       ano: 0,
@@ -192,7 +199,8 @@ export const getUtmHistorico = async (
     const response = await api.get(`/util/utm/historico?ano=${ano}`);
     return response.data;
   } catch (error: any) {
-    console.error('Error al obtener histórico UTM:', error);
+// eslint-disable-next-line no-console
+console.error('Error al obtener histórico UTM:', error);
     return {
       data: [],
       success: false,
@@ -212,7 +220,8 @@ export const getAllIndicadores = async (): Promise<IndicadoresResponse> => {
     const response = await api.get('/util/indicadores');
     return response.data;
   } catch (error: any) {
-    console.error('Error al obtener indicadores:', error);
+// eslint-disable-next-line no-console
+console.error('Error al obtener indicadores:', error);
     return {
       indicadores: [],
       success: false,
@@ -232,7 +241,8 @@ export const getIndicadorByCodigo = async (
     const response = await api.get(`/util/indicadores?codigo=${codigo}`);
     return response.data;
   } catch (error: any) {
-    console.error(`Error al obtener indicador ${codigo}:`, error);
+// eslint-disable-next-line no-console
+console.error(`Error al obtener indicador ${codigo}:`, error);
     return {
       indicadores: [],
       success: false,
@@ -265,7 +275,8 @@ export const getSyncStatus = async (): Promise<SyncStatusResponse> => {
       },
     };
   } catch (error: any) {
-    console.error('Error al obtener estado de sincronización:', error);
+// eslint-disable-next-line no-console
+console.error('Error al obtener estado de sincronización:', error);
     return {
       lastSync: null,
       isRunning: false,
@@ -294,7 +305,8 @@ export const startManualSync = async (): Promise<{
     const response = await api.post('/util/sync/manual');
     return response.data;
   } catch (error: any) {
-    console.error('Error al iniciar sincronización manual:', error);
+// eslint-disable-next-line no-console
+console.error('Error al iniciar sincronización manual:', error);
     return {
       success: false,
       message: '',
@@ -316,7 +328,8 @@ export const initializeHistoricalData = async (): Promise<{
     const response = await api.post('/util/sync/init');
     return response.data;
   } catch (error: any) {
-    console.error('Error al inicializar datos históricos:', error);
+// eslint-disable-next-line no-console
+console.error('Error al inicializar datos históricos:', error);
     return {
       success: false,
       message: '',
@@ -406,7 +419,7 @@ export const getDateRange = (
   };
 };
 
-export default {
+const indicadoresService = {
   // UF Services
   getUfByDate,
   getCurrentUf,
@@ -433,3 +446,6 @@ export default {
   calculateDateDifference,
   getDateRange,
 };
+
+export default indicadoresService;
+

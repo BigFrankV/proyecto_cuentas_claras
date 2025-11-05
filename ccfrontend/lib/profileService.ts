@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   UserExtended,
   ProfileFormData,
@@ -6,7 +8,6 @@ import {
   ProfileUpdateResponse,
   PasswordChangeResponse,
   PreferencesUpdateResponse,
-  SessionsResponse,
   TotpSetupResponse,
   TotpVerificationData,
   TotpActionResponse,
@@ -22,7 +23,8 @@ class ProfileService {
       const response = await apiClient.get('/auth/me');
       return response.data;
     } catch (error: any) {
-      console.error('Error obteniendo perfil:', error);
+      // eslint-disable-next-line no-console
+console.error('Error obteniendo perfil:', error);
       throw new Error(
         error.response?.data?.message || 'Error al obtener perfil',
       );
@@ -35,7 +37,8 @@ class ProfileService {
       const response = await apiClient.patch('/auth/profile', data);
       return response.data;
     } catch (error: any) {
-      console.error('Error actualizando perfil:', error);
+      // eslint-disable-next-line no-console
+console.error('Error actualizando perfil:', error);
       throw new Error(
         error.response?.data?.message || 'Error al actualizar perfil',
       );
@@ -53,7 +56,8 @@ class ProfileService {
       });
       return response.data;
     } catch (error: any) {
-      console.error('Error cambiando contraseña:', error);
+      // eslint-disable-next-line no-console
+console.error('Error cambiando contraseña:', error);
       throw new Error(
         error.response?.data?.message || 'Error al cambiar contraseña',
       );
@@ -68,7 +72,8 @@ class ProfileService {
       const response = await apiClient.patch('/auth/preferences', preferences);
       return response.data;
     } catch (error: any) {
-      console.error('Error actualizando preferencias:', error);
+      // eslint-disable-next-line no-console
+console.error('Error actualizando preferencias:', error);
       throw new Error(
         error.response?.data?.message || 'Error al actualizar preferencias',
       );
@@ -81,7 +86,8 @@ class ProfileService {
       const response = await apiClient.get('/auth/sessions');
       return response.data.sessions || [];
     } catch (error: any) {
-      console.error('Error obteniendo sesiones:', error);
+      // eslint-disable-next-line no-console
+console.error('Error obteniendo sesiones:', error);
       // Devolver datos mock como fallback
       return this.getMockSessions();
     }
@@ -93,7 +99,8 @@ class ProfileService {
       const response = await apiClient.delete(`/auth/sessions/${sessionId}`);
       return response.data;
     } catch (error: any) {
-      console.error('Error cerrando sesión:', error);
+      // eslint-disable-next-line no-console
+console.error('Error cerrando sesión:', error);
       throw new Error(
         error.response?.data?.message || 'Error al cerrar sesión',
       );
@@ -106,7 +113,8 @@ class ProfileService {
       const response = await apiClient.delete('/auth/sessions');
       return response.data;
     } catch (error: any) {
-      console.error('Error cerrando todas las sesiones:', error);
+      // eslint-disable-next-line no-console
+console.error('Error cerrando todas las sesiones:', error);
       throw new Error(
         error.response?.data?.message || 'Error al cerrar sesiones',
       );
@@ -122,7 +130,8 @@ class ProfileService {
       const totp_enabled = response.data?.totp_enabled || false;
       return { enabled: totp_enabled };
     } catch (error: any) {
-      console.error('Error checking 2FA status via /auth/me:', error);
+      // eslint-disable-next-line no-console
+console.error('Error checking 2FA status via /auth/me:', error);
 
       // Fallback al método anterior si /auth/me falla
       try {
@@ -173,7 +182,8 @@ class ProfileService {
       const response = await apiClient.get('/auth/2fa/setup');
       return response.data;
     } catch (error: any) {
-      console.error('Error configurando 2FA:', error);
+      // eslint-disable-next-line no-console
+console.error('Error configurando 2FA:', error);
       throw new Error(
         error.response?.data?.message || 'Error al configurar 2FA',
       );
@@ -189,7 +199,8 @@ class ProfileService {
       });
       return { success: true, message: '2FA activado exitosamente' };
     } catch (error: any) {
-      console.error('Error activando 2FA:', error);
+      // eslint-disable-next-line no-console
+console.error('Error activando 2FA:', error);
       throw new Error(error.response?.data?.message || 'Error al activar 2FA');
     }
   }
@@ -200,7 +211,8 @@ class ProfileService {
       const response = await apiClient.post('/auth/2fa/disable', { code });
       return { success: true, message: '2FA desactivado exitosamente' };
     } catch (error: any) {
-      console.error('Error desactivando 2FA:', error);
+      // eslint-disable-next-line no-console
+console.error('Error desactivando 2FA:', error);
       throw new Error(
         error.response?.data?.message || 'Error al desactivar 2FA',
       );
@@ -216,7 +228,8 @@ class ProfileService {
       });
       return response.data;
     } catch (error: any) {
-      console.error('Error verificando 2FA:', error);
+      // eslint-disable-next-line no-console
+console.error('Error verificando 2FA:', error);
       throw new Error(error.response?.data?.message || 'Código 2FA inválido');
     }
   }
@@ -258,3 +271,4 @@ class ProfileService {
 
 const profileService = new ProfileService();
 export default profileService;
+

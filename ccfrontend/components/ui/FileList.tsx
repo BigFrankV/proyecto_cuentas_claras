@@ -44,7 +44,8 @@ export default function FileList({
 
       setFiles(fileList);
     } catch (error) {
-      console.error('Error loading files:', error);
+// eslint-disable-next-line no-console
+console.error('Error loading files:', error);
       setError('Error cargando archivos');
     } finally {
       setLoading(false);
@@ -63,7 +64,8 @@ export default function FileList({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Error downloading file:', error);
+// eslint-disable-next-line no-console
+console.error('Error downloading file:', error);
     }
   };
 
@@ -81,7 +83,8 @@ export default function FileList({
       setFiles(files.filter(f => f.id !== file.id));
       onFileDelete?.(file.id);
     } catch (error) {
-      console.error('Error deleting file:', error);
+// eslint-disable-next-line no-console
+console.error('Error deleting file:', error);
     }
   };
 
@@ -205,3 +208,4 @@ export default function FileList({
     </div>
   );
 }
+

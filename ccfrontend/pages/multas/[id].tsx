@@ -29,6 +29,7 @@ const MultaDetalleRoute: React.FC = () => {
         setMulta(res); // getMulta ya devuelve el objeto adaptado
         setHistorial(Array.isArray(hist) ? hist : (hist?.data ?? []));
       } catch (err) {
+// eslint-disable-next-line no-console
         console.error('Error cargando multa', err);
       } finally {
         if (mounted) {

@@ -52,3 +52,4 @@ export const MultaCard: React.FC<MultaCardProps> = ({ multa, onAction }) => {
     </div>
   );
 };
+

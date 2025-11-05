@@ -90,6 +90,7 @@ export default function PersonaDetalle() {
       setRoles(rolesData);
       setResumenFinanciero(resumenData);
     } catch (err) {
+// eslint-disable-next-line no-console
       console.error('Error cargando datos de persona:', err);
     }
   };

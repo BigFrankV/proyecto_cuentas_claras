@@ -5,3 +5,4 @@ import ProviderTable from './ProviderTable';
 
 export { ProviderFilters, ProviderStats, ProviderTable, ProviderCard };
 export default { ProviderFilters, ProviderStats, ProviderTable, ProviderCard };
+

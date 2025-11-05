@@ -57,11 +57,12 @@ export default function CentrosCostoListado() {
     try {
       setLoading(true);
       const response = await listCentros(resolvedComunidadId);
-      console.log('API Response:', response);
+      // eslint-disable-next-line no-console`n      console.log('API Response:', response);
       setCentros(response.data);
       setPagination(response.pagination);
     } catch (err) {
-      console.error('Error loading centros:', err);
+// eslint-disable-next-line no-console
+console.error('Error loading centros:', err);
     } finally {
       setLoading(false);
     }
@@ -86,7 +87,8 @@ export default function CentrosCostoListado() {
       setSelectedCentro(null);
       loadCentros(pagination.page);
     } catch (err) {
-      console.error('Error deleting centro:', err);
+// eslint-disable-next-line no-console
+console.error('Error deleting centro:', err);
     }
   };
 
@@ -270,3 +272,4 @@ export default function CentrosCostoListado() {
     </ProtectedRoute>
   );
 }
+

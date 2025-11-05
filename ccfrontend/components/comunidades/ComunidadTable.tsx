@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 
@@ -43,13 +44,15 @@ const ComunidadTable: React.FC<ComunidadTableProps> = ({
                 <tr key={comunidad.id}>
                   <td>
                     <div className='d-flex align-items-center'>
-                      <img
+                      <Image
                         src={
                           comunidad.imagen ||
                           'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80'
                         }
                         alt={comunidad.nombre}
                         className='rounded me-3'
+                        width={50}
+                        height={50}
                         style={{
                           width: '50px',
                           height: '50px',
@@ -228,3 +231,4 @@ const ComunidadTable: React.FC<ComunidadTableProps> = ({
 };
 
 export default ComunidadTable;
+

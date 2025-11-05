@@ -67,7 +67,8 @@ const PersonasListado = () => {
       const data = await listarPersonas(filters);
       setPersonas(data);
     } catch (err) {
-      console.error('Error al cargar personas:', err);
+// eslint-disable-next-line no-console
+console.error('Error al cargar personas:', err);
     }
   };
 
@@ -81,7 +82,8 @@ const PersonasListado = () => {
         administradores: data.administradores,
       });
     } catch (err) {
-      console.error('Error al cargar estadísticas:', err);
+// eslint-disable-next-line no-console
+console.error('Error al cargar estadísticas:', err);
     }
   };
 
@@ -212,3 +214,4 @@ const PersonasListado = () => {
 };
 
 export default PersonasListado;
+

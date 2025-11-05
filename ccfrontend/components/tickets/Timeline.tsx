@@ -234,3 +234,4 @@ export const Timeline: React.FC<TimelineProps> = ({
 };
 
 export default Timeline;
+

@@ -44,3 +44,4 @@ export type NotificationType =
 export type NotificationStatus = 'sent' | 'draft' | 'scheduled' | 'failed';
 export type NotificationChannel = 'email' | 'sms' | 'push' | 'app';
 export type AudienceType = 'all' | 'building' | 'unit' | 'custom';
+

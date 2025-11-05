@@ -195,6 +195,7 @@ export default function DetallePurchase() {
       setPurchase(mappedPurchase);
       setDocuments([]); // por ahora vacío
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error loading purchase data:', error);
       setPurchase(null);
       setDocuments([]);
@@ -278,6 +279,7 @@ export default function DetallePurchase() {
         alert('Compra aprobada exitosamente');
       }
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error approving purchase:', error);
       alert('Error al aprobar la compra');
     }
@@ -316,6 +318,7 @@ export default function DetallePurchase() {
         alert('Compra rechazada');
       }
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error rejecting purchase:', error);
       alert('Error al rechazar la compra');
     }
@@ -349,6 +352,7 @@ export default function DetallePurchase() {
         setNewNote('');
       }
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error adding note:', error);
     }
   };

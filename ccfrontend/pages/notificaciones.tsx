@@ -327,7 +327,7 @@ export default function NotificacionesListado() {
       case 'view':
         router.push(`/notificaciones/${notificationId}`);
         break;
-      case 'duplicate':
+      case 'duplicate': {
         // Crear una copia de la notificación
         const notificationToDuplicate = notifications.find(
           n => n.id === notificationId,
@@ -348,6 +348,7 @@ export default function NotificacionesListado() {
           alert('Notificación duplicada como borrador');
         }
         break;
+      }
       case 'resend':
         if (
           confirm('¿Estás seguro de que quieres reenviar esta notificación?')
@@ -383,6 +384,7 @@ export default function NotificacionesListado() {
         }
         break;
       default:
+        // eslint-disable-next-line no-console
         console.log('Acción no implementada:', action);
     }
   };
@@ -449,7 +451,7 @@ export default function NotificacionesListado() {
           );
         }
         break;
-      case 'export':
+      case 'export': {
         const selectedNotificationData = notifications.filter(n =>
           selectedNotifications.includes(n.id),
         );
@@ -477,7 +479,9 @@ export default function NotificacionesListado() {
         setSelectedNotifications([]);
         alert('Notificaciones exportadas exitosamente');
         break;
+      }
       default:
+        // eslint-disable-next-line no-console
         console.log('Acción masiva no implementada:', action);
     }
   };
@@ -1230,7 +1234,7 @@ export default function NotificacionesListado() {
             ) : null}
 
             {/* Cards View for Mobile and Desktop Cards Mode */}
-            {viewMode === 'cards' || true ? (
+            {viewMode === 'cards' ? (
               <div className={`p-3 ${viewMode === 'table' ? 'd-md-none' : ''}`}>
                 <div className='row'>
                   {filteredNotifications.map(notification => (
@@ -1506,29 +1510,29 @@ export default function NotificacionesListado() {
             <nav>
               <ul className='pagination mb-0'>
                 <li className='page-item disabled'>
-                  <a className='page-link' href='#'>
+                  <button className='page-link' disabled>
                     Anterior
-                  </a>
+                  </button>
                 </li>
                 <li className='page-item active'>
-                  <a className='page-link' href='#'>
+                  <button className='page-link' disabled>
                     1
-                  </a>
+                  </button>
                 </li>
                 <li className='page-item'>
-                  <a className='page-link' href='#'>
+                  <button className='page-link'>
                     2
-                  </a>
+                  </button>
                 </li>
                 <li className='page-item'>
-                  <a className='page-link' href='#'>
+                  <button className='page-link'>
                     3
-                  </a>
+                  </button>
                 </li>
                 <li className='page-item'>
-                  <a className='page-link' href='#'>
+                  <button className='page-link'>
                     Siguiente
-                  </a>
+                  </button>
                 </li>
               </ul>
             </nav>
@@ -1538,3 +1542,4 @@ export default function NotificacionesListado() {
     </ProtectedRoute>
   );
 }
+

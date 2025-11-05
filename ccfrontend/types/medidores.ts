@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface MedidorLocation {
   building?: string;
   floor?: string | null;
@@ -59,3 +60,4 @@ export interface MedidoresListResponse {
   data: Medidor[];
   pagination?: { total: number; limit: number; offset: number; pages: number };
 }
+

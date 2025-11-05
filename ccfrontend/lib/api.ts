@@ -17,21 +17,31 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   config => {
     const token = localStorage.getItem('auth_token');
-    console.log('🔐 [API Request] Ruta:', config.url);
-    console.log('🔐 [API Request] Token presente:', !!token);
-    console.log('🔐 [API Request] Base URL:', config.baseURL);
+    // eslint-disable-next-line no-console
+    console.log('[API Request] Ruta:', config.url);
+    // eslint-disable-next-line no-console
+    console.log('[API Request] Token presente:', !!token);
+    // eslint-disable-next-line no-console
+    console.log('[API Request] Base URL:', config.baseURL);
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔐 [API Request] Token agregado al header');
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
+      console.log('[API Request] Token agregado al header');
     } else {
-      console.warn('🔐 [API Request] ⚠️ NO HAY TOKEN en localStorage');
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
+
+// eslint-disable-next-line no-console
+console.warn('[API Request] No hay token en localStorage');
     }
 
     return config;
   },
   error => {
-    console.error('🔐 [API Request Error]:', error);
+    // eslint-disable-next-line no-console
+console.error('[API Request Error]:', error);
     return Promise.reject(error);
   },
 );
@@ -39,21 +49,30 @@ apiClient.interceptors.request.use(
 // Interceptor para manejar respuestas y errores
 apiClient.interceptors.response.use(
   response => {
-    console.log('✅ [API Response] Ruta:', response.config.url);
-    console.log('✅ [API Response] Status:', response.status);
-    console.log('✅ [API Response] Data:', response.data);
+    // eslint-disable-next-line no-console
+    console.log('[API Response] Ruta:', response.config.url);
+    // eslint-disable-next-line no-console
+    console.log('[API Response] Status:', response.status);
+    // eslint-disable-next-line no-console
+    console.log('[API Response] Data:', response.data);
     return response;
   },
   error => {
-    console.error('❌ [API Error] Ruta:', error.config?.url);
-    console.error('❌ [API Error] Status:', error.response?.status);
-    console.error('❌ [API Error] Error message:', error.message);
-    console.error('❌ [API Error] Response data:', error.response?.data);
-    console.error('❌ [API Error] Code:', error.code);
+    // eslint-disable-next-line no-console
+    console.error('[API Error] Ruta:', error.config?.url);
+    // eslint-disable-next-line no-console
+    console.error('[API Error] Status:', error.response?.status);
+    // eslint-disable-next-line no-console
+    console.error('[API Error] Mensaje de error:', error.message);
+    // eslint-disable-next-line no-console
+    console.error('[API Error] Datos de respuesta:', error.response?.data);
+    // eslint-disable-next-line no-console
+    console.error('[API Error] Código:', error.code);
 
     // Si el token expiró o no existe, limpiar y redirigir
     if (error.response?.status === 401) {
-      console.error('❌ [API Error] 401 - No autorizado, limpiando sesión...');
+      // eslint-disable-next-line no-console
+      console.error('[API Error] 401 - No autorizado, limpiando sesión...');
 
       // Limpiar localStorage
       if (typeof window !== 'undefined') {
@@ -64,7 +83,8 @@ apiClient.interceptors.response.use(
         // Redirigir SOLO si no estamos ya en la página de login
         const currentPath = window.location.pathname;
         if (currentPath !== '/' && currentPath !== '/login') {
-          console.error('❌ [API Error] Redirigiendo a login...');
+          // eslint-disable-next-line no-console
+          console.error('[API Error] Redirigiendo a login...');
           window.location.href = '/';
         }
       }
@@ -75,3 +95,4 @@ apiClient.interceptors.response.use(
 
 export default apiClient;
 export { API_BASE_URL };
+

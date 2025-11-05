@@ -217,7 +217,8 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
           }
         }
       } catch (e) {
-        console.error('Error cargando tab:', e);
+// eslint-disable-next-line no-console
+console.error('Error cargando tab:', e);
       } finally {
         if (mounted) {
           setLoadingTab(false);
@@ -276,7 +277,8 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
       }
       alert('Pago registrado correctamente');
     } catch (err) {
-      console.error('Error registrando pago:', err);
+// eslint-disable-next-line no-console
+console.error('Error registrando pago:', err);
       alert('Error registrando pago');
     } finally {
       setLoadingTab(false);
@@ -331,7 +333,8 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
         }
       }
     } catch (err: any) {
-      console.error('Error creando apelación:', err);
+// eslint-disable-next-line no-console
+console.error('Error creando apelación:', err);
       setAppealError(err?.message ?? 'Error del servidor');
     } finally {
       setLoadingTab(false);
@@ -1004,3 +1007,4 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
 };
 
 export default MultaDetallePage;
+

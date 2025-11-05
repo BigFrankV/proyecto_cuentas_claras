@@ -578,3 +578,4 @@ export function EmissionRow({
     </tr>
   );
 }
+

@@ -63,7 +63,8 @@ const AmenidadesCalendarioPage: React.FC = () => {
         // Por ahora, dejamos vacío hasta que se implemente el servicio
         setEvents([]);
       } catch (error) {
-        console.error('Error loading events:', error);
+// eslint-disable-next-line no-console
+console.error('Error loading events:', error);
         setEvents([]);
       } finally {
         setIsLoading(false);
@@ -254,3 +255,4 @@ const AmenidadesCalendarioPage: React.FC = () => {
 };
 
 export default AmenidadesCalendarioPage;
+

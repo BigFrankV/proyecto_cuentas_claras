@@ -9,3 +9,4 @@ export const Timeline = ({ activities }) => {
     </div>
   );
 };
+

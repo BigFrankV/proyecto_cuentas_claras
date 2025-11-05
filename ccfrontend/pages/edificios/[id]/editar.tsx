@@ -51,6 +51,7 @@ export default function EdificioEditar() {
             setEdificio(edificioData);
 
             // Llenar el formulario con los datos existentes
+            // eslint-disable-next-line no-console
             console.log('Datos recibidos del edificio:', edificioData);
 
             // Cargar campos básicos
@@ -77,6 +78,7 @@ export default function EdificioEditar() {
 
             // Manejar servicios y amenidades específicamente
             if (edificioData.servicios) {
+// eslint-disable-next-line no-console
               console.log(
                 'Servicios recibidos:',
                 edificioData.servicios,
@@ -93,6 +95,7 @@ export default function EdificioEditar() {
             }
 
             if (edificioData.amenidades) {
+// eslint-disable-next-line no-console
               console.log(
                 'Amenidades recibidas:',
                 edificioData.amenidades,
@@ -116,6 +119,7 @@ export default function EdificioEditar() {
 
           setComunidades(opciones);
         } catch (error) {
+// eslint-disable-next-line no-console
           console.error('Error cargando datos:', error);
         } finally {
           setLoadingData(false);
@@ -193,6 +197,7 @@ export default function EdificioEditar() {
       await updateEdificio(id, formData);
       router.push('/edificios');
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error actualizando edificio:', error);
     }
   };

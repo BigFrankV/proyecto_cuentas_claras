@@ -1,4 +1,4 @@
-import Head from 'next/head';
+/* eslint-disable react/no-unescaped-entities */
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 
@@ -200,6 +200,7 @@ const ValidadorRUT: React.FC = () => {
       setShowCopiedAlert(text);
       setTimeout(() => setShowCopiedAlert(null), 2000);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Error al copiar:', err);
     }
   };
@@ -257,8 +258,7 @@ const ValidadorRUT: React.FC = () => {
             role='alert'
           >
             <i className='material-icons me-2'>check_circle</i>
-            <strong>¡Copiado!</strong> RUT "{showCopiedAlert}" copiado al
-            portapapeles.
+            <strong>¡Copiado!</strong> RUT "{showCopiedAlert}&rdquo; copiado al portapapeles.
             <button
               type='button'
               className='btn-close'
@@ -566,3 +566,4 @@ const ValidadorRUT: React.FC = () => {
 };
 
 export default ValidadorRUT;
+

@@ -3,14 +3,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 
-// Componentes específicos
 import ComunidadCard from '@/components/comunidades/ComunidadCard';
 import ComunidadTable from '@/components/comunidades/ComunidadTable';
 import FilterContainer from '@/components/comunidades/FilterContainer';
 import ViewToggle from '@/components/comunidades/ViewToggle';
 import Layout from '@/components/layout/Layout';
-
-// Tipos y servicios
 import comunidadesService from '@/lib/comunidadesService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth'; // ✅ AGREGAR useAuth
 import {
@@ -58,16 +55,20 @@ export default function ComunidadesListado() {
     setIsLoading(true);
     setError(null);
     try {
+      // eslint-disable-next-line no-console
       console.log('👤 Usuario actual:', user);
+      // eslint-disable-next-line no-console
       console.log('👑 Es superadmin:', user?.is_superadmin);
 
       // El backend ya filtra las comunidades basado en permisos de usuario
       // No necesitamos lógica diferente para superadmin vs usuarios normales
       const data = await comunidadesService.getComunidades();
       setComunidades(data);
+      // eslint-disable-next-line no-console
       console.log(`📊 Total comunidades cargadas: ${data.length}`);
     } catch (error: any) {
-      console.error('❌ Error loading comunidades:', error);
+// eslint-disable-next-line no-console
+console.error('❌ Error loading comunidades:', error);
       const errorMessage =
         error?.response?.data?.message ||
         error?.message ||
@@ -150,7 +151,8 @@ export default function ComunidadesListado() {
         await comunidadesService.deleteComunidad(id);
         await loadComunidades();
       } catch (error) {
-        console.error('Error deleting comunidad:', error);
+// eslint-disable-next-line no-console
+console.error('Error deleting comunidad:', error);
         alert('Error al eliminar la comunidad');
       }
     }
@@ -289,19 +291,19 @@ export default function ComunidadesListado() {
                       <span className='page-link'>1</span>
                     </li>
                     <li className='page-item'>
-                      <a className='page-link' href='#'>
+                      <button className='page-link' type='button'>
                         2
-                      </a>
+                      </button>
                     </li>
                     <li className='page-item'>
-                      <a className='page-link' href='#'>
+                      <button className='page-link' type='button'>
                         3
-                      </a>
+                      </button>
                     </li>
                     <li className='page-item'>
-                      <a className='page-link' href='#'>
+                      <button className='page-link' type='button'>
                         Siguiente
-                      </a>
+                      </button>
                     </li>
                   </ul>
                 </nav>
@@ -313,3 +315,4 @@ export default function ComunidadesListado() {
     </ProtectedRoute>
   );
 }
+

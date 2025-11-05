@@ -75,7 +75,8 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
           onFilterChange('comunidad', String(user.comunidad_id));
         }
       } catch (err: any) {
-        console.error('Error loading comunidades dropdown', err);
+// eslint-disable-next-line no-console
+console.error('Error loading comunidades dropdown', err);
         // fallback si backend devuelve 403: usar comunidad_id del user si existe
         if (err?.response?.status === 403 && user?.comunidad_id) {
           const fallback = [
@@ -304,3 +305,4 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
 };
 
 export default UnidadFilters;
+

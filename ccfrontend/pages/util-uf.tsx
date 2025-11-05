@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -115,7 +116,7 @@ const ConsultorUF: React.FC = () => {
   };
 
   // Función para usar períodos rápidos
-  const usePeriodoRapido = (key: string) => {
+  const handlePeriodoRapido = (key: string) => {
     const today = new Date();
     const targetDate = new Date(today);
 
@@ -217,12 +218,14 @@ const ConsultorUF: React.FC = () => {
 
         setChartData(chartData);
       } else {
+        // eslint-disable-next-line no-console
         console.error('Error al cargar histórico UF:', apiResponse.error);
         // En caso de error, limpiar datos
         setHistorialUf([]);
         setChartData(null);
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error al cargar datos históricos:', error);
       setHistorialUf([]);
       setChartData(null);
@@ -453,7 +456,7 @@ const ConsultorUF: React.FC = () => {
                         <div key={periodo.key} className='col-md-3'>
                           <button
                             className='btn btn-outline-secondary w-100'
-                            onClick={() => usePeriodoRapido(periodo.key)}
+                            onClick={() => handlePeriodoRapido(periodo.key)}
                             disabled={loading}
                           >
                             <i className='material-icons me-1'>
@@ -807,3 +810,4 @@ const ConsultorUF: React.FC = () => {
 };
 
 export default ConsultorUF;
+
