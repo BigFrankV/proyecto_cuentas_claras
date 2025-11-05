@@ -184,7 +184,7 @@ export default function DocumentoDetalle() {
             downloadCount: (prev.downloadCount || 0) + 1,
             lastDownloaded: new Date().toISOString(),
           }
-        : null
+        : null,
     );
 
     alert(`Descargando ${document.fileName}`);

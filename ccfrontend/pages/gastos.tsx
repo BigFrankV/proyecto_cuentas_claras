@@ -625,6 +625,13 @@ export default function GastosListado() {
                   <div
                     className='data-card'
                     onClick={() => handleExpenseClick(expense.id)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        handleExpenseClick(expense.id);
+                      }
+                    }}
+                    role='button'
+                    tabIndex={0}
                   >
                     <div className='card-body'>
                       <div className='data-card-header'>

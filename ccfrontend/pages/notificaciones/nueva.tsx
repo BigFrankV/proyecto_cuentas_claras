@@ -394,6 +394,14 @@ export default function NuevaNotificacion() {
                             height: '100%',
                           }}
                           onClick={() => handleTypeSelect(type.id)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleTypeSelect(type.id);
+                            }
+                          }}
+                          role='button'
+                          tabIndex={0}
                         >
                           <div
                             className='type-icon mb-3'
@@ -650,6 +658,19 @@ export default function NuevaNotificacion() {
                                   message: newMessage,
                                 }));
                               }}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  const newMessage =
+                                    formData.message + variable;
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    message: newMessage,
+                                  }));
+                                }
+                              }}
+                              role='button'
+                              tabIndex={0}
                             >
                               {variable}
                             </span>
@@ -715,7 +736,7 @@ export default function NuevaNotificacion() {
                             className={`channel-card ${formData.channels.includes(channel.id) ? 'selected' : ''}`}
                             style={{
                               backgroundColor: formData.channels.includes(
-                                channel.id
+                                channel.id,
                               )
                                 ? channel.bg
                                 : '#fff',
@@ -729,6 +750,14 @@ export default function NuevaNotificacion() {
                               transition: 'all 0.2s ease',
                             }}
                             onClick={() => handleChannelToggle(channel.id)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleChannelToggle(channel.id);
+                              }
+                            }}
+                            role='button'
+                            tabIndex={0}
                           >
                             <div
                               className='channel-icon mb-2'
@@ -1277,7 +1306,7 @@ export default function NuevaNotificacion() {
                       <div className='d-flex flex-wrap gap-1'>
                         {formData.channels.map(channel => {
                           const channelConfig = channels.find(
-                            c => c.id === channel
+                            c => c.id === channel,
                           );
                           return (
                             <span

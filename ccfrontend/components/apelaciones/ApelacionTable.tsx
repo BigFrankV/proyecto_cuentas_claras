@@ -76,7 +76,7 @@ export default function ApelacionTable({
       return true;
     }
     const roles = (u.memberships || []).map((m: any) =>
-      String(m.rol_slug || m.rol || '').toLowerCase()
+      String(m.rol_slug || m.rol || '').toLowerCase(),
     );
     const allowed = [
       'presidente_comite',
@@ -116,7 +116,7 @@ export default function ApelacionTable({
             ? res.meta.total
             : res.data
               ? res.data.length
-              : 0
+              : 0,
         );
       } catch (err: any) {
         // eslint-disable-next-line no-console
@@ -216,15 +216,15 @@ export default function ApelacionTable({
                               >
                                 Editar
                               </Link>
-                              <a
-                                className='p-2 text-decoration-none text-dark'
-                                href='#'
+                              <button
+                                type='button'
+                                className='p-2 text-decoration-none text-dark bg-transparent border-0 text-start'
                                 onClick={e => {
                                   e.preventDefault(); /* implementar descargue */
                                 }}
                               >
                                 Descargar documentos
-                              </a>
+                              </button>
                             </div>
                           </ActionDropdown>
                         ) : (

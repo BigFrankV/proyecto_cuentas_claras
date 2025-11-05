@@ -37,7 +37,7 @@ export const useEdificios = () => {
         setEdificios(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al cargar los edificios'
+          err instanceof Error ? err.message : 'Error al cargar los edificios',
         );
         // eslint-disable-next-line no-console
         console.error('Error fetching edificios:', err);
@@ -45,7 +45,7 @@ export const useEdificios = () => {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Crear un nuevo edificio
@@ -68,7 +68,7 @@ export const useEdificios = () => {
         return false;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al crear el edificio'
+          err instanceof Error ? err.message : 'Error al crear el edificio',
         );
         // eslint-disable-next-line no-console
         console.error('Error creating edificio:', err);
@@ -77,7 +77,7 @@ export const useEdificios = () => {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Actualizar un edificio
@@ -96,15 +96,15 @@ export const useEdificios = () => {
         if (updatedEdificio) {
           setEdificios(prev =>
             prev.map(edificio =>
-              edificio.id === id ? updatedEdificio : edificio
-            )
+              edificio.id === id ? updatedEdificio : edificio,
+            ),
           );
           return true;
         }
         return false;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al actualizar el edificio'
+          err instanceof Error ? err.message : 'Error al actualizar el edificio',
         );
         // eslint-disable-next-line no-console
         console.error('Error updating edificio:', err);
@@ -113,7 +113,7 @@ export const useEdificios = () => {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Eliminar un edificio
@@ -133,7 +133,7 @@ export const useEdificios = () => {
         return true;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al eliminar el edificio'
+          err instanceof Error ? err.message : 'Error al eliminar el edificio',
         );
         // eslint-disable-next-line no-console
         console.error('Error deleting edificio:', err);
@@ -142,7 +142,7 @@ export const useEdificios = () => {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Obtener edificio por ID
@@ -161,7 +161,7 @@ export const useEdificios = () => {
         return edificio;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al cargar el edificio'
+          err instanceof Error ? err.message : 'Error al cargar el edificio',
         );
         // eslint-disable-next-line no-console
         console.error('Error getting edificio by id:', err);
@@ -170,7 +170,7 @@ export const useEdificios = () => {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Verificar dependencias
@@ -189,7 +189,7 @@ export const useEdificios = () => {
         return {};
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Obtener estadísticas
@@ -241,7 +241,7 @@ export const useEdificios = () => {
         return true;
       });
     },
-    [edificios]
+    [edificios],
   );
 
   return {
@@ -279,7 +279,7 @@ export const useEdificiosStats = () => {
       setStats(data);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Error al cargar estadísticas'
+        err instanceof Error ? err.message : 'Error al cargar estadísticas',
       );
       // eslint-disable-next-line no-console
       console.error('Error fetching stats:', err);
@@ -349,7 +349,7 @@ export const useTorres = (edificioId: string) => {
         setLoading(false);
       }
     },
-    [edificioId]
+    [edificioId],
   );
 
   return {
@@ -414,7 +414,7 @@ export const useUnidades = (edificioId: string, torreId?: string) => {
         setLoading(false);
       }
     },
-    [edificioId]
+    [edificioId],
   );
 
   return {
@@ -462,7 +462,7 @@ export const useEdificiosUtils = () => {
     async (
       edificioId: string,
       codigo: string,
-      tipo: 'edificio' | 'torre' | 'unidad'
+      tipo: 'edificio' | 'torre' | 'unidad',
     ) => {
       if (typeof window === 'undefined') {
         return false;
@@ -477,7 +477,7 @@ export const useEdificiosUtils = () => {
         return false;
       }
     },
-    []
+    [],
   );
 
   return {
@@ -520,7 +520,7 @@ export const useEdificioForm = () => {
         }));
       }
     },
-    [errors]
+    [errors],
   );
 
   const touchField = useCallback((field: keyof EdificioFormData) => {

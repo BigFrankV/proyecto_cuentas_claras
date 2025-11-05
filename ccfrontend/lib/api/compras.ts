@@ -13,7 +13,7 @@ const handleApiError = (error: unknown) => {
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as { response?: { data?: { error?: string } } };
     throw new Error(
-      apiError.response?.data?.error || 'Error de conexión con el servidor'
+      apiError.response?.data?.error || 'Error de conexión con el servidor',
     );
   }
   throw new Error('Error de conexión con el servidor');
@@ -22,7 +22,7 @@ const handleApiError = (error: unknown) => {
 // Helper para hacer peticiones autenticadas
 const apiRequest = async (
   url: string,
-  options: Record<string, unknown> = {}
+  options: Record<string, unknown> = {},
 ) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
   const token =
@@ -46,7 +46,7 @@ const apiRequest = async (
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      errorData.error || `HTTP error! status: ${response.status}`
+      errorData.error || `HTTP error! status: ${response.status}`,
     );
   }
 
@@ -136,7 +136,7 @@ export const comprasApi = {
   // Actualizar compra
   update: async (
     id: number,
-    compra: Partial<CompraBackend>
+    compra: Partial<CompraBackend>,
   ): Promise<CompraBackend> => {
     try {
       const data = await apiRequest(`/compras/${id}`, {
@@ -168,7 +168,7 @@ export const comprasApi = {
 
   // Estadísticas generales de compras
   getEstadisticas: async (
-    comunidadId?: number
+    comunidadId?: number,
   ): Promise<ComprasEstadisticas> => {
     try {
       const params = new URLSearchParams();

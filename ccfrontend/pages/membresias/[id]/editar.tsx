@@ -171,28 +171,28 @@ export default function MembresiaEditar() {
               </button>
               <ul className='dropdown-menu'>
                 <li>
-                  <a className='dropdown-item' href='#'>
+                  <button type='button' className='dropdown-item'>
                     <i className='fas fa-sync-alt me-2'></i> Renovar membresía
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <a className='dropdown-item' href='#'>
+                  <button type='button' className='dropdown-item'>
                     <i className='fas fa-star me-2'></i> Cambiar nivel
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <a className='dropdown-item' href='#'>
+                  <button type='button' className='dropdown-item'>
                     <i className='fas fa-envelope me-2'></i> Notificar al
                     miembro
-                  </a>
+                  </button>
                 </li>
                 <li>
                   <hr className='dropdown-divider' />
                 </li>
                 <li>
-                  <a className='dropdown-item text-danger' href='#'>
+                  <button type='button' className='dropdown-item text-danger'>
                     <i className='fas fa-ban me-2'></i> Cancelar membresía
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>

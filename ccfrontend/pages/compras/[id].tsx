@@ -23,7 +23,7 @@ import { CompraBackend } from '@/types/compras';
 // Función para formatear moneda chilena
 const formatCurrency = (
   amount: number,
-  currency: 'clp' | 'usd' = 'clp'
+  currency: 'clp' | 'usd' = 'clp',
 ): string => {
   if (currency === 'clp') {
     return `$${amount.toLocaleString('es-CL')}`;
@@ -571,7 +571,7 @@ export default function DetallePurchase() {
                             </label>
                             <div className='detail-value'>
                               {new Date(
-                                purchase.requiredDate
+                                purchase.requiredDate,
                               ).toLocaleDateString('es-ES')}
                             </div>
                           </div>
@@ -590,7 +590,7 @@ export default function DetallePurchase() {
                             <div className='detail-value fw-bold'>
                               {formatCurrency(
                                 purchase.totalAmount,
-                                purchase.currency
+                                purchase.currency,
                               )}
                             </div>
                           </div>
@@ -692,7 +692,7 @@ export default function DetallePurchase() {
                               <strong>
                                 {formatCurrency(
                                   purchase.costCenter.budget,
-                                  purchase.currency
+                                  purchase.currency,
                                 )}
                               </strong>
                             </div>
@@ -701,7 +701,7 @@ export default function DetallePurchase() {
                               <span>
                                 {formatCurrency(
                                   purchase.costCenter.spent,
-                                  purchase.currency
+                                  purchase.currency,
                                 )}
                               </span>
                             </div>
@@ -711,7 +711,7 @@ export default function DetallePurchase() {
                                 {formatCurrency(
                                   purchase.costCenter.budget -
                                     purchase.costCenter.spent,
-                                  purchase.currency
+                                  purchase.currency,
                                 )}
                               </span>
                             </div>
@@ -789,7 +789,7 @@ export default function DetallePurchase() {
                               <td className='fw-bold'>
                                 {formatCurrency(
                                   purchase.totalAmount,
-                                  purchase.currency
+                                  purchase.currency,
                                 )}
                               </td>
                               <td></td>
@@ -835,7 +835,7 @@ export default function DetallePurchase() {
                             <div className='total-value'>
                               {formatCurrency(
                                 purchase.totalAmount,
-                                purchase.currency
+                                purchase.currency,
                               )}
                             </div>
                           </div>
@@ -886,10 +886,12 @@ export default function DetallePurchase() {
                               <strong>Aprobada por:</strong>{' '}
                               {purchase.approvedBy}
                             </div>
-                            <div>
-                              <strong>Fecha:</strong>{' '}
-                              {formatDate(purchase.approvedDate!)}
-                            </div>
+                            {purchase.approvedDate && (
+                              <div>
+                                <strong>Fecha:</strong>{' '}
+                                {formatDate(purchase.approvedDate)}
+                              </div>
+                            )}
                           </div>
                         )}
                         {purchase.rejectedBy && (
@@ -898,10 +900,12 @@ export default function DetallePurchase() {
                               <strong>Rechazada por:</strong>{' '}
                               {purchase.rejectedBy}
                             </div>
-                            <div>
-                              <strong>Fecha:</strong>{' '}
-                              {formatDate(purchase.rejectedDate!)}
-                            </div>
+                            {purchase.rejectedDate && (
+                              <div>
+                                <strong>Fecha:</strong>{' '}
+                                {formatDate(purchase.rejectedDate)}
+                              </div>
+                            )}
                             {purchase.rejectionReason && (
                               <div className='mt-2'>
                                 <strong>Motivo:</strong>

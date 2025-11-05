@@ -30,7 +30,7 @@ const AmenidadesCalendarioPage: React.FC = () => {
 
   const handleEventClick = (info: any) => {
     alert(
-      `Reserva: ${info.event.title}\nFecha: ${info.event.start.toLocaleDateString()}`
+      `Reserva: ${info.event.title}\nFecha: ${info.event.start.toLocaleDateString()}`,
     );
   };
 

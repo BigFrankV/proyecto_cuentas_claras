@@ -63,6 +63,14 @@ export default function MemberSelector({
               key={member.id}
               className='member-card'
               onClick={() => onMemberSelect(member)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onMemberSelect(member);
+                }
+              }}
+              role='button'
+              tabIndex={0}
               style={{
                 border: '1px solid #dee2e6',
                 borderRadius: 'var(--radius)',

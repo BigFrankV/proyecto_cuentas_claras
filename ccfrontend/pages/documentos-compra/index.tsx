@@ -191,8 +191,8 @@ export default function DocumentosCompraListado() {
                     approvedBy: 'Usuario Actual',
                     approvedAt: new Date().toISOString(),
                   }
-                : doc
-            )
+                : doc,
+            ),
           );
           alert('Documento aprobado exitosamente');
         }
@@ -201,8 +201,8 @@ export default function DocumentosCompraListado() {
         if (confirm('¿Estás seguro de que deseas rechazar este documento?')) {
           setDocuments(prev =>
             prev.map(doc =>
-              doc.id === id ? { ...doc, status: 'rejected' } : doc
-            )
+              doc.id === id ? { ...doc, status: 'rejected' } : doc,
+            ),
           );
           alert('Documento rechazado');
         }
@@ -210,7 +210,7 @@ export default function DocumentosCompraListado() {
       case 'pay':
         if (confirm('¿Marcar este documento como pagado?')) {
           setDocuments(prev =>
-            prev.map(doc => (doc.id === id ? { ...doc, status: 'paid' } : doc))
+            prev.map(doc => (doc.id === id ? { ...doc, status: 'paid' } : doc)),
           );
           alert('Documento marcado como pagado');
         }
@@ -242,7 +242,7 @@ export default function DocumentosCompraListado() {
       case 'approve':
         if (
           confirm(
-            `¿Aprobar ${selectedDocuments.length} documentos seleccionados?`
+            `¿Aprobar ${selectedDocuments.length} documentos seleccionados?`,
           )
         ) {
           setDocuments(prev =>
@@ -254,8 +254,8 @@ export default function DocumentosCompraListado() {
                     approvedBy: 'Usuario Actual',
                     approvedAt: new Date().toISOString(),
                   }
-                : doc
-            )
+                : doc,
+            ),
           );
           setSelectedDocuments([]);
           alert('Documentos aprobados exitosamente');
@@ -267,11 +267,11 @@ export default function DocumentosCompraListado() {
       case 'delete':
         if (
           confirm(
-            `¿Eliminar ${selectedDocuments.length} documentos seleccionados?`
+            `¿Eliminar ${selectedDocuments.length} documentos seleccionados?`,
           )
         ) {
           setDocuments(prev =>
-            prev.filter(doc => !selectedDocuments.includes(doc.id))
+            prev.filter(doc => !selectedDocuments.includes(doc.id)),
           );
           setSelectedDocuments([]);
           alert('Documentos eliminados exitosamente');
@@ -568,7 +568,10 @@ export default function DocumentosCompraListado() {
             <div className='results-summary'>
               <strong>{filteredDocuments.length}</strong> documentos encontrados
               {searchTerm && (
-                <span className='text-muted'> para "{searchTerm}"</span>
+                <span className='text-muted'>
+                  {' '}
+                  para &quot;{searchTerm}&quot;
+                </span>
               )}
             </div>
 
@@ -685,7 +688,7 @@ export default function DocumentosCompraListado() {
                                     onClick={() =>
                                       handleDocumentAction(
                                         'approve',
-                                        document.id
+                                        document.id,
                                       )
                                     }
                                   >
@@ -699,7 +702,7 @@ export default function DocumentosCompraListado() {
                                     onClick={() =>
                                       handleDocumentAction(
                                         'reject',
-                                        document.id
+                                        document.id,
                                       )
                                     }
                                   >
@@ -890,7 +893,7 @@ export default function DocumentosCompraListado() {
                                 ]);
                               } else {
                                 setSelectedDocuments(prev =>
-                                  prev.filter(id => id !== document.id)
+                                  prev.filter(id => id !== document.id),
                                 );
                               }
                             }}
@@ -972,7 +975,7 @@ export default function DocumentosCompraListado() {
                                       onClick={() =>
                                         handleDocumentAction(
                                           'approve',
-                                          document.id
+                                          document.id,
                                         )
                                       }
                                     >
@@ -988,7 +991,7 @@ export default function DocumentosCompraListado() {
                                       onClick={() =>
                                         handleDocumentAction(
                                           'reject',
-                                          document.id
+                                          document.id,
                                         )
                                       }
                                     >

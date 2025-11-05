@@ -18,7 +18,7 @@ const SyncControlPanel: React.FC<SyncControlPanelProps> = ({
   const [initLoading, setInitLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
   const [messageType, setMessageType] = useState<'success' | 'error' | 'info'>(
-    'info'
+    'info',
   );
 
   // Cargar estado de sincronización
@@ -78,7 +78,7 @@ const SyncControlPanel: React.FC<SyncControlPanelProps> = ({
 
       if (result.success) {
         setMessage(
-          result.message || 'Inicialización de datos históricos completada'
+          result.message || 'Inicialización de datos históricos completada',
         );
         setMessageType('success');
 
@@ -291,8 +291,8 @@ const SyncControlPanel: React.FC<SyncControlPanelProps> = ({
                   info
                 </i>
                 La sincronización automática se ejecuta diariamente a las 08:00
-                AM. Use "Inicializar" solo si es la primera vez que configura el
-                sistema.
+                AM. Use &quot;Inicializar&quot; solo si es la primera vez que
+                configura el sistema.
               </small>
             </div>
           </>

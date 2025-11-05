@@ -128,7 +128,7 @@ export default function NuevoTicket() {
   ];
 
   const filteredUnits = units.filter(unit =>
-    unit.toLowerCase().includes(unitSearchTerm.toLowerCase())
+    unit.toLowerCase().includes(unitSearchTerm.toLowerCase()),
   );
 
   const handleInputChange = (field: keyof TicketForm, value: any) => {
@@ -730,7 +730,7 @@ export default function NuevoTicket() {
                       <span className='text-muted'>Prioridad:</span>
                       <span className='fw-semibold'>
                         {priorityOptions.find(
-                          p => p.value === formData.prioridad
+                          p => p.value === formData.prioridad,
                         )?.label || 'No seleccionada'}
                       </span>
                     </div>
@@ -738,7 +738,7 @@ export default function NuevoTicket() {
                       <span className='text-muted'>Categoría:</span>
                       <span className='fw-semibold'>
                         {categoryOptions.find(
-                          c => c.value === formData.categoria
+                          c => c.value === formData.categoria,
                         )?.label || 'No seleccionada'}
                       </span>
                     </div>

@@ -86,7 +86,7 @@ export default function RichTextEditor({
       } else {
         textarea.setSelectionRange(
           start + before.length,
-          start + before.length
+          start + before.length,
         );
       }
     }, 0);

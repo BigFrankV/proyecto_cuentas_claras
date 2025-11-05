@@ -6,7 +6,7 @@ import { ProtectedRoute } from '@/lib/useAuth';
 
 const AmenidadesPage = dynamic(
   () => import('@/components/amenidades/AmenidadesPage'),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function AmenidadesListado() {

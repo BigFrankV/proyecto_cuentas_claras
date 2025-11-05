@@ -17,7 +17,7 @@ const MembresiasListado = () => {
     'todos' | 'activo' | 'inactivo'
   >('todos');
   const [comunidadFilter, setComunidadFilter] = useState<number | 'todos'>(
-    'todos'
+    'todos',
   );
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [currentPage, setCurrentPage] = useState(1);
@@ -91,10 +91,10 @@ const MembresiasListado = () => {
         m.hasta &&
         new Date(m.hasta) > now &&
         (new Date(m.hasta).getTime() - now.getTime()) / (1000 * 60 * 60 * 24) <=
-          30
+          30,
     ).length;
     const vencidas = membresias.filter(
-      m => m.hasta && new Date(m.hasta) < now
+      m => m.hasta && new Date(m.hasta) < now,
     ).length;
 
     return { total, activas, vencenEsteMes, vencidas };
@@ -210,7 +210,7 @@ const MembresiasListado = () => {
                         setNivelFilter(
                           e.target.value === 'todos'
                             ? 'todos'
-                            : parseInt(e.target.value)
+                            : parseInt(e.target.value),
                         )
                       }
                     >
@@ -228,7 +228,7 @@ const MembresiasListado = () => {
                       value={estadoFilter}
                       onChange={e =>
                         setEstadoFilter(
-                          e.target.value as 'todos' | 'activo' | 'inactivo'
+                          e.target.value as 'todos' | 'activo' | 'inactivo',
                         )
                       }
                     >
@@ -245,7 +245,7 @@ const MembresiasListado = () => {
                         setComunidadFilter(
                           e.target.value === 'todos'
                             ? 'todos'
-                            : parseInt(e.target.value)
+                            : parseInt(e.target.value),
                         )
                       }
                     >
@@ -461,7 +461,7 @@ const MembresiasListado = () => {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     backgroundColor: getAvatarColor(
-                                      membresia.rol_codigo
+                                      membresia.rol_codigo,
                                     ),
                                     color: '#fff',
                                     fontWeight: 'bold',
@@ -488,7 +488,7 @@ const MembresiasListado = () => {
                             <td>
                               <span
                                 className={getTierBadgeClass(
-                                  membresia.rol_codigo
+                                  membresia.rol_codigo,
                                 )}
                               >
                                 {membresia.rol_nombre}
@@ -539,12 +539,12 @@ const MembresiasListado = () => {
                                           Math.min(
                                             100,
                                             ((new Date(
-                                              membresia.hasta
+                                              membresia.hasta,
                                             ).getTime() -
                                               new Date().getTime()) /
                                               (1000 * 60 * 60 * 24 * 365)) *
-                                              100
-                                          )
+                                              100,
+                                          ),
                                         )
                                       : 100
                                   }
@@ -556,9 +556,9 @@ const MembresiasListado = () => {
                                 {membresia.hasta
                                   ? (() => {
                                       const diasRestantes = Math.ceil(
-                                        (new Date(membresia.hasta!).getTime() -
+                                        (new Date(membresia.hasta).getTime() -
                                           new Date().getTime()) /
-                                          (1000 * 60 * 60 * 24)
+                                          (1000 * 60 * 60 * 24),
                                       );
                                       return diasRestantes > 0
                                         ? `Vence en ${diasRestantes} días`
@@ -606,7 +606,10 @@ const MembresiasListado = () => {
                                     </Link>
                                   </li>
                                   <li>
-                                    <a className='dropdown-item' href='#'>
+                                    <button
+                                      type='button'
+                                      className='dropdown-item'
+                                    >
                                       <i
                                         className='material-icons me-2'
                                         style={{ fontSize: '16px' }}
@@ -614,15 +617,15 @@ const MembresiasListado = () => {
                                         sync
                                       </i>
                                       Renovar
-                                    </a>
+                                    </button>
                                   </li>
                                   <li>
                                     <hr className='dropdown-divider' />
                                   </li>
                                   <li>
-                                    <a
+                                    <button
+                                      type='button'
                                       className='dropdown-item text-danger'
-                                      href='#'
                                     >
                                       <i
                                         className='material-icons me-2'
@@ -631,7 +634,7 @@ const MembresiasListado = () => {
                                         cancel
                                       </i>
                                       Cancelar
-                                    </a>
+                                    </button>
                                   </li>
                                 </ul>
                               </div>
@@ -675,7 +678,7 @@ const MembresiasListado = () => {
                                   height: '48px',
                                   borderRadius: '50%',
                                   backgroundColor: getAvatarColor(
-                                    membresia.rol_codigo
+                                    membresia.rol_codigo,
                                   ),
                                   fontSize: '20px',
                                 }}
@@ -698,7 +701,7 @@ const MembresiasListado = () => {
                             </div>
                             <span
                               className={getTierBadgeClass(
-                                membresia.rol_codigo
+                                membresia.rol_codigo,
                               )}
                             >
                               {membresia.rol_nombre}
@@ -731,9 +734,9 @@ const MembresiasListado = () => {
                                 {membresia.hasta
                                   ? (() => {
                                       const diasRestantes = Math.ceil(
-                                        (new Date(membresia.hasta!).getTime() -
+                                        (new Date(membresia.hasta).getTime() -
                                           new Date().getTime()) /
-                                          (1000 * 60 * 60 * 24)
+                                          (1000 * 60 * 60 * 24),
                                       );
                                       return diasRestantes > 0
                                         ? `${diasRestantes} días restantes`
@@ -761,12 +764,12 @@ const MembresiasListado = () => {
                                         Math.min(
                                           100,
                                           ((new Date(
-                                            membresia.hasta
+                                            membresia.hasta,
                                           ).getTime() -
                                             new Date().getTime()) /
                                             (1000 * 60 * 60 * 24 * 365)) *
-                                            100
-                                        )
+                                            100,
+                                        ),
                                       )
                                     : 100
                                 }
@@ -828,9 +831,9 @@ const MembresiasListado = () => {
               <nav className='mt-4'>
                 <ul className='pagination justify-content-center'>
                   <li className='page-item disabled'>
-                    <a
+                    <button
+                      type='button'
                       className='page-link'
-                      href='#'
                       tabIndex={-1}
                       aria-disabled='true'
                     >
@@ -840,32 +843,32 @@ const MembresiasListado = () => {
                       >
                         chevron_left
                       </i>
-                    </a>
+                    </button>
                   </li>
                   <li className='page-item active'>
-                    <a className='page-link' href='#'>
+                    <button type='button' className='page-link'>
                       1
-                    </a>
+                    </button>
                   </li>
                   <li className='page-item'>
-                    <a className='page-link' href='#'>
+                    <button type='button' className='page-link'>
                       2
-                    </a>
+                    </button>
                   </li>
                   <li className='page-item'>
-                    <a className='page-link' href='#'>
+                    <button type='button' className='page-link'>
                       3
-                    </a>
+                    </button>
                   </li>
                   <li className='page-item'>
-                    <a className='page-link' href='#'>
+                    <button type='button' className='page-link'>
                       <i
                         className='material-icons'
                         style={{ fontSize: '16px' }}
                       >
                         chevron_right
                       </i>
-                    </a>
+                    </button>
                   </li>
                 </ul>
               </nav>

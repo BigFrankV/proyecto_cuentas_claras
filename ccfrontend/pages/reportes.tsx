@@ -36,7 +36,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 // Interfaces para tipos de datos
@@ -77,7 +77,7 @@ interface PagoData {
 export default function ReportesDashboard() {
   const [activeTab, setActiveTab] = useState<string>('financiero');
   const [selectedCommunity, setSelectedCommunity] = useState<number | null>(
-    null
+    null,
   );
   const [dateRange] = useState({
     start: moment().subtract(3, 'month').format('YYYY-MM-DD'),
@@ -248,10 +248,10 @@ export default function ReportesDashboard() {
           setTickets(ticketsRes.data || []);
           // derive simple summary
           const open = (ticketsRes.data || []).filter(
-            (t: any) => t.estado !== 'cerrado'
+            (t: any) => t.estado !== 'cerrado',
           ).length;
           const closed = (ticketsRes.data || []).filter(
-            (t: any) => t.estado === 'cerrado'
+            (t: any) => t.estado === 'cerrado',
           ).length;
           setTicketsSummary({ open, closed });
 
@@ -272,7 +272,7 @@ export default function ReportesDashboard() {
           // eslint-disable-next-line no-console
           console.warn(
             'No hay datos operacionales o el endpoint no respondió:',
-            err
+            err,
           );
         }
       } else if (activeTab === 'consumos') {
@@ -635,7 +635,7 @@ export default function ReportesDashboard() {
                       }).format(
                         flujoData[flujoData.length - 1]?.entradas ||
                           flujoData[flujoData.length - 1]?.ingresos ||
-                          0
+                          0,
                       )}
                     </h4>
                   </div>
@@ -667,7 +667,7 @@ export default function ReportesDashboard() {
                       }).format(
                         flujoData[flujoData.length - 1]?.salidas ||
                           flujoData[flujoData.length - 1]?.gastos ||
-                          0
+                          0,
                       )}
                     </h4>
                   </div>
@@ -872,7 +872,7 @@ export default function ReportesDashboard() {
               {
                 label: 'Gastos por Centro de Costo',
                 data: centrosCostoResumen.map(
-                  (c: any) => c.total || c.monto || 0
+                  (c: any) => c.total || c.monto || 0,
                 ),
                 backgroundColor: [
                   '#198754',
@@ -981,7 +981,7 @@ export default function ReportesDashboard() {
               acc[t.categoria || 'Sin categoría'] =
                 (acc[t.categoria || 'Sin categoría'] || 0) + 1;
               return acc;
-            }, {})
+            }, {}),
           ) as [string, any][])
         : [];
 
@@ -1071,7 +1071,7 @@ export default function ReportesDashboard() {
                             acc[r.amenidad_nombre] =
                               (acc[r.amenidad_nombre] || 0) + 1;
                             return acc;
-                          }, {})
+                          }, {}),
                         ) as [string, any][]
                       )
                         .sort((a, b) => b[1] - a[1])
@@ -1332,7 +1332,7 @@ export default function ReportesDashboard() {
                       .filter(c =>
                         c.nombre
                           .toLowerCase()
-                          .includes(searchCommunity.toLowerCase())
+                          .includes(searchCommunity.toLowerCase()),
                       )
                       .map(comunidad => (
                         <button
@@ -1375,7 +1375,7 @@ export default function ReportesDashboard() {
                     {communities.filter(c =>
                       c.nombre
                         .toLowerCase()
-                        .includes(searchCommunity.toLowerCase())
+                        .includes(searchCommunity.toLowerCase()),
                     ).length === 0 && (
                       <div className='px-3 py-2 text-muted text-center'>
                         No se encontraron comunidades
@@ -1475,7 +1475,7 @@ export default function ReportesDashboard() {
                   value={selectedPeriod}
                   onChange={e =>
                     setSelectedPeriod(
-                      e.target.value as 'monthly' | 'quarterly' | 'yearly'
+                      e.target.value as 'monthly' | 'quarterly' | 'yearly',
                     )
                   }
                 >
@@ -1507,7 +1507,7 @@ export default function ReportesDashboard() {
           {selectedCommunity &&
             (() => {
               const comunidad = communities.find(
-                c => c.id === selectedCommunity
+                c => c.id === selectedCommunity,
               );
               if (!comunidad) {
                 return null;
@@ -1516,7 +1516,7 @@ export default function ReportesDashboard() {
               const disponibles = Math.max(
                 0,
                 (comunidad.totalUnidades || 0) -
-                  (comunidad.unidadesOcupadas || 0)
+                  (comunidad.unidadesOcupadas || 0),
               );
 
               const doughnutData = {

@@ -139,7 +139,7 @@ export function mapBackendToExpense(g: GastoBackend): Expense {
   };
 
   const backendStatus = String(
-    (g as any).estado || g.status || ''
+    (g as any).estado || g.status || '',
   ).toLowerCase();
   const normalizedStatus = statusMap[backendStatus] || 'pending';
 

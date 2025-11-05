@@ -83,7 +83,7 @@ export default function CargoDetallePage() {
         setError(
           err instanceof Error
             ? err.message
-            : 'Error desconocido al cargar el cargo'
+            : 'Error desconocido al cargar el cargo',
         );
       } finally {
         setLoading(false);

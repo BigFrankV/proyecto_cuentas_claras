@@ -395,6 +395,14 @@ export default function BitacoraNueva() {
                       onClick={() =>
                         document.getElementById('tagInput')?.focus()
                       }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          document.getElementById('tagInput')?.focus();
+                        }
+                      }}
+                      role='button'
+                      tabIndex={0}
                     >
                       {tags.map((tag, index) => (
                         <span key={index} className='tag'>
@@ -442,6 +450,8 @@ export default function BitacoraNueva() {
                       onDragLeave={handleDrag}
                       onDragOver={handleDrag}
                       onDrop={handleDrop}
+                      role='button'
+                      tabIndex={0}
                     >
                       <div className='upload-icon'>
                         <i className='material-icons'>cloud_upload</i>

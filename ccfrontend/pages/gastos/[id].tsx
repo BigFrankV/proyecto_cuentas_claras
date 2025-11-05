@@ -21,7 +21,7 @@ import {
   updateGasto,
 } from '@/lib/gastosService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { mapBackendToExpense } from '@/types/gastos';
+import { mapBackendToExpense, Expense, ApprovalRecord, AttachmentFile } from '@/types/gastos';
 
 interface ExpenseFormData {
   id: number;
@@ -45,50 +45,6 @@ interface ExpenseFormData {
 }
 
 interface ExistingAttachment {
-  id: number;
-  name: string;
-  type: string;
-  size: number;
-  url: string;
-  uploadedAt: string;
-}
-
-interface Expense {
-  id: number;
-  description: string;
-  category: string;
-  provider: string;
-  amount: number;
-  date: string;
-  status: 'pending' | 'approved' | 'rejected' | 'paid' | 'completed';
-  dueDate: string;
-  documentType: string;
-  documentNumber: string;
-  hasAttachments: boolean;
-  createdBy: string;
-  createdAt: string;
-  tags: string[];
-  priority: 'low' | 'medium' | 'high';
-  requiredApprovals: number;
-  currentApprovals: number;
-  costCenter: string;
-  observations: string;
-  isRecurring: boolean;
-  recurringPeriod: string;
-  paymentMethod: string;
-  approvalHistory: ApprovalRecord[];
-  attachments: AttachmentFile[];
-}
-
-interface ApprovalRecord {
-  id: number;
-  approver: string;
-  action: 'approved' | 'rejected' | 'requested_changes';
-  date: string;
-  comments: string;
-}
-
-interface AttachmentFile {
   id: number;
   name: string;
   type: string;
@@ -334,12 +290,6 @@ export default function GastoDetalle() {
     glosa: form.description,
     // Agrega otros campos según backend
   });
-
-  useEffect(() => {
-    if (id && comunidadId) {
-      getGastoById(Number(id)).then(data => setExpense(mapToFormData(data)));
-    }
-  }, [id, comunidadId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -72,7 +72,7 @@ class BitacoraService {
   // Obtener actividades de una comunidad
   async getActivities(
     comunidadId: number,
-    filters?: ActivityFilters
+    filters?: ActivityFilters,
   ): Promise<ActivityResponse> {
     try {
       const params = new URLSearchParams();
@@ -109,7 +109,7 @@ class BitacoraService {
   async getStats(comunidadId: number): Promise<ActivityStatsBackend> {
     try {
       const response = await apiClient.get(
-        `${this.baseUrl}/stats/${comunidadId}`
+        `${this.baseUrl}/stats/${comunidadId}`,
       );
       return response.data;
     } catch {
@@ -120,12 +120,12 @@ class BitacoraService {
   // Crear nueva entrada de bitácora
   async createActivity(
     comunidadId: number,
-    data: CreateActivityData
+    data: CreateActivityData,
   ): Promise<ActivityBackend> {
     try {
       const response = await apiClient.post(
         `${this.baseUrl}/comunidad/${comunidadId}`,
-        data
+        data,
       );
       return response.data;
     } catch {
@@ -137,7 +137,7 @@ class BitacoraService {
   async exportData(
     comunidadId: number,
     format: 'csv' | 'excel' | 'pdf',
-    filters?: ActivityFilters
+    filters?: ActivityFilters,
   ): Promise<Blob> {
     try {
       const params = new URLSearchParams();
@@ -161,7 +161,7 @@ class BitacoraService {
         `${this.baseUrl}/export?${params.toString()}`,
         {
           responseType: 'blob',
-        }
+        },
       );
       return response.data;
     } catch {

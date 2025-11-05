@@ -36,7 +36,7 @@ const FilterContainer: React.FC<FilterContainerProps> = ({
   };
 
   const tienesFiltrosActivos = Object.values(filtros).some(
-    value => value !== ''
+    value => value !== '',
   );
 
   return (
@@ -138,7 +138,7 @@ const FilterContainer: React.FC<FilterContainerProps> = ({
 
             {filtros.busqueda && (
               <span className='badge bg-light text-dark me-2 mb-1'>
-                Búsqueda: "{filtros.busqueda}"
+                Búsqueda: &quot;{filtros.busqueda}&quot;
                 <button
                   className='btn-close btn-close-sm ms-1'
                   onClick={() => handleInputChange('busqueda', '')}
@@ -171,7 +171,7 @@ const FilterContainer: React.FC<FilterContainerProps> = ({
 
             {filtros.administrador && (
               <span className='badge bg-light text-dark me-2 mb-1'>
-                Admin: "{filtros.administrador}"
+                Admin: &quot;{filtros.administrador}&quot;
                 <button
                   className='btn-close btn-close-sm ms-1'
                   onClick={() => handleInputChange('administrador', '')}

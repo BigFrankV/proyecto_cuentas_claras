@@ -203,7 +203,7 @@ export default function CentroCostoEditar() {
   }
 
   const selectedDepartment = departmentOptions.find(
-    d => d.value === formData.department
+    d => d.value === formData.department,
   );
 
   return (
@@ -418,7 +418,7 @@ export default function CentroCostoEditar() {
                                   </span>
                                 </Button>
                               </Badge>
-                            )
+                            ),
                           )}
                         </div>
                       </div>
@@ -483,7 +483,7 @@ export default function CentroCostoEditar() {
                             {formData.budget
                               ? (parseInt(formData.budget) / 12).toLocaleString(
                                   undefined,
-                                  { maximumFractionDigits: 0 }
+                                  { maximumFractionDigits: 0 },
                                 )
                               : '0'}
                           </small>
@@ -514,6 +514,14 @@ export default function CentroCostoEditar() {
                             className={`icon-option ${formData.icon === icon ? 'selected' : ''}`}
                             style={{ backgroundColor: formData.color }}
                             onClick={() => handleInputChange('icon', icon)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleInputChange('icon', icon);
+                              }
+                            }}
+                            role='button'
+                            tabIndex={0}
                           >
                             <span className='material-icons'>{icon}</span>
                           </div>
@@ -530,6 +538,15 @@ export default function CentroCostoEditar() {
                             className={`color-option ${formData.color === color ? 'selected' : ''}`}
                             style={{ backgroundColor: color }}
                             onClick={() => handleInputChange('color', color)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleInputChange('color', color);
+                              }
+                            }}
+                            role='button'
+                            tabIndex={0}
+                            aria-label={`Select color ${color}`}
                           />
                         ))}
                       </div>

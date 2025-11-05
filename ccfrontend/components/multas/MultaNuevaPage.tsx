@@ -47,7 +47,7 @@ const MultaNuevaPage: React.FC = () => {
       (unit.codigo || '').toLowerCase().includes(unitSearch.toLowerCase()) ||
       (unit.owner || unit.propietario || '')
         .toLowerCase()
-        .includes(unitSearch.toLowerCase())
+        .includes(unitSearch.toLowerCase()),
   );
 
   // Cargar comunidades al montar (si existe endpoint)
@@ -68,7 +68,7 @@ const MultaNuevaPage: React.FC = () => {
           // eslint-disable-next-line no-console
           console.warn(
             'No se pudieron cargar comunidades (status):',
-            resp.status
+            resp.status,
           );
           return;
         }
@@ -146,7 +146,7 @@ const MultaNuevaPage: React.FC = () => {
           value={selectedComunidadGlobal ?? ''}
           onChange={e =>
             setSelectedComunidadGlobal(
-              e.target.value ? Number(e.target.value) : null
+              e.target.value ? Number(e.target.value) : null,
             )
           }
         >
@@ -174,7 +174,7 @@ const MultaNuevaPage: React.FC = () => {
     try {
       if (unit.comunidad_id) {
         const tipos = await multasService.obtenerTipos(
-          Number(unit.comunidad_id)
+          Number(unit.comunidad_id),
         );
         setViolationTypes(
           (tipos || []).map((t: any, i: number) => ({
@@ -186,7 +186,7 @@ const MultaNuevaPage: React.FC = () => {
               t.icono ||
               ['warning', 'gavel', 'pets', 'cleaning_services'][i % 4],
             color: t.color || '#6f42c1',
-          }))
+          })),
         );
       }
     } catch (err) {
@@ -236,7 +236,7 @@ const MultaNuevaPage: React.FC = () => {
   };
 
   const selectedViolation = violationTypes.find(
-    v => v.id === selectedViolationType
+    v => v.id === selectedViolationType,
   );
 
   useEffect(() => {
@@ -253,7 +253,7 @@ const MultaNuevaPage: React.FC = () => {
               t.icono ||
               ['warning', 'gavel', 'pets', 'cleaning_services'][i % 4],
             color: t.color || '#6f42c1',
-          }))
+          })),
         );
       } catch (e) {
         // eslint-disable-next-line no-console
@@ -314,7 +314,7 @@ const MultaNuevaPage: React.FC = () => {
   const handleSubmit = async () => {
     if (!validateStep(3)) {
       window.alert(
-        'Completa todos los campos obligatorios antes de crear la multa.'
+        'Completa todos los campos obligatorios antes de crear la multa.',
       );
       return;
     }
@@ -430,6 +430,15 @@ const MultaNuevaPage: React.FC = () => {
                     setSelectedViolationType(v.id);
                     setMonto(v.amount);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedViolationType(v.id);
+                      setMonto(v.amount);
+                    }
+                  }}
+                  role='button'
+                  tabIndex={0}
                 >
                   <div className='d-flex align-items-center'>
                     <div
@@ -567,7 +576,7 @@ const MultaNuevaPage: React.FC = () => {
                       value={monto}
                       onChange={e =>
                         setMonto(
-                          e.target.value === '' ? '' : Number(e.target.value)
+                          e.target.value === '' ? '' : Number(e.target.value),
                         )
                       }
                       min={0}
@@ -599,6 +608,14 @@ const MultaNuevaPage: React.FC = () => {
                 <div
                   className='evidence-upload-zone border rounded p-4 text-center'
                   onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                  role='button'
+                  tabIndex={0}
                   style={{ cursor: 'pointer' }}
                 >
                   <i className='material-icons mb-2' style={{ fontSize: 36 }}>
@@ -748,7 +765,7 @@ const MultaNuevaPage: React.FC = () => {
                     changeStep(1);
                   } else {
                     window.alert(
-                      'Completa los campos obligatorios en este paso.'
+                      'Completa los campos obligatorios en este paso.',
                     );
                   }
                 }}

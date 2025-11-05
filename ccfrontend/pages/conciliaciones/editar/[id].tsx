@@ -84,7 +84,7 @@ export default function EditarConciliacion() {
     variant: 'success',
   });
   const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>(
-    []
+    [],
   );
   const [processSteps, setProcessSteps] = useState<ProcessStep[]>([
     {
@@ -223,7 +223,7 @@ export default function EditarConciliacion() {
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -250,7 +250,7 @@ export default function EditarConciliacion() {
             : step.number === activeStep
               ? 'active'
               : 'pending',
-      }))
+      })),
     );
   };
 
@@ -718,8 +718,8 @@ export default function EditarConciliacion() {
                         </span>
                         <h6>Listo para procesar</h6>
                         <p className='text-muted'>
-                          Haga clic en "Actualizar" para procesar el nuevo
-                          archivo
+                          Haga clic en &quot;Actualizar&quot; para procesar el
+                          nuevo archivo
                         </p>
                       </div>
                     )}
@@ -764,7 +764,7 @@ export default function EditarConciliacion() {
                           <div className='summary-value'>
                             {
                               bankTransactions.filter(
-                                t => t.matchStatus === 'matched'
+                                t => t.matchStatus === 'matched',
                               ).length
                             }
                           </div>
@@ -779,7 +779,7 @@ export default function EditarConciliacion() {
                           <div className='summary-value'>
                             {
                               bankTransactions.filter(
-                                t => t.matchStatus === 'unmatched'
+                                t => t.matchStatus === 'unmatched',
                               ).length
                             }
                           </div>
@@ -795,8 +795,8 @@ export default function EditarConciliacion() {
                             {formatCurrency(
                               bankTransactions.reduce(
                                 (sum, t) => sum + t.amount,
-                                0
-                              )
+                                0,
+                              ),
                             )}
                           </div>
                           <div className='summary-label'>Monto Total</div>
@@ -829,7 +829,7 @@ export default function EditarConciliacion() {
                               <tr key={transaction.id}>
                                 <td>
                                   {new Date(
-                                    transaction.date
+                                    transaction.date,
                                   ).toLocaleDateString('es-CL')}
                                 </td>
                                 <td>

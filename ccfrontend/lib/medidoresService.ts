@@ -9,7 +9,7 @@ import apiClient from './api';
 
 export async function listMedidores(
   comunidadId: number | null,
-  params: Record<string, any> = {}
+  params: Record<string, any> = {},
 ): Promise<MedidoresListResponse> {
   if (!comunidadId) {
     return {
@@ -25,7 +25,7 @@ export async function listMedidores(
 
 // Nuevo: endpoint global para superadmin (soporta comunidad_id para filtrar)
 export async function listAllMedidores(
-  params: Record<string, any> = {}
+  params: Record<string, any> = {},
 ): Promise<MedidoresListResponse> {
   const resp = await apiClient.get('/medidores', { params });
   return resp.data as MedidoresListResponse;
@@ -43,7 +43,7 @@ export async function deleteMedidor(id: number): Promise<any> {
 
 export async function listLecturas(
   medidorId: number,
-  params: Record<string, any> = {}
+  params: Record<string, any> = {},
 ): Promise<{ data: Reading[]; pagination?: any }> {
   const resp = await apiClient.get(`/medidores/${medidorId}/lecturas`, {
     params,
@@ -53,18 +53,18 @@ export async function listLecturas(
 
 export async function createLectura(
   medidorId: number,
-  payload: Record<string, any>
+  payload: Record<string, any>,
 ): Promise<Reading> {
   const resp = await apiClient.post(
     `/medidores/${medidorId}/lecturas`,
-    payload
+    payload,
   );
   return resp.data as Reading;
 }
 
 export async function getConsumos(
   medidorId: number,
-  params: Record<string, any> = {}
+  params: Record<string, any> = {},
 ): Promise<{ data: any[] }> {
   const resp = await apiClient.get(`/medidores/${medidorId}/consumos`, {
     params,

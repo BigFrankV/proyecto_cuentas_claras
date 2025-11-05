@@ -38,7 +38,7 @@ export default function MedidoresListadoPage() {
   const [currentView, setCurrentView] = useState<'table' | 'grid'>('table');
 
   // comunidad del usuario (si no es superadmin)
-  const comunidadUsuarioId = user?.comunidades?.[0]?.id ?? null;
+  const comunidadUsuarioId = user?.comunidad_id ?? null;
 
   // cargar comunidades para selector (superadmin)
   useEffect(() => {
@@ -151,7 +151,7 @@ export default function MedidoresListadoPage() {
     const comunidadId = medidor?.comunidad_id ?? comunidadUsuarioId;
     return !!user.comunidades?.some(
       (c: any) =>
-        c.id === comunidadId && (c.role === 'admin' || c.role === 'gestor')
+        c.id === comunidadId && (c.role === 'admin' || c.role === 'gestor'),
     );
   };
 
@@ -477,7 +477,7 @@ export default function MedidoresListadoPage() {
                     const v =
                       e.target.value === '' ? null : Number(e.target.value);
                     setSelectedComunidad(
-                      comunidades.find(c => c.id === v) ?? null
+                      comunidades.find(c => c.id === v) ?? null,
                     );
                     setPage(1);
                   }}

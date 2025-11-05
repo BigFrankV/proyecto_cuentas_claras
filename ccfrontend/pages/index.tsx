@@ -38,7 +38,7 @@ export default function Home() {
       '🏠 Estado auth en login page - autenticado:',
       isAuthenticated,
       'cargando:',
-      authLoading
+      authLoading,
     );
     if (isAuthenticated && !authLoading) {
       // eslint-disable-next-line no-console
@@ -73,7 +73,7 @@ export default function Home() {
     // Validar formato del identificador
     if (identifierValidation && !identifierValidation.isValid) {
       setError(
-        identifierValidation.message || 'Formato de identificador inválido'
+        identifierValidation.message || 'Formato de identificador inválido',
       );
       return;
     }
@@ -144,10 +144,10 @@ export default function Home() {
   // Pre-llenar los campos con las credenciales por defecto
   const fillDefaultCredentials = () => {
     const usernameInput = document.querySelector(
-      'input[name="username"]'
+      'input[name="username"]',
     ) as HTMLInputElement;
     const passwordInput = document.querySelector(
-      'input[name="password"]'
+      'input[name="password"]',
     ) as HTMLInputElement;
 
     if (usernameInput) {
@@ -470,7 +470,7 @@ export default function Home() {
                           value={twoFactorCode}
                           onChange={e =>
                             setTwoFactorCode(
-                              e.target.value.replace(/\D/g, '').slice(0, 6)
+                              e.target.value.replace(/\D/g, '').slice(0, 6),
                             )
                           }
                           maxLength={6}

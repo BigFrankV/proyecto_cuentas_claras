@@ -234,7 +234,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
                 cloud_upload
               </i>
               <p className='text-muted mb-0'>
-                Arrastra archivos aquí o usa el botón "Agregar"
+                Arrastra archivos aquí o usa el botón &quot;Agregar&quot;
               </p>
               <small className='text-muted'>
                 Formatos: PDF, JPG, PNG, DOC, DOCX, TXT (Max: 10MB)

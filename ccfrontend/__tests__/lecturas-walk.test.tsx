@@ -103,7 +103,7 @@ interface ElementFinding {
 function walkElement(
   element: unknown,
   path: string[] = [],
-  findings: ElementFinding[] = []
+  findings: ElementFinding[] = [],
 ): ElementFinding[] {
   if (!element || typeof element !== 'object') {
     return findings;
@@ -125,7 +125,7 @@ function walkElement(
 
   if (Array.isArray(children)) {
     children.forEach((ch, i) =>
-      walkElement(ch, path.concat([`[${i}]`]), findings)
+      walkElement(ch, path.concat([`[${i}]`]), findings),
     );
   } else if (children) {
     walkElement(children, path.concat(['children']), findings);
@@ -148,7 +148,7 @@ test('walk lecturas element tree to find object-typed element types', async () =
   // If there are findings, fail the test to draw attention and show console output
   if (findings.length > 0) {
     throw new Error(
-      `Found object-typed element types: ${JSON.stringify(findings)}`
+      `Found object-typed element types: ${JSON.stringify(findings)}`,
     );
   }
 });

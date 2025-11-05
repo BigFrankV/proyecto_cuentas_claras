@@ -57,7 +57,7 @@ const ValidadorRUT: React.FC = () => {
   // Función para formatear RUT
   const formatRut = (
     rut: string,
-    format: 'dots' | 'clean' | 'dash' = 'dots'
+    format: 'dots' | 'clean' | 'dash' = 'dots',
   ): string => {
     const cleaned = cleanRut(rut);
     if (cleaned.length < 2) {
@@ -419,7 +419,7 @@ const ValidadorRUT: React.FC = () => {
                       value={generateFormat}
                       onChange={e =>
                         setGenerateFormat(
-                          e.target.value as 'dots' | 'clean' | 'dash'
+                          e.target.value as 'dots' | 'clean' | 'dash',
                         )
                       }
                     >

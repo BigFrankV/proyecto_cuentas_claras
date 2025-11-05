@@ -101,7 +101,7 @@ interface FetchOptions {
 // Helper para hacer peticiones autenticadas
 const apiRequest = async (
   url: string,
-  options: FetchOptions = {}
+  options: FetchOptions = {},
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> => {
   // Obtener token directamente de localStorage para evitar problemas de importación
@@ -127,7 +127,7 @@ const apiRequest = async (
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      errorData.error || `HTTP error! status: ${response.status}`
+      errorData.error || `HTTP error! status: ${response.status}`,
     );
   }
 
@@ -353,7 +353,7 @@ export const edificiosApi = {
   // Actualizar edificio
   update: async (
     id: string,
-    data: Partial<EdificioFormData>
+    data: Partial<EdificioFormData>,
   ): Promise<Edificio | null> => {
     try {
       const payload: Record<string, unknown> = {
@@ -506,7 +506,7 @@ export const torresApi = {
   // Crear nueva torre
   create: async (
     edificioId: string,
-    data: TorreFormData
+    data: TorreFormData,
   ): Promise<Torre | null> => {
     try {
       const payload = {
@@ -549,12 +549,12 @@ export const unidadesApi = {
   // Obtener unidades de un edificio
   getByEdificio: async (
     edificioId: string,
-    torreId?: string
+    torreId?: string,
   ): Promise<Unidad[]> => {
     try {
       const queryParams = torreId ? `?torreId=${torreId}` : '';
       const data = await apiRequest(
-        `/edificios/${edificioId}/unidades${queryParams}`
+        `/edificios/${edificioId}/unidades${queryParams}`,
       );
 
       return data.map((unidad: ApiUnidadResponse) => ({
@@ -583,7 +583,7 @@ export const unidadesApi = {
   // Crear nueva unidad
   create: async (
     edificioId: string,
-    data: UnidadFormData
+    data: UnidadFormData,
   ): Promise<Unidad | null> => {
     try {
       const payload = {
@@ -628,7 +628,7 @@ export const edificiosUtilsApi = {
   search: async (query: string, limit = 10) => {
     try {
       return await apiRequest(
-        `/edificios/buscar?q=${encodeURIComponent(query)}&limit=${limit}`
+        `/edificios/buscar?q=${encodeURIComponent(query)}&limit=${limit}`,
       );
     } catch (error) {
       handleApiError(error);
@@ -666,11 +666,11 @@ export const edificiosUtilsApi = {
   validarCodigo: async (
     edificioId: string,
     codigo: string,
-    tipo: 'edificio' | 'torre' | 'unidad'
+    tipo: 'edificio' | 'torre' | 'unidad',
   ) => {
     try {
       return await apiRequest(
-        `/edificios/${edificioId}/validar-codigo?codigo=${encodeURIComponent(codigo)}&tipo=${tipo}`
+        `/edificios/${edificioId}/validar-codigo?codigo=${encodeURIComponent(codigo)}&tipo=${tipo}`,
       );
     } catch (error) {
       handleApiError(error);

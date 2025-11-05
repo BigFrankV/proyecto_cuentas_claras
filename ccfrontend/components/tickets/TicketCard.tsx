@@ -80,6 +80,14 @@ export const TicketCard: React.FC<TicketCardProps> = ({
         height: '100%',
       }}
       onClick={handleCardClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardClick(e as unknown as React.MouseEvent);
+        }
+      }}
+      role='button'
+      tabIndex={0}
     >
       {/* Header */}
       <div className='ticket-card-header d-flex justify-content-between align-items-start mb-3'>
@@ -91,7 +99,17 @@ export const TicketCard: React.FC<TicketCardProps> = ({
           {ticket.number}
         </Link>
         {onSelect && (
-          <div className='form-check' onClick={e => e.stopPropagation()}>
+          <div 
+            className='form-check' 
+            onClick={e => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.stopPropagation();
+              }
+            }}
+            role='button'
+            tabIndex={0}
+          >
             <input
               className='form-check-input'
               type='checkbox'
@@ -259,7 +277,17 @@ export const TicketCard: React.FC<TicketCardProps> = ({
           >
             Ver detalle
           </Link>
-          <div className='dropdown' onClick={e => e.stopPropagation()}>
+          <div 
+            className='dropdown' 
+            onClick={e => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.stopPropagation();
+              }
+            }}
+            role='button'
+            tabIndex={0}
+          >
             <button
               className='btn btn-outline-secondary btn-sm dropdown-toggle'
               type='button'
@@ -269,31 +297,31 @@ export const TicketCard: React.FC<TicketCardProps> = ({
             </button>
             <ul className='dropdown-menu'>
               <li>
-                <a className='dropdown-item' href='#'>
+                <button type='button' className='dropdown-item'>
                   <i className='material-icons me-2'>edit</i>
                   Editar
-                </a>
+                </button>
               </li>
               <li>
-                <a className='dropdown-item' href='#'>
+                <button type='button' className='dropdown-item'>
                   <i className='material-icons me-2'>assignment_ind</i>
                   Asignar
-                </a>
+                </button>
               </li>
               <li>
                 <hr className='dropdown-divider' />
               </li>
               <li>
-                <a className='dropdown-item text-success' href='#'>
+                <button type='button' className='dropdown-item text-success'>
                   <i className='material-icons me-2'>check_circle</i>
                   Resolver
-                </a>
+                </button>
               </li>
               <li>
-                <a className='dropdown-item text-secondary' href='#'>
+                <button type='button' className='dropdown-item text-secondary'>
                   <i className='material-icons me-2'>close</i>
                   Cerrar
-                </a>
+                </button>
               </li>
             </ul>
           </div>

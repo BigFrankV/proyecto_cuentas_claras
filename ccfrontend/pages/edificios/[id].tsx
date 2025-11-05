@@ -147,7 +147,7 @@ export default function EdificioDetalle() {
         const confirmDelete = window.confirm(
           `El edificio "${edificio.nombre}" tiene ${dependencies.torres} torres y ${dependencies.unidades} unidades relacionadas.\n\n` +
             'Eliminar este edificio también eliminará toda la información relacionada.\n\n' +
-            '¿Estás seguro de que deseas continuar?'
+            '¿Estás seguro de que deseas continuar?',
         );
 
         if (!confirmDelete) {
@@ -302,6 +302,14 @@ export default function EdificioDetalle() {
             <div
               className={`tab-edificio ${activeTab === 'informacion' ? 'active' : ''}`}
               onClick={() => setActiveTab('informacion')}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setActiveTab('informacion');
+                }
+              }}
+              role='button'
+              tabIndex={0}
             >
               <i className='material-icons me-2'>info</i>
               Información
@@ -309,6 +317,14 @@ export default function EdificioDetalle() {
             <div
               className={`tab-edificio ${activeTab === 'torres' ? 'active' : ''}`}
               onClick={() => setActiveTab('torres')}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setActiveTab('torres');
+                }
+              }}
+              role='button'
+              tabIndex={0}
             >
               <i className='material-icons me-2'>business</i>
               Torres
@@ -316,6 +332,14 @@ export default function EdificioDetalle() {
             <div
               className={`tab-edificio ${activeTab === 'unidades' ? 'active' : ''}`}
               onClick={() => setActiveTab('unidades')}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setActiveTab('unidades');
+                }
+              }}
+              role='button'
+              tabIndex={0}
             >
               <i className='material-icons me-2'>apartment</i>
               Unidades
@@ -323,6 +347,14 @@ export default function EdificioDetalle() {
             <div
               className={`tab-edificio ${activeTab === 'servicios' ? 'active' : ''}`}
               onClick={() => setActiveTab('servicios')}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setActiveTab('servicios');
+                }
+              }}
+              role='button'
+              tabIndex={0}
             >
               <i className='material-icons me-2'>build</i>
               Servicios
@@ -370,7 +402,7 @@ export default function EdificioDetalle() {
                             <div className='detail-value'>
                               {
                                 TIPOS_EDIFICIO.find(
-                                  t => t.value === edificio.tipo
+                                  t => t.value === edificio.tipo,
                                 )?.label
                               }
                             </div>
@@ -779,14 +811,14 @@ export default function EdificioDetalle() {
                               <i
                                 className={`material-icons me-2 ${
                                   (edificio.servicios || []).includes(
-                                    servicio.value
+                                    servicio.value,
                                   )
                                     ? 'text-success'
                                     : 'text-muted'
                                 }`}
                               >
                                 {(edificio.servicios || []).includes(
-                                  servicio.value
+                                  servicio.value,
                                 )
                                   ? 'check_circle'
                                   : 'radio_button_unchecked'}
@@ -794,7 +826,7 @@ export default function EdificioDetalle() {
                               <span
                                 className={
                                   (edificio.servicios || []).includes(
-                                    servicio.value
+                                    servicio.value,
                                   )
                                     ? 'fw-semibold'
                                     : 'text-muted'
@@ -830,14 +862,14 @@ export default function EdificioDetalle() {
                               <i
                                 className={`material-icons me-2 ${
                                   (edificio.amenidades || []).includes(
-                                    amenidad.value
+                                    amenidad.value,
                                   )
                                     ? 'text-success'
                                     : 'text-muted'
                                 }`}
                               >
                                 {(edificio.amenidades || []).includes(
-                                  amenidad.value
+                                  amenidad.value,
                                 )
                                   ? 'check_circle'
                                   : 'radio_button_unchecked'}
@@ -845,7 +877,7 @@ export default function EdificioDetalle() {
                               <span
                                 className={
                                   (edificio.amenidades || []).includes(
-                                    amenidad.value
+                                    amenidad.value,
                                   )
                                     ? 'fw-semibold'
                                     : 'text-muted'

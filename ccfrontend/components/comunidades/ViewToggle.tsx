@@ -55,7 +55,7 @@ const ViewToggle: React.FC<ViewToggleProps> = ({
             onClick={() =>
               handleOrdenChange(
                 'direccionOrden',
-                configuracion.direccionOrden === 'asc' ? 'desc' : 'asc'
+                configuracion.direccionOrden === 'asc' ? 'desc' : 'asc',
               )
             }
             title={`Ordenar ${configuracion.direccionOrden === 'asc' ? 'descendente' : 'ascendente'}`}

@@ -122,7 +122,7 @@ export const getCurrentUf = async (): Promise<UfApiResponse> => {
  */
 export const getUfHistorico = async (
   fechaInicio: string,
-  fechaFin: string
+  fechaFin: string,
 ): Promise<HistoricoUfResponse> => {
   try {
     const response = await api.get('/util/uf/historico', {
@@ -148,7 +148,7 @@ export const getUfHistorico = async (
  */
 export const getUtmByPeriod = async (
   mes: number,
-  ano: number
+  ano: number,
 ): Promise<UtmApiResponse> => {
   try {
     const mesFormatted = mes.toString().padStart(2, '0');
@@ -193,7 +193,7 @@ export const getCurrentUtm = async (): Promise<UtmApiResponse> => {
  * Obtiene histórico de UTM para un año específico
  */
 export const getUtmHistorico = async (
-  ano: number
+  ano: number,
 ): Promise<HistoricoUtmResponse> => {
   try {
     const response = await api.get(`/util/utm/historico?ano=${ano}`);
@@ -235,7 +235,7 @@ export const getAllIndicadores = async (): Promise<IndicadoresResponse> => {
  * Obtiene un indicador específico por su código
  */
 export const getIndicadorByCodigo = async (
-  codigo: string
+  codigo: string,
 ): Promise<IndicadoresResponse> => {
   try {
     const response = await api.get(`/util/indicadores?codigo=${codigo}`);
@@ -377,7 +377,7 @@ export const formatUTM = (amount: number): string => {
  */
 export const calculateDateDifference = (
   date1: string,
-  date2: string
+  date2: string,
 ): number => {
   const d1 = new Date(date1);
   const d2 = new Date(date2);
@@ -389,7 +389,7 @@ export const calculateDateDifference = (
  * Obtiene el rango de fechas para períodos predefinidos
  */
 export const getDateRange = (
-  period: '7d' | '30d' | '90d' | '1y'
+  period: '7d' | '30d' | '90d' | '1y',
 ): { start: string; end: string } => {
   const end = new Date();
   const start = new Date();

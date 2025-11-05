@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
@@ -225,7 +226,7 @@ export default function PersonaDetalle() {
                 </button>
                 <ul className='dropdown-menu'>
                   <li>
-                    <a className='dropdown-item' href='#'>
+                    <button type='button' className='dropdown-item'>
                       <i
                         className='material-icons me-2'
                         style={{ fontSize: '16px' }}
@@ -233,10 +234,10 @@ export default function PersonaDetalle() {
                         email
                       </i>
                       Enviar email
-                    </a>
+                    </button>
                   </li>
                   <li>
-                    <a className='dropdown-item' href='#'>
+                    <button type='button' className='dropdown-item'>
                       <i
                         className='material-icons me-2'
                         style={{ fontSize: '16px' }}
@@ -244,13 +245,13 @@ export default function PersonaDetalle() {
                         vpn_key
                       </i>
                       Restablecer acceso
-                    </a>
+                    </button>
                   </li>
                   <li>
                     <hr className='dropdown-divider' />
                   </li>
                   <li>
-                    <a className='dropdown-item text-danger' href='#'>
+                    <button type='button' className='dropdown-item text-danger'>
                       <i
                         className='material-icons me-2'
                         style={{ fontSize: '16px' }}
@@ -258,7 +259,7 @@ export default function PersonaDetalle() {
                         block
                       </i>
                       Desactivar
-                    </a>
+                    </button>
                   </li>
                 </ul>
               </div>
@@ -278,14 +279,21 @@ export default function PersonaDetalle() {
           >
             <div className='card-body py-4'>
               <div className='row align-items-center'>
-                <div className='col-auto'>
+                <div
+                  className='col-auto'
+                  style={{
+                    position: 'relative',
+                    width: '80px',
+                    height: '80px',
+                  }}
+                >
                   {persona.avatar ? (
-                    <img
+                    <Image
                       src={persona.avatar}
                       alt='Foto de perfil'
+                      width={80}
+                      height={80}
                       style={{
-                        width: '80px',
-                        height: '80px',
                         borderRadius: '50%',
                         objectFit: 'cover',
                         border: '3px solid rgba(255,255,255,0.3)',
@@ -383,7 +391,7 @@ export default function PersonaDetalle() {
                         <div className='text-muted small'>Fecha Alta</div>
                         <div className='fw-medium'>
                           {new Date(persona.fecha_registro).toLocaleDateString(
-                            'es-AR'
+                            'es-AR',
                           )}
                         </div>
                       </div>
@@ -432,7 +440,7 @@ export default function PersonaDetalle() {
                     <div className='fw-medium'>
                       {persona.ultimo_acceso
                         ? new Date(persona.ultimo_acceso).toLocaleString(
-                            'es-AR'
+                            'es-AR',
                           )
                         : 'Nunca'}
                     </div>
@@ -1114,7 +1122,7 @@ export default function PersonaDetalle() {
                                           className={`fw-bold ${resumen.saldo_pendiente > 0 ? 'text-danger' : 'text-success'}`}
                                         >
                                           {formatCurrency(
-                                            resumen.saldo_pendiente
+                                            resumen.saldo_pendiente,
                                           )}
                                         </div>
                                       </div>
@@ -1140,7 +1148,7 @@ export default function PersonaDetalle() {
                                         <span>{resumen.ultimo_pago.fecha}</span>
                                         <span className='fw-bold text-success'>
                                           {formatCurrency(
-                                            resumen.ultimo_pago.importe
+                                            resumen.ultimo_pago.importe,
                                           )}
                                         </span>
                                       </div>

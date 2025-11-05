@@ -85,12 +85,12 @@ export default function ProveedorNuevo() {
   const handleContactChange = (
     contactId: string,
     field: string,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setContacts(prev =>
       prev.map(contact =>
-        contact.id === contactId ? { ...contact, [field]: value } : contact
-      )
+        contact.id === contactId ? { ...contact, [field]: value } : contact,
+      ),
     );
   };
 
@@ -115,7 +115,7 @@ export default function ProveedorNuevo() {
 
   const setPrimaryContact = (contactId: string) => {
     setContacts(prev =>
-      prev.map(contact => ({ ...contact, isPrimary: contact.id === contactId }))
+      prev.map(contact => ({ ...contact, isPrimary: contact.id === contactId })),
     );
   };
 
@@ -244,7 +244,7 @@ export default function ProveedorNuevo() {
           <label htmlFor={`star${i}`} className='rating-label'>
             <span className='material-icons'>star</span>
           </label>
-        </React.Fragment>
+        </React.Fragment>,
       );
     }
     return <div className='rating-input'>{stars}</div>;
@@ -538,7 +538,7 @@ export default function ProveedorNuevo() {
                                   handleContactChange(
                                     contact.id,
                                     'name',
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -555,7 +555,7 @@ export default function ProveedorNuevo() {
                                   handleContactChange(
                                     contact.id,
                                     'position',
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -574,7 +574,7 @@ export default function ProveedorNuevo() {
                                   handleContactChange(
                                     contact.id,
                                     'phone',
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -591,7 +591,7 @@ export default function ProveedorNuevo() {
                                   handleContactChange(
                                     contact.id,
                                     'email',
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -609,7 +609,7 @@ export default function ProveedorNuevo() {
                                   handleContactChange(
                                     contact.id,
                                     'notes',
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />

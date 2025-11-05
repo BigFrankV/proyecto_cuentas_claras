@@ -22,7 +22,7 @@ export default function ComunidadDetallePage() {
   const [activeTab, setActiveTab] = useState<string>('resumen');
   const [isLoading, setIsLoading] = useState(true);
   const [loadingData, setLoadingData] = useState<{ [key: string]: boolean }>(
-    {}
+    {},
   );
   const [error, setError] = useState<string | null>(null);
   const [tabErrors, setTabErrors] = useState<{ [key: string]: string }>({});
@@ -96,7 +96,7 @@ export default function ComunidadDetallePage() {
     setTabErrors(prev => ({ ...prev, amenidades: '' }));
     try {
       const data = await comunidadesService.getAmenidadesByComunidad(
-        Number(id)
+        Number(id),
       );
       // eslint-disable-next-line no-console
       console.log('Amenidades cargadas:', data);
@@ -149,7 +149,7 @@ export default function ComunidadDetallePage() {
     setLoadingData(prev => ({ ...prev, residentes: true }));
     try {
       const data = await comunidadesService.getResidentesByComunidad(
-        Number(id)
+        Number(id),
       );
       // eslint-disable-next-line no-console
       console.log('Residentes cargados:', data);
@@ -171,7 +171,7 @@ export default function ComunidadDetallePage() {
     setLoadingData(prev => ({ ...prev, estadisticas: true }));
     try {
       const data = await comunidadesService.getEstadisticasByComunidad(
-        Number(id)
+        Number(id),
       );
       // eslint-disable-next-line no-console
       console.log('Estadísticas cargadas:', data);
@@ -179,7 +179,7 @@ export default function ComunidadDetallePage() {
 
       // También cargar flujo de caja para el gráfico
       const flujoData = await comunidadesService.getFlujoCajaByComunidad(
-        Number(id)
+        Number(id),
       );
       // eslint-disable-next-line no-console
       console.log('Flujo de caja cargado:', flujoData);
@@ -202,7 +202,7 @@ export default function ComunidadDetallePage() {
     setLoadingData(prev => ({ ...prev, documentos: true }));
     try {
       const data = await comunidadesService.getDocumentosByComunidad(
-        Number(id)
+        Number(id),
       );
       // eslint-disable-next-line no-console
       console.log('Documentos cargados:', data);
@@ -432,7 +432,7 @@ export default function ComunidadDetallePage() {
                   <div className='stat-content'>
                     <div className='stat-value text-warning'>
                       {comunidadesService.formatCurrency(
-                        comunidad.saldoPendiente
+                        comunidad.saldoPendiente,
                       )}
                     </div>
                     <div className='stat-label'>Saldo Pendiente</div>
@@ -679,7 +679,7 @@ export default function ComunidadDetallePage() {
                                 <span className='text-primary'>
                                   Creado:{' '}
                                   {new Date(
-                                    edificio.fechaCreacion
+                                    edificio.fechaCreacion,
                                   ).toLocaleDateString()}
                                 </span>
                               </small>
@@ -700,25 +700,31 @@ export default function ComunidadDetallePage() {
                               </button>
                               <ul className='dropdown-menu'>
                                 <li>
-                                  <a className='dropdown-item' href='#'>
+                                  <button
+                                    type='button'
+                                    className='dropdown-item'
+                                  >
                                     Ver unidades
-                                  </a>
+                                  </button>
                                 </li>
                                 <li>
-                                  <a className='dropdown-item' href='#'>
+                                  <button
+                                    type='button'
+                                    className='dropdown-item'
+                                  >
                                     Editar
-                                  </a>
+                                  </button>
                                 </li>
                                 <li>
                                   <hr className='dropdown-divider' />
                                 </li>
                                 <li>
-                                  <a
+                                  <button
+                                    type='button'
                                     className='dropdown-item text-danger'
-                                    href='#'
                                   >
                                     Eliminar
-                                  </a>
+                                  </button>
                                 </li>
                               </ul>
                             </div>
@@ -881,25 +887,31 @@ export default function ComunidadDetallePage() {
                                     </button>
                                     <ul className='dropdown-menu dropdown-menu-end'>
                                       <li>
-                                        <a className='dropdown-item' href='#'>
+                                        <button
+                                          type='button'
+                                          className='dropdown-item'
+                                        >
                                           Ver perfil
-                                        </a>
+                                        </button>
                                       </li>
                                       <li>
-                                        <a className='dropdown-item' href='#'>
+                                        <button
+                                          type='button'
+                                          className='dropdown-item'
+                                        >
                                           Editar
-                                        </a>
+                                        </button>
                                       </li>
                                       <li>
                                         <hr className='dropdown-divider' />
                                       </li>
                                       <li>
-                                        <a
+                                        <button
+                                          type='button'
                                           className='dropdown-item text-danger'
-                                          href='#'
                                         >
                                           Eliminar
-                                        </a>
+                                        </button>
                                       </li>
                                     </ul>
                                   </div>
@@ -945,7 +957,7 @@ export default function ComunidadDetallePage() {
                     <div className='stat-value text-success'>
                       {estadisticas
                         ? comunidadesService.formatCurrency(
-                            estadisticas.totalIngresos || 0
+                            estadisticas.totalIngresos || 0,
                           )
                         : 'Cargando...'}
                     </div>
@@ -965,7 +977,7 @@ export default function ComunidadDetallePage() {
                     <div className='stat-value text-primary'>
                       {estadisticas
                         ? comunidadesService.formatCurrency(
-                            estadisticas.ingresosPagados || 0
+                            estadisticas.ingresosPagados || 0,
                           )
                         : 'Cargando...'}
                     </div>
@@ -983,7 +995,7 @@ export default function ComunidadDetallePage() {
                     <div className='stat-value text-warning'>
                       {estadisticas
                         ? comunidadesService.formatCurrency(
-                            estadisticas.ingresosPendientes || 0
+                            estadisticas.ingresosPendientes || 0,
                           )
                         : 'Cargando...'}
                     </div>
@@ -1005,7 +1017,7 @@ export default function ComunidadDetallePage() {
                         ? comunidadesService.formatCurrency(
                             (estadisticas.serviciosBasicos || 0) +
                               (estadisticas.mantenimiento || 0) +
-                              (estadisticas.administracion || 0)
+                              (estadisticas.administracion || 0),
                           )
                         : 'Cargando...'}
                     </div>
@@ -1058,7 +1070,7 @@ export default function ComunidadDetallePage() {
                           <span>Ingresos Totales:</span>
                           <strong className='text-success'>
                             {comunidadesService.formatCurrency(
-                              estadisticas.totalIngresos || 0
+                              estadisticas.totalIngresos || 0,
                             )}
                           </strong>
                         </div>
@@ -1066,7 +1078,7 @@ export default function ComunidadDetallePage() {
                           <span>Pagados:</span>
                           <strong className='text-primary'>
                             {comunidadesService.formatCurrency(
-                              estadisticas.ingresosPagados || 0
+                              estadisticas.ingresosPagados || 0,
                             )}
                           </strong>
                         </div>
@@ -1074,7 +1086,7 @@ export default function ComunidadDetallePage() {
                           <span>Pendientes:</span>
                           <strong className='text-warning'>
                             {comunidadesService.formatCurrency(
-                              estadisticas.ingresosPendientes || 0
+                              estadisticas.ingresosPendientes || 0,
                             )}
                           </strong>
                         </div>
@@ -1083,7 +1095,7 @@ export default function ComunidadDetallePage() {
                           <span>Servicios Básicos:</span>
                           <strong className='text-danger'>
                             {comunidadesService.formatCurrency(
-                              estadisticas.serviciosBasicos || 0
+                              estadisticas.serviciosBasicos || 0,
                             )}
                           </strong>
                         </div>
@@ -1091,7 +1103,7 @@ export default function ComunidadDetallePage() {
                           <span>Mantenimiento:</span>
                           <strong className='text-danger'>
                             {comunidadesService.formatCurrency(
-                              estadisticas.mantenimiento || 0
+                              estadisticas.mantenimiento || 0,
                             )}
                           </strong>
                         </div>
@@ -1099,7 +1111,7 @@ export default function ComunidadDetallePage() {
                           <span>Administración:</span>
                           <strong className='text-danger'>
                             {comunidadesService.formatCurrency(
-                              estadisticas.administracion || 0
+                              estadisticas.administracion || 0,
                             )}
                           </strong>
                         </div>
@@ -1123,7 +1135,7 @@ export default function ComunidadDetallePage() {
                               (estadisticas.totalIngresos || 0) -
                                 ((estadisticas.serviciosBasicos || 0) +
                                   (estadisticas.mantenimiento || 0) +
-                                  (estadisticas.administracion || 0))
+                                  (estadisticas.administracion || 0)),
                             )}
                           </strong>
                         </div>
@@ -1199,7 +1211,7 @@ export default function ComunidadDetallePage() {
                                 </span>{' '}
                                 •
                                 {new Date(
-                                  documento.fechaSubida
+                                  documento.fechaSubida,
                                 ).toLocaleDateString()}
                               </small>
                             </div>
@@ -1234,25 +1246,31 @@ export default function ComunidadDetallePage() {
                               </button>
                               <ul className='dropdown-menu dropdown-menu-end'>
                                 <li>
-                                  <a className='dropdown-item' href='#'>
+                                  <button
+                                    type='button'
+                                    className='dropdown-item'
+                                  >
                                     Editar
-                                  </a>
+                                  </button>
                                 </li>
                                 <li>
-                                  <a className='dropdown-item' href='#'>
+                                  <button
+                                    type='button'
+                                    className='dropdown-item'
+                                  >
                                     Compartir
-                                  </a>
+                                  </button>
                                 </li>
                                 <li>
                                   <hr className='dropdown-divider' />
                                 </li>
                                 <li>
-                                  <a
+                                  <button
+                                    type='button'
                                     className='dropdown-item text-danger'
-                                    href='#'
                                   >
                                     Eliminar
-                                  </a>
+                                  </button>
                                 </li>
                               </ul>
                             </div>

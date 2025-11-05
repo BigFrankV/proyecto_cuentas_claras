@@ -298,6 +298,14 @@ export default function MembresiaNueva() {
                         <div
                           className={`tier-card ${tier.className} ${selectedTier === tier.id ? 'selected' : ''}`}
                           onClick={() => handleTierSelection(tier.id)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleTierSelection(tier.id);
+                            }
+                          }}
+                          role='button'
+                          tabIndex={0}
                           style={{
                             border: '2px solid #e9ecef',
                             borderRadius: 'var(--radius)',

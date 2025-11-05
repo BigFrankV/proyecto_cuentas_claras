@@ -196,7 +196,7 @@ class EmisionesService {
   async getEmisionesComunidad(
     comunidadId: number,
     page: number = 1,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<{
     emisiones: Emision[];
     total: number;
@@ -234,11 +234,11 @@ class EmisionesService {
    * Obtener resumen de emisiones con métricas consolidadas
    */
   async getEmisionesComunidadResumen(
-    comunidadId: number
+    comunidadId: number,
   ): Promise<EmisionResumen[]> {
     try {
       const response = await apiClient.get(
-        `/emisiones/comunidad/${comunidadId}/resumen`
+        `/emisiones/comunidad/${comunidadId}/resumen`,
       );
       return response.data;
     } catch (error) {
@@ -285,12 +285,12 @@ class EmisionesService {
       periodo: string;
       fecha_vencimiento: string;
       observaciones?: string;
-    }
+    },
   ): Promise<Emision> {
     try {
       const response = await apiClient.post(
         `/emisiones/comunidad/${comunidadId}`,
-        data
+        data,
       );
       return response.data;
     } catch (error) {
@@ -356,12 +356,12 @@ class EmisionesService {
       regla_prorrateo: string;
       monto: number;
       metadata_json?: string;
-    }
+    },
   ): Promise<DetalleEmision> {
     try {
       const response = await apiClient.post(
         `/emisiones/${emisionId}/detalles`,
-        data
+        data,
       );
       return response.data;
     } catch (error) {
@@ -506,7 +506,7 @@ class EmisionesService {
    */
   async validarExistenciaEmision(
     comunidadId: number,
-    periodo: string
+    periodo: string,
   ): Promise<{
     existe: boolean;
     emision_id?: number;
@@ -531,11 +531,11 @@ class EmisionesService {
    * Obtener emisiones de gastos comunes por comunidad (Prorrateo)
    */
   async getEmisionesProrrateo(
-    comunidadId: number
+    comunidadId: number,
   ): Promise<EmisionProrrateo[]> {
     try {
       const response = await apiClient.get(
-        `/prorrateo/emisiones/${comunidadId}`
+        `/prorrateo/emisiones/${comunidadId}`,
       );
       return response.data;
     } catch (error) {
@@ -549,11 +549,11 @@ class EmisionesService {
    * Obtener detalles de gastos de una emisión (Prorrateo)
    */
   async getDetallesEmisionProrrateo(
-    emisionId: number
+    emisionId: number,
   ): Promise<DetalleEmisionProrrateo[]> {
     try {
       const response = await apiClient.get(
-        `/prorrateo/emision/${emisionId}/detalles`
+        `/prorrateo/emision/${emisionId}/detalles`,
       );
       return response.data;
     } catch (error) {
@@ -567,11 +567,11 @@ class EmisionesService {
    * Obtener cuentas de cobro de una emisión (Prorrateo)
    */
   async getCuentasCobroEmision(
-    emisionId: number
+    emisionId: number,
   ): Promise<CuentaCobroProrrateo[]> {
     try {
       const response = await apiClient.get(
-        `/prorrateo/emision/${emisionId}/cuentas`
+        `/prorrateo/emision/${emisionId}/cuentas`,
       );
       return response.data;
     } catch (error) {
@@ -585,11 +585,11 @@ class EmisionesService {
    * Obtener detalles de cargos de una cuenta específica (Prorrateo)
    */
   async getDetallesCuentaCobro(
-    cuentaId: number
+    cuentaId: number,
   ): Promise<DetalleCargoCuenta[]> {
     try {
       const response = await apiClient.get(
-        `/prorrateo/cuenta/${cuentaId}/detalles`
+        `/prorrateo/cuenta/${cuentaId}/detalles`,
       );
       return response.data;
     } catch (error) {

@@ -88,7 +88,7 @@ export default function NuevaConciliacion() {
   ]);
 
   const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>(
-    []
+    [],
   );
   const [matchingSummary, setMatchingSummary] = useState({
     totalTransactions: 0,
@@ -160,12 +160,12 @@ export default function NuevaConciliacion() {
 
   const updateStepStatus = (
     stepNumber: number,
-    status: 'pending' | 'active' | 'completed'
+    status: 'pending' | 'active' | 'completed',
   ) => {
     setProcessSteps(prev =>
       prev.map(step =>
-        step.number === stepNumber ? { ...step, status } : step
-      )
+        step.number === stepNumber ? { ...step, status } : step,
+      ),
     );
   };
 
@@ -241,7 +241,7 @@ export default function NuevaConciliacion() {
       const total = mockTransactions.length;
       const totalAmount = mockTransactions.reduce(
         (sum, t) => sum + t.amount,
-        0
+        0,
       );
 
       setMatchingSummary({
@@ -508,6 +508,14 @@ export default function NuevaConciliacion() {
                         onClick={() =>
                           document.getElementById('fileInput')?.click()
                         }
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            document.getElementById('fileInput')?.click();
+                          }
+                        }}
+                        role='button'
+                        tabIndex={0}
                       >
                         <div className='file-upload-icon'>
                           <span className='material-icons'>cloud_upload</span>
@@ -764,7 +772,7 @@ export default function NuevaConciliacion() {
                                 <tr key={transaction.id}>
                                   <td>
                                     {new Date(
-                                      transaction.date
+                                      transaction.date,
                                     ).toLocaleDateString('es-CL')}
                                   </td>
                                   <td>

@@ -37,13 +37,13 @@ export const useAmenidades = () => {
         setAmenidades(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al cargar las amenidades'
+          err instanceof Error ? err.message : 'Error al cargar las amenidades',
         );
       } finally {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Crear una nueva amenidad
@@ -66,14 +66,14 @@ export const useAmenidades = () => {
         return false;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al crear la amenidad'
+          err instanceof Error ? err.message : 'Error al crear la amenidad',
         );
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Actualizar una amenidad
@@ -92,22 +92,22 @@ export const useAmenidades = () => {
         if (updatedAmenidad) {
           setAmenidades(prev =>
             prev.map(amenidad =>
-              amenidad.id === Number(id) ? updatedAmenidad : amenidad
-            )
+              amenidad.id === Number(id) ? updatedAmenidad : amenidad,
+            ),
           );
           return true;
         }
         return false;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al actualizar la amenidad'
+          err instanceof Error ? err.message : 'Error al actualizar la amenidad',
         );
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Eliminar una amenidad
@@ -125,20 +125,20 @@ export const useAmenidades = () => {
         const success = await api.delete(id);
         if (success) {
           setAmenidades(prev =>
-            prev.filter(amenidad => amenidad.id !== Number(id))
+            prev.filter(amenidad => amenidad.id !== Number(id)),
           );
         }
         return success;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al eliminar la amenidad'
+          err instanceof Error ? err.message : 'Error al eliminar la amenidad',
         );
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Obtener amenidad por ID
@@ -157,14 +157,14 @@ export const useAmenidades = () => {
         return amenidad;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al cargar la amenidad'
+          err instanceof Error ? err.message : 'Error al cargar la amenidad',
         );
         return null;
       } finally {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Obtener detalle completo de amenidad
@@ -182,7 +182,7 @@ export const useAmenidades = () => {
         return null;
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Obtener amenidades por comunidad
@@ -200,7 +200,7 @@ export const useAmenidades = () => {
         return [];
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Buscar amenidades
@@ -218,7 +218,7 @@ export const useAmenidades = () => {
         return [];
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Obtener estadísticas
@@ -283,20 +283,20 @@ export const useReservasAmenidades = (amenidadId?: string) => {
         setReservas(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al cargar las reservas'
+          err instanceof Error ? err.message : 'Error al cargar las reservas',
         );
       } finally {
         setLoading(false);
       }
     },
-    [getApi, amenidadId]
+    [getApi, amenidadId],
   );
 
   // Crear una nueva reserva
   const createReserva = useCallback(
     async (
       amenidadId: string,
-      data: ReservaAmenidadFormData
+      data: ReservaAmenidadFormData,
     ): Promise<boolean> => {
       if (typeof window === 'undefined') {
         return false;
@@ -315,21 +315,21 @@ export const useReservasAmenidades = (amenidadId?: string) => {
         return false;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al crear la reserva'
+          err instanceof Error ? err.message : 'Error al crear la reserva',
         );
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Actualizar una reserva
   const updateReserva = useCallback(
     async (
       id: string,
-      data: Partial<ReservaAmenidadFormData>
+      data: Partial<ReservaAmenidadFormData>,
     ): Promise<boolean> => {
       if (typeof window === 'undefined') {
         return false;
@@ -344,22 +344,22 @@ export const useReservasAmenidades = (amenidadId?: string) => {
         if (updatedReserva) {
           setReservas(prev =>
             prev.map(reserva =>
-              reserva.id === Number(id) ? updatedReserva : reserva
-            )
+              reserva.id === Number(id) ? updatedReserva : reserva,
+            ),
           );
           return true;
         }
         return false;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al actualizar la reserva'
+          err instanceof Error ? err.message : 'Error al actualizar la reserva',
         );
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Eliminar una reserva
@@ -377,20 +377,20 @@ export const useReservasAmenidades = (amenidadId?: string) => {
         const success = await api.delete(id);
         if (success) {
           setReservas(prev =>
-            prev.filter(reserva => reserva.id !== Number(id))
+            prev.filter(reserva => reserva.id !== Number(id)),
           );
         }
         return success;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al eliminar la reserva'
+          err instanceof Error ? err.message : 'Error al eliminar la reserva',
         );
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Confirmar reserva
@@ -408,19 +408,19 @@ export const useReservasAmenidades = (amenidadId?: string) => {
             prev.map(reserva =>
               reserva.id === Number(id)
                 ? { ...reserva, estado: 'aprobada' as const }
-                : reserva
-            )
+                : reserva,
+            ),
           );
         }
         return success;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al confirmar la reserva'
+          err instanceof Error ? err.message : 'Error al confirmar la reserva',
         );
         return false;
       }
     },
-    [getApi]
+    [getApi],
   );
 
   // Cancelar reserva
@@ -438,19 +438,19 @@ export const useReservasAmenidades = (amenidadId?: string) => {
             prev.map(reserva =>
               reserva.id === Number(id)
                 ? { ...reserva, estado: 'cancelada' as const }
-                : reserva
-            )
+                : reserva,
+            ),
           );
         }
         return success;
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Error al cancelar la reserva'
+          err instanceof Error ? err.message : 'Error al cancelar la reserva',
         );
         return false;
       }
     },
-    [getApi]
+    [getApi],
   );
 
   return {

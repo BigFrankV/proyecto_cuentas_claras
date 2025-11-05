@@ -49,7 +49,7 @@ export const usePersonas = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Obtener persona por ID
@@ -69,7 +69,7 @@ export const usePersonas = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Crear persona
@@ -106,7 +106,7 @@ export const usePersonas = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Reemplazar persona completamente
@@ -176,7 +176,7 @@ export const usePersonas = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Obtener pagos realizados
@@ -196,7 +196,7 @@ export const usePersonas = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Obtener actividad/auditoría
@@ -206,7 +206,7 @@ export const usePersonas = () => {
       setError(null);
       try {
         const response = await apiClient.get(
-          `/personas/${personaId}/actividad`
+          `/personas/${personaId}/actividad`,
         );
         return response.data;
       } catch (err: any) {
@@ -218,7 +218,7 @@ export const usePersonas = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Obtener documentos asociados
@@ -228,7 +228,7 @@ export const usePersonas = () => {
       setError(null);
       try {
         const response = await apiClient.get(
-          `/personas/${personaId}/documentos`
+          `/personas/${personaId}/documentos`,
         );
         return response.data;
       } catch (err: any) {
@@ -240,7 +240,7 @@ export const usePersonas = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Obtener notas asociadas
@@ -260,7 +260,7 @@ export const usePersonas = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Obtener roles y comunidades
@@ -280,7 +280,7 @@ export const usePersonas = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Obtener resumen financiero
@@ -290,7 +290,7 @@ export const usePersonas = () => {
       setError(null);
       try {
         const response = await apiClient.get(
-          `/personas/${personaId}/resumen-financiero`
+          `/personas/${personaId}/resumen-financiero`,
         );
         return response.data;
       } catch (err: any) {
@@ -302,7 +302,7 @@ export const usePersonas = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Validar campo
@@ -310,7 +310,7 @@ export const usePersonas = () => {
     async (
       field: 'rut' | 'username' | 'email',
       value: string,
-      exclude?: number
+      exclude?: number,
     ): Promise<ValidacionCampo> => {
       setLoading(true);
       setError(null);
@@ -321,7 +321,7 @@ export const usePersonas = () => {
         }
 
         const response = await apiClient.get(
-          `/personas/validar?${params.toString()}`
+          `/personas/validar?${params.toString()}`,
         );
         return response.data;
       } catch (err: any) {
@@ -333,7 +333,7 @@ export const usePersonas = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Autocompletar unidades
@@ -344,7 +344,7 @@ export const usePersonas = () => {
       try {
         const params = search ? `?search=${encodeURIComponent(search)}` : '';
         const response = await apiClient.get(
-          `/personas/unidades/autocompletar${params}`
+          `/personas/unidades/autocompletar${params}`,
         );
         return response.data;
       } catch (err: any) {
@@ -356,7 +356,7 @@ export const usePersonas = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   return {

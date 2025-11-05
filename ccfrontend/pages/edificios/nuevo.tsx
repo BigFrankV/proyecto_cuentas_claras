@@ -45,14 +45,14 @@ export default function EdificioNuevo() {
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value, type } = e.target;
 
     if (type === 'number') {
       updateField(
         name as keyof EdificioFormData,
-        value === '' ? undefined : Number(value)
+        value === '' ? undefined : Number(value),
       );
     } else {
       updateField(name as keyof EdificioFormData, value);
@@ -64,7 +64,7 @@ export default function EdificioNuevo() {
   const handleCheckboxChange = (
     type: 'servicios' | 'amenidades',
     value: string,
-    checked: boolean
+    checked: boolean,
   ) => {
     const currentValues = formData[type] || [];
     const newValues = checked
@@ -473,13 +473,13 @@ export default function EdificioNuevo() {
                               type='checkbox'
                               id={`servicio-${servicio.value}`}
                               checked={(formData.servicios || []).includes(
-                                servicio.value
+                                servicio.value,
                               )}
                               onChange={e =>
                                 handleCheckboxChange(
                                   'servicios',
                                   servicio.value,
-                                  e.target.checked
+                                  e.target.checked,
                                 )
                               }
                             />
@@ -514,13 +514,13 @@ export default function EdificioNuevo() {
                               type='checkbox'
                               id={`amenidad-${amenidad.value}`}
                               checked={(formData.amenidades || []).includes(
-                                amenidad.value
+                                amenidad.value,
                               )}
                               onChange={e =>
                                 handleCheckboxChange(
                                   'amenidades',
                                   amenidad.value,
-                                  e.target.checked
+                                  e.target.checked,
                                 )
                               }
                             />
@@ -548,8 +548,19 @@ export default function EdificioNuevo() {
                     </h5>
                   </div>
                   <div className='form-section-body'>
-                    <div className='upload-area' onClick={handleImageClick}>
+                    <div
+                      className='upload-area'
+                      onClick={handleImageClick}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          handleImageClick();
+                        }
+                      }}
+                      role='button'
+                      tabIndex={0}
+                    >
                       {imagePreview ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
                         <img
                           src={imagePreview}
                           alt='Preview'

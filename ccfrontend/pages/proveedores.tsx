@@ -37,7 +37,7 @@ export default function ProveedoresListado() {
   const [comunidadId, setComunidadId] = useState<number | null>(null);
 
   const [selectedProvider, setSelectedProvider] = useState<Proveedor | null>(
-    null
+    null,
   );
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -45,7 +45,7 @@ export default function ProveedoresListado() {
 
   const resolvedComunidadId = useMemo(
     () => (isSuperUser ? undefined : undefined),
-    [isSuperUser]
+    [isSuperUser],
   );
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function ProveedoresListado() {
 
       const resp = await listProveedores(
         comunidadId ?? resolvedComunidadId,
-        params
+        params,
       );
       setProviders(resp.data);
       if (resp.pagination) {

@@ -211,7 +211,7 @@ export default function EmisionDetalle() {
         if (emissionData) {
           emissionData.paidAmount = paymentsData.reduce(
             (sum, pago) => sum + pago.amount,
-            0
+            0,
           );
         }
       }
@@ -260,7 +260,7 @@ export default function EmisionDetalle() {
   };
 
   const mapReglaToDistributionType = (
-    regla: string
+    regla: string,
   ): Concept['distributionType'] => {
     switch (regla) {
       case 'coeficiente':
@@ -603,7 +603,7 @@ export default function EmisionDetalle() {
                     <label>Pendiente:</label>
                     <div className='amount'>
                       {formatCurrency(
-                        emission.totalAmount - emission.paidAmount
+                        emission.totalAmount - emission.paidAmount,
                       )}
                     </div>
                   </div>
@@ -788,8 +788,8 @@ export default function EmisionDetalle() {
                               {formatCurrency(
                                 concepts.reduce(
                                   (sum, concept) => sum + concept.amount,
-                                  0
-                                )
+                                  0,
+                                ),
                               )}
                             </th>
                           </tr>
@@ -847,8 +847,8 @@ export default function EmisionDetalle() {
                               {formatCurrency(
                                 expenses.reduce(
                                   (sum, expense) => sum + expense.amount,
-                                  0
-                                )
+                                  0,
+                                ),
                               )}
                             </th>
                           </tr>
@@ -978,8 +978,8 @@ export default function EmisionDetalle() {
                               {formatCurrency(
                                 payments.reduce(
                                   (sum, payment) => sum + payment.amount,
-                                  0
-                                )
+                                  0,
+                                ),
                               )}
                             </th>
                             <th colSpan={3}></th>

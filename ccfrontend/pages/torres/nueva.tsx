@@ -72,7 +72,7 @@ export default function TorreNueva() {
           `/torres/edificio/${formData.edificioId}/validar-codigo`,
           {
             params: { codigo: formData.codigo },
-          }
+          },
         );
         setCodigoExists(response.data.existe);
       } catch (error) {
@@ -97,7 +97,7 @@ export default function TorreNueva() {
 
       try {
         const response = await apiClient.get(
-          `/torres/edificio/${formData.edificioId}/siguiente-codigo`
+          `/torres/edificio/${formData.edificioId}/siguiente-codigo`,
         );
         const suggestedCode = response.data.siguienteCodigo;
         if (suggestedCode && !formData.codigo) {
@@ -461,7 +461,7 @@ export default function TorreNueva() {
                             onChange={e =>
                               handleInputChange(
                                 'numPisos',
-                                parseInt(e.target.value) || 1
+                                parseInt(e.target.value) || 1,
                               )
                             }
                           />
@@ -486,7 +486,7 @@ export default function TorreNueva() {
                             onChange={e =>
                               handleInputChange(
                                 'numUnidades',
-                                parseInt(e.target.value) || 1
+                                parseInt(e.target.value) || 1,
                               )
                             }
                           />
@@ -515,7 +515,7 @@ export default function TorreNueva() {
                             onChange={e =>
                               handleInputChange(
                                 'administradorId',
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           >
@@ -542,7 +542,7 @@ export default function TorreNueva() {
                               onChange={e =>
                                 handleInputChange(
                                   'tieneAscensor',
-                                  e.target.checked
+                                  e.target.checked,
                                 )
                               }
                             />
@@ -562,7 +562,7 @@ export default function TorreNueva() {
                               onChange={e =>
                                 handleInputChange(
                                   'tienePorteria',
-                                  e.target.checked
+                                  e.target.checked,
                                 )
                               }
                             />
@@ -582,7 +582,7 @@ export default function TorreNueva() {
                               onChange={e =>
                                 handleInputChange(
                                   'tieneEstacionamiento',
-                                  e.target.checked
+                                  e.target.checked,
                                 )
                               }
                             />
@@ -623,7 +623,7 @@ export default function TorreNueva() {
                           onChange={e =>
                             handleInputChange(
                               'gastosEspecificos',
-                              e.target.value as 'si' | 'no'
+                              e.target.value as 'si' | 'no',
                             )
                           }
                         />
@@ -642,7 +642,7 @@ export default function TorreNueva() {
                           onChange={e =>
                             handleInputChange(
                               'gastosEspecificos',
-                              e.target.value as 'si' | 'no'
+                              e.target.value as 'si' | 'no',
                             )
                           }
                         />
@@ -672,7 +672,7 @@ export default function TorreNueva() {
                           onChange={e =>
                             handleInputChange(
                               'coeficienteTorre',
-                              parseFloat(e.target.value) || 0
+                              parseFloat(e.target.value) || 0,
                             )
                           }
                           required={formData.gastosEspecificos === 'si'}
@@ -829,7 +829,7 @@ export default function TorreNueva() {
                         onChange={e =>
                           handleInputChange(
                             'facturacionIndependiente',
-                            e.target.checked
+                            e.target.checked,
                           )
                         }
                       />

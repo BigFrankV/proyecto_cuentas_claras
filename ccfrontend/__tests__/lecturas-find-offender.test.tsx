@@ -40,7 +40,7 @@ test('find offending object-type element without $$typeof', () => {
       const dump = util.inspect(type, { depth: 4, colors: false });
       // throw immediately so Jest shows the offending value and stack
       throw new Error(
-        `createElement called with non-function/non-string type: ${dump}`
+        `createElement called with non-function/non-string type: ${dump}`,
       );
     }
     return orig.apply(React, [type, ...rest]);

@@ -46,7 +46,7 @@ export default function ConciliacionDetalle() {
   const router = useRouter();
   const { id } = router.query;
   const [conciliacion, setConciliacion] = useState<ConciliacionDetail | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -277,7 +277,7 @@ export default function ConciliacionDetalle() {
                     <div className='stat-number'>
                       {getProgressPercentage(
                         conciliacion.matchedTransactions,
-                        conciliacion.totalTransactions
+                        conciliacion.totalTransactions,
                       )}
                       %
                     </div>
@@ -452,7 +452,7 @@ export default function ConciliacionDetalle() {
                           <td className='fw-semibold'>Fecha Inicio:</td>
                           <td>
                             {new Date(
-                              conciliacion.startDate
+                              conciliacion.startDate,
                             ).toLocaleDateString('es-CL')}
                           </td>
                         </tr>
@@ -460,7 +460,7 @@ export default function ConciliacionDetalle() {
                           <td className='fw-semibold'>Fecha Fin:</td>
                           <td>
                             {new Date(conciliacion.endDate).toLocaleDateString(
-                              'es-CL'
+                              'es-CL',
                             )}
                           </td>
                         </tr>
@@ -472,7 +472,7 @@ export default function ConciliacionDetalle() {
                           <td className='fw-semibold'>Fecha Creación:</td>
                           <td>
                             {new Date(conciliacion.createdAt).toLocaleString(
-                              'es-CL'
+                              'es-CL',
                             )}
                           </td>
                         </tr>
@@ -481,7 +481,7 @@ export default function ConciliacionDetalle() {
                             <td className='fw-semibold'>Fecha Finalización:</td>
                             <td>
                               {new Date(
-                                conciliacion.completedAt
+                                conciliacion.completedAt,
                               ).toLocaleString('es-CL')}
                             </td>
                           </tr>
@@ -545,7 +545,7 @@ export default function ConciliacionDetalle() {
                             <tr key={transaction.id}>
                               <td>
                                 {new Date(transaction.date).toLocaleDateString(
-                                  'es-CL'
+                                  'es-CL',
                                 )}
                               </td>
                               <td>
@@ -665,7 +665,7 @@ export default function ConciliacionDetalle() {
                         <div className='text-muted small'>
                           {conciliacion.completedAt &&
                             new Date(conciliacion.completedAt).toLocaleString(
-                              'es-CL'
+                              'es-CL',
                             )}{' '}
                           por {conciliacion.createdBy}
                         </div>
@@ -691,7 +691,7 @@ export default function ConciliacionDetalle() {
                         <div className='fw-semibold'>Conciliación creada</div>
                         <div className='text-muted small'>
                           {new Date(conciliacion.createdAt).toLocaleString(
-                            'es-CL'
+                            'es-CL',
                           )}{' '}
                           por {conciliacion.createdBy}
                         </div>
@@ -755,10 +755,10 @@ export default function ConciliacionDetalle() {
                   if (conciliacion) {
                     await conciliacionesApi.updateNotas(
                       parseInt(conciliacion.id, 10),
-                      notesText
+                      notesText,
                     );
                     setConciliacion(prev =>
-                      prev ? { ...prev, notes: notesText } : null
+                      prev ? { ...prev, notes: notesText } : null,
                     );
                     setShowNotesModal(false);
                   }

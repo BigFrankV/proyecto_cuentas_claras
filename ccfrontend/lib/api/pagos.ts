@@ -16,7 +16,7 @@ const handleApiError = (error: unknown) => {
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as { response?: { data?: { error?: string } } };
     throw new Error(
-      apiError.response?.data?.error || 'Error de conexión con el servidor'
+      apiError.response?.data?.error || 'Error de conexión con el servidor',
     );
   }
   throw new Error('Error de conexión con el servidor');
@@ -25,7 +25,7 @@ const handleApiError = (error: unknown) => {
 // Helper para hacer peticiones autenticadas
 const apiRequest = async (
   url: string,
-  options: Record<string, unknown> = {}
+  options: Record<string, unknown> = {},
 ) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
   const token =
@@ -49,7 +49,7 @@ const apiRequest = async (
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      errorData.error || `HTTP error! status: ${response.status}`
+      errorData.error || `HTTP error! status: ${response.status}`,
     );
   }
 
@@ -68,7 +68,7 @@ export const pagosApi = {
   // Listar pagos con filtros avanzados
   getByComunidad: async (
     comunidadId: number,
-    filtros?: PaymentFilters
+    filtros?: PaymentFilters,
   ): Promise<PaginatedPayments> => {
     try {
       const queryParams = new URLSearchParams();
@@ -123,7 +123,7 @@ export const pagosApi = {
           residentEmail: item.resident_email,
           createdAt: item.created_at,
           updatedAt: item.updated_at,
-        })
+        }),
       );
 
       // Ensure pagination data is correct
@@ -191,7 +191,7 @@ export const pagosApi = {
   getEstadisticas: async (comunidadId: number): Promise<PaymentStats> => {
     try {
       const data = await apiRequest(
-        `/pagos/comunidad/${comunidadId}/estadisticas`
+        `/pagos/comunidad/${comunidadId}/estadisticas`,
       );
 
       return {
@@ -213,11 +213,11 @@ export const pagosApi = {
 
   // Estadísticas agrupadas por estado
   getEstadisticasPorEstado: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<EstadisticaPorEstado[]> => {
     try {
       const data = await apiRequest(
-        `/pagos/comunidad/${comunidadId}/estadisticas/estado`
+        `/pagos/comunidad/${comunidadId}/estadisticas/estado`,
       );
       return data;
     } catch (error) {
@@ -228,11 +228,11 @@ export const pagosApi = {
 
   // Estadísticas agrupadas por método de pago
   getEstadisticasPorMetodo: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<EstadisticaPorMetodo[]> => {
     try {
       const data = await apiRequest(
-        `/pagos/comunidad/${comunidadId}/estadisticas/metodo`
+        `/pagos/comunidad/${comunidadId}/estadisticas/metodo`,
       );
       return data;
     } catch (error) {

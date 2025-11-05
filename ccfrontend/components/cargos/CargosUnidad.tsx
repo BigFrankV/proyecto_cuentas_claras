@@ -22,7 +22,7 @@ ChartJS.register(
   Legend,
   CategoryScale,
   LinearScale,
-  BarElement
+  BarElement,
 );
 
 export interface UnitInfo {
@@ -124,7 +124,7 @@ export default function CargosUnidad({
   const [itemsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
   const [chartView, setChartView] = useState<'status' | 'type' | 'monthly'>(
-    'status'
+    'status',
   );
 
   const [filters, setFilters] = useState<FilterOptions>({
@@ -169,7 +169,7 @@ export default function CargosUnidad({
         cargo =>
           cargo.concepto.toLowerCase().includes(searchLower) ||
           cargo.descripcion?.toLowerCase().includes(searchLower) ||
-          cargo.id.toLowerCase().includes(searchLower)
+          cargo.id.toLowerCase().includes(searchLower),
       );
     }
 
@@ -246,18 +246,18 @@ export default function CargosUnidad({
   // Statistics
   const totalCargos = filteredCargos.length;
   const pendingCargos = filteredCargos.filter(
-    c => c.estado === 'pending'
+    c => c.estado === 'pending',
   ).length;
   const approvedCargos = filteredCargos.filter(
-    c => c.estado === 'approved'
+    c => c.estado === 'approved',
   ).length;
   const paidCargos = filteredCargos.filter(c => c.estado === 'paid').length;
   const partialCargos = filteredCargos.filter(
-    c => c.estado === 'partial'
+    c => c.estado === 'partial',
   ).length;
   const totalAmount = filteredCargos.reduce(
     (sum, cargo) => sum + cargo.monto,
-    0
+    0,
   );
   const paidAmount = filteredCargos.reduce(
     (sum, cargo) =>
@@ -266,7 +266,7 @@ export default function CargosUnidad({
         : cargo.estado === 'partial'
           ? sum + cargo.montoAplicado
           : sum,
-    0
+    0,
   );
 
   // Chart data
@@ -291,7 +291,7 @@ export default function CargosUnidad({
             acc[cargo.tipo] = (acc[cargo.tipo] || 0) + 1;
             return acc;
           },
-          {} as Record<string, number>
+          {} as Record<string, number>,
         );
 
         return {
@@ -329,7 +329,7 @@ export default function CargosUnidad({
             acc[month] = (acc[month] || 0) + cargo.monto;
             return acc;
           },
-          {} as Record<string, number>
+          {} as Record<string, number>,
         );
 
         return {
@@ -356,7 +356,7 @@ export default function CargosUnidad({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedCargos = filteredCargos.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   const handleViewCargo = (id: string) => {
@@ -649,7 +649,7 @@ export default function CargosUnidad({
                             {page}
                           </button>
                         </li>
-                      )
+                      ),
                     )}
                     <li
                       className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}

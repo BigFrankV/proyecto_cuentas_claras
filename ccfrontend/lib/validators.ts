@@ -168,7 +168,7 @@ export function formatIdentifier(identifier: string): string {
 
 // Obtener mensaje de ayuda para el tipo de identificador
 export function getIdentifierHelpText(
-  type: 'email' | 'rut' | 'dni' | 'username'
+  type: 'email' | 'rut' | 'dni' | 'username',
 ): string {
   switch (type) {
     case 'email':

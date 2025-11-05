@@ -69,7 +69,7 @@ export default function EdificioEditar() {
             updateField('administrador', edificioData.administrador);
             updateField(
               'telefonoAdministrador',
-              edificioData.telefonoAdministrador
+              edificioData.telefonoAdministrador,
             );
             updateField('emailAdministrador', edificioData.emailAdministrador);
             updateField('latitud', edificioData.latitud);
@@ -82,13 +82,13 @@ export default function EdificioEditar() {
               console.log(
                 'Servicios recibidos:',
                 edificioData.servicios,
-                typeof edificioData.servicios
+                typeof edificioData.servicios,
               );
               updateField(
                 'servicios',
                 Array.isArray(edificioData.servicios)
                   ? edificioData.servicios
-                  : []
+                  : [],
               );
             } else {
               updateField('servicios', []);
@@ -99,13 +99,13 @@ export default function EdificioEditar() {
               console.log(
                 'Amenidades recibidas:',
                 edificioData.amenidades,
-                typeof edificioData.amenidades
+                typeof edificioData.amenidades,
               );
               updateField(
                 'amenidades',
                 Array.isArray(edificioData.amenidades)
                   ? edificioData.amenidades
-                  : []
+                  : [],
               );
             } else {
               updateField('amenidades', []);
@@ -133,7 +133,7 @@ export default function EdificioEditar() {
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value, type } = e.target;
 
@@ -142,7 +142,7 @@ export default function EdificioEditar() {
     if (type === 'number') {
       updateField(
         name as keyof EdificioFormData,
-        value === '' ? undefined : Number(value)
+        value === '' ? undefined : Number(value),
       );
     } else {
       updateField(name as keyof EdificioFormData, value);
@@ -152,7 +152,7 @@ export default function EdificioEditar() {
   const handleCheckboxChange = (
     type: 'servicios' | 'amenidades',
     value: string,
-    checked: boolean
+    checked: boolean,
   ) => {
     const currentArray = formData[type] || [];
     const newArray = checked
@@ -591,7 +591,7 @@ export default function EdificioEditar() {
                               handleCheckboxChange(
                                 'servicios',
                                 servicio.value,
-                                e.target.checked
+                                e.target.checked,
                               )
                             }
                           />
@@ -634,7 +634,7 @@ export default function EdificioEditar() {
                               handleCheckboxChange(
                                 'amenidades',
                                 amenidad.value,
-                                e.target.checked
+                                e.target.checked,
                               )
                             }
                           />
@@ -804,10 +804,18 @@ export default function EdificioEditar() {
                       <div
                         className='border-2 border-dashed border-secondary rounded p-4 text-center cursor-pointer hover-bg-light'
                         onClick={handleImageClick}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            handleImageClick();
+                          }
+                        }}
+                        role='button'
+                        tabIndex={0}
                         style={{ cursor: 'pointer' }}
                       >
                         {imagePreview ? (
                           <div>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={imagePreview}
                               alt='Preview'

@@ -33,6 +33,14 @@ export default function TierCard({
       <div
         className={`tier-card ${tier.className} ${isSelected ? 'selected' : ''}`}
         onClick={() => onSelect(tier.id)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelect(tier.id);
+          }
+        }}
+        role='button'
+        tabIndex={0}
         style={{
           border: '2px solid #e9ecef',
           borderRadius: 'var(--radius)',
