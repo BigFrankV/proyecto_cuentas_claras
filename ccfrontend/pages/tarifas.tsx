@@ -5,6 +5,7 @@ import { Modal, Button } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedPage, UserRole } from '@/lib/usePermissions';
 
 import styles from '../styles/tarifas.module.css';
 
@@ -84,10 +85,11 @@ export default function TarifasListado() {
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Tarifas de Consumo — Cuentas Claras</title>
-      </Head>
-      <Layout title='Tarifas de Consumo'>
+      <ProtectedPage role={UserRole.ADMIN}>
+        <Head>
+          <title>Tarifas de Consumo — Cuentas Claras</title>
+        </Head>
+        <Layout title='Tarifas de Consumo'>
         <div className='container-fluid p-4'>
           <div className='row'>
             <div className='col-12'>
@@ -285,6 +287,7 @@ export default function TarifasListado() {
           </Modal.Footer>
         </Modal>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 }

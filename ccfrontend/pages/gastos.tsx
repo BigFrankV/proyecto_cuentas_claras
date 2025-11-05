@@ -26,7 +26,11 @@ import {
   getProveedores,
 } from '@/lib/gastosService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { usePermissions } from '@/lib/usePermissions';
+import {
+  usePermissions,
+  ProtectedPage,
+  UserRole,
+} from '@/lib/usePermissions';
 import { Expense, mapBackendToExpense } from '@/types/gastos';
 
 export default function GastosListado() {
@@ -253,11 +257,12 @@ export default function GastosListado() {
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Gastos — Cuentas Claras</title>
-      </Head>
+      <ProtectedPage role={UserRole.ADMIN}>
+        <Head>
+          <title>Gastos — Cuentas Claras</title>
+        </Head>
 
-      <Layout>
+        <Layout>
         <div className='expenses-container'>
           {/* Header */}
           <div className='expenses-header'>
@@ -782,6 +787,7 @@ export default function GastosListado() {
           </div>
         </div>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 }

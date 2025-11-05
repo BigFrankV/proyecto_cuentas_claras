@@ -13,6 +13,7 @@ import {
 } from '@/components/personas';
 import { usePersonas } from '@/hooks/usePersonas';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedPage, UserRole } from '@/lib/usePermissions';
 import { Persona, PersonaFilters as ApiFilters } from '@/types/personas';
 
 interface PersonaUI {
@@ -118,11 +119,12 @@ const PersonasListado = () => {
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Personas — Cuentas Claras</title>
-      </Head>
+      <ProtectedPage role={UserRole.ADMIN}>
+        <Head>
+          <title>Personas — Cuentas Claras</title>
+        </Head>
 
-      <Layout title='Personas'>
+        <Layout title='Personas'>
         <div className='container-fluid py-4'>
           {/* Mostrar error si existe */}
           {error && (
@@ -215,6 +217,7 @@ const PersonasListado = () => {
           )}
         </div>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 };

@@ -14,6 +14,7 @@ import {
 import Layout from '@/components/layout/Layout';
 import { conciliacionesApi } from '@/lib/api/conciliaciones';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedPage, UserRole } from '@/lib/usePermissions';
 import { Conciliacion, ConciliacionFiltros } from '@/types/conciliaciones';
 
 export default function ConciliacionesListado() {
@@ -107,11 +108,12 @@ export default function ConciliacionesListado() {
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Conciliaciones Bancarias — Cuentas Claras</title>
-      </Head>
+      <ProtectedPage role={UserRole.ADMIN}>
+        <Head>
+          <title>Conciliaciones Bancarias — Cuentas Claras</title>
+        </Head>
 
-      <Layout title='Conciliaciones Bancarias'>
+        <Layout title='Conciliaciones Bancarias'>
         <Container fluid className='p-4'>
           {/* Header */}
           <div className='conciliations-header'>
@@ -395,6 +397,7 @@ export default function ConciliacionesListado() {
           </div>
         </Container>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 }

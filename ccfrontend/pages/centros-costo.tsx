@@ -12,7 +12,11 @@ import {
 import Layout from '@/components/layout/Layout';
 import { listCentros, deleteCentro } from '@/lib/centrosCostoService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { usePermissions } from '@/lib/usePermissions';
+import {
+  usePermissions,
+  ProtectedPage,
+  UserRole,
+} from '@/lib/usePermissions';
 import type { CentroCosto } from '@/types/centrosCosto';
 
 export default function CentrosCostoListado() {
@@ -118,11 +122,12 @@ export default function CentrosCostoListado() {
 
   return (
     <ProtectedRoute>
-      <Head>
-        <title>Centros de Costo — Cuentas Claras</title>
-      </Head>
+      <ProtectedPage role={UserRole.ADMIN}>
+        <Head>
+          <title>Centros de Costo — Cuentas Claras</title>
+        </Head>
 
-      <Layout>
+        <Layout>
         <div className='cost-centers-container'>
           {/* Header (duplicado de Categorías, incluye icono, título, descripción y botón) */}
           <div className='categories-header'>
@@ -270,6 +275,7 @@ export default function CentrosCostoListado() {
           </Modal>
         </div>
       </Layout>
+      </ProtectedPage>
     </ProtectedRoute>
   );
 }
