@@ -111,7 +111,7 @@ test('inspect mocks shapes', () => {
     'DEBUG-MOCK: PlaylistAddCheck type=',
     typeof icons.PlaylistAddCheck,
     'defaultExists=',
-    !!icons.default
+    !!icons.default,
   );
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -123,7 +123,7 @@ test('inspect mocks shapes', () => {
     'DEBUG-MOCK: Button type=',
     typeof rb.Button,
     'Form.Control type=',
-    typeof (rb.Form && rb.Form.Control)
+    typeof (rb.Form && rb.Form.Control),
   );
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -136,7 +136,7 @@ test('inspect mocks shapes', () => {
   // eslint-disable-next-line no-console
   console.log(
     'DEBUG-MOCK: ProtectedRoute type=',
-    typeof useAuthMod.ProtectedRoute
+    typeof useAuthMod.ProtectedRoute,
   );
 
   expect(true).toBe(true);

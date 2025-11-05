@@ -184,7 +184,7 @@ export default function NuevoMedidor() {
 
   const handleInputChange = (
     field: string,
-    value: string | boolean | number
+    value: string | boolean | number,
   ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -368,6 +368,13 @@ export default function NuevoMedidor() {
                               <div
                                 className={`type-selection-card ${formData.type === type ? 'active' : ''} type-${type}`}
                                 onClick={() => handleInputChange('type', type)}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    handleInputChange('type', type);
+                                  }
+                                }}
+                                role='button'
+                                tabIndex={0}
                               >
                                 <span className='material-icons'>
                                   {getTypeIcon(type)}
@@ -809,7 +816,7 @@ export default function NuevoMedidor() {
                             onChange={e =>
                               handleInputChange(
                                 'communicationType',
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           >
@@ -1024,7 +1031,7 @@ export default function NuevoMedidor() {
                         onChange={e =>
                           handleInputChange(
                             'maintenanceFrequency',
-                            e.target.value
+                            e.target.value,
                           )
                         }
                       >
@@ -1174,7 +1181,7 @@ export default function NuevoMedidor() {
                       <strong>Fecha:</strong>{' '}
                       {formData.installationDate
                         ? new Date(
-                            formData.installationDate
+                            formData.installationDate,
                           ).toLocaleDateString()
                         : '-'}
                     </li>

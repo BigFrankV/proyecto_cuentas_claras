@@ -64,7 +64,7 @@ class ConciliacionesApi {
       }
 
       const response = await apiClient.get(
-        `${this.baseURL}?${params.toString()}`
+        `${this.baseURL}?${params.toString()}`,
       );
       return response.data;
     } catch {
@@ -93,7 +93,7 @@ class ConciliacionesApi {
    */
   async getByComunidad(
     comunidadId: number,
-    filtros: Omit<ConciliacionFiltros, 'comunidad_id'> = {}
+    filtros: Omit<ConciliacionFiltros, 'comunidad_id'> = {},
   ): Promise<{
     data: Conciliacion[];
     pagination: {
@@ -135,12 +135,12 @@ class ConciliacionesApi {
    */
   async create(
     comunidadId: number,
-    data: ConciliacionFormData
+    data: ConciliacionFormData,
   ): Promise<ConciliacionDetalle> {
     try {
       const response = await apiClient.post(
         `${this.baseURL}/comunidad/${comunidadId}`,
-        data
+        data,
       );
       return response.data;
     } catch {
@@ -156,11 +156,11 @@ class ConciliacionesApi {
    * Estadísticas generales de conciliaciones por comunidad
    */
   async getEstadisticas(
-    comunidadId: number
+    comunidadId: number,
   ): Promise<EstadisticasConciliaciones> {
     try {
       const response = await apiClient.get(
-        `${this.baseURL}/comunidad/${comunidadId}/estadisticas`
+        `${this.baseURL}/comunidad/${comunidadId}/estadisticas`,
       );
       return response.data;
     } catch {
@@ -174,7 +174,7 @@ class ConciliacionesApi {
   async getPendientes(comunidadId: number): Promise<ConciliacionPendiente[]> {
     try {
       const response = await axios.get(
-        `${this.baseURL}/comunidad/${comunidadId}/pendientes`
+        `${this.baseURL}/comunidad/${comunidadId}/pendientes`,
       );
       return response.data;
     } catch {
@@ -188,7 +188,7 @@ class ConciliacionesApi {
   async getPorEstado(comunidadId: number): Promise<ConciliacionPorEstado[]> {
     try {
       const response = await axios.get(
-        `${this.baseURL}/comunidad/${comunidadId}/por-estado`
+        `${this.baseURL}/comunidad/${comunidadId}/por-estado`,
       );
       return response.data;
     } catch {
@@ -202,7 +202,7 @@ class ConciliacionesApi {
   async getPorTipo(comunidadId: number): Promise<ConciliacionPorTipo[]> {
     try {
       const response = await axios.get(
-        `${this.baseURL}/comunidad/${comunidadId}/por-tipo`
+        `${this.baseURL}/comunidad/${comunidadId}/por-tipo`,
       );
       return response.data;
     } catch {
@@ -218,11 +218,11 @@ class ConciliacionesApi {
    * Movimientos con diferencias entre banco y pago
    */
   async getConDiferencias(
-    comunidadId: number
+    comunidadId: number,
   ): Promise<MovimientoConDiferencias[]> {
     try {
       const response = await axios.get(
-        `${this.baseURL}/comunidad/${comunidadId}/con-diferencias`
+        `${this.baseURL}/comunidad/${comunidadId}/con-diferencias`,
       );
       return response.data;
     } catch {
@@ -236,7 +236,7 @@ class ConciliacionesApi {
   async getSinPago(comunidadId: number): Promise<MovimientoSinPago[]> {
     try {
       const response = await axios.get(
-        `${this.baseURL}/comunidad/${comunidadId}/sin-pago`
+        `${this.baseURL}/comunidad/${comunidadId}/sin-pago`,
       );
       return response.data;
     } catch {
@@ -254,7 +254,7 @@ class ConciliacionesApi {
   async getHistorialPeriodo(comunidadId: number): Promise<HistorialPeriodo[]> {
     try {
       const response = await axios.get(
-        `${this.baseURL}/comunidad/${comunidadId}/historial-periodo`
+        `${this.baseURL}/comunidad/${comunidadId}/historial-periodo`,
       );
       return response.data;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -269,7 +269,7 @@ class ConciliacionesApi {
   async getSaldos(comunidadId: number): Promise<SaldosComparacion[]> {
     try {
       const response = await axios.get(
-        `${this.baseURL}/comunidad/${comunidadId}/saldos`
+        `${this.baseURL}/comunidad/${comunidadId}/saldos`,
       );
       return response.data;
     } catch (error) {
@@ -281,11 +281,11 @@ class ConciliacionesApi {
    * Análisis de precisión de conciliación por período
    */
   async getAnalisisPrecision(
-    comunidadId: number
+    comunidadId: number,
   ): Promise<AnalisisPrecision[]> {
     try {
       const response = await axios.get(
-        `${this.baseURL}/comunidad/${comunidadId}/analisis-precision`
+        `${this.baseURL}/comunidad/${comunidadId}/analisis-precision`,
       );
       return response.data;
     } catch (error) {
@@ -299,7 +299,7 @@ class ConciliacionesApi {
   async getResumen(comunidadId: number): Promise<ResumenConciliacion> {
     try {
       const response = await axios.get(
-        `${this.baseURL}/comunidad/${comunidadId}/resumen`
+        `${this.baseURL}/comunidad/${comunidadId}/resumen`,
       );
       return response.data;
     } catch (error) {
@@ -317,7 +317,7 @@ class ConciliacionesApi {
   async validar(comunidadId: number): Promise<ValidacionConciliacion> {
     try {
       const response = await axios.get(
-        `${this.baseURL}/comunidad/${comunidadId}/validar`
+        `${this.baseURL}/comunidad/${comunidadId}/validar`,
       );
       return response.data;
     } catch (error) {
@@ -334,7 +334,7 @@ class ConciliacionesApi {
    */
   async updateEstado(
     id: number,
-    estado: 'pendiente' | 'conciliado' | 'descartado'
+    estado: 'pendiente' | 'conciliado' | 'descartado',
   ): Promise<ConciliacionDetalle> {
     try {
       const response = await axios.patch(`${this.baseURL}/${id}`, { estado });
@@ -381,7 +381,7 @@ class ConciliacionesApi {
       pago_id?: number;
       glosa?: string;
       referencia?: string;
-    }
+    },
   ): Promise<{
     id: number;
     fecha_mov: string;
@@ -394,7 +394,7 @@ class ConciliacionesApi {
     try {
       const response = await axios.patch(
         `${this.baseURL}/transaccion/${txId}`,
-        data
+        data,
       );
       return response.data;
     } catch (error) {
@@ -407,7 +407,7 @@ class ConciliacionesApi {
    */
   async updateNotas(
     id: number,
-    notas: string
+    notas: string,
   ): Promise<{ id: number; notas: string }> {
     try {
       const response = await axios.patch(`${this.baseURL}/${id}/notas`, {

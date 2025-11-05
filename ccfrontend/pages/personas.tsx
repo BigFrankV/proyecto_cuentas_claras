@@ -108,7 +108,7 @@ const PersonasListado = () => {
       estado: (persona.usuario?.estado || 'Activo') as 'Activo' | 'Inactivo',
       unidades: 0, // TODO: Obtener de API
       fechaRegistro: new Date(persona.fecha_registro).toLocaleDateString(
-        'es-AR'
+        'es-AR',
       ),
       avatar: persona.avatar || undefined,
     }));

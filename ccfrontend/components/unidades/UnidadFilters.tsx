@@ -58,7 +58,7 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
   const { user } = useAuth();
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [selectedComunidad, setSelectedComunidad] = useState<string | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -98,12 +98,12 @@ const UnidadFilters: React.FC<UnidadFiltersProps> = ({
 
   // Filtrar edificios según comunidad seleccionada
   const availableEdificios = edificios.filter(
-    edificio => !filters.comunidad || edificio.comunidadId === filters.comunidad
+    edificio => !filters.comunidad || edificio.comunidadId === filters.comunidad,
   );
 
   // Filtrar torres según edificio seleccionado
   const availableTorres = torres.filter(
-    torre => !filters.edificio || torre.edificioId === filters.edificio
+    torre => !filters.edificio || torre.edificioId === filters.edificio,
   );
 
   const isAdmin =

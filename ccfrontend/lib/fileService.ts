@@ -51,7 +51,7 @@ class FileService {
    */
   async uploadFiles(
     files: FileList | File[],
-    options: FileUploadOptions
+    options: FileUploadOptions,
   ): Promise<UploadedFile[]> {
     try {
       const formData = new FormData();
@@ -96,7 +96,7 @@ class FileService {
    */
   async uploadFile(
     file: File,
-    options: FileUploadOptions
+    options: FileUploadOptions,
   ): Promise<UploadedFile> {
     const files = await this.uploadFiles([file], options);
     if (files.length === 0) {
@@ -111,7 +111,7 @@ class FileService {
   async uploadAvatar(
     file: File,
     personaId: number,
-    comunidadId: number
+    comunidadId: number,
   ): Promise<UploadedFile> {
     return this.uploadFile(file, {
       comunidadId,
@@ -129,7 +129,7 @@ class FileService {
     file: File,
     personaId: number,
     comunidadId: number,
-    description?: string
+    description?: string,
   ): Promise<UploadedFile> {
     return this.uploadFile(file, {
       comunidadId,
@@ -148,7 +148,7 @@ class FileService {
     entityType: 'personas' | 'unidades',
     entityId: number,
     comunidadId: number,
-    description?: string
+    description?: string,
   ): Promise<UploadedFile> {
     return this.uploadFile(file, {
       comunidadId,
@@ -168,7 +168,7 @@ class FileService {
       entityType?: string;
       entityId?: number;
       category?: string;
-    } = {}
+    } = {},
   ): Promise<FileListItem[]> {
     try {
       const params = new URLSearchParams();
@@ -197,7 +197,7 @@ class FileService {
    */
   async getPersonaFiles(
     personaId: number,
-    category?: string
+    category?: string,
   ): Promise<FileListItem[]> {
     const options: any = {
       entityType: 'personas',
@@ -214,7 +214,7 @@ class FileService {
    */
   async getUnidadFiles(
     unidadId: number,
-    category?: string
+    category?: string,
   ): Promise<FileListItem[]> {
     const options: any = {
       entityType: 'unidades',

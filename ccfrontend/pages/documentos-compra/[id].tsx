@@ -238,14 +238,14 @@ export default function DocumentoCompraDetalle() {
             approvedAt: new Date().toISOString(),
             timeline: [...prev.timeline, newTimeline],
           }
-        : null
+        : null,
     );
 
     setApprovalAction(null);
     setApprovalComment('');
 
     alert(
-      `Documento ${action === 'approve' ? 'aprobado' : 'rechazado'} exitosamente`
+      `Documento ${action === 'approve' ? 'aprobado' : 'rechazado'} exitosamente`,
     );
   };
 
@@ -278,7 +278,7 @@ export default function DocumentoCompraDetalle() {
             comments: [...prev.comments, comment],
             timeline: [...prev.timeline, timelineEvent],
           }
-        : null
+        : null,
     );
 
     setNewComment('');
@@ -306,7 +306,7 @@ export default function DocumentoCompraDetalle() {
               status: 'paid',
               timeline: [...prev.timeline, timelineEvent],
             }
-          : null
+          : null,
       );
 
       alert('Documento marcado como pagado exitosamente');
@@ -437,7 +437,7 @@ export default function DocumentoCompraDetalle() {
                             </i>
                             Vencimiento:{' '}
                             {new Date(document.dueDate).toLocaleDateString(
-                              'es-CL'
+                              'es-CL',
                             )}
                           </p>
                         )}
@@ -932,7 +932,7 @@ export default function DocumentoCompraDetalle() {
                           {Math.ceil(
                             (new Date(document.dueDate).getTime() -
                               new Date().getTime()) /
-                              (1000 * 60 * 60 * 24)
+                              (1000 * 60 * 60 * 24),
                           )}
                         </span>
                       </div>

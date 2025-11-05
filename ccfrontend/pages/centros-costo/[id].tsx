@@ -350,7 +350,7 @@ export default function CentroCostoDetalle() {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric',
-                            }
+                            },
                           )}
                         </div>
                       </div>
@@ -367,7 +367,7 @@ export default function CentroCostoDetalle() {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric',
-                            }
+                            },
                           )}
                         </div>
                       </div>
@@ -396,7 +396,7 @@ export default function CentroCostoDetalle() {
                         >
                           {responsibility}
                         </Badge>
-                      )
+                      ),
                     )}
                   </div>
                 </Card.Body>
@@ -428,7 +428,7 @@ export default function CentroCostoDetalle() {
                               </div>
                               <small className='text-muted'>
                                 {new Date(expense.date).toLocaleDateString(
-                                  'es-ES'
+                                  'es-ES',
                                 )}
                               </small>
                             </div>
@@ -538,7 +538,7 @@ export default function CentroCostoDetalle() {
                             $
                             {(costCenter.budget / 12).toLocaleString(
                               undefined,
-                              { maximumFractionDigits: 0 }
+                              { maximumFractionDigits: 0 },
                             )}
                           </span>
                         </div>
@@ -621,7 +621,7 @@ export default function CentroCostoDetalle() {
             </div>
             <p>
               ¿Estás seguro de que deseas eliminar el centro de costo{' '}
-              <strong>"{costCenter.name}"</strong>?
+              <strong>&quot;{costCenter.name}&quot;</strong>?
             </p>
             <p className='text-muted'>
               Esto también eliminará toda la información relacionada, incluyendo

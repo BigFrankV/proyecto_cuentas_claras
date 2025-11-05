@@ -68,7 +68,7 @@ const AmenidadesReservasPage: React.FC = () => {
     // TODO: Load occupied slots from API
     const occupiedSlots: string[] = [];
     setAvailableTimeSlots(
-      timeSlots.filter(slot => !occupiedSlots.includes(slot))
+      timeSlots.filter(slot => !occupiedSlots.includes(slot)),
     );
   }, []);
 
@@ -94,7 +94,7 @@ const AmenidadesReservasPage: React.FC = () => {
 
       // Obtener unidades de la comunidad del usuario
       const unidades = await unidadesService.getUnidadesPorComunidad(
-        activeMembership.comunidadId
+        activeMembership.comunidadId,
       );
 
       // Buscar la unidad que pertenece a la persona del usuario
@@ -132,7 +132,7 @@ const AmenidadesReservasPage: React.FC = () => {
 
     if (!user?.persona_id) {
       alert(
-        'Error: No se pudo identificar al usuario. Por favor, inicie sesión nuevamente.'
+        'Error: No se pudo identificar al usuario. Por favor, inicie sesión nuevamente.',
       );
       return;
     }
@@ -148,7 +148,7 @@ const AmenidadesReservasPage: React.FC = () => {
     const unidadId = await getUserUnidad();
     if (!unidadId) {
       alert(
-        'Error: No se pudo determinar la unidad del usuario. Verifique que tenga una membresía activa.'
+        'Error: No se pudo determinar la unidad del usuario. Verifique que tenga una membresía activa.',
       );
       return;
     }
@@ -176,7 +176,7 @@ const AmenidadesReservasPage: React.FC = () => {
     setShowModal(false);
 
     alert(
-      'Reserva creada exitosamente. Pendiente de confirmación por el administrador.'
+      'Reserva creada exitosamente. Pendiente de confirmación por el administrador.',
     );
   };
 
@@ -203,16 +203,16 @@ const AmenidadesReservasPage: React.FC = () => {
   const clearFilters = () => {
     // Reset all filters
     const amenityFilter = document.getElementById(
-      'amenityFilter'
+      'amenityFilter',
     ) as HTMLSelectElement;
     const statusFilter = document.getElementById(
-      'statusFilter'
+      'statusFilter',
     ) as HTMLSelectElement;
     const dateFromFilter = document.getElementById(
-      'dateFromFilter'
+      'dateFromFilter',
     ) as HTMLInputElement;
     const dateToFilter = document.getElementById(
-      'dateToFilter'
+      'dateToFilter',
     ) as HTMLInputElement;
 
     if (amenityFilter) {
@@ -498,14 +498,14 @@ const AmenidadesReservasPage: React.FC = () => {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric',
-                        }
+                        },
                       )}
                     </div>
                     <div className='reservation-time'>
                       <span className='material-icons me-1'>schedule</span>
                       {new Date(reservation.inicio).toLocaleTimeString(
                         'es-ES',
-                        { hour: '2-digit', minute: '2-digit' }
+                        { hour: '2-digit', minute: '2-digit' },
                       )}{' '}
                       -
                       {new Date(reservation.fin).toLocaleTimeString('es-ES', {

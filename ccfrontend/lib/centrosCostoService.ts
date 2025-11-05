@@ -3,7 +3,7 @@ import { CentroCosto, CentrosResponse } from '@/types/centrosCosto';
 import apiClient from './api';
 
 export async function listCentros(
-  comunidadId?: number
+  comunidadId?: number,
 ): Promise<CentrosResponse> {
   const endpoint =
     typeof comunidadId === 'number'
@@ -21,18 +21,18 @@ export async function getCentroById(id: number): Promise<CentroCosto> {
 
 export async function createCentro(
   comunidadId: number,
-  data: Partial<CentroCosto>
+  data: Partial<CentroCosto>,
 ): Promise<CentroCosto> {
   const response = await apiClient.post(
     `/centros-costo/comunidad/${comunidadId}`,
-    data
+    data,
   );
   return response.data;
 }
 
 export async function updateCentro(
   id: number,
-  data: Partial<CentroCosto>
+  data: Partial<CentroCosto>,
 ): Promise<CentroCosto> {
   const response = await apiClient.patch(`/centros-costo/${id}`, data);
   return response.data;

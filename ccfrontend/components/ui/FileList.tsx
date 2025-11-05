@@ -80,7 +80,7 @@ export default function FileList({
   const handleDelete = async (file: FileListItem) => {
     if (
       !window.confirm(
-        `¿Estás seguro de que quieres eliminar ${file.originalName}?`
+        `¿Estás seguro de que quieres eliminar ${file.originalName}?`,
       )
     ) {
       return;

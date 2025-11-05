@@ -123,7 +123,7 @@ export default function EditarCategoriaGasto() {
   // Manejar cambios en el formulario
   const handleInputChange = (
     field: keyof FormData,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setFormData(prev => ({
       ...prev,
@@ -175,7 +175,7 @@ export default function EditarCategoriaGasto() {
     if (hasChanges()) {
       if (
         window.confirm(
-          '¿Estás seguro de que quieres cancelar? Los cambios se perderán.'
+          '¿Estás seguro de que quieres cancelar? Los cambios se perderán.',
         )
       ) {
         router.push('/categorias-gasto');

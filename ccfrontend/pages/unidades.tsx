@@ -222,24 +222,24 @@ export default function UnidadesListado() {
             ?.toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
           unidad.residente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          unidad.torre.toLowerCase().includes(searchTerm.toLowerCase())
+          unidad.torre.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
     // Filtrar por comunidad
     if (filters.comunidad) {
       const comunidadNombre = comunidadesState.find(
-        (c: any) => c.id === filters.comunidad
+        (c: any) => c.id === filters.comunidad,
       )?.nombre;
       filtered = filtered.filter(
-        unidad => unidad.comunidad === comunidadNombre
+        unidad => unidad.comunidad === comunidadNombre,
       );
     }
 
     // Filtrar por edificio
     if (filters.edificio) {
       const edificioNombre = availableEdificios.find(
-        (e: any) => e.id === filters.edificio
+        (e: any) => e.id === filters.edificio,
       )?.nombre;
       filtered = filtered.filter(unidad => unidad.edificio === edificioNombre);
     }
@@ -247,7 +247,7 @@ export default function UnidadesListado() {
     // Filtrar por torre
     if (filters.torre) {
       const torreNombre = availableTorres.find(
-        (t: any) => t.id === filters.torre
+        (t: any) => t.id === filters.torre,
       )?.nombre;
       filtered = filtered.filter(unidad => unidad.torre === torreNombre);
     }
@@ -283,7 +283,7 @@ export default function UnidadesListado() {
     setSelectedUnidades(prev =>
       prev.includes(unidadId)
         ? prev.filter(id => id !== unidadId)
-        : [...prev, unidadId]
+        : [...prev, unidadId],
     );
   };
 
@@ -291,7 +291,7 @@ export default function UnidadesListado() {
     setSelectedUnidades(
       selectedUnidades.length === filteredUnidades.length
         ? []
-        : filteredUnidades.map(u => u.id)
+        : filteredUnidades.map(u => u.id),
     );
   };
 
@@ -343,14 +343,14 @@ export default function UnidadesListado() {
     const total = filteredUnidades.length;
     const activas = filteredUnidades.filter(u => u.estado === 'Activa').length;
     const inactivas = filteredUnidades.filter(
-      u => u.estado === 'Inactiva'
+      u => u.estado === 'Inactiva',
     ).length;
     const mantenimiento = filteredUnidades.filter(
-      u => u.estado === 'Mantenimiento'
+      u => u.estado === 'Mantenimiento',
     ).length;
     const saldoTotal = filteredUnidades.reduce(
       (sum, u) => sum + u.saldoPendiente,
-      0
+      0,
     );
 
     return { total, activas, inactivas, mantenimiento, saldoTotal };
@@ -416,7 +416,7 @@ export default function UnidadesListado() {
         setError(
           err?.response?.data?.error ||
             err.message ||
-            'Error al cargar unidades'
+            'Error al cargar unidades',
         );
       } finally {
         setLoading(false);

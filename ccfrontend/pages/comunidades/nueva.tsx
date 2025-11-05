@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
@@ -109,7 +110,7 @@ export default function NuevaComunidad() {
       if (formData.rut || formData.dv) {
         const rutError = getRutValidationError(
           formData.rut || '',
-          formData.dv || ''
+          formData.dv || '',
         );
         if (rutError) {
           newErrors.rut = rutError;
@@ -278,7 +279,7 @@ export default function NuevaComunidad() {
                           onChange={e =>
                             handleInputChange(
                               'tipo',
-                              e.target.value as TipoComunidad
+                              e.target.value as TipoComunidad,
                             )
                           }
                         >
@@ -301,7 +302,7 @@ export default function NuevaComunidad() {
                           onChange={e =>
                             handleInputChange(
                               'estado',
-                              e.target.value as EstadoComunidad
+                              e.target.value as EstadoComunidad,
                             )
                           }
                         >
@@ -465,10 +466,23 @@ export default function NuevaComunidad() {
                     <div
                       className='form-thumbnail'
                       onClick={() => document.getElementById('imagen')?.click()}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          document.getElementById('imagen')?.click();
+                        }
+                      }}
+                      role='button'
+                      tabIndex={0}
                     >
                       {previewImage ? (
                         <>
-                          <img src={previewImage} alt='Preview' />
+                          <Image
+                            src={previewImage}
+                            alt='Preview'
+                            fill
+                            style={{ objectFit: 'cover' }}
+                          />
                           <div className='overlay'>
                             <span
                               className='material-icons text-white'
@@ -559,7 +573,7 @@ export default function NuevaComunidad() {
                       onChange={e =>
                         handleInputChange(
                           'totalUnidades',
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       placeholder='120'
@@ -579,7 +593,7 @@ export default function NuevaComunidad() {
                       onChange={e =>
                         handleInputChange(
                           'totalEdificios',
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       placeholder='3'
@@ -599,7 +613,7 @@ export default function NuevaComunidad() {
                       onChange={e =>
                         handleInputChange(
                           'areaComun',
-                          parseFloat(e.target.value) || 0
+                          parseFloat(e.target.value) || 0,
                         )
                       }
                       placeholder='1500'
@@ -643,7 +657,7 @@ export default function NuevaComunidad() {
                                   } else {
                                     handleInputChange(
                                       'amenidades',
-                                      amenidades.filter(a => a !== amenidad)
+                                      amenidades.filter(a => a !== amenidad),
                                     );
                                   }
                                 }}
@@ -786,12 +800,15 @@ export default function NuevaComunidad() {
                         <div className='card-header'>
                           <h6 className='mb-0'>Imagen de la Comunidad</h6>
                         </div>
-                        <div className='card-body p-0'>
-                          <img
+                        <div
+                          className='card-body p-0'
+                          style={{ position: 'relative', height: '200px' }}
+                        >
+                          <Image
                             src={previewImage}
                             alt='Preview'
-                            className='w-100'
-                            style={{ height: '200px', objectFit: 'cover' }}
+                            fill
+                            style={{ objectFit: 'cover' }}
                           />
                         </div>
                       </div>

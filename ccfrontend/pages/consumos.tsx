@@ -3,7 +3,7 @@ import React from 'react';
 
 const ConsumosPage = dynamic(
   () => import('@/components/consumos/ConsumosPage'),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function ConsumosRoute() {

@@ -532,7 +532,7 @@ export default function CategoriasGastoListado() {
                 </div>
                 <p>
                   ¿Estás seguro de que deseas eliminar la categoría{' '}
-                  <strong>"{selectedCategory.nombre}"</strong>?
+                  <strong>&quot;{selectedCategory.nombre}&quot;</strong>?
                 </p>
               </>
             )}

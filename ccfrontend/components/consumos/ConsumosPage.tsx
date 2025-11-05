@@ -187,7 +187,7 @@ export default function ConsumosPage(): JSX.Element {
   function initializeCharts() {
     if (mainRef.current) {
       const existingMain = Chart.getChart(
-        mainRef.current as unknown as HTMLCanvasElement
+        mainRef.current as unknown as HTMLCanvasElement,
       );
       if (existingMain) {
         existingMain.destroy();
@@ -228,7 +228,7 @@ export default function ConsumosPage(): JSX.Element {
 
     if (monthlyRef.current) {
       const existingMonthly = Chart.getChart(
-        monthlyRef.current as unknown as HTMLCanvasElement
+        monthlyRef.current as unknown as HTMLCanvasElement,
       );
       if (existingMonthly) {
         existingMonthly.destroy();
@@ -257,7 +257,7 @@ export default function ConsumosPage(): JSX.Element {
 
     if (weeklyRef.current) {
       const existingWeekly = Chart.getChart(
-        weeklyRef.current as unknown as HTMLCanvasElement
+        weeklyRef.current as unknown as HTMLCanvasElement,
       );
       if (existingWeekly) {
         existingWeekly.destroy();

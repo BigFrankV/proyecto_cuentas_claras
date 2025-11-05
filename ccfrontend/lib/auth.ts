@@ -156,7 +156,7 @@ class AuthService {
         } catch (serverError) {
           // eslint-disable-next-line no-console
           console.log(
-            'No se pudo obtener datos completos del servidor, usando datos del token'
+            'No se pudo obtener datos completos del servidor, usando datos del token',
           );
         }
       } catch (jwtError) {
@@ -181,11 +181,11 @@ class AuthService {
         throw new Error(error.response.data.message);
       } else if (error.response?.status === 401) {
         throw new Error(
-          'Credenciales inválidas. Verifica tu usuario y contraseña.'
+          'Credenciales inválidas. Verifica tu usuario y contraseña.',
         );
       } else if (error.code === 'ECONNREFUSED') {
         throw new Error(
-          'No se pudo conectar con el servidor. Verifica que la API esté ejecutándose.'
+          'No se pudo conectar con el servidor. Verifica que la API esté ejecutándose.',
         );
       } else {
         throw new Error('Error de conexión. Por favor intenta nuevamente.');
@@ -196,7 +196,7 @@ class AuthService {
   // Completar login con código 2FA
   async complete2FALogin(
     tempToken: string,
-    code: string
+    code: string,
   ): Promise<AuthResponse> {
     try {
       const response = await apiClient.post('/auth/2fa/verify', {
@@ -243,7 +243,7 @@ class AuthService {
         } catch (serverError) {
           // eslint-disable-next-line no-console
           console.log(
-            'No se pudo obtener datos completos del servidor en 2FA, usando datos del token'
+            'No se pudo obtener datos completos del servidor en 2FA, usando datos del token',
           );
         }
       } catch (jwtError) {
@@ -301,11 +301,11 @@ class AuthService {
         throw new Error(error.response.data.message);
       } else if (error.response?.status === 400) {
         throw new Error(
-          'Datos de registro inválidos. Verifica que el usuario tenga al menos 3 caracteres y la contraseña 6.'
+          'Datos de registro inválidos. Verifica que el usuario tenga al menos 3 caracteres y la contraseña 6.',
         );
       } else {
         throw new Error(
-          'Error al registrar usuario. Por favor intenta nuevamente.'
+          'Error al registrar usuario. Por favor intenta nuevamente.',
         );
       }
     }
@@ -454,7 +454,7 @@ class AuthService {
   // Cambiar contraseña
   async changePassword(
     currentPassword: string,
-    newPassword: string
+    newPassword: string,
   ): Promise<void> {
     try {
       await apiClient.post('/auth/change-password', {

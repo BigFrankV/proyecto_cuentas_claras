@@ -30,7 +30,7 @@ ChartJS.register(
   Tooltip,
   Legend,
   Filler,
-  ArcElement
+  ArcElement,
 );
 
 // Configuración de la API
@@ -117,25 +117,25 @@ const ConsultorUTMRenovado: React.FC = () => {
 
   // Estados para datos
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    null
+    null,
   );
   const [graficoData, setGraficoData] = useState<UtmValor[]>([]);
   const [variacionMensual, setVariacionMensual] = useState<VariacionMensual[]>(
-    []
+    [],
   );
   const [comparacionAnos, setComparacionAnos] = useState<ComparacionAnos[]>([]);
   const [topValores, setTopValores] = useState<TopValores | null>(null);
   const [historicoAno, setHistoricoAno] = useState<UtmValor[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear()
+    new Date().getFullYear(),
   );
 
   // Estados para consultas y calculadora
   const [mesConsulta, setMesConsulta] = useState<number>(
-    new Date().getMonth() + 1
+    new Date().getMonth() + 1,
   );
   const [anoConsulta, setAnoConsulta] = useState<number>(
-    new Date().getFullYear()
+    new Date().getFullYear(),
   );
   const [consultaResult, setConsultaResult] = useState<UtmValor | null>(null);
   const [montoPesos, setMontoPesos] = useState<number>(0);
@@ -207,7 +207,7 @@ const ConsultorUTMRenovado: React.FC = () => {
   const cargarVariacionMensual = async (meses: number = 12) => {
     try {
       const data = await apiRequest(
-        `/api/valor-utm/variacion-mensual?meses=${meses}`
+        `/api/valor-utm/variacion-mensual?meses=${meses}`,
       );
       setVariacionMensual(data.data || []);
     } catch (err) {
@@ -232,7 +232,7 @@ const ConsultorUTMRenovado: React.FC = () => {
   const cargarTopValores = async (limit: number = 10) => {
     try {
       const data = await apiRequest(
-        `/api/valor-utm/top-valores?limit=${limit}`
+        `/api/valor-utm/top-valores?limit=${limit}`,
       );
       setTopValores(data);
     } catch (err) {
@@ -316,7 +316,7 @@ const ConsultorUTMRenovado: React.FC = () => {
     try {
       setLoading(true);
       const data = await apiRequest(
-        `/api/valor-utm/conversion/pesos-a-utm?pesos=${montoPesos}`
+        `/api/valor-utm/conversion/pesos-a-utm?pesos=${montoPesos}`,
       );
       setConversionResult(data.data);
     } catch (err: any) {
@@ -330,7 +330,7 @@ const ConsultorUTMRenovado: React.FC = () => {
     try {
       setLoading(true);
       const data = await apiRequest(
-        `/api/valor-utm/conversion/utm-a-pesos?utm=${montoUtm}`
+        `/api/valor-utm/conversion/utm-a-pesos?utm=${montoUtm}`,
       );
       setConversionResult(data.data);
     } catch (err: any) {
@@ -444,12 +444,12 @@ const ConsultorUTMRenovado: React.FC = () => {
           backgroundColor: variacionMensual.map(v =>
             (v.variacion_absoluta || 0) >= 0
               ? 'rgba(75, 192, 192, 0.6)'
-              : 'rgba(255, 99, 132, 0.6)'
+              : 'rgba(255, 99, 132, 0.6)',
           ),
           borderColor: variacionMensual.map(v =>
             (v.variacion_absoluta || 0) >= 0
               ? 'rgb(75, 192, 192)'
-              : 'rgb(255, 99, 132)'
+              : 'rgb(255, 99, 132)',
           ),
           borderWidth: 2,
         },
@@ -728,7 +728,7 @@ const ConsultorUTMRenovado: React.FC = () => {
                           <h6 className='card-title mb-1'>Variación Total</h6>
                           <h4 className='mb-0'>
                             {formatPercent(
-                              dashboardData.kpis.variacion_porcentual
+                              dashboardData.kpis.variacion_porcentual,
                             )}
                           </h4>
                           <small>
@@ -863,7 +863,7 @@ const ConsultorUTMRenovado: React.FC = () => {
                                   }
                                 >
                                   {formatPercent(
-                                    valor.variacion_porcentual || 0
+                                    valor.variacion_porcentual || 0,
                                   )}
                                 </td>
                               </tr>
@@ -968,7 +968,7 @@ const ConsultorUTMRenovado: React.FC = () => {
                                 month: 'long',
                               })}
                             </option>
-                          )
+                          ),
                         )}
                       </select>
                     </div>
@@ -981,7 +981,7 @@ const ConsultorUTMRenovado: React.FC = () => {
                       >
                         {Array.from(
                           { length: 10 },
-                          (_, i) => new Date().getFullYear() - i
+                          (_, i) => new Date().getFullYear() - i,
                         ).map(ano => (
                           <option key={ano} value={ano}>
                             {ano}
@@ -1177,7 +1177,7 @@ const ConsultorUTMRenovado: React.FC = () => {
                             {conversionResult.equivalente_pesos
                               ? formatPesos(conversionResult.equivalente_pesos)
                               : formatUTM(
-                                  conversionResult.equivalente_utm || 0
+                                  conversionResult.equivalente_utm || 0,
                                 )}
                           </h4>
                         </div>
@@ -1271,13 +1271,13 @@ const ConsultorUTMRenovado: React.FC = () => {
                                       {valor.mes_nombre ||
                                         new Date(valor.fecha).toLocaleString(
                                           'es-CL',
-                                          { month: 'long' }
+                                          { month: 'long' },
                                         )}
                                     </strong>
                                   </td>
                                   <td>
                                     {new Date(valor.fecha).toLocaleDateString(
-                                      'es-CL'
+                                      'es-CL',
                                     )}
                                   </td>
                                   <td className='text-primary'>
@@ -1324,7 +1324,7 @@ const ConsultorUTMRenovado: React.FC = () => {
                                 </small>
                                 <h5 className='text-success'>
                                   {formatPesos(
-                                    Math.min(...historicoAno.map(v => v.valor))
+                                    Math.min(...historicoAno.map(v => v.valor)),
                                   )}
                                 </h5>
                               </div>
@@ -1338,7 +1338,7 @@ const ConsultorUTMRenovado: React.FC = () => {
                                 </small>
                                 <h5 className='text-danger'>
                                   {formatPesos(
-                                    Math.max(...historicoAno.map(v => v.valor))
+                                    Math.max(...historicoAno.map(v => v.valor)),
                                   )}
                                 </h5>
                               </div>
@@ -1352,8 +1352,8 @@ const ConsultorUTMRenovado: React.FC = () => {
                                   {formatPesos(
                                     historicoAno.reduce(
                                       (sum, v) => sum + v.valor,
-                                      0
-                                    ) / historicoAno.length
+                                      0,
+                                    ) / historicoAno.length,
                                   )}
                                 </h5>
                               </div>
@@ -1570,7 +1570,7 @@ const ConsultorUTMRenovado: React.FC = () => {
                             <th>Mes</th>
                             {Object.keys(comparacionAnos[0] || {})
                               .filter(
-                                key => key !== 'mes' && key !== 'mes_nombre'
+                                key => key !== 'mes' && key !== 'mes_nombre',
                               )
                               .map(year => (
                                 <th key={year} className='text-center'>
@@ -1587,7 +1587,7 @@ const ConsultorUTMRenovado: React.FC = () => {
                               </td>
                               {Object.keys(fila)
                                 .filter(
-                                  key => key !== 'mes' && key !== 'mes_nombre'
+                                  key => key !== 'mes' && key !== 'mes_nombre',
                                 )
                                 .map(year => (
                                   <td key={year} className='text-center'>

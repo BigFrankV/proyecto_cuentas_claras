@@ -107,7 +107,7 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
           cargo.concepto.toLowerCase().includes(searchLower) ||
           cargo.descripcion?.toLowerCase().includes(searchLower) ||
           cargo.unidad.toLowerCase().includes(searchLower) ||
-          cargo.id.toLowerCase().includes(searchLower)
+          cargo.id.toLowerCase().includes(searchLower),
       );
     }
 
@@ -124,7 +124,7 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
     // Unit filter
     if (filters.unitNumber) {
       filtered = filtered.filter(cargo =>
-        cargo.unidad.toLowerCase().includes(filters.unitNumber.toLowerCase())
+        cargo.unidad.toLowerCase().includes(filters.unitNumber.toLowerCase()),
       );
     }
 
@@ -233,21 +233,21 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedCargos = filteredCargos.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   // Statistics
   const totalCargos = filteredCargos.length;
   const pendingCargos = filteredCargos.filter(
-    c => c.estado === 'pending'
+    c => c.estado === 'pending',
   ).length;
   const approvedCargos = filteredCargos.filter(
-    c => c.estado === 'approved'
+    c => c.estado === 'approved',
   ).length;
   const paidCargos = filteredCargos.filter(c => c.estado === 'paid').length;
   const totalAmount = filteredCargos.reduce(
     (sum, cargo) => sum + cargo.monto,
-    0
+    0,
   );
 
   useEffect(() => {
@@ -524,7 +524,7 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
                         {page}
                       </button>
                     </li>
-                  )
+                  ),
                 )}
                 <li
                   className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}

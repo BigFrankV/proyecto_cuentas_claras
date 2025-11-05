@@ -3,7 +3,7 @@ import { CategoriaGasto, CategoriasResponse } from '@/types/categoriasGasto';
 import apiClient from './api';
 
 export async function listCategorias(
-  comunidadId?: number
+  comunidadId?: number,
 ): Promise<CategoriasResponse> {
   const endpoint =
     typeof comunidadId === 'number'
@@ -21,18 +21,18 @@ export async function getCategoriaById(id: number): Promise<CategoriaGasto> {
 
 export async function createCategoria(
   comunidadId: number,
-  data: Partial<CategoriaGasto>
+  data: Partial<CategoriaGasto>,
 ): Promise<CategoriaGasto> {
   const response = await apiClient.post(
     `/categorias-gasto/comunidad/${comunidadId}`,
-    data
+    data,
   );
   return response.data;
 }
 
 export async function updateCategoria(
   id: number,
-  data: Partial<CategoriaGasto>
+  data: Partial<CategoriaGasto>,
 ): Promise<CategoriaGasto> {
   const response = await apiClient.patch(`/categorias-gasto/${id}`, data);
   return response.data;

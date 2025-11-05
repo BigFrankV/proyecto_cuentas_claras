@@ -152,7 +152,7 @@ class ExportService {
   async exportFromServer(
     endpoint: string,
     params: any = {},
-    filename?: string
+    filename?: string,
   ) {
     try {
       const response = await fetch(`/api/export/${endpoint}`, {

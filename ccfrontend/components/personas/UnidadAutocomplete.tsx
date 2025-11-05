@@ -89,7 +89,7 @@ export const UnidadAutocomplete: React.FC<UnidadAutocompleteProps> = ({
   const handleSelectUnit = (unidad: UnidadAutocompleteType) => {
     onChange(unidad);
     setSearchTerm(
-      `${unidad.nombre} - ${unidad.edificio} (${unidad.comunidad})`
+      `${unidad.nombre} - ${unidad.edificio} (${unidad.comunidad})`,
     );
     setIsOpen(false);
   };
@@ -162,6 +162,14 @@ export const UnidadAutocomplete: React.FC<UnidadAutocompleteProps> = ({
                 key={unidad.id}
                 className='p-2 border-bottom cursor-pointer hover-bg-light'
                 onClick={() => handleSelectUnit(unidad)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSelectUnit(unidad);
+                  }
+                }}
+                role='button'
+                tabIndex={0}
                 style={{ cursor: 'pointer' }}
                 onMouseEnter={e => e.currentTarget.classList.add('bg-light')}
                 onMouseLeave={e => e.currentTarget.classList.remove('bg-light')}

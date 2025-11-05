@@ -98,12 +98,12 @@ export default function UnidadNueva() {
   // Filtrar edificios según comunidad seleccionada
   const availableEdificios = edificios.filter(
     edificio =>
-      !formData.comunidad || edificio.comunidadId === formData.comunidad
+      !formData.comunidad || edificio.comunidadId === formData.comunidad,
   );
 
   // Filtrar torres según edificio seleccionado
   const availableTorres = torres.filter(
-    torre => !formData.edificio || torre.edificioId === formData.edificio
+    torre => !formData.edificio || torre.edificioId === formData.edificio,
   );
 
   // Calcular m² totales automáticamente
@@ -132,7 +132,7 @@ export default function UnidadNueva() {
     setSelectedCaracteristicas(prev =>
       prev.includes(caracteristica)
         ? prev.filter(c => c !== caracteristica)
-        : [...prev, caracteristica]
+        : [...prev, caracteristica],
     );
   };
 
@@ -149,8 +149,8 @@ export default function UnidadNueva() {
   const handleMedidorChange = (id: string, field: string, value: string) => {
     setMedidores(prev =>
       prev.map(medidor =>
-        medidor.id === id ? { ...medidor, [field]: value } : medidor
-      )
+        medidor.id === id ? { ...medidor, [field]: value } : medidor,
+      ),
     );
   };
 
@@ -224,7 +224,7 @@ export default function UnidadNueva() {
       const comunidadId = formData.comunidad;
       const resp = await apiClient.post(
         `/unidades/comunidad/${comunidadId}`,
-        payload
+        payload,
       );
       // on success, navigate to new unidad detail or list
       const created = resp.data;
@@ -465,7 +465,7 @@ export default function UnidadNueva() {
                             onChange={e =>
                               handleInputChange(
                                 'piso',
-                                parseInt(e.target.value) || 0
+                                parseInt(e.target.value) || 0,
                               )
                             }
                           />
@@ -488,7 +488,7 @@ export default function UnidadNueva() {
                             onChange={e =>
                               handleInputChange(
                                 'nroDormitorios',
-                                parseInt(e.target.value) || 0
+                                parseInt(e.target.value) || 0,
                               )
                             }
                           />
@@ -508,7 +508,7 @@ export default function UnidadNueva() {
                             onChange={e =>
                               handleInputChange(
                                 'nroBanos',
-                                parseInt(e.target.value) || 0
+                                parseInt(e.target.value) || 0,
                               )
                             }
                           />
@@ -569,7 +569,7 @@ export default function UnidadNueva() {
                               onChange={e =>
                                 handleInputChange(
                                   'm2Utiles',
-                                  parseFloat(e.target.value) || 0
+                                  parseFloat(e.target.value) || 0,
                                 )
                               }
                               required
@@ -599,7 +599,7 @@ export default function UnidadNueva() {
                               onChange={e =>
                                 handleInputChange(
                                   'm2Terrazas',
-                                  parseFloat(e.target.value) || 0
+                                  parseFloat(e.target.value) || 0,
                                 )
                               }
                             />
@@ -647,7 +647,7 @@ export default function UnidadNueva() {
                             onChange={e =>
                               handleInputChange(
                                 'alicuota',
-                                parseFloat(e.target.value) || 0
+                                parseFloat(e.target.value) || 0,
                               )
                             }
                           />
@@ -716,7 +716,7 @@ export default function UnidadNueva() {
                             onChange={e =>
                               handleInputChange(
                                 'estacionamiento',
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
@@ -737,7 +737,7 @@ export default function UnidadNueva() {
                             onChange={e =>
                               handleInputChange(
                                 'ubicacionEstacionamiento',
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
@@ -775,7 +775,7 @@ export default function UnidadNueva() {
                             onChange={e =>
                               handleInputChange(
                                 'ubicacionBodega',
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
@@ -894,7 +894,7 @@ export default function UnidadNueva() {
                                   handleMedidorChange(
                                     medidor.id,
                                     'tipo',
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               >
@@ -917,7 +917,7 @@ export default function UnidadNueva() {
                                   handleMedidorChange(
                                     medidor.id,
                                     'numero',
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 placeholder='Número del medidor'
@@ -933,7 +933,7 @@ export default function UnidadNueva() {
                                   handleMedidorChange(
                                     medidor.id,
                                     'ubicacion',
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 placeholder='Ubicación del medidor'

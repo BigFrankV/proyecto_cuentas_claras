@@ -136,8 +136,8 @@ export default function NuevoDocumento() {
           prev.map(f =>
             f.id === uploadFile.id
               ? { ...f, progress: Math.min(f.progress + 10, 100) }
-              : f
-          )
+              : f,
+          ),
         );
       }, 200);
 
@@ -145,8 +145,8 @@ export default function NuevoDocumento() {
         clearInterval(interval);
         setSelectedFiles(prev =>
           prev.map(f =>
-            f.id === uploadFile.id ? { ...f, progress: 100, uploaded: true } : f
-          )
+            f.id === uploadFile.id ? { ...f, progress: 100, uploaded: true } : f,
+          ),
         );
       }, 2000);
     });
@@ -240,6 +240,14 @@ export default function NuevoDocumento() {
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          fileInputRef.current?.click();
+                        }
+                      }}
+                      role='button'
+                      tabIndex={0}
                       style={{
                         cursor: 'pointer',
                         minHeight: '200px',
@@ -425,6 +433,14 @@ export default function NuevoDocumento() {
                             className={`category-card card border-2 ${selectedCategory === category.id ? 'border-primary bg-light' : 'border-light'}`}
                             style={{ cursor: 'pointer' }}
                             onClick={() => setSelectedCategory(category.id)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setSelectedCategory(category.id);
+                              }
+                            }}
+                            role='button'
+                            tabIndex={0}
                           >
                             <div className='card-body p-3'>
                               <div className='d-flex align-items-center'>
@@ -485,6 +501,14 @@ export default function NuevoDocumento() {
                             className={`access-card card border-2 ${selectedAccess === access.id ? 'border-primary bg-light' : 'border-light'}`}
                             style={{ cursor: 'pointer' }}
                             onClick={() => setSelectedAccess(access.id)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setSelectedAccess(access.id);
+                              }
+                            }}
+                            role='button'
+                            tabIndex={0}
                           >
                             <div className='card-body p-3'>
                               <div className='d-flex align-items-center'>
@@ -525,6 +549,14 @@ export default function NuevoDocumento() {
                         className={`version-option d-flex align-items-center p-3 border rounded-3 mb-2 ${versionOption === 'new' ? 'border-primary bg-light' : 'border-light'}`}
                         style={{ cursor: 'pointer' }}
                         onClick={() => setVersionOption('new')}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setVersionOption('new');
+                          }
+                        }}
+                        role='button'
+                        tabIndex={0}
                       >
                         <input
                           type='radio'
@@ -547,6 +579,14 @@ export default function NuevoDocumento() {
                         className={`version-option d-flex align-items-center p-3 border rounded-3 ${versionOption === 'update' ? 'border-primary bg-light' : 'border-light'}`}
                         style={{ cursor: 'pointer' }}
                         onClick={() => setVersionOption('update')}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setVersionOption('update');
+                          }
+                        }}
+                        role='button'
+                        tabIndex={0}
                       >
                         <input
                           type='radio'

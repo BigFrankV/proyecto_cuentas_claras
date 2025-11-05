@@ -182,7 +182,7 @@ export default function TarifasListado() {
                                       ${tramo.precio}
                                     </span>
                                   </div>
-                                )
+                                ),
                               )}
                             </div>
                           )}
@@ -202,7 +202,7 @@ export default function TarifasListado() {
                                       ${est.precio}
                                     </span>
                                   </div>
-                                )
+                                ),
                               )}
                             </div>
                           )}

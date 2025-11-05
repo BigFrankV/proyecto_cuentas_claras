@@ -27,7 +27,7 @@ class MultasService {
 
   // ===== CRUD ADAPTADO A TU BACKEND =====
   async getMultas(
-    filtros?: any
+    filtros?: any,
   ): Promise<{ data: any[]; totalPaginas: number }> {
     try {
       const params: any = {};
@@ -111,7 +111,7 @@ class MultasService {
       monto: data.monto,
       prioridad: data.prioridad,
       fecha_infraccion: this.formatearFechaParaBackend(
-        data.fecha || data.fecha_infraccion
+        data.fecha || data.fecha_infraccion,
       ),
       fecha_vencimiento: data.fecha_vencimiento,
     };
@@ -383,7 +383,7 @@ class MultasService {
       metodo_pago?: string;
       referencia?: string;
       monto?: number;
-    }
+    },
   ): Promise<Multa> {
     const response = await api.post(`/multas/${id}/registrar-pago`, pagoData);
     const raw = response.data?.data ?? response.data;
@@ -393,7 +393,7 @@ class MultasService {
   // Crear apelación (wrapper). Backend esperado: POST /multas/:id/apelacion
   async crearApelacion(
     id: number,
-    body: { motivo: string; documentos_json?: any[] }
+    body: { motivo: string; documentos_json?: any[] },
   ): Promise<any> {
     const response = await api.post(`/multas/${id}/apelacion`, body);
     return response.data?.data ?? response.data;
@@ -416,7 +416,7 @@ class MultasService {
   // Agregar este método en la clase MultasService
   async obtenerUnidadesAutocompletar(
     search: string,
-    comunidadId?: number
+    comunidadId?: number,
   ): Promise<any[]> {
     const params: any = { search, limit: 10 };
     if (comunidadId) {
@@ -463,7 +463,7 @@ export function getAuthHeaders(): Record<string, string> {
  */
 export async function fetchWithAuth(
   input: RequestInfo,
-  init: RequestInit = {}
+  init: RequestInit = {},
 ) {
   const baseHeaders = getAuthHeaders();
   const mergedHeaders = Object.assign({}, baseHeaders, init.headers || {});

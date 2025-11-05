@@ -328,14 +328,14 @@ export default function UnidadDetalle() {
               fecha: h.fecha,
               tipo: h.tipo,
               descripcion: h.descripcion,
-            }))
+            })),
           );
         }
       } catch (err: any) {
         // eslint-disable-next-line no-console
         console.error('Error loading unidad data', err);
         setError(
-          err?.response?.data?.error || err.message || 'Error al cargar unidad'
+          err?.response?.data?.error || err.message || 'Error al cargar unidad',
         );
       } finally {
         setLoading(false);
@@ -796,7 +796,7 @@ export default function UnidadDetalle() {
                               >
                                 {caracteristica}
                               </span>
-                            )
+                            ),
                           )}
                         </div>
                       </div>
@@ -1121,7 +1121,7 @@ export default function UnidadDetalle() {
                               <div className='col-md-8'>
                                 {unidad.medidores.agua.ultimaLectura} m³ (
                                 {formatDateShort(
-                                  unidad.medidores.agua.fechaLectura
+                                  unidad.medidores.agua.fechaLectura,
                                 )}
                                 )
                               </div>
@@ -1185,7 +1185,7 @@ export default function UnidadDetalle() {
                                 {unidad.medidores.electricidad.ultimaLectura}{' '}
                                 kWh (
                                 {formatDateShort(
-                                  unidad.medidores.electricidad.fechaLectura
+                                  unidad.medidores.electricidad.fechaLectura,
                                 )}
                                 )
                               </div>

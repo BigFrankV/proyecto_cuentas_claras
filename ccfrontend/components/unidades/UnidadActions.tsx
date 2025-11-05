@@ -25,10 +25,7 @@ interface UnidadActionsProps {
 
 const UnidadActions: React.FC<UnidadActionsProps> = ({
   selectedUnidades,
-  unidades,
   onDeleteSelected,
-  onExport,
-  onImport,
 }) => {
   const hasSelectedUnidades = selectedUnidades.length > 0;
 

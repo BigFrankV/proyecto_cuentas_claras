@@ -44,7 +44,7 @@ export const useRutValidator = () => {
       }
       return dv.toString();
     },
-    []
+    [],
   );
 
   // Función para limpiar RUT
@@ -74,7 +74,7 @@ export const useRutValidator = () => {
           return cleaned;
       }
     },
-    [cleanRut]
+    [cleanRut],
   );
 
   // Función para validar RUT
@@ -149,7 +149,7 @@ export const useRutValidator = () => {
       setValidation(result);
       return result;
     },
-    [cleanRut, calculateDigitoVerificador, formatRut]
+    [cleanRut, calculateDigitoVerificador, formatRut],
   );
 
   // Función para generar RUTs válidos
@@ -181,7 +181,7 @@ export const useRutValidator = () => {
         }, 300);
       });
     },
-    [calculateDigitoVerificador, formatRut]
+    [calculateDigitoVerificador, formatRut],
   );
 
   // Función para limpiar resultados
@@ -205,7 +205,7 @@ export const useRutValidator = () => {
 // Hook para consulta y cálculo de UF
 export const useUfConsultor = () => {
   const [consultaResult, setConsultaResult] = useState<UfConsultaResult | null>(
-    null
+    null,
   );
   const [calculatorState, setCalculatorState] = useState<CalculatorState>({
     loading: false,
@@ -227,7 +227,7 @@ export const useUfConsultor = () => {
         const dayOfYear = Math.floor(
           (dateObj.getTime() -
             new Date(dateObj.getFullYear(), 0, 0).getTime()) /
-            86400000
+            86400000,
         );
         const variation =
           Math.sin((dayOfYear / 365) * 2 * Math.PI) * 500 +
@@ -263,14 +263,14 @@ export const useUfConsultor = () => {
         setIsLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Función para calcular conversiones UF
   const calcularConversionUF = useCallback(
     (
       inputs: UfCalculatorInputs,
-      type: 'toPesos' | 'toUf'
+      type: 'toPesos' | 'toUf',
     ): Promise<UfCalculatorResult> => {
       setCalculatorState(prev => ({ ...prev, loading: true, error: null }));
 
@@ -325,7 +325,7 @@ export const useUfConsultor = () => {
         }, 300);
       });
     },
-    [consultaResult]
+    [consultaResult],
   );
 
   return {
@@ -421,14 +421,14 @@ export const useUtmConsultor = () => {
         setIsLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Función para calcular conversiones UTM
   const calcularConversionUTM = useCallback(
     (
       inputs: UtmCalculatorInputs,
-      type: 'toPesos' | 'toUtm'
+      type: 'toPesos' | 'toUtm',
     ): Promise<UtmCalculatorResult> => {
       setCalculatorState(prev => ({ ...prev, loading: true, error: null }));
 
@@ -485,7 +485,7 @@ export const useUtmConsultor = () => {
         }, 300);
       });
     },
-    [consultaResult]
+    [consultaResult],
   );
 
   return {
@@ -549,7 +549,7 @@ export const usePeriodosRapidos = () => {
 
       return { mes: targetMes, ano: targetAno };
     },
-    []
+    [],
   );
 
   return {
@@ -589,7 +589,7 @@ export const useNumberFormatter = () => {
         maximumFractionDigits: decimals,
       });
     },
-    []
+    [],
   );
 
   return {
@@ -620,7 +620,7 @@ export const useClipboard = () => {
         return false;
       }
     },
-    []
+    [],
   );
 
   const clearCopied = useCallback(() => {
@@ -650,7 +650,7 @@ export const useDateUtils = () => {
         day: 'numeric',
       });
     },
-    []
+    [],
   );
 
   const getCurrentMonth = useCallback((): number => {

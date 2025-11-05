@@ -4,4 +4,12 @@ import CentroStats from './CentroStats';
 import CentroTable from './CentroTable';
 
 export { CentroFilters, CentroStats, CentroTable, CentroCard };
-export default { CentroFilters, CentroStats, CentroTable, CentroCard };
+
+const CentrosCostoComponents = {
+  CentroFilters,
+  CentroStats,
+  CentroTable,
+  CentroCard,
+};
+
+export default CentrosCostoComponents;

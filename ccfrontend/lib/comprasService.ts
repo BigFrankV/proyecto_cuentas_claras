@@ -5,7 +5,7 @@ import apiClient from './api';
 
 export async function listCompras(
   comunidadId?: number | null,
-  params: Record<string, any> = {}
+  params: Record<string, any> = {},
 ): Promise<ComprasResponse> {
   if (typeof comunidadId === 'number') {
     params.comunidad_id = comunidadId;

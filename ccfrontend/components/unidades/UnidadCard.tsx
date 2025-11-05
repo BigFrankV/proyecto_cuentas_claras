@@ -59,6 +59,8 @@ const UnidadCard: React.FC<UnidadCardProps> = ({ unidad }) => {
       style={{
         transition: 'transform 0.15s ease, box-shadow 0.15s ease',
       }}
+      role='button'
+      tabIndex={0}
       onMouseEnter={e => {
         e.currentTarget.style.transform = 'translateY(-3px)';
         e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.1)';

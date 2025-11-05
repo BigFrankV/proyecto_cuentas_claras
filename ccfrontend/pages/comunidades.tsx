@@ -23,7 +23,7 @@ export default function ComunidadesListado() {
   // Estados principales
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [comunidadesFiltradas, setComunidadesFiltradas] = useState<Comunidad[]>(
-    []
+    [],
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,26 +97,26 @@ export default function ComunidadesListado() {
       resultado = resultado.filter(
         comunidad =>
           comunidad.nombre.toLowerCase().includes(busqueda) ||
-          comunidad.direccion.toLowerCase().includes(busqueda)
+          comunidad.direccion.toLowerCase().includes(busqueda),
       );
     }
 
     if (filtros.tipo) {
       resultado = resultado.filter(
-        comunidad => comunidad.tipo === filtros.tipo
+        comunidad => comunidad.tipo === filtros.tipo,
       );
     }
 
     if (filtros.estado) {
       resultado = resultado.filter(
-        comunidad => comunidad.estado === filtros.estado
+        comunidad => comunidad.estado === filtros.estado,
       );
     }
 
     if (filtros.administrador) {
       const admin = filtros.administrador.toLowerCase();
       resultado = resultado.filter(comunidad =>
-        comunidad.administrador.toLowerCase().includes(admin)
+        comunidad.administrador.toLowerCase().includes(admin),
       );
     }
 

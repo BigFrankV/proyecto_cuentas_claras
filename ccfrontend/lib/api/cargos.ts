@@ -41,7 +41,7 @@ const handleApiError = (error: unknown) => {
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as { response?: { data?: { error?: string } } };
     throw new Error(
-      apiError.response?.data?.error || 'Error de conexión con el servidor'
+      apiError.response?.data?.error || 'Error de conexión con el servidor',
     );
   }
   throw new Error('Error de conexión con el servidor');
@@ -50,7 +50,7 @@ const handleApiError = (error: unknown) => {
 // Helper para hacer peticiones autenticadas
 const apiRequest = async (
   url: string,
-  options: Record<string, unknown> = {}
+  options: Record<string, unknown> = {},
 ) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
   const token =
@@ -74,7 +74,7 @@ const apiRequest = async (
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      errorData.error || `HTTP error! status: ${response.status}`
+      errorData.error || `HTTP error! status: ${response.status}`,
     );
   }
 
@@ -120,7 +120,7 @@ export const cargosApi = {
   // Obtener todos los cargos de una comunidad con filtros
   getByComunidad: async (
     comunidadId: number,
-    filters?: CargoFilters
+    filters?: CargoFilters,
   ): Promise<Cargo[]> => {
     try {
       const queryParams = new URLSearchParams();
@@ -289,7 +289,7 @@ export const cargosApi = {
 
   // Obtener estadísticas de cargos por comunidad
   getEstadisticas: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<{
     totalCargos: number;
     totalMonto: number;
@@ -305,7 +305,7 @@ export const cargosApi = {
   }> => {
     try {
       const data = await apiRequest(
-        `/cargos/comunidad/${comunidadId}/estadisticas`
+        `/cargos/comunidad/${comunidadId}/estadisticas`,
       );
       return {
         totalCargos: data.total_cargos,
@@ -329,11 +329,11 @@ export const cargosApi = {
   // Obtener cargos por período
   getByPeriodo: async (
     comunidadId: number,
-    periodo: string
+    periodo: string,
   ): Promise<Cargo[]> => {
     try {
       const data = await apiRequest(
-        `/cargos/comunidad/${comunidadId}/periodo/${periodo}`
+        `/cargos/comunidad/${comunidadId}/periodo/${periodo}`,
       );
 
       return data.map((cargo: CargoBackend) => ({
@@ -360,7 +360,7 @@ export const cargosApi = {
   getVencidos: async (comunidadId: number): Promise<Cargo[]> => {
     try {
       const data = await apiRequest(
-        `/cargos/comunidad/${comunidadId}/vencidos`
+        `/cargos/comunidad/${comunidadId}/vencidos`,
       );
 
       return data.map((cargo: CargoBackend) => ({
@@ -404,7 +404,7 @@ export const cargosApi = {
 
   // Obtener cargos agrupados por estado
   getPorEstado: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<
     Array<{
       estado: string;
@@ -415,7 +415,7 @@ export const cargosApi = {
   > => {
     try {
       const data = await apiRequest(
-        `/cargos/comunidad/${comunidadId}/por-estado`
+        `/cargos/comunidad/${comunidadId}/por-estado`,
       );
       return data.map(
         (item: {
@@ -428,7 +428,7 @@ export const cargosApi = {
           cantidad: item.cantidad,
           montoTotal: item.monto_total,
           montoPromedio: item.monto_promedio,
-        })
+        }),
       );
     } catch (error) {
       handleApiError(error);
@@ -438,7 +438,7 @@ export const cargosApi = {
 
   // Validación de cargos
   validarCargos: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<
     Array<{
       id: number;
@@ -450,7 +450,7 @@ export const cargosApi = {
   > => {
     try {
       const data = await apiRequest(
-        `/cargos/comunidad/${comunidadId}/validacion`
+        `/cargos/comunidad/${comunidadId}/validacion`,
       );
       return data.map(
         (item: {
@@ -465,7 +465,7 @@ export const cargosApi = {
           montoTotal: item.monto_total,
           saldo: item.saldo,
           cantidadDetalles: item.cantidad_detalles,
-        })
+        }),
       );
     } catch (error) {
       handleApiError(error);
@@ -477,7 +477,7 @@ export const cargosApi = {
   getConInteres: async (comunidadId: number): Promise<Cargo[]> => {
     try {
       const data = await apiRequest(
-        `/cargos/comunidad/${comunidadId}/con-interes`
+        `/cargos/comunidad/${comunidadId}/con-interes`,
       );
 
       return data.map((cargo: CargoBackend) => ({
@@ -502,7 +502,7 @@ export const cargosApi = {
 
   // Obtener resumen de pagos
   getResumenPagos: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<
     Array<{
       chargeId: number;
@@ -517,7 +517,7 @@ export const cargosApi = {
   > => {
     try {
       const data = await apiRequest(
-        `/cargos/comunidad/${comunidadId}/resumen-pagos`
+        `/cargos/comunidad/${comunidadId}/resumen-pagos`,
       );
       return data.map(
         (item: {
@@ -538,7 +538,7 @@ export const cargosApi = {
           paymentCount: item.paymentCount,
           lastPaymentDate: item.lastPaymentDate,
           estadoCalculado: item.estado_calculado,
-        })
+        }),
       );
     } catch (error) {
       handleApiError(error);
@@ -548,7 +548,7 @@ export const cargosApi = {
 
   // Obtener cargos por categoría
   getPorCategoria: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<
     Array<{
       nombreCategoria: string;
@@ -562,7 +562,7 @@ export const cargosApi = {
   > => {
     try {
       const data = await apiRequest(
-        `/cargos/comunidad/${comunidadId}/por-categoria`
+        `/cargos/comunidad/${comunidadId}/por-categoria`,
       );
       return data.map(
         (item: {
@@ -581,7 +581,7 @@ export const cargosApi = {
           montoPromedio: item.monto_promedio,
           cargosUnicos: item.cargos_unicos,
           unidadesAfectadas: item.unidades_afectadas,
-        })
+        }),
       );
     } catch (error) {
       handleApiError(error);
@@ -591,7 +591,7 @@ export const cargosApi = {
 
   // Recalcular interés de un cargo
   recalcularInteres: async (
-    id: number
+    id: number,
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const data = await apiRequest(`/cargos/${id}/recalcular-interes`, {
@@ -606,7 +606,7 @@ export const cargosApi = {
 
   // Notificar sobre un cargo
   notificarCargo: async (
-    id: number
+    id: number,
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const data = await apiRequest(`/cargos/${id}/notificar`, {

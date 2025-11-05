@@ -26,7 +26,7 @@ class ProfileService {
       // eslint-disable-next-line no-console
       console.error('Error obteniendo perfil:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al obtener perfil'
+        error.response?.data?.message || 'Error al obtener perfil',
       );
     }
   }
@@ -40,14 +40,14 @@ class ProfileService {
       // eslint-disable-next-line no-console
       console.error('Error actualizando perfil:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al actualizar perfil'
+        error.response?.data?.message || 'Error al actualizar perfil',
       );
     }
   }
 
   // Cambiar contraseña
   async changePassword(
-    data: PasswordChangeData
+    data: PasswordChangeData,
   ): Promise<PasswordChangeResponse> {
     try {
       const response = await apiClient.post('/auth/change-password', {
@@ -59,14 +59,14 @@ class ProfileService {
       // eslint-disable-next-line no-console
       console.error('Error cambiando contraseña:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al cambiar contraseña'
+        error.response?.data?.message || 'Error al cambiar contraseña',
       );
     }
   }
 
   // Actualizar preferencias
   async updatePreferences(
-    preferences: UserPreferences
+    preferences: UserPreferences,
   ): Promise<PreferencesUpdateResponse> {
     try {
       const response = await apiClient.patch('/auth/preferences', preferences);
@@ -75,7 +75,7 @@ class ProfileService {
       // eslint-disable-next-line no-console
       console.error('Error actualizando preferencias:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al actualizar preferencias'
+        error.response?.data?.message || 'Error al actualizar preferencias',
       );
     }
   }
@@ -102,7 +102,7 @@ class ProfileService {
       // eslint-disable-next-line no-console
       console.error('Error cerrando sesión:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al cerrar sesión'
+        error.response?.data?.message || 'Error al cerrar sesión',
       );
     }
   }
@@ -116,7 +116,7 @@ class ProfileService {
       // eslint-disable-next-line no-console
       console.error('Error cerrando todas las sesiones:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al cerrar sesiones'
+        error.response?.data?.message || 'Error al cerrar sesiones',
       );
     }
   }
@@ -185,7 +185,7 @@ class ProfileService {
       // eslint-disable-next-line no-console
       console.error('Error configurando 2FA:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al configurar 2FA'
+        error.response?.data?.message || 'Error al configurar 2FA',
       );
     }
   }
@@ -214,7 +214,7 @@ class ProfileService {
       // eslint-disable-next-line no-console
       console.error('Error desactivando 2FA:', error);
       throw new Error(
-        error.response?.data?.message || 'Error al desactivar 2FA'
+        error.response?.data?.message || 'Error al desactivar 2FA',
       );
     }
   }

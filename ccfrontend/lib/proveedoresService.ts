@@ -5,7 +5,7 @@ import apiClient from './api';
 
 export async function listProveedores(
   comunidadId?: number | null,
-  params: Record<string, any> = {}
+  params: Record<string, any> = {},
 ): Promise<ProveedoresResponse> {
   const endpoint =
     typeof comunidadId === 'number'
@@ -51,11 +51,11 @@ export async function deleteProveedor(id: number): Promise<void> {
 
 export async function createProveedor(
   comunidadId: number,
-  payload: Partial<Proveedor>
+  payload: Partial<Proveedor>,
 ) {
   const resp = await apiClient.post(
     `/proveedores/comunidad/${comunidadId}`,
-    payload
+    payload,
   );
   return resp.data;
 }

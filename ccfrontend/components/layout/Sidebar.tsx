@@ -249,7 +249,7 @@ export default function Sidebar() {
             .map((section, sectionIndex) => {
               // Filtrar items de la sección según permisos
               const visibleItems = section.items.filter(item =>
-                shouldShowItem(item.href)
+                shouldShowItem(item.href),
               );
 
               // Si no hay items visibles, no mostrar la sección
@@ -323,15 +323,15 @@ export default function Sidebar() {
 
         {/* Menú de usuario */}
         <div className='dropdown'>
-          <a
-            href='#'
-            className='d-flex align-items-center text-white text-decoration-none dropdown-toggle'
+          <button
+            type='button'
+            className='d-flex align-items-center text-white text-decoration-none dropdown-toggle bg-transparent border-0 w-100'
             id='userDropdown'
             data-bs-toggle='dropdown'
           >
             <span className='material-icons me-2'>settings</span>
             <span>Configuración</span>
-          </a>
+          </button>
           <ul
             className='dropdown-menu dropdown-menu-dark'
             aria-labelledby='userDropdown'
@@ -347,9 +347,9 @@ export default function Sidebar() {
               </Link>
             </li>
             <li>
-              <a className='dropdown-item' href='#'>
+              <button type='button' className='dropdown-item'>
                 Preferencias
-              </a>
+              </button>
             </li>
             <li>
               <hr className='dropdown-divider' />

@@ -88,22 +88,14 @@ export default function GastoNuevo() {
   useEffect(() => {
     const loadLists = async () => {
       // eslint-disable-next-line no-console
-      console.log(
-        'idToUse:',
-        comunidadParaEnviar,
-        'isSuperUser:',
-        isSuperUser,
-      );
+      console.log('idToUse:', comunidadParaEnviar, 'isSuperUser:', isSuperUser);
       try {
         // eslint-disable-next-line no-console
         console.log('-> llamando getCategorias...');
         const cats = await getCategorias(comunidadParaEnviar);
         const catsArray = Array.isArray(cats) ? cats : (cats?.data ?? []);
         // eslint-disable-next-line no-console
-        console.log(
-          '<- getCategorias normalized length:',
-          catsArray.length,
-        );
+        console.log('<- getCategorias normalized length:', catsArray.length);
         setCategories(
           (catsArray || []).map((c: any) => ({
             id: c.id,
@@ -134,10 +126,7 @@ export default function GastoNuevo() {
         const provs = await getProveedores(comunidadParaEnviar);
         const provsArray = Array.isArray(provs) ? provs : (provs?.data ?? []);
         // eslint-disable-next-line no-console
-        console.log(
-          '<- getProveedores normalized length:',
-          provsArray.length,
-        );
+        console.log('<- getProveedores normalized length:', provsArray.length);
         setProviders(
           (provsArray || []).map((p: any) => ({
             id: p.id,
@@ -146,10 +135,7 @@ export default function GastoNuevo() {
         );
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.error(
-          'Error cargando listas para dropdowns:',
-          err,
-        );
+        console.error('Error cargando listas para dropdowns:', err);
         setCategories([]);
         setCostCenters([]);
         setProviders([]);

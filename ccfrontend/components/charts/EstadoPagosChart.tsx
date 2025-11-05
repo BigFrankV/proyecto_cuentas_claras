@@ -74,7 +74,7 @@ export default function EstadoPagosChart({
                 const porcentaje = Math.round(
                   (cantidad /
                     item.data.reduce((a: number, b: number) => a + b, 0)) *
-                    100
+                    100,
                 );
 
                 return {

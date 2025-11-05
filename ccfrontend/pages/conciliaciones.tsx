@@ -45,7 +45,7 @@ export default function ConciliacionesListado() {
 
   const handleFilterChange = (
     field: keyof ConciliacionFiltros,
-    value: string | number | undefined
+    value: string | number | undefined,
   ) => {
     setFilters(prev => ({
       ...prev,
@@ -95,13 +95,13 @@ export default function ConciliacionesListado() {
   const stats = {
     total: conciliaciones.length,
     conciliadas: conciliaciones.filter(
-      c => c.reconciliationStatus === 'reconciliado'
+      c => c.reconciliationStatus === 'reconciliado',
     ).length,
     pendientes: conciliaciones.filter(
-      c => c.reconciliationStatus === 'pendiente'
+      c => c.reconciliationStatus === 'pendiente',
     ).length,
     descartadas: conciliaciones.filter(
-      c => c.reconciliationStatus === 'descartado'
+      c => c.reconciliationStatus === 'descartado',
     ).length,
   };
 

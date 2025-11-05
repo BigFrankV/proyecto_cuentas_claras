@@ -79,6 +79,7 @@ export default function TwoFactorModal({
                     Usa Google Authenticator, Authy u otra aplicación compatible
                   </p>
                   <div className='text-center mb-3'>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={setupData.qr}
                       alt='QR Code'

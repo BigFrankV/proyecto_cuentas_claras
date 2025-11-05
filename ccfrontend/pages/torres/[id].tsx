@@ -98,7 +98,7 @@ export default function TorreDetalle() {
 
     if (unidadFilter !== 'todas') {
       filtered = filtered.filter(
-        unidad => unidad.estado.toLowerCase() === unidadFilter.toLowerCase()
+        unidad => unidad.estado.toLowerCase() === unidadFilter.toLowerCase(),
       );
     }
 
@@ -111,7 +111,7 @@ export default function TorreDetalle() {
             .includes(unidadSearch.toLowerCase()) ||
           unidad.arrendatario
             ?.toLowerCase()
-            .includes(unidadSearch.toLowerCase())
+            .includes(unidadSearch.toLowerCase()),
       );
     }
 
@@ -428,12 +428,12 @@ export default function TorreDetalle() {
                     onClick={() => {
                       if (
                         confirm(
-                          '¿Estás seguro de que quieres eliminar esta torre?'
+                          '¿Estás seguro de que quieres eliminar esta torre?',
                         )
                       ) {
                         // TODO: Implementar eliminación de torre
                         alert(
-                          'Funcionalidad de eliminación próximamente disponible'
+                          'Funcionalidad de eliminación próximamente disponible',
                         );
                       }
                     }}

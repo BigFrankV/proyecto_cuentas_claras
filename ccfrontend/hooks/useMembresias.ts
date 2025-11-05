@@ -69,7 +69,7 @@ export const useMembresias = () => {
         });
 
         const response = await apiClient.get(
-          `/membresias?${params.toString()}`
+          `/membresias?${params.toString()}`,
         );
         return response.data;
       } catch (err: any) {
@@ -81,7 +81,7 @@ export const useMembresias = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   const obtenerMembresia = useCallback(
@@ -100,7 +100,7 @@ export const useMembresias = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   const crearMembresia = useCallback(
@@ -126,7 +126,7 @@ export const useMembresias = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   const actualizarMembresia = useCallback(
@@ -136,7 +136,7 @@ export const useMembresias = () => {
         rol_id: number;
         activo: boolean;
         hasta: string;
-      }>
+      }>,
     ): Promise<Membresia> => {
       setLoading(true);
       setError(null);
@@ -152,7 +152,7 @@ export const useMembresias = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   const eliminarMembresia = useCallback(async (id: number): Promise<void> => {

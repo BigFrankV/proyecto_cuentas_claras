@@ -90,7 +90,7 @@ export default function CargosUnidadPage() {
         setError(
           err instanceof Error
             ? err.message
-            : 'Error desconocido al cargar los datos'
+            : 'Error desconocido al cargar los datos',
         );
       } finally {
         setLoading(false);

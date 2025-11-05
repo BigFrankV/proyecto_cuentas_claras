@@ -222,7 +222,7 @@ const UnidadCaracteristicas: React.FC<UnidadCaracteristicasProps> = ({
       return caracteristicas;
     }
     return caracteristicas.filter(c =>
-      c.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+      c.nombre.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [searchTerm]);
 
@@ -328,7 +328,7 @@ const UnidadCaracteristicas: React.FC<UnidadCaracteristicasProps> = ({
                           type='checkbox'
                           id={`caracteristica-${caracteristica.id}`}
                           checked={selectedCaracteristicas.includes(
-                            caracteristica.id
+                            caracteristica.id,
                           )}
                           onChange={() =>
                             handleCaracteristicaToggle(caracteristica.id)

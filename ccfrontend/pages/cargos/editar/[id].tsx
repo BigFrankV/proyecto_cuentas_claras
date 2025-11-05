@@ -62,12 +62,12 @@ export default function EditarCargoPage() {
         // Función helper para convertir fecha a string
         const formatDate = (date: any): string => {
           if (date instanceof Date) {
-            return date.toISOString().split('T')[0]!;
+            return date.toISOString().split('T')[0] || '';
           }
           if (typeof date === 'string') {
-            return date.split('T')[0]!;
+            return date.split('T')[0] || '';
           }
-          return new Date().toISOString().split('T')[0]!;
+          return new Date().toISOString().split('T')[0] || '';
         };
 
         const mappedCharge: Charge = {
@@ -387,7 +387,7 @@ export default function EditarCargoPage() {
                             onChange={e =>
                               handleInputChange(
                                 'amount',
-                                parseFloat(e.target.value) || 0
+                                parseFloat(e.target.value) || 0,
                               )
                             }
                             min='0'
@@ -526,7 +526,7 @@ export default function EditarCargoPage() {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
-                          }
+                          },
                         )}
                       </div>
                     </div>

@@ -38,7 +38,7 @@ const parseDateSafe = (d?: string | Date | null): Date | null => {
       Number(day),
       Number(hh),
       Number(mm),
-      Number(ss)
+      Number(ss),
     );
   }
 
@@ -57,7 +57,7 @@ const parseDateSafe = (d?: string | Date | null): Date | null => {
         Number(day),
         Number(hh),
         Number(mm),
-        Number(ss)
+        Number(ss),
       );
     }
   }
@@ -97,7 +97,7 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
   const [documents, setDocuments] = useState<any[] | null>(null);
   const [appeals, setAppeals] = useState<any[] | null>(null);
   const [comms, setComms] = useState<any[] | null>(
-    historial.length ? historial : null
+    historial.length ? historial : null,
   );
   const [loadingTab, setLoadingTab] = useState(false);
   const paymentFormRef = useRef<HTMLFormElement | null>(null);
@@ -157,8 +157,8 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
           }
           setPayments(
             (histArr || []).filter((x: any) =>
-              String(x.accion).toLowerCase().includes('pago')
-            )
+              String(x.accion).toLowerCase().includes('pago'),
+            ),
           );
         }
 
@@ -177,7 +177,7 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
         if (activeTab === 'evidence' && documents === null) {
           try {
             const res: any = await multasService.getDocumentos(
-              Number(multa.id)
+              Number(multa.id),
             );
             if (!mounted) {
               return;
@@ -192,7 +192,7 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
         if (activeTab === 'appeals' && appeals === null) {
           try {
             const res: any = await multasService.getApelaciones(
-              Number(multa.id)
+              Number(multa.id),
             );
             if (!mounted) {
               return;
@@ -211,8 +211,8 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
             }
             setAppeals(
               (histArr || []).filter((x: any) =>
-                String(x.accion).toLowerCase().includes('apel')
-              )
+                String(x.accion).toLowerCase().includes('apel'),
+              ),
             );
           }
         }
@@ -263,8 +263,8 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
       setComms(histArr);
       setPayments(
         (histArr || []).filter((x: any) =>
-          String(x.accion).toLowerCase().includes('pago')
-        )
+          String(x.accion).toLowerCase().includes('pago'),
+        ),
       );
       // cerrar modal (Bootstrap)
       const modalEl = document.getElementById('paymentModal');
@@ -302,7 +302,7 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
       setLoadingTab(true);
       const createResp = await multasService.crearApelacion(
         Number(multa.id),
-        payload
+        payload,
       );
 
       // Si el backend devuelve { success: false, details: [...] }
@@ -312,7 +312,7 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
           .filter(Boolean)
           .join('; ');
         setAppealError(
-          msgs || String(createResp.error || 'Error creando apelación')
+          msgs || String(createResp.error || 'Error creando apelación'),
         );
         return;
       }

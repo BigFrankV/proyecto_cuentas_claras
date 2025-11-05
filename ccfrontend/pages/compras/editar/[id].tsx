@@ -21,7 +21,7 @@ import { CompraBackend } from '@/types/compras';
 // Función para formatear moneda chilena
 const formatCurrency = (
   amount: number,
-  currency: 'clp' | 'usd' = 'clp'
+  currency: 'clp' | 'usd' = 'clp',
 ): string => {
   if (currency === 'clp') {
     return `$${amount.toLocaleString('es-CL')}`;
@@ -351,7 +351,7 @@ export default function EditarCompra() {
   const handleItemChange = (
     itemId: string,
     field: string,
-    value: string | number
+    value: string | number,
   ) => {
     setItems(prev =>
       prev.map(item => {
@@ -367,7 +367,7 @@ export default function EditarCompra() {
           return updatedItem;
         }
         return item;
-      })
+      }),
     );
   };
 
@@ -431,7 +431,7 @@ export default function EditarCompra() {
 
     // Validar items
     const validItems = items.filter(
-      item => item.description.trim() && item.quantity > 0 && item.unitPrice > 0
+      item => item.description.trim() && item.quantity > 0 && item.unitPrice > 0,
     );
 
     if (validItems.length === 0) {
@@ -492,7 +492,7 @@ export default function EditarCompra() {
 
       if (requiresReapproval) {
         alert(
-          'Compra actualizada. Se ha enviado para re-aprobación debido a los cambios realizados.'
+          'Compra actualizada. Se ha enviado para re-aprobación debido a los cambios realizados.',
         );
       } else {
         alert('Compra actualizada exitosamente');
@@ -601,8 +601,9 @@ export default function EditarCompra() {
             </span>
             <h4>Compra no editable</h4>
             <p className='text-muted'>
-              Esta compra está en estado "{getStatusInfo(purchase.status).label}
-              " y no puede ser editada.
+              Esta compra está en estado &quot;
+              {getStatusInfo(purchase.status).label}
+              &quot; y no puede ser editada.
             </p>
             <div className='d-flex gap-2 justify-content-center'>
               <Button variant='outline-secondary' onClick={() => router.back()}>
@@ -684,7 +685,7 @@ export default function EditarCompra() {
               <span className='material-icons me-2'>warning</span>
               <strong>Atención:</strong> Esta compra ya está aprobada. Los
               cambios significativos requerirán re-aprobación y volverán el
-              estado a "Pendiente".
+              estado a &quot;Pendiente&quot;.
             </Alert>
           )}
 
@@ -870,7 +871,7 @@ export default function EditarCompra() {
                                 (Disponible:{' '}
                                 {formatCurrency(
                                   center.budget - center.spent,
-                                  formData.currency
+                                  formData.currency,
                                 )}
                                 )
                               </option>
@@ -966,7 +967,7 @@ export default function EditarCompra() {
                                     handleItemChange(
                                       item.id,
                                       'description',
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   size='sm'
@@ -980,7 +981,7 @@ export default function EditarCompra() {
                                     handleItemChange(
                                       item.id,
                                       'notes',
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   size='sm'
@@ -996,7 +997,7 @@ export default function EditarCompra() {
                                     handleItemChange(
                                       item.id,
                                       'quantity',
-                                      parseInt(e.target.value) || 1
+                                      parseInt(e.target.value) || 1,
                                     )
                                   }
                                   size='sm'
@@ -1009,7 +1010,7 @@ export default function EditarCompra() {
                                     handleItemChange(
                                       item.id,
                                       'unit',
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   size='sm'
@@ -1036,7 +1037,7 @@ export default function EditarCompra() {
                                     handleItemChange(
                                       item.id,
                                       'unitPrice',
-                                      parseFloat(e.target.value) || 0
+                                      parseFloat(e.target.value) || 0,
                                     )
                                   }
                                   size='sm'
@@ -1068,7 +1069,7 @@ export default function EditarCompra() {
                             <td className='fw-bold'>
                               {formatCurrency(
                                 getTotalAmount(),
-                                formData.currency
+                                formData.currency,
                               )}
                             </td>
                             <td></td>
@@ -1114,7 +1115,7 @@ export default function EditarCompra() {
                             onChange={e =>
                               handleInputChange(
                                 'requestJustification',
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
@@ -1148,7 +1149,7 @@ export default function EditarCompra() {
                           <div className='stat-value'>
                             {items.reduce(
                               (sum, item) => sum + item.quantity,
-                              0
+                              0,
                             )}
                           </div>
                           <div className='stat-label'>Cantidad Total</div>
@@ -1160,7 +1161,7 @@ export default function EditarCompra() {
                           <div className='total-value'>
                             {formatCurrency(
                               getTotalAmount(),
-                              formData.currency
+                              formData.currency,
                             )}
                           </div>
                         </div>
@@ -1214,7 +1215,7 @@ export default function EditarCompra() {
                       <div>
                         <strong>Fecha de solicitud:</strong>{' '}
                         {new Date(purchase.requestedDate).toLocaleDateString(
-                          'es-ES'
+                          'es-ES',
                         )}
                       </div>
                       {purchase.status === 'approved' && (
@@ -1317,8 +1318,8 @@ export default function EditarCompra() {
               realizaste requieren una nueva aprobación.
             </p>
             <p>
-              ¿Deseas continuar? El estado cambiará a "Pendiente" y deberá ser
-              aprobada nuevamente.
+              ¿Deseas continuar? El estado cambiará a &quot;Pendiente&quot; y
+              deberá ser aprobada nuevamente.
             </p>
           </Modal.Body>
           <Modal.Footer>

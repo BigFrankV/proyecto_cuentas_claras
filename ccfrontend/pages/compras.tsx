@@ -1067,7 +1067,7 @@ export default function ComprasListado() {
                 </div>
                 <p>
                   ¿Estás seguro de que deseas eliminar la compra{' '}
-                  <strong>"{selectedPurchase.number}"</strong>?
+                  <strong>&quot;{selectedPurchase.number}&quot;</strong>?
                 </p>
                 <p className='text-muted'>
                   Esto también eliminará toda la información relacionada,

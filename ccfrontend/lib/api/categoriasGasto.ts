@@ -23,7 +23,7 @@ const handleApiError = (error: unknown) => {
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as { response?: { data?: { error?: string } } };
     throw new Error(
-      apiError.response?.data?.error || 'Error de conexión con el servidor'
+      apiError.response?.data?.error || 'Error de conexión con el servidor',
     );
   }
   throw new Error('Error de conexión con el servidor');
@@ -32,7 +32,7 @@ const handleApiError = (error: unknown) => {
 // Helper para hacer peticiones autenticadas
 const apiRequest = async (
   url: string,
-  options: Record<string, unknown> = {}
+  options: Record<string, unknown> = {},
 ) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
   const token =
@@ -56,7 +56,7 @@ const apiRequest = async (
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      errorData.error || `HTTP error! status: ${response.status}`
+      errorData.error || `HTTP error! status: ${response.status}`,
     );
   }
 
@@ -76,7 +76,7 @@ export const categoriasGastoApi = {
   getByComunidad: async (comunidadId: number): Promise<CategoriaGasto[]> => {
     try {
       const data = await apiRequest(
-        `/categorias-gasto/comunidad/${comunidadId}`
+        `/categorias-gasto/comunidad/${comunidadId}`,
       );
       return data;
     } catch (error) {
@@ -88,7 +88,7 @@ export const categoriasGastoApi = {
   // Listar categorías con filtros avanzados y paginación
   getFiltradas: async (
     comunidadId: number,
-    filtros?: CategoriasFiltradasRequest
+    filtros?: CategoriasFiltradasRequest,
   ): Promise<CategoriasResponse> => {
     try {
       const queryParams = new URLSearchParams();
@@ -139,7 +139,7 @@ export const categoriasGastoApi = {
   getUltimosGastos: async (id: number, limit = 10): Promise<UltimoGasto[]> => {
     try {
       const data = await apiRequest(
-        `/categorias-gasto/${id}/ultimos-gastos?limit=${limit}`
+        `/categorias-gasto/${id}/ultimos-gastos?limit=${limit}`,
       );
       return data;
     } catch (error) {
@@ -166,7 +166,7 @@ export const categoriasGastoApi = {
   // Crear nueva categoría
   create: async (
     comunidadId: number,
-    categoria: CrearCategoriaRequest
+    categoria: CrearCategoriaRequest,
   ): Promise<CategoriaGasto> => {
     try {
       const data = await apiRequest(
@@ -174,7 +174,7 @@ export const categoriasGastoApi = {
         {
           method: 'POST',
           body: JSON.stringify(categoria),
-        }
+        },
       );
       return data;
     } catch (error) {
@@ -186,7 +186,7 @@ export const categoriasGastoApi = {
   // Actualizar categoría
   update: async (
     id: number,
-    categoria: ActualizarCategoriaRequest
+    categoria: ActualizarCategoriaRequest,
   ): Promise<CategoriaGasto> => {
     try {
       const data = await apiRequest(`/categorias-gasto/${id}`, {
@@ -220,7 +220,7 @@ export const categoriasGastoApi = {
   toggleActiva: async (
     id: number,
     activa: boolean,
-    comunidadId?: number
+    comunidadId?: number,
   ): Promise<CategoriaGasto> => {
     try {
       const body: { activa: boolean; comunidad_id?: number } = { activa };
@@ -245,7 +245,7 @@ export const categoriasGastoApi = {
 
   // Estadísticas generales
   getEstadisticasGenerales: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<EstadisticasGenerales> => {
     try {
       const url = `/categorias-gasto/comunidad/${comunidadId}/estadisticas/generales`;
@@ -259,7 +259,7 @@ export const categoriasGastoApi = {
 
   // Estadísticas por tipo
   getEstadisticasPorTipo: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<EstadisticaPorTipo[]> => {
     try {
       const url = `/categorias-gasto/comunidad/${comunidadId}/estadisticas/por-tipo`;
@@ -275,7 +275,7 @@ export const categoriasGastoApi = {
   getMasUtilizadas: async (
     comunidadId: number,
     fechaInicio?: string,
-    fechaFin?: string
+    fechaFin?: string,
   ): Promise<CategoriaMasUtilizada[]> => {
     try {
       const queryParams = new URLSearchParams();
@@ -302,7 +302,7 @@ export const categoriasGastoApi = {
   getMasCostosas: async (
     comunidadId: number,
     fechaInicio?: string,
-    fechaFin?: string
+    fechaFin?: string,
   ): Promise<CategoriaMasUtilizada[]> => {
     try {
       const queryParams = new URLSearchParams();
@@ -329,7 +329,7 @@ export const categoriasGastoApi = {
   getSinUso: async (
     comunidadId: number,
     fechaInicio?: string,
-    fechaFin?: string
+    fechaFin?: string,
   ): Promise<CategoriaGasto[]> => {
     try {
       const queryParams = new URLSearchParams();
@@ -374,7 +374,7 @@ export const categoriasGastoApi = {
   validarNombre: async (
     comunidadId: number,
     nombre: string,
-    excludeId?: number
+    excludeId?: number,
   ): Promise<boolean> => {
     try {
       const queryParams = new URLSearchParams();
@@ -411,7 +411,7 @@ export const categoriasGastoApi = {
   validarTipo: async (tipo: string): Promise<boolean> => {
     try {
       const data = await apiRequest(
-        `/categorias-gasto/validar-tipo?tipo=${tipo}`
+        `/categorias-gasto/validar-tipo?tipo=${tipo}`,
       );
       return data.valido;
     } catch (error) {
@@ -428,7 +428,7 @@ export const categoriasGastoApi = {
   getActivas: async (comunidadId: number): Promise<CategoriaGasto[]> => {
     try {
       const data = await apiRequest(
-        `/categorias-gasto/comunidad/${comunidadId}/activas`
+        `/categorias-gasto/comunidad/${comunidadId}/activas`,
       );
       return data;
     } catch (error) {
@@ -441,7 +441,7 @@ export const categoriasGastoApi = {
   getTipos: async (comunidadId: number): Promise<string[]> => {
     try {
       const data = await apiRequest(
-        `/categorias-gasto/comunidad/${comunidadId}/tipos`
+        `/categorias-gasto/comunidad/${comunidadId}/tipos`,
       );
       return data;
     } catch (error) {
@@ -453,11 +453,11 @@ export const categoriasGastoApi = {
   // Lista de categorías por tipo específico
   getPorTipo: async (
     comunidadId: number,
-    tipo: string
+    tipo: string,
   ): Promise<CategoriaGasto[]> => {
     try {
       const data = await apiRequest(
-        `/categorias-gasto/comunidad/${comunidadId}/por-tipo/${tipo}`
+        `/categorias-gasto/comunidad/${comunidadId}/por-tipo/${tipo}`,
       );
       return data;
     } catch (error) {
@@ -472,7 +472,7 @@ export const categoriasGastoApi = {
 
   // Resumen para dashboard
   getDashboardResumen: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<DashboardResumen> => {
     try {
       const url = `/categorias-gasto/comunidad/${comunidadId}/dashboard/resumen`;
@@ -486,7 +486,7 @@ export const categoriasGastoApi = {
 
   // Top categorías por gasto en el último mes
   getDashboardTopMes: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<DashboardTopMes[]> => {
     try {
       const url = `/categorias-gasto/comunidad/${comunidadId}/dashboard/top-mes`;
@@ -500,7 +500,7 @@ export const categoriasGastoApi = {
 
   // Categorías activas sin uso reciente
   getDashboardSinUsoReciente: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<DashboardSinUsoReciente[]> => {
     try {
       const url = `/categorias-gasto/comunidad/${comunidadId}/dashboard/sin-uso-reciente`;
@@ -514,7 +514,7 @@ export const categoriasGastoApi = {
 
   // Distribución de gastos por tipo
   getDashboardDistribucionTipo: async (
-    comunidadId: number
+    comunidadId: number,
   ): Promise<DashboardDistribucionTipo[]> => {
     try {
       const url = `/categorias-gasto/comunidad/${comunidadId}/dashboard/distribucion-tipo`;

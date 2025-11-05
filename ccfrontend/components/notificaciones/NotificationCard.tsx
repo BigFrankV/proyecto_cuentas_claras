@@ -86,6 +86,16 @@ export default function NotificationCard({
         transition: 'all 0.2s ease',
       }}
       onClick={handleCardClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (onAction) {
+            onAction('view', notification.id);
+          }
+        }
+      }}
+      role='button'
+      tabIndex={0}
     >
       {/* Unread Indicator */}
       {!notification.isRead && (
@@ -108,7 +118,17 @@ export default function NotificationCard({
         <div className='d-flex gap-2'>
           <StatusBadge status={notification.status} size='sm' />
         </div>
-        <div className='form-check' onClick={e => e.stopPropagation()}>
+        <div 
+          className='form-check' 
+          onClick={e => e.stopPropagation()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation();
+            }
+          }}
+          role='button'
+          tabIndex={0}
+        >
           <input
             className='form-check-input notification-checkbox'
             type='checkbox'
@@ -236,7 +256,7 @@ export default function NotificationCard({
                 {Math.round(
                   (notification.deliveryStats.opened /
                     notification.deliveryStats.delivered) *
-                    100
+                    100,
                 )}
                 %
               </div>
@@ -258,7 +278,17 @@ export default function NotificationCard({
           Ver detalle
         </button>
 
-        <div className='dropdown' onClick={e => e.stopPropagation()}>
+        <div 
+          className='dropdown' 
+          onClick={e => e.stopPropagation()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation();
+            }
+          }}
+          role='button'
+          tabIndex={0}
+        >
           <button
             className='btn btn-outline-secondary btn-sm dropdown-toggle'
             type='button'

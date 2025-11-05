@@ -128,12 +128,12 @@ export const dashboardService = {
       const totalGastos =
         gastos.data?.reduce(
           (sum: number, gasto: any) => sum + (gasto.monto || 0),
-          0
+          0,
         ) || 0;
       const totalCargos =
         cargos.data?.reduce(
           (sum: number, cargo: any) => sum + (cargo.monto || 0),
-          0
+          0,
         ) || 0;
       const pagosRecibidos =
         pagos.data?.filter((pago: any) => pago.estado === 'aplicado')?.length ||
@@ -172,11 +172,11 @@ export const dashboardService = {
 
   // Obtener gastos por categoría para gráfico de barras
   async getGastosPorCategoria(
-    comunidadId: number
+    comunidadId: number,
   ): Promise<GastoPorCategoria[]> {
     try {
       const response = await apiClient.get(
-        `/dashboard/comunidad/${comunidadId}/grafico-gastos-categoria`
+        `/dashboard/comunidad/${comunidadId}/grafico-gastos-categoria`,
       );
 
       if (!response.data || !Array.isArray(response.data)) {
@@ -199,7 +199,7 @@ export const dashboardService = {
   async getEstadoPagos(comunidadId: number): Promise<EstadoPago[]> {
     try {
       const response = await apiClient.get(
-        `/dashboard/comunidad/${comunidadId}/grafico-estado-pagos`
+        `/dashboard/comunidad/${comunidadId}/grafico-estado-pagos`,
       );
 
       if (!response.data || !Array.isArray(response.data)) {
@@ -208,7 +208,7 @@ export const dashboardService = {
 
       const total = response.data.reduce(
         (sum: number, item: any) => sum + Number(item.cantidad_unidades || 0),
-        0
+        0,
       );
 
       return response.data.map((item: any) => ({
@@ -227,11 +227,11 @@ export const dashboardService = {
 
   // Obtener tendencias de emisiones para gráfico de líneas
   async getTendenciasEmisiones(
-    comunidadId: number
+    comunidadId: number,
   ): Promise<TendenciaEmision[]> {
     try {
       const response = await apiClient.get(
-        `/dashboard/comunidad/${comunidadId}/grafico-emisiones`
+        `/dashboard/comunidad/${comunidadId}/grafico-emisiones`,
       );
 
       if (!response.data || !Array.isArray(response.data)) {
@@ -254,7 +254,7 @@ export const dashboardService = {
   async getConsumosMedidores(comunidadId: number): Promise<ConsumoMedidor[]> {
     try {
       const medidores = await apiClient.get(
-        `/medidores/comunidad/${comunidadId}`
+        `/medidores/comunidad/${comunidadId}`,
       );
 
       if (!medidores.data?.length) {
@@ -267,7 +267,7 @@ export const dashboardService = {
         .map(async (medidor: any) => {
           try {
             const consumos = await apiClient.get(
-              `/medidores/${medidor.id}/consumos`
+              `/medidores/${medidor.id}/consumos`,
             );
             const ultimoConsumo = consumos.data?.[0] || {};
 
@@ -295,7 +295,7 @@ export const dashboardService = {
 
   // Obtener resumen completo del dashboard
   async getResumenCompleto(
-    comunidadId: number
+    comunidadId: number,
   ): Promise<DashboardResumenCompleto> {
     try {
       // Llamadas en paralelo para eficiencia
@@ -303,7 +303,7 @@ export const dashboardService = {
         await Promise.all([
           apiClient.get(`/dashboard/comunidad/${comunidadId}/resumen-completo`),
           apiClient.get(
-            `/dashboard/comunidad/${comunidadId}/reservas-amenidades?limit=5`
+            `/dashboard/comunidad/${comunidadId}/reservas-amenidades?limit=5`,
           ),
           this.getKPIsChanges(comunidadId),
         ]);
@@ -391,7 +391,7 @@ export const dashboardService = {
             titulo: actividad.titulo || '',
             descripcion: `Vence: ${actividad.fecha_formateada}`,
             fecha: actividad.fecha_formateada || '',
-          })
+          }),
         ) || [];
 
       // Transformar reservas de amenidades
@@ -429,7 +429,7 @@ export const dashboardService = {
       const previousMonth = new Date(
         currentMonth.getFullYear(),
         currentMonth.getMonth() - 1,
-        1
+        1,
       );
 
       const [currentKPIs, previousKPIs] = await Promise.all([
@@ -447,19 +447,19 @@ export const dashboardService = {
       return {
         saldoTotalChange: calculateChange(
           currentKPIs.saldoTotal,
-          previousKPIs.saldoTotal
+          previousKPIs.saldoTotal,
         ),
         ingresosMesChange: calculateChange(
           currentKPIs.ingresosMes,
-          previousKPIs.ingresosMes
+          previousKPIs.ingresosMes,
         ),
         gastosMesChange: calculateChange(
           currentKPIs.gastosMes,
-          previousKPIs.gastosMes
+          previousKPIs.gastosMes,
         ),
         tasaMorosidadChange: calculateChange(
           currentKPIs.tasaMorosidad,
-          previousKPIs.tasaMorosidad
+          previousKPIs.tasaMorosidad,
         ),
       };
     } catch {
@@ -476,7 +476,7 @@ export const dashboardService = {
   // Método auxiliar para obtener KPIs de un mes específico
   async getKPIsForMonth(
     comunidadId: number,
-    date: Date
+    date: Date,
   ): Promise<{
     saldoTotal: number;
     ingresosMes: number;
@@ -488,7 +488,7 @@ export const dashboardService = {
 
     try {
       const response = await apiClient.get(
-        `/dashboard/comunidad/${comunidadId}/kpis?year=${year}&month=${month}`
+        `/dashboard/comunidad/${comunidadId}/kpis?year=${year}&month=${month}`,
       );
       return {
         saldoTotal: response.data?.saldo_total || 0,

@@ -36,6 +36,58 @@ export default function MedidorDetallePage() {
   const [consumos, setConsumos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ fecha: '', lectura: '', periodo: '' });
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [config, setConfig] = useState({
+    alertThreshold: '',
+    maintenanceInterval: '',
+    autoReadings: false,
+  });
+
+  // Historial de mantenimiento de ejemplo
+  const maintenanceHistory = [
+    {
+      id: 1,
+      date: '2024-01-15',
+      type: 'Revisión',
+      description: 'Mantenimiento preventivo',
+    },
+    {
+      id: 2,
+      date: '2024-06-10',
+      type: 'Reparación',
+      description: 'Ajuste de calibración',
+    },
+  ];
+
+  // Función para obtener el badge de estado
+  const getStatusBadge = (estado?: string) => {
+    switch (estado) {
+      case 'activo':
+        return <Badge bg='success'>Activo</Badge>;
+      case 'inactivo':
+        return <Badge bg='danger'>Inactivo</Badge>;
+      case 'mantenimiento':
+        return <Badge bg='warning'>Mantenimiento</Badge>;
+      default:
+        return <Badge bg='secondary'>Desconocido</Badge>;
+    }
+  };
+
+  // Función para guardar la configuración
+  const handleSaveConfiguration = async () => {
+    try {
+      // TODO: Implementar guardado de configuración
+      // eslint-disable-next-line no-console
+      console.log('Guardando configuración:', config);
+      setShowConfigModal(false);
+      alert('Configuración guardada exitosamente');
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Error guardando configuración:', err);
+      alert('Error al guardar la configuración');
+    }
+  };
 
   useEffect(() => {
     if (!id) {
@@ -80,7 +132,7 @@ export default function MedidorDetallePage() {
     return !!user.comunidades?.find(
       (c: any) =>
         c.id === medidor?.comunidad_id &&
-        (c.role === 'admin' || c.role === 'gestor')
+        (c.role === 'admin' || c.role === 'gestor'),
     );
   };
 
@@ -382,7 +434,7 @@ export default function MedidorDetallePage() {
                         <span className='info-label'>Fecha de Instalación</span>
                         <span className='info-value'>
                           {new Date(
-                            medidor?.fecha_instalacion
+                            medidor?.fecha_instalacion,
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -481,7 +533,7 @@ export default function MedidorDetallePage() {
                         <span className='info-label'>Último Servicio</span>
                         <span className='info-value'>
                           {new Date(
-                            medidor?.ultimo_servicio
+                            medidor?.ultimo_servicio,
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -489,7 +541,7 @@ export default function MedidorDetallePage() {
                         <span className='info-label'>Próximo Servicio</span>
                         <span className='info-value'>
                           {new Date(
-                            medidor?.proximo_servicio
+                            medidor?.proximo_servicio,
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -655,7 +707,7 @@ export default function MedidorDetallePage() {
                         <span className='info-label'>Garantía hasta</span>
                         <span className='info-value'>
                           {new Date(
-                            medidor?.garantia_hasta
+                            medidor?.garantia_hasta,
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -663,7 +715,7 @@ export default function MedidorDetallePage() {
                         <span className='info-label'>Fecha de Creación</span>
                         <span className='info-value'>
                           {new Date(
-                            medidor?.fecha_creacion
+                            medidor?.fecha_creacion,
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -671,7 +723,7 @@ export default function MedidorDetallePage() {
                         <span className='info-label'>Última Actualización</span>
                         <span className='info-value'>
                           {new Date(
-                            medidor?.ultima_actualizacion
+                            medidor?.ultima_actualizacion,
                           ).toLocaleDateString()}
                         </span>
                       </div>

@@ -177,7 +177,7 @@ export default function EditarDocumento() {
 
         router.push(`/documentos/${id}`);
       },
-      newFile ? 2500 : 800
+      newFile ? 2500 : 800,
     );
   };
 
@@ -433,6 +433,8 @@ export default function EditarDocumento() {
                       }`}
                       onDragEnter={handleDrag}
                       onDragLeave={handleDrag}
+                      role='button'
+                      tabIndex={0}
                       onDragOver={handleDrag}
                       onDrop={handleDrop}
                     >
@@ -607,7 +609,7 @@ export default function EditarDocumento() {
                         access_time
                       </i>
                       {new Date(document.uploadedAt).toLocaleDateString(
-                        'es-CL'
+                        'es-CL',
                       )}
                     </div>
                   </div>

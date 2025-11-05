@@ -33,7 +33,7 @@ export default function FileUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = event.target.files;
     if (!files || files.length === 0) {
@@ -77,7 +77,7 @@ export default function FileUpload({
         // Validar tamaño
         if (!fileService.validateFileSize(file, maxSizeMB)) {
           errors.push(
-            `${file.name}: Archivo demasiado grande (máximo ${maxSizeMB}MB)`
+            `${file.name}: Archivo demasiado grande (máximo ${maxSizeMB}MB)`,
           );
           continue;
         }
@@ -102,7 +102,7 @@ export default function FileUpload({
       // eslint-disable-next-line no-console
       console.error('Error uploading files:', error);
       onUploadError?.(
-        error instanceof Error ? error.message : 'Error subiendo archivos'
+        error instanceof Error ? error.message : 'Error subiendo archivos',
       );
     } finally {
       setIsUploading(false);
@@ -130,6 +130,16 @@ export default function FileUpload({
         onClick={() =>
           !disabled && !isUploading && fileInputRef.current?.click()
         }
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (!disabled && !isUploading) {
+              fileInputRef.current?.click();
+            }
+          }
+        }}
+        role='button'
+        tabIndex={disabled ? -1 : 0}
         onDrop={handleDrop}
         onDragOver={e => e.preventDefault()}
         style={{

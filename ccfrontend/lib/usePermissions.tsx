@@ -128,7 +128,7 @@ export function usePermissions() {
     // Verificar si el usuario pertenece a esa comunidad
     if (user?.memberships && Array.isArray(user.memberships)) {
       return user.memberships.some(
-        (membership: any) => membership.comunidadId === communityId
+        (membership: any) => membership.comunidadId === communityId,
       );
     }
 
@@ -150,7 +150,7 @@ export function usePermissions() {
   // ✅ NUEVO: Verificar si tiene un rol específico en una comunidad
   const hasRoleInCommunity = (
     communityId: number,
-    roleToCheck: string
+    roleToCheck: string,
   ): boolean => {
     if (user?.is_superadmin) {
       return true;
@@ -160,7 +160,7 @@ export function usePermissions() {
       user?.memberships?.some(
         (membership: any) =>
           membership.comunidadId === communityId &&
-          membership.rol.toLowerCase() === roleToCheck.toLowerCase()
+          membership.rol.toLowerCase() === roleToCheck.toLowerCase(),
       ) || false
     );
   };
@@ -168,7 +168,7 @@ export function usePermissions() {
   // ✅ MODIFICADO: Verificar permisos con contexto de comunidad
   const hasPermission = (
     permission: Permission,
-    communityId?: number
+    communityId?: number,
   ): boolean => {
     const rolePermissions = ROLE_PERMISSIONS[currentRole] || [];
     const hasBasePermission = rolePermissions.includes(permission);

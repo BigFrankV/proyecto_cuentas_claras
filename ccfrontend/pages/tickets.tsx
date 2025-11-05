@@ -75,7 +75,7 @@ const mapEstadoToFrontend = (estado: string): keyof typeof statusConfig => {
 };
 
 const mapPrioridadToFrontend = (
-  prioridad: string
+  prioridad: string,
 ): keyof typeof priorityConfig => {
   switch (prioridad) {
     case 'baja':
@@ -139,7 +139,7 @@ export default function TicketsListado() {
             .toString()
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          ticket.solicitante.toLowerCase().includes(searchTerm.toLowerCase())
+          ticket.solicitante.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -163,13 +163,13 @@ export default function TicketsListado() {
       };
       const backendPriority = priorityMap[filters.priority] || filters.priority;
       filtered = filtered.filter(
-        ticket => ticket.prioridad === backendPriority
+        ticket => ticket.prioridad === backendPriority,
       );
     }
 
     if (filters.category) {
       filtered = filtered.filter(
-        ticket => ticket.categoria === filters.category
+        ticket => ticket.categoria === filters.category,
       );
     }
 
@@ -181,7 +181,7 @@ export default function TicketsListado() {
     const inProgress = tickets.filter(t => t.estado === 'en_progreso').length;
     const resolved = tickets.filter(t => t.estado === 'resuelto').length;
     const escalated = tickets.filter(
-      t => t.nivel_urgencia === 'critico' || t.nivel_urgencia === 'urgente'
+      t => t.nivel_urgencia === 'critico' || t.nivel_urgencia === 'urgente',
     ).length;
 
     return { open, inProgress, resolved, escalated };
@@ -223,7 +223,7 @@ export default function TicketsListado() {
     setSelectedTickets(prev =>
       prev.includes(ticketId)
         ? prev.filter(id => id !== ticketId)
-        : [...prev, ticketId]
+        : [...prev, ticketId],
     );
   };
 
@@ -731,7 +731,7 @@ export default function TicketsListado() {
                           <td>
                             {(() => {
                               const statusKey = mapEstadoToFrontend(
-                                ticket.estado
+                                ticket.estado,
                               );
                               const status = statusConfig[statusKey];
                               return (
@@ -755,7 +755,7 @@ export default function TicketsListado() {
                           <td>
                             {(() => {
                               const priorityKey = mapPrioridadToFrontend(
-                                ticket.prioridad
+                                ticket.prioridad,
                               );
                               const priority = priorityConfig[priorityKey];
                               return (
@@ -962,7 +962,7 @@ export default function TicketsListado() {
                         <div className='ticket-badges d-flex flex-wrap gap-2 mb-3'>
                           {(() => {
                             const statusKey = mapEstadoToFrontend(
-                              ticket.estado
+                              ticket.estado,
                             );
                             const status = statusConfig[statusKey];
                             return (
@@ -984,7 +984,7 @@ export default function TicketsListado() {
                           })()}
                           {(() => {
                             const priorityKey = mapPrioridadToFrontend(
-                              ticket.prioridad
+                              ticket.prioridad,
                             );
                             const priority = priorityConfig[priorityKey];
                             return (

@@ -7,7 +7,7 @@ import Layout from '@/components/layout/Layout';
 import api from '@/lib/api';
 import multasService from '@/lib/multasService';
 import { ProtectedRoute } from '@/lib/useAuth';
-import useAuth from '@/lib/useAuth'; // <-- import faltante
+import {useAuth} from '@/lib/useAuth'; // <-- import faltante
 
 // ============================================
 // TIPOS E INTERFACES
@@ -187,7 +187,7 @@ export default function EditarMulta() {
   // Estados auxiliares que faltaban
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [unidadSeleccionada, setUnidadSeleccionada] = useState<Unidad | null>(
-    null
+    null,
   );
   const [personaSeleccionada, setPersonaSeleccionada] =
     useState<Persona | null>(null);
@@ -248,7 +248,7 @@ export default function EditarMulta() {
   };
 
   const validateChanges = (
-    changes: Partial<FormData>
+    changes: Partial<FormData>,
   ): { valid: boolean; errors: ValidationErrors } => {
     const newErrors: ValidationErrors = {};
 
@@ -323,7 +323,7 @@ export default function EditarMulta() {
 
       // Determinar comunidadId desde la propia multa (evita depender de `user` en SSR)
       setComunidadId(
-        response?.comunidad_id ? Number(response.comunidad_id) : null
+        response?.comunidad_id ? Number(response.comunidad_id) : null,
       );
 
       // Verificar si se puede editar
@@ -797,6 +797,14 @@ export default function EditarMulta() {
                               : ''
                           }`}
                           onClick={() => handleSelectTipoInfraccion(tipo.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleSelectTipoInfraccion(tipo.value);
+                            }
+                          }}
+                          role='button'
+                          tabIndex={0}
                         >
                           <div
                             className='infraction-icon'
@@ -890,6 +898,14 @@ export default function EditarMulta() {
                             onClick={() =>
                               handleSelectPrioridad(prioridad.value)
                             }
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleSelectPrioridad(prioridad.value);
+                              }
+                            }}
+                            role='button'
+                            tabIndex={0}
                             style={{ borderColor: prioridad.color }}
                           >
                             <div
@@ -931,7 +947,7 @@ export default function EditarMulta() {
                           onChange={e =>
                             handleInputChange(
                               'fecha_infraccion',
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           max={new Date().toISOString().split('T')[0]}
@@ -958,7 +974,7 @@ export default function EditarMulta() {
                           onChange={e =>
                             handleInputChange(
                               'fecha_vencimiento',
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           min={formData.fecha_infraccion}
@@ -1090,6 +1106,14 @@ export default function EditarMulta() {
                         key={unidad.id}
                         className='selectable-card'
                         onClick={() => handleSelectUnidad(unidad)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleSelectUnidad(unidad);
+                          }
+                        }}
+                        role='button'
+                        tabIndex={0}
                       >
                         <div className='card-icon'>
                           <i className='material-icons'>apartment</i>
@@ -1159,6 +1183,14 @@ export default function EditarMulta() {
                           key={persona.id}
                           className='list-item'
                           onClick={() => handleSelectPersona(persona)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleSelectPersona(persona);
+                            }
+                          }}
+                          role='button'
+                          tabIndex={0}
                         >
                           <i className='material-icons'>person</i>
                           <div className='list-item-content'>

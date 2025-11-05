@@ -36,7 +36,7 @@ export const useValidacionCampos = () => {
         setValidando(false);
       }
     },
-    [validarCampo]
+    [validarCampo],
   );
 
   const validarEmail = useCallback(
@@ -64,13 +64,13 @@ export const useValidacionCampos = () => {
         setValidando(false);
       }
     },
-    [validarCampo]
+    [validarCampo],
   );
 
   const validarUsername = useCallback(
     async (
       username: string,
-      excludeId?: number
+      excludeId?: number,
     ): Promise<ValidacionResultado> => {
       if (!username || username.trim() === '') {
         return { valido: false, mensaje: 'El nombre de usuario es requerido' };
@@ -106,7 +106,7 @@ export const useValidacionCampos = () => {
         setValidando(false);
       }
     },
-    [validarCampo]
+    [validarCampo],
   );
 
   return {
