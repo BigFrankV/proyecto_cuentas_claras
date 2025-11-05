@@ -15,19 +15,19 @@ const MultaDetalleRoute: React.FC = () => {
 
   useEffect(() => {
     if (!id) {
-      return;
+      return undefined;
     }
     let mounted = true;
     (async () => {
       try {
         setLoading(true);
-        const res = await multasService.getMulta(id as string);
-        const hist = await multasService.obtenerHistorial(id as string);
+        const res = await multasService.getMulta(Number(id));
+        const hist = await multasService.obtenerHistorial(Number(id));
         if (!mounted) {
           return;
         }
         setMulta(res); // getMulta ya devuelve el objeto adaptado
-        setHistorial(Array.isArray(hist) ? hist : (hist?.data ?? []));
+        setHistorial(Array.isArray(hist) ? hist : ((hist as any)?.data ?? []));
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error('Error cargando multa', err);
@@ -44,7 +44,7 @@ const MultaDetalleRoute: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout title='Cargando...' noGutter>
+      <Layout title='Cargando...'>
         <div className='p-4'>Cargando...</div>
       </Layout>
     );
@@ -59,7 +59,7 @@ const MultaDetalleRoute: React.FC = () => {
 
   return (
     <ProtectedRoute>
-      <Layout title={`Detalle de Multa ${multa.numero}`} noGutter>
+      <Layout title={`Detalle de Multa ${multa.numero}`}>
         <MultaDetallePage multa={multa} historial={historial} />
       </Layout>
     </ProtectedRoute>

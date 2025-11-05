@@ -14,7 +14,7 @@ export default function TenenciasUnidad() {
 
   useEffect(() => {
     if (!id) {
-      return;
+      return undefined;
     }
     let mounted = true;
     const load = async () => {

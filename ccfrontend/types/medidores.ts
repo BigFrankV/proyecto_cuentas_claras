@@ -41,6 +41,7 @@ export interface Medidor {
   tipo?: 'agua' | 'gas' | 'electricidad' | string;
   medidor_codigo?: string | null; // medidor.codigo en la vista
   serial_number?: string | null;
+  numero_serie?: string | null; // Alias para serial_number
   es_compartido?: 0 | 1 | boolean;
   marca?: string | null;
   modelo?: string | null;
@@ -54,6 +55,42 @@ export interface Medidor {
   fecha_ultima_lectura?: string | null;
   total_lecturas?: number | null;
   lecturas_recientes?: Reading[];
+  
+  // Ubicación detallada
+  edificio?: string | null;
+  unidad?: string | null;
+  piso?: string | number | null;
+  posicion?: string | null;
+  
+  // Alertas y mantenimiento
+  alertas?: any[] | null;
+  ultimo_consumo?: number | null;
+  proximo_mantenimiento?: string | null;
+  frecuencia_mantenimiento?: string | null;
+  
+  // Instalación
+  fecha_instalacion?: string | null;
+  tecnico_instalador?: string | null;
+  empresa_instaladora?: string | null;
+  
+  // Servicio
+  ultimo_servicio?: string | null;
+  proximo_servicio?: string | null;
+  empresa_servicio?: string | null;
+  notas_servicio?: string | null;
+  
+  // Especificaciones técnicas
+  capacidad?: string | number | null;
+  precision?: string | null;
+  certificacion?: string | null;
+  temperatura_operacion?: string | null;
+  tipo_comunicacion?: string | null;
+  
+  // Documentación
+  certificado_instalacion?: string | null;
+  garantia_hasta?: string | null;
+  fecha_creacion?: string | null;
+  ultima_actualizacion?: string | null;
 }
 
 export interface MedidoresListResponse {

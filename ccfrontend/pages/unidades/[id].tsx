@@ -254,7 +254,7 @@ export default function UnidadDetalle() {
   // Fetch unidad summary, cargos, pagos, medidores
   useEffect(() => {
     if (!id) {
-      return;
+      return undefined;
     }
     let mounted = true;
     const load = async () => {

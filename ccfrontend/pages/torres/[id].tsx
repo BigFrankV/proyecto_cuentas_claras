@@ -121,7 +121,7 @@ export default function TorreDetalle() {
   // Load torre data
   useEffect(() => {
     if (!id) {
-      return;
+      return undefined;
     }
     let mounted = true;
     (async () => {
@@ -168,7 +168,7 @@ export default function TorreDetalle() {
   // Load unidades for this tower
   useEffect(() => {
     if (!id) {
-      return;
+      return undefined;
     }
     let mounted = true;
     (async () => {
