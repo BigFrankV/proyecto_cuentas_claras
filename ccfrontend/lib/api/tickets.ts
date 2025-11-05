@@ -23,15 +23,21 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 const handleApiError = (error: unknown) => {
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as { response?: { data?: { error?: string } } };
-    throw new Error(apiError.response?.data?.error || 'Error de conexión con el servidor');
+    throw new Error(
+      apiError.response?.data?.error || 'Error de conexión con el servidor',
+    );
   }
   throw new Error('Error de conexión con el servidor');
 };
 
 // Helper para hacer peticiones autenticadas
-const apiRequest = async (url: string, options: Record<string, unknown> = {}) => {
+const apiRequest = async (
+  url: string,
+  options: Record<string, unknown> = {},
+) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
   if (!token) {
     throw new Error('Missing token');
@@ -41,8 +47,8 @@ const apiRequest = async (url: string, options: Record<string, unknown> = {}) =>
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...(options.headers as Record<string, unknown> || {}),
+      Authorization: `Bearer ${token}`,
+      ...((options.headers as Record<string, unknown>) || {}),
     },
   };
 
@@ -50,7 +56,9 @@ const apiRequest = async (url: string, options: Record<string, unknown> = {}) =>
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    throw new Error(
+      errorData.error || `HTTP error! status: ${response.status}`,
+    );
   }
 
   return response.json();
@@ -66,7 +74,10 @@ export const ticketsApi = {
   // =========================================
 
   // Listar tickets con filtros avanzados
-  getByComunidad: async (comunidadId: number, filtros?: TicketFiltros): Promise<Ticket[]> => {
+  getByComunidad: async (
+    comunidadId: number,
+    filtros?: TicketFiltros,
+  ): Promise<Ticket[]> => {
     try {
       const queryParams = new URLSearchParams();
       queryParams.append('comunidadId', comunidadId.toString());
@@ -102,46 +113,56 @@ export const ticketsApi = {
       const url = `/tickets/comunidad/${comunidadId}?${queryParams.toString()}`;
       const data = await apiRequest(url);
 
-      return data.map((ticket: {
-        id: number;
-        numero: number;
-        titulo: string;
-        descripcion: string;
-        estado: string;
-        prioridad: string;
-        categoria: string;
-        comunidad: string;
-        unidad: string;
-        solicitante: string;
-        asignado_a: string;
-        fecha_creacion: string;
-        fecha_actualizacion: string;
-        fecha_vencimiento: string;
-        fecha_cierre: string;
-        dias_vencimiento: number | null;
-        nivel_urgencia: string;
-        dias_abiertos: number;
-      }) => ({
-        id: ticket.id,
-        numero: ticket.numero,
-        titulo: ticket.titulo,
-        descripcion: ticket.descripcion,
-        estado: ticket.estado as 'abierto' | 'en_progreso' | 'resuelto' | 'cerrado',
-        prioridad: ticket.prioridad as 'alta' | 'media' | 'baja',
-        categoria: ticket.categoria,
-        comunidad: ticket.comunidad,
-        unidad: ticket.unidad,
-        solicitante: ticket.solicitante,
-        asignado_a: ticket.asignado_a,
-        fecha_creacion: ticket.fecha_creacion,
-        fecha_actualizacion: ticket.fecha_actualizacion,
-        fecha_vencimiento: ticket.fecha_vencimiento,
-        fecha_cierre: ticket.fecha_cierre,
-        dias_vencimiento: ticket.dias_vencimiento,
-        nivel_urgencia: ticket.nivel_urgencia as
-          'finalizado' | 'vencido' | 'critico' | 'urgente' | 'normal',
-        dias_abiertos: ticket.dias_abiertos,
-      }));
+      return data.map(
+        (ticket: {
+          id: number;
+          numero: number;
+          titulo: string;
+          descripcion: string;
+          estado: string;
+          prioridad: string;
+          categoria: string;
+          comunidad: string;
+          unidad: string;
+          solicitante: string;
+          asignado_a: string;
+          fecha_creacion: string;
+          fecha_actualizacion: string;
+          fecha_vencimiento: string;
+          fecha_cierre: string;
+          dias_vencimiento: number | null;
+          nivel_urgencia: string;
+          dias_abiertos: number;
+        }) => ({
+          id: ticket.id,
+          numero: ticket.numero,
+          titulo: ticket.titulo,
+          descripcion: ticket.descripcion,
+          estado: ticket.estado as
+            | 'abierto'
+            | 'en_progreso'
+            | 'resuelto'
+            | 'cerrado',
+          prioridad: ticket.prioridad as 'alta' | 'media' | 'baja',
+          categoria: ticket.categoria,
+          comunidad: ticket.comunidad,
+          unidad: ticket.unidad,
+          solicitante: ticket.solicitante,
+          asignado_a: ticket.asignado_a,
+          fecha_creacion: ticket.fecha_creacion,
+          fecha_actualizacion: ticket.fecha_actualizacion,
+          fecha_vencimiento: ticket.fecha_vencimiento,
+          fecha_cierre: ticket.fecha_cierre,
+          dias_vencimiento: ticket.dias_vencimiento,
+          nivel_urgencia: ticket.nivel_urgencia as
+            | 'finalizado'
+            | 'vencido'
+            | 'critico'
+            | 'urgente'
+            | 'normal',
+          dias_abiertos: ticket.dias_abiertos,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -149,9 +170,13 @@ export const ticketsApi = {
   },
 
   // Estadísticas de tickets por comunidad
-  getEstadisticasByComunidad: async (comunidadId: number): Promise<TicketEstadisticas> => {
+  getEstadisticasByComunidad: async (
+    comunidadId: number,
+  ): Promise<TicketEstadisticas> => {
     try {
-      const data = await apiRequest(`/tickets/comunidad/${comunidadId}/estadisticas`);
+      const data = await apiRequest(
+        `/tickets/comunidad/${comunidadId}/estadisticas`,
+      );
       return {
         comunidad: data.comunidad,
         total_tickets: data.total_tickets,
@@ -170,34 +195,40 @@ export const ticketsApi = {
   },
 
   // Tickets próximos a vencer
-  getProximosVencer: async (comunidadId: number): Promise<TicketProximoVencer[]> => {
+  getProximosVencer: async (
+    comunidadId: number,
+  ): Promise<TicketProximoVencer[]> => {
     try {
-      const data = await apiRequest(`/tickets/comunidad/${comunidadId}/proximos-vencer`);
-      return data.map((ticket: {
-        id: number;
-        numero: number;
-        titulo: string;
-        comunidad: string;
-        unidad: string;
-        solicitante: string;
-        fecha_vencimiento: string;
-        dias_restantes: number;
-        urgencia: string;
-        prioridad: string;
-        categoria: string;
-      }) => ({
-        id: ticket.id,
-        numero: ticket.numero,
-        titulo: ticket.titulo,
-        comunidad: ticket.comunidad,
-        unidad: ticket.unidad,
-        solicitante: ticket.solicitante,
-        fecha_vencimiento: ticket.fecha_vencimiento,
-        dias_restantes: ticket.dias_restantes,
-        urgencia: ticket.urgencia as 'alta' | 'media' | 'baja',
-        prioridad: ticket.prioridad as 'alta' | 'media' | 'baja',
-        categoria: ticket.categoria,
-      }));
+      const data = await apiRequest(
+        `/tickets/comunidad/${comunidadId}/proximos-vencer`,
+      );
+      return data.map(
+        (ticket: {
+          id: number;
+          numero: number;
+          titulo: string;
+          comunidad: string;
+          unidad: string;
+          solicitante: string;
+          fecha_vencimiento: string;
+          dias_restantes: number;
+          urgencia: string;
+          prioridad: string;
+          categoria: string;
+        }) => ({
+          id: ticket.id,
+          numero: ticket.numero,
+          titulo: ticket.titulo,
+          comunidad: ticket.comunidad,
+          unidad: ticket.unidad,
+          solicitante: ticket.solicitante,
+          fecha_vencimiento: ticket.fecha_vencimiento,
+          dias_restantes: ticket.dias_restantes,
+          urgencia: ticket.urgencia as 'alta' | 'media' | 'baja',
+          prioridad: ticket.prioridad as 'alta' | 'media' | 'baja',
+          categoria: ticket.categoria,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -238,9 +269,11 @@ export const ticketsApi = {
         estado_descripcion: data.estado_descripcion,
         dias_desde_creacion: data.dias_desde_creacion,
         dias_para_resolver: data.dias_para_resolver,
-        num_comentarios: data.estadisticas?.num_comentarios || data.num_comentarios || 0,
+        num_comentarios:
+          data.estadisticas?.num_comentarios || data.num_comentarios || 0,
         num_adjuntos: data.estadisticas?.num_adjuntos || data.num_adjuntos || 0,
-        num_historial: data.estadisticas?.num_historial || data.num_historial || 0,
+        num_historial:
+          data.estadisticas?.num_historial || data.num_historial || 0,
         // Additional fields from backend
         tags: data.etiquetas || [],
         attachments: data.adjuntos || [],
@@ -262,46 +295,56 @@ export const ticketsApi = {
   getTodosCompletos: async (): Promise<Ticket[]> => {
     try {
       const data = await apiRequest('/tickets/todos/completos');
-      return data.map((ticket: {
-        id: number;
-        numero: number;
-        asunto: string;
-        descripcion: string;
-        estado: string;
-        prioridad: string;
-        categoria: string;
-        comunidad: string;
-        unidad: string;
-        solicitante: string;
-        asignado_a: string;
-        fecha_creacion: string;
-        fecha_actualizacion: string;
-        fecha_vencimiento: string;
-        fecha_cierre: string;
-        dias_vencimiento: number | null;
-        nivel_urgencia: string;
-        dias_abiertos: number;
-      }) => ({
-        id: ticket.id,
-        numero: ticket.numero,
-        titulo: ticket.asunto,
-        descripcion: ticket.descripcion,
-        estado: ticket.estado as 'abierto' | 'en_progreso' | 'resuelto' | 'cerrado',
-        prioridad: ticket.prioridad as 'alta' | 'media' | 'baja',
-        categoria: ticket.categoria,
-        comunidad: ticket.comunidad,
-        unidad: ticket.unidad,
-        solicitante: ticket.solicitante,
-        asignado_a: ticket.asignado_a,
-        fecha_creacion: ticket.fecha_creacion,
-        fecha_actualizacion: ticket.fecha_actualizacion,
-        fecha_vencimiento: ticket.fecha_vencimiento,
-        fecha_cierre: ticket.fecha_cierre,
-        dias_vencimiento: ticket.dias_vencimiento,
-        nivel_urgencia: ticket.nivel_urgencia as
-          'finalizado' | 'vencido' | 'critico' | 'urgente' | 'normal',
-        dias_abiertos: ticket.dias_abiertos,
-      }));
+      return data.map(
+        (ticket: {
+          id: number;
+          numero: number;
+          asunto: string;
+          descripcion: string;
+          estado: string;
+          prioridad: string;
+          categoria: string;
+          comunidad: string;
+          unidad: string;
+          solicitante: string;
+          asignado_a: string;
+          fecha_creacion: string;
+          fecha_actualizacion: string;
+          fecha_vencimiento: string;
+          fecha_cierre: string;
+          dias_vencimiento: number | null;
+          nivel_urgencia: string;
+          dias_abiertos: number;
+        }) => ({
+          id: ticket.id,
+          numero: ticket.numero,
+          titulo: ticket.asunto,
+          descripcion: ticket.descripcion,
+          estado: ticket.estado as
+            | 'abierto'
+            | 'en_progreso'
+            | 'resuelto'
+            | 'cerrado',
+          prioridad: ticket.prioridad as 'alta' | 'media' | 'baja',
+          categoria: ticket.categoria,
+          comunidad: ticket.comunidad,
+          unidad: ticket.unidad,
+          solicitante: ticket.solicitante,
+          asignado_a: ticket.asignado_a,
+          fecha_creacion: ticket.fecha_creacion,
+          fecha_actualizacion: ticket.fecha_actualizacion,
+          fecha_vencimiento: ticket.fecha_vencimiento,
+          fecha_cierre: ticket.fecha_cierre,
+          dias_vencimiento: ticket.dias_vencimiento,
+          nivel_urgencia: ticket.nivel_urgencia as
+            | 'finalizado'
+            | 'vencido'
+            | 'critico'
+            | 'urgente'
+            | 'normal',
+          dias_abiertos: ticket.dias_abiertos,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -338,21 +381,27 @@ export const ticketsApi = {
   getEstadisticasPorEstado: async (): Promise<EstadisticaPorEstado[]> => {
     try {
       const data = await apiRequest('/tickets/estadisticas/por-estado');
-      return data.map((stat: {
-        estado: string;
-        cantidad: number;
-        porcentaje: number;
-        tiempo_promedio_resolucion: number;
-        mas_antiguo: string;
-        mas_reciente: string;
-      }) => ({
-        estado: stat.estado as 'abierto' | 'en_progreso' | 'resuelto' | 'cerrado',
-        cantidad: stat.cantidad,
-        porcentaje: stat.porcentaje,
-        tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
-        mas_antiguo: stat.mas_antiguo,
-        mas_reciente: stat.mas_reciente,
-      }));
+      return data.map(
+        (stat: {
+          estado: string;
+          cantidad: number;
+          porcentaje: number;
+          tiempo_promedio_resolucion: number;
+          mas_antiguo: string;
+          mas_reciente: string;
+        }) => ({
+          estado: stat.estado as
+            | 'abierto'
+            | 'en_progreso'
+            | 'resuelto'
+            | 'cerrado',
+          cantidad: stat.cantidad,
+          porcentaje: stat.porcentaje,
+          tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
+          mas_antiguo: stat.mas_antiguo,
+          mas_reciente: stat.mas_reciente,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -363,21 +412,23 @@ export const ticketsApi = {
   getEstadisticasPorPrioridad: async (): Promise<EstadisticaPorPrioridad[]> => {
     try {
       const data = await apiRequest('/tickets/estadisticas/por-prioridad');
-      return data.map((stat: {
-        prioridad: string;
-        cantidad: number;
-        porcentaje: number;
-        resueltos: number;
-        porcentaje_resolucion_prioridad: number;
-        tiempo_promedio_resolucion: number;
-      }) => ({
-        prioridad: stat.prioridad as 'alta' | 'media' | 'baja',
-        cantidad: stat.cantidad,
-        porcentaje: stat.porcentaje,
-        resueltos: stat.resueltos,
-        porcentaje_resolucion_prioridad: stat.porcentaje_resolucion_prioridad,
-        tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
-      }));
+      return data.map(
+        (stat: {
+          prioridad: string;
+          cantidad: number;
+          porcentaje: number;
+          resueltos: number;
+          porcentaje_resolucion_prioridad: number;
+          tiempo_promedio_resolucion: number;
+        }) => ({
+          prioridad: stat.prioridad as 'alta' | 'media' | 'baja',
+          cantidad: stat.cantidad,
+          porcentaje: stat.porcentaje,
+          resueltos: stat.resueltos,
+          porcentaje_resolucion_prioridad: stat.porcentaje_resolucion_prioridad,
+          tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -388,25 +439,27 @@ export const ticketsApi = {
   getEstadisticasPorCategoria: async (): Promise<EstadisticaPorCategoria[]> => {
     try {
       const data = await apiRequest('/tickets/estadisticas/por-categoria');
-      return data.map((stat: {
-        categoria: string;
-        cantidad: number;
-        porcentaje: number;
-        resueltos: number;
-        porcentaje_resolucion: number;
-        tiempo_promedio_resolucion: number;
-        mas_antiguo: string;
-        mas_reciente: string;
-      }) => ({
-        categoria: stat.categoria,
-        cantidad: stat.cantidad,
-        porcentaje: stat.porcentaje,
-        resueltos: stat.resueltos,
-        porcentaje_resolucion: stat.porcentaje_resolucion,
-        tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
-        mas_antiguo: stat.mas_antiguo,
-        mas_reciente: stat.mas_reciente,
-      }));
+      return data.map(
+        (stat: {
+          categoria: string;
+          cantidad: number;
+          porcentaje: number;
+          resueltos: number;
+          porcentaje_resolucion: number;
+          tiempo_promedio_resolucion: number;
+          mas_antiguo: string;
+          mas_reciente: string;
+        }) => ({
+          categoria: stat.categoria,
+          cantidad: stat.cantidad,
+          porcentaje: stat.porcentaje,
+          resueltos: stat.resueltos,
+          porcentaje_resolucion: stat.porcentaje_resolucion,
+          tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
+          mas_antiguo: stat.mas_antiguo,
+          mas_reciente: stat.mas_reciente,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -417,29 +470,31 @@ export const ticketsApi = {
   getEstadisticasMensuales: async (): Promise<EstadisticaMensual[]> => {
     try {
       const data = await apiRequest('/tickets/estadisticas/mensuales');
-      return data.map((stat: {
-        anio: number;
-        mes: number;
-        total_tickets: number;
-        abiertos: number;
-        en_progreso: number;
-        resueltos: number;
-        cerrados: number;
-        escalados: number;
-        porcentaje_resolucion: number;
-        tiempo_promedio_resolucion: number;
-      }) => ({
-        anio: stat.anio,
-        mes: stat.mes,
-        total_tickets: stat.total_tickets,
-        abiertos: stat.abiertos,
-        en_progreso: stat.en_progreso,
-        resueltos: stat.resueltos,
-        cerrados: stat.cerrados,
-        escalados: stat.escalados,
-        porcentaje_resolucion: stat.porcentaje_resolucion,
-        tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
-      }));
+      return data.map(
+        (stat: {
+          anio: number;
+          mes: number;
+          total_tickets: number;
+          abiertos: number;
+          en_progreso: number;
+          resueltos: number;
+          cerrados: number;
+          escalados: number;
+          porcentaje_resolucion: number;
+          tiempo_promedio_resolucion: number;
+        }) => ({
+          anio: stat.anio,
+          mes: stat.mes,
+          total_tickets: stat.total_tickets,
+          abiertos: stat.abiertos,
+          en_progreso: stat.en_progreso,
+          resueltos: stat.resueltos,
+          cerrados: stat.cerrados,
+          escalados: stat.escalados,
+          porcentaje_resolucion: stat.porcentaje_resolucion,
+          tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -451,7 +506,9 @@ export const ticketsApi = {
   // =========================================
 
   // Búsqueda avanzada
-  busquedaAvanzada: async (filtros: BusquedaAvanzadaFiltros): Promise<Ticket[]> => {
+  busquedaAvanzada: async (
+    filtros: BusquedaAvanzadaFiltros,
+  ): Promise<Ticket[]> => {
     try {
       const queryParams = new URLSearchParams();
 
@@ -480,7 +537,10 @@ export const ticketsApi = {
         queryParams.append('fecha_hasta', filtros.fecha_hasta);
       }
       if (filtros.dias_vencimiento) {
-        queryParams.append('dias_vencimiento', filtros.dias_vencimiento.toString());
+        queryParams.append(
+          'dias_vencimiento',
+          filtros.dias_vencimiento.toString(),
+        );
       }
       if (filtros.limit) {
         queryParams.append('limit', filtros.limit.toString());
@@ -492,46 +552,56 @@ export const ticketsApi = {
       const url = `/tickets/busqueda/avanzada?${queryParams.toString()}`;
       const data = await apiRequest(url);
 
-      return data.map((ticket: {
-        id: number;
-        numero: number;
-        titulo: string;
-        descripcion: string;
-        estado: string;
-        prioridad: string;
-        categoria: string;
-        comunidad: string;
-        unidad: string;
-        solicitante: string;
-        asignado_a: string;
-        fecha_creacion: string;
-        fecha_actualizacion: string;
-        fecha_vencimiento: string;
-        fecha_cierre: string;
-        dias_vencimiento: number | null;
-        nivel_urgencia: string;
-        dias_abiertos: number;
-      }) => ({
-        id: ticket.id,
-        numero: ticket.numero,
-        titulo: ticket.titulo,
-        descripcion: ticket.descripcion,
-        estado: ticket.estado as 'abierto' | 'en_progreso' | 'resuelto' | 'cerrado',
-        prioridad: ticket.prioridad as 'alta' | 'media' | 'baja',
-        categoria: ticket.categoria,
-        comunidad: ticket.comunidad,
-        unidad: ticket.unidad,
-        solicitante: ticket.solicitante,
-        asignado_a: ticket.asignado_a,
-        fecha_creacion: ticket.fecha_creacion,
-        fecha_actualizacion: ticket.fecha_actualizacion,
-        fecha_vencimiento: ticket.fecha_vencimiento,
-        fecha_cierre: ticket.fecha_cierre,
-        dias_vencimiento: ticket.dias_vencimiento,
-        nivel_urgencia: ticket.nivel_urgencia as
-          'finalizado' | 'vencido' | 'critico' | 'urgente' | 'normal',
-        dias_abiertos: ticket.dias_abiertos,
-      }));
+      return data.map(
+        (ticket: {
+          id: number;
+          numero: number;
+          titulo: string;
+          descripcion: string;
+          estado: string;
+          prioridad: string;
+          categoria: string;
+          comunidad: string;
+          unidad: string;
+          solicitante: string;
+          asignado_a: string;
+          fecha_creacion: string;
+          fecha_actualizacion: string;
+          fecha_vencimiento: string;
+          fecha_cierre: string;
+          dias_vencimiento: number | null;
+          nivel_urgencia: string;
+          dias_abiertos: number;
+        }) => ({
+          id: ticket.id,
+          numero: ticket.numero,
+          titulo: ticket.titulo,
+          descripcion: ticket.descripcion,
+          estado: ticket.estado as
+            | 'abierto'
+            | 'en_progreso'
+            | 'resuelto'
+            | 'cerrado',
+          prioridad: ticket.prioridad as 'alta' | 'media' | 'baja',
+          categoria: ticket.categoria,
+          comunidad: ticket.comunidad,
+          unidad: ticket.unidad,
+          solicitante: ticket.solicitante,
+          asignado_a: ticket.asignado_a,
+          fecha_creacion: ticket.fecha_creacion,
+          fecha_actualizacion: ticket.fecha_actualizacion,
+          fecha_vencimiento: ticket.fecha_vencimiento,
+          fecha_cierre: ticket.fecha_cierre,
+          dias_vencimiento: ticket.dias_vencimiento,
+          nivel_urgencia: ticket.nivel_urgencia as
+            | 'finalizado'
+            | 'vencido'
+            | 'critico'
+            | 'urgente'
+            | 'normal',
+          dias_abiertos: ticket.dias_abiertos,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -542,29 +612,31 @@ export const ticketsApi = {
   getPorAsignadoEstadisticas: async (): Promise<TicketPorAsignado[]> => {
     try {
       const data = await apiRequest('/tickets/por-asignado/estadisticas');
-      return data.map((stat: {
-        asignado_id: number;
-        asignado_nombre: string;
-        asignado_email: string;
-        total_tickets: number;
-        abiertos: number;
-        en_progreso: number;
-        resueltos: number;
-        cerrados: number;
-        tiempo_promedio_resolucion: number;
-        ultimo_ticket: string;
-      }) => ({
-        asignado_id: stat.asignado_id,
-        asignado_nombre: stat.asignado_nombre,
-        asignado_email: stat.asignado_email,
-        total_tickets: stat.total_tickets,
-        abiertos: stat.abiertos,
-        en_progreso: stat.en_progreso,
-        resueltos: stat.resueltos,
-        cerrados: stat.cerrados,
-        tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
-        ultimo_ticket: stat.ultimo_ticket,
-      }));
+      return data.map(
+        (stat: {
+          asignado_id: number;
+          asignado_nombre: string;
+          asignado_email: string;
+          total_tickets: number;
+          abiertos: number;
+          en_progreso: number;
+          resueltos: number;
+          cerrados: number;
+          tiempo_promedio_resolucion: number;
+          ultimo_ticket: string;
+        }) => ({
+          asignado_id: stat.asignado_id,
+          asignado_nombre: stat.asignado_nombre,
+          asignado_email: stat.asignado_email,
+          total_tickets: stat.total_tickets,
+          abiertos: stat.abiertos,
+          en_progreso: stat.en_progreso,
+          resueltos: stat.resueltos,
+          cerrados: stat.cerrados,
+          tiempo_promedio_resolucion: stat.tiempo_promedio_resolucion,
+          ultimo_ticket: stat.ultimo_ticket,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -578,14 +650,17 @@ export const ticketsApi = {
   // Exportación completa
   exportCompleto: async (): Promise<Blob> => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('auth_token')
+          : null;
       if (!token) {
         throw new Error('Missing token');
       }
 
       const response = await fetch(`${API_BASE_URL}/tickets/export/completo`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -603,14 +678,17 @@ export const ticketsApi = {
   // Exportación de tickets abiertos
   exportAbiertos: async (): Promise<Blob> => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('auth_token')
+          : null;
       if (!token) {
         throw new Error('Missing token');
       }
 
       const response = await fetch(`${API_BASE_URL}/tickets/export/abiertos`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -628,16 +706,22 @@ export const ticketsApi = {
   // Exportación de estadísticas de resolución
   exportEstadisticasResolucion: async (): Promise<Blob> => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('auth_token')
+          : null;
       if (!token) {
         throw new Error('Missing token');
       }
 
-      const response = await fetch(`${API_BASE_URL}/tickets/export/estadisticas-resolucion`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
+      const response = await fetch(
+        `${API_BASE_URL}/tickets/export/estadisticas-resolucion`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -675,7 +759,10 @@ export const ticketsApi = {
   // =========================================
 
   // Crear nuevo ticket
-  create: async (comunidadId: number, ticketData: TicketFormData): Promise<Ticket> => {
+  create: async (
+    comunidadId: number,
+    ticketData: TicketFormData,
+  ): Promise<Ticket> => {
     try {
       const data = await apiRequest(`/tickets/comunidad/${comunidadId}`, {
         method: 'POST',
@@ -743,7 +830,9 @@ export const ticketsApi = {
   },
 
   // Eliminar ticket
-  delete: async (id: number): Promise<{ success: boolean; message: string }> => {
+  delete: async (
+    id: number,
+  ): Promise<{ success: boolean; message: string }> => {
     try {
       await apiRequest(`/tickets/${id}`, {
         method: 'DELETE',

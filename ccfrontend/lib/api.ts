@@ -20,14 +20,14 @@ apiClient.interceptors.request.use(
     console.log('🔐 [API Request] Ruta:', config.url);
     console.log('🔐 [API Request] Token presente:', !!token);
     console.log('🔐 [API Request] Base URL:', config.baseURL);
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       console.log('🔐 [API Request] Token agregado al header');
     } else {
       console.warn('🔐 [API Request] ⚠️ NO HAY TOKEN en localStorage');
     }
-    
+
     return config;
   },
   error => {
@@ -50,17 +50,17 @@ apiClient.interceptors.response.use(
     console.error('❌ [API Error] Error message:', error.message);
     console.error('❌ [API Error] Response data:', error.response?.data);
     console.error('❌ [API Error] Code:', error.code);
-    
+
     // Si el token expiró o no existe, limpiar y redirigir
     if (error.response?.status === 401) {
       console.error('❌ [API Error] 401 - No autorizado, limpiando sesión...');
-      
+
       // Limpiar localStorage
       if (typeof window !== 'undefined') {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user_data');
         localStorage.removeItem('token');
-        
+
         // Redirigir SOLO si no estamos ya en la página de login
         const currentPath = window.location.pathname;
         if (currentPath !== '/' && currentPath !== '/login') {

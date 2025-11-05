@@ -1,7 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
-
 import {
   Button,
   Card,
@@ -15,8 +14,12 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
+import {
+  getGastoById,
+  getAprobaciones,
+  createAprobacion,
+} from '@/lib/gastosService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { getGastoById, getAprobaciones, createAprobacion } from '@/lib/gastosService';
 import { mapBackendToExpense } from '@/types/gastos';
 
 interface Expense {
@@ -199,7 +202,10 @@ export default function GastoDetalle() {
   const handleApproveExpense = async () => {
     setActionLoading(true);
     try {
-      await createAprobacion(Number(id), { accion: 'aprobar', observaciones: 'Aprobado' });
+      await createAprobacion(Number(id), {
+        accion: 'aprobar',
+        observaciones: 'Aprobado',
+      });
       // Recargar aprobaciones
       const nuevasAprobaciones = await getAprobaciones(Number(id));
       setApprovalHistory(nuevasAprobaciones);
@@ -219,7 +225,10 @@ export default function GastoDetalle() {
   const handleRejectExpense = async () => {
     setActionLoading(true);
     try {
-      await createAprobacion(Number(id), { accion: 'rechazar', observaciones: 'Rechazado' });
+      await createAprobacion(Number(id), {
+        accion: 'rechazar',
+        observaciones: 'Rechazado',
+      });
       // Recargar aprobaciones
       const nuevasAprobaciones = await getAprobaciones(Number(id));
       setApprovalHistory(nuevasAprobaciones);
@@ -271,14 +280,15 @@ export default function GastoDetalle() {
     priority: gasto.priority || 'medium', // Dinámico
     requiredApprovals: gasto.required_aprobaciones || 1,
     attachments: [],
-    existingAttachments: gasto.attachments?.map((a: any) => ({
-      id: a.id,
-      name: a.name,
-      type: a.type,
-      size: a.size,
-      url: a.url,
-      uploadedAt: a.uploadedAt,
-    })) || [],
+    existingAttachments:
+      gasto.attachments?.map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        type: a.type,
+        size: a.size,
+        url: a.url,
+        uploadedAt: a.uploadedAt,
+      })) || [],
   });
 
   const mapFormDataToPayload = (form: any): any => ({
@@ -648,9 +658,9 @@ export default function GastoDetalle() {
                                   : 'Rechazó'}
                               </span>
                               <span className='approval-date'>
-                                {new Date(approval.created_at).toLocaleDateString(
-                                  'es-CL',
-                                )}
+                                {new Date(
+                                  approval.created_at,
+                                ).toLocaleDateString('es-CL')}
                               </span>
                             </div>
                             {approval.observaciones && (

@@ -10,12 +10,11 @@ import {
 import api from './api';
 
 class MultasService {
-
   // ===== NUEVO: obtener tipos desde el backend (acepta opcional comunidadId) =====
   async obtenerTipos(comunidadId?: number): Promise<TipoInfraccion[]> {
     try {
       const params: any = {};
-      if (comunidadId) params.comunidadId = comunidadId;
+      if (comunidadId) {params.comunidadId = comunidadId;}
       const response = await api.get('/multas/tipos-infraccion', { params });
       return response.data?.data ?? response.data ?? [];
     } catch (err) {
@@ -405,9 +404,12 @@ class MultasService {
   }
 
   // Agregar este método en la clase MultasService
-  async obtenerUnidadesAutocompletar(search: string, comunidadId?: number): Promise<any[]> {
+  async obtenerUnidadesAutocompletar(
+    search: string,
+    comunidadId?: number,
+  ): Promise<any[]> {
     const params: any = { search, limit: 10 };
-    if (comunidadId) params.comunidad_id = comunidadId;
+    if (comunidadId) {params.comunidad_id = comunidadId;}
     const response = await api.get('/unidades', { params });
     return response.data.map((u: any) => ({
       id: u.id,
@@ -416,7 +418,8 @@ class MultasService {
       propietario: u.propietario_nombre || '',
       edificio: u.edificio_nombre || '',
       torre: u.torre_nombre || '',
-      display: `${u.numero} - ${u.propietario_nombre || 'Sin propietario'} ${u.edificio_nombre ? `(${u.edificio_nombre})` : ''}`.trim()
+      display:
+        `${u.numero} - ${u.propietario_nombre || 'Sin propietario'} ${u.edificio_nombre ? `(${u.edificio_nombre})` : ''}`.trim(),
     }));
   }
 }
@@ -431,9 +434,9 @@ export const createMulta = (data: any) => multasService.createMulta(data);
 // ===== HELPERS DE AUTENTICACIÓN PARA FETCH / AXIOS =====
 export function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = { Accept: 'application/json' };
-  if (typeof window === 'undefined') return headers;
+  if (typeof window === 'undefined') {return headers;}
   const token = localStorage.getItem('token'); // confirmar key ('token' o 'accessToken')
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (token) {headers['Authorization'] = `Bearer ${token}`;}
   return headers;
 }
 
@@ -441,10 +444,17 @@ export function getAuthHeaders(): Record<string, string> {
  * Uso recomendado para llamadas fetch desde componentes:
  * const resp = await fetchWithAuth(url, { method: 'GET' });
  */
-export async function fetchWithAuth(input: RequestInfo, init: RequestInit = {}) {
+export async function fetchWithAuth(
+  input: RequestInfo,
+  init: RequestInit = {},
+) {
   const baseHeaders = getAuthHeaders();
   const mergedHeaders = Object.assign({}, baseHeaders, init.headers || {});
-  const opts: RequestInit = { ...init, headers: mergedHeaders, credentials: init.credentials ?? 'omit' };
+  const opts: RequestInit = {
+    ...init,
+    headers: mergedHeaders,
+    credentials: init.credentials ?? 'omit',
+  };
   return fetch(input, opts);
 }
 
@@ -455,7 +465,7 @@ export async function fetchWithAuth(input: RequestInfo, init: RequestInit = {}) 
 export function setAxiosAuthToken(token?: string | null) {
   try {
     const anyApi: any = api as any;
-    if (!anyApi || !anyApi.defaults) return;
+    if (!anyApi || !anyApi.defaults) {return;}
     if (token) {
       anyApi.defaults.headers = anyApi.defaults.headers || {};
       anyApi.defaults.headers.common = anyApi.defaults.headers.common || {};

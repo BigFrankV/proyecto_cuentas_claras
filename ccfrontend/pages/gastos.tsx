@@ -71,7 +71,10 @@ export default function GastosListado() {
 
     try {
       setLoading(true);
-      const resp = await listGastos(resolvedComunidadId, { limit: 100, offset: 0 });
+      const resp = await listGastos(resolvedComunidadId, {
+        limit: 100,
+        offset: 0,
+      });
       console.log('Respuesta del backend:', resp.data); // Verifica si 'estado' es correcto
       const items = resp.data || [];
       const mapped: Expense[] = (Array.isArray(items) ? items : []).map(
@@ -169,8 +172,11 @@ export default function GastosListado() {
 
   const filteredExpenses = expenses.filter(expense => {
     return (
-      expense.description.toLowerCase().includes(filters.search.toLowerCase()) &&
-      (filters.category === '' || expense.categoryId === Number(filters.category)) &&
+      expense.description
+        .toLowerCase()
+        .includes(filters.search.toLowerCase()) &&
+      (filters.category === '' ||
+        expense.categoryId === Number(filters.category)) &&
       (filters.status === '' || expense.status === filters.status) &&
       (filters.provider === '' ||
         expense.provider.toLowerCase().includes(filters.provider.toLowerCase()))
@@ -202,7 +208,11 @@ export default function GastosListado() {
           id: c.id,
           nombre: c.nombre ?? c.name ?? c.label,
         }));
-        setCategories(normalized.sort((a: any, b: any) => String(a.nombre).localeCompare(String(b.nombre))));
+        setCategories(
+          normalized.sort((a: any, b: any) =>
+            String(a.nombre).localeCompare(String(b.nombre)),
+          ),
+        );
       })
       .catch(err => {
         console.error('Error getCategorias', err);
@@ -364,7 +374,9 @@ export default function GastosListado() {
                       <option value=''>Todas las categorías</option>
                       {categories.map(category => (
                         <option key={category.id} value={category.id}>
-                          {category.nombre ?? category.name ?? String(category.id)}
+                          {category.nombre ??
+                            category.name ??
+                            String(category.id)}
                         </option>
                       ))}
                     </Form.Select>

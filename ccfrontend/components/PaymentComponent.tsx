@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Card, Form, Button, Modal, Spinner, Badge } from 'react-bootstrap';
+import {
+  Alert,
+  Card,
+  Form,
+  Button,
+  Modal,
+  Spinner,
+  Badge,
+} from 'react-bootstrap';
 
 interface PaymentGateway {
   id: string;
@@ -27,7 +35,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
   description,
   onSuccess,
   onError,
-  onCancel
+  onCancel,
 }) => {
   const [selectedGateway, setSelectedGateway] = useState<string>('');
   const [payerEmail, setPayerEmail] = useState<string>('');
@@ -35,40 +43,42 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
   const [processing, setProcessing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [error, setError] = useState<string>('');
-  const [transactionStatus, setTransactionStatus] = useState<'pending' | 'success' | 'error' | null>(null);
+  const [transactionStatus, setTransactionStatus] = useState<
+    'pending' | 'success' | 'error' | null
+  >(null);
 
   const gateways: PaymentGateway[] = [
     {
       id: 'webpay',
       name: 'Webpay Plus',
       description: 'Tarjetas de crédito y débito (Transbank)',
-      icon: <i className="material-icons">credit_card</i>,
+      icon: <i className='material-icons'>credit_card</i>,
       enabled: true,
-      processingTime: 'Inmediato'
+      processingTime: 'Inmediato',
     },
     {
       id: 'khipu',
       name: 'Khipu',
       description: 'Transferencia bancaria',
-      icon: <i className="material-icons">account_balance</i>,
+      icon: <i className='material-icons'>account_balance</i>,
       enabled: true,
-      processingTime: '1-2 días hábiles'
+      processingTime: '1-2 días hábiles',
     },
     {
       id: 'mercadopago',
       name: 'MercadoPago',
       description: 'Múltiples métodos de pago',
-      icon: <i className="material-icons">payment</i>,
+      icon: <i className='material-icons'>payment</i>,
       enabled: true,
-      processingTime: 'Inmediato'
-    }
+      processingTime: 'Inmediato',
+    },
   ];
 
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
       currency: 'CLP',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     }).format(value);
   };
 
@@ -92,7 +102,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
   };
 
   const handlePayment = async () => {
-    if (!validateForm()) return;
+    if (!validateForm()) {return;}
 
     setProcessing(true);
     setError('');
@@ -102,7 +112,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
           communityId,
@@ -110,8 +120,8 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
           amount,
           gateway: selectedGateway,
           description,
-          payerEmail: payerEmail || undefined
-        })
+          payerEmail: payerEmail || undefined,
+        }),
       });
 
       const data = await response.json();
@@ -128,7 +138,6 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
         setTransactionStatus('pending');
         pollTransactionStatus(data.orderId);
       }
-
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Error desconocido');
       setProcessing(false);
@@ -144,21 +153,25 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
       try {
         const response = await fetch(`/api/gateway/transaction/${orderId}`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         });
 
         const data = await response.json();
 
         if (data.success && data.transaction) {
           const status = data.transaction.status;
-          
+
           if (status === 'approved') {
             setTransactionStatus('success');
             setProcessing(false);
             onSuccess?.(data.transaction.orderId);
             return;
-          } else if (status === 'rejected' || status === 'cancelled' || status === 'expired') {
+          } else if (
+            status === 'rejected' ||
+            status === 'cancelled' ||
+            status === 'expired'
+          ) {
             setTransactionStatus('error');
             setProcessing(false);
             setError('El pago fue rechazado o cancelado');
@@ -191,11 +204,32 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
   const getStatusBadge = () => {
     switch (transactionStatus) {
       case 'pending':
-        return <Badge bg="warning"><i className="material-icons me-1" style={{fontSize: '14px'}}>schedule</i>Procesando...</Badge>;
+        return (
+          <Badge bg='warning'>
+            <i className='material-icons me-1' style={{ fontSize: '14px' }}>
+              schedule
+            </i>
+            Procesando...
+          </Badge>
+        );
       case 'success':
-        return <Badge bg="success"><i className="material-icons me-1" style={{fontSize: '14px'}}>check_circle</i>Exitoso</Badge>;
+        return (
+          <Badge bg='success'>
+            <i className='material-icons me-1' style={{ fontSize: '14px' }}>
+              check_circle
+            </i>
+            Exitoso
+          </Badge>
+        );
       case 'error':
-        return <Badge bg="danger"><i className="material-icons me-1" style={{fontSize: '14px'}}>error</i>Error</Badge>;
+        return (
+          <Badge bg='danger'>
+            <i className='material-icons me-1' style={{ fontSize: '14px' }}>
+              error
+            </i>
+            Error
+          </Badge>
+        );
       default:
         return null;
     }
@@ -204,12 +238,12 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
   if (processing) {
     return (
       <Card>
-        <Card.Body className="text-center p-5">
-          <Spinner animation="border" variant="primary" className="mb-3" />
+        <Card.Body className='text-center p-5'>
+          <Spinner animation='border' variant='primary' className='mb-3' />
           <h5>Procesando pago...</h5>
-          <p className="text-muted">
-            {transactionStatus === 'pending' 
-              ? 'Verificando el estado de la transacción...' 
+          <p className='text-muted'>
+            {transactionStatus === 'pending'
+              ? 'Verificando el estado de la transacción...'
               : 'Redirigiendo a la pasarela de pago...'}
           </p>
           {getStatusBadge()}
@@ -220,12 +254,19 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
 
   if (transactionStatus === 'success') {
     return (
-      <Card className="border-success">
-        <Card.Body className="text-center p-5">
-          <i className="material-icons text-success mb-3" style={{fontSize: '64px'}}>check_circle</i>
-          <h4 className="text-success">¡Pago exitoso!</h4>
-          <p className="text-muted">Su pago ha sido procesado correctamente.</p>
-          <p><strong>{formatCurrency(amount)}</strong></p>
+      <Card className='border-success'>
+        <Card.Body className='text-center p-5'>
+          <i
+            className='material-icons text-success mb-3'
+            style={{ fontSize: '64px' }}
+          >
+            check_circle
+          </i>
+          <h4 className='text-success'>¡Pago exitoso!</h4>
+          <p className='text-muted'>Su pago ha sido procesado correctamente.</p>
+          <p>
+            <strong>{formatCurrency(amount)}</strong>
+          </p>
         </Card.Body>
       </Card>
     );
@@ -235,51 +276,57 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
     <>
       <Card>
         <Card.Header>
-          <h5 className="mb-0">Realizar Pago</h5>
+          <h5 className='mb-0'>Realizar Pago</h5>
         </Card.Header>
         <Card.Body>
           {error && (
-            <Alert variant="danger" dismissible onClose={() => setError('')}>
+            <Alert variant='danger' dismissible onClose={() => setError('')}>
               {error}
             </Alert>
           )}
 
-          <div className="mb-4">
+          <div className='mb-4'>
             <h6>Resumen del pago</h6>
-            <div className="bg-light p-3 rounded">
-              <div className="d-flex justify-content-between">
+            <div className='bg-light p-3 rounded'>
+              <div className='d-flex justify-content-between'>
                 <span>Descripción:</span>
                 <strong>{description}</strong>
               </div>
-              <div className="d-flex justify-content-between">
+              <div className='d-flex justify-content-between'>
                 <span>Monto:</span>
-                <strong className="text-primary">{formatCurrency(amount)}</strong>
+                <strong className='text-primary'>
+                  {formatCurrency(amount)}
+                </strong>
               </div>
             </div>
           </div>
 
           <Form>
-            <Form.Group className="mb-4">
+            <Form.Group className='mb-4'>
               <Form.Label>Método de pago</Form.Label>
-              {gateways.map((gateway) => (
-                <div key={gateway.id} className="mb-2">
+              {gateways.map(gateway => (
+                <div key={gateway.id} className='mb-2'>
                   <Form.Check
-                    type="radio"
+                    type='radio'
                     id={gateway.id}
-                    name="gateway"
+                    name='gateway'
                     value={gateway.id}
                     disabled={!gateway.enabled}
                     checked={selectedGateway === gateway.id}
-                    onChange={(e) => setSelectedGateway(e.target.value)}
+                    onChange={e => setSelectedGateway(e.target.value)}
                     label={
-                      <div className="d-flex align-items-center">
-                        <div className="me-3">{gateway.icon}</div>
-                        <div className="flex-grow-1">
-                          <div className="fw-semibold">{gateway.name}</div>
-                          <small className="text-muted">{gateway.description}</small>
+                      <div className='d-flex align-items-center'>
+                        <div className='me-3'>{gateway.icon}</div>
+                        <div className='flex-grow-1'>
+                          <div className='fw-semibold'>{gateway.name}</div>
+                          <small className='text-muted'>
+                            {gateway.description}
+                          </small>
                         </div>
-                        <div className="text-end">
-                          <small className="text-muted">{gateway.processingTime}</small>
+                        <div className='text-end'>
+                          <small className='text-muted'>
+                            {gateway.processingTime}
+                          </small>
                         </div>
                       </div>
                     }
@@ -288,38 +335,38 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
               ))}
             </Form.Group>
 
-            <Form.Group className="mb-4">
+            <Form.Group className='mb-4'>
               <Form.Label>Email (opcional)</Form.Label>
               <Form.Control
-                type="email"
-                placeholder="su@email.com"
+                type='email'
+                placeholder='su@email.com'
                 value={payerEmail}
-                onChange={(e) => setPayerEmail(e.target.value)}
+                onChange={e => setPayerEmail(e.target.value)}
               />
-              <Form.Text className="text-muted">
+              <Form.Text className='text-muted'>
                 Para recibir confirmación del pago
               </Form.Text>
             </Form.Group>
 
-            <div className="d-grid gap-2">
+            <div className='d-grid gap-2'>
               <Button
-                variant="primary"
-                size="lg"
+                variant='primary'
+                size='lg'
                 disabled={!selectedGateway || loading}
                 onClick={() => setShowConfirmModal(true)}
               >
                 {loading ? (
                   <>
-                    <Spinner animation="border" size="sm" className="me-2" />
+                    <Spinner animation='border' size='sm' className='me-2' />
                     Procesando...
                   </>
                 ) : (
                   `Pagar ${formatCurrency(amount)}`
                 )}
               </Button>
-              
+
               {onCancel && (
-                <Button variant="outline-secondary" onClick={onCancel}>
+                <Button variant='outline-secondary' onClick={onCancel}>
                   Cancelar
                 </Button>
               )}
@@ -329,17 +376,21 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
       </Card>
 
       {/* Modal de confirmación */}
-      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
+      <Modal
+        show={showConfirmModal}
+        onHide={() => setShowConfirmModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Confirmar Pago</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <div className="text-center">
+          <div className='text-center'>
             <h5>¿Confirma el pago de {formatCurrency(amount)}?</h5>
-            <p className="text-muted mt-3">{description}</p>
-            
+            <p className='text-muted mt-3'>{description}</p>
+
             {selectedGateway && (
-              <div className="mt-3">
+              <div className='mt-3'>
                 <p>
                   <strong>Método de pago:</strong>{' '}
                   {gateways.find(g => g.id === selectedGateway)?.name}
@@ -349,11 +400,14 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
+          <Button
+            variant='secondary'
+            onClick={() => setShowConfirmModal(false)}
+          >
             Cancelar
           </Button>
-          <Button 
-            variant="primary" 
+          <Button
+            variant='primary'
             onClick={() => {
               setShowConfirmModal(false);
               handlePayment();

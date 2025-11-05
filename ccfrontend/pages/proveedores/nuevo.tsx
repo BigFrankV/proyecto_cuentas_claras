@@ -507,7 +507,7 @@ export default function ProveedorNuevo() {
                         {errors.contacts}
                       </Alert>
                     )}
-                    {contacts.map((contact) => (
+                    {contacts.map(contact => (
                       <div key={contact.id} className='contact-item'>
                         {contacts.length > 1 && (
                           <Button

@@ -12,8 +12,6 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { usePermissions } from '@/lib/usePermissions';
 import {
   createGasto,
   getCategorias,
@@ -21,6 +19,8 @@ import {
   getProveedores,
   getComunidades,
 } from '@/lib/gastosService';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions';
 
 interface ExpenseFormData {
   description: string;
@@ -47,7 +47,8 @@ export default function GastoNuevo() {
   const { user } = useAuth();
   const { isSuperUser, currentRole } = usePermissions();
   // Obtener currentComunidadId del user
-  const currentComunidadId = user?.comunidad_id || user?.memberships?.[0]?.comunidadId;
+  const currentComunidadId =
+    user?.comunidad_id || user?.memberships?.[0]?.comunidadId;
   // para superadmin
   const isSuper = Boolean(user?.is_superadmin);
   // Normalizar isSuper (puede ser función o boolean)
@@ -79,32 +80,68 @@ export default function GastoNuevo() {
   const [categories, setCategories] = useState([]);
   const [costCenters, setCostCenters] = useState([]);
   const [providers, setProviders] = useState([]);
-  const [selectedComunidad, setSelectedComunidad] = useState<number | null>(null);
+  const [selectedComunidad, setSelectedComunidad] = useState<number | null>(
+    null,
+  );
   const [comunidades, setComunidades] = useState<any[]>([]); // Lista de comunidades
 
   useEffect(() => {
     const loadLists = async () => {
-      console.log('[GASTO-NUEVO] idToUse:', comunidadParaEnviar, 'isSuperUser:', isSuperUser);
+      console.log(
+        '[GASTO-NUEVO] idToUse:',
+        comunidadParaEnviar,
+        'isSuperUser:',
+        isSuperUser,
+      );
       try {
         console.log('[GASTO-NUEVO] -> llamando getCategorias...');
         const cats = await getCategorias(comunidadParaEnviar);
         const catsArray = Array.isArray(cats) ? cats : (cats?.data ?? []);
-        console.log('[GASTO-NUEVO] <- getCategorias normalized length:', catsArray.length);
-        setCategories((catsArray || []).map((c: any) => ({ id: c.id, nombre: c.nombre ?? c.name ?? String(c.id) })));
+        console.log(
+          '[GASTO-NUEVO] <- getCategorias normalized length:',
+          catsArray.length,
+        );
+        setCategories(
+          (catsArray || []).map((c: any) => ({
+            id: c.id,
+            nombre: c.nombre ?? c.name ?? String(c.id),
+          })),
+        );
 
         console.log('[GASTO-NUEVO] -> llamando getCentrosCosto...');
         const centros = await getCentrosCosto(comunidadParaEnviar);
-        const centrosArray = Array.isArray(centros) ? centros : (centros?.data ?? []);
-        console.log('[GASTO-NUEVO] <- getCentrosCosto normalized length:', centrosArray.length);
-        setCostCenters((centrosArray || []).map((c: any) => ({ id: c.id, nombre: c.nombre ?? String(c.id) })));
+        const centrosArray = Array.isArray(centros)
+          ? centros
+          : (centros?.data ?? []);
+        console.log(
+          '[GASTO-NUEVO] <- getCentrosCosto normalized length:',
+          centrosArray.length,
+        );
+        setCostCenters(
+          (centrosArray || []).map((c: any) => ({
+            id: c.id,
+            nombre: c.nombre ?? String(c.id),
+          })),
+        );
 
         console.log('[GASTO-NUEVO] -> llamando getProveedores...');
         const provs = await getProveedores(comunidadParaEnviar);
         const provsArray = Array.isArray(provs) ? provs : (provs?.data ?? []);
-        console.log('[GASTO-NUEVO] <- getProveedores normalized length:', provsArray.length);
-        setProviders((provsArray || []).map((p: any) => ({ id: p.id, nombre: p.nombre ?? p.razon_social ?? String(p.id) })));
+        console.log(
+          '[GASTO-NUEVO] <- getProveedores normalized length:',
+          provsArray.length,
+        );
+        setProviders(
+          (provsArray || []).map((p: any) => ({
+            id: p.id,
+            nombre: p.nombre ?? p.razon_social ?? String(p.id),
+          })),
+        );
       } catch (err) {
-        console.error('[GASTO-NUEVO] Error cargando listas para dropdowns:', err);
+        console.error(
+          '[GASTO-NUEVO] Error cargando listas para dropdowns:',
+          err,
+        );
         setCategories([]);
         setCostCenters([]);
         setProviders([]);
@@ -116,10 +153,12 @@ export default function GastoNuevo() {
 
   useEffect(() => {
     if (isSuper) {
-      getComunidades().then(res => {
-        const comunidadesArray = Array.isArray(res) ? res : (res?.data ?? []);
-        setComunidades(comunidadesArray);
-      }).catch(console.error);
+      getComunidades()
+        .then(res => {
+          const comunidadesArray = Array.isArray(res) ? res : (res?.data ?? []);
+          setComunidades(comunidadesArray);
+        })
+        .catch(console.error);
     }
   }, [isSuper]);
 
@@ -128,7 +167,10 @@ export default function GastoNuevo() {
     return (
       <ProtectedRoute>
         <Layout>
-          <div className='d-flex justify-content-center align-items-center' style={{ minHeight: '400px' }}>
+          <div
+            className='d-flex justify-content-center align-items-center'
+            style={{ minHeight: '400px' }}
+          >
             <div className='text-center'>
               <div className='spinner-border text-primary mb-3' />
               <p>Cargando...</p>
@@ -140,12 +182,19 @@ export default function GastoNuevo() {
   }
 
   // Verificar permisos: Solo superadmin, admin, contador, admin_comunidad pueden crear
-  const canCreate = user?.is_superadmin || user?.roles?.includes('admin') || user?.roles?.includes('contador') || user?.roles?.includes('admin_comunidad'); {
+  const canCreate =
+    user?.is_superadmin ||
+    user?.roles?.includes('admin') ||
+    user?.roles?.includes('contador') ||
+    user?.roles?.includes('admin_comunidad');
+  {
     if (!canCreate) {
       return (
         <ProtectedRoute>
           <Layout>
-            <Alert variant='danger'>No tienes permisos para crear gastos.</Alert>
+            <Alert variant='danger'>
+              No tienes permisos para crear gastos.
+            </Alert>
           </Layout>
         </ProtectedRoute>
       );
@@ -312,13 +361,27 @@ export default function GastoNuevo() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm()) {return;}
     setLoading(true);
     try {
       const payload = mapFormDataToPayload(formData);
-      console.log('[GASTO-NUEVO] creando gasto - comunidadId:', isSuper ? selectedComunidad : comunidadParaEnviar, 'payload:', payload);
-      console.log('Antes de createGasto - user.is_superadmin:', user?.is_superadmin, 'currentComunidadId:', currentComunidadId, 'comunidadParaEnviar:', comunidadParaEnviar);
-      const comunidadIdFinal = isSuper ? selectedComunidad : comunidadParaEnviar;
+      console.log(
+        '[GASTO-NUEVO] creando gasto - comunidadId:',
+        isSuper ? selectedComunidad : comunidadParaEnviar,
+        'payload:',
+        payload,
+      );
+      console.log(
+        'Antes de createGasto - user.is_superadmin:',
+        user?.is_superadmin,
+        'currentComunidadId:',
+        currentComunidadId,
+        'comunidadParaEnviar:',
+        comunidadParaEnviar,
+      );
+      const comunidadIdFinal = isSuper
+        ? selectedComunidad
+        : comunidadParaEnviar;
       const newGasto = await createGasto(comunidadIdFinal ?? null, payload);
       router.push(`/gastos/${newGasto.id}`);
     } catch (err) {
@@ -380,12 +443,16 @@ export default function GastoNuevo() {
                         <Form.Label className='required'>Comunidad</Form.Label>
                         <Form.Select
                           value={selectedComunidad || ''}
-                          onChange={(e) => setSelectedComunidad(Number(e.target.value) || null)}
+                          onChange={e =>
+                            setSelectedComunidad(Number(e.target.value) || null)
+                          }
                           required
                         >
                           <option value=''>Selecciona una comunidad</option>
-                          {comunidades.map((c) => (
-                            <option key={c.id} value={c.id}>{c.nombre}</option>
+                          {comunidades.map(c => (
+                            <option key={c.id} value={c.id}>
+                              {c.nombre}
+                            </option>
                           ))}
                         </Form.Select>
                       </Form.Group>
@@ -432,7 +499,10 @@ export default function GastoNuevo() {
                           <Form.Select
                             value={formData.category}
                             onChange={e =>
-                              handleInputChange('category', parseInt(e.target.value))
+                              handleInputChange(
+                                'category',
+                                parseInt(e.target.value),
+                              )
                             }
                             isInvalid={!!errors.category}
                           >
@@ -457,14 +527,19 @@ export default function GastoNuevo() {
                           <Form.Select
                             value={formData.provider}
                             onChange={e =>
-                              handleInputChange('provider', parseInt(e.target.value))
+                              handleInputChange(
+                                'provider',
+                                parseInt(e.target.value),
+                              )
                             }
                             isInvalid={!!errors.provider}
                           >
                             <option value={0}>Selecciona un proveedor</option>
                             {providers.map(prov => (
                               <option key={prov.id} value={prov.id}>
-                                {prov.nombre ?? prov.razon_social ?? String(prov.id)}
+                                {prov.nombre ??
+                                  prov.razon_social ??
+                                  String(prov.id)}
                               </option>
                             ))}
                           </Form.Select>
@@ -500,7 +575,10 @@ export default function GastoNuevo() {
                           <Form.Select
                             value={formData.costCenter}
                             onChange={e =>
-                              handleInputChange('costCenter', parseInt(e.target.value))
+                              handleInputChange(
+                                'costCenter',
+                                parseInt(e.target.value),
+                              )
                             }
                           >
                             <option value={0}>

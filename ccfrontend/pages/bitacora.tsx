@@ -33,7 +33,12 @@ interface Stats {
 export default function BitacoraListado() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<Activity[]>([]);
-  const [stats, setStats] = useState<Stats>({ total: 0, today: 0, high: 0, critical: 0 });
+  const [stats, setStats] = useState<Stats>({
+    total: 0,
+    today: 0,
+    high: 0,
+    critical: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -64,14 +69,23 @@ export default function BitacoraListado() {
         backendFilters.search = searchTerm;
       }
       if (selectedType && selectedType !== 'all') {
-        backendFilters.type = selectedType as Exclude<ActivityFilters['type'], undefined>;
+        backendFilters.type = selectedType as Exclude<
+          ActivityFilters['type'],
+          undefined
+        >;
       }
       if (selectedPriority && selectedPriority !== 'all') {
-        const priority = selectedPriority as Exclude<ActivityFilters['priority'], undefined>;
+        const priority = selectedPriority as Exclude<
+          ActivityFilters['priority'],
+          undefined
+        >;
         backendFilters.priority = priority;
       }
       if (dateRange && dateRange !== 'all') {
-        backendFilters.dateRange = dateRange as Exclude<ActivityFilters['dateRange'], undefined>;
+        backendFilters.dateRange = dateRange as Exclude<
+          ActivityFilters['dateRange'],
+          undefined
+        >;
       }
 
       // Load activities and stats in parallel
@@ -120,7 +134,10 @@ export default function BitacoraListado() {
     return (
       <ProtectedRoute>
         <Layout title='Bitácora de Actividades'>
-          <div className='d-flex justify-content-center align-items-center' style={{ minHeight: '400px' }}>
+          <div
+            className='d-flex justify-content-center align-items-center'
+            style={{ minHeight: '400px' }}
+          >
             <div className='text-center'>
               <div className='spinner-border text-primary' role='status'>
                 <span className='visually-hidden'>Cargando...</span>
@@ -145,19 +162,28 @@ export default function BitacoraListado() {
           <div className='d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3'>
             <div>
               <h1 className='h3 mb-1'>Bitácora de Actividades</h1>
-              <p className='text-muted mb-0'>Registro completo de actividades del sistema</p>
+              <p className='text-muted mb-0'>
+                Registro completo de actividades del sistema
+              </p>
             </div>
             <div className='d-flex gap-2'>
               <button
                 type='button'
                 className={`btn real-time-indicator ${autoRefresh ? 'active' : ''}`}
                 onClick={toggleAutoRefresh}
-                title={autoRefresh ? 'Desactivar actualización automática' : 'Activar actualización automática'}
+                title={
+                  autoRefresh
+                    ? 'Desactivar actualización automática'
+                    : 'Activar actualización automática'
+                }
               >
                 <i className='material-icons'>radio_button_checked</i>
                 <span>{autoRefresh ? 'En vivo' : 'Manual'}</span>
               </button>
-              <button className='btn btn-outline-secondary' onClick={handleRefresh}>
+              <button
+                className='btn btn-outline-secondary'
+                onClick={handleRefresh}
+              >
                 <i className='material-icons me-2'>refresh</i>
                 Actualizar
               </button>
@@ -222,7 +248,7 @@ export default function BitacoraListado() {
                     className='form-control ps-5'
                     placeholder='Buscar por título, descripción, usuario...'
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={e => setSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
@@ -232,7 +258,7 @@ export default function BitacoraListado() {
                 <select
                   className='form-select'
                   value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
+                  onChange={e => setSelectedType(e.target.value)}
                 >
                   <option value='all'>Todos los tipos</option>
                   <option value='system'>Sistema</option>
@@ -249,7 +275,7 @@ export default function BitacoraListado() {
                 <select
                   className='form-select'
                   value={selectedPriority}
-                  onChange={(e) => setSelectedPriority(e.target.value)}
+                  onChange={e => setSelectedPriority(e.target.value)}
                 >
                   <option value='all'>Todas las prioridades</option>
                   <option value='low'>Baja</option>
@@ -264,7 +290,7 @@ export default function BitacoraListado() {
                 <select
                   className='form-select'
                   value={dateRange}
-                  onChange={(e) => setDateRange(e.target.value)}
+                  onChange={e => setDateRange(e.target.value)}
                 >
                   <option value='today'>Hoy</option>
                   <option value='week'>Esta semana</option>
@@ -276,7 +302,10 @@ export default function BitacoraListado() {
               <div className='filter-group'>
                 <label className='form-label'>&nbsp;</label>
                 <div className='d-flex gap-2'>
-                  <button className='btn btn-outline-secondary' onClick={clearFilters}>
+                  <button
+                    className='btn btn-outline-secondary'
+                    onClick={clearFilters}
+                  >
                     <i className='material-icons me-2'>clear</i>
                     Limpiar
                   </button>
@@ -291,19 +320,28 @@ export default function BitacoraListado() {
                     </button>
                     <ul className='dropdown-menu'>
                       <li>
-                        <button className='dropdown-item' onClick={() => exportData('csv')}>
+                        <button
+                          className='dropdown-item'
+                          onClick={() => exportData('csv')}
+                        >
                           <i className='material-icons me-2'>table_chart</i>
                           CSV
                         </button>
                       </li>
                       <li>
-                        <button className='dropdown-item' onClick={() => exportData('excel')}>
+                        <button
+                          className='dropdown-item'
+                          onClick={() => exportData('excel')}
+                        >
                           <i className='material-icons me-2'>description</i>
                           Excel
                         </button>
                       </li>
                       <li>
-                        <button className='dropdown-item' onClick={() => exportData('pdf')}>
+                        <button
+                          className='dropdown-item'
+                          onClick={() => exportData('pdf')}
+                        >
                           <i className='material-icons me-2'>picture_as_pdf</i>
                           PDF
                         </button>
@@ -323,14 +361,15 @@ export default function BitacoraListado() {
               </div>
               <div className='activity-actions'>
                 <span className='text-muted small me-3'>
-                  Mostrando {filteredActivities.length} de {activities.length} actividades
+                  Mostrando {filteredActivities.length} de {activities.length}{' '}
+                  actividades
                 </span>
               </div>
             </div>
 
             {filteredActivities.length > 0 ? (
               <div className='timeline position-relative'>
-                {filteredActivities.map((activity) => (
+                {filteredActivities.map(activity => (
                   <TimelineItem
                     key={activity.id}
                     id={activity.id}
@@ -349,21 +388,28 @@ export default function BitacoraListado() {
               </div>
             ) : (
               <div className='text-center py-5'>
-                <i className='material-icons mb-3 text-muted' style={{ fontSize: '4rem' }}>
+                <i
+                  className='material-icons mb-3 text-muted'
+                  style={{ fontSize: '4rem' }}
+                >
                   event_note
                 </i>
                 <h5 className='text-muted'>No se encontraron actividades</h5>
                 <p className='text-muted'>
-                  {searchTerm || selectedType !== 'all' || selectedPriority !== 'all' 
+                  {searchTerm ||
+                  selectedType !== 'all' ||
+                  selectedPriority !== 'all'
                     ? 'Intenta cambiar los filtros de búsqueda'
                     : 'Aún no hay actividades registradas'}
                 </p>
-                {!searchTerm && selectedType === 'all' && selectedPriority === 'all' && (
-                  <Link href='/bitacora/nueva' className='btn btn-primary'>
-                    <i className='material-icons me-2'>add</i>
-                    Crear Primera Entrada
-                  </Link>
-                )}
+                {!searchTerm &&
+                  selectedType === 'all' &&
+                  selectedPriority === 'all' && (
+                    <Link href='/bitacora/nueva' className='btn btn-primary'>
+                      <i className='material-icons me-2'>add</i>
+                      Crear Primera Entrada
+                    </Link>
+                  )}
               </div>
             )}
           </div>
@@ -377,7 +423,9 @@ export default function BitacoraListado() {
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             border-left: 4px solid #007bff;
             height: 100%;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition:
+              transform 0.2s ease,
+              box-shadow 0.2s ease;
           }
 
           .stats-card:hover {
@@ -397,10 +445,18 @@ export default function BitacoraListado() {
             margin-bottom: 1rem;
           }
 
-          .stats-icon.info { background-color: #17a2b8; }
-          .stats-icon.warning { background-color: #ffc107; }
-          .stats-icon.success { background-color: #28a745; }
-          .stats-icon.danger { background-color: #dc3545; }
+          .stats-icon.info {
+            background-color: #17a2b8;
+          }
+          .stats-icon.warning {
+            background-color: #ffc107;
+          }
+          .stats-icon.success {
+            background-color: #28a745;
+          }
+          .stats-icon.danger {
+            background-color: #dc3545;
+          }
 
           .stats-number {
             font-size: 2rem;
@@ -502,8 +558,13 @@ export default function BitacoraListado() {
           }
 
           @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%,
+            100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.5;
+            }
           }
 
           @media (max-width: 768px) {

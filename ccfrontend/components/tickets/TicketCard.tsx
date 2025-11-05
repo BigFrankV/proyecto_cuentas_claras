@@ -1,8 +1,9 @@
-import React from 'react';
 import Link from 'next/link';
-import { StatusBadge } from './StatusBadge';
-import { PriorityBadge } from './PriorityBadge';
+import React from 'react';
+
 import { CategoryBadge } from './CategoryBadge';
+import { PriorityBadge } from './PriorityBadge';
+import { StatusBadge } from './StatusBadge';
 
 export interface TicketCardData {
   id: string;
@@ -39,12 +40,12 @@ interface TicketCardProps {
   className?: string;
 }
 
-export const TicketCard: React.FC<TicketCardProps> = ({ 
+export const TicketCard: React.FC<TicketCardProps> = ({
   ticket,
   selected = false,
   onSelect,
   showActions = true,
-  className = ''
+  className = '',
 }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-CL', {
@@ -52,7 +53,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -64,31 +65,33 @@ export const TicketCard: React.FC<TicketCardProps> = ({
   };
 
   return (
-    <div 
+    <div
       className={`ticket-card ${className}`}
       style={{
         backgroundColor: '#fff',
         borderRadius: 'var(--radius)',
         padding: '1rem',
         boxShadow: 'var(--shadow-sm)',
-        border: selected ? '2px solid var(--color-primary)' : '1px solid #e9ecef',
+        border: selected
+          ? '2px solid var(--color-primary)'
+          : '1px solid #e9ecef',
         cursor: 'pointer',
         transition: 'all 0.2s ease',
-        height: '100%'
+        height: '100%',
       }}
       onClick={handleCardClick}
     >
       {/* Header */}
       <div className='ticket-card-header d-flex justify-content-between align-items-start mb-3'>
-        <Link 
-          href={`/tickets/${ticket.id}`} 
+        <Link
+          href={`/tickets/${ticket.id}`}
           className='ticket-number fw-bold text-primary text-decoration-none'
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           {ticket.number}
         </Link>
         {onSelect && (
-          <div className='form-check' onClick={(e) => e.stopPropagation()}>
+          <div className='form-check' onClick={e => e.stopPropagation()}>
             <input
               className='form-check-input'
               type='checkbox'
@@ -100,25 +103,31 @@ export const TicketCard: React.FC<TicketCardProps> = ({
       </div>
 
       {/* Subject */}
-      <h6 className='ticket-subject mb-2' style={{ 
-        fontSize: '1rem',
-        fontWeight: '600',
-        lineHeight: '1.4',
-        color: '#212529'
-      }}>
+      <h6
+        className='ticket-subject mb-2'
+        style={{
+          fontSize: '1rem',
+          fontWeight: '600',
+          lineHeight: '1.4',
+          color: '#212529',
+        }}
+      >
         {ticket.subject}
       </h6>
 
       {/* Description Preview */}
       {ticket.description && (
-        <p className='ticket-description text-muted mb-3' style={{
-          fontSize: '0.875rem',
-          lineHeight: '1.5',
-          overflow: 'hidden',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical'
-        }}>
+        <p
+          className='ticket-description text-muted mb-3'
+          style={{
+            fontSize: '0.875rem',
+            lineHeight: '1.5',
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+          }}
+        >
           {ticket.description}
         </p>
       )}
@@ -126,18 +135,35 @@ export const TicketCard: React.FC<TicketCardProps> = ({
       {/* Meta Information */}
       <div className='ticket-meta mb-3'>
         <div className='ticket-meta-item d-flex align-items-center mb-1'>
-          <i className='material-icons me-1' style={{ fontSize: '16px', color: '#6c757d' }}>person</i>
+          <i
+            className='material-icons me-1'
+            style={{ fontSize: '16px', color: '#6c757d' }}
+          >
+            person
+          </i>
           <span className='small text-muted'>{ticket.requester.name}</span>
         </div>
         {ticket.requester.unit && (
           <div className='ticket-meta-item d-flex align-items-center mb-1'>
-            <i className='material-icons me-1' style={{ fontSize: '16px', color: '#6c757d' }}>home</i>
+            <i
+              className='material-icons me-1'
+              style={{ fontSize: '16px', color: '#6c757d' }}
+            >
+              home
+            </i>
             <span className='small text-muted'>{ticket.requester.unit}</span>
           </div>
         )}
         <div className='ticket-meta-item d-flex align-items-center'>
-          <i className='material-icons me-1' style={{ fontSize: '16px', color: '#6c757d' }}>schedule</i>
-          <span className='small text-muted'>{formatDate(ticket.createdAt)}</span>
+          <i
+            className='material-icons me-1'
+            style={{ fontSize: '16px', color: '#6c757d' }}
+          >
+            schedule
+          </i>
+          <span className='small text-muted'>
+            {formatDate(ticket.createdAt)}
+          </span>
         </div>
       </div>
 
@@ -153,12 +179,19 @@ export const TicketCard: React.FC<TicketCardProps> = ({
         <div className='ticket-tags mb-3'>
           <div className='d-flex flex-wrap gap-1'>
             {ticket.tags.slice(0, 3).map((tag, index) => (
-              <span key={index} className='badge bg-light text-dark' style={{ fontSize: '0.688rem' }}>
+              <span
+                key={index}
+                className='badge bg-light text-dark'
+                style={{ fontSize: '0.688rem' }}
+              >
                 {tag}
               </span>
             ))}
             {ticket.tags.length > 3 && (
-              <span className='badge bg-light text-muted' style={{ fontSize: '0.688rem' }}>
+              <span
+                className='badge bg-light text-muted'
+                style={{ fontSize: '0.688rem' }}
+              >
                 +{ticket.tags.length - 3} más
               </span>
             )}
@@ -181,7 +214,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '0.875rem',
-              fontWeight: '600'
+              fontWeight: '600',
             }}
           >
             {ticket.assignee.avatar}
@@ -194,17 +227,22 @@ export const TicketCard: React.FC<TicketCardProps> = ({
       )}
 
       {/* Stats */}
-      {(ticket.commentsCount !== undefined || ticket.attachmentsCount !== undefined) && (
+      {(ticket.commentsCount !== undefined ||
+        ticket.attachmentsCount !== undefined) && (
         <div className='ticket-stats d-flex align-items-center gap-3 mb-3 text-muted'>
           {ticket.commentsCount !== undefined && (
             <div className='d-flex align-items-center'>
-              <i className='material-icons me-1' style={{ fontSize: '16px' }}>comment</i>
+              <i className='material-icons me-1' style={{ fontSize: '16px' }}>
+                comment
+              </i>
               <span className='small'>{ticket.commentsCount}</span>
             </div>
           )}
           {ticket.attachmentsCount !== undefined && (
             <div className='d-flex align-items-center'>
-              <i className='material-icons me-1' style={{ fontSize: '16px' }}>attach_file</i>
+              <i className='material-icons me-1' style={{ fontSize: '16px' }}>
+                attach_file
+              </i>
               <span className='small'>{ticket.attachmentsCount}</span>
             </div>
           )}
@@ -214,14 +252,14 @@ export const TicketCard: React.FC<TicketCardProps> = ({
       {/* Actions */}
       {showActions && (
         <div className='ticket-actions d-flex gap-2'>
-          <Link 
-            href={`/tickets/${ticket.id}`} 
+          <Link
+            href={`/tickets/${ticket.id}`}
             className='btn btn-outline-primary btn-sm flex-fill'
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             Ver detalle
           </Link>
-          <div className='dropdown' onClick={(e) => e.stopPropagation()}>
+          <div className='dropdown' onClick={e => e.stopPropagation()}>
             <button
               className='btn btn-outline-secondary btn-sm dropdown-toggle'
               type='button'
@@ -242,7 +280,9 @@ export const TicketCard: React.FC<TicketCardProps> = ({
                   Asignar
                 </a>
               </li>
-              <li><hr className='dropdown-divider' /></li>
+              <li>
+                <hr className='dropdown-divider' />
+              </li>
               <li>
                 <a className='dropdown-item text-success' href='#'>
                   <i className='material-icons me-2'>check_circle</i>

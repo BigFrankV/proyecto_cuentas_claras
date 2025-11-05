@@ -1,6 +1,7 @@
-import React from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import React from 'react';
 import { Doughnut } from 'react-chartjs-2';
+
 import { EstadoPago } from '@/lib/dashboardService';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -64,7 +65,7 @@ export default function EstadoPagosChart({
           font: {
             size: 12,
           },
-          generateLabels: function (chart: any) {
+          generateLabels (chart: any) {
             const data = chart.data;
             if (data.labels.length && data.datasets.length) {
               return data.labels.map((label: string, i: number) => {
@@ -73,7 +74,7 @@ export default function EstadoPagosChart({
                 const porcentaje = Math.round(
                   (cantidad /
                     item.data.reduce((a: number, b: number) => a + b, 0)) *
-                    100
+                    100,
                 );
 
                 return {
@@ -98,7 +99,7 @@ export default function EstadoPagosChart({
         borderColor: '#ddd',
         borderWidth: 1,
         callbacks: {
-          label: function (context: any) {
+          label (context: any) {
             const item = data.find(d => d.tipo === context.label);
             return `${context.label}: ${context.parsed} (${item?.porcentaje}%)`;
           },

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+
 import apiClient from '@/lib/api';
 import {
   Persona,
@@ -14,7 +15,7 @@ import {
   ResumenFinanciero,
   UnidadAutocomplete,
   PersonaFilters,
-  ValidacionCampo
+  ValidacionCampo,
 } from '@/types/personas';
 
 export const usePersonas = () => {
@@ -25,43 +26,51 @@ export const usePersonas = () => {
   const clearError = useCallback(() => setError(null), []);
 
   // Listar personas con filtros
-  const listarPersonas = useCallback(async (filters: PersonaFilters = {}): Promise<Persona[]> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, value.toString());
-        }
-      });
+  const listarPersonas = useCallback(
+    async (filters: PersonaFilters = {}): Promise<Persona[]> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            params.append(key, value.toString());
+          }
+        });
 
-      const response = await apiClient.get(`/personas?${params.toString()}`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al listar personas';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        const response = await apiClient.get(`/personas?${params.toString()}`);
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al listar personas';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Obtener persona por ID
-  const obtenerPersona = useCallback(async (id: number): Promise<PersonaConUsuario> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.get(`/personas/${id}`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener persona';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const obtenerPersona = useCallback(
+    async (id: number): Promise<PersonaConUsuario> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiClient.get(`/personas/${id}`);
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al obtener persona';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Crear persona
   const crearPersona = useCallback(async (data: Partial<Persona>) => {
@@ -71,7 +80,8 @@ export const usePersonas = () => {
       const response = await apiClient.post('/personas', data);
       return response.data;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al crear persona';
+      const errorMessage =
+        err.response?.data?.error || 'Error al crear persona';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -80,20 +90,24 @@ export const usePersonas = () => {
   }, []);
 
   // Actualizar persona
-  const actualizarPersona = useCallback(async (id: number, data: Partial<Persona>) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.patch(`/personas/${id}`, data);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al actualizar persona';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const actualizarPersona = useCallback(
+    async (id: number, data: Partial<Persona>) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiClient.patch(`/personas/${id}`, data);
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al actualizar persona';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Reemplazar persona completamente
   const reemplazarPersona = useCallback(async (id: number, data: Persona) => {
@@ -103,7 +117,8 @@ export const usePersonas = () => {
       const response = await apiClient.put(`/personas/${id}`, data);
       return response.data;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al reemplazar persona';
+      const errorMessage =
+        err.response?.data?.error || 'Error al reemplazar persona';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -118,7 +133,8 @@ export const usePersonas = () => {
     try {
       await apiClient.delete(`/personas/${id}`);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al eliminar persona';
+      const errorMessage =
+        err.response?.data?.error || 'Error al eliminar persona';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -134,7 +150,8 @@ export const usePersonas = () => {
       const response = await apiClient.get('/personas/estadisticas');
       return response.data;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener estadísticas';
+      const errorMessage =
+        err.response?.data?.error || 'Error al obtener estadísticas';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -143,156 +160,202 @@ export const usePersonas = () => {
   }, []);
 
   // Obtener unidades asociadas
-  const obtenerUnidadesAsociadas = useCallback(async (personaId: number): Promise<UnidadAsociada[]> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.get(`/personas/${personaId}/unidades`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener unidades asociadas';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const obtenerUnidadesAsociadas = useCallback(
+    async (personaId: number): Promise<UnidadAsociada[]> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiClient.get(`/personas/${personaId}/unidades`);
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al obtener unidades asociadas';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Obtener pagos realizados
-  const obtenerPagosRealizados = useCallback(async (personaId: number): Promise<PagoRealizado[]> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.get(`/personas/${personaId}/pagos`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener pagos realizados';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const obtenerPagosRealizados = useCallback(
+    async (personaId: number): Promise<PagoRealizado[]> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiClient.get(`/personas/${personaId}/pagos`);
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al obtener pagos realizados';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Obtener actividad/auditoría
-  const obtenerActividad = useCallback(async (personaId: number): Promise<ActividadAuditoria[]> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.get(`/personas/${personaId}/actividad`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener actividad';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const obtenerActividad = useCallback(
+    async (personaId: number): Promise<ActividadAuditoria[]> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiClient.get(
+          `/personas/${personaId}/actividad`,
+        );
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al obtener actividad';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Obtener documentos asociados
-  const obtenerDocumentos = useCallback(async (personaId: number): Promise<DocumentoAsociado[]> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.get(`/personas/${personaId}/documentos`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener documentos';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const obtenerDocumentos = useCallback(
+    async (personaId: number): Promise<DocumentoAsociado[]> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiClient.get(
+          `/personas/${personaId}/documentos`,
+        );
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al obtener documentos';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Obtener notas asociadas
-  const obtenerNotas = useCallback(async (personaId: number): Promise<NotaAsociada[]> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.get(`/personas/${personaId}/notas`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener notas';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const obtenerNotas = useCallback(
+    async (personaId: number): Promise<NotaAsociada[]> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiClient.get(`/personas/${personaId}/notas`);
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al obtener notas';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Obtener roles y comunidades
-  const obtenerRolesComunidades = useCallback(async (personaId: number): Promise<RolComunidad[]> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.get(`/personas/${personaId}/roles`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener roles y comunidades';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const obtenerRolesComunidades = useCallback(
+    async (personaId: number): Promise<RolComunidad[]> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiClient.get(`/personas/${personaId}/roles`);
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al obtener roles y comunidades';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Obtener resumen financiero
-  const obtenerResumenFinanciero = useCallback(async (personaId: number): Promise<ResumenFinanciero[]> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.get(`/personas/${personaId}/resumen-financiero`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al obtener resumen financiero';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const obtenerResumenFinanciero = useCallback(
+    async (personaId: number): Promise<ResumenFinanciero[]> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await apiClient.get(
+          `/personas/${personaId}/resumen-financiero`,
+        );
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al obtener resumen financiero';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Validar campo
-  const validarCampo = useCallback(async (
-    field: 'rut' | 'username' | 'email',
-    value: string,
-    exclude?: number
-  ): Promise<ValidacionCampo> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({ field, value });
-      if (exclude) params.append('exclude', exclude.toString());
+  const validarCampo = useCallback(
+    async (
+      field: 'rut' | 'username' | 'email',
+      value: string,
+      exclude?: number,
+    ): Promise<ValidacionCampo> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams({ field, value });
+        if (exclude) {params.append('exclude', exclude.toString());}
 
-      const response = await apiClient.get(`/personas/validar?${params.toString()}`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al validar campo';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        const response = await apiClient.get(
+          `/personas/validar?${params.toString()}`,
+        );
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al validar campo';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Autocompletar unidades
-  const autocompletarUnidades = useCallback(async (search?: string): Promise<UnidadAutocomplete[]> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = search ? `?search=${encodeURIComponent(search)}` : '';
-      const response = await apiClient.get(`/personas/unidades/autocompletar${params}`);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Error al autocompletar unidades';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const autocompletarUnidades = useCallback(
+    async (search?: string): Promise<UnidadAutocomplete[]> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = search ? `?search=${encodeURIComponent(search)}` : '';
+        const response = await apiClient.get(
+          `/personas/unidades/autocompletar${params}`,
+        );
+        return response.data;
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.error || 'Error al autocompletar unidades';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   return {
     loading,

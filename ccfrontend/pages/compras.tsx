@@ -14,8 +14,8 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import { comprasApi } from '@/lib/api/compras';
+import { ProtectedRoute } from '@/lib/useAuth';
 import { CompraBackend } from '@/types/compras';
 
 interface Purchase {
@@ -123,57 +123,60 @@ export default function ComprasListado() {
         offset,
       };
 
-      if (filters.search) filtersApi.search = filters.search;
-      if (filters.type) filtersApi.tipo_doc = filters.type;
-      if (filters.dateFrom) filtersApi.fecha_desde = filters.dateFrom;
-      if (filters.dateTo) filtersApi.fecha_hasta = filters.dateTo;
+      if (filters.search) {filtersApi.search = filters.search;}
+      if (filters.type) {filtersApi.tipo_doc = filters.type;}
+      if (filters.dateFrom) {filtersApi.fecha_desde = filters.dateFrom;}
+      if (filters.dateTo) {filtersApi.fecha_hasta = filters.dateTo;}
 
       const resp = await comprasApi.getAll(filtersApi);
       const rows: CompraBackend[] = resp.data || [];
 
       // mapear rows a la forma local Purchase (lo mínimo necesario para la UI)
       const // ...existing code...
-mapped: Purchase[] = rows.map(r => ({
-  id: Number(r.id),
-  number: r.folio ?? `#${r.id}`,
-  type: 'service',
-  status: 'pending',
-  priority: 'medium',
-  provider: {
-    id: Number(r.proveedor_id ?? 0),
-    name: r.proveedor_nombre ?? '-',
-    category: '',
-    rating: 0,
-  },
-  costCenter: {
-    id: r.centro_costo_id ?? 0,
-    name: r.centro_costo_nombre ?? '',
-    department: '',
-  },
-  category: {
-    id: 0,
-    name: r.categoria_gasto ?? '',
-    color: '#ccc',
-  },
-  description: r.glosa ?? '',
-  totalAmount: Number(r.total ?? 0),
-  currency: 'clp',
-  requestedBy: '',
-  requestDate: r.fecha_emision ?? (r.created_at ?? ''),
-  requiredDate: r.fecha_emision ?? (r.created_at ?? ''),
-  items: [],
-  documents: 0,
-  notes: '',
-  createdAt: r.created_at ?? '',
-  updatedAt: r.updated_at ?? '',
-  // Omit optional properties like approvedBy, approvedDate, etc., if they should be undefined
-}));
+        mapped: Purchase[] = rows.map(r => ({
+          id: Number(r.id),
+          number: r.folio ?? `#${r.id}`,
+          type: 'service',
+          status: 'pending',
+          priority: 'medium',
+          provider: {
+            id: Number(r.proveedor_id ?? 0),
+            name: r.proveedor_nombre ?? '-',
+            category: '',
+            rating: 0,
+          },
+          costCenter: {
+            id: r.centro_costo_id ?? 0,
+            name: r.centro_costo_nombre ?? '',
+            department: '',
+          },
+          category: {
+            id: 0,
+            name: r.categoria_gasto ?? '',
+            color: '#ccc',
+          },
+          description: r.glosa ?? '',
+          totalAmount: Number(r.total ?? 0),
+          currency: 'clp',
+          requestedBy: '',
+          requestDate: r.fecha_emision ?? r.created_at ?? '',
+          requiredDate: r.fecha_emision ?? r.created_at ?? '',
+          items: [],
+          documents: 0,
+          notes: '',
+          createdAt: r.created_at ?? '',
+          updatedAt: r.updated_at ?? '',
+          // Omit optional properties like approvedBy, approvedDate, etc., if they should be undefined
+        }));
 
       setPurchases(mapped);
 
       // Actualizar paginación
       const total = resp.pagination.total ?? 0;
-      const pages = Math.max(1, resp.pagination.pages ?? Math.ceil(total / limit));
+      const pages = Math.max(
+        1,
+        resp.pagination.pages ?? Math.ceil(total / limit),
+      );
       setCurrentPage(resp.pagination.page ?? page);
     } catch (error) {
       console.error('Error loading purchases:', error);

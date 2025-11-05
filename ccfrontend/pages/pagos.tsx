@@ -15,11 +15,7 @@ import {
 
 import { pagosApi } from '@/lib/api/pagos';
 import { ProtectedRoute } from '@/lib/useAuth';
-import {
-  Pago,
-  PaymentFilters,
-  PaymentStats,
-} from '@/types/pagos';
+import { Pago, PaymentFilters, PaymentStats } from '@/types/pagos';
 
 import Layout from '../components/layout/Layout';
 import PaymentComponent from '../components/PaymentComponent';
@@ -64,7 +60,7 @@ const Pagos: React.FC = () => {
 
       setPagos(response.data);
       setPagination(response.pagination);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       // Error loading payments
       setPagos([]);
@@ -88,7 +84,7 @@ const Pagos: React.FC = () => {
         totalAmount: statsData.totalAmount,
         averageAmount: statsData.averageAmount,
       });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       // Error loading stats
     }
@@ -97,7 +93,7 @@ const Pagos: React.FC = () => {
   useEffect(() => {
     loadPayments();
     loadStats();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
 
   // Auto-apply search filter with debounce
@@ -332,7 +328,11 @@ const Pagos: React.FC = () => {
                   </h6>
                 </Col>
                 <Col xs='auto'>
-                  <Button variant='outline-secondary' size='sm' onClick={handleClearFilters}>
+                  <Button
+                    variant='outline-secondary'
+                    size='sm'
+                    onClick={handleClearFilters}
+                  >
                     <span className='material-icons me-1'>refresh</span>
                     Limpiar
                   </Button>
@@ -398,7 +398,11 @@ const Pagos: React.FC = () => {
                       <span className='material-icons me-1'>search</span>
                       Buscar
                     </Button>
-                    <Button variant='outline-secondary' size='sm' onClick={handleClearFilters}>
+                    <Button
+                      variant='outline-secondary'
+                      size='sm'
+                      onClick={handleClearFilters}
+                    >
                       <span className='material-icons me-1'>clear</span>
                       Limpiar
                     </Button>
@@ -600,12 +604,14 @@ const Pagos: React.FC = () => {
               <div className='d-flex justify-content-between align-items-center p-3 border-top'>
                 <div className='text-muted'>
                   Mostrando {pagination.offset + 1}-
-                  {Math.min(pagination.offset + pagos.length, pagination.total)} de{' '}
-                  {pagination.total} pagos
+                  {Math.min(pagination.offset + pagos.length, pagination.total)}{' '}
+                  de {pagination.total} pagos
                 </div>
                 <nav>
                   <ul className='pagination pagination-sm mb-0'>
-                    <li className={`page-item ${pagination.offset === 0 ? 'disabled' : ''}`}>
+                    <li
+                      className={`page-item ${pagination.offset === 0 ? 'disabled' : ''}`}
+                    >
                       <button
                         className='page-link'
                         onClick={() =>
@@ -624,7 +630,9 @@ const Pagos: React.FC = () => {
                         {Math.floor(pagination.offset / pagination.limit) + 1}
                       </span>
                     </li>
-                    <li className={`page-item ${!pagination.hasMore ? 'disabled' : ''}`}>
+                    <li
+                      className={`page-item ${!pagination.hasMore ? 'disabled' : ''}`}
+                    >
                       <button
                         className='page-link'
                         onClick={() =>

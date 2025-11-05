@@ -12,15 +12,21 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 const handleApiError = (error: unknown) => {
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as { response?: { data?: { error?: string } } };
-    throw new Error(apiError.response?.data?.error || 'Error de conexión con el servidor');
+    throw new Error(
+      apiError.response?.data?.error || 'Error de conexión con el servidor',
+    );
   }
   throw new Error('Error de conexión con el servidor');
 };
 
 // Helper para hacer peticiones autenticadas
-const apiRequest = async (url: string, options: Record<string, unknown> = {}) => {
+const apiRequest = async (
+  url: string,
+  options: Record<string, unknown> = {},
+) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
   if (!token) {
     throw new Error('Missing token');
@@ -30,8 +36,8 @@ const apiRequest = async (url: string, options: Record<string, unknown> = {}) =>
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...(options.headers as Record<string, unknown> || {}),
+      Authorization: `Bearer ${token}`,
+      ...((options.headers as Record<string, unknown>) || {}),
     },
   };
 
@@ -39,7 +45,9 @@ const apiRequest = async (url: string, options: Record<string, unknown> = {}) =>
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    throw new Error(
+      errorData.error || `HTTP error! status: ${response.status}`,
+    );
   }
 
   return response.json();
@@ -126,7 +134,10 @@ export const comprasApi = {
   },
 
   // Actualizar compra
-  update: async (id: number, compra: Partial<CompraBackend>): Promise<CompraBackend> => {
+  update: async (
+    id: number,
+    compra: Partial<CompraBackend>,
+  ): Promise<CompraBackend> => {
     try {
       const data = await apiRequest(`/compras/${id}`, {
         method: 'PATCH',
@@ -156,7 +167,9 @@ export const comprasApi = {
   // =========================================
 
   // Estadísticas generales de compras
-  getEstadisticas: async (comunidadId?: number): Promise<ComprasEstadisticas> => {
+  getEstadisticas: async (
+    comunidadId?: number,
+  ): Promise<ComprasEstadisticas> => {
     try {
       const params = new URLSearchParams();
       if (comunidadId) {
@@ -164,7 +177,9 @@ export const comprasApi = {
       }
 
       const queryString = params.toString();
-      const url = queryString ? `/compras/estadisticas?${queryString}` : '/compras/estadisticas';
+      const url = queryString
+        ? `/compras/estadisticas?${queryString}`
+        : '/compras/estadisticas';
 
       const data = await apiRequest(url);
       return data;

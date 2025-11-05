@@ -13,11 +13,17 @@ class TestLogger {
   private logs: LogEntry[] = [];
   private isTestEnvironment = typeof jest !== 'undefined';
 
-  private createLogEntry(level: LogEntry['level'], message: string, data?: any): LogEntry {
+  private createLogEntry(
+    level: LogEntry['level'],
+    message: string,
+    data?: any,
+  ): LogEntry {
     return {
       timestamp: new Date().toISOString(),
       level,
-      testName: this.isTestEnvironment ? (global as any).expect?.getState?.()?.currentTestName : undefined,
+      testName: this.isTestEnvironment
+        ? (global as any).expect?.getState?.()?.currentTestName
+        : undefined,
       message,
       data,
     };
@@ -72,7 +78,7 @@ class TestLogger {
         this.error('Unhandled Promise Rejection', { reason, promise });
       });
 
-      process.on('uncaughtException', (error) => {
+      process.on('uncaughtException', error => {
         this.error('Uncaught Exception', { error });
       });
     }

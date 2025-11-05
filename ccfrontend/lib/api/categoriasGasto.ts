@@ -22,15 +22,21 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 const handleApiError = (error: unknown) => {
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as { response?: { data?: { error?: string } } };
-    throw new Error(apiError.response?.data?.error || 'Error de conexión con el servidor');
+    throw new Error(
+      apiError.response?.data?.error || 'Error de conexión con el servidor',
+    );
   }
   throw new Error('Error de conexión con el servidor');
 };
 
 // Helper para hacer peticiones autenticadas
-const apiRequest = async (url: string, options: Record<string, unknown> = {}) => {
+const apiRequest = async (
+  url: string,
+  options: Record<string, unknown> = {},
+) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
   if (!token) {
     throw new Error('Missing token');
@@ -40,8 +46,8 @@ const apiRequest = async (url: string, options: Record<string, unknown> = {}) =>
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...(options.headers as Record<string, unknown> || {}),
+      Authorization: `Bearer ${token}`,
+      ...((options.headers as Record<string, unknown>) || {}),
     },
   };
 
@@ -49,7 +55,9 @@ const apiRequest = async (url: string, options: Record<string, unknown> = {}) =>
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    throw new Error(
+      errorData.error || `HTTP error! status: ${response.status}`,
+    );
   }
 
   return response.json();
@@ -67,7 +75,9 @@ export const categoriasGastoApi = {
   // Listar categorías básicas por comunidad
   getByComunidad: async (comunidadId: number): Promise<CategoriaGasto[]> => {
     try {
-      const data = await apiRequest(`/categorias-gasto/comunidad/${comunidadId}`);
+      const data = await apiRequest(
+        `/categorias-gasto/comunidad/${comunidadId}`,
+      );
       return data;
     } catch (error) {
       handleApiError(error);
@@ -128,7 +138,9 @@ export const categoriasGastoApi = {
   // Obtener últimos gastos asociados a la categoría
   getUltimosGastos: async (id: number, limit = 10): Promise<UltimoGasto[]> => {
     try {
-      const data = await apiRequest(`/categorias-gasto/${id}/ultimos-gastos?limit=${limit}`);
+      const data = await apiRequest(
+        `/categorias-gasto/${id}/ultimos-gastos?limit=${limit}`,
+      );
       return data;
     } catch (error) {
       handleApiError(error);
@@ -157,10 +169,13 @@ export const categoriasGastoApi = {
     categoria: CrearCategoriaRequest,
   ): Promise<CategoriaGasto> => {
     try {
-      const data = await apiRequest(`/categorias-gasto/comunidad/${comunidadId}`, {
-        method: 'POST',
-        body: JSON.stringify(categoria),
-      });
+      const data = await apiRequest(
+        `/categorias-gasto/comunidad/${comunidadId}`,
+        {
+          method: 'POST',
+          body: JSON.stringify(categoria),
+        },
+      );
       return data;
     } catch (error) {
       handleApiError(error);
@@ -169,7 +184,10 @@ export const categoriasGastoApi = {
   },
 
   // Actualizar categoría
-  update: async (id: number, categoria: ActualizarCategoriaRequest): Promise<CategoriaGasto> => {
+  update: async (
+    id: number,
+    categoria: ActualizarCategoriaRequest,
+  ): Promise<CategoriaGasto> => {
     try {
       const data = await apiRequest(`/categorias-gasto/${id}`, {
         method: 'PATCH',
@@ -226,7 +244,9 @@ export const categoriasGastoApi = {
   // =========================================
 
   // Estadísticas generales
-  getEstadisticasGenerales: async (comunidadId: number): Promise<EstadisticasGenerales> => {
+  getEstadisticasGenerales: async (
+    comunidadId: number,
+  ): Promise<EstadisticasGenerales> => {
     try {
       const url = `/categorias-gasto/comunidad/${comunidadId}/estadisticas/generales`;
       const data = await apiRequest(url);
@@ -238,7 +258,9 @@ export const categoriasGastoApi = {
   },
 
   // Estadísticas por tipo
-  getEstadisticasPorTipo: async (comunidadId: number): Promise<EstadisticaPorTipo[]> => {
+  getEstadisticasPorTipo: async (
+    comunidadId: number,
+  ): Promise<EstadisticaPorTipo[]> => {
     try {
       const url = `/categorias-gasto/comunidad/${comunidadId}/estadisticas/por-tipo`;
       const data = await apiRequest(url);
@@ -388,7 +410,9 @@ export const categoriasGastoApi = {
   // Validar tipo
   validarTipo: async (tipo: string): Promise<boolean> => {
     try {
-      const data = await apiRequest(`/categorias-gasto/validar-tipo?tipo=${tipo}`);
+      const data = await apiRequest(
+        `/categorias-gasto/validar-tipo?tipo=${tipo}`,
+      );
       return data.valido;
     } catch (error) {
       handleApiError(error);
@@ -403,7 +427,9 @@ export const categoriasGastoApi = {
   // Lista de categorías activas
   getActivas: async (comunidadId: number): Promise<CategoriaGasto[]> => {
     try {
-      const data = await apiRequest(`/categorias-gasto/comunidad/${comunidadId}/activas`);
+      const data = await apiRequest(
+        `/categorias-gasto/comunidad/${comunidadId}/activas`,
+      );
       return data;
     } catch (error) {
       handleApiError(error);
@@ -414,7 +440,9 @@ export const categoriasGastoApi = {
   // Lista de tipos disponibles
   getTipos: async (comunidadId: number): Promise<string[]> => {
     try {
-      const data = await apiRequest(`/categorias-gasto/comunidad/${comunidadId}/tipos`);
+      const data = await apiRequest(
+        `/categorias-gasto/comunidad/${comunidadId}/tipos`,
+      );
       return data;
     } catch (error) {
       handleApiError(error);
@@ -423,9 +451,14 @@ export const categoriasGastoApi = {
   },
 
   // Lista de categorías por tipo específico
-  getPorTipo: async (comunidadId: number, tipo: string): Promise<CategoriaGasto[]> => {
+  getPorTipo: async (
+    comunidadId: number,
+    tipo: string,
+  ): Promise<CategoriaGasto[]> => {
     try {
-      const data = await apiRequest(`/categorias-gasto/comunidad/${comunidadId}/por-tipo/${tipo}`);
+      const data = await apiRequest(
+        `/categorias-gasto/comunidad/${comunidadId}/por-tipo/${tipo}`,
+      );
       return data;
     } catch (error) {
       handleApiError(error);
@@ -438,7 +471,9 @@ export const categoriasGastoApi = {
   // =========================================
 
   // Resumen para dashboard
-  getDashboardResumen: async (comunidadId: number): Promise<DashboardResumen> => {
+  getDashboardResumen: async (
+    comunidadId: number,
+  ): Promise<DashboardResumen> => {
     try {
       const url = `/categorias-gasto/comunidad/${comunidadId}/dashboard/resumen`;
       const data = await apiRequest(url);
@@ -450,7 +485,9 @@ export const categoriasGastoApi = {
   },
 
   // Top categorías por gasto en el último mes
-  getDashboardTopMes: async (comunidadId: number): Promise<DashboardTopMes[]> => {
+  getDashboardTopMes: async (
+    comunidadId: number,
+  ): Promise<DashboardTopMes[]> => {
     try {
       const url = `/categorias-gasto/comunidad/${comunidadId}/dashboard/top-mes`;
       const data = await apiRequest(url);
@@ -462,7 +499,9 @@ export const categoriasGastoApi = {
   },
 
   // Categorías activas sin uso reciente
-  getDashboardSinUsoReciente: async (comunidadId: number): Promise<DashboardSinUsoReciente[]> => {
+  getDashboardSinUsoReciente: async (
+    comunidadId: number,
+  ): Promise<DashboardSinUsoReciente[]> => {
     try {
       const url = `/categorias-gasto/comunidad/${comunidadId}/dashboard/sin-uso-reciente`;
       const data = await apiRequest(url);

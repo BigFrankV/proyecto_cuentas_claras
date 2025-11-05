@@ -1,11 +1,18 @@
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
+
+import {
+  CargoDetalle,
+  Cargo,
+  PaymentRecord,
+  Document,
+  TimelineItem,
+} from '@/components/cargos';
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
-import { CargoDetalle, Cargo, PaymentRecord, Document, TimelineItem } from '@/components/cargos';
 import { cargosApi } from '@/lib/api/cargos';
+import { ProtectedRoute } from '@/lib/useAuth';
 import { CargoDetalle as CargoDetalleType } from '@/types/cargos';
-import Head from 'next/head';
 
 export default function CargoDetallePage() {
   const router = useRouter();
@@ -16,7 +23,7 @@ export default function CargoDetallePage() {
 
   useEffect(() => {
     const fetchCargo = async () => {
-      if (!id || typeof id !== 'string') return;
+      if (!id || typeof id !== 'string') {return;}
 
       setLoading(true);
       setError(null);
@@ -28,21 +35,29 @@ export default function CargoDetallePage() {
         const cargoData = await cargosApi.getById(parseInt(id));
 
         // Mapear los datos de la API al formato que espera el componente
-        const estadoMapping: Record<string, 'pending' | 'approved' | 'rejected' | 'paid' | 'partial'> = {
-          'pendiente': 'pending',
-          'pagado': 'paid',
-          'vencido': 'pending', // Mapear vencido como pending
-          'parcial': 'partial'
+        const estadoMapping: Record<
+          string,
+          'pending' | 'approved' | 'rejected' | 'paid' | 'partial'
+        > = {
+          pendiente: 'pending',
+          pagado: 'paid',
+          vencido: 'pending', // Mapear vencido como pending
+          parcial: 'partial',
         };
 
         const mappedCargo: Cargo = {
           id: cargoData.id.toString(),
           concepto: cargoData.concepto,
           descripcion: cargoData.descripcion || '',
-          tipo: cargoData.tipo.toLowerCase().includes('administración') ? 'administration' :
-                cargoData.tipo.toLowerCase().includes('mantenimiento') ? 'maintenance' :
-                cargoData.tipo.toLowerCase().includes('servicio') ? 'service' :
-                cargoData.tipo.toLowerCase().includes('seguro') ? 'insurance' : 'other',
+          tipo: cargoData.tipo.toLowerCase().includes('administración')
+            ? 'administration'
+            : cargoData.tipo.toLowerCase().includes('mantenimiento')
+              ? 'maintenance'
+              : cargoData.tipo.toLowerCase().includes('servicio')
+                ? 'service'
+                : cargoData.tipo.toLowerCase().includes('seguro')
+                  ? 'insurance'
+                  : 'other',
           estado: estadoMapping[cargoData.estado] || 'pending',
           monto: cargoData.monto,
           montoAplicado: cargoData.monto - cargoData.saldo, // Calcular monto aplicado
@@ -51,14 +66,18 @@ export default function CargoDetallePage() {
           fechaVencimiento: cargoData.fechaVencimiento,
           fechaCreacion: cargoData.fechaCreacion,
           cuentaCosto: `CCU-${cargoData.id}`, // Generar un código de cuenta de costo
-          observaciones: `Propietario: ${cargoData.propietario || 'N/A'}`
+          observaciones: `Propietario: ${cargoData.propietario || 'N/A'}`,
         };
 
         console.log('✅ Cargo mapeado:', mappedCargo);
         setCargo(mappedCargo);
       } catch (err) {
         console.error('❌ Error al cargar cargo:', err);
-        setError(err instanceof Error ? err.message : 'Error desconocido al cargar el cargo');
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Error desconocido al cargar el cargo',
+        );
       } finally {
         setLoading(false);
       }
@@ -70,13 +89,16 @@ export default function CargoDetallePage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <Layout title="Cargando...">
-          <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-            <div className="text-center">
-              <div className="spinner-border mb-3" role="status">
-                <span className="visually-hidden">Cargando...</span>
+        <Layout title='Cargando...'>
+          <div
+            className='d-flex justify-content-center align-items-center'
+            style={{ minHeight: '400px' }}
+          >
+            <div className='text-center'>
+              <div className='spinner-border mb-3' role='status'>
+                <span className='visually-hidden'>Cargando...</span>
               </div>
-              <p className="text-muted">Cargando información del cargo...</p>
+              <p className='text-muted'>Cargando información del cargo...</p>
             </div>
           </div>
         </Layout>
@@ -87,29 +109,32 @@ export default function CargoDetallePage() {
   if (error || !cargo) {
     return (
       <ProtectedRoute>
-        <Layout title="Error">
-          <div className="container-fluid p-4">
-            <div className="row justify-content-center">
-              <div className="col-md-6">
-                <div className="text-center">
-                  <i className="material-icons display-1 text-muted">error_outline</i>
-                  <h2 className="mt-3">Cargo no encontrado</h2>
-                  <p className="text-muted mb-4">
-                    {error || 'El cargo solicitado no existe o no tienes permisos para verlo.'}
+        <Layout title='Error'>
+          <div className='container-fluid p-4'>
+            <div className='row justify-content-center'>
+              <div className='col-md-6'>
+                <div className='text-center'>
+                  <i className='material-icons display-1 text-muted'>
+                    error_outline
+                  </i>
+                  <h2 className='mt-3'>Cargo no encontrado</h2>
+                  <p className='text-muted mb-4'>
+                    {error ||
+                      'El cargo solicitado no existe o no tienes permisos para verlo.'}
                   </p>
-                  <div className="d-flex gap-2 justify-content-center">
-                    <button 
-                      className="btn btn-primary"
+                  <div className='d-flex gap-2 justify-content-center'>
+                    <button
+                      className='btn btn-primary'
                       onClick={() => router.push('/cargos')}
                     >
-                      <i className="material-icons me-2">arrow_back</i>
+                      <i className='material-icons me-2'>arrow_back</i>
                       Volver a Cargos
                     </button>
-                    <button 
-                      className="btn btn-outline-secondary"
+                    <button
+                      className='btn btn-outline-secondary'
                       onClick={() => router.reload()}
                     >
-                      <i className="material-icons me-2">refresh</i>
+                      <i className='material-icons me-2'>refresh</i>
                       Reintentar
                     </button>
                   </div>
@@ -129,27 +154,25 @@ export default function CargoDetallePage() {
       </Head>
 
       <Layout title={`Cargo ${cargo.id}`}>
-        <div className="container-fluid p-4">
+        <div className='container-fluid p-4'>
           {/* Breadcrumb */}
-          <nav aria-label="breadcrumb" className="mb-4">
-            <ol className="breadcrumb">
-              <li className="breadcrumb-item">
-                <button 
-                  className="btn btn-link p-0 text-decoration-none"
+          <nav aria-label='breadcrumb' className='mb-4'>
+            <ol className='breadcrumb'>
+              <li className='breadcrumb-item'>
+                <button
+                  className='btn btn-link p-0 text-decoration-none'
                   onClick={() => router.push('/cargos')}
                 >
                   Cargos
                 </button>
               </li>
-              <li className="breadcrumb-item active" aria-current="page">
+              <li className='breadcrumb-item active' aria-current='page'>
                 {cargo.id}
               </li>
             </ol>
           </nav>
 
-          <CargoDetalle 
-            cargo={cargo}
-          />
+          <CargoDetalle cargo={cargo} />
         </div>
       </Layout>
     </ProtectedRoute>

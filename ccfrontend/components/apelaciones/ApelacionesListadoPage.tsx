@@ -210,7 +210,10 @@ const ApelacionesListadoPage: React.FC = () => {
                 Nueva Apelación
               </button>
             )}
-            <button className='btn btn-outline-secondary' onClick={() => load()}>
+            <button
+              className='btn btn-outline-secondary'
+              onClick={() => load()}
+            >
               {loading ? 'Cargando...' : 'Refrescar'}
             </button>
           </div>

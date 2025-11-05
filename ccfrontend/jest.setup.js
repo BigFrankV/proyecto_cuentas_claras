@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 
 import '@testing-library/jest-dom';
-import jest from 'jest-mock';
+import { jest } from '@jest/globals';
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {

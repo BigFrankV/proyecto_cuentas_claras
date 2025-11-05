@@ -11,66 +11,70 @@ export function ActivityBadge({ type, size = 'md' }: ActivityBadgeProps) {
         label: 'Sistema',
         bgColor: '#17a2b8',
         textColor: '#fff',
-        icon: 'settings'
+        icon: 'settings',
       },
       user: {
         label: 'Usuario',
         bgColor: '#28a745',
         textColor: '#fff',
-        icon: 'person'
+        icon: 'person',
       },
       security: {
         label: 'Seguridad',
         bgColor: '#dc3545',
         textColor: '#fff',
-        icon: 'security'
+        icon: 'security',
       },
       maintenance: {
         label: 'Mantenimiento',
         bgColor: '#ffc107',
         textColor: '#212529',
-        icon: 'build'
+        icon: 'build',
       },
       admin: {
         label: 'Administración',
         bgColor: '#6f42c1',
         textColor: '#fff',
-        icon: 'admin_panel_settings'
+        icon: 'admin_panel_settings',
       },
       financial: {
         label: 'Financiero',
         bgColor: '#fd7e14',
         textColor: '#fff',
-        icon: 'attach_money'
-      }
+        icon: 'attach_money',
+      },
     };
     return configs[activityType as keyof typeof configs] || configs.system;
   };
 
   const config = getConfig(type);
-  
+
   const sizeClasses = {
     sm: 'px-2 py-1',
     md: 'px-3 py-1',
-    lg: 'px-3 py-2'
+    lg: 'px-3 py-2',
   };
 
   const textSizes = {
     sm: 'small',
     md: '',
-    lg: 'fs-6'
+    lg: 'fs-6',
   };
 
   return (
-    <span 
+    <span
       className={`activity-badge badge d-inline-flex align-items-center gap-1 ${sizeClasses[size]} ${textSizes[size]}`}
       style={{
         backgroundColor: config.bgColor,
         color: config.textColor,
-        fontSize: size === 'sm' ? '0.75rem' : size === 'lg' ? '0.875rem' : '0.8rem'
+        fontSize:
+          size === 'sm' ? '0.75rem' : size === 'lg' ? '0.875rem' : '0.8rem',
       }}
     >
-      <i className='material-icons' style={{ fontSize: size === 'sm' ? '14px' : '16px' }}>
+      <i
+        className='material-icons'
+        style={{ fontSize: size === 'sm' ? '14px' : '16px' }}
+      >
         {config.icon}
       </i>
       {config.label}
@@ -91,54 +95,58 @@ export function PriorityBadge({ priority, size = 'md' }: PriorityBadgeProps) {
         label: 'Baja',
         bgColor: '#28a745',
         textColor: '#fff',
-        icon: 'keyboard_arrow_down'
+        icon: 'keyboard_arrow_down',
       },
       normal: {
         label: 'Normal',
         bgColor: '#17a2b8',
         textColor: '#fff',
-        icon: 'remove'
+        icon: 'remove',
       },
       high: {
         label: 'Alta',
         bgColor: '#ffc107',
         textColor: '#212529',
-        icon: 'keyboard_arrow_up'
+        icon: 'keyboard_arrow_up',
       },
       critical: {
         label: 'Crítica',
         bgColor: '#dc3545',
         textColor: '#fff',
-        icon: 'priority_high'
-      }
+        icon: 'priority_high',
+      },
     };
     return configs[priorityLevel as keyof typeof configs] || configs.normal;
   };
 
   const config = getConfig(priority);
-  
+
   const sizeClasses = {
     sm: 'px-2 py-1',
     md: 'px-3 py-1',
-    lg: 'px-3 py-2'
+    lg: 'px-3 py-2',
   };
 
   const textSizes = {
     sm: 'small',
     md: '',
-    lg: 'fs-6'
+    lg: 'fs-6',
   };
 
   return (
-    <span 
+    <span
       className={`priority-badge badge d-inline-flex align-items-center gap-1 ${sizeClasses[size]} ${textSizes[size]}`}
       style={{
         backgroundColor: config.bgColor,
         color: config.textColor,
-        fontSize: size === 'sm' ? '0.75rem' : size === 'lg' ? '0.875rem' : '0.8rem'
+        fontSize:
+          size === 'sm' ? '0.75rem' : size === 'lg' ? '0.875rem' : '0.8rem',
       }}
     >
-      <i className='material-icons' style={{ fontSize: size === 'sm' ? '14px' : '16px' }}>
+      <i
+        className='material-icons'
+        style={{ fontSize: size === 'sm' ? '14px' : '16px' }}
+      >
         {config.icon}
       </i>
       {config.label}
@@ -155,11 +163,12 @@ interface FileIconProps {
 export function FileIcon({ fileName, size = 'md' }: FileIconProps) {
   const getFileType = (name: string) => {
     const extension = name.split('.').pop()?.toLowerCase();
-    
-    if (['pdf'].includes(extension || '')) return 'pdf';
-    if (['doc', 'docx'].includes(extension || '')) return 'doc';
-    if (['xls', 'xlsx'].includes(extension || '')) return 'xlsx';
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '')) return 'image';
+
+    if (['pdf'].includes(extension || '')) {return 'pdf';}
+    if (['doc', 'docx'].includes(extension || '')) {return 'doc';}
+    if (['xls', 'xlsx'].includes(extension || '')) {return 'xlsx';}
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || ''))
+      {return 'image';}
     return 'default';
   };
 
@@ -168,43 +177,43 @@ export function FileIcon({ fileName, size = 'md' }: FileIconProps) {
       pdf: {
         icon: 'picture_as_pdf',
         bgColor: '#dc3545',
-        textColor: '#fff'
+        textColor: '#fff',
       },
       doc: {
         icon: 'description',
         bgColor: '#2b579a',
-        textColor: '#fff'
+        textColor: '#fff',
       },
       xlsx: {
         icon: 'table_chart',
         bgColor: '#107c41',
-        textColor: '#fff'
+        textColor: '#fff',
       },
       image: {
         icon: 'image',
         bgColor: '#7b1fa2',
-        textColor: '#fff'
+        textColor: '#fff',
       },
       default: {
         icon: 'insert_drive_file',
         bgColor: '#6c757d',
-        textColor: '#fff'
-      }
+        textColor: '#fff',
+      },
     };
     return configs[type as keyof typeof configs] || configs.default;
   };
 
   const fileType = getFileType(fileName);
   const config = getFileConfig(fileType);
-  
+
   const sizeStyles = {
     sm: { width: '20px', height: '20px', fontSize: '12px' },
     md: { width: '24px', height: '24px', fontSize: '14px' },
-    lg: { width: '32px', height: '32px', fontSize: '18px' }
+    lg: { width: '32px', height: '32px', fontSize: '18px' },
   };
 
   return (
-    <div 
+    <div
       className={`file-icon file-icon-${fileType}`}
       style={{
         backgroundColor: config.bgColor,
@@ -214,10 +223,13 @@ export function FileIcon({ fileName, size = 'md' }: FileIconProps) {
         justifyContent: 'center',
         borderRadius: '0.25rem',
         flexShrink: 0,
-        ...sizeStyles[size]
+        ...sizeStyles[size],
       }}
     >
-      <i className='material-icons' style={{ fontSize: sizeStyles[size].fontSize }}>
+      <i
+        className='material-icons'
+        style={{ fontSize: sizeStyles[size].fontSize }}
+      >
         {config.icon}
       </i>
     </div>

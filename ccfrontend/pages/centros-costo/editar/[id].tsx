@@ -480,9 +480,9 @@ export default function CentroCostoEditar() {
                             Mensual: $
                             {formData.budget
                               ? (parseInt(formData.budget) / 12).toLocaleString(
-                                undefined,
-                                { maximumFractionDigits: 0 },
-                              )
+                                  undefined,
+                                  { maximumFractionDigits: 0 },
+                                )
                               : '0'}
                           </small>
                         </div>
