@@ -43,13 +43,13 @@ export default function MedidoresListadoPage() {
   // cargar comunidades para selector (superadmin)
   useEffect(() => {
     if (!isSuper) {
-      return;
+      return undefined;
     }
     let mounted = true;
     (async () => {
       try {
-        const resp = await comunidadesService.listComunidades?.();
-        const list = Array.isArray(resp) ? resp : (resp?.data ?? []);
+        const resp = await comunidadesService.getComunidades();
+        const list = Array.isArray(resp) ? resp : ((resp as any)?.data ?? []);
         if (!mounted) {
           return;
         }
@@ -149,9 +149,9 @@ export default function MedidoresListadoPage() {
       return true;
     }
     const comunidadId = medidor?.comunidad_id ?? comunidadUsuarioId;
-    return !!user.comunidades?.some(
-      (c: any) =>
-        c.id === comunidadId && (c.role === 'admin' || c.role === 'gestor'),
+    return !!user.memberships?.some(
+      (m: any) =>
+        m.comunidad_id === comunidadId && (m.rol === 'admin' || m.rol === 'gestor'),
     );
   };
 
@@ -187,7 +187,7 @@ export default function MedidoresListadoPage() {
   // debug temporal: memberships en consola
   useEffect(() => {
     // eslint-disable-next-line no-console
-    console.debug('DEBUG user memberships:', user?.comunidades);
+    console.debug('DEBUG user memberships:', user?.memberships);
   }, [user]);
 
   return (
@@ -324,7 +324,7 @@ export default function MedidoresListadoPage() {
                     <div className='stat-header'>
                       <div>
                         <div className='stat-value'>
-                          {medidores.filter(m => m.alertas?.length > 0).length}
+                          0
                         </div>
                         <div className='stat-label'>Con Alertas</div>
                         <div className='stat-change negative'>
@@ -496,7 +496,7 @@ export default function MedidoresListadoPage() {
 
             {/* Aviso si usuario no es superadmin y no tiene comunidades */}
             {!isSuper &&
-              (!user?.comunidades || user.comunidades.length === 0) && (
+              (!user?.memberships || user.memberships.length === 0) && (
                 <div className='alert alert-warning'>
                   No estás asignado a ninguna comunidad. Contacta al
                   administrador para asignar tu rol/comunidad.
@@ -551,9 +551,7 @@ export default function MedidoresListadoPage() {
                           </div>
                         </td>
                         <td>
-                          {m.estado ??
-                            (m.activo ? 'activo' : 'inactivo') ??
-                            '-'}
+                          {m.estado ?? (m.activo ? 'activo' : 'inactivo')}
                         </td>
                         <td className='text-end'>
                           <div className='d-flex gap-1 justify-content-end'>

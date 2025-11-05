@@ -42,6 +42,12 @@ export default function MedidorDetallePage() {
     alertThreshold: '',
     maintenanceInterval: '',
     autoReadings: false,
+    readingFrequency: 'monthly',
+    consumptionThreshold: 0,
+    autoReading: false,
+    notifications: true,
+    pressureThreshold: 0,
+    temperatureThreshold: 0,
   });
 
   // Historial de mantenimiento de ejemplo
@@ -49,14 +55,30 @@ export default function MedidorDetallePage() {
     {
       id: 1,
       date: '2024-01-15',
-      type: 'Revisión',
+      fecha: '2024-01-15',
+      type: 'preventivo',
+      tipo: 'preventivo',
       description: 'Mantenimiento preventivo',
+      descripcion: 'Mantenimiento preventivo',
+      tecnico: 'Juan Pérez',
+      empresa: 'ServicTech',
+      repuestos: [],
+      costo: 25000,
+      estado: 'completado',
     },
     {
       id: 2,
       date: '2024-06-10',
-      type: 'Reparación',
+      fecha: '2024-06-10',
+      type: 'correctivo',
+      tipo: 'correctivo',
       description: 'Ajuste de calibración',
+      descripcion: 'Ajuste de calibración',
+      tecnico: 'María González',
+      empresa: 'MeterCare',
+      repuestos: ['Sensor de presión'],
+      costo: 45000,
+      estado: 'completado',
     },
   ];
 
@@ -91,7 +113,7 @@ export default function MedidorDetallePage() {
 
   useEffect(() => {
     if (!id) {
-      return;
+      return undefined;
     }
     let mounted = true;
     const load = async () => {
@@ -103,9 +125,9 @@ export default function MedidorDetallePage() {
         }
         setMedidor(data);
         const lecResp = await listLecturas(Number(id), { limit: 24 });
-        setLecturas(lecResp.data ?? lecResp);
+        setLecturas(Array.isArray(lecResp) ? lecResp : (lecResp?.data ?? []));
         const consResp = await getConsumos(Number(id));
-        setConsumos(consResp.data ?? []);
+        setConsumos(Array.isArray(consResp) ? consResp : (consResp?.data ?? []));
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error('load medidor err', err);
@@ -129,10 +151,10 @@ export default function MedidorDetallePage() {
     if (user.is_superadmin) {
       return true;
     }
-    return !!user.comunidades?.find(
-      (c: any) =>
-        c.id === medidor?.comunidad_id &&
-        (c.role === 'admin' || c.role === 'gestor'),
+    return !!user.memberships?.find(
+      (m: any) =>
+        m.comunidad_id === medidor?.comunidad_id &&
+        (m.rol === 'admin' || m.rol === 'gestor'),
     );
   };
 
@@ -155,7 +177,7 @@ export default function MedidorDetallePage() {
       alert('Lectura creada');
       // refrescar lecturas y medidor
       const lecResp = await listLecturas(Number(id), { limit: 24 });
-      setLecturas(lecResp.data ?? lecResp);
+      setLecturas(Array.isArray(lecResp) ? lecResp : (lecResp?.data ?? []));
       const data = await getMedidor(Number(id));
       setMedidor(data);
       setForm({ fecha: '', lectura: '', periodo: '' });

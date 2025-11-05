@@ -14,7 +14,7 @@ export default function CargosUnidad() {
 
   useEffect(() => {
     if (!id) {
-      return;
+      return undefined;
     }
     let mounted = true;
     const load = async () => {

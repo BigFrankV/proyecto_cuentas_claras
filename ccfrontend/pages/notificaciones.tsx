@@ -1233,7 +1233,7 @@ export default function NotificacionesListado() {
 
             {/* Cards View for Mobile and Desktop Cards Mode */}
             {viewMode === 'cards' ? (
-              <div className={`p-3 ${viewMode === 'table' ? 'd-md-none' : ''}`}>
+              <div className='p-3'>
                 <div className='row'>
                   {filteredNotifications.map(notification => (
                     <div
