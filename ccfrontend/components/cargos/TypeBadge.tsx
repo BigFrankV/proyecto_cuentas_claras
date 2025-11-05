@@ -8,32 +8,30 @@ export interface TypeBadgeProps {
 const typeConfig = {
   administration: {
     label: 'Administración',
-    className: 'charge-type administration'
+    className: 'charge-type administration',
   },
   maintenance: {
     label: 'Mantenimiento',
-    className: 'charge-type maintenance'
+    className: 'charge-type maintenance',
   },
   service: {
     label: 'Servicios',
-    className: 'charge-type service'
+    className: 'charge-type service',
   },
   insurance: {
     label: 'Seguros',
-    className: 'charge-type insurance'
+    className: 'charge-type insurance',
   },
   other: {
     label: 'Otros',
-    className: 'charge-type other'
-  }
+    className: 'charge-type other',
+  },
 };
 
 export default function TypeBadge({ type, className = '' }: TypeBadgeProps) {
   const config = typeConfig[type];
 
   return (
-    <span className={`${config.className} ${className}`}>
-      {config.label}
-    </span>
+    <span className={`${config.className} ${className}`}>{config.label}</span>
   );
 }

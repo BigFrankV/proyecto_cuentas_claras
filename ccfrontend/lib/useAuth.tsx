@@ -7,7 +7,7 @@ import {
   ReactNode,
 } from 'react';
 
-import authService, { User, AuthResponse } from './auth'; 
+import authService, { User, AuthResponse } from './auth';
 
 // Tipos para el contexto de autenticación
 interface AuthContextType {
@@ -15,7 +15,11 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (identifier: string, password: string, totp_code?: string) => Promise<AuthResponse>; // ✅ AGREGAR totp_code
+  login: (
+    identifier: string,
+    password: string,
+    totp_code?: string
+  ) => Promise<AuthResponse>; // ✅ AGREGAR totp_code
   complete2FALogin: (tempToken: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -53,10 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const checkAuthStatus = async () => {
       console.log('🔍 Verificando estado de autenticación...');
-      
+
       // Debug del estado actual
       authService.debugAuthState();
-      
+
       try {
         // Primero verificar si tenemos un token válido
         if (!authService.isAuthenticated()) {
@@ -68,11 +72,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         console.log('✅ Token válido encontrado en localStorage');
-        
+
         // Intentar obtener datos del usuario desde localStorage
         const userData = authService.getUserData();
         if (userData) {
-          console.log('✅ Datos de usuario encontrados en localStorage:', userData);
+          console.log(
+            '✅ Datos de usuario encontrados en localStorage:',
+            userData,
+          );
           // ✅ NUEVO: Log de memberships para debug
           if (userData.memberships) {
             console.log('🏢 Membresías del usuario:', userData.memberships);
@@ -80,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (isMounted) {
             setUser(userData);
           }
-          
+
           // Verificar con el servidor para sincronizar datos
           try {
             const currentUser = await authService.getCurrentUser();
@@ -88,27 +95,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.log('✅ Usuario verificado con servidor:', currentUser);
               // ✅ NUEVO: Log de memberships actualizadas
               if (currentUser.memberships) {
-                console.log('🏢 Membresías actualizadas del servidor:', currentUser.memberships);
+                console.log(
+                  '🏢 Membresías actualizadas del servidor:',
+                  currentUser.memberships,
+                );
               }
               // Actualizar datos con información completa del servidor
               const updatedUserData = { ...userData, ...currentUser };
               setUser(updatedUserData);
               // Actualizar localStorage con datos completos
               if (typeof window !== 'undefined') {
-                localStorage.setItem('user_data', JSON.stringify(updatedUserData));
+                localStorage.setItem(
+                  'user_data',
+                  JSON.stringify(updatedUserData),
+                );
               }
             } else if (!currentUser) {
-              console.log('⚠️ Servidor no reconoce el token, manteniendo datos locales');
+              console.log(
+                '⚠️ Servidor no reconoce el token, manteniendo datos locales',
+              );
             }
           } catch (serverError: any) {
-            console.log('⚠️ Error verificando con servidor:', serverError.message);
+            console.log(
+              '⚠️ Error verificando con servidor:',
+              serverError.message,
+            );
             if (serverError.response?.status === 401) {
               console.log('❌ Token inválido según servidor, limpiando sesión');
               await clearSession();
               return;
             }
             // Si es otro tipo de error, mantener datos locales
-            console.log('⚠️ Manteniendo sesión local por error de conectividad');
+            console.log(
+              '⚠️ Manteniendo sesión local por error de conectividad',
+            );
           }
         } else {
           console.log('❌ No se encontraron datos de usuario en localStorage');
@@ -138,15 +158,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (identifier: string, password: string) => {
     console.log('🔐 Iniciando login para:', identifier);
     try {
-      const response = await authService.login({ 
-        identifier, 
-        password, 
+      const response = await authService.login({
+        identifier,
+        password,
       });
-      
+
       console.log('✅ Login exitoso, datos recibidos:', response.user);
       // ✅ NUEVO: Log específico para memberships
       if (response.user?.memberships) {
-        console.log('🏢 Membresías recibidas en login:', response.user.memberships);
+        console.log(
+          '🏢 Membresías recibidas en login:',
+          response.user.memberships,
+        );
       }
       if (response.user?.is_superadmin) {
         console.log('👑 Usuario identificado como SUPERADMIN');
@@ -169,7 +192,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('✅ Login 2FA exitoso, datos recibidos:', response.user);
       // ✅ NUEVO: Log específico para memberships en 2FA
       if (response.user?.memberships) {
-        console.log('🏢 Membresías recibidas en 2FA login:', response.user.memberships);
+        console.log(
+          '🏢 Membresías recibidas en 2FA login:',
+          response.user.memberships,
+        );
       }
       if (response.user) {
         setUser(response.user);

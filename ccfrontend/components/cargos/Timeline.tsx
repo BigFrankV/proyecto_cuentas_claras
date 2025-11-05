@@ -21,7 +21,7 @@ export default function Timeline({ items, className = '' }: TimelineProps) {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     }).format(date);
   };
 
@@ -31,20 +31,22 @@ export default function Timeline({ items, className = '' }: TimelineProps) {
 
   return (
     <div className={`timeline ${className}`}>
-      {items.map((item) => (
+      {items.map(item => (
         <div key={item.id} className={getTimelineItemClass(item.type)}>
-          <div className="timeline-header d-flex justify-content-between align-items-start">
-            <h6 className="timeline-title mb-1">{item.title}</h6>
-            <small className="timeline-date text-muted">
+          <div className='timeline-header d-flex justify-content-between align-items-start'>
+            <h6 className='timeline-title mb-1'>{item.title}</h6>
+            <small className='timeline-date text-muted'>
               {formatDate(item.date)}
             </small>
           </div>
-          
-          <div className="timeline-content">
-            <p className="mb-1">{item.content}</p>
+
+          <div className='timeline-content'>
+            <p className='mb-1'>{item.content}</p>
             {item.user && (
-              <small className="timeline-user text-muted d-block">
-                <i className="material-icons me-1" style={{ fontSize: '14px' }}>person</i>
+              <small className='timeline-user text-muted d-block'>
+                <i className='material-icons me-1' style={{ fontSize: '14px' }}>
+                  person
+                </i>
                 {item.user}
               </small>
             )}

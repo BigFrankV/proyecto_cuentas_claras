@@ -1,9 +1,10 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
+
+import Layout from '@/components/layout/Layout';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 interface MembershipData {
   id: string;
@@ -41,15 +42,23 @@ interface MembershipData {
 
 const tierStyles = {
   basico: { badge: 'tier-basic', bgColor: '#e9ecef', textColor: '#495057' },
-  estandar: { badge: 'tier-standard', bgColor: '#cff4fc', textColor: '#055160' },
+  estandar: {
+    badge: 'tier-standard',
+    bgColor: '#cff4fc',
+    textColor: '#055160',
+  },
   premium: { badge: 'tier-premium', bgColor: '#fff3cd', textColor: '#664d03' },
-  vip: { badge: 'tier-vip', bgColor: 'linear-gradient(45deg, #f6d365 0%, #fda085 100%)', textColor: '#212529' }
+  vip: {
+    badge: 'tier-vip',
+    bgColor: 'linear-gradient(45deg, #f6d365 0%, #fda085 100%)',
+    textColor: '#212529',
+  },
 };
 
 const statusColors = {
   activo: 'success',
   inactivo: 'secondary',
-  vencido: 'danger'
+  vencido: 'danger',
 };
 
 export default function MembresiaEditar() {
@@ -72,11 +81,11 @@ export default function MembresiaEditar() {
         name: 'Juan Delgado',
         type: 'Propietario',
         document: '12.345.678-9',
-        unit: 'Edificio A - Depto 101'
+        unit: 'Edificio A - Depto 101',
       },
       community: {
         id: '1',
-        name: 'Comunidad Parque Real'
+        name: 'Comunidad Parque Real',
       },
       startDate: '2023-01-15',
       endDate: '2024-01-15',
@@ -89,13 +98,13 @@ export default function MembresiaEditar() {
         { name: 'Gestión de solicitudes', included: true },
         { name: 'Reserva de áreas comunes', included: true },
         { name: 'Acceso múltiples unidades', included: false },
-        { name: 'Soporte prioritario', included: false }
+        { name: 'Soporte prioritario', included: false },
       ],
       paymentHistory: [
         { id: '1', date: '2023-11-01', amount: 8000, status: 'pagado' },
         { id: '2', date: '2023-10-01', amount: 8000, status: 'pagado' },
-        { id: '3', date: '2023-09-01', amount: 8000, status: 'pagado' }
-      ]
+        { id: '3', date: '2023-09-01', amount: 8000, status: 'pagado' },
+      ],
     });
   }, [id]);
 
@@ -103,7 +112,7 @@ export default function MembresiaEditar() {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
       currency: 'CLP',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     }).format(price);
   };
 
@@ -111,7 +120,7 @@ export default function MembresiaEditar() {
     return new Date(dateString).toLocaleDateString('es-CL', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -143,54 +152,88 @@ export default function MembresiaEditar() {
         {/* Header personalizado */}
         <header className='bg-white shadow-sm py-3 px-4 d-flex justify-content-between align-items-center sticky-top'>
           <div className='d-flex align-items-center'>
-            <Link href='/membresias' className='btn btn-link text-secondary p-0 me-3'>
+            <Link
+              href='/membresias'
+              className='btn btn-link text-secondary p-0 me-3'
+            >
               <i className='material-icons'>arrow_back</i>
             </Link>
             <h5 className='mb-0'>Detalle de Membresía</h5>
           </div>
           <div className='d-flex align-items-center'>
             <div className='dropdown me-2'>
-              <button className='btn btn-outline-secondary dropdown-toggle' type='button' data-bs-toggle='dropdown'>
+              <button
+                className='btn btn-outline-secondary dropdown-toggle'
+                type='button'
+                data-bs-toggle='dropdown'
+              >
                 <i className='fas fa-ellipsis-v'></i> Acciones
               </button>
               <ul className='dropdown-menu'>
-                <li><a className='dropdown-item' href='#'><i className='fas fa-sync-alt me-2'></i> Renovar membresía</a></li>
-                <li><a className='dropdown-item' href='#'><i className='fas fa-star me-2'></i> Cambiar nivel</a></li>
-                <li><a className='dropdown-item' href='#'><i className='fas fa-envelope me-2'></i> Notificar al miembro</a></li>
-                <li><hr className='dropdown-divider' /></li>
-                <li><a className='dropdown-item text-danger' href='#'><i className='fas fa-ban me-2'></i> Cancelar membresía</a></li>
+                <li>
+                  <a className='dropdown-item' href='#'>
+                    <i className='fas fa-sync-alt me-2'></i> Renovar membresía
+                  </a>
+                </li>
+                <li>
+                  <a className='dropdown-item' href='#'>
+                    <i className='fas fa-star me-2'></i> Cambiar nivel
+                  </a>
+                </li>
+                <li>
+                  <a className='dropdown-item' href='#'>
+                    <i className='fas fa-envelope me-2'></i> Notificar al
+                    miembro
+                  </a>
+                </li>
+                <li>
+                  <hr className='dropdown-divider' />
+                </li>
+                <li>
+                  <a className='dropdown-item text-danger' href='#'>
+                    <i className='fas fa-ban me-2'></i> Cancelar membresía
+                  </a>
+                </li>
               </ul>
             </div>
-            <button 
+            <button
               className='btn btn-primary'
               onClick={() => setEditMode(!editMode)}
             >
-              <i className='fas fa-edit me-2'></i> 
+              <i className='fas fa-edit me-2'></i>
               {editMode ? 'Ver Detalle' : 'Editar'}
             </button>
           </div>
         </header>
 
         {/* Membership Header */}
-        <div className='membership-header' style={{
-          backgroundColor: 'var(--color-primary)',
-          color: 'white',
-          padding: '2rem 0',
-          marginBottom: '1.5rem'
-        }}>
+        <div
+          className='membership-header'
+          style={{
+            backgroundColor: 'var(--color-primary)',
+            color: 'white',
+            padding: '2rem 0',
+            marginBottom: '1.5rem',
+          }}
+        >
           <div className='container-fluid'>
             <div className='row align-items-center'>
               <div className='col-auto'>
-                <div style={{
-                  width: '80px',
-                  height: '80px',
-                  backgroundColor: tierStyle.bgColor,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className='material-icons' style={{ fontSize: '40px', color: tierStyle.textColor }}>
+                <div
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    backgroundColor: tierStyle.bgColor,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <i
+                    className='material-icons'
+                    style={{ fontSize: '40px', color: tierStyle.textColor }}
+                  >
                     card_membership
                   </i>
                 </div>
@@ -198,19 +241,26 @@ export default function MembresiaEditar() {
               <div className='col membership-info'>
                 <h3 className='mb-1'>Membresía {membership.tierName}</h3>
                 <div className='d-flex align-items-center mb-2'>
-                  <span className={`tier-badge ${tierStyle.badge} me-2`}>{membership.tierName}</span>
+                  <span className={`tier-badge ${tierStyle.badge} me-2`}>
+                    {membership.tierName}
+                  </span>
                   <span className='small'>ID: {membership.code}</span>
                 </div>
                 <div className='d-flex align-items-center'>
                   <i className='material-icons me-2 small'>person</i>
-                  <span className='small'>{membership.member.name} ({membership.member.type})</span>
+                  <span className='small'>
+                    {membership.member.name} ({membership.member.type})
+                  </span>
                   <i className='material-icons mx-3 small'>domain</i>
                   <span className='small'>{membership.community.name}</span>
                 </div>
               </div>
               <div className='col-auto'>
-                <span className={`badge bg-${statusColors[membership.status]} status-badge`}>
-                  {membership.status.charAt(0).toUpperCase() + membership.status.slice(1)}
+                <span
+                  className={`badge bg-${statusColors[membership.status]} status-badge`}
+                >
+                  {membership.status.charAt(0).toUpperCase() +
+                    membership.status.slice(1)}
                 </span>
               </div>
             </div>
@@ -222,16 +272,22 @@ export default function MembresiaEditar() {
           <div className='row'>
             <div className='col-12 col-lg-4'>
               {/* Estado y Validez */}
-              <div className='content-section mb-4' style={{ 
-                backgroundColor: '#fff',
-                borderRadius: 'var(--radius)',
-                boxShadow: 'var(--shadow-sm)'
-              }}>
-                <div className='content-header' style={{
-                  padding: '1rem',
-                  borderBottom: '1px solid rgba(0,0,0,0.05)',
-                  backgroundColor: '#f9f9fa'
-                }}>
+              <div
+                className='content-section mb-4'
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 'var(--radius)',
+                  boxShadow: 'var(--shadow-sm)',
+                }}
+              >
+                <div
+                  className='content-header'
+                  style={{
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0,0,0,0.05)',
+                    backgroundColor: '#f9f9fa',
+                  }}
+                >
                   <h6 className='mb-0'>Estado y Validez</h6>
                 </div>
                 <div className='content-body' style={{ padding: '1.5rem' }}>
@@ -241,9 +297,9 @@ export default function MembresiaEditar() {
                       <div>{membership.progress}%</div>
                     </div>
                     <div className='progress' style={{ height: '8px' }}>
-                      <div 
-                        className='progress-bar bg-success' 
-                        role='progressbar' 
+                      <div
+                        className='progress-bar bg-success'
+                        role='progressbar'
                         style={{ width: `${membership.progress}%` }}
                       />
                     </div>
@@ -252,12 +308,16 @@ export default function MembresiaEditar() {
                   <div className='row text-center mt-4'>
                     <div className='col-6'>
                       <div className='border-end'>
-                        <div className='h5 mb-0'>{formatDate(membership.startDate)}</div>
+                        <div className='h5 mb-0'>
+                          {formatDate(membership.startDate)}
+                        </div>
                         <div className='small text-muted'>Inicio</div>
                       </div>
                     </div>
                     <div className='col-6'>
-                      <div className='h5 mb-0'>{formatDate(membership.endDate)}</div>
+                      <div className='h5 mb-0'>
+                        {formatDate(membership.endDate)}
+                      </div>
                       <div className='small text-muted'>Vencimiento</div>
                     </div>
                   </div>
@@ -265,8 +325,11 @@ export default function MembresiaEditar() {
                   <div className='mt-4'>
                     <div className='d-flex justify-content-between align-items-center'>
                       <span>Estado actual:</span>
-                      <span className={`badge bg-${statusColors[membership.status]}`}>
-                        {membership.status.charAt(0).toUpperCase() + membership.status.slice(1)}
+                      <span
+                        className={`badge bg-${statusColors[membership.status]}`}
+                      >
+                        {membership.status.charAt(0).toUpperCase() +
+                          membership.status.slice(1)}
                       </span>
                     </div>
                   </div>
@@ -274,21 +337,27 @@ export default function MembresiaEditar() {
               </div>
 
               {/* Información del Miembro */}
-              <div className='content-section mb-4' style={{ 
-                backgroundColor: '#fff',
-                borderRadius: 'var(--radius)',
-                boxShadow: 'var(--shadow-sm)'
-              }}>
-                <div className='content-header' style={{
-                  padding: '1rem',
-                  borderBottom: '1px solid rgba(0,0,0,0.05)',
-                  backgroundColor: '#f9f9fa'
-                }}>
+              <div
+                className='content-section mb-4'
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 'var(--radius)',
+                  boxShadow: 'var(--shadow-sm)',
+                }}
+              >
+                <div
+                  className='content-header'
+                  style={{
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0,0,0,0.05)',
+                    backgroundColor: '#f9f9fa',
+                  }}
+                >
                   <h6 className='mb-0'>Información del Miembro</h6>
                 </div>
                 <div className='content-body' style={{ padding: '1.5rem' }}>
                   <div className='d-flex align-items-center mb-3'>
-                    <div 
+                    <div
                       className='avatar me-3'
                       style={{
                         width: '48px',
@@ -300,21 +369,28 @@ export default function MembresiaEditar() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: '18px',
-                        fontWeight: '600'
+                        fontWeight: '600',
                       }}
                     >
-                      {membership.member.name.split(' ').map(n => n[0]).join('')}
+                      {membership.member.name
+                        .split(' ')
+                        .map(n => n[0])
+                        .join('')}
                     </div>
                     <div>
                       <h6 className='mb-1'>{membership.member.name}</h6>
-                      <div className='text-muted small'>{membership.member.type}</div>
+                      <div className='text-muted small'>
+                        {membership.member.type}
+                      </div>
                     </div>
                   </div>
 
                   <div className='row'>
                     <div className='col-12 mb-2'>
                       <strong>Documento:</strong>
-                      <div className='text-muted'>{membership.member.document}</div>
+                      <div className='text-muted'>
+                        {membership.member.document}
+                      </div>
                     </div>
                     <div className='col-12 mb-2'>
                       <strong>Unidad:</strong>
@@ -322,41 +398,57 @@ export default function MembresiaEditar() {
                     </div>
                     <div className='col-12'>
                       <strong>Comunidad:</strong>
-                      <div className='text-muted'>{membership.community.name}</div>
+                      <div className='text-muted'>
+                        {membership.community.name}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Características del Plan */}
-              <div className='content-section mb-4' style={{ 
-                backgroundColor: '#fff',
-                borderRadius: 'var(--radius)',
-                boxShadow: 'var(--shadow-sm)'
-              }}>
-                <div className='content-header' style={{
-                  padding: '1rem',
-                  borderBottom: '1px solid rgba(0,0,0,0.05)',
-                  backgroundColor: '#f9f9fa'
-                }}>
+              <div
+                className='content-section mb-4'
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 'var(--radius)',
+                  boxShadow: 'var(--shadow-sm)',
+                }}
+              >
+                <div
+                  className='content-header'
+                  style={{
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0,0,0,0.05)',
+                    backgroundColor: '#f9f9fa',
+                  }}
+                >
                   <h6 className='mb-0'>Características del Plan</h6>
                 </div>
                 <div className='content-body' style={{ padding: '1.5rem' }}>
-                  <ul className='feature-list' style={{ listStyleType: 'none', paddingLeft: 0 }}>
+                  <ul
+                    className='feature-list'
+                    style={{ listStyleType: 'none', paddingLeft: 0 }}
+                  >
                     {membership.features.map((feature, index) => (
-                      <li 
+                      <li
                         key={index}
                         className={`${feature.included ? 'feature-active' : 'feature-inactive'}`}
                         style={{
                           padding: '0.5rem 0',
-                          borderBottom: index < membership.features.length - 1 ? '1px solid #f1f1f1' : 'none'
+                          borderBottom:
+                            index < membership.features.length - 1
+                              ? '1px solid #f1f1f1'
+                              : 'none',
                         }}
                       >
-                        <i 
+                        <i
                           className='material-icons me-2'
                           style={{
                             fontSize: '18px',
-                            color: feature.included ? 'var(--color-success)' : 'var(--color-muted)'
+                            color: feature.included
+                              ? 'var(--color-success)'
+                              : 'var(--color-muted)',
                           }}
                         >
                           {feature.included ? 'check_circle' : 'cancel'}
@@ -372,24 +464,36 @@ export default function MembresiaEditar() {
             <div className='col-12 col-lg-8'>
               {editMode ? (
                 /* Formulario de edición */
-                <div className='content-section' style={{ 
-                  backgroundColor: '#fff',
-                  borderRadius: 'var(--radius)',
-                  boxShadow: 'var(--shadow-sm)'
-                }}>
-                  <div className='content-header' style={{
-                    padding: '1rem',
-                    borderBottom: '1px solid rgba(0,0,0,0.05)',
-                    backgroundColor: '#f9f9fa'
-                  }}>
+                <div
+                  className='content-section'
+                  style={{
+                    backgroundColor: '#fff',
+                    borderRadius: 'var(--radius)',
+                    boxShadow: 'var(--shadow-sm)',
+                  }}
+                >
+                  <div
+                    className='content-header'
+                    style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid rgba(0,0,0,0.05)',
+                      backgroundColor: '#f9f9fa',
+                    }}
+                  >
                     <h6 className='mb-0'>Editar Membresía</h6>
                   </div>
                   <div className='content-body' style={{ padding: '1.5rem' }}>
                     <form>
                       <div className='row'>
                         <div className='col-md-6 mb-3'>
-                          <label htmlFor='tier' className='form-label'>Nivel de Membresía</label>
-                          <select className='form-select' id='tier' defaultValue={membership.tier}>
+                          <label htmlFor='tier' className='form-label'>
+                            Nivel de Membresía
+                          </label>
+                          <select
+                            className='form-select'
+                            id='tier'
+                            defaultValue={membership.tier}
+                          >
                             <option value='basico'>Básico</option>
                             <option value='estandar'>Estándar</option>
                             <option value='premium'>Premium</option>
@@ -397,8 +501,14 @@ export default function MembresiaEditar() {
                           </select>
                         </div>
                         <div className='col-md-6 mb-3'>
-                          <label htmlFor='status' className='form-label'>Estado</label>
-                          <select className='form-select' id='status' defaultValue={membership.status}>
+                          <label htmlFor='status' className='form-label'>
+                            Estado
+                          </label>
+                          <select
+                            className='form-select'
+                            id='status'
+                            defaultValue={membership.status}
+                          >
                             <option value='activo'>Activo</option>
                             <option value='inactivo'>Inactivo</option>
                             <option value='vencido'>Vencido</option>
@@ -408,41 +518,47 @@ export default function MembresiaEditar() {
 
                       <div className='row'>
                         <div className='col-md-6 mb-3'>
-                          <label htmlFor='startDate' className='form-label'>Fecha de Inicio</label>
-                          <input 
-                            type='date' 
-                            className='form-control' 
-                            id='startDate' 
+                          <label htmlFor='startDate' className='form-label'>
+                            Fecha de Inicio
+                          </label>
+                          <input
+                            type='date'
+                            className='form-control'
+                            id='startDate'
                             defaultValue={membership.startDate}
                           />
                         </div>
                         <div className='col-md-6 mb-3'>
-                          <label htmlFor='endDate' className='form-label'>Fecha de Vencimiento</label>
-                          <input 
-                            type='date' 
-                            className='form-control' 
-                            id='endDate' 
+                          <label htmlFor='endDate' className='form-label'>
+                            Fecha de Vencimiento
+                          </label>
+                          <input
+                            type='date'
+                            className='form-control'
+                            id='endDate'
                             defaultValue={membership.endDate}
                           />
                         </div>
                       </div>
 
                       <div className='mb-3'>
-                        <label htmlFor='price' className='form-label'>Precio Mensual</label>
+                        <label htmlFor='price' className='form-label'>
+                          Precio Mensual
+                        </label>
                         <div className='input-group'>
                           <span className='input-group-text'>$</span>
-                          <input 
-                            type='number' 
-                            className='form-control' 
-                            id='price' 
+                          <input
+                            type='number'
+                            className='form-control'
+                            id='price'
                             defaultValue={membership.price}
                           />
                         </div>
                       </div>
 
                       <div className='d-flex justify-content-end'>
-                        <button 
-                          type='button' 
+                        <button
+                          type='button'
                           className='btn btn-outline-secondary me-2'
                           onClick={() => setEditMode(false)}
                         >
@@ -457,49 +573,61 @@ export default function MembresiaEditar() {
                 </div>
               ) : (
                 /* Historial de pagos */
-                <div className='content-section' style={{ 
-                  backgroundColor: '#fff',
-                  borderRadius: 'var(--radius)',
-                  boxShadow: 'var(--shadow-sm)'
-                }}>
-                  <div className='content-header' style={{
-                    padding: '1rem',
-                    borderBottom: '1px solid rgba(0,0,0,0.05)',
-                    backgroundColor: '#f9f9fa'
-                  }}>
+                <div
+                  className='content-section'
+                  style={{
+                    backgroundColor: '#fff',
+                    borderRadius: 'var(--radius)',
+                    boxShadow: 'var(--shadow-sm)',
+                  }}
+                >
+                  <div
+                    className='content-header'
+                    style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid rgba(0,0,0,0.05)',
+                      backgroundColor: '#f9f9fa',
+                    }}
+                  >
                     <h6 className='mb-0'>Historial de Pagos</h6>
                   </div>
                   <div className='content-body' style={{ padding: '1.5rem' }}>
-                    {membership.paymentHistory.map((payment) => (
-                      <div 
+                    {membership.paymentHistory.map(payment => (
+                      <div
                         key={payment.id}
                         className='payment-card'
                         style={{
                           border: '1px solid #dee2e6',
                           borderRadius: 'var(--radius)',
                           padding: '1rem',
-                          marginBottom: '1rem'
+                          marginBottom: '1rem',
                         }}
                       >
                         <div className='d-flex justify-content-between align-items-start'>
                           <div>
-                            <div className='payment-date text-muted' style={{ fontSize: '0.85rem' }}>
+                            <div
+                              className='payment-date text-muted'
+                              style={{ fontSize: '0.85rem' }}
+                            >
                               {formatDate(payment.date)}
                             </div>
-                            <div 
+                            <div
                               className='payment-amount'
                               style={{
                                 fontSize: '1.25rem',
                                 fontWeight: '600',
                                 color: 'var(--color-primary)',
-                                margin: '0.5rem 0'
+                                margin: '0.5rem 0',
                               }}
                             >
                               {formatPrice(payment.amount)}
                             </div>
                           </div>
-                          <span className={`badge bg-${payment.status === 'pagado' ? 'success' : payment.status === 'pendiente' ? 'warning' : 'danger'}`}>
-                            {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                          <span
+                            className={`badge bg-${payment.status === 'pagado' ? 'success' : payment.status === 'pendiente' ? 'warning' : 'danger'}`}
+                          >
+                            {payment.status.charAt(0).toUpperCase() +
+                              payment.status.slice(1)}
                           </span>
                         </div>
                       </div>
@@ -526,7 +654,7 @@ export default function MembresiaEditar() {
             font-size: 0.75rem;
             font-weight: 600;
           }
-          
+
           .tier-badge.tier-standard {
             background-color: #cff4fc;
             color: #055160;
@@ -535,7 +663,7 @@ export default function MembresiaEditar() {
             font-size: 0.75rem;
             font-weight: 600;
           }
-          
+
           .tier-badge.tier-premium {
             background-color: #fff3cd;
             color: #664d03;
@@ -544,7 +672,7 @@ export default function MembresiaEditar() {
             font-size: 0.75rem;
             font-weight: 600;
           }
-          
+
           .tier-badge.tier-vip {
             background: linear-gradient(45deg, #f6d365 0%, #fda085 100%);
             color: #212529;

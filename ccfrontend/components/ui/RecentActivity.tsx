@@ -53,7 +53,7 @@ export default function RecentActivity() {
                 <div key={index} className='list-group-item border-0 py-3'>
                   <div className='d-flex align-items-start'>
                     <div
-                      className={`rounded-circle d-flex align-items-center justify-content-center me-3`}
+                      className={'rounded-circle d-flex align-items-center justify-content-center me-3'}
                       style={{
                         width: '40px',
                         height: '40px',

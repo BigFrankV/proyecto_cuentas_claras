@@ -1,7 +1,6 @@
 import Head from 'next/head';
-import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '@/lib/useAuth';
+import React, { useEffect, useState } from 'react';
 import {
   Button,
   Card,
@@ -23,6 +22,7 @@ import {
   getMedidor,
   listLecturas,
 } from '@/lib/medidoresService';
+import { useAuth } from '@/lib/useAuth';
 import { ProtectedRoute } from '@/lib/useAuth';
 import type { Medidor, Reading } from '@/types/medidores';
 
@@ -38,13 +38,13 @@ export default function MedidorDetallePage() {
   const [form, setForm] = useState({ fecha: '', lectura: '', periodo: '' });
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {return;}
     let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
         const data = await getMedidor(Number(id));
-        if (!mounted) return;
+        if (!mounted) {return;}
         setMedidor(data);
         const lecResp = await listLecturas(Number(id), { limit: 24 });
         setLecturas(lecResp.data ?? lecResp);
@@ -54,7 +54,7 @@ export default function MedidorDetallePage() {
         console.error('load medidor err', err);
         alert('Error cargando medidor');
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {setLoading(false);}
       }
     };
     load();
@@ -64,8 +64,8 @@ export default function MedidorDetallePage() {
   }, [id]);
 
   const canManage = () => {
-    if (!user) return false;
-    if (user.is_superadmin) return true;
+    if (!user) {return false;}
+    if (user.is_superadmin) {return true;}
     return !!user.comunidades?.find(
       (c: any) =>
         c.id === medidor?.comunidad_id &&
@@ -75,7 +75,7 @@ export default function MedidorDetallePage() {
 
   const submitLectura = async (e: any) => {
     e.preventDefault();
-    if (!id) return;
+    if (!id) {return;}
     if (!form.fecha || form.lectura === '' || !form.periodo) {
       alert('Completa fecha, lectura y periodo');
       return;
@@ -97,23 +97,23 @@ export default function MedidorDetallePage() {
     } catch (err: any) {
       console.error('create lectura err', err);
       if (err?.response?.status === 409)
-        alert('Ya existe una lectura para ese periodo');
-      else if (err?.response?.status === 403) alert('No autorizado');
-      else alert('Error al crear lectura');
+        {alert('Ya existe una lectura para ese periodo');}
+      else if (err?.response?.status === 403) {alert('No autorizado');}
+      else {alert('Error al crear lectura');}
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!medidor) return;
+    if (!medidor) {return;}
     if (!confirm('Eliminar medidor? (si tiene lecturas, será desactivado)'))
-      return;
+      {return;}
     setLoading(true);
     try {
       const resp = await deleteMedidor(medidor.id);
-      if (resp?.softDeleted) alert('Medidor desactivado (soft-delete)');
-      else alert('Medidor eliminado');
+      if (resp?.softDeleted) {alert('Medidor desactivado (soft-delete)');}
+      else {alert('Medidor eliminado');}
       router.push('/medidores');
     } catch (err: any) {
       console.error('delete medidor err', err);
@@ -123,8 +123,8 @@ export default function MedidorDetallePage() {
     }
   };
 
-  if (!id) return <div>Cargando id...</div>;
-  if (loading && !medidor) return <div>Cargando...</div>;
+  if (!id) {return <div>Cargando id...</div>;}
+  if (loading && !medidor) {return <div>Cargando...</div>;}
 
   return (
     <ProtectedRoute>
@@ -290,11 +290,15 @@ export default function MedidorDetallePage() {
                       </h5>
                       <div className='info-item'>
                         <span className='info-label'>Código</span>
-                        <span className='info-value'>{medidor?.medidor_codigo}</span>
+                        <span className='info-value'>
+                          {medidor?.medidor_codigo}
+                        </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Número de Serie</span>
-                        <span className='info-value'>{medidor?.numero_serie}</span>
+                        <span className='info-value'>
+                          {medidor?.numero_serie}
+                        </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Marca y Modelo</span>
@@ -308,8 +312,8 @@ export default function MedidorDetallePage() {
                           {medidor?.tipo === 'electrico'
                             ? 'Eléctrico'
                             : medidor?.tipo === 'agua'
-                            ? 'Agua'
-                            : 'Gas'}
+                              ? 'Agua'
+                              : 'Gas'}
                         </span>
                       </div>
                       <div className='info-item'>
@@ -334,9 +338,7 @@ export default function MedidorDetallePage() {
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Edificio</span>
-                        <span className='info-value'>
-                          {medidor?.edificio}
-                        </span>
+                        <span className='info-value'>{medidor?.edificio}</span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Unidad</span>
@@ -346,9 +348,7 @@ export default function MedidorDetallePage() {
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Posición</span>
-                        <span className='info-value'>
-                          {medidor?.posicion}
-                        </span>
+                        <span className='info-value'>{medidor?.posicion}</span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Fecha de Instalación</span>
@@ -405,7 +405,9 @@ export default function MedidorDetallePage() {
                     <tbody>
                       {lecturas.map(reading => (
                         <tr key={reading.id}>
-                          <td>{new Date(reading.fecha).toLocaleDateString()}</td>
+                          <td>
+                            {new Date(reading.fecha).toLocaleDateString()}
+                          </td>
                           <td>{reading.periodo}</td>
                           <td className='fw-medium'>
                             {reading.lectura.toLocaleString()}
@@ -416,15 +418,15 @@ export default function MedidorDetallePage() {
                                 reading.status === 'valida'
                                   ? 'bg-success'
                                   : reading.status === 'estimada'
-                                  ? 'bg-warning'
-                                  : 'bg-danger'
+                                    ? 'bg-warning'
+                                    : 'bg-danger'
                               }`}
                             >
                               {reading.status === 'valida'
                                 ? 'Válida'
                                 : reading.status === 'estimada'
-                                ? 'Estimada'
-                                : 'Error'}
+                                  ? 'Estimada'
+                                  : 'Error'}
                             </span>
                           </td>
                         </tr>
@@ -517,15 +519,15 @@ export default function MedidorDetallePage() {
                                       record.tipo === 'preventivo'
                                         ? 'bg-success'
                                         : record.tipo === 'correctivo'
-                                        ? 'bg-warning'
-                                        : 'bg-info'
+                                          ? 'bg-warning'
+                                          : 'bg-info'
                                     }`}
                                   >
                                     {record.tipo === 'preventivo'
                                       ? 'Preventivo'
                                       : record.tipo === 'correctivo'
-                                      ? 'Correctivo'
-                                      : 'Calibración'}
+                                        ? 'Correctivo'
+                                        : 'Calibración'}
                                   </span>
                                 </td>
                                 <td>
@@ -579,15 +581,11 @@ export default function MedidorDetallePage() {
                       </h5>
                       <div className='info-item'>
                         <span className='info-label'>Capacidad</span>
-                        <span className='info-value'>
-                          {medidor?.capacidad}
-                        </span>
+                        <span className='info-value'>{medidor?.capacidad}</span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Precisión</span>
-                        <span className='info-value'>
-                          {medidor?.precision}
-                        </span>
+                        <span className='info-value'>{medidor?.precision}</span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Certificación</span>
@@ -636,13 +634,17 @@ export default function MedidorDetallePage() {
                       <div className='info-item'>
                         <span className='info-label'>Fecha de Creación</span>
                         <span className='info-value'>
-                          {new Date(medidor?.fecha_creacion).toLocaleDateString()}
+                          {new Date(
+                            medidor?.fecha_creacion,
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                       <div className='info-item'>
                         <span className='info-label'>Última Actualización</span>
                         <span className='info-value'>
-                          {new Date(medidor?.ultima_actualizacion).toLocaleDateString()}
+                          {new Date(
+                            medidor?.ultima_actualizacion,
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                     </div>

@@ -1170,8 +1170,8 @@ export default function NuevoMedidor() {
                       <strong>Fecha:</strong>{' '}
                       {formData.installationDate
                         ? new Date(
-                          formData.installationDate,
-                        ).toLocaleDateString()
+                            formData.installationDate,
+                          ).toLocaleDateString()
                         : '-'}
                     </li>
                     <li>

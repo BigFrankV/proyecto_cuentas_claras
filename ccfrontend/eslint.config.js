@@ -128,7 +128,7 @@ export default [
       'comma-dangle': ['error', 'always-multiline'],
       quotes: ['error', 'single', { avoidEscape: true }],
       semi: ['error', 'always'],
-      indent: ['error', 2, { SwitchCase: 1 }],
+      // indent: ['error', 2, { SwitchCase: 1 }], // Disabled due to stack overflow bug, Prettier handles formatting
       'max-len': ['warn', { code: 100, ignoreUrls: true }],
       eqeqeq: ['error', 'always'],
       curly: ['error', 'all'],

@@ -24,7 +24,14 @@ interface ActivityStatsBackend {
 
 interface ActivityFilters {
   search?: string;
-  type?: 'system' | 'user' | 'security' | 'maintenance' | 'admin' | 'financial' | 'all';
+  type?:
+    | 'system'
+    | 'user'
+    | 'security'
+    | 'maintenance'
+    | 'admin'
+    | 'financial'
+    | 'all';
   priority?: 'low' | 'normal' | 'high' | 'critical' | 'all';
   dateRange?: 'today' | 'week' | 'month' | 'all';
   page?: number;
@@ -52,13 +59,21 @@ interface ActivityResponse {
   };
 }
 
-export type { ActivityFilters, ActivityResponse, ActivityStatsBackend, CreateActivityData };
+export type {
+  ActivityFilters,
+  ActivityResponse,
+  ActivityStatsBackend,
+  CreateActivityData,
+};
 
 class BitacoraService {
   private baseUrl = '/bitacora';
 
   // Obtener actividades de una comunidad
-  async getActivities(comunidadId: number, filters?: ActivityFilters): Promise<ActivityResponse> {
+  async getActivities(
+    comunidadId: number,
+    filters?: ActivityFilters,
+  ): Promise<ActivityResponse> {
     try {
       const params = new URLSearchParams();
 
@@ -93,7 +108,9 @@ class BitacoraService {
   // Obtener estadísticas de la bitácora
   async getStats(comunidadId: number): Promise<ActivityStatsBackend> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/stats/${comunidadId}`);
+      const response = await apiClient.get(
+        `${this.baseUrl}/stats/${comunidadId}`,
+      );
       return response.data;
     } catch {
       throw new Error('Error al obtener estadísticas');
@@ -101,9 +118,15 @@ class BitacoraService {
   }
 
   // Crear nueva entrada de bitácora
-  async createActivity(comunidadId: number, data: CreateActivityData): Promise<ActivityBackend> {
+  async createActivity(
+    comunidadId: number,
+    data: CreateActivityData,
+  ): Promise<ActivityBackend> {
     try {
-      const response = await apiClient.post(`${this.baseUrl}/comunidad/${comunidadId}`, data);
+      const response = await apiClient.post(
+        `${this.baseUrl}/comunidad/${comunidadId}`,
+        data,
+      );
       return response.data;
     } catch {
       throw new Error('Error al crear actividad');
@@ -134,9 +157,12 @@ class BitacoraService {
         params.append('dateRange', filters.dateRange);
       }
 
-      const response = await apiClient.get(`${this.baseUrl}/export?${params.toString()}`, {
-        responseType: 'blob',
-      });
+      const response = await apiClient.get(
+        `${this.baseUrl}/export?${params.toString()}`,
+        {
+          responseType: 'blob',
+        },
+      );
       return response.data;
     } catch {
       throw new Error('Error al exportar datos');

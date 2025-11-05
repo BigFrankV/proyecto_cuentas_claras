@@ -177,7 +177,7 @@ export const dashboardService = {
       const response = await apiClient.get(
         `/dashboard/comunidad/${comunidadId}/grafico-gastos-categoria`,
       );
-      
+
       if (!response.data || !Array.isArray(response.data)) {
         return [];
       }
@@ -199,13 +199,13 @@ export const dashboardService = {
       const response = await apiClient.get(
         `/dashboard/comunidad/${comunidadId}/grafico-estado-pagos`,
       );
-      
+
       if (!response.data || !Array.isArray(response.data)) {
         return [];
       }
 
       const total = response.data.reduce(
-        (sum: number, item: any) => sum + (Number(item.cantidad_unidades || 0)),
+        (sum: number, item: any) => sum + Number(item.cantidad_unidades || 0),
         0,
       );
 
@@ -213,9 +213,7 @@ export const dashboardService = {
         tipo: item.categoria_pago || 'N/A',
         cantidad: Number(item.cantidad_unidades || 0),
         porcentaje:
-          total > 0
-            ? ((Number(item.cantidad_unidades || 0) / total) * 100)
-            : 0,
+          total > 0 ? (Number(item.cantidad_unidades || 0) / total) * 100 : 0,
         color: item.color || '#95a5a6',
       }));
     } catch (error) {
@@ -232,7 +230,7 @@ export const dashboardService = {
       const response = await apiClient.get(
         `/dashboard/comunidad/${comunidadId}/grafico-emisiones`,
       );
-      
+
       if (!response.data || !Array.isArray(response.data)) {
         return [];
       }
@@ -292,14 +290,19 @@ export const dashboardService = {
   },
 
   // Obtener resumen completo del dashboard
-  async getResumenCompleto(comunidadId: number): Promise<DashboardResumenCompleto> {
+  async getResumenCompleto(
+    comunidadId: number,
+  ): Promise<DashboardResumenCompleto> {
     try {
       // Llamadas en paralelo para eficiencia
-      const [resumenResponse, reservasResponse, kpisChanges] = await Promise.all([
-        apiClient.get(`/dashboard/comunidad/${comunidadId}/resumen-completo`),
-        apiClient.get(`/dashboard/comunidad/${comunidadId}/reservas-amenidades?limit=5`),
-        this.getKPIsChanges(comunidadId),
-      ]);
+      const [resumenResponse, reservasResponse, kpisChanges] =
+        await Promise.all([
+          apiClient.get(`/dashboard/comunidad/${comunidadId}/resumen-completo`),
+          apiClient.get(
+            `/dashboard/comunidad/${comunidadId}/reservas-amenidades?limit=5`,
+          ),
+          this.getKPIsChanges(comunidadId),
+        ]);
 
       const resumen = resumenResponse.data;
 
@@ -352,50 +355,50 @@ export const dashboardService = {
         ingresosMesChange: getIngresosChange(resumen.kpis?.ingresos_mes),
         gastosMes: getGastosValue(resumen.kpis?.gastos_mes),
         gastosMesChange: getGastosChange(resumen.kpis?.gastos_mes),
-        tasaMorosidad: typeof resumen.kpis?.morosidad === 'object' 
-          ? Number(resumen.kpis.morosidad?.tasa_morosidad_actual || 0)
-          : Number(resumen.kpis?.morosidad || 0),
+        tasaMorosidad:
+          typeof resumen.kpis?.morosidad === 'object'
+            ? Number(resumen.kpis.morosidad?.tasa_morosidad_actual || 0)
+            : Number(resumen.kpis?.morosidad || 0),
         tasaMorosidadChange: kpisChanges.tasaMorosidadChange,
       };
 
       // Transformar pagos recientes
-      const pagosRecientes: PagoReciente[] = resumen.tablas?.pagos_recientes?.map(
-        (pago: ApiPagoReciente) => ({
+      const pagosRecientes: PagoReciente[] =
+        resumen.tablas?.pagos_recientes?.map((pago: ApiPagoReciente) => ({
           unidad: pago.unidad || '',
           monto: pago.monto || 0,
           fecha: pago.fecha_pago || '',
           estado: pago.estado || '',
-        }),
-      ) || [];
+        })) || [];
 
       // Transformar unidades morosas
-      const unidadesMorosas: UnidadMorosa[] = resumen.tablas?.unidades_morosas?.map(
-        (unidad: ApiUnidadMorosa) => ({
+      const unidadesMorosas: UnidadMorosa[] =
+        resumen.tablas?.unidades_morosas?.map((unidad: ApiUnidadMorosa) => ({
           unidad: unidad.codigo_unidad || '',
           propietario: '', // No disponible en la respuesta actual
           meses: unidad.meses_morosos || 0,
           deuda: unidad.deuda_total || 0,
-        }),
-      ) || [];
+        })) || [];
 
       // Transformar próximas actividades
       const proximasActividades: ActividadProxima[] =
-        resumen.tablas?.proximas_actividades?.map((actividad: ApiActividadProxima) => ({
-          titulo: actividad.titulo || '',
-          descripcion: `Vence: ${actividad.fecha_formateada}`,
-          fecha: actividad.fecha_formateada || '',
-        })) || [];
+        resumen.tablas?.proximas_actividades?.map(
+          (actividad: ApiActividadProxima) => ({
+            titulo: actividad.titulo || '',
+            descripcion: `Vence: ${actividad.fecha_formateada}`,
+            fecha: actividad.fecha_formateada || '',
+          }),
+        ) || [];
 
       // Transformar reservas de amenidades
-      const reservasAmenidades: ReservaAmenidad[] = reservasResponse.data?.map(
-        (reserva: ApiReservaAmenidad) => ({
+      const reservasAmenidades: ReservaAmenidad[] =
+        reservasResponse.data?.map((reserva: ApiReservaAmenidad) => ({
           amenidad: reserva.amenidad || '',
           unidad: reserva.unidad_reserva || '',
           usuario: reserva.reservado_por || '',
           fecha: reserva.fecha_inicio || '',
           estado: reserva.estado_descripcion || '',
-        }),
-      ) || [];
+        })) || [];
 
       return {
         kpis,
@@ -419,7 +422,11 @@ export const dashboardService = {
     try {
       // Obtener datos del mes actual y anterior
       const currentMonth = new Date();
-      const previousMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+      const previousMonth = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() - 1,
+        1,
+      );
 
       const [currentKPIs, previousKPIs] = await Promise.all([
         this.getKPIsForMonth(comunidadId, currentMonth),
@@ -434,10 +441,22 @@ export const dashboardService = {
       };
 
       return {
-        saldoTotalChange: calculateChange(currentKPIs.saldoTotal, previousKPIs.saldoTotal),
-        ingresosMesChange: calculateChange(currentKPIs.ingresosMes, previousKPIs.ingresosMes),
-        gastosMesChange: calculateChange(currentKPIs.gastosMes, previousKPIs.gastosMes),
-        tasaMorosidadChange: calculateChange(currentKPIs.tasaMorosidad, previousKPIs.tasaMorosidad),
+        saldoTotalChange: calculateChange(
+          currentKPIs.saldoTotal,
+          previousKPIs.saldoTotal,
+        ),
+        ingresosMesChange: calculateChange(
+          currentKPIs.ingresosMes,
+          previousKPIs.ingresosMes,
+        ),
+        gastosMesChange: calculateChange(
+          currentKPIs.gastosMes,
+          previousKPIs.gastosMes,
+        ),
+        tasaMorosidadChange: calculateChange(
+          currentKPIs.tasaMorosidad,
+          previousKPIs.tasaMorosidad,
+        ),
       };
     } catch {
       // En caso de error, devolver cambios en 0
@@ -451,7 +470,10 @@ export const dashboardService = {
   },
 
   // Método auxiliar para obtener KPIs de un mes específico
-  async getKPIsForMonth(comunidadId: number, date: Date): Promise<{
+  async getKPIsForMonth(
+    comunidadId: number,
+    date: Date,
+  ): Promise<{
     saldoTotal: number;
     ingresosMes: number;
     gastosMes: number;

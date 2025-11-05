@@ -1,9 +1,5 @@
 {
-  "extends": [
-    "next/core-web-vitals",
-    "eslint:recommended",
-    "prettier"
-  ],
+  "extends": ["next/core-web-vitals", "eslint:recommended", "prettier"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2021,
@@ -12,9 +8,7 @@
       "jsx": true
     }
   },
-  "plugins": [
-    "@typescript-eslint"
-  ],
+  "plugins": ["@typescript-eslint"],
   "rules": {
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
@@ -50,10 +44,7 @@
   },
   "overrides": [
     {
-      "files": [
-        "**/__tests__/**/*",
-        "**/*.test.*"
-      ],
+      "files": ["**/__tests__/**/*", "**/*.test.*"],
       "env": {
         "jest": true
       },

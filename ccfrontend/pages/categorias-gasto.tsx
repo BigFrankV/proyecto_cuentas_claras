@@ -61,7 +61,12 @@ export default function CategoriasGastoListado() {
       setCategories(response.data);
       setPagination({
         total: response.pagination?.total || 0,
-        page: response.pagination?.offset ? Math.floor((response.pagination.offset || 0) / (response.pagination.limit || 10)) + 1 : 1,
+        page: response.pagination?.offset
+          ? Math.floor(
+              (response.pagination.offset || 0) /
+                (response.pagination.limit || 10),
+            ) + 1
+          : 1,
         limit: response.pagination?.limit || 10,
         pages: response.pagination?.pages || 0,
       });

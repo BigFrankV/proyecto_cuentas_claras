@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+
+import AmountCell from './AmountCell';
+import { Cargo } from './CargoCard';
 import FilterCard, { FilterOptions } from './FilterCard';
 import StatusBadge from './StatusBadge';
 import TypeBadge from './TypeBadge';
-import AmountCell from './AmountCell';
-import { Cargo } from './CargoCard';
 
 export interface CargosListadoProps {
   className?: string;
@@ -62,7 +63,7 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
-  
+
   const [filters, setFilters] = useState<FilterOptions>({
     searchTerm: '',
     status: '',
@@ -78,32 +79,33 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     }).format(date);
   };
 
   const formatPeriod = (period: string): string => {
     const [year, month] = period.split('-');
-    if (!year || !month) return period;
+    if (!year || !month) {return period;}
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
-      month: 'long'
+      month: 'long',
     }).format(new Date(parseInt(year), parseInt(month) - 1));
   };
 
   const applyFilters = () => {
     setLoading(true);
-    
+
     let filtered = [...cargos];
 
     // Search term filter
     if (filters.searchTerm) {
       const searchLower = filters.searchTerm.toLowerCase();
-      filtered = filtered.filter(cargo => 
-        cargo.concepto.toLowerCase().includes(searchLower) ||
-        cargo.descripcion?.toLowerCase().includes(searchLower) ||
-        cargo.unidad.toLowerCase().includes(searchLower) ||
-        cargo.id.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        cargo =>
+          cargo.concepto.toLowerCase().includes(searchLower) ||
+          cargo.descripcion?.toLowerCase().includes(searchLower) ||
+          cargo.unidad.toLowerCase().includes(searchLower) ||
+          cargo.id.toLowerCase().includes(searchLower),
       );
     }
 
@@ -119,8 +121,8 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
 
     // Unit filter
     if (filters.unitNumber) {
-      filtered = filtered.filter(cargo => 
-        cargo.unidad.toLowerCase().includes(filters.unitNumber.toLowerCase())
+      filtered = filtered.filter(cargo =>
+        cargo.unidad.toLowerCase().includes(filters.unitNumber.toLowerCase()),
       );
     }
 
@@ -212,7 +214,7 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
 
   const handleBulkReject = () => {
     console.log('Bulk reject:', Array.from(selectedCargos));
-    // TODO: Implement bulk reject  
+    // TODO: Implement bulk reject
   };
 
   const handleExport = () => {
@@ -223,14 +225,24 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
   // Pagination
   const totalPages = Math.ceil(filteredCargos.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedCargos = filteredCargos.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedCargos = filteredCargos.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   // Statistics
   const totalCargos = filteredCargos.length;
-  const pendingCargos = filteredCargos.filter(c => c.estado === 'pending').length;
-  const approvedCargos = filteredCargos.filter(c => c.estado === 'approved').length;
+  const pendingCargos = filteredCargos.filter(
+    c => c.estado === 'pending',
+  ).length;
+  const approvedCargos = filteredCargos.filter(
+    c => c.estado === 'approved',
+  ).length;
   const paidCargos = filteredCargos.filter(c => c.estado === 'paid').length;
-  const totalAmount = filteredCargos.reduce((sum, cargo) => sum + cargo.monto, 0);
+  const totalAmount = filteredCargos.reduce(
+    (sum, cargo) => sum + cargo.monto,
+    0,
+  );
 
   useEffect(() => {
     applyFilters();
@@ -239,34 +251,34 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
   return (
     <div className={`cargos-listado ${className}`}>
       {/* Header Stats */}
-      <div className="charges-header">
-        <h1 className="charges-title">Gestión de Cargos</h1>
-        <p className="charges-subtitle">
+      <div className='charges-header'>
+        <h1 className='charges-title'>Gestión de Cargos</h1>
+        <p className='charges-subtitle'>
           Administre y controle todos los cargos de la propiedad horizontal
         </p>
-        
-        <div className="charges-stats">
-          <div className="stat-item">
-            <div className="stat-number">{totalCargos}</div>
-            <div className="stat-label">Total</div>
+
+        <div className='charges-stats'>
+          <div className='stat-item'>
+            <div className='stat-number'>{totalCargos}</div>
+            <div className='stat-label'>Total</div>
           </div>
-          <div className="stat-item">
-            <div className="stat-number">{pendingCargos}</div>
-            <div className="stat-label">Pendientes</div>
+          <div className='stat-item'>
+            <div className='stat-number'>{pendingCargos}</div>
+            <div className='stat-label'>Pendientes</div>
           </div>
-          <div className="stat-item">
-            <div className="stat-number">{approvedCargos}</div>
-            <div className="stat-label">Aprobados</div>
+          <div className='stat-item'>
+            <div className='stat-number'>{approvedCargos}</div>
+            <div className='stat-label'>Aprobados</div>
           </div>
-          <div className="stat-item">
-            <div className="stat-number">{paidCargos}</div>
-            <div className="stat-label">Pagados</div>
+          <div className='stat-item'>
+            <div className='stat-number'>{paidCargos}</div>
+            <div className='stat-label'>Pagados</div>
           </div>
-          <div className="stat-item">
-            <div className="stat-number">
+          <div className='stat-item'>
+            <div className='stat-number'>
               <AmountCell amount={totalAmount} />
             </div>
-            <div className="stat-label">Monto Total</div>
+            <div className='stat-label'>Monto Total</div>
           </div>
         </div>
       </div>
@@ -281,38 +293,38 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
 
       {/* Bulk Actions */}
       {selectedCargos.size > 0 && (
-        <div className="bulk-actions show">
-          <div className="bulk-actions-header">
-            <h6 className="bulk-actions-title">
+        <div className='bulk-actions show'>
+          <div className='bulk-actions-header'>
+            <h6 className='bulk-actions-title'>
               {selectedCargos.size} cargo(s) seleccionado(s)
             </h6>
-            <button 
-              className="btn btn-outline-secondary btn-sm"
+            <button
+              className='btn btn-outline-secondary btn-sm'
               onClick={() => setSelectedCargos(new Set())}
             >
-              <i className="material-icons">clear</i>
+              <i className='material-icons'>clear</i>
             </button>
           </div>
-          <div className="bulk-actions-buttons">
-            <button 
-              className="btn btn-success btn-sm"
+          <div className='bulk-actions-buttons'>
+            <button
+              className='btn btn-success btn-sm'
               onClick={handleBulkApprove}
             >
-              <i className="material-icons me-1">check</i>
+              <i className='material-icons me-1'>check</i>
               Aprobar
             </button>
-            <button 
-              className="btn btn-danger btn-sm"
+            <button
+              className='btn btn-danger btn-sm'
               onClick={handleBulkReject}
             >
-              <i className="material-icons me-1">close</i>
+              <i className='material-icons me-1'>close</i>
               Rechazar
             </button>
-            <button 
-              className="btn btn-outline-primary btn-sm"
+            <button
+              className='btn btn-outline-primary btn-sm'
               onClick={handleExport}
             >
-              <i className="material-icons me-1">download</i>
+              <i className='material-icons me-1'>download</i>
               Exportar
             </button>
           </div>
@@ -320,89 +332,96 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
       )}
 
       {/* Table */}
-      <div className="charges-table">
-        <div className="table-header">
-          <h5 className="table-title">
-            <i className="material-icons">receipt_long</i>
+      <div className='charges-table'>
+        <div className='table-header'>
+          <h5 className='table-title'>
+            <i className='material-icons'>receipt_long</i>
             Lista de Cargos
           </h5>
-          <div className="d-flex gap-2">
-            <button 
-              className="btn btn-primary"
-              onClick={() => window.location.href = '/cargos/nuevo'}
+          <div className='d-flex gap-2'>
+            <button
+              className='btn btn-primary'
+              onClick={() => (window.location.href = '/cargos/nuevo')}
             >
-              <i className="material-icons me-2">add</i>
+              <i className='material-icons me-2'>add</i>
               Nuevo Cargo
             </button>
-            <button 
-              className="btn btn-outline-secondary"
+            <button
+              className='btn btn-outline-secondary'
               onClick={handleExport}
             >
-              <i className="material-icons me-2">download</i>
+              <i className='material-icons me-2'>download</i>
               Exportar
             </button>
           </div>
         </div>
 
-        <div className="table-responsive">
+        <div className='table-responsive'>
           {loading ? (
-            <div className="text-center p-4">
-              <div className="spinner-border" role="status">
-                <span className="visually-hidden">Cargando...</span>
+            <div className='text-center p-4'>
+              <div className='spinner-border' role='status'>
+                <span className='visually-hidden'>Cargando...</span>
               </div>
             </div>
           ) : filteredCargos.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">
-                <i className="material-icons">search_off</i>
+            <div className='empty-state'>
+              <div className='empty-state-icon'>
+                <i className='material-icons'>search_off</i>
               </div>
-              <h4 className="empty-state-title">No se encontraron cargos</h4>
-              <p className="empty-state-description">
+              <h4 className='empty-state-title'>No se encontraron cargos</h4>
+              <p className='empty-state-description'>
                 No hay cargos que coincidan con los filtros seleccionados.
               </p>
             </div>
           ) : (
-            <table className="table custom-table">
+            <table className='table custom-table'>
               <thead>
                 <tr>
-                  <th scope="col" style={{ width: '50px' }}>
+                  <th scope='col' style={{ width: '50px' }}>
                     <input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={selectedCargos.size === filteredCargos.length && filteredCargos.length > 0}
+                      type='checkbox'
+                      className='form-check-input'
+                      checked={
+                        selectedCargos.size === filteredCargos.length &&
+                        filteredCargos.length > 0
+                      }
                       onChange={toggleSelectAll}
                     />
                   </th>
-                  <th scope="col">ID</th>
-                  <th scope="col">Concepto</th>
-                  <th scope="col">Tipo</th>
-                  <th scope="col">Unidad</th>
-                  <th scope="col">Período</th>
-                  <th scope="col">Monto</th>
-                  <th scope="col">Estado</th>
-                  <th scope="col">Vencimiento</th>
-                  <th scope="col" style={{ width: '120px' }}>Acciones</th>
+                  <th scope='col'>ID</th>
+                  <th scope='col'>Concepto</th>
+                  <th scope='col'>Tipo</th>
+                  <th scope='col'>Unidad</th>
+                  <th scope='col'>Período</th>
+                  <th scope='col'>Monto</th>
+                  <th scope='col'>Estado</th>
+                  <th scope='col'>Vencimiento</th>
+                  <th scope='col' style={{ width: '120px' }}>
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedCargos.map((cargo) => (
+                {paginatedCargos.map(cargo => (
                   <tr key={cargo.id}>
                     <td>
                       <input
-                        type="checkbox"
-                        className="form-check-input"
+                        type='checkbox'
+                        className='form-check-input'
                         checked={selectedCargos.has(cargo.id)}
                         onChange={() => toggleCargoSelection(cargo.id)}
                       />
                     </td>
                     <td>
-                      <span className="charge-id">{cargo.id}</span>
+                      <span className='charge-id'>{cargo.id}</span>
                     </td>
                     <td>
                       <div>
                         <strong>{cargo.concepto}</strong>
                         {cargo.descripcion && (
-                          <div className="text-muted small">{cargo.descripcion}</div>
+                          <div className='text-muted small'>
+                            {cargo.descripcion}
+                          </div>
                         )}
                       </div>
                     </td>
@@ -412,9 +431,7 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
                     <td>
                       <strong>{cargo.unidad}</strong>
                     </td>
-                    <td>
-                      {formatPeriod(cargo.periodo)}
-                    </td>
+                    <td>{formatPeriod(cargo.periodo)}</td>
                     <td>
                       <AmountCell amount={cargo.monto} />
                     </td>
@@ -422,32 +439,39 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
                       <StatusBadge status={cargo.estado} />
                     </td>
                     <td>
-                      <span className={new Date() > cargo.fechaVencimiento && cargo.estado !== 'paid' ? 'text-danger fw-bold' : ''}>
+                      <span
+                        className={
+                          new Date() > cargo.fechaVencimiento &&
+                          cargo.estado !== 'paid'
+                            ? 'text-danger fw-bold'
+                            : ''
+                        }
+                      >
                         {formatDate(cargo.fechaVencimiento)}
                       </span>
                     </td>
                     <td>
-                      <div className="btn-group" role="group">
+                      <div className='btn-group' role='group'>
                         <button
-                          className="action-btn primary small"
+                          className='action-btn primary small'
                           onClick={() => handleViewCargo(cargo.id)}
-                          title="Ver detalle"
+                          title='Ver detalle'
                         >
-                          <i className="material-icons">visibility</i>
+                          <i className='material-icons'>visibility</i>
                         </button>
                         <button
-                          className="action-btn outline small"
+                          className='action-btn outline small'
                           onClick={() => handleEditCargo(cargo.id)}
-                          title="Editar"
+                          title='Editar'
                         >
-                          <i className="material-icons">edit</i>
+                          <i className='material-icons'>edit</i>
                         </button>
                         <button
-                          className="action-btn danger small"
+                          className='action-btn danger small'
                           onClick={() => handleDeleteCargo(cargo.id)}
-                          title="Eliminar"
+                          title='Eliminar'
                         >
-                          <i className="material-icons">delete</i>
+                          <i className='material-icons'>delete</i>
                         </button>
                       </div>
                     </td>
@@ -460,35 +484,50 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="pagination-container">
-            <div className="pagination-info">
-              Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filteredCargos.length)} de {filteredCargos.length} cargos
+          <div className='pagination-container'>
+            <div className='pagination-info'>
+              Mostrando {startIndex + 1} a{' '}
+              {Math.min(startIndex + itemsPerPage, filteredCargos.length)} de{' '}
+              {filteredCargos.length} cargos
             </div>
             <nav>
-              <ul className="pagination">
-                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                  <button 
-                    className="page-link"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              <ul className='pagination'>
+                <li
+                  className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}
+                >
+                  <button
+                    className='page-link'
+                    onClick={() =>
+                      setCurrentPage(prev => Math.max(1, prev - 1))
+                    }
                     disabled={currentPage === 1}
                   >
                     Anterior
                   </button>
                 </li>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
-                    <button 
-                      className="page-link"
-                      onClick={() => setCurrentPage(page)}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  page => (
+                    <li
+                      key={page}
+                      className={`page-item ${currentPage === page ? 'active' : ''}`}
                     >
-                      {page}
-                    </button>
-                  </li>
-                ))}
-                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                  <button 
-                    className="page-link"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      <button
+                        className='page-link'
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </button>
+                    </li>
+                  ),
+                )}
+                <li
+                  className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}
+                >
+                  <button
+                    className='page-link'
+                    onClick={() =>
+                      setCurrentPage(prev => Math.min(totalPages, prev + 1))
+                    }
                     disabled={currentPage === totalPages}
                   >
                     Siguiente

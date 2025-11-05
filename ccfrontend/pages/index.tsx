@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
+
 import { useAuth } from '@/lib/useAuth';
 import { validateIdentifier, formatIdentifier } from '@/lib/validators';
 
@@ -15,13 +16,13 @@ export default function Home() {
   } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   // Estados para 2FA
   const [requires2FA, setRequires2FA] = useState(false);
   const [tempToken, setTempToken] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [username, setUsername] = useState('');
-  
+
   // Estado para validación de identificador
   const [identifierValue, setIdentifierValue] = useState('');
   const [identifierValidation, setIdentifierValidation] = useState<{
@@ -36,7 +37,7 @@ export default function Home() {
       '🏠 Estado auth en login page - autenticado:',
       isAuthenticated,
       'cargando:',
-      authLoading
+      authLoading,
     );
     if (isAuthenticated && !authLoading) {
       console.log('✅ Usuario autenticado, redirigiendo al dashboard...');
@@ -69,7 +70,9 @@ export default function Home() {
 
     // Validar formato del identificador
     if (identifierValidation && !identifierValidation.isValid) {
-      setError(identifierValidation.message || 'Formato de identificador inválido');
+      setError(
+        identifierValidation.message || 'Formato de identificador inválido',
+      );
       return;
     }
 
@@ -79,7 +82,7 @@ export default function Home() {
     try {
       // Formatear el identificador antes de enviarlo
       const formattedIdentifier = formatIdentifier(identifierValue);
-      
+
       // Usar el login del contexto de autenticación
       const response = await authLogin(formattedIdentifier, password);
 
@@ -139,14 +142,14 @@ export default function Home() {
   // Pre-llenar los campos con las credenciales por defecto
   const fillDefaultCredentials = () => {
     const usernameInput = document.querySelector(
-      'input[name="username"]'
+      'input[name="username"]',
     ) as HTMLInputElement;
     const passwordInput = document.querySelector(
-      'input[name="password"]'
+      'input[name="password"]',
     ) as HTMLInputElement;
 
-    if (usernameInput) usernameInput.value = 'patrick';
-    if (passwordInput) passwordInput.value = 'patrick';
+    if (usernameInput) {usernameInput.value = 'patrick';}
+    if (passwordInput) {passwordInput.value = 'patrick';}
   };
 
   return (
@@ -297,10 +300,9 @@ export default function Home() {
 
                   {/* Título dinámico */}
                   <p className='text-muted'>
-                    {requires2FA 
+                    {requires2FA
                       ? 'Introduce el código de 6 dígitos de tu aplicación de autenticación.'
-                      : 'Ingresa con tu correo, RUT, DNI o usuario para acceder al panel.'
-                    }
+                      : 'Ingresa con tu correo, RUT, DNI o usuario para acceder al panel.'}
                   </p>
 
                   {error && (
@@ -328,7 +330,9 @@ export default function Home() {
                   {!requires2FA && (
                     <form onSubmit={handleSubmit}>
                       <div className='mb-3'>
-                        <label className='form-label'>Correo, RUT, DNI o Usuario</label>
+                        <label className='form-label'>
+                          Correo, RUT, DNI o Usuario
+                        </label>
                         <input
                           name='identifier'
                           type='text'
@@ -341,13 +345,15 @@ export default function Home() {
                           }`}
                           placeholder='ejemplo@correo.com, 12345678-9, 12345678 o usuario'
                           value={identifierValue}
-                          onChange={(e) => setIdentifierValue(e.target.value)}
+                          onChange={e => setIdentifierValue(e.target.value)}
                           required
                         />
                         {identifierValidation && (
                           <div
                             className={`${
-                              identifierValidation.isValid ? 'valid-feedback' : 'invalid-feedback'
+                              identifierValidation.isValid
+                                ? 'valid-feedback'
+                                : 'invalid-feedback'
                             }`}
                           >
                             {identifierValidation.isValid
@@ -355,18 +361,19 @@ export default function Home() {
                                   identifierValidation.type === 'email'
                                     ? 'Correo electrónico'
                                     : identifierValidation.type === 'rut'
-                                    ? 'RUT chileno'
-                                    : identifierValidation.type === 'dni'
-                                    ? 'DNI'
-                                    : 'Nombre de usuario'
+                                      ? 'RUT chileno'
+                                      : identifierValidation.type === 'dni'
+                                        ? 'DNI'
+                                        : 'Nombre de usuario'
                                 }`
-                              : identifierValidation.message || 'Formato inválido'
-                            }
+                              : identifierValidation.message ||
+                                'Formato inválido'}
                           </div>
                         )}
                         {!identifierValidation && (
                           <div className='form-text'>
-                            Puedes usar tu correo electrónico, RUT (Chile), DNI o nombre de usuario
+                            Puedes usar tu correo electrónico, RUT (Chile), DNI
+                            o nombre de usuario
                           </div>
                         )}
                       </div>
@@ -388,7 +395,10 @@ export default function Home() {
                             type='checkbox'
                             id='remember'
                           />
-                          <label className='form-check-label' htmlFor='remember'>
+                          <label
+                            className='form-check-label'
+                            htmlFor='remember'
+                          >
                             Recordarme
                           </label>
                         </div>
@@ -416,22 +426,26 @@ export default function Home() {
                   {requires2FA && (
                     <form onSubmit={handle2FASubmit}>
                       <div className='text-center mb-4'>
-                        <div 
+                        <div
                           className='d-inline-flex align-items-center justify-content-center bg-light rounded-circle'
                           style={{ width: '80px', height: '80px' }}
                         >
-                          <span 
-                            className='material-icons' 
-                            style={{ 
-                              fontSize: '40px', 
-                              color: 'var(--color-primary)' 
+                          <span
+                            className='material-icons'
+                            style={{
+                              fontSize: '40px',
+                              color: 'var(--color-primary)',
                             }}
                           >
                             verified_user
                           </span>
                         </div>
-                        <h5 className='mt-3 mb-1'>Verificación de Dos Factores</h5>
-                        <p className='text-muted small mb-0'>Usuario: <strong>{username}</strong></p>
+                        <h5 className='mt-3 mb-1'>
+                          Verificación de Dos Factores
+                        </h5>
+                        <p className='text-muted small mb-0'>
+                          Usuario: <strong>{username}</strong>
+                        </p>
                       </div>
 
                       <div className='mb-4'>
@@ -441,20 +455,25 @@ export default function Home() {
                         <input
                           type='text'
                           className='form-control text-center'
-                          style={{ 
-                            fontSize: '1.5rem', 
+                          style={{
+                            fontSize: '1.5rem',
                             letterSpacing: '0.5rem',
-                            height: '60px'
+                            height: '60px',
                           }}
                           placeholder='000000'
                           value={twoFactorCode}
-                          onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          onChange={e =>
+                            setTwoFactorCode(
+                              e.target.value.replace(/\D/g, '').slice(0, 6),
+                            )
+                          }
                           maxLength={6}
                           required
                           autoFocus
                         />
                         <div className='form-text text-center'>
-                          Ingresa el código de 6 dígitos de tu aplicación de autenticación
+                          Ingresa el código de 6 dígitos de tu aplicación de
+                          autenticación
                         </div>
                       </div>
 
@@ -466,7 +485,10 @@ export default function Home() {
                         >
                           {isLoading ? (
                             <>
-                              <span className='spinner-border spinner-border-sm me-2' role='status'></span>
+                              <span
+                                className='spinner-border spinner-border-sm me-2'
+                                role='status'
+                              ></span>
                               Verificando...
                             </>
                           ) : (
@@ -479,7 +501,10 @@ export default function Home() {
                           onClick={cancel2FA}
                           disabled={isLoading}
                         >
-                          <span className='material-icons me-2' style={{ fontSize: '18px' }}>
+                          <span
+                            className='material-icons me-2'
+                            style={{ fontSize: '18px' }}
+                          >
                             arrow_back
                           </span>
                           Volver al Login
@@ -512,13 +537,20 @@ export default function Home() {
                     <div className='text-center mt-3'>
                       <div className='alert alert-info border-0 bg-light'>
                         <div className='d-flex align-items-start'>
-                          <span className='material-icons me-2 text-primary' style={{ fontSize: '20px' }}>
+                          <span
+                            className='material-icons me-2 text-primary'
+                            style={{ fontSize: '20px' }}
+                          >
                             info
                           </span>
                           <div className='text-start small'>
-                            <strong>¿No tienes acceso a tu aplicación de autenticación?</strong>
+                            <strong>
+                              ¿No tienes acceso a tu aplicación de
+                              autenticación?
+                            </strong>
                             <br />
-                            Contacta al administrador del sistema para desactivar temporalmente 2FA en tu cuenta.
+                            Contacta al administrador del sistema para
+                            desactivar temporalmente 2FA en tu cuenta.
                           </div>
                         </div>
                       </div>

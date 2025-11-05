@@ -22,7 +22,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
             amount: 150000,
             type: 'credit',
             matched: true,
-            matchStatus: 'matched'
+            matchStatus: 'matched',
           },
           {
             id: 2,
@@ -32,7 +32,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
             amount: -75000,
             type: 'debit',
             matched: true,
-            matchStatus: 'matched'
+            matchStatus: 'matched',
           },
           {
             id: 3,
@@ -42,7 +42,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
             amount: -25000,
             type: 'debit',
             matched: false,
-            matchStatus: 'unmatched'
+            matchStatus: 'unmatched',
           },
           {
             id: 4,
@@ -52,7 +52,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
             amount: 50000,
             type: 'credit',
             matched: true,
-            matchStatus: 'matched'
+            matchStatus: 'matched',
           },
           {
             id: 5,
@@ -62,29 +62,28 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
             amount: -120000,
             type: 'debit',
             matched: false,
-            matchStatus: 'unmatched'
-          }
-        ]
+            matchStatus: 'unmatched',
+          },
+        ],
       };
 
       // Simular delay de procesamiento
       setTimeout(() => {
         res.status(200).json({
           message: 'Archivo procesado exitosamente',
-          data: mockProcessingResult
+          data: mockProcessingResult,
         });
       }, 2000);
-
     } catch (error) {
       console.error('Error processing file:', error);
       res.status(500).json({
-        error: 'Error al procesar el archivo'
+        error: 'Error al procesar el archivo',
       });
     }
   } else {
     res.setHeader('Allow', ['POST']);
     res.status(405).json({
-      error: `Método ${req.method} no permitido`
+      error: `Método ${req.method} no permitido`,
     });
   }
 }

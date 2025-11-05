@@ -1,9 +1,10 @@
-import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+
+import Layout from '@/components/layout/Layout';
 import apiClient from '@/lib/api';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 export default function ResidentesUnidad() {
   const router = useRouter();
@@ -12,17 +13,23 @@ export default function ResidentesUnidad() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {return;}
     let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
         const res = await apiClient.get(`/unidades/${id}/residentes`);
-        if (mounted) setResidentes(res.data || []);
-      } catch (err) { console.error(err); } finally { setLoading(false); }
+        if (mounted) {setResidentes(res.data || []);}
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
   return (
@@ -38,9 +45,15 @@ export default function ResidentesUnidad() {
               <div className='card'>
                 <div className='card-body'>
                   <h1 className='card-title'>Gestión de Residentes</h1>
-                  <p className='text-muted'>Lista de residentes asociados a la unidad</p>
-                  {loading && <div className='alert alert-info'>Cargando...</div>}
-                  {!loading && residentes.length === 0 && <div className='alert alert-warning'>No hay residentes</div>}
+                  <p className='text-muted'>
+                    Lista de residentes asociados a la unidad
+                  </p>
+                  {loading && (
+                    <div className='alert alert-info'>Cargando...</div>
+                  )}
+                  {!loading && residentes.length === 0 && (
+                    <div className='alert alert-warning'>No hay residentes</div>
+                  )}
                   {!loading && residentes.length > 0 && (
                     <ul className='list-group'>
                       {residentes.map(r => (

@@ -9,25 +9,28 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import DashboardCharts from '@/components/ui/DashboardCharts';
 import comunidadesService from '@/lib/comunidadesService';
-import { dashboardService, DashboardResumenCompleto } from '@/lib/dashboardService';
+import {
+  dashboardService,
+  DashboardResumenCompleto,
+} from '@/lib/dashboardService';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
-import {
-  usePermissions,
-} from '@/lib/usePermissions';
-
+import { usePermissions } from '@/lib/usePermissions';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { isSuperUser } = usePermissions();
 
   // Estados para datos dinámicos
-  const [selectedComunidad, setSelectedComunidad] = useState<number | null>(null);
+  const [selectedComunidad, setSelectedComunidad] = useState<number | null>(
+    null,
+  );
   const [comunidades, setComunidades] = useState<any[]>([]);
   const [searchComunidad, setSearchComunidad] = useState('');
   const [showComunidadDropdown, setShowComunidadDropdown] = useState(false);
   const [notificacionesCount] = useState(0);
-  const [dashboardData, setDashboardData] = useState<DashboardResumenCompleto | null>(null);
+  const [dashboardData, setDashboardData] =
+    useState<DashboardResumenCompleto | null>(null);
   const [, setIsLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
 
@@ -39,30 +42,41 @@ export default function Dashboard() {
       try {
         console.log('📊 [Dashboard] loadInitialData - Iniciando');
         console.log('📊 [Dashboard] Usuario actual:', user);
-        console.log('📊 [Dashboard] Token:', localStorage.getItem('auth_token'));
-        
+        console.log(
+          '📊 [Dashboard] Token:',
+          localStorage.getItem('auth_token'),
+        );
+
         // ✅ NUEVA VERIFICACIÓN: Si no hay usuario, no continuar
         if (!user) {
-          console.log('❌ [Dashboard] Sin usuario autenticado, abortando carga de datos');
+          console.log(
+            '❌ [Dashboard] Sin usuario autenticado, abortando carga de datos',
+          );
           setIsLoading(false);
           return;
         }
-        
+
         const comunidadesData = await comunidadesService.getComunidades();
-        
+
         if (!isMounted) {
           console.log('📊 [Dashboard] Componente desmontado, abortando');
           return;
         }
 
-        console.log('📊 [Dashboard] Comunidades recibidas:', comunidadesData.length);
+        console.log(
+          '📊 [Dashboard] Comunidades recibidas:',
+          comunidadesData.length,
+        );
         setComunidades(comunidadesData);
 
         // Inicializar con la primera comunidad si existe
         if (comunidadesData.length > 0) {
           const primeraComunidad = comunidadesData[0];
           if (primeraComunidad) {
-            console.log('📊 [Dashboard] Estableciendo primera comunidad:', primeraComunidad.id);
+            console.log(
+              '📊 [Dashboard] Estableciendo primera comunidad:',
+              primeraComunidad.id,
+            );
             setSelectedComunidad(primeraComunidad.id);
           }
         } else {
@@ -254,11 +268,10 @@ export default function Dashboard() {
                     value={
                       showComunidadDropdown
                         ? searchComunidad
-                        : comunidades.find(
-                          c => c.id === selectedComunidad,
-                        )?.nombre || 'Seleccionar Comunidad'
+                        : comunidades.find(c => c.id === selectedComunidad)
+                            ?.nombre || 'Seleccionar Comunidad'
                     }
-                    onChange={(e) => {
+                    onChange={e => {
                       setSearchComunidad(e.target.value);
                       setShowComunidadDropdown(true);
                     }}
@@ -273,22 +286,23 @@ export default function Dashboard() {
                 {showComunidadDropdown && (
                   <div
                     className='position-absolute w-100 mt-1 bg-white border rounded shadow-sm'
-                    style={{ zIndex: 1000, maxHeight: '300px', overflowY: 'auto' }}
+                    style={{
+                      zIndex: 1000,
+                      maxHeight: '300px',
+                      overflowY: 'auto',
+                    }}
                   >
                     {comunidades
-                      .filter(
-                        c =>
-                          c.nombre
-                            .toLowerCase()
-                            .includes(searchComunidad.toLowerCase()),
+                      .filter(c =>
+                        c.nombre
+                          .toLowerCase()
+                          .includes(searchComunidad.toLowerCase()),
                       )
                       .map(comunidad => (
                         <button
                           key={comunidad.id}
                           className={`d-block w-100 text-start px-3 py-2 border-0 bg-white ${
-                            comunidad.id === selectedComunidad
-                              ? 'bg-light'
-                              : ''
+                            comunidad.id === selectedComunidad ? 'bg-light' : ''
                           }`}
                           style={{ cursor: 'pointer' }}
                           onMouseDown={() => {
@@ -296,10 +310,10 @@ export default function Dashboard() {
                             setSearchComunidad('');
                             setShowComunidadDropdown(false);
                           }}
-                          onMouseEnter={(e) => {
+                          onMouseEnter={e => {
                             e.currentTarget.style.backgroundColor = '#f8f9fa';
                           }}
-                          onMouseLeave={(e) => {
+                          onMouseLeave={e => {
                             e.currentTarget.style.backgroundColor =
                               comunidad.id === selectedComunidad
                                 ? '#f8f9fa'
@@ -307,7 +321,10 @@ export default function Dashboard() {
                           }}
                         >
                           <div className='d-flex align-items-center'>
-                            <span className='material-icons me-2 text-muted' style={{ fontSize: '18px' }}>
+                            <span
+                              className='material-icons me-2 text-muted'
+                              style={{ fontSize: '18px' }}
+                            >
                               apartment
                             </span>
                             <div>
@@ -398,16 +415,26 @@ export default function Dashboard() {
                       Saldo Total
                     </span>
                     <h4 className='mb-0'>
-                      ${dashboardData?.kpis?.saldoTotal?.toLocaleString() || '0'}
+                      $
+                      {dashboardData?.kpis?.saldoTotal?.toLocaleString() || '0'}
                     </h4>
-                    <div className={`small ${(dashboardData?.kpis?.saldoTotalChange || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
+                    <div
+                      className={`small ${(dashboardData?.kpis?.saldoTotalChange || 0) >= 0 ? 'text-success' : 'text-danger'}`}
+                    >
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {(dashboardData?.kpis?.saldoTotalChange || 0) >= 0 ? 'arrow_upward' : 'arrow_downward'}
+                        {(dashboardData?.kpis?.saldoTotalChange || 0) >= 0
+                          ? 'arrow_upward'
+                          : 'arrow_downward'}
                       </span>
-                      <span>{Math.abs(dashboardData?.kpis?.saldoTotalChange || 0).toFixed(1)}% vs mes anterior</span>
+                      <span>
+                        {Math.abs(
+                          dashboardData?.kpis?.saldoTotalChange || 0,
+                        ).toFixed(1)}
+                        % vs mes anterior
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -434,16 +461,27 @@ export default function Dashboard() {
                       Ingresos del Mes
                     </span>
                     <h4 className='mb-0'>
-                      ${dashboardData?.kpis?.ingresosMes?.toLocaleString() || '0'}
+                      $
+                      {dashboardData?.kpis?.ingresosMes?.toLocaleString() ||
+                        '0'}
                     </h4>
-                    <div className={`small ${(dashboardData?.kpis?.ingresosMesChange || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
+                    <div
+                      className={`small ${(dashboardData?.kpis?.ingresosMesChange || 0) >= 0 ? 'text-success' : 'text-danger'}`}
+                    >
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {(dashboardData?.kpis?.ingresosMesChange || 0) >= 0 ? 'arrow_upward' : 'arrow_downward'}
+                        {(dashboardData?.kpis?.ingresosMesChange || 0) >= 0
+                          ? 'arrow_upward'
+                          : 'arrow_downward'}
                       </span>
-                      <span>{Math.abs(dashboardData?.kpis?.ingresosMesChange || 0).toFixed(1)}% vs mes anterior</span>
+                      <span>
+                        {Math.abs(
+                          dashboardData?.kpis?.ingresosMesChange || 0,
+                        ).toFixed(1)}
+                        % vs mes anterior
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -469,14 +507,23 @@ export default function Dashboard() {
                     <h4 className='mb-0'>
                       ${dashboardData?.kpis?.gastosMes?.toLocaleString() || '0'}
                     </h4>
-                    <div className={`small ${(dashboardData?.kpis?.gastosMesChange || 0) >= 0 ? 'text-danger' : 'text-success'}`}>
+                    <div
+                      className={`small ${(dashboardData?.kpis?.gastosMesChange || 0) >= 0 ? 'text-danger' : 'text-success'}`}
+                    >
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {(dashboardData?.kpis?.gastosMesChange || 0) >= 0 ? 'arrow_upward' : 'arrow_downward'}
+                        {(dashboardData?.kpis?.gastosMesChange || 0) >= 0
+                          ? 'arrow_upward'
+                          : 'arrow_downward'}
                       </span>
-                      <span>{Math.abs(dashboardData?.kpis?.gastosMesChange || 0).toFixed(1)}% vs mes anterior</span>
+                      <span>
+                        {Math.abs(
+                          dashboardData?.kpis?.gastosMesChange || 0,
+                        ).toFixed(1)}
+                        % vs mes anterior
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -505,14 +552,23 @@ export default function Dashboard() {
                     <h4 className='mb-0'>
                       {dashboardData?.kpis?.tasaMorosidad || '0'}%
                     </h4>
-                    <div className={`small ${(dashboardData?.kpis?.tasaMorosidadChange || 0) <= 0 ? 'text-success' : 'text-danger'}`}>
+                    <div
+                      className={`small ${(dashboardData?.kpis?.tasaMorosidadChange || 0) <= 0 ? 'text-success' : 'text-danger'}`}
+                    >
                       <span
                         className='material-icons align-middle'
                         style={{ fontSize: '14px' }}
                       >
-                        {(dashboardData?.kpis?.tasaMorosidadChange || 0) <= 0 ? 'arrow_downward' : 'arrow_upward'}
+                        {(dashboardData?.kpis?.tasaMorosidadChange || 0) <= 0
+                          ? 'arrow_downward'
+                          : 'arrow_upward'}
                       </span>
-                      <span>{Math.abs(dashboardData?.kpis?.tasaMorosidadChange || 0).toFixed(1)}% vs mes anterior</span>
+                      <span>
+                        {Math.abs(
+                          dashboardData?.kpis?.tasaMorosidadChange || 0,
+                        ).toFixed(1)}
+                        % vs mes anterior
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -569,7 +625,7 @@ export default function Dashboard() {
                         </tr>
                       )) || (
                         <tr>
-                          <td colSpan={4} className="text-center text-muted">
+                          <td colSpan={4} className='text-center text-muted'>
                             No hay pagos recientes
                           </td>
                         </tr>
@@ -625,7 +681,7 @@ export default function Dashboard() {
                         </tr>
                       )) || (
                         <tr>
-                          <td colSpan={5} className="text-center text-muted">
+                          <td colSpan={5} className='text-center text-muted'>
                             No hay unidades morosas
                           </td>
                         </tr>
@@ -649,23 +705,25 @@ export default function Dashboard() {
                   </button>
                 </div>
                 <div className='list-group list-group-flush'>
-                  {dashboardData?.proximasActividades?.map((actividad, index) => (
-                    <div key={index} className='list-group-item'>
-                      <div className='d-flex w-100 justify-content-between align-items-center'>
-                        <div>
-                          <h6 className='mb-1'>{actividad.titulo}</h6>
-                          <p className='mb-0 text-muted'>
-                            {actividad.descripcion}
-                          </p>
-                        </div>
-                        <div className='text-end'>
-                          <span className='badge bg-primary'>
-                            {new Date(actividad.fecha).toLocaleDateString()}
-                          </span>
+                  {dashboardData?.proximasActividades?.map(
+                    (actividad, index) => (
+                      <div key={index} className='list-group-item'>
+                        <div className='d-flex w-100 justify-content-between align-items-center'>
+                          <div>
+                            <h6 className='mb-1'>{actividad.titulo}</h6>
+                            <p className='mb-0 text-muted'>
+                              {actividad.descripcion}
+                            </p>
+                          </div>
+                          <div className='text-end'>
+                            <span className='badge bg-primary'>
+                              {new Date(actividad.fecha).toLocaleDateString()}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )) || (
+                    ),
+                  ) || (
                     <div className='list-group-item text-center text-muted'>
                       No hay actividades próximas
                     </div>

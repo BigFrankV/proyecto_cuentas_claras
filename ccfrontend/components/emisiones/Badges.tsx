@@ -1,5 +1,12 @@
 // Tipos de estado para las emisiones
-export type EmissionStatus = 'draft' | 'ready' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
+export type EmissionStatus =
+  | 'draft'
+  | 'ready'
+  | 'sent'
+  | 'paid'
+  | 'partial'
+  | 'overdue'
+  | 'cancelled';
 
 // Badge de estado de emisión
 interface EmissionStatusBadgeProps {
@@ -7,56 +14,59 @@ interface EmissionStatusBadgeProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function EmissionStatusBadge({ status, size = 'md' }: EmissionStatusBadgeProps) {
+export function EmissionStatusBadge({
+  status,
+  size = 'md',
+}: EmissionStatusBadgeProps) {
   const getStatusConfig = (status: EmissionStatus) => {
     switch (status) {
       case 'draft':
         return {
           icon: 'edit',
           label: 'Borrador',
-          className: 'status-badge draft'
+          className: 'status-badge draft',
         };
       case 'ready':
         return {
           icon: 'check_circle',
           label: 'Lista',
-          className: 'status-badge ready'
+          className: 'status-badge ready',
         };
       case 'sent':
         return {
           icon: 'send',
           label: 'Enviada',
-          className: 'status-badge sent'
+          className: 'status-badge sent',
         };
       case 'paid':
         return {
           icon: 'paid',
           label: 'Pagada',
-          className: 'status-badge paid'
+          className: 'status-badge paid',
         };
       case 'partial':
         return {
           icon: 'schedule',
           label: 'Parcial',
-          className: 'status-badge partial'
+          className: 'status-badge partial',
         };
       case 'overdue':
         return {
           icon: 'warning',
           label: 'Vencida',
-          className: 'status-badge overdue'
+          className: 'status-badge overdue',
         };
       case 'cancelled':
         return {
           icon: 'cancel',
           label: 'Cancelada',
-          className: 'status-badge cancelled'
+          className: 'status-badge cancelled',
         };
       default:
         return {
           icon: 'help',
           label: 'Desconocido',
-          className: 'status-badge unknown'
+          className: 'status-badge unknown',
         };
     }
   };
@@ -67,7 +77,7 @@ export function EmissionStatusBadge({ status, size = 'md' }: EmissionStatusBadge
     <span className={`${config.className} ${size}`}>
       <i className='material-icons'>{config.icon}</i>
       <span>{config.label}</span>
-      
+
       <style jsx>{`
         .status-badge {
           display: inline-flex;
@@ -160,38 +170,41 @@ interface EmissionTypeBadgeProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function EmissionTypeBadge({ type, size = 'md' }: EmissionTypeBadgeProps) {
+export function EmissionTypeBadge({
+  type,
+  size = 'md',
+}: EmissionTypeBadgeProps) {
   const getTypeConfig = (type: string) => {
     switch (type) {
       case 'gastos_comunes':
         return {
           icon: 'home',
           label: 'Gastos Comunes',
-          className: 'type-badge common'
+          className: 'type-badge common',
         };
       case 'extraordinaria':
         return {
           icon: 'star',
           label: 'Extraordinaria',
-          className: 'type-badge extraordinary'
+          className: 'type-badge extraordinary',
         };
       case 'multa':
         return {
           icon: 'gavel',
           label: 'Multa',
-          className: 'type-badge fine'
+          className: 'type-badge fine',
         };
       case 'interes':
         return {
           icon: 'trending_up',
           label: 'Interés',
-          className: 'type-badge interest'
+          className: 'type-badge interest',
         };
       default:
         return {
           icon: 'receipt',
           label: 'Emisión',
-          className: 'type-badge default'
+          className: 'type-badge default',
         };
     }
   };
@@ -202,7 +215,7 @@ export function EmissionTypeBadge({ type, size = 'md' }: EmissionTypeBadgeProps)
     <span className={`${config.className} ${size}`}>
       <i className='material-icons'>{config.icon}</i>
       <span>{config.label}</span>
-      
+
       <style jsx>{`
         .type-badge {
           display: inline-flex;
@@ -279,31 +292,31 @@ export function PriorityBadge({ priority, size = 'md' }: PriorityBadgeProps) {
         return {
           icon: 'keyboard_arrow_down',
           label: 'Baja',
-          className: 'priority-badge low'
+          className: 'priority-badge low',
         };
       case 'normal':
         return {
           icon: 'remove',
           label: 'Normal',
-          className: 'priority-badge normal'
+          className: 'priority-badge normal',
         };
       case 'high':
         return {
           icon: 'keyboard_arrow_up',
           label: 'Alta',
-          className: 'priority-badge high'
+          className: 'priority-badge high',
         };
       case 'urgent':
         return {
           icon: 'priority_high',
           label: 'Urgente',
-          className: 'priority-badge urgent'
+          className: 'priority-badge urgent',
         };
       default:
         return {
           icon: 'help',
           label: 'Normal',
-          className: 'priority-badge normal'
+          className: 'priority-badge normal',
         };
     }
   };
@@ -314,7 +327,7 @@ export function PriorityBadge({ priority, size = 'md' }: PriorityBadgeProps) {
     <span className={`${config.className} ${size}`}>
       <i className='material-icons'>{config.icon}</i>
       <span>{config.label}</span>
-      
+
       <style jsx>{`
         .priority-badge {
           display: inline-flex;

@@ -25,7 +25,7 @@ export default function TimelineItem({
   tags = [],
   attachments = 0,
   ip,
-  location
+  location,
 }: TimelineItemProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -34,7 +34,7 @@ export default function TimelineItem({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -45,7 +45,7 @@ export default function TimelineItem({
       security: 'timeline-marker security',
       maintenance: 'timeline-marker maintenance',
       admin: 'timeline-marker admin',
-      financial: 'timeline-marker financial'
+      financial: 'timeline-marker financial',
     };
     return classes[activityType as keyof typeof classes] || 'timeline-marker';
   };
@@ -53,7 +53,7 @@ export default function TimelineItem({
   return (
     <div className='timeline-item'>
       <div className={getMarkerClass(type)}></div>
-      
+
       <div className='timeline-content'>
         <div className='timeline-header'>
           <div className='timeline-info'>

@@ -25,7 +25,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   isSubmitting = false,
   className = '',
   minRows = 3,
-  maxRows = 8
+  maxRows = 8,
 }) => {
   const [content, setContent] = useState('');
   const [isInternal, setIsInternal] = useState(false);
@@ -34,7 +34,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!content.trim()) {
       return;
     }
@@ -42,12 +42,12 @@ export const CommentForm: React.FC<CommentFormProps> = ({
     const commentData: CommentData = {
       content: content.trim(),
       isInternal,
-      ...(attachments.length > 0 && { attachments })
+      ...(attachments.length > 0 && { attachments }),
     };
 
     try {
       await onSubmit(commentData);
-      
+
       // Reset form after successful submission
       setContent('');
       setIsInternal(false);
@@ -85,11 +85,11 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {return '0 Bytes';}
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
   return (
@@ -102,14 +102,14 @@ export const CommentForm: React.FC<CommentFormProps> = ({
         <textarea
           className={`form-control ${isDragging ? 'border-primary' : ''}`}
           rows={minRows}
-          style={{ 
+          style={{
             minHeight: `${minRows * 1.5}rem`,
             maxHeight: `${maxRows * 1.5}rem`,
-            resize: 'vertical'
+            resize: 'vertical',
           }}
           placeholder={placeholder}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={e => setContent(e.target.value)}
           onDragOver={showAttachments ? handleDragOver : undefined}
           onDragLeave={showAttachments ? handleDragLeave : undefined}
           onDrop={showAttachments ? handleDrop : undefined}
@@ -117,7 +117,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
           required
         />
         {showAttachments && isDragging && (
-          <div 
+          <div
             className='drag-overlay'
             style={{
               position: 'absolute',
@@ -131,11 +131,14 @@ export const CommentForm: React.FC<CommentFormProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              zIndex: 10
+              zIndex: 10,
             }}
           >
             <div className='text-center'>
-              <i className='material-icons mb-2' style={{ fontSize: '2rem', color: 'var(--color-primary)' }}>
+              <i
+                className='material-icons mb-2'
+                style={{ fontSize: '2rem', color: 'var(--color-primary)' }}
+              >
                 cloud_upload
               </i>
               <p className='mb-0 text-primary fw-semibold'>
@@ -162,7 +165,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
                 input.type = 'file';
                 input.multiple = true;
                 input.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx,.txt';
-                input.onchange = (e) => {
+                input.onchange = e => {
                   const target = e.target as HTMLInputElement;
                   handleFileSelect(target.files);
                 };
@@ -178,15 +181,20 @@ export const CommentForm: React.FC<CommentFormProps> = ({
           {attachments.length > 0 && (
             <div className='attachments-list'>
               {attachments.map((file, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className='attachment-item d-flex align-items-center justify-content-between p-2 border rounded mb-2'
                   style={{ backgroundColor: '#f8f9fa' }}
                 >
                   <div className='d-flex align-items-center'>
-                    <i className='material-icons me-2 text-primary'>description</i>
+                    <i className='material-icons me-2 text-primary'>
+                      description
+                    </i>
                     <div>
-                      <div className='fw-semibold' style={{ fontSize: '0.875rem' }}>
+                      <div
+                        className='fw-semibold'
+                        style={{ fontSize: '0.875rem' }}
+                      >
                         {file.name}
                       </div>
                       <small className='text-muted'>
@@ -208,15 +216,18 @@ export const CommentForm: React.FC<CommentFormProps> = ({
           )}
 
           {attachments.length === 0 && (
-            <div 
+            <div
               className='attachment-dropzone text-center py-3'
               style={{
                 border: '2px dashed #dee2e6',
                 borderRadius: 'var(--radius)',
-                backgroundColor: '#f8f9fa'
+                backgroundColor: '#f8f9fa',
               }}
             >
-              <i className='material-icons mb-2' style={{ fontSize: '2rem', color: '#6c757d' }}>
+              <i
+                className='material-icons mb-2'
+                style={{ fontSize: '2rem', color: '#6c757d' }}
+              >
                 cloud_upload
               </i>
               <p className='text-muted mb-0'>
@@ -240,11 +251,13 @@ export const CommentForm: React.FC<CommentFormProps> = ({
                 type='checkbox'
                 id='internalComment'
                 checked={isInternal}
-                onChange={(e) => setIsInternal(e.target.checked)}
+                onChange={e => setIsInternal(e.target.checked)}
                 disabled={isSubmitting}
               />
               <label className='form-check-label' htmlFor='internalComment'>
-                <i className='material-icons me-1' style={{ fontSize: '16px' }}>lock</i>
+                <i className='material-icons me-1' style={{ fontSize: '16px' }}>
+                  lock
+                </i>
                 Comentario interno
               </label>
             </div>
@@ -271,7 +284,10 @@ export const CommentForm: React.FC<CommentFormProps> = ({
           >
             {isSubmitting ? (
               <>
-                <span className='spinner-border spinner-border-sm me-2' role='status'></span>
+                <span
+                  className='spinner-border spinner-border-sm me-2'
+                  role='status'
+                ></span>
                 Enviando...
               </>
             ) : (
@@ -287,11 +303,10 @@ export const CommentForm: React.FC<CommentFormProps> = ({
       {/* Character Count */}
       <div className='d-flex justify-content-between mt-2'>
         <small className='text-muted'>
-          {attachments.length > 0 && `${attachments.length} archivo(s) adjunto(s)`}
+          {attachments.length > 0 &&
+            `${attachments.length} archivo(s) adjunto(s)`}
         </small>
-        <small className='text-muted'>
-          {content.length} caracteres
-        </small>
+        <small className='text-muted'>{content.length} caracteres</small>
       </div>
     </form>
   );

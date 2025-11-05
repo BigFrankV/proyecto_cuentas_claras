@@ -21,19 +21,32 @@ export function getUserRole(user: User | null): string {
   if (user.roles && user.roles.length > 0) {
     // Buscar el rol con mayor prioridad
     const roleHierarchy = [
-      'superadmin', 'superadministrador', 'superadministradora',
-      'admin', 'administrador', 'administradora',
-      'manager', 'gerente',
-      'proveedor', 'proveedora', 'contractor',
-      'conserje', 'portero', 'portera', 'vigilante',
-      'propietario', 'propietaria',
-      'inquilino', 'inquilina', 
-      'residente', 'resident'
+      'superadmin',
+      'superadministrador',
+      'superadministradora',
+      'admin',
+      'administrador',
+      'administradora',
+      'manager',
+      'gerente',
+      'proveedor',
+      'proveedora',
+      'contractor',
+      'conserje',
+      'portero',
+      'portera',
+      'vigilante',
+      'propietario',
+      'propietaria',
+      'inquilino',
+      'inquilina',
+      'residente',
+      'resident',
     ];
 
     for (const hierarchyRole of roleHierarchy) {
-      const foundRole = user.roles.find(role => 
-        role?.toLowerCase() === hierarchyRole
+      const foundRole = user.roles.find(
+        role => role?.toLowerCase() === hierarchyRole,
       );
       if (foundRole) {
         return normalizeRole(foundRole);
@@ -64,40 +77,40 @@ export function getUserRole(user: User | null): string {
 export function normalizeRole(role: string): string {
   const roleMap: Record<string, string> = {
     // Roles de administración
-    'administrador': 'Admin',
-    'administradora': 'Admin',
-    'admin': 'Admin',
-    'administrator': 'Admin',
-    
+    administrador: 'Admin',
+    administradora: 'Admin',
+    admin: 'Admin',
+    administrator: 'Admin',
+
     // Roles de super administración
-    'superadministrador': 'Superadmin',
-    'superadministradora': 'Superadmin',
-    'superadmin': 'Superadmin',
-    'super_admin': 'Superadmin',
-    
+    superadministrador: 'Superadmin',
+    superadministradora: 'Superadmin',
+    superadmin: 'Superadmin',
+    super_admin: 'Superadmin',
+
     // Roles de residentes
-    'residente': 'Residente',
-    'resident': 'Residente',
-    'propietario': 'Propietario',
-    'propietaria': 'Propietario',
-    'inquilino': 'Inquilino',
-    'inquilina': 'Inquilino',
-    
+    residente: 'Residente',
+    resident: 'Residente',
+    propietario: 'Propietario',
+    propietaria: 'Propietario',
+    inquilino: 'Inquilino',
+    inquilina: 'Inquilino',
+
     // Roles de staff
-    'conserje': 'Conserje',
-    'portero': 'Portero',
-    'portera': 'Portero',
-    'vigilante': 'Vigilante',
-    
+    conserje: 'Conserje',
+    portero: 'Portero',
+    portera: 'Portero',
+    vigilante: 'Vigilante',
+
     // Roles de proveedores
-    'proveedor': 'Proveedor',
-    'proveedora': 'Proveedor',
-    'contractor': 'Proveedor',
-    
+    proveedor: 'Proveedor',
+    proveedora: 'Proveedor',
+    contractor: 'Proveedor',
+
     // Otros
-    'invitado': 'Invitado',
-    'invitada': 'Invitado',
-    'guest': 'Invitado',
+    invitado: 'Invitado',
+    invitada: 'Invitado',
+    guest: 'Invitado',
   };
 
   const normalizedRole = roleMap[role.toLowerCase()];
@@ -119,7 +132,7 @@ export function getRoleTagClass(user: User | null): string {
   }
 
   const role = getUserRole(user);
-  
+
   switch (role) {
     case 'Admin':
       return 'tag--primary';

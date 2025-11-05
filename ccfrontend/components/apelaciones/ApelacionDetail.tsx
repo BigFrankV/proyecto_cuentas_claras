@@ -76,37 +76,38 @@ const ApelacionDetail = ({
         </p>
       )}
       <div className='mt-3'>
-        {apelacion.estado === 'pendiente' && hasPermission('apelaciones.resolve' as any) && (
-          <>
-            <button
-              className='btn btn-success me-2'
-              disabled={loading}
-              onClick={() => handleResolve('aceptar')}
-            >
-              Aprobar
-            </button>
-            <button
-              className='btn btn-danger'
-              disabled={loading}
-              onClick={() => handleResolve('rechazar')}
-            >
-              Rechazar
-            </button>
-          </>
-        )}
+        {apelacion.estado === 'pendiente' &&
+          hasPermission('apelaciones.resolve' as any) && (
+            <>
+              <button
+                className='btn btn-success me-2'
+                disabled={loading}
+                onClick={() => handleResolve('aceptar')}
+              >
+                Aprobar
+              </button>
+              <button
+                className='btn btn-danger'
+                disabled={loading}
+                onClick={() => handleResolve('rechazar')}
+              >
+                Rechazar
+              </button>
+            </>
+          )}
 
         {!isManager() &&
           user &&
           (user.id === apelacion.usuario_id ||
             user.persona_id === apelacion.persona_id) &&
           apelacion.estado === 'pendiente' && (
-          <Link
-            href={`/apelaciones/${apelacion.id}/editar`}
-            className='btn btn-primary'
-          >
+            <Link
+              href={`/apelaciones/${apelacion.id}/editar`}
+              className='btn btn-primary'
+            >
               Editar mi apelación
-          </Link>
-        )}
+            </Link>
+          )}
       </div>
     </div>
   );

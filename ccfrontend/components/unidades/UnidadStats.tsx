@@ -12,7 +12,7 @@ const UnidadStats: React.FC<UnidadStatsProps> = ({ stats }) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
-      currency: 'CLP'
+      currency: 'CLP',
     }).format(amount);
   };
 

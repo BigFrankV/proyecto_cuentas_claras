@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Frontend para Cuentas Claras - Sistema de administración de comunidades",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev -p 5173",
     "build": "next build",

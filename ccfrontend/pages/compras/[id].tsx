@@ -16,8 +16,8 @@ import {
 } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
 import { comprasApi } from '@/lib/api/compras';
+import { ProtectedRoute } from '@/lib/useAuth';
 import { CompraBackend } from '@/types/compras';
 
 // Función para formatear moneda chilena
@@ -185,7 +185,7 @@ export default function DetallePurchase() {
         items: [], // por ahora vacío, podría mapearse si hay detalle de items
         totalAmount: Number(compra.total ?? 0),
         currency: 'clp',
-        requiredDate: compra.fecha_emision ?? (compra.created_at ?? ''),
+        requiredDate: compra.fecha_emision ?? compra.created_at ?? '',
         requestedBy: '', // no hay campo específico en la vista
         requestedDate: compra.created_at ?? '',
         documentsCount: 0, // por ahora 0

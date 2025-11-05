@@ -40,15 +40,21 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 const handleApiError = (error: unknown) => {
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as { response?: { data?: { error?: string } } };
-    throw new Error(apiError.response?.data?.error || 'Error de conexión con el servidor');
+    throw new Error(
+      apiError.response?.data?.error || 'Error de conexión con el servidor',
+    );
   }
   throw new Error('Error de conexión con el servidor');
 };
 
 // Helper para hacer peticiones autenticadas
-const apiRequest = async (url: string, options: Record<string, unknown> = {}) => {
+const apiRequest = async (
+  url: string,
+  options: Record<string, unknown> = {},
+) => {
   // Obtener token directamente de localStorage para evitar problemas de importación
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
   if (!token) {
     throw new Error('Missing token');
@@ -58,8 +64,8 @@ const apiRequest = async (url: string, options: Record<string, unknown> = {}) =>
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...(options.headers as Record<string, unknown> || {}),
+      Authorization: `Bearer ${token}`,
+      ...((options.headers as Record<string, unknown>) || {}),
     },
   };
 
@@ -67,7 +73,9 @@ const apiRequest = async (url: string, options: Record<string, unknown> = {}) =>
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    throw new Error(
+      errorData.error || `HTTP error! status: ${response.status}`,
+    );
   }
 
   return response.json();
@@ -110,7 +118,10 @@ export const cargosApi = {
   },
 
   // Obtener todos los cargos de una comunidad con filtros
-  getByComunidad: async (comunidadId: number, filters?: CargoFilters): Promise<Cargo[]> => {
+  getByComunidad: async (
+    comunidadId: number,
+    filters?: CargoFilters,
+  ): Promise<Cargo[]> => {
     try {
       const queryParams = new URLSearchParams();
       queryParams.append('comunidadId', comunidadId.toString());
@@ -200,10 +211,16 @@ export const cargosApi = {
         id: cargo.id,
         concepto: cargo.concepto,
         tipo: cargo.tipo,
-        estado: cargo.estado === 'pending' ? 'pendiente' :
-          cargo.estado === 'paid' ? 'pagado' :
-            cargo.estado === 'overdue' ? 'vencido' :
-              cargo.estado === 'partial' ? 'parcial' : cargo.estado,
+        estado:
+          cargo.estado === 'pending'
+            ? 'pendiente'
+            : cargo.estado === 'paid'
+              ? 'pagado'
+              : cargo.estado === 'overdue'
+                ? 'vencido'
+                : cargo.estado === 'partial'
+                  ? 'parcial'
+                  : cargo.estado,
         monto: cargo.monto,
         fechaVencimiento: new Date(cargo.fecha_vencimiento),
         unidad: cargo.unidad,
@@ -271,7 +288,9 @@ export const cargosApi = {
   },
 
   // Obtener estadísticas de cargos por comunidad
-  getEstadisticas: async (comunidadId: number): Promise<{
+  getEstadisticas: async (
+    comunidadId: number,
+  ): Promise<{
     totalCargos: number;
     totalMonto: number;
     totalSaldo: number;
@@ -285,7 +304,9 @@ export const cargosApi = {
     cargoMasReciente: string;
   }> => {
     try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/estadisticas`);
+      const data = await apiRequest(
+        `/cargos/comunidad/${comunidadId}/estadisticas`,
+      );
       return {
         totalCargos: data.total_cargos,
         totalMonto: data.monto_total,
@@ -306,9 +327,14 @@ export const cargosApi = {
   },
 
   // Obtener cargos por período
-  getByPeriodo: async (comunidadId: number, periodo: string): Promise<Cargo[]> => {
+  getByPeriodo: async (
+    comunidadId: number,
+    periodo: string,
+  ): Promise<Cargo[]> => {
     try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/periodo/${periodo}`);
+      const data = await apiRequest(
+        `/cargos/comunidad/${comunidadId}/periodo/${periodo}`,
+      );
 
       return data.map((cargo: CargoBackend) => ({
         id: cargo.id,
@@ -333,7 +359,9 @@ export const cargosApi = {
   // Obtener cargos vencidos
   getVencidos: async (comunidadId: number): Promise<Cargo[]> => {
     try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/vencidos`);
+      const data = await apiRequest(
+        `/cargos/comunidad/${comunidadId}/vencidos`,
+      );
 
       return data.map((cargo: CargoBackend) => ({
         id: cargo.id,
@@ -375,25 +403,33 @@ export const cargosApi = {
   },
 
   // Obtener cargos agrupados por estado
-  getPorEstado: async (comunidadId: number): Promise<Array<{
-    estado: string;
-    cantidad: number;
-    montoTotal: number;
-    montoPromedio: number;
-  }>> => {
+  getPorEstado: async (
+    comunidadId: number,
+  ): Promise<
+    Array<{
+      estado: string;
+      cantidad: number;
+      montoTotal: number;
+      montoPromedio: number;
+    }>
+  > => {
     try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/por-estado`);
-      return data.map((item: {
-        estado: string;
-        cantidad: number;
-        monto_total: number;
-        monto_promedio: number;
-      }) => ({
-        estado: item.estado,
-        cantidad: item.cantidad,
-        montoTotal: item.monto_total,
-        montoPromedio: item.monto_promedio,
-      }));
+      const data = await apiRequest(
+        `/cargos/comunidad/${comunidadId}/por-estado`,
+      );
+      return data.map(
+        (item: {
+          estado: string;
+          cantidad: number;
+          monto_total: number;
+          monto_promedio: number;
+        }) => ({
+          estado: item.estado,
+          cantidad: item.cantidad,
+          montoTotal: item.monto_total,
+          montoPromedio: item.monto_promedio,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -401,28 +437,36 @@ export const cargosApi = {
   },
 
   // Validación de cargos
-  validarCargos: async (comunidadId: number): Promise<Array<{
-    id: number;
-    estadoValidacion: string;
-    montoTotal: number;
-    saldo: number;
-    cantidadDetalles: number;
-  }>> => {
+  validarCargos: async (
+    comunidadId: number,
+  ): Promise<
+    Array<{
+      id: number;
+      estadoValidacion: string;
+      montoTotal: number;
+      saldo: number;
+      cantidadDetalles: number;
+    }>
+  > => {
     try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/validacion`);
-      return data.map((item: {
-        id: number;
-        estado_validacion: string;
-        monto_total: number;
-        saldo: number;
-        cantidad_detalles: number;
-      }) => ({
-        id: item.id,
-        estadoValidacion: item.estado_validacion,
-        montoTotal: item.monto_total,
-        saldo: item.saldo,
-        cantidadDetalles: item.cantidad_detalles,
-      }));
+      const data = await apiRequest(
+        `/cargos/comunidad/${comunidadId}/validacion`,
+      );
+      return data.map(
+        (item: {
+          id: number;
+          estado_validacion: string;
+          monto_total: number;
+          saldo: number;
+          cantidad_detalles: number;
+        }) => ({
+          id: item.id,
+          estadoValidacion: item.estado_validacion,
+          montoTotal: item.monto_total,
+          saldo: item.saldo,
+          cantidadDetalles: item.cantidad_detalles,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -432,7 +476,9 @@ export const cargosApi = {
   // Obtener cargos con interés acumulado
   getConInteres: async (comunidadId: number): Promise<Cargo[]> => {
     try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/con-interes`);
+      const data = await apiRequest(
+        `/cargos/comunidad/${comunidadId}/con-interes`,
+      );
 
       return data.map((cargo: CargoBackend) => ({
         id: cargo.id,
@@ -455,37 +501,45 @@ export const cargosApi = {
   },
 
   // Obtener resumen de pagos
-  getResumenPagos: async (comunidadId: number): Promise<Array<{
-    chargeId: number;
-    concept: string;
-    totalAmount: number;
-    remainingBalance: number;
-    totalPaid: number;
-    paymentCount: number;
-    lastPaymentDate: string | null;
-    estadoCalculado: string;
-  }>> => {
+  getResumenPagos: async (
+    comunidadId: number,
+  ): Promise<
+    Array<{
+      chargeId: number;
+      concept: string;
+      totalAmount: number;
+      remainingBalance: number;
+      totalPaid: number;
+      paymentCount: number;
+      lastPaymentDate: string | null;
+      estadoCalculado: string;
+    }>
+  > => {
     try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/resumen-pagos`);
-      return data.map((item: {
-        chargeId: number;
-        concept: string;
-        totalAmount: number;
-        remainingBalance: number;
-        totalPaid: number;
-        paymentCount: number;
-        lastPaymentDate: string | null;
-        estado_calculado: string;
-      }) => ({
-        chargeId: item.chargeId,
-        concept: item.concept,
-        totalAmount: item.totalAmount,
-        remainingBalance: item.remainingBalance,
-        totalPaid: item.totalPaid,
-        paymentCount: item.paymentCount,
-        lastPaymentDate: item.lastPaymentDate,
-        estadoCalculado: item.estado_calculado,
-      }));
+      const data = await apiRequest(
+        `/cargos/comunidad/${comunidadId}/resumen-pagos`,
+      );
+      return data.map(
+        (item: {
+          chargeId: number;
+          concept: string;
+          totalAmount: number;
+          remainingBalance: number;
+          totalPaid: number;
+          paymentCount: number;
+          lastPaymentDate: string | null;
+          estado_calculado: string;
+        }) => ({
+          chargeId: item.chargeId,
+          concept: item.concept,
+          totalAmount: item.totalAmount,
+          remainingBalance: item.remainingBalance,
+          totalPaid: item.totalPaid,
+          paymentCount: item.paymentCount,
+          lastPaymentDate: item.lastPaymentDate,
+          estadoCalculado: item.estado_calculado,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -493,34 +547,42 @@ export const cargosApi = {
   },
 
   // Obtener cargos por categoría
-  getPorCategoria: async (comunidadId: number): Promise<Array<{
-    nombreCategoria: string;
-    tipoCategoria: string;
-    cantidadDetallesCargo: number;
-    montoTotal: number;
-    montoPromedio: number;
-    cargosUnicos: number;
-    unidadesAfectadas: number;
-  }>> => {
+  getPorCategoria: async (
+    comunidadId: number,
+  ): Promise<
+    Array<{
+      nombreCategoria: string;
+      tipoCategoria: string;
+      cantidadDetallesCargo: number;
+      montoTotal: number;
+      montoPromedio: number;
+      cargosUnicos: number;
+      unidadesAfectadas: number;
+    }>
+  > => {
     try {
-      const data = await apiRequest(`/cargos/comunidad/${comunidadId}/por-categoria`);
-      return data.map((item: {
-        nombre_categoria: string;
-        tipo_categoria: string;
-        cantidad_detalles_cargo: number;
-        monto_total: number;
-        monto_promedio: number;
-        cargos_unicos: number;
-        unidades_afectadas: number;
-      }) => ({
-        nombreCategoria: item.nombre_categoria,
-        tipoCategoria: item.tipo_categoria,
-        cantidadDetallesCargo: item.cantidad_detalles_cargo,
-        montoTotal: item.monto_total,
-        montoPromedio: item.monto_promedio,
-        cargosUnicos: item.cargos_unicos,
-        unidadesAfectadas: item.unidades_afectadas,
-      }));
+      const data = await apiRequest(
+        `/cargos/comunidad/${comunidadId}/por-categoria`,
+      );
+      return data.map(
+        (item: {
+          nombre_categoria: string;
+          tipo_categoria: string;
+          cantidad_detalles_cargo: number;
+          monto_total: number;
+          monto_promedio: number;
+          cargos_unicos: number;
+          unidades_afectadas: number;
+        }) => ({
+          nombreCategoria: item.nombre_categoria,
+          tipoCategoria: item.tipo_categoria,
+          cantidadDetallesCargo: item.cantidad_detalles_cargo,
+          montoTotal: item.monto_total,
+          montoPromedio: item.monto_promedio,
+          cargosUnicos: item.cargos_unicos,
+          unidadesAfectadas: item.unidades_afectadas,
+        }),
+      );
     } catch (error) {
       handleApiError(error);
       throw error;
@@ -528,7 +590,9 @@ export const cargosApi = {
   },
 
   // Recalcular interés de un cargo
-  recalcularInteres: async (id: number): Promise<{ success: boolean; message: string }> => {
+  recalcularInteres: async (
+    id: number,
+  ): Promise<{ success: boolean; message: string }> => {
     try {
       const data = await apiRequest(`/cargos/${id}/recalcular-interes`, {
         method: 'POST',
@@ -541,7 +605,9 @@ export const cargosApi = {
   },
 
   // Notificar sobre un cargo
-  notificarCargo: async (id: number): Promise<{ success: boolean; message: string }> => {
+  notificarCargo: async (
+    id: number,
+  ): Promise<{ success: boolean; message: string }> => {
     try {
       const data = await apiRequest(`/cargos/${id}/notificar`, {
         method: 'POST',

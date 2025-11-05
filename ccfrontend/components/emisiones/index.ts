@@ -1,4 +1,8 @@
-export { EmissionStatusBadge, EmissionTypeBadge, PriorityBadge } from './Badges';
+export {
+  EmissionStatusBadge,
+  EmissionTypeBadge,
+  PriorityBadge,
+} from './Badges';
 export type { EmissionStatus } from './Badges';
 
 export { EmissionCard, EmissionRow } from './EmissionCard';
