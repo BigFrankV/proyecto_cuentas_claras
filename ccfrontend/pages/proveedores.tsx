@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -75,7 +77,8 @@ export default function ProveedoresListado() {
           pages: Math.ceil(resp.data.length / prev.limit),
         }));}
     } catch (err) {
-      console.error('Error loading providers:', err);
+// eslint-disable-next-line no-console
+console.error('Error loading providers:', err);
     } finally {
       setLoading(false);
     }
@@ -96,7 +99,8 @@ export default function ProveedoresListado() {
       setSelectedProvider(null);
       loadProviders(pagination.page);
     } catch (err) {
-      console.error('Error deleting provider:', err);
+// eslint-disable-next-line no-console
+console.error('Error deleting provider:', err);
       alert('No se pudo eliminar el proveedor');
     }
   };
@@ -255,3 +259,4 @@ export default function ProveedoresListado() {
     </ProtectedRoute>
   );
 }
+

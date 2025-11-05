@@ -235,3 +235,4 @@ export function FileIcon({ fileName, size = 'md' }: FileIconProps) {
     </div>
   );
 }
+

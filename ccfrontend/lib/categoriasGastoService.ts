@@ -41,3 +41,4 @@ export async function updateCategoria(
 export async function deleteCategoria(id: number): Promise<void> {
   await apiClient.delete(`/categorias-gasto/${id}`);
 }
+

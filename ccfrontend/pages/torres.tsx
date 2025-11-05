@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useMemo, useEffect } from 'react';
 
@@ -70,7 +71,8 @@ export default function TorresListado() {
           promedioUnidades: statsData.promedioUnidadesPorTorre || 0,
         });
       } catch (err) {
-        console.error('Error loading torres data:', err);
+// eslint-disable-next-line no-console
+console.error('Error loading torres data:', err);
         setError('Error al cargar los datos de las torres');
       } finally {
         setLoading(false);
@@ -334,19 +336,19 @@ export default function TorresListado() {
                     </button>
                     <ul className='dropdown-menu'>
                       <li>
-                        <a className='dropdown-item' href='#'>
+                        <button className='dropdown-item' type='button'>
                           Excel
-                        </a>
+                        </button>
                       </li>
                       <li>
-                        <a className='dropdown-item' href='#'>
+                        <button className='dropdown-item' type='button'>
                           PDF
-                        </a>
+                        </button>
                       </li>
                       <li>
-                        <a className='dropdown-item' href='#'>
+                        <button className='dropdown-item' type='button'>
                           CSV
-                        </a>
+                        </button>
                       </li>
                     </ul>
                   </div>
@@ -480,22 +482,22 @@ export default function TorresListado() {
                       </button>
                       <ul className='dropdown-menu'>
                         <li>
-                          <a className='dropdown-item' href='#'>
+                          <button className='dropdown-item' type='button'>
                             Exportar a Excel
-                          </a>
+                          </button>
                         </li>
                         <li>
-                          <a className='dropdown-item' href='#'>
+                          <button className='dropdown-item' type='button'>
                             Imprimir listado
-                          </a>
+                          </button>
                         </li>
                         <li>
                           <hr className='dropdown-divider' />
                         </li>
                         <li>
-                          <a className='dropdown-item text-danger' href='#'>
+                          <button className='dropdown-item text-danger' type='button'>
                             Eliminar seleccionadas
-                          </a>
+                          </button>
                         </li>
                       </ul>
                     </div>
@@ -662,27 +664,27 @@ export default function TorresListado() {
                         <nav aria-label='Page navigation'>
                           <ul className='pagination pagination-sm mb-0'>
                             <li className='page-item disabled'>
-                              <a
+                              <button
                                 className='page-link'
-                                href='#'
+                                type='button'
                                 aria-label='Previous'
                               >
                                 <span aria-hidden='true'>&laquo;</span>
-                              </a>
+                              </button>
                             </li>
                             <li className='page-item active'>
-                              <a className='page-link' href='#'>
+                              <button className='page-link' type='button'>
                                 1
-                              </a>
+                              </button>
                             </li>
                             <li className='page-item disabled'>
-                              <a
+                              <button
                                 className='page-link'
-                                href='#'
+                                type='button'
                                 aria-label='Next'
                               >
                                 <span aria-hidden='true'>&raquo;</span>
-                              </a>
+                              </button>
                             </li>
                           </ul>
                         </nav>
@@ -705,10 +707,12 @@ export default function TorresListado() {
                         style={{ position: 'relative', overflow: 'hidden' }}
                       >
                         <div className='position-relative'>
-                          <img
+                          <Image
                             src={torre.imagen}
                             className='card-img-top'
                             alt={torre.nombre}
+                            width={400}
+                            height={200}
                             style={{ height: '200px', objectFit: 'cover' }}
                           />
                           <div
@@ -720,6 +724,7 @@ export default function TorresListado() {
                             onMouseLeave={e =>
                               (e.currentTarget.style.opacity = '0')
                             }
+                            role="presentation"
                           >
                             <div className='btn-group'>
                               <Link
@@ -832,3 +837,4 @@ export default function TorresListado() {
     </ProtectedRoute>
   );
 }
+

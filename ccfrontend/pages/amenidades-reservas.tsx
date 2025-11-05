@@ -8,3 +8,4 @@ const AmenidadesReservasPage = dynamic(
 export default function AmenidadesReservas() {
   return <AmenidadesReservasPage />;
 }
+

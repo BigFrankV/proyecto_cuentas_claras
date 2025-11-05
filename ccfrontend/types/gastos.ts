@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Tipos para módulo Gastos (backend <-> frontend)
 
 export type GastoStatus =
@@ -34,6 +35,7 @@ export interface GastoBackend {
   proveedor_nombre?: string;
   centro_costo?: string;
   categoria?: string;
+  categoria_nombre?: string; // Nombre legible de la categoría
   documento_compra_id?: number | null;
   documento_tipo?: string | null;
   documento_numero?: string | null;
@@ -146,7 +148,7 @@ export function mapBackendToExpense(g: GastoBackend): Expense {
     description: g.glosa || g.documento_numero || `Gasto #${g.id}`,
     category:
       (g.categoria_nombre as string) || (g.categoria as string) || 'otros',
-    categoryId: (g as any).categoria_id ?? (g as any).categoriaId ?? undefined, // <-- devolver undefined en vez de null si no existe
+    categoryId: (g as any).categoria_id ?? (g as any).categoriaId ?? undefined,
     provider: g.proveedor_nombre || g.creado_por || '',
     amount: Number(g.monto) || 0,
     date: g.fecha || g.created_at || '',
@@ -160,7 +162,7 @@ export function mapBackendToExpense(g: GastoBackend): Expense {
     tags: g.tags || [],
     priority: (g.priority as GastoPriority) || 'medium',
     requiredApprovals:
-      (g as any).required_approals ?? (g as any).required_approvals ?? 0, // <-- corregir typo y fallback
+      (g as any).required_approals ?? (g as any).required_approvals ?? 0,
     currentApprovals: g.current_approvals || 0,
     costCenter: g.centro_costo || null,
     observations: g.observations || null,
@@ -171,3 +173,4 @@ export function mapBackendToExpense(g: GastoBackend): Expense {
     attachments: g.attachments || [],
   };
 }
+

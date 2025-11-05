@@ -68,7 +68,8 @@ export default function NuevaComunidad() {
         setPreviewImage(comunidad.imagen);
       }
     } catch (error) {
-      console.error('Error loading comunidad:', error);
+// eslint-disable-next-line no-console
+console.error('Error loading comunidad:', error);
     }
   };
 
@@ -153,7 +154,8 @@ export default function NuevaComunidad() {
 
       router.push('/comunidades');
     } catch (error) {
-      console.error('Error saving comunidad:', error);
+// eslint-disable-next-line no-console
+console.error('Error saving comunidad:', error);
       alert('Error al guardar la comunidad');
     } finally {
       setIsLoading(false);
@@ -863,3 +865,4 @@ export default function NuevaComunidad() {
     </>
   );
 }
+

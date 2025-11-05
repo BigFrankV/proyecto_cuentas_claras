@@ -1,3 +1,7 @@
+/* eslint-disable import/no-anonymous-default-export */
+/* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3000';
 
 function authHeaders(token?: string) {
@@ -96,3 +100,4 @@ export default {
   updateApelacion,
   resolveApelacion,
 };
+

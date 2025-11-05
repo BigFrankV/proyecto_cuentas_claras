@@ -394,3 +394,4 @@ const CargosListado: React.FC<CargosListadoProps> = ({ comunidadId }) => {
 };
 
 export default CargosListado;
+

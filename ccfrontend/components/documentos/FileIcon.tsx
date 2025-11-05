@@ -78,3 +78,4 @@ export default function FileIcon({ fileName, size = 'md' }: FileIconProps) {
     </div>
   );
 }
+

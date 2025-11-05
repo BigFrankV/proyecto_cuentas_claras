@@ -106,3 +106,4 @@ export interface TotpActionResponse {
   message: string;
   setupData?: TotpSetupResponse;
 }
+

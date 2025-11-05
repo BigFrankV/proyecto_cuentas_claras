@@ -191,6 +191,7 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
   };
 
   const handleEditCargo = (id: string) => {
+    // eslint-disable-next-line no-console
     console.log('Edit cargo:', id);
     // TODO: Implement edit functionality
   };
@@ -208,16 +209,19 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
   };
 
   const handleBulkApprove = () => {
+    // eslint-disable-next-line no-console
     console.log('Bulk approve:', Array.from(selectedCargos));
     // TODO: Implement bulk approve
   };
 
   const handleBulkReject = () => {
+    // eslint-disable-next-line no-console
     console.log('Bulk reject:', Array.from(selectedCargos));
     // TODO: Implement bulk reject
   };
 
   const handleExport = () => {
+    // eslint-disable-next-line no-console
     console.log('Export data');
     // TODO: Implement export functionality
   };
@@ -541,3 +545,4 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
     </div>
   );
 }
+

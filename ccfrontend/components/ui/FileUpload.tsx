@@ -93,7 +93,8 @@ export default function FileUpload({
       setUploadProgress(100);
       onUploadSuccess?.(uploadedFiles);
     } catch (error) {
-      console.error('Error uploading files:', error);
+// eslint-disable-next-line no-console
+console.error('Error uploading files:', error);
       onUploadError?.(
         error instanceof Error ? error.message : 'Error subiendo archivos',
       );
@@ -184,3 +185,4 @@ export default function FileUpload({
     </div>
   );
 }
+

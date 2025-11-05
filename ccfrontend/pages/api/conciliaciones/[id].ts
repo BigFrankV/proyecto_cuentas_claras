@@ -39,6 +39,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         });
       }, 1000);
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error updating conciliation:', error);
       res.status(500).json({
         error: 'Error interno del servidor',

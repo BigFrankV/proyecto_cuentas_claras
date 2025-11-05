@@ -6,3 +6,4 @@ export { default as VersionBadge } from './VersionBadge';
 export { default as DocumentCard } from './DocumentCard';
 export { default as StatusBadge } from './StatusBadge';
 export { default as TypeBadge } from './TypeBadge';
+

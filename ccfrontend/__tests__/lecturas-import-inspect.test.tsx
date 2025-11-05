@@ -129,6 +129,8 @@ test('inspect imports used by lecturas page', async () => {
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const page = require('../pages/medidores/[id]/lecturas');
+  // eslint-disable-next-line no-console
   console.log('LECTURAS PAGE keys', Object.keys(page));
   expect(page).toBeDefined();
 });
+

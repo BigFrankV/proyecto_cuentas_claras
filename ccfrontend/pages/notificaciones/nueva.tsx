@@ -174,7 +174,8 @@ export default function NuevaNotificacion() {
         router.push('/notificaciones?message=scheduled');
       }
     } catch (error) {
-      console.error('Error saving notification:', error);
+// eslint-disable-next-line no-console
+console.error('Error saving notification:', error);
     } finally {
       setSaving(false);
     }
@@ -1329,3 +1330,4 @@ export default function NuevaNotificacion() {
     </ProtectedRoute>
   );
 }
+

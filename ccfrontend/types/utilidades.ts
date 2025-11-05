@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Tipos para las utilidades del sistema
 
 // === UTILIDAD RUT ===
@@ -264,3 +265,4 @@ export type UtmCalculator = (
   inputs: UtmCalculatorInputs,
   type: 'toPesos' | 'toUtm'
 ) => UtmCalculatorResult;
+

@@ -41,3 +41,4 @@ export async function updateCentro(
 export async function deleteCentro(id: number): Promise<void> {
   await apiClient.delete(`/centros-costo/${id}`);
 }
+

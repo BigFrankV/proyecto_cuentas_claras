@@ -21,6 +21,7 @@ export default function CargosUnidad() {
         const res = await apiClient.get(`/unidades/${id}/cuentas`);
         if (mounted) {setCargos(res.data || []);}
       } catch (err) {
+// eslint-disable-next-line no-console
         console.error(err);
       } finally {
         setLoading(false);

@@ -220,6 +220,7 @@ export default function EditarCompra() {
         items: mappedPurchase.items,
       });
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error loading purchase data:', error);
       setPurchase(null);
     } finally {
@@ -319,6 +320,7 @@ export default function EditarCompra() {
       setCostCenters(mockCostCenters);
       setCategories(mockCategories);
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error loading initial data:', error);
     }
   };
@@ -483,6 +485,9 @@ export default function EditarCompra() {
         status: requiresReapproval ? 'pending' : purchase?.status,
       };
 
+      // eslint-disable-next-line no-console
+
+// eslint-disable-next-line no-console
       console.log('Compra actualizada:', updatedData);
 
       if (requiresReapproval) {
@@ -495,6 +500,7 @@ export default function EditarCompra() {
 
       router.push(`/compras/${id}`);
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error updating purchase:', error);
       alert('Error al actualizar la compra');
     } finally {

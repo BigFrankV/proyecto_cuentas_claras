@@ -1,4 +1,7 @@
+/* eslint-disable no-console */
+/* eslint-disable max-len */
 import Head from 'next/head';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useState, useRef } from 'react';
 import { Button, Card, Form, Row, Col, Alert, Badge } from 'react-bootstrap';
@@ -194,6 +197,7 @@ export default function ProveedorNuevo() {
       // Simular envío de datos
       await new Promise(resolve => setTimeout(resolve, 2000));
 
+// eslint-disable-next-line no-console
       console.log('Datos del proveedor:', {
         ...formData,
         contacts: contacts.filter(c => c.name.trim()),
@@ -205,7 +209,8 @@ export default function ProveedorNuevo() {
       alert('Proveedor creado exitosamente');
       router.push('/proveedores');
     } catch (error) {
-      console.error('Error creating provider:', error);
+// eslint-disable-next-line no-console
+console.error('Error creating provider:', error);
       alert('Error al crear el proveedor');
     } finally {
       setLoading(false);
@@ -742,6 +747,15 @@ export default function ProveedorNuevo() {
                     <div
                       className='file-upload-box'
                       onClick={() => fileInputRef.current?.click()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          fileInputRef.current?.click();
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label="Seleccionar archivos para subir"
                     >
                       <div className='upload-content'>
                         <span className='material-icons'>cloud_upload</span>
@@ -869,10 +883,28 @@ export default function ProveedorNuevo() {
                       <div
                         className='provider-logo-upload'
                         onClick={() => logoInputRef.current?.click()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            logoInputRef.current?.click();
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                        aria-label="Seleccionar logo del proveedor"
                       >
                         {logoPreview ? (
                           <>
-                            <img src={logoPreview} alt='Logo del proveedor' />
+                            <Image
+                              src={logoPreview}
+                              alt='Logo del proveedor'
+                              width={120}
+                              height={120}
+                              style={{
+                                borderRadius: '8px',
+                                objectFit: 'cover',
+                              }}
+                            />
                             <div className='upload-overlay'>
                               <span className='material-icons'>edit</span>
                             </div>
@@ -939,3 +971,4 @@ export default function ProveedorNuevo() {
     </ProtectedRoute>
   );
 }
+

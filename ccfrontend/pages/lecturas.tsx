@@ -9,3 +9,4 @@ const LecturasPage = dynamic(
 export default function LecturasRoute() {
   return <LecturasPage />;
 }
+

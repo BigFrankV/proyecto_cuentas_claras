@@ -365,3 +365,4 @@ const UnidadCaracteristicas: React.FC<UnidadCaracteristicasProps> = ({
 };
 
 export default UnidadCaracteristicas;
+

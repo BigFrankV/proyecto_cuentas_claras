@@ -310,10 +310,14 @@ export default function EditarMulta() {
   const loadMulta = async () => {
     try {
       setLoading(true);
+      // eslint-disable-next-line no-console
       console.log(`🔍 Cargando multa ${id}...`);
 
       const response = await multasService.getMulta(Number(id));
 
+      // eslint-disable-next-line no-console
+
+// eslint-disable-next-line no-console
       console.log('✅ Multa cargada:', response);
       setMulta(response);
 
@@ -364,6 +368,7 @@ export default function EditarMulta() {
       // Cargar personas de la unidad
       await loadPersonasUnidad(response.unidad_id);
     } catch (error: any) {
+// eslint-disable-next-line no-console
       console.error('❌ Error cargando multa:', error);
       toast.error(error.message || 'Error al cargar la multa');
       setTimeout(() => router.push('/multas'), 2000);
@@ -521,15 +526,22 @@ export default function EditarMulta() {
         payload.monto = parseFloat(String(payload.monto));
       }
 
+      // eslint-disable-next-line no-console
+
+// eslint-disable-next-line no-console
       console.log('📝 Actualizando multa (solo campos modificados):', payload);
 
       const response = await multasService.updateMulta(Number(id), payload);
 
+      // eslint-disable-next-line no-console
+
+// eslint-disable-next-line no-console
       console.log('✅ Multa actualizada:', response);
       toast.success('Multa actualizada exitosamente');
 
       router.push(`/multas/${id}`);
     } catch (error: any) {
+// eslint-disable-next-line no-console
       console.error('❌ Error actualizando multa:', error);
       toast.error(error.message || 'Error al actualizar la multa');
     } finally {

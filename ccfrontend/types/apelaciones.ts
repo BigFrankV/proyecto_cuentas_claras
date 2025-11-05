@@ -15,3 +15,4 @@ export interface Apelacion {
   updated_at?: string;
   [key: string]: any;
 }
+

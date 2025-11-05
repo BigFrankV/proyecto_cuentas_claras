@@ -226,7 +226,8 @@ export default function UnidadNueva() {
       }
     } catch (err) {
       const error: any = err;
-      console.error('Error al crear unidad:', error);
+// eslint-disable-next-line no-console
+console.error('Error al crear unidad:', error);
       // map server validation
       const serverErr = error?.response?.data;
       if (serverErr) {
@@ -812,9 +813,17 @@ export default function UnidadNueva() {
                             borderRadius: '16px',
                             fontSize: '0.875rem',
                           }}
+                          role="button"
+                          tabIndex={0}
                           onClick={() =>
                             handleCaracteristicaToggle(caracteristica)
                           }
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleCaracteristicaToggle(caracteristica);
+                            }
+                          }}
                         >
                           {caracteristica}
                         </span>
@@ -857,8 +866,8 @@ export default function UnidadNueva() {
                   <div className='p-4'>
                     {medidores.length === 0 ? (
                       <p className='text-muted mb-0'>
-                        No hay medidores configurados. Haga clic en "Agregar
-                        Medidor" para añadir uno.
+                        No hay medidores configurados. Haga clic en &quot;Agregar
+                        Medidor&quot; para añadir uno.
                       </p>
                     ) : (
                       medidores.map(medidor => (
@@ -1026,3 +1035,4 @@ export default function UnidadNueva() {
     </ProtectedRoute>
   );
 }
+

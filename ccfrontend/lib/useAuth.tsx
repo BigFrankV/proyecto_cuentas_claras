@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 import { useRouter } from 'next/router';
 import {
   useState,
@@ -39,24 +41,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let isMounted = true;
 
     const clearSession = async () => {
-      console.log('🚪 Iniciando proceso de logout...');
+      // eslint-disable-next-line no-console`n      console.log('Iniciando proceso de logout...');
       try {
         await authService.logout();
-        console.log('✅ Logout exitoso en servidor');
+        // eslint-disable-next-line no-console`n        console.log('Logout exitoso en servidor');
       } catch (error) {
-        console.error('❌ Error en logout del servidor:', error);
+// eslint-disable-next-line no-console
+console.error('Error en logout del servidor:', error);
       } finally {
         if (isMounted) {
-          console.log('🧹 Limpiando estado local...');
+          // eslint-disable-next-line no-console`n          console.log('Limpiando estado local...');
           setUser(null);
-          console.log('🏠 Redirigiendo a página de inicio...');
+          // eslint-disable-next-line no-console`n          console.log('Redirigiendo a página de inicio...');
           router.push('/');
         }
       }
     };
 
     const checkAuthStatus = async () => {
-      console.log('🔍 Verificando estado de autenticación...');
+      // eslint-disable-next-line no-console`n      console.log('Verificando estado de autenticación...');
 
       // Debug del estado actual
       authService.debugAuthState();
@@ -64,25 +67,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         // Primero verificar si tenemos un token válido
         if (!authService.isAuthenticated()) {
-          console.log('❌ No hay token válido o está expirado');
+          // eslint-disable-next-line no-console`n          console.log('No hay token válido o está expirado');
           if (isMounted) {
             setUser(null);
           }
           return;
         }
 
-        console.log('✅ Token válido encontrado en localStorage');
+        // eslint-disable-next-line no-console`n        console.log('Token válido encontrado en localStorage');
 
         // Intentar obtener datos del usuario desde localStorage
         const userData = authService.getUserData();
         if (userData) {
+// eslint-disable-next-line no-console
           console.log(
-            '✅ Datos de usuario encontrados en localStorage:',
+            'Datos de usuario encontrados en localStorage:',
             userData,
           );
           // ✅ NUEVO: Log de memberships para debug
           if (userData.memberships) {
-            console.log('🏢 Membresías del usuario:', userData.memberships);
+            // eslint-disable-next-line no-console`n            console.log('Membresías del usuario:', userData.memberships);
           }
           if (isMounted) {
             setUser(userData);
@@ -92,11 +96,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           try {
             const currentUser = await authService.getCurrentUser();
             if (currentUser && isMounted) {
-              console.log('✅ Usuario verificado con servidor:', currentUser);
+              // eslint-disable-next-line no-console`n              console.log('Usuario verificado con servidor:', currentUser);
               // ✅ NUEVO: Log de memberships actualizadas
               if (currentUser.memberships) {
+// eslint-disable-next-line no-console
                 console.log(
-                  '🏢 Membresías actualizadas del servidor:',
+                  'Membresías actualizadas del servidor:',
                   currentUser.memberships,
                 );
               }
@@ -111,38 +116,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 );
               }
             } else if (!currentUser) {
+// eslint-disable-next-line no-console
               console.log(
-                '⚠️ Servidor no reconoce el token, manteniendo datos locales',
+                'Servidor no reconoce el token, manteniendo datos locales',
               );
             }
           } catch (serverError: any) {
+// eslint-disable-next-line no-console
             console.log(
-              '⚠️ Error verificando con servidor:',
+              'Error verificando con servidor:',
               serverError.message,
             );
             if (serverError.response?.status === 401) {
-              console.log('❌ Token inválido según servidor, limpiando sesión');
+              // eslint-disable-next-line no-console`n              console.log('Token inválido según servidor, limpiando sesión');
               await clearSession();
               return;
             }
             // Si es otro tipo de error, mantener datos locales
+// eslint-disable-next-line no-console
             console.log(
-              '⚠️ Manteniendo sesión local por error de conectividad',
+              'Manteniendo sesión local por error de conectividad',
             );
           }
         } else {
-          console.log('❌ No se encontraron datos de usuario en localStorage');
+          // eslint-disable-next-line no-console`n          console.log('No se encontraron datos de usuario en localStorage');
           // Si hay token pero no datos de usuario, limpiar todo
           await clearSession();
         }
       } catch (error) {
-        console.error('❌ Error verificando autenticación:', error);
+// eslint-disable-next-line no-console
+console.error('Error verificando autenticación:', error);
         // Si hay error, limpiar datos
         await clearSession();
       } finally {
         if (isMounted) {
           setIsLoading(false);
-          console.log('🔍 Verificación de autenticación completada');
+          // eslint-disable-next-line no-console`n          console.log('Verificación de autenticación completada');
         }
       }
     };
@@ -156,88 +165,94 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ✅ CORREGIR: Agregar soporte para totp_code opcional
   const login = async (identifier: string, password: string) => {
-    console.log('🔐 Iniciando login para:', identifier);
+    // eslint-disable-next-line no-console`n    console.log('Iniciando login para:', identifier);
     try {
       const response = await authService.login({
         identifier,
         password,
       });
 
-      console.log('✅ Login exitoso, datos recibidos:', response.user);
+      // eslint-disable-next-line no-console`n      console.log('Login exitoso, datos recibidos:', response.user);
       // ✅ NUEVO: Log específico para memberships
       if (response.user?.memberships) {
+// eslint-disable-next-line no-console
         console.log(
-          '🏢 Membresías recibidas en login:',
+          'Membresías recibidas en login:',
           response.user.memberships,
         );
       }
       if (response.user?.is_superadmin) {
-        console.log('👑 Usuario identificado como SUPERADMIN');
+        // eslint-disable-next-line no-console`n        console.log('Usuario identificado como SUPERADMIN');
       }
       if (response.user) {
         setUser(response.user);
-        console.log('✅ Usuario establecido en contexto:', response.user);
+        // eslint-disable-next-line no-console`n        console.log('Usuario establecido en contexto:', response.user);
       }
       return response; // Devolver la respuesta para manejar 2FA
     } catch (error) {
-      console.error('❌ Error en login:', error);
+// eslint-disable-next-line no-console
+console.error('Error en login:', error);
       throw error; // Re-lanzar para que el componente maneje el error
     }
   };
 
   const complete2FALogin = async (tempToken: string, code: string) => {
-    console.log('🔐 Completando login 2FA');
+    // eslint-disable-next-line no-console`n    console.log('Completando login 2FA');
     try {
       const response = await authService.complete2FALogin(tempToken, code);
-      console.log('✅ Login 2FA exitoso, datos recibidos:', response.user);
+      // eslint-disable-next-line no-console`n      console.log('Login 2FA exitoso, datos recibidos:', response.user);
       // ✅ NUEVO: Log específico para memberships en 2FA
       if (response.user?.memberships) {
+// eslint-disable-next-line no-console
         console.log(
-          '🏢 Membresías recibidas en 2FA login:',
+          'Membresías recibidas en 2FA login:',
           response.user.memberships,
         );
       }
       if (response.user) {
         setUser(response.user);
-        console.log('✅ Usuario establecido en contexto:', response.user);
+        // eslint-disable-next-line no-console`n        console.log('Usuario establecido en contexto:', response.user);
       }
     } catch (error) {
-      console.error('❌ Error en login 2FA:', error);
+// eslint-disable-next-line no-console
+console.error('Error en login 2FA:', error);
       throw error;
     }
   };
 
   const logout = async () => {
-    console.log('🚪 Iniciando proceso de logout...');
+    // eslint-disable-next-line no-console`n    console.log('Iniciando proceso de logout...');
     try {
       await authService.logout();
-      console.log('✅ Logout exitoso en servidor');
+      // eslint-disable-next-line no-console`n      console.log('Logout exitoso en servidor');
     } catch (error) {
-      console.error('❌ Error en logout del servidor:', error);
+// eslint-disable-next-line no-console
+console.error('Error en logout del servidor:', error);
     } finally {
-      console.log('🧹 Limpiando estado local...');
+      // eslint-disable-next-line no-console`n      console.log('Limpiando estado local...');
       setUser(null);
-      console.log('🏠 Redirigiendo a página de inicio...');
+      // eslint-disable-next-line no-console`n      console.log('🏠 Redirigiendo a página de inicio...');
       router.push('/');
     }
   };
 
   const refreshUser = async () => {
-    console.log('🔄 Refrescando datos de usuario...');
+    // eslint-disable-next-line no-console`n    console.log('Refrescando datos de usuario...');
     try {
       const currentUser = await authService.getCurrentUser();
       if (currentUser) {
-        console.log('✅ Datos de usuario actualizados:', currentUser);
+        // eslint-disable-next-line no-console`n        console.log('Datos de usuario actualizados:', currentUser);
         // ✅ NUEVO: Log de memberships actualizadas
         if (currentUser.memberships) {
-          console.log('🏢 Membresías actualizadas:', currentUser.memberships);
+          // eslint-disable-next-line no-console`n          console.log('Membresías actualizadas:', currentUser.memberships);
         }
         setUser(currentUser);
         // Actualizar localStorage
         localStorage.setItem('user_data', JSON.stringify(currentUser));
       }
     } catch (error) {
-      console.error('❌ Error refrescando usuario:', error);
+// eslint-disable-next-line no-console
+console.error('Error refrescando usuario:', error);
     }
   };
 
@@ -270,20 +285,21 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+// eslint-disable-next-line no-console
     console.log(
-      '🔒 ProtectedRoute - autenticado:',
+      'ProtectedRoute - autenticado:',
       isAuthenticated,
       'cargando:',
       isLoading,
     );
     if (!isLoading && !isAuthenticated) {
-      console.log('❌ No autenticado, redirigiendo a login...');
+      // eslint-disable-next-line no-console`n      console.log('No autenticado, redirigiendo a login...');
       router.push('/');
     }
   }, [isAuthenticated, isLoading, router]);
 
   if (isLoading) {
-    console.log('⏳ ProtectedRoute - Mostrando spinner de carga...');
+    // eslint-disable-next-line no-console`n    console.log('ProtectedRoute - Mostrando spinner de carga...');
     return (
       <div className='d-flex justify-content-center align-items-center min-vh-100'>
         <div className='spinner-border text-primary' role='status'>
@@ -294,12 +310,14 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   }
 
   if (!isAuthenticated) {
+// eslint-disable-next-line no-console
     console.log(
-      '❌ ProtectedRoute - Usuario no autenticado, no mostrando contenido',
+      'ProtectedRoute - Usuario no autenticado, no mostrando contenido',
     );
     return null;
   }
 
-  console.log('✅ ProtectedRoute - Usuario autenticado, mostrando contenido');
+  // eslint-disable-next-line no-console`n  console.log('ProtectedRoute - Usuario autenticado, mostrando contenido');
   return <>{children}</>;
 }
+

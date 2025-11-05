@@ -162,6 +162,7 @@ export default function EditarConciliacion() {
         updateProcessSteps(4);
       }
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error loading conciliation data:', error);
       setAlert({
         show: true,
@@ -303,6 +304,7 @@ export default function EditarConciliacion() {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Simular actualización de datos básicos
+// eslint-disable-next-line no-console
         console.log('Actualizando conciliación con datos:', {
           bank: formData.bank,
           bankAccount: formData.bankAccount,
@@ -314,6 +316,7 @@ export default function EditarConciliacion() {
         // Cargar o recargar transacciones
         if (formData.uploadedFile) {
           // Simular procesamiento de archivo nuevo
+          // eslint-disable-next-line no-console
           console.log('Procesando archivo:', formData.uploadedFile.name);
 
           // Generar transacciones mock con datos más variados
@@ -383,6 +386,7 @@ export default function EditarConciliacion() {
           variant: 'success',
         });
       } catch (error) {
+// eslint-disable-next-line no-console
         console.error('Error updating conciliation:', error);
         setAlert({
           show: true,

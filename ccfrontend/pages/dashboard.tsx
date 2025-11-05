@@ -40,8 +40,8 @@ export default function Dashboard() {
 
     const loadInitialData = async () => {
       try {
-        console.log('📊 [Dashboard] loadInitialData - Iniciando');
-        console.log('📊 [Dashboard] Usuario actual:', user);
+        // eslint-disable-next-line no-console`n        console.log('📊 [Dashboard] loadInitialData - Iniciando');
+        // eslint-disable-next-line no-console`n        console.log('📊 [Dashboard] Usuario actual:', user);
         console.log(
           '📊 [Dashboard] Token:',
           localStorage.getItem('auth_token'),
@@ -49,6 +49,7 @@ export default function Dashboard() {
 
         // ✅ NUEVA VERIFICACIÓN: Si no hay usuario, no continuar
         if (!user) {
+// eslint-disable-next-line no-console
           console.log(
             '❌ [Dashboard] Sin usuario autenticado, abortando carga de datos',
           );
@@ -59,10 +60,11 @@ export default function Dashboard() {
         const comunidadesData = await comunidadesService.getComunidades();
 
         if (!isMounted) {
-          console.log('📊 [Dashboard] Componente desmontado, abortando');
+          // eslint-disable-next-line no-console`n          console.log('📊 [Dashboard] Componente desmontado, abortando');
           return;
         }
 
+// eslint-disable-next-line no-console
         console.log(
           '📊 [Dashboard] Comunidades recibidas:',
           comunidadesData.length,
@@ -73,6 +75,7 @@ export default function Dashboard() {
         if (comunidadesData.length > 0) {
           const primeraComunidad = comunidadesData[0];
           if (primeraComunidad) {
+// eslint-disable-next-line no-console
             console.log(
               '📊 [Dashboard] Estableciendo primera comunidad:',
               primeraComunidad.id,
@@ -80,16 +83,20 @@ export default function Dashboard() {
             setSelectedComunidad(primeraComunidad.id);
           }
         } else {
-          console.warn('📊 [Dashboard] ⚠️ No hay comunidades disponibles');
+          // eslint-disable-next-line no-console
+
+// eslint-disable-next-line no-console
+console.warn('📊 [Dashboard] ⚠️ No hay comunidades disponibles');
         }
       } catch (err) {
         if (isMounted) {
-          console.error('❌ [Dashboard] Error loading initial data:', err);
+// eslint-disable-next-line no-console
+console.error('❌ [Dashboard] Error loading initial data:', err);
           setError('Error al cargar los datos iniciales');
         }
       } finally {
         if (isMounted) {
-          console.log('📊 [Dashboard] loadInitialData - Completado');
+          // eslint-disable-next-line no-console`n          console.log('📊 [Dashboard] loadInitialData - Completado');
           setIsLoading(false);
         }
       }
@@ -108,7 +115,8 @@ export default function Dashboard() {
       const data = await dashboardService.getResumenCompleto(comunidadId);
       setDashboardData(data);
     } catch (err) {
-      console.error('Error loading dashboard data:', err);
+// eslint-disable-next-line no-console
+console.error('Error loading dashboard data:', err);
       setError('Error al cargar los datos del dashboard');
     }
   };
@@ -804,3 +812,4 @@ export default function Dashboard() {
     </ProtectedRoute>
   );
 }
+

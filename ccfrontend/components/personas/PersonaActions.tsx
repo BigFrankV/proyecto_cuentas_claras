@@ -9,22 +9,34 @@ export default function PersonaActions({
     {
       icon: 'email',
       text: 'Enviar email',
-      action: () => console.log('Enviar email'),
+      action: () => {
+        // eslint-disable-next-line no-console
+        console.log('Enviar email');
+      },
     },
     {
       icon: 'receipt_long',
       text: 'Ver estado de cuenta',
-      action: () => console.log('Ver estado de cuenta'),
+      action: () => {
+        // eslint-disable-next-line no-console
+        console.log('Ver estado de cuenta');
+      },
     },
     {
       icon: 'add_home',
       text: 'Asignar nueva unidad',
-      action: () => console.log('Asignar nueva unidad'),
+      action: () => {
+        // eslint-disable-next-line no-console
+        console.log('Asignar nueva unidad');
+      },
     },
     {
       icon: 'vpn_key',
       text: 'Restablecer contraseña',
-      action: () => console.log('Restablecer contraseña'),
+      action: () => {
+        // eslint-disable-next-line no-console
+        console.log('Restablecer contraseña');
+      },
     },
   ];
 
@@ -50,3 +62,4 @@ export default function PersonaActions({
     </div>
   );
 }
+

@@ -46,6 +46,7 @@ export default function EdificioDetalle() {
           fetchTorres();
           fetchUnidades();
         } catch (error) {
+// eslint-disable-next-line no-console
           console.error('Error cargando edificio:', error);
         }
       }
@@ -159,6 +160,7 @@ export default function EdificioDetalle() {
       setShowDeleteModal(false);
       router.push('/edificios');
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error eliminando edificio:', error);
       // Aquí podrías mostrar un mensaje de error al usuario
     }

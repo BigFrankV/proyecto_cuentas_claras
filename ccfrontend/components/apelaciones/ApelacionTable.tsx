@@ -119,7 +119,8 @@ export default function ApelacionTable({
               : 0,
         );
       } catch (err: any) {
-        console.error('ApelacionTable.list.error', err);
+// eslint-disable-next-line no-console
+console.error('ApelacionTable.list.error', err);
         setError(err?.message || 'Error al cargar apelaciones');
       } finally {
         setLoading(false);
@@ -266,3 +267,4 @@ export default function ApelacionTable({
     </div>
   );
 }
+

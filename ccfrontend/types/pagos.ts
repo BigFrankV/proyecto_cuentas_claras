@@ -111,3 +111,4 @@ export interface EstadisticaPorMetodo {
   total_amount: number;
   average_amount: number;
 }
+

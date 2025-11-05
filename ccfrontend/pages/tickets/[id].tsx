@@ -78,6 +78,7 @@ export default function TicketDetalle() {
       const ticketData = await ticketsApi.getById(Number(id));
       setTicket(ticketData);
     } catch (err) {
+// eslint-disable-next-line no-console
       console.error('Error loading ticket:', err);
       setError(
         err instanceof Error ? err.message : 'Error al cargar el ticket',
@@ -136,6 +137,7 @@ export default function TicketDetalle() {
 
       setNewComment('');
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error adding comment:', error);
     } finally {
       setIsAddingComment(false);
@@ -279,24 +281,24 @@ export default function TicketDetalle() {
                 </button>
                 <ul className='dropdown-menu'>
                   <li>
-                    <a className='dropdown-item' href='#'>
+                    <button className='dropdown-item' type='button'>
                       En Progreso
-                    </a>
+                    </button>
                   </li>
                   <li>
-                    <a className='dropdown-item' href='#'>
+                    <button className='dropdown-item' type='button'>
                       Resuelto
-                    </a>
+                    </button>
                   </li>
                   <li>
-                    <a className='dropdown-item' href='#'>
+                    <button className='dropdown-item' type='button'>
                       Cerrado
-                    </a>
+                    </button>
                   </li>
                   <li>
-                    <a className='dropdown-item' href='#'>
+                    <button className='dropdown-item' type='button'>
                       Escalado
-                    </a>
+                    </button>
                   </li>
                 </ul>
               </div>

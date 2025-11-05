@@ -684,3 +684,4 @@ const Pagos: React.FC = () => {
 };
 
 export default Pagos;
+

@@ -106,7 +106,8 @@ const AmenidadesReservasPage: React.FC = () => {
 
       return null;
     } catch (error) {
-      console.error('Error obteniendo unidad del usuario:', error);
+// eslint-disable-next-line no-console
+console.error('Error obteniendo unidad del usuario:', error);
       return null;
     }
   }, [user]);
@@ -299,9 +300,9 @@ const AmenidadesReservasPage: React.FC = () => {
                   </a>
                 </li>
                 <li>
-                  <a className='dropdown-item' href='#'>
+                  <button className='dropdown-item'>
                     Configuración
-                  </a>
+                  </button>
                 </li>
                 <li>
                   <hr className='dropdown-divider' />
@@ -572,29 +573,29 @@ const AmenidadesReservasPage: React.FC = () => {
           <nav aria-label='Paginación de reservas' className='mt-4'>
             <ul className='pagination justify-content-center'>
               <li className='page-item disabled'>
-                <a className='page-link' href='#' tabIndex={-1}>
+                <button className='page-link' disabled tabIndex={-1}>
                   <span className='material-icons'>chevron_left</span>
-                </a>
+                </button>
               </li>
               <li className='page-item active'>
-                <a className='page-link' href='#'>
+                <button className='page-link' disabled>
                   1
-                </a>
+                </button>
               </li>
               <li className='page-item'>
-                <a className='page-link' href='#'>
+                <button className='page-link'>
                   2
-                </a>
+                </button>
               </li>
               <li className='page-item'>
-                <a className='page-link' href='#'>
+                <button className='page-link'>
                   3
-                </a>
+                </button>
               </li>
               <li className='page-item'>
-                <a className='page-link' href='#'>
+                <button className='page-link'>
                   <span className='material-icons'>chevron_right</span>
-                </a>
+                </button>
               </li>
             </ul>
           </nav>
@@ -664,6 +665,14 @@ const AmenidadesReservasPage: React.FC = () => {
                             key={slot}
                             className={`time-slot ${selectedTimeSlot === slot ? 'selected' : ''}`}
                             onClick={() => selectTimeSlot(slot)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                selectTimeSlot(slot);
+                              }
+                            }}
+                            role="button"
+                            tabIndex={0}
                           >
                             {slot}
                           </div>
@@ -988,3 +997,4 @@ const AmenidadesReservasPage: React.FC = () => {
 };
 
 export default AmenidadesReservasPage;
+

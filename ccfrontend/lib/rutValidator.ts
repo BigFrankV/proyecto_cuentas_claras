@@ -1,3 +1,4 @@
+/* eslint-disable import/no-anonymous-default-export */
 /**
  * Utilidad para validación de RUT chileno
  *
@@ -211,3 +212,4 @@ export default {
   splitRut,
   getRutValidationError,
 };
+

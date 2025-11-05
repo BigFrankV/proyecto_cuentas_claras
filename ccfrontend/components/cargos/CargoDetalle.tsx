@@ -157,27 +157,32 @@ export default function CargoDetalle({
   };
 
   const handleRegisterPayment = () => {
+    // eslint-disable-next-line no-console
     console.log('Register payment for cargo:', cargo.id);
     // TODO: Implement payment registration
   };
 
   const handleSendReminder = () => {
+    // eslint-disable-next-line no-console
     console.log('Send reminder for cargo:', cargo.id);
     // TODO: Implement send reminder
   };
 
   const handleEditCargo = () => {
+    // eslint-disable-next-line no-console
     console.log('Edit cargo:', cargo.id);
     // TODO: Implement edit functionality
   };
 
   const handleDuplicateCargo = () => {
+    // eslint-disable-next-line no-console
     console.log('Duplicate cargo:', cargo.id);
     // TODO: Implement duplicate functionality
   };
 
   const handleCancelCargo = () => {
     if (confirm('¿Está seguro de que desea cancelar este cargo?')) {
+      // eslint-disable-next-line no-console
       console.log('Cancel cargo:', cargo.id);
       // TODO: Implement cancel functionality
     }
@@ -188,11 +193,13 @@ export default function CargoDetalle({
   };
 
   const handleExportCargo = () => {
+    // eslint-disable-next-line no-console
     console.log('Export cargo:', cargo.id);
     // TODO: Implement export functionality
   };
 
   const handleUploadDocument = () => {
+    // eslint-disable-next-line no-console
     console.log('Upload document for cargo:', cargo.id);
     // TODO: Implement document upload
   };
@@ -651,3 +658,4 @@ export default function CargoDetalle({
     </div>
   );
 }
+

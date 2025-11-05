@@ -36,7 +36,8 @@ export const UnidadAutocomplete: React.FC<UnidadAutocompleteProps> = ({
           setSuggestions(results);
           setIsOpen(true);
         } catch (error) {
-          console.error('Error buscando unidades:', error);
+// eslint-disable-next-line no-console
+console.error('Error buscando unidades:', error);
           setSuggestions([]);
         } finally {
           setIsLoading(false);
@@ -188,3 +189,4 @@ export const UnidadAutocomplete: React.FC<UnidadAutocompleteProps> = ({
     </div>
   );
 };
+

@@ -47,6 +47,7 @@ export default function EditarCargoPage() {
 
       setLoading(true);
       try {
+        // eslint-disable-next-line no-console
         console.log('🔍 Cargando cargo para editar:', id);
 
         // Obtener el cargo desde la API
@@ -106,8 +107,12 @@ export default function EditarCargoPage() {
           description: mappedCharge.description || '',
         });
 
+        // eslint-disable-next-line no-console
+
+// eslint-disable-next-line no-console
         console.log('✅ Cargo cargado para edición:', mappedCharge);
       } catch (err) {
+// eslint-disable-next-line no-console
         console.error('❌ Error al cargar cargo:', err);
         // Aquí podrías mostrar un mensaje de error o redirigir
       } finally {
@@ -166,6 +171,7 @@ export default function EditarCargoPage() {
 
     try {
       // Simular guardado - en un caso real sería una llamada a la API
+      // eslint-disable-next-line no-console
       console.log('Guardando cargo:', { id, ...formData });
 
       // Simular delay de red
@@ -174,6 +180,7 @@ export default function EditarCargoPage() {
       // Redirigir de vuelta a la lista
       router.push('/cargos');
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error al guardar:', error);
       // Aquí podrías mostrar un mensaje de error
     } finally {

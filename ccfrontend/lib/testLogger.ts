@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, no-console */
 // Logger personalizado para pruebas
 // Proporciona logging estructurado con timestamps y contexto de prueba
 
@@ -41,9 +42,11 @@ class TestLogger {
     // Mostrar en consola según el nivel
     switch (level) {
       case 'error':
+        // eslint-disable-next-line no-console
         console.error(fullMessage, data || '');
         break;
       case 'warn':
+        // eslint-disable-next-line no-console
         console.warn(fullMessage, data || '');
         break;
       case 'info':
@@ -113,3 +116,4 @@ testLogger.catchUnhandledErrors();
 
 export default testLogger;
 export { TestLogger };
+

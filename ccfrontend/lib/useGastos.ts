@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { useEffect, useState } from 'react';
 
 import { GastoBackend } from '@/types/gastos';
@@ -49,7 +50,8 @@ export function useGastosShared(
         sharedData = { timestamp: Date.now(), items };
         notify(items);
       } catch (err) {
-        console.error('useGastosShared error', err);
+// eslint-disable-next-line no-console
+console.error('useGastosShared error', err);
         sharedData = { timestamp: Date.now(), items: [] };
         notify([]);
       }
@@ -65,3 +67,4 @@ export function useGastosShared(
 
   return { data, loading: data === null };
 }
+

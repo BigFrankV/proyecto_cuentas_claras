@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -155,6 +156,7 @@ export default function TorreDetalle() {
           },
         });
       } catch (err) {
+// eslint-disable-next-line no-console
         console.error('Error loading torre details:', err);
       }
     })();
@@ -190,6 +192,7 @@ export default function TorreDetalle() {
         }));
         setUnidades(mapped);
       } catch (err) {
+// eslint-disable-next-line no-console
         console.error('Error loading unidades for torre', err);
       }
     })();
@@ -209,6 +212,7 @@ export default function TorreDetalle() {
     setTorre({ ...formData });
     setEditMode(false);
     // Aquí harías la llamada a la API
+    // eslint-disable-next-line no-console
     console.log('Guardando torre:', formData);
   };
 
@@ -378,29 +382,55 @@ export default function TorreDetalle() {
                 className='btn btn-outline-secondary dropdown-toggle'
                 type='button'
                 data-bs-toggle='dropdown'
+                aria-expanded='false'
+                aria-haspopup='true'
+                aria-label='Más acciones para la torre'
               >
                 <i className='material-icons me-1'>more_vert</i>
                 Más Acciones
               </button>
-              <ul className='dropdown-menu'>
-                <li>
-                  <a className='dropdown-item' href='#'>
+              <ul className='dropdown-menu' role='menu'>
+                <li role='none'>
+                  <button
+                    className='dropdown-item'
+                    type='button'
+                    onClick={() => {
+                      // TODO: Implementar generación de reporte
+                      alert('Funcionalidad de reporte próximamente disponible');
+                    }}
+                    role='menuitem'
+                  >
                     <i className='material-icons me-2'>file_download</i>Generar
                     Reporte
-                  </a>
+                  </button>
                 </li>
-                <li>
-                  <a className='dropdown-item' href='#'>
+                <li role='none'>
+                  <button
+                    className='dropdown-item'
+                    type='button'
+                    onClick={() => window.print()}
+                    role='menuitem'
+                  >
                     <i className='material-icons me-2'>print</i>Imprimir
-                  </a>
+                  </button>
                 </li>
-                <li>
+                <li role='none'>
                   <hr className='dropdown-divider' />
                 </li>
-                <li>
-                  <a className='dropdown-item text-danger' href='#'>
+                <li role='none'>
+                  <button
+                    className='dropdown-item text-danger'
+                    type='button'
+                    onClick={() => {
+                      if (confirm('¿Estás seguro de que quieres eliminar esta torre?')) {
+                        // TODO: Implementar eliminación de torre
+                        alert('Funcionalidad de eliminación próximamente disponible');
+                      }
+                    }}
+                    role='menuitem'
+                  >
                     <i className='material-icons me-2'>delete</i>Eliminar Torre
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>

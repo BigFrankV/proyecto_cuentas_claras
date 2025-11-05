@@ -1,4 +1,5 @@
 import { Chart, registerables } from 'chart.js';
+import Link from 'next/link';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import Sidebar from '@/components/layout/Sidebar';
@@ -129,7 +130,7 @@ export default function ConsumosPage(): JSX.Element {
       setDetalleData(detalle);
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Error fetching data:', error);
+console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -406,12 +407,12 @@ export default function ConsumosPage(): JSX.Element {
                 </button>
 
                 <div className='d-flex align-items-center'>
-                  <a
+                  <Link
                     href='/medidores'
                     className='btn btn-outline-secondary me-2'
                   >
                     Volver a Medidores
-                  </a>
+                  </Link>
                   <div>
                     <small className='text-muted'>
                       Medidor seleccionado:{' '}
@@ -443,22 +444,22 @@ export default function ConsumosPage(): JSX.Element {
                     </button>
                     <ul className='dropdown-menu dropdown-menu-end'>
                       <li>
-                        <a className='dropdown-item' href='/profile'>
+                        <Link className='dropdown-item' href='/profile'>
                           Mi Perfil
-                        </a>
+                        </Link>
                       </li>
                       <li>
-                        <a className='dropdown-item' href='/tarifas'>
+                        <Link className='dropdown-item' href='/tarifas'>
                           Tarifas de Consumo
-                        </a>
+                        </Link>
                       </li>
                       <li>
                         <hr className='dropdown-divider' />
                       </li>
                       <li>
-                        <a className='dropdown-item text-danger' href='/login'>
+                        <Link className='dropdown-item text-danger' href='/login'>
                           Cerrar Sesión
-                        </a>
+                        </Link>
                       </li>
                     </ul>
                   </div>
@@ -712,3 +713,4 @@ export default function ConsumosPage(): JSX.Element {
     </div>
   );
 }
+

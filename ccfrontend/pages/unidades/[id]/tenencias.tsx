@@ -21,6 +21,7 @@ export default function TenenciasUnidad() {
         const res = await apiClient.get(`/unidades/${id}/tenencias`);
         if (mounted) {setTenencias(res.data || []);}
       } catch (err) {
+// eslint-disable-next-line no-console
         console.error('Error loading tenencias', err);
       } finally {
         setLoading(false);

@@ -61,18 +61,6 @@ export default function EditarGasto() {
   const { isSuperUser, currentRole } = usePermissions();
   const comunidadId = currentComunidadId;
 
-  // Verificar permisos: Solo superadmin o admin puede editar
-  const canEdit = isSuperUser || currentRole === 'admin';
-  if (!canEdit) {
-    return (
-      <ProtectedRoute>
-        <Layout>
-          <Alert variant='danger'>No tienes permisos para editar gastos.</Alert>
-        </Layout>
-      </ProtectedRoute>
-    );
-  }
-
   const [formData, setFormData] = useState<ExpenseFormData>({
     id: 0,
     description: '',
@@ -107,19 +95,6 @@ export default function EditarGasto() {
   const [providers, setProviders] = useState([]);
   const [costCenters, setCostCenters] = useState([]);
 
-  const documentTypes = [
-    { value: 'factura', label: 'Factura' },
-    { value: 'boleta', label: 'Boleta de Honorarios' },
-    { value: 'recibo', label: 'Recibo' },
-    { value: 'factura_electronica', label: 'Factura Electrónica' },
-    { value: 'nota_credito', label: 'Nota de Crédito' },
-    { value: 'nota_debito', label: 'Nota de Débito' },
-    { value: 'orden_compra', label: 'Orden de Compra' },
-    { value: 'cotizacion', label: 'Cotización' },
-    { value: 'contrato', label: 'Contrato' },
-    { value: 'otro', label: 'Otro' },
-  ];
-
   useEffect(() => {
     if (id) {
       getGastoById(Number(id))
@@ -137,6 +112,31 @@ export default function EditarGasto() {
       getProveedores(comunidadId || undefined).then(setProviders);
     }
   }, [id, comunidadId]); // Mantener dependencias
+
+  const documentTypes = [
+    { value: 'factura', label: 'Factura' },
+    { value: 'boleta', label: 'Boleta de Honorarios' },
+    { value: 'recibo', label: 'Recibo' },
+    { value: 'factura_electronica', label: 'Factura Electrónica' },
+    { value: 'nota_credito', label: 'Nota de Crédito' },
+    { value: 'nota_debito', label: 'Nota de Débito' },
+    { value: 'orden_compra', label: 'Orden de Compra' },
+    { value: 'cotizacion', label: 'Cotización' },
+    { value: 'contrato', label: 'Contrato' },
+    { value: 'otro', label: 'Otro' },
+  ];
+
+  // Verificar permisos: Solo superadmin o admin puede editar
+  const canEdit = isSuperUser || currentRole === 'admin';
+  if (!canEdit) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <Alert variant='danger'>No tienes permisos para editar gastos.</Alert>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   const mapToFormData = (gasto: any): ExpenseFormData => ({
     id: gasto.id,
@@ -327,6 +327,7 @@ export default function EditarGasto() {
       await updateGasto(Number(id), payload);
       router.push(`/gastos/${id}`);
     } catch (err) {
+// eslint-disable-next-line no-console
       console.error(err);
       setErrors({ general: 'Error al actualizar gasto' });
     } finally {
@@ -405,7 +406,7 @@ export default function EditarGasto() {
             <Alert variant='info' className='mb-0'>
               <span className='material-icons me-2'>info</span>
               Estás editando un gasto existente. Los cambios se guardarán cuando
-              presiones "Actualizar Gasto".
+              presiones &quot;Actualizar Gasto&quot;.
             </Alert>
           </div>
 
@@ -694,6 +695,15 @@ export default function EditarGasto() {
                       onDragOver={handleDrag}
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          fileInputRef.current?.click();
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Haz clic o arrastra archivos para subir"
                     >
                       <div className='file-upload-content'>
                         <span className='material-icons file-upload-icon'>

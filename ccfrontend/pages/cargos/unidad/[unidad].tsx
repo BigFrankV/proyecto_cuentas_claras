@@ -23,6 +23,7 @@ export default function CargosUnidadPage() {
       setError(null);
 
       try {
+        // eslint-disable-next-line no-console
         console.log('🔍 Cargando datos de la unidad:', unidad);
 
         // Obtener cargos de la unidad desde la API
@@ -74,6 +75,7 @@ export default function CargosUnidadPage() {
           coeficiente: 0,
         };
 
+// eslint-disable-next-line no-console
         console.log('✅ Datos cargados:', {
           unitData,
           cargosCount: mappedCargos.length,
@@ -81,6 +83,7 @@ export default function CargosUnidadPage() {
         setUnitInfo(unitData);
         setCargos(mappedCargos);
       } catch (err) {
+// eslint-disable-next-line no-console
         console.error('❌ Error al cargar datos de la unidad:', err);
         setError(
           err instanceof Error

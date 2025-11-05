@@ -75,14 +75,16 @@ export default function GastosListado() {
         limit: 100,
         offset: 0,
       });
-      console.log('Respuesta del backend:', resp.data); // Verifica si 'estado' es correcto
+// eslint-disable-next-line no-console
+console.log('Respuesta del backend:', resp.data); // Verifica si 'estado' es correcto
       const items = resp.data || [];
       const mapped: Expense[] = (Array.isArray(items) ? items : []).map(
         mapBackendToExpense,
       );
       setExpenses(mapped);
     } catch (error) {
-      console.error('Error loading expenses from API:', error);
+// eslint-disable-next-line no-console
+console.error('Error loading expenses from API:', error);
       setExpenses([]);
     } finally {
       setLoading(false);
@@ -215,7 +217,8 @@ export default function GastosListado() {
         );
       })
       .catch(err => {
-        console.error('Error getCategorias', err);
+// eslint-disable-next-line no-console
+console.error('Error getCategorias', err);
         setCategories([]);
       });
 
@@ -228,7 +231,8 @@ export default function GastosListado() {
         setCostCenters(normalized);
       })
       .catch(err => {
-        console.error('Error getCentrosCosto', err);
+// eslint-disable-next-line no-console
+console.error('Error getCentrosCosto', err);
         setCostCenters([]);
       });
 
@@ -241,7 +245,8 @@ export default function GastosListado() {
         setProviders(normalized);
       })
       .catch(err => {
-        console.error('Error getProveedores', err);
+// eslint-disable-next-line no-console
+console.error('Error getProveedores', err);
         setProviders([]);
       });
   }, [resolvedComunidadId]);
@@ -773,3 +778,4 @@ export default function GastosListado() {
     </ProtectedRoute>
   );
 }
+

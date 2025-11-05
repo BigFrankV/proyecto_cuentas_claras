@@ -45,7 +45,15 @@ export default function PriorityOption({
     <div
       className={`priority-option ${priority} ${selected ? 'selected' : ''}`}
       onClick={() => onSelect(priority)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect(priority);
+        }
+      }}
       style={{ cursor: 'pointer' }}
+      role="button"
+      tabIndex={0}
     >
       <div
         className='priority-icon'
@@ -150,3 +158,4 @@ export default function PriorityOption({
     </div>
   );
 }
+

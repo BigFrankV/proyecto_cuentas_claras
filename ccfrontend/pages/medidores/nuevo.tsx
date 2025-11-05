@@ -141,7 +141,8 @@ export default function NuevoMedidor() {
 
       setCommunities(mockCommunities);
     } catch (error) {
-      console.error('Error loading initial data:', error);
+// eslint-disable-next-line no-console
+console.error('Error loading initial data:', error);
     }
   };
 
@@ -157,7 +158,8 @@ export default function NuevoMedidor() {
 
       setBuildings(mockBuildings);
     } catch (error) {
-      console.error('Error loading buildings:', error);
+// eslint-disable-next-line no-console
+console.error('Error loading buildings:', error);
     }
   };
 
@@ -175,7 +177,8 @@ export default function NuevoMedidor() {
 
       setUnits(mockUnits);
     } catch (error) {
-      console.error('Error loading units:', error);
+// eslint-disable-next-line no-console
+console.error('Error loading units:', error);
     }
   };
 
@@ -273,7 +276,8 @@ export default function NuevoMedidor() {
       alert('Medidor creado exitosamente');
       router.push('/medidores');
     } catch (error) {
-      console.error('Error creating meter:', error);
+// eslint-disable-next-line no-console
+console.error('Error creating meter:', error);
       alert('Error al crear el medidor');
     } finally {
       setLoading(false);
@@ -1198,3 +1202,4 @@ export default function NuevoMedidor() {
     </ProtectedRoute>
   );
 }
+

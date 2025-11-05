@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Comunidad,
   ComunidadDetalle,
@@ -14,10 +15,12 @@ class ComunidadesService {
   // Métodos CRUD básicos
   async getComunidades(filtros?: ComunidadFiltros): Promise<Comunidad[]> {
     try {
+      // eslint-disable-next-line no-console
       console.log(
-        '📍 [ComunidadesService] getComunidades - Iniciando solicitud',
+        '[ComunidadesService] getComunidades - Iniciando solicitud',
       );
-      console.log('📍 [ComunidadesService] Filtros:', filtros);
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console`n      console.log('[ComunidadesService] Filtros:', filtros);
 
       const params = new URLSearchParams();
 
@@ -32,22 +35,26 @@ class ComunidadesService {
       } // Si tipo es RUT
 
       const url = `${this.baseUrl}${params.toString() ? `?${params.toString()}` : ''}`;
-      console.log('📍 [ComunidadesService] URL completa:', url);
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console`n      console.log('[ComunidadesService] URL completa:', url);
 
       const token = localStorage.getItem('auth_token');
-      console.log('📍 [ComunidadesService] Token presente:', !!token);
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console`n      console.log('[ComunidadesService] Token presente:', !!token);
 
       // ✅ NUEVA VERIFICACIÓN: Si no hay token, no intentar
       if (!token) {
+        // eslint-disable-next-line no-console
         console.error(
-          '❌ [ComunidadesService] SIN TOKEN - No se puede acceder a comunidades',
+          '[ComunidadesService] SIN TOKEN - No se puede acceder a comunidades',
         );
         throw new Error('No hay autenticación (token ausente)');
       }
 
       const response = await apiClient.get(url);
+      // eslint-disable-next-line no-console
       console.log(
-        '📍 [ComunidadesService] Respuesta exitosa. Comunidades:',
+        '[ComunidadesService] Respuesta exitosa. Comunidades:',
         response.data.length,
       );
 
@@ -55,22 +62,27 @@ class ComunidadesService {
         this.normalizeComunidad(comunidad),
       );
     } catch (error: any) {
+      // eslint-disable-next-line no-console
       console.error(
-        '❌ [ComunidadesService] Error fetching comunidades:',
+        '[ComunidadesService] Error obteniendo comunidades:',
         error.message,
       );
-      console.error('❌ [ComunidadesService] Status:', error.response?.status);
-      console.error('❌ [ComunidadesService] Response:', error.response?.data);
+      // eslint-disable-next-line no-console
+console.error('[ComunidadesService] Status:', error.response?.status);
+      // eslint-disable-next-line no-console
+console.error('[ComunidadesService] Response:', error.response?.data);
 
       // ✅ NUEVA MANEJO: Si es 401, informar claramente
       if (error.response?.status === 401) {
+        // eslint-disable-next-line no-console
         console.error(
-          '❌ [ComunidadesService] 401 - Sin autorización. Usuario debe hacer login.',
+          '[ComunidadesService] 401 - Sin autorización. Usuario debe hacer login.',
         );
         throw new Error('No autorizado. Por favor, haz login.');
       }
 
-      console.error('❌ [ComunidadesService] Full error:', error);
+      // eslint-disable-next-line no-console
+console.error('[ComunidadesService] Error completo:', error);
       throw error; // Propagar error para manejarlo en el componente
     }
   }
@@ -80,7 +92,8 @@ class ComunidadesService {
       const response = await apiClient.get(`${this.baseUrl}/${id}`);
       return this.normalizeComunidad(response.data) as ComunidadDetalle;
     } catch (error) {
-      console.error(`Error fetching comunidad ${id}:`, error);
+      // eslint-disable-next-line no-console
+console.error(`Error obteniendo comunidad ${id}:`, error);
       throw error;
     }
   }
@@ -91,7 +104,8 @@ class ComunidadesService {
       const response = await apiClient.get(`${this.baseUrl}/${id}/amenidades`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching amenidades for comunidad ${id}:`, error);
+      // eslint-disable-next-line no-console
+console.error(`Error obteniendo amenidades para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -101,7 +115,8 @@ class ComunidadesService {
       const response = await apiClient.get(`${this.baseUrl}/${id}/edificios`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching edificios for comunidad ${id}:`, error);
+      // eslint-disable-next-line no-console
+console.error(`Error obteniendo edificios para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -111,7 +126,8 @@ class ComunidadesService {
       const response = await apiClient.get(`${this.baseUrl}/${id}/contactos`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching contactos for comunidad ${id}:`, error);
+      // eslint-disable-next-line no-console
+console.error(`Error obteniendo contactos para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -121,7 +137,8 @@ class ComunidadesService {
       const response = await apiClient.get(`${this.baseUrl}/${id}/documentos`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching documentos for comunidad ${id}:`, error);
+      // eslint-disable-next-line no-console
+console.error(`Error obteniendo documentos para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -131,7 +148,8 @@ class ComunidadesService {
       const response = await apiClient.get(`${this.baseUrl}/${id}/residentes`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching residentes for comunidad ${id}:`, error);
+      // eslint-disable-next-line no-console
+console.error(`Error obteniendo residentes para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -141,7 +159,8 @@ class ComunidadesService {
       const response = await apiClient.get(`${this.baseUrl}/${id}/parametros`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching parametros for comunidad ${id}:`, error);
+      // eslint-disable-next-line no-console
+console.error(`Error obteniendo parametros para comunidad ${id}:`, error);
       return null;
     }
   }
@@ -153,7 +172,8 @@ class ComunidadesService {
       );
       return response.data;
     } catch (error) {
-      console.error(`Error fetching estadisticas for comunidad ${id}:`, error);
+      // eslint-disable-next-line no-console
+console.error(`Error obteniendo estadisticas para comunidad ${id}:`, error);
       return {
         totalIngresos: 0,
         ingresosPagados: 0,
@@ -170,7 +190,8 @@ class ComunidadesService {
       const response = await apiClient.get(`${this.baseUrl}/${id}/flujo-caja`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching flujo-caja for comunidad ${id}:`, error);
+      // eslint-disable-next-line no-console
+console.error(`Error obteniendo flujo-caja para comunidad ${id}:`, error);
       return [];
     }
   }
@@ -191,7 +212,8 @@ class ComunidadesService {
       const response = await apiClient.post(this.baseUrl, payload);
       return this.normalizeComunidad(response.data);
     } catch (error) {
-      console.error('Error creating comunidad:', error);
+      // eslint-disable-next-line no-console
+console.error('Error creando comunidad:', error);
       throw error;
     }
   }
@@ -229,7 +251,8 @@ class ComunidadesService {
       const response = await apiClient.patch(`${this.baseUrl}/${id}`, payload);
       return this.normalizeComunidad(response.data);
     } catch (error) {
-      console.error(`Error updating comunidad ${id}:`, error);
+      // eslint-disable-next-line no-console
+console.error(`Error actualizando comunidad ${id}:`, error);
       throw error;
     }
   }
@@ -238,7 +261,8 @@ class ComunidadesService {
     try {
       await apiClient.delete(`${this.baseUrl}/${id}`);
     } catch (error) {
-      console.error(`Error deleting comunidad ${id}:`, error);
+      // eslint-disable-next-line no-console
+console.error(`Error eliminando comunidad ${id}:`, error);
       throw error;
     }
   }
@@ -253,8 +277,9 @@ class ComunidadesService {
       );
       return response.data;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(
-        `Error fetching parametros for comunidad ${comunidadId}:`,
+        `Error obteniendo parametros para comunidad ${comunidadId}:`,
         error,
       );
       throw error;
@@ -272,8 +297,9 @@ class ComunidadesService {
       );
       return response.data;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(
-        `Error updating parametros for comunidad ${comunidadId}:`,
+        `Error actualizando parametros para comunidad ${comunidadId}:`,
         error,
       );
       throw error;
@@ -288,8 +314,9 @@ class ComunidadesService {
       );
       return response.data;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(
-        `Error fetching estadisticas for comunidad ${comunidadId}:`,
+        `Error obteniendo estadisticas para comunidad ${comunidadId}:`,
         error,
       );
       throw error;
@@ -306,6 +333,7 @@ class ComunidadesService {
       );
       return response.data;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(
         `Error verificando acceso a comunidad ${comunidadId}:`,
         error,
@@ -319,7 +347,8 @@ class ComunidadesService {
       const response = await apiClient.get(`${this.baseUrl}/mis-membresias`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching membresías:', error);
+      // eslint-disable-next-line no-console
+console.error('Error obteniendo membresías:', error);
       return [];
     }
   }
@@ -405,3 +434,4 @@ class ComunidadesService {
 
 const comunidadesService = new ComunidadesService();
 export default comunidadesService;
+

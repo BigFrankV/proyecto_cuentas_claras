@@ -18,9 +18,40 @@ import {
   getGastoById,
   getAprobaciones,
   createAprobacion,
+  updateGasto,
 } from '@/lib/gastosService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { mapBackendToExpense } from '@/types/gastos';
+
+interface ExpenseFormData {
+  id: number;
+  description: string;
+  category: number;
+  provider: number;
+  amount: string;
+  date: string;
+  dueDate: string;
+  documentType: string;
+  documentNumber: string;
+  isRecurring: boolean;
+  recurringPeriod: string;
+  costCenter: number;
+  tags: string[];
+  observations: string;
+  priority: 'low' | 'medium' | 'high';
+  requiredApprovals: number;
+  attachments: File[];
+  existingAttachments: ExistingAttachment[];
+}
+
+interface ExistingAttachment {
+  id: number;
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+  uploadedAt: string;
+}
 
 interface Expense {
   id: number;
@@ -94,6 +125,7 @@ export default function GastoDetalle() {
       const data = await getGastoById(Number(id));
       setExpense(mapBackendToExpense(data));
     } catch (err) {
+// eslint-disable-next-line no-console
       console.error(err);
     } finally {
       setLoading(false);
@@ -215,6 +247,7 @@ export default function GastoDetalle() {
       setShowApprovalModal(false);
       alert('Gasto aprobado exitosamente');
     } catch (err) {
+// eslint-disable-next-line no-console
       console.error('Error al aprobar:', err);
       alert('Error al aprobar el gasto');
     } finally {
@@ -238,6 +271,7 @@ export default function GastoDetalle() {
       setShowApprovalModal(false);
       alert('Gasto rechazado');
     } catch (err) {
+// eslint-disable-next-line no-console
       console.error('Error al rechazar:', err);
       alert('Error al rechazar el gasto');
     } finally {
@@ -255,6 +289,7 @@ export default function GastoDetalle() {
       alert('Gasto eliminado exitosamente');
       router.push('/gastos');
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error deleting expense:', error);
       alert('Error al eliminar el gasto');
     } finally {
@@ -315,6 +350,7 @@ export default function GastoDetalle() {
       await updateGasto(Number(id), payload);
       router.push(`/gastos/${id}`);
     } catch (err) {
+// eslint-disable-next-line no-console
       console.error(err);
       // Manejar error
     } finally {

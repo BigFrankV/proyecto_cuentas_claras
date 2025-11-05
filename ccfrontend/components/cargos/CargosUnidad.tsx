@@ -283,7 +283,7 @@ export default function CargosUnidad({
           ],
         };
 
-      case 'type':
+      case 'type': {
         const typeGroups = filteredCargos.reduce(
           (acc, cargo) => {
             acc[cargo.tipo] = (acc[cargo.tipo] || 0) + 1;
@@ -318,8 +318,9 @@ export default function CargosUnidad({
             },
           ],
         };
+      }
 
-      case 'monthly':
+      case 'monthly': {
         const monthlyData = filteredCargos.reduce(
           (acc, cargo) => {
             const month = cargo.periodo;
@@ -341,6 +342,7 @@ export default function CargosUnidad({
             },
           ],
         };
+      }
 
       default:
         return { labels: [], datasets: [] };
@@ -369,6 +371,7 @@ export default function CargosUnidad({
   };
 
   const handleSendStatement = () => {
+    // eslint-disable-next-line no-console
     console.log('Send statement for unit:', unidad.numero);
     // TODO: Implement send statement functionality
   };
@@ -378,6 +381,7 @@ export default function CargosUnidad({
   };
 
   const handleExportUnitCharges = () => {
+    // eslint-disable-next-line no-console
     console.log('Export charges for unit:', unidad.numero);
     // TODO: Implement export functionality
   };
@@ -785,3 +789,4 @@ export default function CargosUnidad({
     </div>
   );
 }
+

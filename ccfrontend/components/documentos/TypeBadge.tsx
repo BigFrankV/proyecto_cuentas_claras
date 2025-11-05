@@ -50,3 +50,4 @@ export default function TypeBadge({ type, size = 'md' }: TypeBadgeProps) {
     </span>
   );
 }
+

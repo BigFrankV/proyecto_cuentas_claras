@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useRef, useEffect } from 'react';
@@ -75,7 +76,8 @@ export default function TorreNueva() {
         );
         setCodigoExists(response.data.existe);
       } catch (error) {
-        console.error('Error validating codigo:', error);
+// eslint-disable-next-line no-console
+console.error('Error validating codigo:', error);
         setCodigoExists(null);
       } finally {
         setCodigoValidating(false);
@@ -100,7 +102,8 @@ export default function TorreNueva() {
           setFormData(prev => ({ ...prev, codigo: suggestedCode }));
         }
       } catch (error) {
-        console.error('Error getting siguiente codigo:', error);
+// eslint-disable-next-line no-console
+console.error('Error getting siguiente codigo:', error);
       }
     };
 
@@ -238,7 +241,8 @@ export default function TorreNueva() {
       // Redirigir al listado de torres
       router.push('/torres');
     } catch (error: any) {
-      console.error('Error al crear torre:', error);
+// eslint-disable-next-line no-console
+console.error('Error al crear torre:', error);
       if (error.response?.status === 409) {
         setErrors({ codigo: 'Este código ya existe en el edificio' });
       } else {
@@ -711,6 +715,12 @@ export default function TorreNueva() {
                             : '#f8f9fa',
                         }}
                         onClick={() => fileInputRef.current?.click()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            fileInputRef.current?.click();
+                          }
+                        }}
                         onMouseEnter={e => {
                           if (!imagePreview)
                             {e.currentTarget.style.borderColor =
@@ -720,13 +730,18 @@ export default function TorreNueva() {
                           if (!imagePreview)
                             {e.currentTarget.style.borderColor = '#ddd';}
                         }}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Haz clic para seleccionar imagen"
                       >
                         {imagePreview ? (
-                          <img
+                          <Image
                             src={imagePreview}
                             alt='Preview'
                             className='img-fluid rounded'
-                            style={{ maxHeight: '200px' }}
+                            width={300}
+                            height={200}
+                            style={{ maxHeight: '200px', width: 'auto' }}
                           />
                         ) : (
                           <>
@@ -884,3 +899,4 @@ export default function TorreNueva() {
     </ProtectedRoute>
   );
 }
+

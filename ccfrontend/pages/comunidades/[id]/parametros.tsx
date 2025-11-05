@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 
@@ -147,6 +148,7 @@ export default function ParametrosCobranzaPage() {
             setParametros(prev => ({ ...prev, ...parametrosExistentes }));
           }
         } catch (error) {
+// eslint-disable-next-line no-console
           console.error('Error cargando datos:', error);
         } finally {
           setLoading(false);
@@ -171,7 +173,7 @@ export default function ParametrosCobranzaPage() {
     setParametros(prev => ({
       ...prev,
       cuentaBancaria: {
-        ...prev.cuentaBancaria!,
+        ...(prev.cuentaBancaria || {}),
         [field]: value,
       },
     }));
@@ -185,6 +187,7 @@ export default function ParametrosCobranzaPage() {
       await comunidadesService.updateParametrosCobranza(Number(id), parametros);
       alert('Parámetros de cobranza actualizados correctamente');
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error guardando parámetros:', error);
       alert('Error al guardar los parámetros');
     } finally {
@@ -261,9 +264,9 @@ export default function ParametrosCobranzaPage() {
                   <nav aria-label='breadcrumb'>
                     <ol className='breadcrumb mb-0'>
                       <li className='breadcrumb-item'>
-                        <a href='/comunidades' className='text-decoration-none'>
+                        <Link href='/comunidades' className='text-decoration-none'>
                           Comunidades
-                        </a>
+                        </Link>
                       </li>
                       <li className='breadcrumb-item'>
                         <a

@@ -126,6 +126,7 @@ export default function CentroCostoEditar() {
 
       setFormData(mockData);
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error loading cost center:', error);
       alert('Error al cargar el centro de costo');
       router.push('/centros-costo');
@@ -172,6 +173,7 @@ export default function CentroCostoEditar() {
       alert('Centro de costo actualizado exitosamente');
       router.push(`/centros-costo/${id}`);
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error updating cost center:', error);
       alert('Error al actualizar el centro de costo');
     } finally {

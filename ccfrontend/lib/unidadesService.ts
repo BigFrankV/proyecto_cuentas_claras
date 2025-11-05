@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Servicio completo para unidades, basado en el backend de unidades.js
 import api from './api';
 
@@ -6,11 +7,13 @@ class UnidadesService {
   async getUnidades(
     params?: any,
   ): Promise<{ data: any[]; totalPaginas?: number }> {
-    console.log('🔍 Frontend: Llamando getUnidades con params:', params);
+    // eslint-disable-next-line no-console
+    // eslint-disable-next-line no-console`n    console.log('Frontend: Llamando getUnidades con params:', params);
     try {
       const response = await api.get('/unidades', { params });
+      // eslint-disable-next-line no-console
       console.log(
-        '✅ Frontend: Respuesta getUnidades:',
+        'Frontend: Respuesta getUnidades:',
         response.status,
         response.data,
       );
@@ -21,8 +24,9 @@ class UnidadesService {
         totalPaginas,
       };
     } catch (err: any) {
+      // eslint-disable-next-line no-console
       console.error(
-        '❌ Frontend: Error en getUnidades:',
+        'Frontend: Error en getUnidades:',
         err.response?.status,
         err.message,
       );
@@ -357,3 +361,4 @@ export const getUnidades = (params?: any) =>
 export const getDropdownComunidades = () =>
   unidadesService.getDropdownComunidades();
 // Agrega más exports según necesites
+

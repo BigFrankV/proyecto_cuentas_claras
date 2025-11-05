@@ -1,9 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-undef */
 import {
   Multa,
-  MultaFiltros,
-  CreateMultaData,
-  UpdateMultaData,
-  MultasEstadisticas,
   TipoInfraccion,
 } from '@/types/multas';
 
@@ -18,7 +16,8 @@ class MultasService {
       const response = await api.get('/multas/tipos-infraccion', { params });
       return response.data?.data ?? response.data ?? [];
     } catch (err) {
-      console.error('❌ Error obteniendo tipos de infracción:', err);
+      // eslint-disable-next-line no-console
+console.error('Error obteniendo tipos de infracción:', err);
       // fallback seguro: devolver array vacío (o llamar a getTiposInfraccionPredefinidos si existe)
       if (typeof (this as any).getTiposInfraccionPredefinidos === 'function') {
         return (this as any).getTiposInfraccionPredefinidos();
@@ -44,7 +43,7 @@ class MultasService {
       }
       if (filtros?.pagina) {
         params.page = filtros.pagina;
-      } // ✅ Agrega página
+      } //  Agrega página
       const response = await api.get('/multas', { params });
       const data = response.data?.data ?? response.data;
       const totalPaginas = response.data?.totalPaginas ?? 1;
@@ -53,7 +52,8 @@ class MultasService {
         totalPaginas,
       };
     } catch (err) {
-      console.error('❌ Error obteniendo multas:', err);
+      // eslint-disable-next-line no-console
+console.error('Error obteniendo multas:', err);
       throw err;
     }
   }
@@ -129,25 +129,30 @@ class MultasService {
       const raw = response.data?.data ?? response.data;
       return this.adaptMultaFromBackend(raw);
     } catch (error) {
-      console.error(`❌ Error updating multa ${id}:`, error);
+      // eslint-disable-next-line no-console
+console.error(`Error actualizando multa ${id}:`, error);
       throw error;
     }
   }
 
   async deleteMulta(id: number): Promise<void> {
     try {
-      console.log(`🗑️ Eliminando multa ${id}`);
+      // eslint-disable-next-line no-console
+      console.log(`Eliminando multa ${id}`);
       await api.delete(`/multas/${id}`);
-      console.log('✅ Multa eliminada exitosamente');
+      // eslint-disable-next-line no-console
+      console.log('Multa eliminada exitosamente');
     } catch (error) {
-      console.error(`❌ Error eliminando multa ${id}:`, error);
+      // eslint-disable-next-line no-console
+      console.error(`Error eliminando multa ${id}:`, error);
       throw error;
     }
   }
 
   async anularMulta(id: number, motivo?: string): Promise<Multa> {
     try {
-      console.log(`🚫 Anulando multa ${id}`);
+      // eslint-disable-next-line no-console
+      console.log(`Anulando multa ${id}`);
 
       // Usar endpoint específico si existe en backend
       const payload: any = {};
@@ -156,15 +161,17 @@ class MultasService {
       }
       const response = await api.patch(`/multas/${id}/anular`, payload);
       const raw = response.data?.data ?? response.data;
-      console.log('✅ Multa anulada exitosamente');
+      // eslint-disable-next-line no-console
+      console.log('Multa anulada exitosamente');
       return this.adaptMultaFromBackend(raw);
     } catch (error) {
-      console.error(`❌ Error anulando multa ${id}:`, error);
+      // eslint-disable-next-line no-console
+      console.error(`Error anulando multa ${id}:`, error);
       throw error;
     }
   }
 
-  // ✅ USAR tu endpoint de estadísticas
+  //  USAR tu endpoint de estadísticas
   async getEstadisticas(comunidadId?: number): Promise<any> {
     const params = comunidadId ? { comunidad_id: comunidadId } : undefined;
     const response = await api.get('/multas/estadisticas', { params });
@@ -182,7 +189,7 @@ class MultasService {
     return (multasBackend || []).map(m => this.adaptMultaFromBackend(m));
   }
 
-  // ✅ Formatear fecha para tu backend (DATE field)
+  //  Formatear fecha para tu backend (DATE field)
   private formatearFechaParaBackend(fechaISO: string): string {
     try {
       if (!fechaISO) {
@@ -203,12 +210,13 @@ class MultasService {
       const fecha = new Date(fechaISO);
       return fecha.toISOString().split('T')[0];
     } catch (error) {
-      console.error('❌ Error formateando fecha para backend:', error);
+      // eslint-disable-next-line no-console
+console.error('Error formateando fecha para backend:', error);
       return new Date().toISOString().split('T')[0];
     }
   }
 
-  // ✅ Normalizar fecha DATE de MySQL
+  //  Normalizar fecha DATE de MySQL
   private normalizarFechaFromDB(fecha: any): string {
     try {
       if (!fecha) {
@@ -227,12 +235,13 @@ class MultasService {
 
       return new Date(fecha).toISOString().split('T')[0];
     } catch (error) {
-      console.error('❌ Error normalizando fecha:', error);
+      // eslint-disable-next-line no-console
+console.error('Error normalizando fecha:', error);
       return new Date().toISOString().split('T')[0];
     }
   }
 
-  // ✅ Normalizar timestamp DATETIME de MySQL
+  //  Normalizar timestamp DATETIME de MySQL
   private normalizarTimestampFromDB(timestamp: any): string {
     try {
       if (!timestamp) {
@@ -248,12 +257,13 @@ class MultasService {
 
       return new Date().toISOString();
     } catch (error) {
-      console.error('❌ Error normalizando timestamp:', error);
+      // eslint-disable-next-line no-console
+console.error('Error normalizando timestamp:', error);
       return new Date().toISOString();
     }
   }
 
-  // ✅ Calcular vencimiento (30 días)
+  //  Calcular vencimiento (30 días)
   private calcularFechaVencimiento(fechaInfraccion: string): string {
     try {
       let fecha: Date;
@@ -276,14 +286,15 @@ class MultasService {
       fecha.setDate(fecha.getDate() + 30);
       return fecha.toISOString().split('T')[0];
     } catch (error) {
-      console.error('❌ Error calculando vencimiento:', error);
+      // eslint-disable-next-line no-console
+console.error('Error calculando vencimiento:', error);
       const fallback = new Date();
       fallback.setDate(fallback.getDate() + 30);
       return fallback.toISOString().split('T')[0];
     }
   }
 
-  // ✅ Agregar método faltante para la página de detalle
+  //  Agregar método faltante para la página de detalle
   async getMultaById(id: number): Promise<Multa> {
     return this.getMulta(id);
   }
@@ -300,8 +311,8 @@ class MultasService {
   getEstadoColor(estado: Multa['estado']): string {
     const colores = {
       pendiente: 'warning',
-      pagado: 'success', // ✅ Tu BD usa 'pagado'
-      vencido: 'danger', // ✅ Tu BD usa 'vencido'
+      pagado: 'success', //  Tu BD usa 'pagado'
+      vencido: 'danger', //  Tu BD usa 'vencido'
       apelada: 'info',
       anulada: 'secondary',
     };
@@ -419,12 +430,14 @@ class MultasService {
       edificio: u.edificio_nombre || '',
       torre: u.torre_nombre || '',
       display:
-        `${u.numero} - ${u.propietario_nombre || 'Sin propietario'} ${u.edificio_nombre ? `(${u.edificio_nombre})` : ''}`.trim(),
+        `${u.numero} - ${u.propietario_nombre || 'Sin propietario'} ${
+          u.edificio_nombre ? `(${u.edificio_nombre})` : ''
+        }`.trim(),
     }));
   }
 }
 
-// ✅ CREAR LA INSTANCIA Y EXPORTARLA
+//  CREAR LA INSTANCIA Y EXPORTARLA
 const multasService = new MultasService();
 
 export default multasService;
@@ -476,6 +489,11 @@ export function setAxiosAuthToken(token?: string | null) {
       }
     }
   } catch (err) {
-    console.warn('setAxiosAuthToken error', err);
+    // eslint-disable-next-line no-console
+    // eslint-disable-next-line no-console
+
+// eslint-disable-next-line no-console
+console.warn('setAxiosAuthToken error', err);
   }
 }
+

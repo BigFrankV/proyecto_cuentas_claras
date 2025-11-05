@@ -25,6 +25,7 @@ export default function EditApelacionPage() {
           documentos_json: r.documentos_json || null,
         });
       } catch (err) {
+// eslint-disable-next-line no-console
         console.error('getApelacion.error', err);
       } finally {
         setLoading(false);
@@ -39,6 +40,7 @@ export default function EditApelacionPage() {
       await updateApelacion(Number(id), form, token);
       router.push(`/apelaciones/${id}`);
     } catch (err) {
+// eslint-disable-next-line no-console
       console.error('updateApelacion.error', err);
       alert('Error al guardar la apelación');
     } finally {

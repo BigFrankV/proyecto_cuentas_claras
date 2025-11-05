@@ -141,6 +141,7 @@ test('walk lecturas element tree to find object-typed element types', async () =
   const { container } = render(<Lecturas />);
   expect(container).toBeDefined();
   const findings = walkElement(container.firstChild, ['Lecturas']);
+  // eslint-disable-next-line no-console
   console.log('WALK-FINDINGS:', findings);
   // If there are findings, fail the test to draw attention and show console output
   if (findings.length > 0) {
@@ -149,3 +150,4 @@ test('walk lecturas element tree to find object-typed element types', async () =
     );
   }
 });
+

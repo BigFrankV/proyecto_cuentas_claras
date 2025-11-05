@@ -611,7 +611,8 @@ export const useClipboard = () => {
 
         return true;
       } catch (error) {
-        console.error('Error al copiar al portapapeles:', error);
+// eslint-disable-next-line no-console
+console.error('Error al copiar al portapapeles:', error);
         return false;
       }
     },
@@ -669,3 +670,4 @@ export const useDateUtils = () => {
     isValidDate,
   };
 };
+

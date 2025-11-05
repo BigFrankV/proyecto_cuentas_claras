@@ -56,8 +56,10 @@ export default function CategoriasGastoListado() {
     try {
       setLoading(true);
       const response = await listCategorias(resolvedComunidadId);
-      console.log('API Response:', response); // <-- añadir
-      console.log('Response data:', response.data); // <-- añadir
+// eslint-disable-next-line no-console
+console.log('API Response:', response); // <-- añadir
+// eslint-disable-next-line no-console
+console.log('Response data:', response.data); // <-- añadir
       setCategories(response.data);
       setPagination({
         total: response.pagination?.total || 0,
@@ -70,9 +72,11 @@ export default function CategoriasGastoListado() {
         limit: response.pagination?.limit || 10,
         pages: response.pagination?.pages || 0,
       });
-      console.log('Categories set:', response.data); // <-- añadir
+// eslint-disable-next-line no-console
+console.log('Categories set:', response.data); // <-- añadir
     } catch (error) {
-      console.error('Error loading categories:', error);
+// eslint-disable-next-line no-console
+console.error('Error loading categories:', error);
     } finally {
       setLoading(false);
     }
@@ -109,7 +113,8 @@ export default function CategoriasGastoListado() {
       setSelectedCategory(null);
       alert('Categoría eliminada exitosamente');
     } catch (error) {
-      console.error('Error deleting category:', error);
+// eslint-disable-next-line no-console
+console.error('Error deleting category:', error);
       alert('Error al eliminar la categoría');
     }
   };
@@ -549,3 +554,4 @@ export default function CategoriasGastoListado() {
     </ProtectedRoute>
   );
 }
+

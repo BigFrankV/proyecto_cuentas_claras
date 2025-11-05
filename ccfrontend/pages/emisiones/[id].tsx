@@ -236,6 +236,7 @@ export default function EmisionDetalle() {
       setPayments(paymentsData);
       setHistory(historyData);
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error loading emission data:', error);
       // Fallback a datos mock si falla la API
       loadMockData();

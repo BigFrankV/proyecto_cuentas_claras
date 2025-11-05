@@ -139,3 +139,4 @@ export default function PersonaCard({ persona }: PersonaCardProps) {
     </div>
   );
 }
+

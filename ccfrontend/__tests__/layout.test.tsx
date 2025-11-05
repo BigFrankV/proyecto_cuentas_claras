@@ -23,3 +23,4 @@ describe('Layout mock', () => {
     expect(screen.getByTestId('layout-children')).toHaveTextContent('Content');
   });
 });
+

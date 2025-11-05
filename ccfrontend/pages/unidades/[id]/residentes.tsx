@@ -21,6 +21,7 @@ export default function ResidentesUnidad() {
         const res = await apiClient.get(`/unidades/${id}/residentes`);
         if (mounted) {setResidentes(res.data || []);}
       } catch (err) {
+// eslint-disable-next-line no-console
         console.error(err);
       } finally {
         setLoading(false);

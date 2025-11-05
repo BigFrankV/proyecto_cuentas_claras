@@ -172,3 +172,4 @@ class BitacoraService {
 
 const bitacoraService = new BitacoraService();
 export default bitacoraService;
+

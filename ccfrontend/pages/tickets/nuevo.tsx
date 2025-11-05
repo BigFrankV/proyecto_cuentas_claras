@@ -224,7 +224,8 @@ export default function NuevoTicket() {
       // Success - redirect to tickets list
       router.push('/tickets');
     } catch (error) {
-      console.error('Error creating ticket:', error);
+// eslint-disable-next-line no-console
+console.error('Error creating ticket:', error);
       // TODO: Mostrar error al usuario
     } finally {
       setIsSubmitting(false);
@@ -356,6 +357,14 @@ export default function NuevoTicket() {
                             onClick={() =>
                               handleInputChange('prioridad', priority.value)
                             }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleInputChange('prioridad', priority.value);
+                              }
+                            }}
+                            role="button"
+                            tabIndex={0}
                           >
                             <div className='text-center'>
                               <div
@@ -423,6 +432,14 @@ export default function NuevoTicket() {
                             onClick={() =>
                               handleInputChange('categoria', category.value)
                             }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleInputChange('categoria', category.value);
+                              }
+                            }}
+                            role="button"
+                            tabIndex={0}
                           >
                             <div className='d-flex align-items-center'>
                               <div
@@ -484,6 +501,15 @@ export default function NuevoTicket() {
                       onDragOver={handleDragOver}
                       onDrop={handleDrop}
                       onClick={handleFileSelect}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleFileSelect();
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Haz clic o arrastra archivos para subir"
                     >
                       <i
                         className='material-icons mb-2'
@@ -763,3 +789,4 @@ export default function NuevoTicket() {
     </ProtectedRoute>
   );
 }
+

@@ -164,7 +164,8 @@ export const dashboardService = {
         emisionesActivas,
       };
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+// eslint-disable-next-line no-console
+console.error('Error fetching dashboard stats:', error);
       throw error;
     }
   },
@@ -188,7 +189,8 @@ export const dashboardService = {
         color: item.color || '#3498db',
       }));
     } catch (error) {
-      console.error('Error fetching gastos por categoría:', error);
+// eslint-disable-next-line no-console
+console.error('Error fetching gastos por categoría:', error);
       return [];
     }
   },
@@ -217,7 +219,8 @@ export const dashboardService = {
         color: item.color || '#95a5a6',
       }));
     } catch (error) {
-      console.error('Error fetching estado de pagos:', error);
+// eslint-disable-next-line no-console
+console.error('Error fetching estado de pagos:', error);
       return [];
     }
   },
@@ -241,7 +244,8 @@ export const dashboardService = {
         cantidad: Number(item.cantidad_unidades || item.cantidad || 0),
       }));
     } catch (error) {
-      console.error('Error fetching tendencias de emisiones:', error);
+// eslint-disable-next-line no-console
+console.error('Error fetching tendencias de emisiones:', error);
       return [];
     }
   },
@@ -503,3 +507,4 @@ export const dashboardService = {
     }
   },
 };
+

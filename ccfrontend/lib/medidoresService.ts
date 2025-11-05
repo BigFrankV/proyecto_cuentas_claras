@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   Medidor,
   MedidoresListResponse,
@@ -69,3 +70,4 @@ export async function getConsumos(
   });
   return resp.data;
 }
+

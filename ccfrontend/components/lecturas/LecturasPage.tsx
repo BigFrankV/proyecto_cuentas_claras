@@ -2,7 +2,7 @@ import React from 'react';
 
 import Sidebar from '@/components/layout/Sidebar';
 
-export default function LecturasPage(): JSX.Element {
+export default function LecturasPage(): React.ReactElement {
   return (
     <div className='d-flex'>
       <Sidebar />
@@ -119,3 +119,4 @@ export default function LecturasPage(): JSX.Element {
     </div>
   );
 }
+

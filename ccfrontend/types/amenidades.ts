@@ -150,3 +150,4 @@ export const TIPOS_AMENIDAD = {
   estacionamiento: { label: 'Estacionamiento', icon: 'local_parking' },
   otros: { label: 'Otros', icon: 'category' },
 } as const;
+

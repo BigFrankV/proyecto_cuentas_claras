@@ -9,47 +9,120 @@ import {
   UnidadFormData,
 } from '@/types/edificios';
 
+// Tipos para respuestas de la API
+interface ApiEdificioResponse {
+  id: number;
+  nombre: string;
+  codigo: string;
+  direccion: string;
+  comunidad_id?: number;
+  comunidad_nombre?: string;
+  estado: string;
+  tipo?: string;
+  fecha_creacion: string;
+  fecha_actualizacion?: string;
+  ano_construccion?: number;
+  numero_torres?: number;
+  total_unidades?: number;
+  unidades_activas?: number;
+  pisos?: number;
+  administrador?: string;
+  telefono_administrador?: string;
+  email_administrador?: string;
+  servicios?: unknown;
+  amenidades?: unknown;
+  latitud?: number;
+  longitud?: number;
+  imagen?: string;
+  observaciones?: string;
+  area_comun?: number;
+  area_privada?: number;
+  parqueaderos?: number;
+  depositos?: number;
+}
+
+interface ApiTorreResponse {
+  id: number;
+  edificio_id: number;
+  nombre: string;
+  codigo: string;
+  pisos: number;
+  unidades_por_piso?: number;
+  total_unidades?: number;
+  unidades_ocupadas?: number;
+  estado: string;
+  fecha_creacion: string;
+  observaciones?: string;
+}
+
+interface ApiUnidadResponse {
+  id: number;
+  edificio_id: number;
+  torre_id?: number;
+  numero: string;
+  piso?: number;
+  estado: string;
+  area?: number;
+  habitaciones?: number;
+  banos?: number;
+  balcon?: boolean;
+  parqueadero?: boolean;
+  deposito?: boolean;
+  fecha_creacion: string;
+  observaciones?: string;
+}
+
 // Base URL para las APIs
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 // Helper para manejar errores de API
-const handleApiError = (error: any) => {
-  console.error('API Error:', error);
-  if (error.response?.data?.error) {
-    throw new Error(error.response.data.error);
+const handleApiError = (error: unknown) => {
+  // En producción, no mostrar detalles del error por seguridad
+  if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
+console.error('API Error:', error);
+  }
+  if (error && typeof error === 'object' && 'response' in error) {
+    const apiError = error as { response?: { data?: { error?: string } } };
+    if (apiError.response?.data?.error) {
+      throw new Error(apiError.response.data.error);
+    }
   }
   throw new Error('Error de conexión con el servidor');
 };
 
+// Tipos para fetch API
+interface FetchOptions {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string;
+}
+
 // Helper para hacer peticiones autenticadas
-const apiRequest = async (url: string, options: RequestInit = {}) => {
+const apiRequest = async (
+  url: string,
+  options: FetchOptions = {},
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any> => {
   // Obtener token directamente de localStorage para evitar problemas de importación
   const token =
     typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
-  console.log(
-    '🔐 Token obtenido para API:',
-    token ? 'Token presente' : 'No hay token',
-  );
-  console.log('🔐 URL de la petición:', `${API_BASE_URL}${url}`);
-
   if (!token) {
-    console.error('❌ No se pudo obtener token para la petición');
     throw new Error('Missing token');
   }
 
-  const config: RequestInit = {
+  const config: Record<string, unknown> = {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
-      ...options.headers,
+      ...((options.headers as Record<string, unknown>) || {}),
     },
   };
 
-  console.log('🔐 Headers de la petición:', config.headers);
-
-  const response = await fetch(`${API_BASE_URL}${url}`, config);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const response = await fetch(`${API_BASE_URL}${url}`, config as any);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -85,7 +158,7 @@ export const edificiosApi = {
       const data = await apiRequest(url);
 
       // Mapear la respuesta del backend al formato del frontend
-      return data.map((edificio: any) => ({
+      return data.map((edificio: ApiEdificioResponse) => ({
         id: edificio.id.toString(),
         nombre: edificio.nombre,
         codigo: edificio.codigo,
@@ -105,7 +178,9 @@ export const edificiosApi = {
         telefonoAdministrador: edificio.telefono_administrador,
         emailAdministrador: edificio.email_administrador,
         servicios: (() => {
-          if (Array.isArray(edificio.servicios)) {return edificio.servicios;}
+          if (Array.isArray(edificio.servicios)) {
+            return edificio.servicios;
+          }
           if (
             typeof edificio.servicios === 'string' &&
             edificio.servicios.trim()
@@ -119,7 +194,9 @@ export const edificiosApi = {
           return [];
         })(),
         amenidades: (() => {
-          if (Array.isArray(edificio.amenidades)) {return edificio.amenidades;}
+          if (Array.isArray(edificio.amenidades)) {
+            return edificio.amenidades;
+          }
           if (
             typeof edificio.amenidades === 'string' &&
             edificio.amenidades.trim()
@@ -266,7 +343,7 @@ export const edificiosApi = {
     data: Partial<EdificioFormData>,
   ): Promise<Edificio | null> => {
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         nombre: data.nombre,
         codigo: data.codigo,
         direccion: data.direccion,
@@ -274,27 +351,48 @@ export const edificiosApi = {
       };
 
       // Campos opcionales
-      if (data.anoConstructccion !== undefined)
-        {payload.anoConstructccion = data.anoConstructccion;}
-      if (data.pisos !== undefined) {payload.pisos = data.pisos;}
-      if (data.administrador !== undefined)
-        {payload.administrador = data.administrador;}
-      if (data.telefonoAdministrador !== undefined)
-        {payload.telefonoAdministrador = data.telefonoAdministrador;}
-      if (data.emailAdministrador !== undefined)
-        {payload.emailAdministrador = data.emailAdministrador;}
-      if (data.servicios !== undefined) {payload.servicios = data.servicios;}
-      if (data.amenidades !== undefined) {payload.amenidades = data.amenidades;}
-      if (data.latitud !== undefined) {payload.latitud = data.latitud;}
-      if (data.longitud !== undefined) {payload.longitud = data.longitud;}
-      if (data.observaciones !== undefined)
-        {payload.observaciones = data.observaciones;}
-      if (data.areaComun !== undefined) {payload.areaComun = data.areaComun;}
-      if (data.areaPrivada !== undefined)
-        {payload.areaPrivada = data.areaPrivada;}
-      if (data.parqueaderos !== undefined)
-        {payload.parqueaderos = data.parqueaderos;}
-      if (data.depositos !== undefined) {payload.depositos = data.depositos;}
+      if (data.anoConstructccion !== undefined) {
+        payload.anoConstructccion = data.anoConstructccion;
+      }
+      if (data.pisos !== undefined) {
+        payload.pisos = data.pisos;
+      }
+      if (data.administrador !== undefined) {
+        payload.administrador = data.administrador;
+      }
+      if (data.telefonoAdministrador !== undefined) {
+        payload.telefonoAdministrador = data.telefonoAdministrador;
+      }
+      if (data.emailAdministrador !== undefined) {
+        payload.emailAdministrador = data.emailAdministrador;
+      }
+      if (data.servicios !== undefined) {
+        payload.servicios = data.servicios;
+      }
+      if (data.amenidades !== undefined) {
+        payload.amenidades = data.amenidades;
+      }
+      if (data.latitud !== undefined) {
+        payload.latitud = data.latitud;
+      }
+      if (data.longitud !== undefined) {
+        payload.longitud = data.longitud;
+      }
+      if (data.observaciones !== undefined) {
+        payload.observaciones = data.observaciones;
+      }
+      if (data.areaComun !== undefined) {
+        payload.areaComun = data.areaComun;
+      }
+      if (data.areaPrivada !== undefined) {
+        payload.areaPrivada = data.areaPrivada;
+      }
+      if (data.parqueaderos !== undefined) {
+        payload.parqueaderos = data.parqueaderos;
+      }
+      if (data.depositos !== undefined) {
+        payload.depositos = data.depositos;
+      }
 
       const result = await apiRequest(`/edificios/${id}`, {
         method: 'PUT',
@@ -373,7 +471,7 @@ export const torresApi = {
     try {
       const data = await apiRequest(`/edificios/${edificioId}/torres`);
 
-      return data.map((torre: any) => ({
+      return data.map((torre: ApiTorreResponse) => ({
         id: torre.id.toString(),
         edificioId: torre.edificio_id.toString(),
         nombre: torre.nombre,
@@ -446,7 +544,7 @@ export const unidadesApi = {
         `/edificios/${edificioId}/unidades${queryParams}`,
       );
 
-      return data.map((unidad: any) => ({
+      return data.map((unidad: ApiUnidadResponse) => ({
         id: unidad.id.toString(),
         edificioId: unidad.edificio_id.toString(),
         torreId: unidad.torre_id?.toString(),
@@ -580,10 +678,13 @@ export const edificiosUtilsApi = {
 // EXPORTACIONES PRINCIPALES
 // =============================================================================
 
-export default {
+const edificiosApiClient = {
   edificios: edificiosApi,
   stats: edificiosStatsApi,
   torres: torresApi,
   unidades: unidadesApi,
   utils: edificiosUtilsApi,
 };
+
+export default edificiosApiClient;
+

@@ -44,12 +44,14 @@ export default function ComunidadDetallePage() {
     setError(null);
     try {
       const data = await comunidadesService.getComunidadById(Number(id));
+      // eslint-disable-next-line no-console
       console.log('Datos de comunidad cargados:', data);
       setComunidad(data);
 
       // Cargar amenidades para la pestaña resumen por defecto
       await loadAmenidades();
     } catch (error: any) {
+// eslint-disable-next-line no-console
       console.error('Error loading comunidad:', error);
       const errorMessage =
         error?.response?.data?.message ||
@@ -92,9 +94,11 @@ export default function ComunidadDetallePage() {
       const data = await comunidadesService.getAmenidadesByComunidad(
         Number(id),
       );
+      // eslint-disable-next-line no-console
       console.log('Amenidades cargadas:', data);
       setAmenidades(data);
     } catch (error: any) {
+// eslint-disable-next-line no-console
       console.error('Error loading amenidades:', error);
       const errorMessage =
         error?.response?.data?.message ||
@@ -114,9 +118,11 @@ export default function ComunidadDetallePage() {
     setTabErrors(prev => ({ ...prev, edificios: '' }));
     try {
       const data = await comunidadesService.getEdificiosByComunidad(Number(id));
+      // eslint-disable-next-line no-console
       console.log('Edificios cargados:', data);
       setEdificios(data);
     } catch (error: any) {
+// eslint-disable-next-line no-console
       console.error('Error loading edificios:', error);
       const errorMessage =
         error?.response?.data?.message ||
@@ -137,9 +143,11 @@ export default function ComunidadDetallePage() {
       const data = await comunidadesService.getResidentesByComunidad(
         Number(id),
       );
+      // eslint-disable-next-line no-console
       console.log('Residentes cargados:', data);
       setResidentes(data);
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error loading residentes:', error);
       setResidentes([]);
     } finally {
@@ -155,6 +163,7 @@ export default function ComunidadDetallePage() {
       const data = await comunidadesService.getEstadisticasByComunidad(
         Number(id),
       );
+      // eslint-disable-next-line no-console
       console.log('Estadísticas cargadas:', data);
       setEstadisticas(data);
 
@@ -162,9 +171,11 @@ export default function ComunidadDetallePage() {
       const flujoData = await comunidadesService.getFlujoCajaByComunidad(
         Number(id),
       );
+      // eslint-disable-next-line no-console
       console.log('Flujo de caja cargado:', flujoData);
       setFlujoCaja(flujoData);
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error loading estadisticas:', error);
       setEstadisticas(null);
       setFlujoCaja([]);
@@ -181,9 +192,11 @@ export default function ComunidadDetallePage() {
       const data = await comunidadesService.getDocumentosByComunidad(
         Number(id),
       );
+      // eslint-disable-next-line no-console
       console.log('Documentos cargados:', data);
       setDocumentos(data);
     } catch (error) {
+// eslint-disable-next-line no-console
       console.error('Error loading documentos:', error);
       setDocumentos([]);
     } finally {

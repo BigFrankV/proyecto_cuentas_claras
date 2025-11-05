@@ -28,3 +28,4 @@ export interface ProveedoresResponse {
     pages: number;
   };
 }
+

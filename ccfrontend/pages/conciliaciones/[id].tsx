@@ -763,6 +763,7 @@ export default function ConciliacionDetalle() {
                     setShowNotesModal(false);
                   }
                 } catch (error) {
+// eslint-disable-next-line no-console
                   console.error('Error updating notes:', error);
                   // TODO: Show error message to user
                 }

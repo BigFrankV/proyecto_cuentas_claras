@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'; // ✅ AGREGAR ESTA LÍNEA
 
 import { useAuth } from './useAuth';
@@ -266,3 +267,4 @@ export function PermissionGuard({
 
   return hasAccess ? <>{children}</> : <>{fallback}</>;
 }
+
