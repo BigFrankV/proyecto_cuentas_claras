@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
-import { getUserRole } from '@/lib/roles';
 import { useAuth } from '@/lib/useAuth';
 import {
   usePermissions,
@@ -10,318 +9,124 @@ import {
   Permission,
 } from '@/lib/usePermissions';
 
-// Definición de las secciones del menú
+// Definición de las secciones del menú (igual, pero con permisos asociados)
 const menuSections = [
   {
     title: 'Dashboard',
     items: [
-      { href: '/dashboard', label: 'Panel Principal', icon: 'dashboard' },
-      { href: '/reportes', label: 'Reportes', icon: 'bar_chart' },
+      { href: '/dashboard', label: 'Panel Principal', icon: 'dashboard', permission: Permission.VIEW_COMMUNITIES }, // Todos ven dashboard
+      { href: '/reportes', label: 'Reportes', icon: 'bar_chart', permission: Permission.VIEW_REPORTS },
     ],
   },
   {
     title: 'Estructura',
     items: [
-      { href: '/comunidades', label: 'Comunidades', icon: 'domain' },
-      { href: '/edificios', label: 'Edificios', icon: 'business' },
-      { href: '/torres', label: 'Torres', icon: 'location_city' },
-      { href: '/unidades', label: 'Unidades', icon: 'apartment' },
+      { href: '/comunidades', label: 'Comunidades', icon: 'domain', permission: Permission.VIEW_COMMUNITIES },
+      { href: '/edificios', label: 'Edificios', icon: 'business', permission: Permission.VIEW_COMMUNITIES },
+      { href: '/torres', label: 'Torres', icon: 'location_city', permission: Permission.VIEW_COMMUNITIES },
+      { href: '/unidades', label: 'Unidades', icon: 'apartment', permission: Permission.VIEW_COMMUNITIES },
     ],
   },
   {
     title: 'Residentes',
     items: [
-      { href: '/personas', label: 'Personas', icon: 'people' },
-      { href: '/membresias', label: 'Membresías', icon: 'card_membership' },
+      { href: '/personas', label: 'Personas', icon: 'people', permission: Permission.VIEW_USERS },
+      { href: '/membresias', label: 'Membresías', icon: 'card_membership', permission: Permission.VIEW_USERS },
     ],
   },
   {
     title: 'Finanzas',
     items: [
-      { href: '/emisiones', label: 'Emisiones', icon: 'receipt_long' },
-      { href: '/cargos', label: 'Cargos', icon: 'assignment' },
-      { href: '/pagos', label: 'Pagos', icon: 'payments' },
-      {
-        href: '/conciliaciones',
-        label: 'Conciliaciones',
-        icon: 'account_balance',
-      },
+      { href: '/emisiones', label: 'Emisiones', icon: 'receipt_long', permission: Permission.VIEW_FINANCES },
+      { href: '/cargos', label: 'Cargos', icon: 'assignment', permission: Permission.VIEW_FINANCES },
+      { href: '/pagos', label: 'Pagos', icon: 'payments', permission: Permission.VIEW_FINANCES },
+      { href: '/conciliaciones', label: 'Conciliaciones', icon: 'account_balance', permission: Permission.APPROVE_PAYMENTS },
     ],
   },
   {
     title: 'Gastos',
     items: [
-      { href: '/gastos', label: 'Gastos', icon: 'shopping_cart' },
-      { href: '/categorias-gasto', label: 'Categorías', icon: 'category' },
-      {
-        href: '/centros-costo',
-        label: 'Centros de Costo',
-        icon: 'account_balance_wallet',
-      },
-      { href: '/proveedores', label: 'Proveedores', icon: 'store' },
-      { href: '/compras', label: 'Compras', icon: 'inventory' },
+      { href: '/gastos', label: 'Gastos', icon: 'shopping_cart', permission: Permission.MANAGE_FINANCES },
+      { href: '/categorias-gasto', label: 'Categorías', icon: 'category', permission: Permission.MANAGE_FINANCES },
+      { href: '/centros-costo', label: 'Centros de Costo', icon: 'account_balance_wallet', permission: Permission.MANAGE_FINANCES },
+      { href: '/proveedores', label: 'Proveedores', icon: 'store', permission: Permission.MANAGE_FINANCES },
+      { href: '/compras', label: 'Compras', icon: 'inventory', permission: Permission.MANAGE_FINANCES },
     ],
   },
   {
     title: 'Servicios',
     items: [
-      { href: '/medidores', label: 'Medidores', icon: 'speed' },
-      { href: '/lecturas', label: 'Lecturas', icon: 'visibility' },
-      { href: '/consumos', label: 'Consumos', icon: 'water_drop' },
-      { href: '/tarifas', label: 'Tarifas', icon: 'price_change' },
+      { href: '/medidores', label: 'Medidores', icon: 'speed', permission: Permission.VIEW_COMMUNITIES }, // Todos ven, pero conserje edita
+      { href: '/lecturas', label: 'Lecturas', icon: 'visibility', permission: Permission.VIEW_COMMUNITIES },
+      { href: '/consumos', label: 'Consumos', icon: 'water_drop', permission: Permission.VIEW_FINANCES },
+      { href: '/tarifas', label: 'Tarifas', icon: 'price_change', permission: Permission.MANAGE_FINANCES },
     ],
   },
   {
     title: 'Amenidades',
     items: [
-      { href: '/amenidades', label: 'Lista de Amenidades', icon: 'pool' },
-      {
-        href: '/amenidades-reservas',
-        label: 'Reservas',
-        icon: 'event_available',
-      },
-      {
-        href: '/amenidades-calendario',
-        label: 'Calendario',
-        icon: 'calendar_month',
-      },
+      { href: '/amenidades', label: 'Lista de Amenidades', icon: 'pool', permission: Permission.MANAGE_AMENITIES },
+      { href: '/amenidades-reservas', label: 'Reservas', icon: 'event_available', permission: Permission.VIEW_COMMUNITIES },
+      { href: '/amenidades-calendario', label: 'Calendario', icon: 'calendar_month', permission: Permission.VIEW_COMMUNITIES },
     ],
   },
   {
     title: 'Sanciones',
     items: [
-      { href: '/multas', label: 'Multas', icon: 'gavel' },
-      { href: '/multas-nueva', label: 'Nueva Multa', icon: 'add_circle' },
-      { href: '/apelaciones', label: 'Apelaciones', icon: 'gavel' },
-      {
-        href: '/apelaciones-nueva',
-        label: 'Nueva Apelación',
-        icon: 'add_circle_outline',
-      },
+      { href: '/multas', label: 'Multas', icon: 'gavel', permission: Permission.VIEW_FINANCES },
+      { href: '/multas-nueva', label: 'Nueva Multa', icon: 'add_circle', permission: Permission.MANAGE_MULTAS },
+      { href: '/apelaciones', label: 'Apelaciones', icon: 'gavel', permission: Permission.VIEW_FINANCES },
+      { href: '/apelaciones-nueva', label: 'Nueva Apelación', icon: 'add_circle_outline', permission: Permission.VIEW_FINANCES },
     ],
   },
   {
     title: 'Comunicación',
     items: [
-      { href: '/tickets', label: 'Tickets', icon: 'support_agent' },
-      {
-        href: '/notificaciones',
-        label: 'Notificaciones',
-        icon: 'notifications',
-      },
-      { href: '/documentos', label: 'Documentos', icon: 'folder' },
-      { href: '/bitacora', label: 'Bitácora', icon: 'history' },
+      { href: '/tickets', label: 'Tickets', icon: 'support_agent', permission: Permission.VIEW_TICKETS },
+      { href: '/notificaciones', label: 'Notificaciones', icon: 'notifications', permission: Permission.VIEW_COMMUNITIES },
+      { href: '/documentos', label: 'Documentos', icon: 'folder', permission: Permission.VIEW_COMMUNITIES },
+      { href: '/bitacora', label: 'Bitácora', icon: 'history', permission: Permission.VIEW_USERS },
     ],
   },
   {
     title: 'Utilidades',
     items: [
-      { href: '/util-uf', label: 'Valor UF', icon: 'trending_up' },
-      { href: '/util-utm', label: 'Valor UTM', icon: 'calculate' },
-      { href: '/util-rut', label: 'Validador RUT', icon: 'verified_user' },
+      { href: '/util-uf', label: 'Valor UF', icon: 'trending_up', permission: Permission.VIEW_COMMUNITIES }, // Todos
+      { href: '/util-utm', label: 'Valor UTM', icon: 'calculate', permission: Permission.VIEW_COMMUNITIES },
+      { href: '/util-rut', label: 'Validador RUT', icon: 'verified_user', permission: Permission.VIEW_COMMUNITIES },
     ],
   },
 ];
 
+// Mapeo de roles a español
+const roleTranslations: Record<string, string> = {
+  superuser: 'Superusuario',
+  admin: 'Administrador',
+  concierge: 'Conserje',
+  accountant: 'Contador',
+  manager: 'Gerente',
+  user: 'Usuario',
+};
+
 export default function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { isSuperUser, hasPermission, currentRole, isAdmin } = usePermissions();
+  const { hasPermission, currentRole } = usePermissions(); // Usar permisos dinámicos
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Obtener el rol normalizado del usuario
-  const userRole = getUserRole(user);
-
-  // Función para determinar si una sección debe mostrarse según permisos
+  // Función para determinar si una sección debe mostrarse (usando permisos)
   const shouldShowSection = (sectionTitle: string) => {
     // Superadmin ve todo
-    if (isSuperUser()) {
-      return true;
-    }
+    if (user?.is_superadmin) return true;
 
-    // Reglas por sección según rol
-    switch (sectionTitle) {
-      case 'Dashboard':
-        return true; // Todos ven dashboard
-
-      case 'Estructura':
-        // Todos menos Conserje y Proveedor
-        return !['Conserje', 'Portero', 'Vigilante', 'Proveedor'].includes(
-          userRole,
-        );
-
-      case 'Residentes':
-        // Solo roles administrativos
-        return isAdmin();
-
-      case 'Finanzas':
-        // Administrativos y residentes
-        return (
-          isAdmin() ||
-          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
-        );
-
-      case 'Gastos':
-        // Solo administrativos
-        return isAdmin();
-
-      case 'Servicios':
-        // Administrativos, residentes y conserjes (para lecturas)
-        return (
-          isAdmin() ||
-          ['Propietario', 'Inquilino', 'Residente', 'Conserje'].includes(
-            userRole,
-          )
-        );
-
-      case 'Amenidades':
-        // Todos menos Proveedor
-        return userRole !== 'Proveedor';
-
-      case 'Sanciones':
-        // Administrativos y residentes
-        return (
-          isAdmin() ||
-          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
-        );
-
-      case 'Comunicación':
-        // Todos menos Proveedor (tienen acceso limitado a tickets)
-        return true;
-
-      case 'Utilidades':
-        return true; // Todos pueden usar utilidades
-
-      default:
-        return false;
-    }
+    // Verificar si al menos un item de la sección tiene permiso
+    const section = menuSections.find(s => s.title === sectionTitle);
+    return section?.items.some(item => hasPermission(item.permission)) || false;
   };
 
-  // Función para determinar si un item específico debe mostrarse
-  const shouldShowItem = (href: string) => {
-    // Superadmin ve todo
-    if (isSuperUser()) {
-      return true;
-    }
-
-    // Reglas específicas por ruta y rol
-    switch (href) {
-      // DASHBOARD
-      case '/dashboard':
-        return true; // Todos
-      case '/reportes':
-        return (
-          isAdmin() ||
-          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
-        );
-
-      // ESTRUCTURA
-      case '/comunidades':
-      case '/edificios':
-      case '/torres':
-      case '/unidades':
-        // Administrativos y residentes (residentes solo lectura)
-        return (
-          isAdmin() ||
-          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
-        );
-
-      // RESIDENTES
-      case '/personas':
-      case '/membresias':
-        return isAdmin(); // Solo administrativos
-
-      // FINANZAS
-      case '/emisiones':
-      case '/cargos':
-      case '/pagos':
-        // Administrativos y residentes
-        return (
-          isAdmin() ||
-          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
-        );
-      case '/conciliaciones':
-        return isAdmin(); // Solo administrativos
-
-      // GASTOS
-      case '/gastos':
-      case '/categorias-gasto':
-      case '/centros-costo':
-      case '/compras':
-        return isAdmin(); // Solo administrativos
-      case '/proveedores':
-        return isAdmin() || userRole === 'Proveedor'; // Admin o el proveedor mismo
-
-      // SERVICIOS
-      case '/medidores':
-      case '/lecturas':
-        return isAdmin() || userRole === 'Conserje'; // Admin o conserje para registrar
-      case '/consumos':
-        // Administrativos y residentes
-        return (
-          isAdmin() ||
-          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
-        );
-      case '/tarifas':
-        return isAdmin(); // Solo administrativos
-
-      // AMENIDADES
-      case '/amenidades':
-      case '/amenidades-reservas':
-      case '/amenidades-calendario':
-        // Todos menos Proveedor, conserje solo lectura
-        return (
-          isAdmin() ||
-          [
-            'Propietario',
-            'Inquilino',
-            'Residente',
-            'Conserje',
-            'Portero',
-            'Vigilante',
-          ].includes(userRole)
-        );
-
-      // SANCIONES
-      case '/multas':
-      case '/apelaciones':
-        // Administrativos y residentes (ven las propias)
-        return (
-          isAdmin() ||
-          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
-        );
-      case '/multas-nueva':
-        return isAdmin(); // Solo admin crea multas
-      case '/apelaciones-nueva':
-        // Admin o residentes (para apelar sus multas)
-        return (
-          isAdmin() ||
-          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
-        );
-
-      // COMUNICACIÓN
-      case '/tickets':
-        return true; // Todos pueden crear tickets
-      case '/notificaciones':
-        return userRole !== 'Proveedor'; // Todos menos proveedor
-      case '/documentos':
-        // Administrativos y residentes
-        return (
-          isAdmin() ||
-          ['Propietario', 'Inquilino', 'Residente'].includes(userRole)
-        );
-      case '/bitacora':
-        return isAdmin(); // Solo administrativos
-
-      // UTILIDADES
-      case '/util-uf':
-      case '/util-utm':
-      case '/util-rut':
-        return true; // Todos
-
-      default:
-        return false; // Por defecto, ocultar
-    }
+  // Función para determinar si un item debe mostrarse (usando permisos)
+  const shouldShowItem = (item: any) => {
+    return hasPermission(item.permission);
   };
 
   const isActive = (href: string) => {
@@ -336,6 +141,9 @@ export default function Sidebar() {
       console.error('Error al cerrar sesión:', error);
     }
   };
+
+  // Traducción del rol actual a español
+  const currentRoleSpanish = roleTranslations[currentRole] || currentRole;
 
   return (
     <>
@@ -393,7 +201,7 @@ export default function Sidebar() {
               {user?.persona?.nombres && user?.persona?.apellidos
                 ? `${user.persona.nombres} ${user.persona.apellidos}`
                 : user?.username || 'Usuario'}
-              {isSuperUser() ? (
+              {user?.is_superadmin ? (
                 <span
                   className='badge bg-warning text-dark ms-1'
                   style={{ fontSize: '0.6rem' }}
@@ -405,7 +213,7 @@ export default function Sidebar() {
                   className='badge bg-secondary ms-1'
                   style={{ fontSize: '0.6rem' }}
                 >
-                  {getUserRole(user).toUpperCase()}
+                  {currentRoleSpanish?.toUpperCase()}
                 </span>
               )}
             </span>
@@ -430,15 +238,10 @@ export default function Sidebar() {
           {menuSections
             .filter(section => shouldShowSection(section.title))
             .map((section, sectionIndex) => {
-              // Filtrar items de la sección según permisos
-              const visibleItems = section.items.filter(item =>
-                shouldShowItem(item.href),
-              );
+              // Filtrar items según permisos
+              const visibleItems = section.items.filter(item => shouldShowItem(item));
 
-              // Si no hay items visibles, no mostrar la sección
-              if (visibleItems.length === 0) {
-                return null;
-              }
+              if (visibleItems.length === 0) return null;
 
               return (
                 <div key={section.title}>
@@ -463,7 +266,7 @@ export default function Sidebar() {
                     }}
                   >
                     {section.title}
-                    {isSuperUser() && section.title === 'Dashboard' && (
+                    {user?.is_superadmin && section.title === 'Dashboard' && (
                       <span
                         className='badge bg-warning text-dark ms-2'
                         style={{ fontSize: '0.6rem' }}
@@ -473,27 +276,41 @@ export default function Sidebar() {
                     )}
                   </div>
 
-                  {/* Items de navegación */}
+                  {/* Items de navegación con PermissionGuard */}
                   <ul className='nav nav-sidebar flex-column'>
                     {visibleItems.map(item => (
                       <li className='nav-item' key={item.href}>
-                        <Link
-                          href={item.href}
-                          className={`nav-link ${isActive(item.href) ? 'active' : ''}`}
-                          style={{
-                            color: 'rgba(255,255,255,0.8)',
-                            ...(isActive(item.href) && {
-                              color: '#fff',
-                              background: 'rgba(253,93,20,0.2)',
-                              borderLeft: '3px solid var(--color-accent)',
-                            }),
-                          }}
+                        <PermissionGuard
+                          permission={item.permission}
+                          fallback={
+                            <div
+                              className='nav-link disabled'
+                              title='No tienes permisos para acceder a esta sección'
+                              style={{ color: 'rgba(255,255,255,0.5)', cursor: 'not-allowed' }}
+                            >
+                              <span className='material-icons align-middle me-2'>{item.icon}</span>
+                              <span>{item.label}</span>
+                            </div>
+                          }
                         >
-                          <span className='material-icons align-middle me-2'>
-                            {item.icon}
-                          </span>
-                          <span>{item.label}</span>
-                        </Link>
+                          <Link
+                            href={item.href}
+                            className={`nav-link ${isActive(item.href) ? 'active' : ''}`}
+                            style={{
+                              color: 'rgba(255,255,255,0.8)',
+                              ...(isActive(item.href) && {
+                                color: '#fff',
+                                background: 'rgba(253,93,20,0.2)',
+                                borderLeft: '3px solid var(--color-accent)',
+                              }),
+                            }}
+                          >
+                            <span className='material-icons align-middle me-2'>
+                              {item.icon}
+                            </span>
+                            <span>{item.label}</span>
+                          </Link>
+                        </PermissionGuard>
                       </li>
                     ))}
                   </ul>
@@ -525,7 +342,7 @@ export default function Sidebar() {
               </Link>
             </li>
             {/* Solo administradores pueden ver Parámetros */}
-            {isAdmin() && (
+            {user?.is_superadmin && (
               <li>
                 <Link className='dropdown-item' href='/parametros'>
                   Parámetros
