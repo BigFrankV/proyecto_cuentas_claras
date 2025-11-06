@@ -2160,6 +2160,173 @@ router.get(
   }
 );
 
+// =========================================
+// PUT /categorias-gasto/:id
+// Actualizar categoría de gasto
+// =========================================
+router.put(
+  '/:id',
+  authenticate,
+  authorize(['superadmin', 'admin_comunidad', 'administrador']),
+  [
+    body('nombre').optional().trim().notEmpty().withMessage('Nombre no puede estar vacío'),
+    body('tipo').optional().isIn(TIPOS_CATEGORIA).withMessage('Tipo de categoría inválido'),
+    body('cta_contable').optional().trim().escape(),
+    body('activa').optional().isBoolean().withMessage('Activa debe ser booleano')
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    try {
+      const { id } = req.params;
+      const { nombre, tipo, cta_contable, activa } = req.body;
+
+      // Obtener categoría actual
+      const [categorias] = await db.query('SELECT * FROM categoria_gasto WHERE id = ?', [id]);
+      if (categorias.length === 0) {
+        return res.status(404).json({ success: false, error: 'Categoría no encontrada' });
+      }
+
+      const categoria = categorias[0];
+      const valores_anteriores = { ...categoria };
+
+      // Validar que el nuevo nombre sea único en la comunidad (si se proporciona)
+      if (nombre && nombre !== categoria.nombre) {
+        const [duplicados] = await db.query(
+          'SELECT id FROM categoria_gasto WHERE nombre = ? AND comunidad_id = ? AND id != ?',
+          [nombre, categoria.comunidad_id, id]
+        );
+        if (duplicados.length > 0) {
+          return res.status(409).json({ success: false, error: 'Ya existe una categoría con ese nombre' });
+        }
+      }
+
+      // Construir query de actualización
+      let updateFields = [];
+      let updateValues = [];
+
+      if (nombre !== undefined) {
+        updateFields.push('nombre = ?');
+        updateValues.push(nombre);
+      }
+      if (tipo !== undefined) {
+        updateFields.push('tipo = ?');
+        updateValues.push(tipo);
+      }
+      if (cta_contable !== undefined) {
+        updateFields.push('cta_contable = ?');
+        updateValues.push(cta_contable);
+      }
+      if (activa !== undefined) {
+        updateFields.push('activa = ?');
+        updateValues.push(activa ? 1 : 0);
+      }
+
+      if (updateFields.length === 0) {
+        return res.status(400).json({ success: false, error: 'No hay campos para actualizar' });
+      }
+
+      updateFields.push('updated_at = NOW()');
+      updateValues.push(id);
+
+      const updateQuery = `UPDATE categoria_gasto SET ${updateFields.join(', ')} WHERE id = ?`;
+      await db.query(updateQuery, updateValues);
+
+      // Obtener categoría actualizada
+      const [categoriasActualizadas] = await db.query('SELECT * FROM categoria_gasto WHERE id = ?', [id]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [
+          req.user.id,
+          'UPDATE',
+          'categoria_gasto',
+          id,
+          JSON.stringify(valores_anteriores),
+          JSON.stringify(categoriasActualizadas[0]),
+          req.ip
+        ]
+      );
+
+      res.json({
+        success: true,
+        message: 'Categoría actualizada exitosamente',
+        data: categoriasActualizadas[0]
+      });
+    } catch (error) {
+      console.error('Error al actualizar categoría:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+);
+
+// =========================================
+// DELETE /categorias-gasto/:id
+// Eliminar categoría (soft delete)
+// =========================================
+router.delete(
+  '/:id',
+  authenticate,
+  authorize(['superadmin', 'admin_comunidad', 'administrador']),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Obtener categoría
+      const [categorias] = await db.query('SELECT * FROM categoria_gasto WHERE id = ?', [id]);
+      if (categorias.length === 0) {
+        return res.status(404).json({ success: false, error: 'Categoría no encontrada' });
+      }
+
+      const categoria = categorias[0];
+
+      // Validar que no tenga gastos activos
+      const [gastos] = await db.query(
+        `SELECT COUNT(*) as total FROM gasto 
+         WHERE categoria_gasto_id = ? AND estado IN ('pendiente', 'aprobado')`,
+        [id]
+      );
+
+      if (gastos[0].total > 0) {
+        return res.status(409).json({ 
+          success: false, 
+          error: `No se puede eliminar: hay ${gastos[0].total} gasto(s) activo(s) en esta categoría` 
+        });
+      }
+
+      // Soft delete - marcar como inactiva
+      await db.query('UPDATE categoria_gasto SET activa = 0, updated_at = NOW() WHERE id = ?', [id]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, ip_address, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+        [
+          req.user.id,
+          'DELETE',
+          'categoria_gasto',
+          id,
+          JSON.stringify(categoria),
+          req.ip
+        ]
+      );
+
+      res.json({
+        success: true,
+        message: 'Categoría eliminada exitosamente'
+      });
+    } catch (error) {
+      console.error('Error al eliminar categoría:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+);
+
 module.exports = router;
 
 // =========================================

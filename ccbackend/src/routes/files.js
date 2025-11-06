@@ -343,6 +343,97 @@ router.post('/cleanup', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/files/{id}:
+ *   put:
+ *     summary: Actualizar metadatos de archivo
+ *     tags: [Files]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               description:
+ *                 type: string
+ *               category:
+ *                 type: string
+ */
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { description, category } = req.body;
+
+    if (!description && !category) {
+      return res.status(400).json({
+        success: false,
+        message: 'Debe proporcionar al menos un campo para actualizar',
+      });
+    }
+
+    // Obtener archivo actual
+    const fileInfo = await FileService.getFileInfo(id);
+    
+    if (!fileInfo) {
+      return res.status(404).json({
+        success: false,
+        message: 'Archivo no encontrado',
+      });
+    }
+
+    // Validar permisos
+    if (fileInfo.comunidad_id !== req.user.comunidadId && !req.user.is_superadmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para actualizar este archivo',
+      });
+    }
+
+    // Actualizar metadatos
+    const updateFields = [];
+    const updateValues = [];
+
+    if (description !== undefined) {
+      updateFields.push('description = ?');
+      updateValues.push(description);
+    }
+    if (category !== undefined) {
+      updateFields.push('category = ?');
+      updateValues.push(category);
+    }
+
+    updateFields.push('updated_at = NOW()');
+    updateValues.push(id);
+
+    await FileService.updateFileMetadata(id, {
+      description,
+      category,
+    });
+
+    res.json({
+      success: true,
+      message: 'Metadatos del archivo actualizados correctamente',
+    });
+  } catch (error) {
+    console.error('Error actualizando archivo:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message,
+    });
+  }
+});
+
 module.exports = router;
 
 // =========================================

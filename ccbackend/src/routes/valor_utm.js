@@ -8,6 +8,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { authenticate } = require('../middleware/auth');
+const { authorize } = require('../middleware/authorize');
+const { body, validationResult } = require('express-validator');
 const logger = require('../logger');
 
 /**
@@ -1060,6 +1062,287 @@ router.get('/disponibilidad', authenticate, async (req, res) => {
   }
 });
 
+// =========================================
+// CRUD OPERATIONS - POST/PATCH/DELETE
+// =========================================
+
+/**
+ * @swagger
+ * /valor-utm:
+ *   post:
+ *     tags: [UTM]
+ *     summary: Crear nuevo valor UTM
+ *     description: Registra un nuevo valor UTM para una fecha
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [fecha, valor]
+ *             properties:
+ *               fecha:
+ *                 type: string
+ *                 format: date
+ *               valor:
+ *                 type: number
+ *                 format: float
+ *     responses:
+ *       201:
+ *         description: Valor UTM creado exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado (solo superadmin)
+ *       409:
+ *         description: Valor UTM duplicado para esa fecha
+ *       500:
+ *         description: Error servidor
+ */
+router.post(
+  '/',
+  [
+    authenticate,
+    authorize('superadmin'),
+    body('fecha')
+      .isISO8601()
+      .withMessage('fecha debe ser fecha válida')
+      .toDate(),
+    body('valor')
+      .isFloat({ min: 0 })
+      .withMessage('valor debe ser número positivo'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { fecha, valor } = req.body;
+
+      // Verificar que no exista valor UTM para esa fecha
+      const [duplicate] = await db.query(
+        'SELECT id FROM utm_valor WHERE DATE(fecha) = DATE(?)',
+        [fecha]
+      );
+      if (duplicate.length) {
+        return res
+          .status(409)
+          .json({ error: 'Ya existe un valor UTM para esa fecha' });
+      }
+
+      // Insertar valor UTM
+      const [result] = await db.query(
+        `INSERT INTO utm_valor (fecha, valor) VALUES (?, ?)`,
+        [fecha, valor]
+      );
+
+      // Obtener el valor UTM creado
+      const [utm] = await db.query('SELECT * FROM utm_valor WHERE id = ?', [
+        result.insertId,
+      ]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address)
+         VALUES (?, 'INSERT', 'utm_valor', ?, ?, ?)`,
+        [req.user.id, result.insertId, JSON.stringify(utm[0]), req.ip]
+      );
+
+      res.status(201).json(utm[0]);
+    } catch (err) {
+      logger.error('Error al crear valor UTM:', err);
+      res.status(500).json({ error: 'Error al crear valor UTM' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /valor-utm/{id}:
+ *   patch:
+ *     tags: [UTM]
+ *     summary: Actualizar valor UTM
+ *     description: Actualiza el valor UTM existente
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               valor:
+ *                 type: number
+ *                 format: float
+ *               fecha:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       200:
+ *         description: Valor UTM actualizado exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado (solo superadmin)
+ *       404:
+ *         description: Valor UTM no encontrado
+ *       500:
+ *         description: Error servidor
+ */
+router.patch(
+  '/:id',
+  [
+    authenticate,
+    authorize('superadmin'),
+    body('valor')
+      .optional()
+      .isFloat({ min: 0 })
+      .withMessage('valor debe ser número positivo'),
+    body('fecha')
+      .optional()
+      .isISO8601()
+      .withMessage('fecha debe ser fecha válida')
+      .toDate(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const utm_id = Number(req.params.id);
+
+      // Obtener valor UTM anterior
+      const [utm_anterior] = await db.query(
+        'SELECT * FROM utm_valor WHERE id = ?',
+        [utm_id]
+      );
+      if (!utm_anterior.length) {
+        return res.status(404).json({ error: 'Valor UTM no encontrado' });
+      }
+
+      // Preparar actualización
+      const campos = [];
+      const valores = [];
+
+      if (req.body.valor !== undefined) {
+        campos.push('valor = ?');
+        valores.push(req.body.valor);
+      }
+      if (req.body.fecha !== undefined) {
+        campos.push('fecha = ?');
+        valores.push(req.body.fecha);
+      }
+
+      if (campos.length === 0) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
+      }
+
+      valores.push(utm_id);
+
+      // Ejecutar actualización
+      await db.query(
+        `UPDATE utm_valor SET ${campos.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        valores
+      );
+
+      // Obtener valor UTM actualizado
+      const [utm_actualizado] = await db.query(
+        'SELECT * FROM utm_valor WHERE id = ?',
+        [utm_id]
+      );
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address)
+         VALUES (?, 'UPDATE', 'utm_valor', ?, ?, ?, ?)`,
+        [
+          req.user.id,
+          utm_id,
+          JSON.stringify(utm_anterior[0]),
+          JSON.stringify(utm_actualizado[0]),
+          req.ip,
+        ]
+      );
+
+      res.json(utm_actualizado[0]);
+    } catch (err) {
+      logger.error('Error al actualizar valor UTM:', err);
+      res.status(500).json({ error: 'Error al actualizar valor UTM' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /valor-utm/{id}:
+ *   delete:
+ *     tags: [UTM]
+ *     summary: Eliminar valor UTM
+ *     description: Elimina un valor UTM (hard delete - se debe considerar cuidadosamente)
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Valor UTM eliminado exitosamente
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado (solo superadmin)
+ *       404:
+ *         description: Valor UTM no encontrado
+ *       500:
+ *         description: Error servidor
+ */
+router.delete(
+  '/:id',
+  [authenticate, authorize('superadmin')],
+  async (req, res) => {
+    try {
+      const utm_id = Number(req.params.id);
+
+      // Obtener valor UTM anterior
+      const [utm] = await db.query('SELECT * FROM utm_valor WHERE id = ?', [
+        utm_id,
+      ]);
+      if (!utm.length) {
+        return res.status(404).json({ error: 'Valor UTM no encontrado' });
+      }
+
+      // Eliminar valor UTM (hard delete)
+      await db.query('DELETE FROM utm_valor WHERE id = ?', [utm_id]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, ip_address)
+         VALUES (?, 'DELETE', 'utm_valor', ?, ?, ?)`,
+        [req.user.id, utm_id, JSON.stringify(utm[0]), req.ip]
+      );
+
+      res.status(200).json({ message: 'Valor UTM eliminado exitosamente' });
+    } catch (err) {
+      logger.error('Error al eliminar valor UTM:', err);
+      res.status(500).json({ error: 'Error al eliminar valor UTM' });
+    }
+  }
+);
+
 module.exports = router;
 
 // =========================================
@@ -1102,3 +1385,4 @@ module.exports = router;
 
 // // 9. DISPONIBILIDAD DE DATOS
 // GET: /valor-utm/disponibilidad
+

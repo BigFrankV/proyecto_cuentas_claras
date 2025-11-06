@@ -147,13 +147,48 @@ export const usePersonas = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/personas/estadisticas');
-      return response.data;
+      // Primero intentamos con el endpoint
+      try {
+        const response = await apiClient.get('/personas/estadisticas');
+        return response.data;
+      } catch (err: any) {
+        // Si el endpoint no existe (404), calculamos las estadísticas localmente
+        if (err.response?.status === 404) {
+          // Obtener todas las personas sin paginación para calcular estadísticas
+          const response = await apiClient.get('/personas?limit=1000&offset=0');
+          const personas: Persona[] = response.data;
+
+          const administradores = personas.filter(p => p.usuario).length;
+          const propietarios = personas.filter(p => !p.usuario).length;
+          const activos = personas.filter(
+            p => p.usuario?.estado === 'Activo' || !p.usuario,
+          ).length;
+          const inactivos = personas.length - activos;
+
+          return {
+            total_personas: personas.length,
+            administradores,
+            inquilinos: 0,
+            propietarios,
+            activos,
+            inactivos,
+          };
+        }
+        throw err;
+      }
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.error || 'Error al obtener estadísticas';
       setError(errorMessage);
-      throw new Error(errorMessage);
+      // No lanzar error, devolver estadísticas vacías
+      return {
+        total_personas: 0,
+        administradores: 0,
+        inquilinos: 0,
+        propietarios: 0,
+        activos: 0,
+        inactivos: 0,
+      };
     } finally {
       setLoading(false);
     }

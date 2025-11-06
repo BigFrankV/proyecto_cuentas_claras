@@ -26,13 +26,12 @@ export default function NuevoCargoPage() {
 
   // Form data
   const [formData, setFormData] = useState<CargoFormData>({
-    concept: '',
-    type: 'administration',
-    amount: 0,
-    dueDate: '',
-    status: 'pending',
-    unit: '',
-    description: '',
+    concepto: '',
+    tipo: 'administration',
+    monto: 0,
+    fecha_vencimiento: '',
+    unidad: '',
+    descripcion: '',
   });
 
   const handleInputChange = (field: string, value: string | number) => {
@@ -52,20 +51,20 @@ export default function NuevoCargoPage() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.concept.trim()) {
-      newErrors.concept = 'El concepto es obligatorio';
+    if (!formData.concepto.trim()) {
+      newErrors.concepto = 'El concepto es obligatorio';
     }
 
-    if (!formData.unit.trim()) {
-      newErrors.unit = 'La unidad es obligatoria';
+    if (!formData.unidad.trim()) {
+      newErrors.unidad = 'La unidad es obligatoria';
     }
 
-    if (formData.amount <= 0) {
-      newErrors.amount = 'El monto debe ser mayor a 0';
+    if (formData.monto <= 0) {
+      newErrors.monto = 'El monto debe ser mayor a 0';
     }
 
-    if (!formData.dueDate) {
-      newErrors.dueDate = 'La fecha de vencimiento es obligatoria';
+    if (!formData.fecha_vencimiento) {
+      newErrors.fecha_vencimiento = 'La fecha de vencimiento es obligatoria';
     }
 
     setErrors(newErrors);
@@ -168,55 +167,55 @@ export default function NuevoCargoPage() {
                   <form onSubmit={handleSubmit}>
                     <div className='row'>
                       <div className='col-md-6 mb-3'>
-                        <label htmlFor='concept' className='form-label'>
+                        <label htmlFor='concepto' className='form-label'>
                           Concepto <span className='text-danger'>*</span>
                         </label>
                         <input
                           type='text'
-                          className={`form-control ${errors.concept ? 'is-invalid' : ''}`}
-                          id='concept'
-                          value={formData.concept}
+                          className={`form-control ${errors.concepto ? 'is-invalid' : ''}`}
+                          id='concepto'
+                          value={formData.concepto}
                           onChange={e =>
-                            handleInputChange('concept', e.target.value)
+                            handleInputChange('concepto', e.target.value)
                           }
                           placeholder='Ej: Administración Febrero 2024'
                         />
-                        {errors.concept && (
+                        {errors.concepto && (
                           <div className='invalid-feedback'>
-                            {errors.concept}
+                            {errors.concepto}
                           </div>
                         )}
                       </div>
 
                       <div className='col-md-6 mb-3'>
-                        <label htmlFor='unit' className='form-label'>
+                        <label htmlFor='unidad' className='form-label'>
                           Unidad <span className='text-danger'>*</span>
                         </label>
                         <input
                           type='text'
-                          className={`form-control ${errors.unit ? 'is-invalid' : ''}`}
-                          id='unit'
-                          value={formData.unit}
+                          className={`form-control ${errors.unidad ? 'is-invalid' : ''}`}
+                          id='unidad'
+                          value={formData.unidad}
                           onChange={e =>
-                            handleInputChange('unit', e.target.value)
+                            handleInputChange('unidad', e.target.value)
                           }
                           placeholder='Ej: APT-101'
                         />
-                        {errors.unit && (
-                          <div className='invalid-feedback'>{errors.unit}</div>
+                        {errors.unidad && (
+                          <div className='invalid-feedback'>{errors.unidad}</div>
                         )}
                       </div>
 
                       <div className='col-md-6 mb-3'>
-                        <label htmlFor='type' className='form-label'>
+                        <label htmlFor='tipo' className='form-label'>
                           Tipo
                         </label>
                         <select
                           className='form-select'
-                          id='type'
-                          value={formData.type}
+                          id='tipo'
+                          value={formData.tipo}
                           onChange={e =>
-                            handleInputChange('type', e.target.value)
+                            handleInputChange('tipo', e.target.value)
                           }
                         >
                           <option value='administration'>Administración</option>
@@ -228,85 +227,65 @@ export default function NuevoCargoPage() {
                       </div>
 
                       <div className='col-md-6 mb-3'>
-                        <label htmlFor='status' className='form-label'>
-                          Estado
-                        </label>
-                        <select
-                          className='form-select'
-                          id='status'
-                          value={formData.status}
-                          onChange={e =>
-                            handleInputChange('status', e.target.value)
-                          }
-                        >
-                          <option value='pending'>Pendiente</option>
-                          <option value='approved'>Aprobado</option>
-                          <option value='rejected'>Rechazado</option>
-                          <option value='paid'>Pagado</option>
-                          <option value='partial'>Parcial</option>
-                        </select>
-                      </div>
-
-                      <div className='col-md-6 mb-3'>
-                        <label htmlFor='amount' className='form-label'>
+                        <label htmlFor='monto' className='form-label'>
                           Monto <span className='text-danger'>*</span>
                         </label>
                         <div className='input-group'>
                           <span className='input-group-text'>$</span>
                           <input
                             type='number'
-                            className={`form-control ${errors.amount ? 'is-invalid' : ''}`}
-                            id='amount'
-                            value={formData.amount}
+                            className={`form-control ${errors.monto ? 'is-invalid' : ''}`}
+                            id='monto'
+                            value={formData.monto}
                             onChange={e =>
                               handleInputChange(
-                                'amount',
+                                'monto',
                                 parseFloat(e.target.value) || 0,
                               )
                             }
                             min='0'
                             step='1000'
                           />
-                          {errors.amount && (
+                          {errors.monto && (
                             <div className='invalid-feedback'>
-                              {errors.amount}
+                              {errors.monto}
                             </div>
                           )}
                         </div>
                       </div>
 
                       <div className='col-md-6 mb-3'>
-                        <label htmlFor='dueDate' className='form-label'>
+                        <label htmlFor='fecha_vencimiento' className='form-label'>
                           Fecha de Vencimiento{' '}
                           <span className='text-danger'>*</span>
                         </label>
                         <input
                           type='date'
-                          className={`form-control ${errors.dueDate ? 'is-invalid' : ''}`}
-                          id='dueDate'
-                          value={formData.dueDate}
+                          className={`form-control ${errors.fecha_vencimiento ? 'is-invalid' : ''}`}
+                          id='fecha_vencimiento'
+                          value={formData.fecha_vencimiento}
                           onChange={e =>
-                            handleInputChange('dueDate', e.target.value)
+                            handleInputChange('fecha_vencimiento', e.target.value)
                           }
                         />
-                        {errors.dueDate && (
+                        {errors.fecha_vencimiento && (
                           <div className='invalid-feedback'>
-                            {errors.dueDate}
+                            {errors.fecha_vencimiento}
                           </div>
                         )}
                       </div>
 
                       <div className='col-12 mb-3'>
-                        <label htmlFor='description' className='form-label'>
+                        <label htmlFor='descripcion' className='form-label'>
                           Descripción
                         </label>
                         <textarea
                           className='form-control'
-                          id='description'
+                          id='descripcion'
                           rows={3}
-                          value={formData.description}
+                          value={formData.descripcion || ''}
                           onChange={e =>
-                            handleInputChange('description', e.target.value)
+                            handleInputChange('descripcion', e.target.value)
                           }
                           placeholder='Descripción adicional del cargo (opcional)'
                         />

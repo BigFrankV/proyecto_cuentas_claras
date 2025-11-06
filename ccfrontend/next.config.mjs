@@ -3,6 +3,9 @@ const nextConfig = {
   // Configuración esencial para Cuentas Claras
   reactStrictMode: true,
   
+  // Standalone output para Docker
+  output: 'standalone',
+  
   // Disable SWC minification (using Babel instead due to custom config)
   swcMinify: false,
 

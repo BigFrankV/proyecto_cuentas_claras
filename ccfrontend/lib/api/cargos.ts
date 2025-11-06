@@ -129,8 +129,8 @@ export const cargosApi = {
       if (filters?.estado) {
         queryParams.append('estado', filters.estado);
       }
-      if (filters?.unidad) {
-        queryParams.append('unidad', filters.unidad.toString());
+      if (filters?.unidadId) {
+        queryParams.append('unidadId', filters.unidadId.toString());
       }
       if (filters?.periodo) {
         queryParams.append('periodo', filters.periodo);
