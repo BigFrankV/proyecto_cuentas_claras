@@ -2093,40 +2093,242 @@ router.post(
   }
 );
 
+// =========================================
+// CRUD OPERATIONS - PUT/DELETE
+// =========================================
+
+/**
+ * @swagger
+ * /pagos/{id}:
+ *   put:
+ *     tags: [Pagos]
+ *     summary: Actualizar pago existente
+ *     description: Actualiza los datos de un pago (solo si está en estado pendiente)
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               monto:
+ *                 type: number
+ *                 description: Monto del pago
+ *               fecha:
+ *                 type: string
+ *                 format: date
+ *                 description: Fecha del pago
+ *               forma_pago:
+ *                 type: string
+ *                 description: Forma de pago
+ *               referencia_pago:
+ *                 type: string
+ *                 description: Referencia/número de transacción
+ *               descripcion:
+ *                 type: string
+ *                 description: Descripción adicional
+ *     responses:
+ *       200:
+ *         description: Pago actualizado exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Pago no encontrado
+ *       409:
+ *         description: Pago no puede ser actualizado
+ *       500:
+ *         description: Error servidor
+ */
+router.put(
+  '/:id',
+  [
+    authenticate,
+    authorize('superadmin', 'admin_comunidad', 'tesorero'),
+    body('monto').optional().isNumeric(),
+    body('fecha').optional().notEmpty(),
+    body('forma_pago').optional().trim(),
+    body('referencia_pago').optional().trim(),
+    body('descripcion').optional().trim(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const pagoId = Number(req.params.id);
+
+      // Obtener pago anterior
+      const [pagoAnterior] = await db.query(
+        'SELECT * FROM pago WHERE id = ?',
+        [pagoId]
+      );
+      if (!pagoAnterior.length) {
+        return res.status(404).json({ error: 'Pago no encontrado' });
+      }
+
+      // Verificar que el pago esté en estado pendiente
+      if (pagoAnterior[0].estado !== 'pendiente') {
+        return res.status(409).json({
+          error:
+            'Solo se pueden actualizar pagos en estado pendiente. Estado actual: ' +
+            pagoAnterior[0].estado,
+        });
+      }
+
+      // Preparar actualización
+      const campos = [];
+      const valores = [];
+
+      if (req.body.monto !== undefined) {
+        campos.push('monto = ?');
+        valores.push(req.body.monto);
+      }
+      if (req.body.fecha !== undefined) {
+        campos.push('fecha = ?');
+        valores.push(req.body.fecha);
+      }
+      if (req.body.forma_pago !== undefined) {
+        campos.push('forma_pago = ?');
+        valores.push(req.body.forma_pago);
+      }
+      if (req.body.referencia_pago !== undefined) {
+        campos.push('referencia_pago = ?');
+        valores.push(req.body.referencia_pago);
+      }
+      if (req.body.descripcion !== undefined) {
+        campos.push('descripcion = ?');
+        valores.push(req.body.descripcion);
+      }
+
+      if (campos.length === 0) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
+      }
+
+      valores.push(pagoId);
+
+      // Ejecutar actualización
+      await db.query(
+        `UPDATE pago SET ${campos.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        valores
+      );
+
+      // Obtener pago actualizado
+      const [pagoActualizado] = await db.query('SELECT * FROM pago WHERE id = ?', [
+        pagoId,
+      ]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address)
+         VALUES (?, 'UPDATE', 'pago', ?, ?, ?, ?)`,
+        [
+          req.user.id,
+          pagoId,
+          JSON.stringify(pagoAnterior[0]),
+          JSON.stringify(pagoActualizado[0]),
+          req.ip,
+        ]
+      );
+
+      res.json(pagoActualizado[0]);
+    } catch (err) {
+      console.error('Error al actualizar pago:', err);
+      res.status(500).json({ error: 'Error al actualizar pago' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /pagos/{id}:
+ *   delete:
+ *     tags: [Pagos]
+ *     summary: Eliminar pago
+ *     description: Elimina un pago verificando que esté en estado pendiente y sin aplicaciones
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Pago eliminado exitosamente
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Pago no encontrado
+ *       409:
+ *         description: Pago no puede ser eliminado
+ *       500:
+ *         description: Error servidor
+ */
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('superadmin', 'admin_comunidad'),
+  async (req, res) => {
+    try {
+      const pagoId = Number(req.params.id);
+
+      // Obtener pago a eliminar
+      const [pago] = await db.query('SELECT * FROM pago WHERE id = ?', [pagoId]);
+      if (!pago.length) {
+        return res.status(404).json({ error: 'Pago no encontrado' });
+      }
+
+      // Verificar que el pago esté en estado pendiente
+      if (pago[0].estado !== 'pendiente') {
+        return res.status(409).json({
+          error:
+            'Solo se pueden eliminar pagos en estado pendiente. Estado actual: ' +
+            pago[0].estado,
+        });
+      }
+
+      // Verificar que no tenga aplicaciones
+      const [aplicaciones] = await db.query(
+        'SELECT COUNT(*) as total FROM aplicacion_pago WHERE pago_id = ?',
+        [pagoId]
+      );
+
+      if (aplicaciones[0].total > 0) {
+        return res.status(409).json({
+          error:
+            'No se puede eliminar un pago que tiene aplicaciones. Primero revise las aplicaciones.',
+        });
+      }
+
+      // Realizar eliminación
+      await db.query('DELETE FROM pago WHERE id = ?', [pagoId]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, ip_address)
+         VALUES (?, 'DELETE', 'pago', ?, ?, ?)`,
+        [req.user.id, pagoId, JSON.stringify(pago[0]), req.ip]
+      );
+
+      res.status(204).end();
+    } catch (err) {
+      console.error('Error al eliminar pago:', err);
+      res.status(500).json({ error: 'Error al eliminar pago' });
+    }
+  }
+);
+
 module.exports = router;
-
-// =========================================
-// ENDPOINTS DE PAGOS
-// =========================================
-
-// // 1. LISTADOS Y FILTROS
-// GET: /pagos/comunidad/:comunidadId
-// GET: /pagos/:id
-
-// // 2. ESTADÍSTICAS
-// GET: /pagos/comunidad/:comunidadId/estadisticas
-// GET: /pagos/comunidad/:comunidadId/estadisticas/estado
-// GET: /pagos/comunidad/:comunidadId/estadisticas/metodo
-// GET: /pagos/comunidad/:comunidadId/estadisticas/periodo
-
-// // 3. PAGOS PENDIENTES Y APLICACIONES
-// GET: /pagos/comunidad/:comunidadId/pendientes
-// GET: /pagos/:id/aplicaciones
-
-// // 4. HISTORIAL Y CONSULTAS POR UNIDAD/RESIDENTE
-// GET: /pagos/unidad/:unidadId/historial
-// GET: /pagos/comunidad/:comunidadId/por-residente
-
-// // 5. CONCILIACIÓN BANCARIA
-// GET: /pagos/comunidad/:comunidadId/conciliacion
-
-// // 6. WEBHOOKS
-// GET: /pagos/:id/webhooks
-
-// // 7. VALIDACIONES
-// GET: /pagos/comunidad/:comunidadId/validar
-
-// // 8. CRUD BÁSICO
-// POST: /pagos/comunidad/:comunidadId
-// POST: /pagos/:id/aplicar
-// POST: /pagos/:id/reversar

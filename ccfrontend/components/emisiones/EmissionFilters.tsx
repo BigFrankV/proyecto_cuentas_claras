@@ -2,12 +2,12 @@ import { useState } from 'react';
 
 // Props para el componente de filtros
 interface EmissionFiltersProps {
-  onFilterChange: (filters: EmissionFilters) => void;
+  onFilterChange: (filters: IEmissionFilters) => void;
   onClearFilters: () => void;
 }
 
 // Interfaz para los filtros
-export interface EmissionFilters {
+export interface IEmissionFilters {
   search: string;
   status: string;
   type: string;
@@ -21,7 +21,7 @@ export function EmissionFilters({
   onFilterChange,
   onClearFilters,
 }: EmissionFiltersProps) {
-  const [filters, setFilters] = useState<EmissionFilters>({
+  const [filters, setFilters] = useState<IEmissionFilters>({
     search: '',
     status: 'all',
     type: 'all',
@@ -33,14 +33,14 @@ export function EmissionFilters({
 
   const [isCollapsed, setIsCollapsed] = useState(true);
 
-  const handleFilterChange = (field: keyof EmissionFilters, value: string) => {
+  const handleFilterChange = (field: keyof IEmissionFilters, value: string) => {
     const newFilters = { ...filters, [field]: value };
     setFilters(newFilters);
     onFilterChange(newFilters);
   };
 
   const handleClearFilters = () => {
-    const clearedFilters: EmissionFilters = {
+    const clearedFilters: IEmissionFilters = {
       search: '',
       status: 'all',
       type: 'all',

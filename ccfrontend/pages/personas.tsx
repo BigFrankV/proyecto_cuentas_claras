@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { useState, useMemo, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
@@ -35,7 +34,6 @@ const PersonasListado = () => {
   const [estadoFilter, setEstadoFilter] = useState('todos');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [stats, setStats] = useState<any>(null);
 
@@ -91,6 +89,13 @@ const PersonasListado = () => {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Error al cargar estadísticas:', err);
+      // Si falla, usar valores por defecto vacíos
+      setStats({
+        total: 0,
+        propietarios: 0,
+        inquilinos: 0,
+        administradores: 0,
+      });
     }
   };
 

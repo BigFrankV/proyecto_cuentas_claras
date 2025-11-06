@@ -16,6 +16,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
+  loading?: boolean;
   isAuthenticated: boolean;
   login: (
     identifier: string,
@@ -281,6 +282,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     token: authService.getToken(),
     isLoading,
+    loading: isLoading,
     isAuthenticated: !!user,
     login,
     complete2FALogin,

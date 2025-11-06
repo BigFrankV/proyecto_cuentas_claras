@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
+const { authorize } = require('../middleware/authorize');
 
 /**
  * @swagger
@@ -174,4 +176,322 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
+// =========================================
+// CRUD OPERATIONS - POST/PATCH/DELETE
+// =========================================
+
+/**
+ * @swagger
+ * /compras:
+ *   post:
+ *     tags: [Compras]
+ *     summary: Crear nueva compra
+ *     description: Registra una nueva compra/gasto
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [folio, fecha_emision, monto, tipo_doc, proveedor_id, comunidad_id]
+ *             properties:
+ *               folio:
+ *                 type: string
+ *               fecha_emision:
+ *                 type: string
+ *                 format: date
+ *               monto:
+ *                 type: number
+ *               tipo_doc:
+ *                 type: string
+ *               proveedor_id:
+ *                 type: integer
+ *               comunidad_id:
+ *                 type: integer
+ *               descripcion:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Compra creada exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       500:
+ *         description: Error servidor
+ */
+router.post(
+  '/',
+  [
+    authenticate,
+    authorize('superadmin', 'admin_comunidad', 'administrador'),
+    body('folio').notEmpty().withMessage('folio requerido').trim(),
+    body('fecha_emision')
+      .isISO8601()
+      .withMessage('fecha_emision debe ser fecha válida')
+      .toDate(),
+    body('monto')
+      .isFloat({ min: 0 })
+      .withMessage('monto debe ser número positivo'),
+    body('tipo_doc').notEmpty().withMessage('tipo_doc requerido').trim(),
+    body('proveedor_id')
+      .isInt({ min: 1 })
+      .withMessage('proveedor_id requerido'),
+    body('comunidad_id')
+      .isInt({ min: 1 })
+      .withMessage('comunidad_id requerido'),
+    body('descripcion').optional().trim(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const {
+        folio,
+        fecha_emision,
+        monto,
+        tipo_doc,
+        proveedor_id,
+        comunidad_id,
+        descripcion,
+      } = req.body;
+
+      // Verificar que el proveedor existe
+      const [proveedor] = await db.query('SELECT id FROM proveedor WHERE id = ?', [
+        proveedor_id,
+      ]);
+      if (!proveedor.length) {
+        return res.status(404).json({ error: 'Proveedor no encontrado' });
+      }
+
+      // Verificar que la comunidad existe
+      const [comunidad] = await db.query('SELECT id FROM comunidad WHERE id = ?', [
+        comunidad_id,
+      ]);
+      if (!comunidad.length) {
+        return res.status(404).json({ error: 'Comunidad no encontrada' });
+      }
+
+      // Insertar compra
+      const [result] = await db.query(
+        `INSERT INTO compra (folio, fecha_emision, monto, tipo_doc, proveedor_id, comunidad_id, descripcion, activo)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
+        [folio, fecha_emision, monto, tipo_doc, proveedor_id, comunidad_id, descripcion || null]
+      );
+
+      // Obtener la compra creada
+      const [compra] = await db.query('SELECT * FROM compra WHERE id = ?', [
+        result.insertId,
+      ]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address)
+         VALUES (?, 'INSERT', 'compra', ?, ?, ?)`,
+        [req.user.id, result.insertId, JSON.stringify(compra[0]), req.ip]
+      );
+
+      res.status(201).json(compra[0]);
+    } catch (err) {
+      console.error('Error al crear compra:', err);
+      res.status(500).json({ error: 'Error al crear compra' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /compras/{id}:
+ *   patch:
+ *     tags: [Compras]
+ *     summary: Actualizar compra existente
+ *     description: Actualiza los datos de una compra
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               folio:
+ *                 type: string
+ *               fecha_emision:
+ *                 type: string
+ *                 format: date
+ *               monto:
+ *                 type: number
+ *               descripcion:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Compra actualizada exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       404:
+ *         description: Compra no encontrada
+ *       500:
+ *         description: Error servidor
+ */
+router.patch(
+  '/:id',
+  [
+    authenticate,
+    authorize('superadmin', 'admin_comunidad', 'administrador'),
+    body('folio').optional().trim(),
+    body('fecha_emision')
+      .optional()
+      .isISO8601()
+      .withMessage('fecha_emision debe ser fecha válida')
+      .toDate(),
+    body('monto')
+      .optional()
+      .isFloat({ min: 0 })
+      .withMessage('monto debe ser número positivo'),
+    body('descripcion').optional().trim(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const compra_id = Number(req.params.id);
+
+      // Obtener compra anterior
+      const [compra_anterior] = await db.query('SELECT * FROM compra WHERE id = ?', [
+        compra_id,
+      ]);
+      if (!compra_anterior.length) {
+        return res.status(404).json({ error: 'Compra no encontrada' });
+      }
+
+      // Preparar actualización
+      const campos = [];
+      const valores = [];
+
+      if (req.body.folio !== undefined) {
+        campos.push('folio = ?');
+        valores.push(req.body.folio);
+      }
+      if (req.body.fecha_emision !== undefined) {
+        campos.push('fecha_emision = ?');
+        valores.push(req.body.fecha_emision);
+      }
+      if (req.body.monto !== undefined) {
+        campos.push('monto = ?');
+        valores.push(req.body.monto);
+      }
+      if (req.body.descripcion !== undefined) {
+        campos.push('descripcion = ?');
+        valores.push(req.body.descripcion || null);
+      }
+
+      if (campos.length === 0) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
+      }
+
+      valores.push(compra_id);
+
+      // Ejecutar actualización
+      await db.query(
+        `UPDATE compra SET ${campos.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        valores
+      );
+
+      // Obtener compra actualizada
+      const [compra_actualizada] = await db.query('SELECT * FROM compra WHERE id = ?', [
+        compra_id,
+      ]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address)
+         VALUES (?, 'UPDATE', 'compra', ?, ?, ?, ?)`,
+        [
+          req.user.id,
+          compra_id,
+          JSON.stringify(compra_anterior[0]),
+          JSON.stringify(compra_actualizada[0]),
+          req.ip,
+        ]
+      );
+
+      res.json(compra_actualizada[0]);
+    } catch (err) {
+      console.error('Error al actualizar compra:', err);
+      res.status(500).json({ error: 'Error al actualizar compra' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /compras/{id}:
+ *   delete:
+ *     tags: [Compras]
+ *     summary: Eliminar compra
+ *     description: Marca una compra como inactiva (soft delete)
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Compra eliminada exitosamente
+ *       401:
+ *         description: No autenticado
+ *       404:
+ *         description: Compra no encontrada
+ *       500:
+ *         description: Error servidor
+ */
+router.delete(
+  '/:id',
+  [authenticate, authorize('superadmin', 'admin_comunidad', 'administrador')],
+  async (req, res) => {
+    try {
+      const compra_id = Number(req.params.id);
+
+      // Obtener compra anterior
+      const [compra] = await db.query('SELECT * FROM compra WHERE id = ?', [compra_id]);
+      if (!compra.length) {
+        return res.status(404).json({ error: 'Compra no encontrada' });
+      }
+
+      // Soft delete - marcar como inactivo
+      await db.query(
+        'UPDATE compra SET activo = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [compra_id]
+      );
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, ip_address)
+         VALUES (?, 'DELETE', 'compra', ?, ?, ?)`,
+        [req.user.id, compra_id, JSON.stringify(compra[0]), req.ip]
+      );
+
+      res.status(200).json({ message: 'Compra eliminada exitosamente' });
+    } catch (err) {
+      console.error('Error al eliminar compra:', err);
+      res.status(500).json({ error: 'Error al eliminar compra' });
+    }
+  }
+);
+
 module.exports = router;
+

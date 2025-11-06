@@ -165,7 +165,7 @@ router.get(
       u.codigo as unidad,
       c.razon_social as nombre_comunidad,
       egc.periodo as periodo,
-      CONCAT(p.nombres, ' ', p.apellidos) as propietario,
+      MAX(CONCAT(p.nombres, ' ', p.apellidos)) as propietario,
       ccu.saldo as saldo,
       ccu.interes_acumulado as interes_acumulado,
       DATE_FORMAT(ccu.created_at, '%Y-%m-%d') as fecha_creacion,
@@ -189,6 +189,7 @@ router.get(
     ) tu ON u.id = tu.unidad_id
     LEFT JOIN persona p ON tu.persona_id = p.id
     WHERE ${conditions.join(' AND ')}
+    GROUP BY ccu.id, ccu.monto_total, ccu.saldo, ccu.interes_acumulado, ccu.estado, ccu.created_at, ccu.updated_at, u.codigo, c.razon_social, egc.periodo, egc.fecha_vencimiento
     ORDER BY ccu.created_at DESC
     LIMIT ? OFFSET ?
   `;
@@ -296,9 +297,9 @@ router.get('/:id', authenticate, async (req, res) => {
       u.codigo as unidad,
       c.razon_social as nombre_comunidad,
       egc.periodo as periodo,
-      CONCAT(p.nombres, ' ', p.apellidos) as propietario,
-      p.email as email_propietario,
-      p.telefono as telefono_propietario,
+      MAX(CONCAT(p.nombres, ' ', p.apellidos)) as propietario,
+      MAX(p.email) as email_propietario,
+      MAX(p.telefono) as telefono_propietario,
       ccu.saldo as saldo,
       ccu.interes_acumulado as interes_acumulado,
       DATE_FORMAT(ccu.created_at, '%Y-%m-%d') as fecha_creacion,
@@ -323,6 +324,7 @@ router.get('/:id', authenticate, async (req, res) => {
     ) tu ON u.id = tu.unidad_id
     LEFT JOIN persona p ON tu.persona_id = p.id
     WHERE ccu.id = ?
+    GROUP BY ccu.id, ccu.monto_total, ccu.saldo, ccu.interes_acumulado, ccu.estado, ccu.created_at, ccu.updated_at, u.codigo, c.razon_social, egc.periodo, egc.fecha_vencimiento, egc.observaciones
   `;
   const [rows] = await db.query(sql, [id]);
   if (!rows.length) return res.status(404).json({ error: 'not found' });
@@ -1096,8 +1098,8 @@ router.get(
       ccu.saldo as saldo,
       ccu.interes_acumulado as interes_acumulado,
       u.codigo as unidad,
-      CONCAT(p.nombres, ' ', p.apellidos) as propietario,
-      p.email as email_propietario,
+      MAX(CONCAT(p.nombres, ' ', p.apellidos)) as propietario,
+      MAX(p.email) as email_propietario,
       c.razon_social as nombre_comunidad
     FROM cuenta_cobro_unidad ccu
     JOIN comunidad c ON ccu.comunidad_id = c.id
@@ -1120,6 +1122,7 @@ router.get(
     WHERE ccu.estado IN ('pendiente', 'parcial', 'vencido')
       AND egc.fecha_vencimiento < CURDATE()
       AND ccu.comunidad_id = ?
+    GROUP BY ccu.id, ccu.monto_total, ccu.saldo, ccu.interes_acumulado, ccu.estado, ccu.created_at, u.codigo, c.razon_social, egc.fecha_vencimiento, egc.periodo
     ORDER BY egc.fecha_vencimiento ASC, ccu.saldo DESC
   `;
     const [rows] = await db.query(sql, [comunidadId]);
@@ -1451,7 +1454,7 @@ router.get(
       (ccu.monto_total + ccu.interes_acumulado) as total_con_interes,
       DATEDIFF(CURDATE(), egc.fecha_vencimiento) as dias_vencido,
       u.codigo as unidad,
-      CONCAT(p.nombres, ' ', p.apellidos) as propietario,
+      MAX(CONCAT(p.nombres, ' ', p.apellidos)) as propietario,
       c.razon_social as nombre_comunidad
     FROM cuenta_cobro_unidad ccu
     JOIN comunidad c ON ccu.comunidad_id = c.id
@@ -1473,6 +1476,7 @@ router.get(
     LEFT JOIN persona p ON tu.persona_id = p.id
     WHERE ccu.interes_acumulado > 0
       AND ccu.comunidad_id = ?
+    GROUP BY ccu.id, ccu.monto_total, ccu.saldo, ccu.interes_acumulado, ccu.estado, ccu.created_at, u.codigo, c.razon_social, egc.fecha_vencimiento, egc.periodo
     ORDER BY ccu.interes_acumulado DESC
   `;
     const [rows] = await db.query(sql, [comunidadId]);
@@ -1777,33 +1781,227 @@ router.post(
   }
 );
 
+// =========================================
+// CRUD OPERATIONS - PUT/DELETE
+// =========================================
+
+/**
+ * @swagger
+ * /cargos/{id}:
+ *   put:
+ *     tags: [Cargos]
+ *     summary: Actualizar cargo/cuenta de cobro
+ *     description: Actualiza un cargo existente (solo si está pendiente)
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               monto:
+ *                 type: number
+ *                 description: Monto del cargo
+ *               fecha_vencimiento:
+ *                 type: string
+ *                 format: date
+ *                 description: Fecha de vencimiento
+ *               descripcion:
+ *                 type: string
+ *                 description: Descripción del cargo
+ *               concepto:
+ *                 type: string
+ *                 description: Concepto/tipo de cargo
+ *     responses:
+ *       200:
+ *         description: Cargo actualizado exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Cargo no encontrado
+ *       409:
+ *         description: Cargo no puede ser actualizado
+ *       500:
+ *         description: Error servidor
+ */
+router.put(
+  '/:id',
+  [
+    authenticate,
+    authorize('superadmin', 'admin_comunidad', 'tesorero', 'contador'),
+    body('monto').optional().isNumeric(),
+    body('fecha_vencimiento').optional().notEmpty(),
+    body('descripcion').optional().trim(),
+    body('concepto').optional().trim(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const cargoId = Number(req.params.id);
+
+      // Obtener cargo anterior
+      const [cargoAnterior] = await db.query(
+        'SELECT * FROM cargo_unidad WHERE id = ?',
+        [cargoId]
+      );
+      if (!cargoAnterior.length) {
+        return res.status(404).json({ error: 'Cargo no encontrado' });
+      }
+
+      // Verificar que el cargo esté pendiente (no pagado ni parcial con muchos pagos)
+      if (cargoAnterior[0].estado === 'pagado') {
+        return res.status(409).json({
+          error:
+            'No se puede actualizar un cargo ya pagado. Contacte a administración.',
+        });
+      }
+
+      // Preparar actualización
+      const campos = [];
+      const valores = [];
+
+      if (req.body.monto !== undefined) {
+        campos.push('monto_total = ?');
+        valores.push(req.body.monto);
+      }
+      if (req.body.fecha_vencimiento !== undefined) {
+        campos.push('fecha_vencimiento = ?');
+        valores.push(req.body.fecha_vencimiento);
+      }
+      if (req.body.descripcion !== undefined) {
+        campos.push('descripcion = ?');
+        valores.push(req.body.descripcion);
+      }
+      if (req.body.concepto !== undefined) {
+        campos.push('concepto = ?');
+        valores.push(req.body.concepto);
+      }
+
+      if (campos.length === 0) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
+      }
+
+      valores.push(cargoId);
+
+      // Ejecutar actualización
+      await db.query(
+        `UPDATE cargo_unidad SET ${campos.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        valores
+      );
+
+      // Obtener cargo actualizado
+      const [cargoActualizado] = await db.query(
+        'SELECT * FROM cargo_unidad WHERE id = ?',
+        [cargoId]
+      );
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address)
+         VALUES (?, 'UPDATE', 'cargo_unidad', ?, ?, ?, ?)`,
+        [
+          req.user.id,
+          cargoId,
+          JSON.stringify(cargoAnterior[0]),
+          JSON.stringify(cargoActualizado[0]),
+          req.ip,
+        ]
+      );
+
+      res.json(cargoActualizado[0]);
+    } catch (err) {
+      console.error('Error al actualizar cargo:', err);
+      res.status(500).json({ error: 'Error al actualizar cargo' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /cargos/{id}:
+ *   delete:
+ *     tags: [Cargos]
+ *     summary: Eliminar cargo/cuenta de cobro
+ *     description: Elimina un cargo verificando que esté completamente pendiente (sin pagos aplicados)
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Cargo eliminado exitosamente
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Cargo no encontrado
+ *       409:
+ *         description: Cargo no puede ser eliminado
+ *       500:
+ *         description: Error servidor
+ */
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('superadmin', 'admin_comunidad'),
+  async (req, res) => {
+    try {
+      const cargoId = Number(req.params.id);
+
+      // Obtener cargo a eliminar
+      const [cargo] = await db.query('SELECT * FROM cargo_unidad WHERE id = ?', [
+        cargoId,
+      ]);
+      if (!cargo.length) {
+        return res.status(404).json({ error: 'Cargo no encontrado' });
+      }
+
+      // Verificar que el cargo no tenga pagos aplicados
+      const [pagosAplicados] = await db.query(
+        'SELECT COUNT(*) as total FROM aplicacion_pago WHERE cargo_id = ?',
+        [cargoId]
+      );
+
+      if (pagosAplicados[0].total > 0) {
+        return res.status(409).json({
+          error:
+            'No se puede eliminar un cargo que tiene pagos aplicados. Primero revise los pagos.',
+        });
+      }
+
+      // Realizar eliminación
+      await db.query('DELETE FROM cargo_unidad WHERE id = ?', [cargoId]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, ip_address)
+         VALUES (?, 'DELETE', 'cargo_unidad', ?, ?, ?)`,
+        [req.user.id, cargoId, JSON.stringify(cargo[0]), req.ip]
+      );
+
+      res.status(204).end();
+    } catch (err) {
+      console.error('Error al eliminar cargo:', err);
+      res.status(500).json({ error: 'Error al eliminar cargo' });
+    }
+  }
+);
+
 module.exports = router;
-
-// // =========================================
-// // ENDPOINTS DE CUENTAS DE COBRO (CARGOS)
-// // =========================================
-
-// // LISTADOS, FILTROS Y DETALLES
-// GET: /cargos/comunidad/:comunidadId
-// GET: /cargos/:id
-// GET: /cargos/unidad/:id
-// GET: /cargos/:id/detalle
-// GET: /cargos/:id/pagos
-// GET: /cargos/:id/historial-pagos
-// GET: /cargos/comunidad/:comunidadId/vencidos
-// GET: /cargos/comunidad/:comunidadId/con-interes
-
-// // OPERACIONES CRUD
-// POST: /cargos
-
-// // ESTADÍSTICAS Y REPORTES
-// GET: /cargos/comunidad/:comunidadId/estadisticas
-// GET: /cargos/comunidad/:comunidadId/periodo/:periodo
-// GET: /cargos/comunidad/:comunidadId/por-estado
-// GET: /cargos/comunidad/:comunidadId/resumen-pagos
-// GET: /cargos/comunidad/:comunidadId/por-categoria
-
-// // VALIDACIONES Y OTROS STUBS
-// POST: /cargos/:id/recalcular-interes
-// POST: /cargos/:id/notificar
-// GET: /cargos/comunidad/:comunidadId/validacion

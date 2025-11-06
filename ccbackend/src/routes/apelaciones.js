@@ -504,4 +504,214 @@ router.post(
   }
 );
 
+// =========================================
+// CRUD OPERATIONS - PATCH/DELETE
+// =========================================
+
+/**
+ * @swagger
+ * /apelaciones/{id}:
+ *   patch:
+ *     tags: [Apelaciones]
+ *     summary: Actualizar estado de apelación
+ *     description: Resuelve o rechaza una apelación
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [estado]
+ *             properties:
+ *               estado:
+ *                 type: string
+ *                 enum: [resuelta, rechazada]
+ *               resolucion:
+ *                 type: string
+ *                 description: Motivo de la resolución
+ *     responses:
+ *       200:
+ *         description: Apelación actualizada exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       404:
+ *         description: Apelación no encontrada
+ *       500:
+ *         description: Error servidor
+ */
+router.patch(
+  '/:id',
+  [
+    authenticate,
+    body('estado')
+      .isIn(['resuelta', 'rechazada'])
+      .withMessage('Estado inválido'),
+    body('resolucion').optional().trim(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const apelacion_id = Number(req.params.id);
+      const { estado, resolucion } = req.body;
+
+      // Obtener apelación anterior
+      const [apelacion_anterior] = await db.query(
+        'SELECT * FROM multa_apelacion WHERE id = ?',
+        [apelacion_id]
+      );
+      if (!apelacion_anterior.length) {
+        return res
+          .status(404)
+          .json({ success: false, error: 'Apelación no encontrada' });
+      }
+
+      // Verificar que la apelación está pendiente
+      if (apelacion_anterior[0].estado !== 'pendiente') {
+        return res.status(400).json({
+          success: false,
+          error: 'Solo se pueden resolver apelaciones pendientes',
+        });
+      }
+
+      // Actualizar apelación
+      await db.query(
+        `UPDATE multa_apelacion 
+         SET estado = ?, resolucion = ?, updated_at = CURRENT_TIMESTAMP 
+         WHERE id = ?`,
+        [estado, resolucion || null, apelacion_id]
+      );
+
+      // Si es rechazada, volver multa a estado anterior
+      if (estado === 'rechazada') {
+        await db.query(
+          "UPDATE multa SET estado = 'vigente' WHERE id = ?",
+          [apelacion_anterior[0].multa_id]
+        );
+      }
+      // Si es resuelta, anular la multa
+      else if (estado === 'resuelta') {
+        await db.query(
+          "UPDATE multa SET estado = 'anulada' WHERE id = ?",
+          [apelacion_anterior[0].multa_id]
+        );
+      }
+
+      // Obtener apelación actualizada
+      const [apelacion_actualizada] = await db.query(
+        'SELECT * FROM multa_apelacion WHERE id = ?',
+        [apelacion_id]
+      );
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address)
+         VALUES (?, 'UPDATE', 'multa_apelacion', ?, ?, ?, ?)`,
+        [
+          req.user.id,
+          apelacion_id,
+          JSON.stringify(apelacion_anterior[0]),
+          JSON.stringify(apelacion_actualizada[0]),
+          req.ip,
+        ]
+      );
+
+      res.json({
+        success: true,
+        data: apelacion_actualizada[0],
+        message: 'Apelación actualizada',
+      });
+    } catch (err) {
+      console.error('Error PATCH /apelaciones/:id', err);
+      res.status(500).json({ success: false, error: 'Error del servidor' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /apelaciones/{id}:
+ *   delete:
+ *     tags: [Apelaciones]
+ *     summary: Eliminar apelación
+ *     description: Elimina una apelación pendiente
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Apelación eliminada exitosamente
+ *       401:
+ *         description: No autenticado
+ *       404:
+ *         description: Apelación no encontrada
+ *       400:
+ *         description: Apelación no puede ser eliminada (no está pendiente)
+ *       500:
+ *         description: Error servidor
+ */
+router.delete('/:id', authenticate, async (req, res) => {
+  try {
+    const apelacion_id = Number(req.params.id);
+
+    // Obtener apelación
+    const [apelacion] = await db.query(
+      'SELECT * FROM multa_apelacion WHERE id = ?',
+      [apelacion_id]
+    );
+    if (!apelacion.length) {
+      return res
+        .status(404)
+        .json({ success: false, error: 'Apelación no encontrada' });
+    }
+
+    // Solo permitir eliminar apelaciones pendientes
+    if (apelacion[0].estado !== 'pendiente') {
+      return res.status(400).json({
+        success: false,
+        error: 'Solo se pueden eliminar apelaciones pendientes',
+      });
+    }
+
+    // Eliminar apelación
+    await db.query('DELETE FROM multa_apelacion WHERE id = ?', [apelacion_id]);
+
+    // Restaurar estado de multa a vigente
+    await db.query('UPDATE multa SET estado = ? WHERE id = ?', [
+      'vigente',
+      apelacion[0].multa_id,
+    ]);
+
+    // Registrar en auditoría
+    await db.query(
+      `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, ip_address)
+       VALUES (?, 'DELETE', 'multa_apelacion', ?, ?, ?)`,
+      [req.user.id, apelacion_id, JSON.stringify(apelacion[0]), req.ip]
+    );
+
+    res.json({
+      success: true,
+      message: 'Apelación eliminada exitosamente',
+    });
+  } catch (err) {
+    console.error('Error DELETE /apelaciones/:id', err);
+    res.status(500).json({ success: false, error: 'Error del servidor' });
+  }
+});
+
 module.exports = router;
+
