@@ -4,49 +4,48 @@ export interface Cargo {
   id: number;
   concepto: string;
   descripcion?: string;
-  tipo:
-    | 'Administración'
-    | 'extraordinaria'
-    | 'multa'
-    | 'interes'
-    | 'Mantenimiento'
-    | 'Servicio'
-    | 'Seguro'
-    | 'Otro';
+  tipo: string;
   estado: 'pendiente' | 'pagado' | 'vencido' | 'parcial';
   monto: number;
-  montoAplicado?: number;
-  unidad: string;
-  periodo?: string;
   fechaVencimiento: Date;
-  fechaCreacion: Date;
-  cuentaCosto?: string;
-  observaciones?: string;
+  unidad: string;
   nombreComunidad?: string;
+  periodo?: string;
   propietario?: string;
-  emailPropietario?: string;
-  telefonoPropietario?: string;
   saldo: number;
   interesAcumulado: number;
+  fechaCreacion: Date;
+  emailPropietario?: string;
+  telefonoPropietario?: string;
 }
 
 export interface CargoFormData {
-  concept: string;
-  type: 'administration' | 'maintenance' | 'service' | 'insurance' | 'other';
-  amount: number;
-  dueDate: string;
-  status: 'pending' | 'approved' | 'rejected' | 'paid' | 'partial';
-  unit: string;
-  description?: string;
+  concepto: string;
+  tipo: string;
+  monto: number;
+  fecha_vencimiento: string;
+  unidad: string;
+  descripcion?: string;
+  periodo?: string;
 }
 
 export interface CargoFilters {
   comunidadId?: number;
+  unidadId?: number;
   estado?: 'pendiente' | 'pagado' | 'vencido' | 'parcial';
-  unidad?: number;
   periodo?: string;
   page?: number;
   limit?: number;
+  search?: string;
+}
+
+export interface CargoStats {
+  total_cargos: number;
+  total_monto: number;
+  total_saldo: number;
+  total_interes: number;
+  cargos_pagados: number;
+  cargos_pendientes: number;
 }
 
 export interface PaymentRecord {

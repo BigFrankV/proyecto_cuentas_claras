@@ -646,6 +646,345 @@ router.get('/catalogos/estados', authenticate, async (req, res) => {
  *             $ref: '#/components/schemas/Error'
  */
 
+// =========================================
+// CRUD OPERATIONS - POST/PATCH/DELETE
+// =========================================
+
+/**
+ * @swagger
+ * /membresias:
+ *   post:
+ *     tags: [Membresias]
+ *     summary: Crear nueva membresía
+ *     description: Asigna un rol a un usuario en una comunidad
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [usuario_id, comunidad_id, rol_id, desde]
+ *             properties:
+ *               usuario_id:
+ *                 type: integer
+ *               comunidad_id:
+ *                 type: integer
+ *               rol_id:
+ *                 type: integer
+ *               desde:
+ *                 type: string
+ *                 format: date
+ *               hasta:
+ *                 type: string
+ *                 format: date
+ *                 nullable: true
+ *     responses:
+ *       201:
+ *         description: Membresía creada exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       409:
+ *         description: Membresía duplicada
+ *       500:
+ *         description: Error servidor
+ */
+router.post(
+  '/',
+  [
+    authenticate,
+    authorize('superadmin', 'admin_comunidad', 'administrador'),
+    body('usuario_id').isInt({ min: 1 }).withMessage('usuario_id requerido'),
+    body('comunidad_id').isInt({ min: 1 }).withMessage('comunidad_id requerido'),
+    body('rol_id').isInt({ min: 1 }).withMessage('rol_id requerido'),
+    body('desde')
+      .isISO8601()
+      .withMessage('desde debe ser fecha válida')
+      .toDate(),
+    body('hasta')
+      .optional()
+      .isISO8601()
+      .withMessage('hasta debe ser fecha válida')
+      .toDate(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { usuario_id, comunidad_id, rol_id, desde, hasta } = req.body;
+
+      // Verificar que el usuario existe
+      const [usuario] = await db.query('SELECT id FROM usuario WHERE id = ?', [
+        usuario_id,
+      ]);
+      if (!usuario.length) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      // Verificar que la comunidad existe
+      const [comunidad] = await db.query('SELECT id FROM comunidad WHERE id = ?', [
+        comunidad_id,
+      ]);
+      if (!comunidad.length) {
+        return res.status(404).json({ error: 'Comunidad no encontrada' });
+      }
+
+      // Verificar que el rol existe
+      const [rol] = await db.query('SELECT id FROM rol WHERE id = ?', [rol_id]);
+      if (!rol.length) {
+        return res.status(404).json({ error: 'Rol no encontrado' });
+      }
+
+      // Verificar que no exista ya una membresía activa
+      const [duplicate] = await db.query(
+        'SELECT id FROM usuario_miembro_comunidad WHERE usuario_id = ? AND comunidad_id = ? AND activo = 1',
+        [usuario_id, comunidad_id]
+      );
+      if (duplicate.length) {
+        return res
+          .status(409)
+          .json({ error: 'El usuario ya tiene membresía activa en esta comunidad' });
+      }
+
+      // Insertar membresía
+      const [result] = await db.query(
+        `INSERT INTO usuario_miembro_comunidad (usuario_id, comunidad_id, rol_id, desde, hasta, activo)
+         VALUES (?, ?, ?, ?, ?, 1)`,
+        [usuario_id, comunidad_id, rol_id, desde, hasta || null]
+      );
+
+      // Obtener la membresía creada
+      const [membresia] = await db.query(
+        `SELECT umc.*, u.nombre_completo, c.nombre AS comunidad_nombre, r.nombre AS rol_nombre
+         FROM usuario_miembro_comunidad umc
+         JOIN usuario u ON umc.usuario_id = u.id
+         JOIN comunidad c ON umc.comunidad_id = c.id
+         JOIN rol r ON umc.rol_id = r.id
+         WHERE umc.id = ?`,
+        [result.insertId]
+      );
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address)
+         VALUES (?, 'INSERT', 'usuario_miembro_comunidad', ?, ?, ?)`,
+        [req.user.id, result.insertId, JSON.stringify(membresia[0]), req.ip]
+      );
+
+      res.status(201).json(membresia[0]);
+    } catch (err) {
+      console.error('Error al crear membresía:', err);
+      res.status(500).json({ error: 'Error al crear membresía' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /membresias/{id}:
+ *   patch:
+ *     tags: [Membresias]
+ *     summary: Actualizar membresía
+ *     description: Actualiza los datos de una membresía existente
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rol_id:
+ *                 type: integer
+ *               hasta:
+ *                 type: string
+ *                 format: date
+ *                 nullable: true
+ *               activo:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Membresía actualizada exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Membresía no encontrada
+ *       500:
+ *         description: Error servidor
+ */
+router.patch(
+  '/:id',
+  [
+    authenticate,
+    authorize('superadmin', 'admin_comunidad', 'administrador'),
+    body('rol_id').optional().isInt({ min: 1 }).withMessage('rol_id inválido'),
+    body('hasta')
+      .optional()
+      .isISO8601()
+      .withMessage('hasta debe ser fecha válida')
+      .toDate(),
+    body('activo').optional().isBoolean().withMessage('activo debe ser booleano'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const membresia_id = Number(req.params.id);
+
+      // Obtener membresía anterior
+      const [membresia_anterior] = await db.query(
+        'SELECT * FROM usuario_miembro_comunidad WHERE id = ?',
+        [membresia_id]
+      );
+      if (!membresia_anterior.length) {
+        return res.status(404).json({ error: 'Membresía no encontrada' });
+      }
+
+      // Preparar actualización
+      const campos = [];
+      const valores = [];
+
+      if (req.body.rol_id !== undefined) {
+        // Verificar que el rol existe
+        const [rol] = await db.query('SELECT id FROM rol WHERE id = ?', [
+          req.body.rol_id,
+        ]);
+        if (!rol.length) {
+          return res.status(404).json({ error: 'Rol no encontrado' });
+        }
+        campos.push('rol_id = ?');
+        valores.push(req.body.rol_id);
+      }
+
+      if (req.body.hasta !== undefined) {
+        campos.push('hasta = ?');
+        valores.push(req.body.hasta || null);
+      }
+
+      if (req.body.activo !== undefined) {
+        campos.push('activo = ?');
+        valores.push(req.body.activo ? 1 : 0);
+      }
+
+      if (campos.length === 0) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
+      }
+
+      valores.push(membresia_id);
+
+      // Ejecutar actualización
+      await db.query(
+        `UPDATE usuario_miembro_comunidad SET ${campos.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        valores
+      );
+
+      // Obtener membresía actualizada
+      const [membresia_actualizada] = await db.query(
+        'SELECT * FROM usuario_miembro_comunidad WHERE id = ?',
+        [membresia_id]
+      );
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address)
+         VALUES (?, 'UPDATE', 'usuario_miembro_comunidad', ?, ?, ?, ?)`,
+        [
+          req.user.id,
+          membresia_id,
+          JSON.stringify(membresia_anterior[0]),
+          JSON.stringify(membresia_actualizada[0]),
+          req.ip,
+        ]
+      );
+
+      res.json(membresia_actualizada[0]);
+    } catch (err) {
+      console.error('Error al actualizar membresía:', err);
+      res.status(500).json({ error: 'Error al actualizar membresía' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /membresias/{id}:
+ *   delete:
+ *     tags: [Membresias]
+ *     summary: Eliminar membresía
+ *     description: Marca una membresía como inactiva (soft delete)
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Membresía eliminada exitosamente
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Membresía no encontrada
+ *       500:
+ *         description: Error servidor
+ */
+router.delete(
+  '/:id',
+  [authenticate, authorize('superadmin', 'admin_comunidad', 'administrador')],
+  async (req, res) => {
+    try {
+      const membresia_id = Number(req.params.id);
+
+      // Obtener membresía anterior
+      const [membresia] = await db.query(
+        'SELECT * FROM usuario_miembro_comunidad WHERE id = ?',
+        [membresia_id]
+      );
+      if (!membresia.length) {
+        return res.status(404).json({ error: 'Membresía no encontrada' });
+      }
+
+      // Soft delete - marcar como inactivo
+      await db.query(
+        'UPDATE usuario_miembro_comunidad SET activo = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [membresia_id]
+      );
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, ip_address)
+         VALUES (?, 'DELETE', 'usuario_miembro_comunidad', ?, ?, ?)`,
+        [req.user.id, membresia_id, JSON.stringify(membresia[0]), req.ip]
+      );
+
+      res.status(200).json({ message: 'Membresía eliminada exitosamente' });
+    } catch (err) {
+      console.error('Error al eliminar membresía:', err);
+      res.status(500).json({ error: 'Error al eliminar membresía' });
+    }
+  }
+);
+
 module.exports = router;
 
 // =========================================

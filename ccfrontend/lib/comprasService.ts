@@ -21,3 +21,20 @@ export async function getCompra(id: number): Promise<Compra> {
   const resp = await apiClient.get(`/compras/${id}`);
   return resp.data;
 }
+
+export async function createCompra(data: Partial<Compra>): Promise<Compra> {
+  const resp = await apiClient.post('/compras', data);
+  return resp.data;
+}
+
+export async function updateCompra(
+  id: number,
+  data: Partial<Compra>,
+): Promise<Compra> {
+  const resp = await apiClient.put(`/compras/${id}`, data);
+  return resp.data;
+}
+
+export async function deleteCompra(id: number): Promise<void> {
+  await apiClient.delete(`/compras/${id}`);
+}

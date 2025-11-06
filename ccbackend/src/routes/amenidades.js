@@ -1110,47 +1110,350 @@ router.post(
   }
 );
 
+// =========================================
+// CRUD OPERATIONS - POST/PUT/DELETE
+// =========================================
+
+/**
+ * @swagger
+ * /amenidades/comunidad/{comunidadId}:
+ *   post:
+ *     tags: [Amenidades]
+ *     summary: Crear nueva amenidad
+ *     description: Crea una nueva amenidad para la comunidad especificada
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [nombre]
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 description: Nombre de la amenidad
+ *               reglas:
+ *                 type: string
+ *                 description: Reglas de uso
+ *               capacidad:
+ *                 type: integer
+ *                 description: Capacidad máxima
+ *               requiere_aprobacion:
+ *                 type: boolean
+ *                 description: Si requiere aprobación de admin
+ *               tarifa:
+ *                 type: number
+ *                 description: Tarifa de uso
+ *     responses:
+ *       201:
+ *         description: Amenidad creada exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       409:
+ *         description: Amenidad duplicada
+ *       500:
+ *         description: Error servidor
+ */
+router.post(
+  '/comunidad/:comunidadId',
+  [
+    authenticate,
+    authorize('superadmin', 'admin_comunidad', 'tesorero'),
+    requireCommunity('comunidadId'),
+    body('nombre')
+      .notEmpty()
+      .withMessage('Nombre es requerido')
+      .trim()
+      .escape(),
+    body('reglas').optional().trim(),
+    body('capacidad').optional().isInt({ min: 0 }).toInt(),
+    body('requiere_aprobacion').optional().isBoolean().toBoolean(),
+    body('tarifa').optional().isFloat({ min: 0 }).toFloat(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { nombre, reglas, capacidad, requiere_aprobacion, tarifa } =
+        req.body;
+
+      // Verificar que la comunidad existe
+      const [comunidad] = await db.query('SELECT id FROM comunidad WHERE id = ?', [
+        comunidadId,
+      ]);
+      if (!comunidad.length) {
+        return res.status(404).json({ error: 'Comunidad no encontrada' });
+      }
+
+      // Verificar que no exista una amenidad con el mismo nombre
+      const [duplicate] = await db.query(
+        'SELECT id FROM amenidad WHERE comunidad_id = ? AND nombre = ?',
+        [comunidadId, nombre]
+      );
+      if (duplicate.length) {
+        return res
+          .status(409)
+          .json({ error: 'Ya existe una amenidad con ese nombre' });
+      }
+
+      // Insertar amenidad
+      const [result] = await db.query(
+        `INSERT INTO amenidad (comunidad_id, nombre, reglas, capacidad, requiere_aprobacion, tarifa)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          comunidadId,
+          nombre,
+          reglas || null,
+          capacidad || 0,
+          requiere_aprobacion ? 1 : 0,
+          tarifa || 0,
+        ]
+      );
+
+      // Obtener la amenidad creada
+      const [amenidad] = await db.query('SELECT * FROM amenidad WHERE id = ?', [
+        result.insertId,
+      ]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address)
+         VALUES (?, 'INSERT', 'amenidad', ?, ?, ?)`,
+        [req.user.id, result.insertId, JSON.stringify(amenidad[0]), req.ip]
+      );
+
+      res.status(201).json(amenidad[0]);
+    } catch (err) {
+      console.error('Error al crear amenidad:', err);
+      res.status(500).json({ error: 'Error al crear amenidad' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /amenidades/{id}:
+ *   put:
+ *     tags: [Amenidades]
+ *     summary: Actualizar amenidad existente
+ *     description: Actualiza los datos de una amenidad existente
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *               reglas:
+ *                 type: string
+ *               capacidad:
+ *                 type: integer
+ *               requiere_aprobacion:
+ *                 type: boolean
+ *               tarifa:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Amenidad actualizada exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Amenidad no encontrada
+ *       500:
+ *         description: Error servidor
+ */
+router.put(
+  '/:id',
+  [
+    authenticate,
+    authorize('superadmin', 'admin_comunidad', 'tesorero'),
+    body('nombre').optional().trim().escape(),
+    body('reglas').optional().trim(),
+    body('capacidad').optional().isInt({ min: 0 }).toInt(),
+    body('requiere_aprobacion').optional().isBoolean().toBoolean(),
+    body('tarifa').optional().isFloat({ min: 0 }).toFloat(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const amenidadId = Number(req.params.id);
+
+      // Obtener amenidad anterior para auditoría
+      const [amenidadAnterior] = await db.query(
+        'SELECT * FROM amenidad WHERE id = ?',
+        [amenidadId]
+      );
+      if (!amenidadAnterior.length) {
+        return res.status(404).json({ error: 'Amenidad no encontrada' });
+      }
+
+      // Preparar actualización
+      const campos = [];
+      const valores = [];
+
+      if (req.body.nombre !== undefined) {
+        campos.push('nombre = ?');
+        valores.push(req.body.nombre);
+      }
+      if (req.body.reglas !== undefined) {
+        campos.push('reglas = ?');
+        valores.push(req.body.reglas || null);
+      }
+      if (req.body.capacidad !== undefined) {
+        campos.push('capacidad = ?');
+        valores.push(req.body.capacidad);
+      }
+      if (req.body.requiere_aprobacion !== undefined) {
+        campos.push('requiere_aprobacion = ?');
+        valores.push(req.body.requiere_aprobacion ? 1 : 0);
+      }
+      if (req.body.tarifa !== undefined) {
+        campos.push('tarifa = ?');
+        valores.push(req.body.tarifa);
+      }
+
+      if (campos.length === 0) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
+      }
+
+      valores.push(amenidadId);
+
+      // Ejecutar actualización
+      await db.query(
+        `UPDATE amenidad SET ${campos.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        valores
+      );
+
+      // Obtener registro actualizado
+      const [amenidadActualizada] = await db.query(
+        'SELECT * FROM amenidad WHERE id = ?',
+        [amenidadId]
+      );
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address)
+         VALUES (?, 'UPDATE', 'amenidad', ?, ?, ?, ?)`,
+        [
+          req.user.id,
+          amenidadId,
+          JSON.stringify(amenidadAnterior[0]),
+          JSON.stringify(amenidadActualizada[0]),
+          req.ip,
+        ]
+      );
+
+      res.json(amenidadActualizada[0]);
+    } catch (err) {
+      console.error('Error al actualizar amenidad:', err);
+      res.status(500).json({ error: 'Error al actualizar amenidad' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /amenidades/{id}:
+ *   delete:
+ *     tags: [Amenidades]
+ *     summary: Eliminar amenidad
+ *     description: Elimina una amenidad (soft delete si tiene reservas)
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Amenidad eliminada exitosamente
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Amenidad no encontrada
+ *       409:
+ *         description: Amenidad tiene reservas activas
+ *       500:
+ *         description: Error servidor
+ */
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('superadmin', 'admin_comunidad'),
+  async (req, res) => {
+    try {
+      const amenidadId = Number(req.params.id);
+
+      // Obtener amenidad a eliminar
+      const [amenidad] = await db.query('SELECT * FROM amenidad WHERE id = ?', [
+        amenidadId,
+      ]);
+      if (!amenidad.length) {
+        return res.status(404).json({ error: 'Amenidad no encontrada' });
+      }
+
+      // Verificar si tiene reservas activas
+      const [reservasActivas] = await db.query(
+        `SELECT COUNT(*) as total FROM reserva_amenidad 
+         WHERE amenidad_id = ? AND estado IN ('solicitada', 'aprobada')`,
+        [amenidadId]
+      );
+
+      if (reservasActivas[0].total > 0) {
+        return res.status(409).json({
+          error:
+            'No se puede eliminar una amenidad con reservas activas. Cancele las reservas primero.',
+        });
+      }
+
+      // Realizar eliminación (hard delete ya que no tiene reservas activas)
+      await db.query('DELETE FROM amenidad WHERE id = ?', [amenidadId]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, ip_address)
+         VALUES (?, 'DELETE', 'amenidad', ?, ?, ?)`,
+        [req.user.id, amenidadId, JSON.stringify(amenidad[0]), req.ip]
+      );
+
+      res.status(204).end();
+    } catch (err) {
+      console.error('Error al eliminar amenidad:', err);
+      res.status(500).json({ error: 'Error al eliminar amenidad' });
+    }
+  }
+);
+
 module.exports = router;
-// =========================================
-// ENDPOINTS DE AMENIDADES
-// =========================================
-
-// // 1. LISTADOS BÁSICOS CON FILTROS
-// GET: /amenidades
-// GET: /amenidades/por-comunidad
-// GET: /amenidades/disponibles
-
-// // 2. VISTAS DETALLADAS
-// GET: /amenidades/:id/detalle
-// GET: /amenidades/completas
-
-// // 3. ESTADÍSTICAS
-// GET: /amenidades/estadisticas/generales
-// GET: /amenidades/estadisticas/comunidad
-// GET: /amenidades/estadisticas/tipo
-
-// // 4. BÚSQUEDAS FILTRADAS
-// GET: /amenidades/buscar
-// GET: /amenidades/por-capacidad
-// GET: /amenidades/por-tarifa
-
-// // 5. EXPORTACIONES
-// GET: /amenidades/exportar/completo
-// GET: /amenidades/exportar/estadisticas
-// GET: /amenidades/exportar/reglas
-
-// // 6. VALIDACIONES
-// GET: /amenidades/validar/integridad
-// GET: /amenidades/validar/duplicados
-// GET: /amenidades/validar/anomalias
-
-// // 7. CRUD BÁSICO POR COMUNIDAD
-// GET: /amenidades/comunidad/:comunidadId
-// POST: /amenidades/comunidad/:comunidadId
-// GET: /amenidades/:id
-// PATCH: /amenidades/:id
-// DELETE: /amenidades/:id
-
-// // 8. RESERVAS DE AMENIDADES
-// GET: /amenidades/:id/reservas
-// POST: /amenidades/:id/reservas

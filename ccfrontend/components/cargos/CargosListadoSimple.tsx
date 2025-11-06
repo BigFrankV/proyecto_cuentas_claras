@@ -1,50 +1,40 @@
 import Link from 'next/link';
 import React, { useState, useEffect, useMemo } from 'react';
 
-import { cargosApi } from '../../lib/api/cargos';
-import { Cargo } from '../../types/cargos';
+import { useCargos } from '@/hooks/useCargos';
+import { Cargo } from '@/types/cargos';
 
-interface CargosListadoProps {
-  comunidadId?: string;
-}
-
-const CargosListado: React.FC<CargosListadoProps> = ({ comunidadId }) => {
-  const [charges, setCharges] = useState<Cargo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const CargosListadoSimple: React.FC = () => {
+  const [cargos, setCargos] = useState<Cargo[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('todos');
 
-  // Cargar datos de la API
+  const { listarCargos, loading, error } = useCargos();
+
+  // Cargar cargos al montar el componente
   useEffect(() => {
-    const loadCharges = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    cargarCargos();
+  }, []);
 
-        let data: Cargo[];
-        if (comunidadId) {
-          const id = parseInt(comunidadId, 10);
-          if (!isNaN(id)) {
-            data = await cargosApi.getByComunidad(id);
-          } else {
-            data = [];
-          }
-        } else {
-          // Si no hay comunidadId, podríamos cargar todos los cargos o mostrar un mensaje
-          data = [];
-        }
+  // Cargar cargos con filtro de estado
+  useEffect(() => {
+    cargarCargos();
+  }, [selectedStatus]);
 
-        setCharges(data);
-      } catch {
-        setError('Error al cargar los cargos. Por favor, intenta de nuevo.');
-      } finally {
-        setLoading(false);
+  const cargarCargos = async () => {
+    try {
+      const filters: any = {};
+
+      if (selectedStatus !== 'todos') {
+        filters.estado = selectedStatus;
       }
-    };
 
-    loadCharges();
-  }, [comunidadId]);
+      const data = await listarCargos(filters);
+      setCargos(data);
+    } catch {
+      // Error ya manejado por el hook
+    }
+  };
 
   // Formatear moneda
   const formatCurrency = (value: number) => {
@@ -56,86 +46,69 @@ const CargosListado: React.FC<CargosListadoProps> = ({ comunidadId }) => {
   };
 
   // Formatear fecha
-  const formatDate = (dateString: string | Date) => {
-    const date =
-      typeof dateString === 'string' ? new Date(dateString) : dateString;
-    return date.toLocaleDateString('es-CO', {
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-    });
+    }).format(date);
+  };
+
+  // Obtener clase de estado
+  const getStatusClass = (estado: string) => {
+    switch (estado) {
+      case 'pagado':
+        return 'bg-success';
+      case 'pendiente':
+        return 'bg-warning';
+      case 'vencido':
+        return 'bg-danger';
+      case 'parcial':
+        return 'bg-info';
+      default:
+        return 'bg-secondary';
+    }
   };
 
   // Obtener texto del estado
-  const getStatusText = (status: string) => {
+  const getStatusText = (estado: string) => {
     const statusMap: Record<string, string> = {
       pendiente: 'Pendiente',
       pagado: 'Pagado',
       vencido: 'Vencido',
       parcial: 'Parcial',
     };
-    return statusMap[status] || status;
+    return statusMap[estado] || estado;
   };
 
-  // Obtener texto del tipo
-  const getTypeText = (type: string) => {
-    const typeMap: Record<string, string> = {
-      Administración: 'Administración',
-      extraordinaria: 'Extraordinaria',
-      multa: 'Multa',
-      interes: 'Interés',
-      Mantenimiento: 'Mantenimiento',
-      Servicio: 'Servicio',
-      Seguro: 'Seguro',
-      Otro: 'Otro',
-    };
-    return typeMap[type] || type;
-  };
+  // Filtrar cargos por búsqueda
+  const filteredCargos = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return cargos;
+    }
 
-  // Filtrar cargos
-  const filteredCharges = useMemo(() => {
-    return charges.filter(charge => {
-      const matchesSearch =
-        charge.concepto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        charge.unidad.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        charge.id.toString().includes(searchTerm);
+    const term = searchTerm.toLowerCase();
+    return cargos.filter(
+      cargo =>
+        cargo.concepto.toLowerCase().includes(term) ||
+        cargo.unidad.toLowerCase().includes(term) ||
+        cargo.id.toString().includes(term) ||
+        (cargo.propietario?.toLowerCase().includes(term) || false),
+    );
+  }, [cargos, searchTerm]);
 
-      const matchesStatus =
-        selectedStatus === 'all' || charge.estado === selectedStatus;
-
-      return matchesSearch && matchesStatus;
-    });
-  }, [charges, searchTerm, selectedStatus]);
-
-  // Estadísticas
+  // Calcular estadísticas
   const stats = useMemo(() => {
     return {
-      total: charges.length,
-      pending: charges.filter(c => c.estado === 'pendiente').length,
-      paid: charges.filter(c => c.estado === 'pagado').length,
-      overdue: charges.filter(c => {
-        const dueDate =
-          c.fechaVencimiento instanceof Date
-            ? c.fechaVencimiento
-            : new Date(c.fechaVencimiento);
-        const today = new Date();
-        return c.estado === 'pendiente' && dueDate < today;
-      }).length,
+      total: cargos.length,
+      pendientes: cargos.filter(c => c.estado === 'pendiente').length,
+      pagados: cargos.filter(c => c.estado === 'pagado').length,
+      vencidos: cargos.filter(c => c.estado === 'vencido').length,
+      parciales: cargos.filter(c => c.estado === 'parcial').length,
+      montoTotal: cargos.reduce((sum, c) => sum + c.monto, 0),
+      saldoTotal: cargos.reduce((sum, c) => sum + c.saldo, 0),
     };
-  }, [charges]);
-
-  // Función para marcar como pagado
-  const handleMarkAsPaid = async (chargeId: number) => {
-    try {
-      // Aquí podríamos implementar la lógica para marcar como pagado
-      // Por ahora solo mostramos un mensaje
-      alert(
-        `Funcionalidad para marcar como pagado el cargo ${chargeId} próximamente disponible`,
-      );
-    } catch {
-      // Error handling sin console
-    }
-  };
+  }, [cargos]);
 
   if (loading) {
     return (
@@ -150,236 +123,216 @@ const CargosListado: React.FC<CargosListadoProps> = ({ comunidadId }) => {
     );
   }
 
-  if (error) {
-    return (
-      <div className='container-fluid py-4'>
-        <div className='alert alert-danger' role='alert'>
-          <h4 className='alert-heading'>Error</h4>
-          <p>{error}</p>
-          <button
-            className='btn btn-outline-danger'
-            onClick={() => window.location.reload()}
-          >
-            Reintentar
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className='container-fluid py-4'>
-      {/* Header con estadísticas */}
-      <div className='charges-header mb-4'>
-        <h1 className='charges-title'>Gestión de Cargos</h1>
-        <p className='charges-subtitle'>
-          Administra y da seguimiento a todos los cargos de la comunidad
-        </p>
+      {/* Error Alert */}
+      {error && (
+        <div className='alert alert-danger alert-dismissible fade show' role='alert'>
+          <i className='material-icons me-2'>error</i>
+          <strong>Error:</strong> {error}
+          <button
+            type='button'
+            className='btn-close'
+            onClick={() => cargarCargos()}
+            title='Reintentar'
+          />
+        </div>
+      )}
 
-        <div className='charges-stats'>
-          <div className='stat-item'>
-            <div className='stat-number'>{stats.total}</div>
-            <div className='stat-label'>Total</div>
+      {/* Header */}
+      <div className='mb-4'>
+        <div className='d-flex justify-content-between align-items-center mb-3'>
+          <h2 className='mb-0'>Gestión de Cargos</h2>
+          <Link href='/cargos/nuevo' className='btn btn-success'>
+            <i className='material-icons me-2'>add</i>
+            Nuevo Cargo
+          </Link>
+        </div>
+        <p className='text-muted mb-0'>
+          Administra y da seguimiento a todos los cargos
+        </p>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className='row mb-4'>
+        <div className='col-md-3'>
+          <div className='card text-center'>
+            <div className='card-body'>
+              <h5 className='card-title text-muted mb-2'>Total Cargos</h5>
+              <h2 className='mb-0'>{stats.total}</h2>
+              <small className='text-muted'>
+                {formatCurrency(stats.montoTotal)}
+              </small>
+            </div>
           </div>
-          <div className='stat-item'>
-            <div className='stat-number'>{stats.pending}</div>
-            <div className='stat-label'>Pendientes</div>
+        </div>
+        <div className='col-md-3'>
+          <div className='card text-center border-warning'>
+            <div className='card-body'>
+              <h5 className='card-title text-warning mb-2'>Pendientes</h5>
+              <h2 className='text-warning mb-0'>{stats.pendientes}</h2>
+              <small className='text-muted'>Por cobrar</small>
+            </div>
           </div>
-          <div className='stat-item'>
-            <div className='stat-number'>{stats.paid}</div>
-            <div className='stat-label'>Pagados</div>
+        </div>
+        <div className='col-md-3'>
+          <div className='card text-center border-success'>
+            <div className='card-body'>
+              <h5 className='card-title text-success mb-2'>Pagados</h5>
+              <h2 className='text-success mb-0'>{stats.pagados}</h2>
+              <small className='text-muted'>Completado</small>
+            </div>
           </div>
-          <div className='stat-item'>
-            <div className='stat-number'>{stats.overdue}</div>
-            <div className='stat-label'>Vencidos</div>
+        </div>
+        <div className='col-md-3'>
+          <div className='card text-center border-danger'>
+            <div className='card-body'>
+              <h5 className='card-title text-danger mb-2'>Vencidos</h5>
+              <h2 className='text-danger mb-0'>{stats.vencidos}</h2>
+              <small className='text-muted'>Requieren atención</small>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className='filters-card mb-4'>
-        <div className='row g-3'>
-          <div className='col-md-6'>
-            <div className='search-bar'>
+      {/* Filters */}
+      <div className='card mb-4'>
+        <div className='card-body'>
+          <div className='row g-3'>
+            <div className='col-md-6'>
+              <label className='form-label'>Buscar</label>
               <input
                 type='text'
-                className='form-control search-input'
-                placeholder='Buscar por concepto, unidad o ID...'
+                className='form-control'
+                placeholder='Concepto, unidad, ID o propietario...'
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
-          </div>
-          <div className='col-md-4'>
-            <select
-              className='form-select'
-              value={selectedStatus}
-              onChange={e => setSelectedStatus(e.target.value)}
-            >
-              <option value='all'>Todos los estados</option>
-              <option value='pendiente'>Pendiente</option>
-              <option value='pagado'>Pagado</option>
-              <option value='vencido'>Vencido</option>
-              <option value='parcial'>Parcial</option>
-            </select>
-          </div>
-          <div className='col-md-2'>
-            <button
-              className='btn btn-outline-secondary w-100'
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedStatus('all');
-              }}
-            >
-              Limpiar
-            </button>
+            <div className='col-md-4'>
+              <label className='form-label'>Estado</label>
+              <select
+                className='form-select'
+                value={selectedStatus}
+                onChange={e => setSelectedStatus(e.target.value)}
+              >
+                <option value='todos'>Todos los estados</option>
+                <option value='pendiente'>Pendiente</option>
+                <option value='pagado'>Pagado</option>
+                <option value='vencido'>Vencido</option>
+                <option value='parcial'>Parcial</option>
+              </select>
+            </div>
+            <div className='col-md-2 d-flex align-items-end'>
+              <button
+                className='btn btn-outline-secondary w-100'
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedStatus('todos');
+                }}
+              >
+                Limpiar
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Acciones principales */}
-      <div className='d-flex justify-content-between align-items-center mb-3'>
-        <div></div>
-        <div>
-          <Link href='/cargos/nuevo' className='btn btn-success'>
-            ➕ Nuevo Cargo
-          </Link>
-        </div>
-      </div>
-
-      {/* Tabla de cargos */}
-      <div className='charges-table'>
-        <div className='table-header'>
-          <h4 className='table-title mb-0'>Lista de Cargos</h4>
-          <div className='table-info'>
-            Mostrando {filteredCharges.length} de {charges.length} cargos
-          </div>
-        </div>
-
-        {filteredCharges.length === 0 ? (
-          <div className='empty-state'>
-            <div className='empty-state-icon'>📋</div>
-            <h5 className='empty-state-title'>
-              {charges.length === 0
+      {/* Table */}
+      {filteredCargos.length === 0 ? (
+        <div className='card'>
+          <div className='card-body text-center py-5'>
+            <i className='material-icons' style={{ fontSize: '48px' }}>
+              event_note
+            </i>
+            <h5 className='mt-3'>
+              {cargos.length === 0
                 ? 'No hay cargos registrados'
                 : 'No se encontraron cargos'}
             </h5>
-            <p className='empty-state-description mb-0'>
-              {charges.length === 0
-                ? 'Comienza creando tu primer cargo.'
-                : 'No hay cargos que coincidan con los filtros seleccionados.'}
+            <p className='text-muted mb-0'>
+              {cargos.length === 0
+                ? 'Comienza creando un nuevo cargo.'
+                : 'No hay cargos que coincidan con los filtros.'}
             </p>
-            {charges.length === 0 && (
-              <Link href='/cargos/nuevo' className='btn btn-success mt-3'>
-                Crear primer cargo
-              </Link>
-            )}
           </div>
-        ) : (
+        </div>
+      ) : (
+        <div className='card'>
           <div className='table-responsive'>
-            <table className='table custom-table mb-0'>
-              <thead>
+            <table className='table table-hover mb-0'>
+              <thead className='table-light'>
                 <tr>
-                  <th>ID</th>
+                  <th style={{ width: '60px' }}>ID</th>
                   <th>Concepto</th>
                   <th>Tipo</th>
                   <th>Unidad</th>
                   <th>Monto</th>
+                  <th>Saldo</th>
                   <th>Vencimiento</th>
                   <th>Estado</th>
-                  <th>Acciones</th>
+                  <th style={{ width: '100px' }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredCharges.map(charge => (
-                  <tr key={charge.id}>
+                {filteredCargos.map(cargo => (
+                  <tr key={cargo.id}>
                     <td>
-                      <span className='charge-id'>{charge.id}</span>
+                      <span className='badge bg-secondary'>{cargo.id}</span>
                     </td>
                     <td>
                       <div>
-                        <strong>{charge.concepto}</strong>
-                        {charge.descripcion && (
-                          <small className='text-muted d-block'>
-                            {charge.descripcion}
-                          </small>
+                        <strong>{cargo.concepto}</strong>
+                        {cargo.descripcion && (
+                          <div className='small text-muted'>
+                            {cargo.descripcion}
+                          </div>
                         )}
                       </div>
                     </td>
+                    <td>
+                      <small className='text-muted'>{cargo.tipo}</small>
+                    </td>
+                    <td>
+                      <strong>{cargo.unidad}</strong>
+                    </td>
+                    <td>{formatCurrency(cargo.monto)}</td>
+                    <td>
+                      {cargo.saldo > 0 ? (
+                        <span className='text-danger'>
+                          {formatCurrency(cargo.saldo)}
+                        </span>
+                      ) : (
+                        <span className='text-success'>$0</span>
+                      )}
+                    </td>
+                    <td>{formatDate(cargo.fechaVencimiento)}</td>
                     <td>
                       <span
-                        className={`charge-type ${charge.tipo.toLowerCase()}`}
+                        className={`badge ${getStatusClass(cargo.estado)}`}
                       >
-                        {getTypeText(charge.tipo)}
+                        {getStatusText(cargo.estado)}
                       </span>
                     </td>
                     <td>
-                      <span className='fw-bold'>{charge.unidad}</span>
-                    </td>
-                    <td>
-                      <div
-                        className={`amount-cell ${
-                          charge.estado === 'pagado' ? 'positive' : 'pending'
-                        }`}
-                      >
-                        <div>{formatCurrency(charge.monto)}</div>
-                        {charge.montoAplicado &&
-                          charge.montoAplicado !== charge.monto && (
-                            <small className='text-muted'>
-                              Aplicado: {formatCurrency(charge.montoAplicado)}
-                            </small>
-                          )}
-                      </div>
-                    </td>
-                    <td>
-                      <div>
-                        {formatDate(charge.fechaVencimiento)}
-                        {(() => {
-                          const dueDate =
-                            charge.fechaVencimiento instanceof Date
-                              ? charge.fechaVencimiento
-                              : new Date(charge.fechaVencimiento);
-                          const today = new Date();
-                          return (
-                            dueDate < today && charge.estado === 'pendiente'
-                          );
-                        })() && (
-                          <small className='text-danger d-block'>
-                            ⚠️ Vencido
-                          </small>
-                        )}
-                      </div>
-                    </td>
-                    <td>
-                      <span className={`status-badge ${charge.estado}`}>
-                        {getStatusText(charge.estado)}
-                      </span>
-                    </td>
-                    <td>
-                      <div className='d-flex gap-1'>
-                        <a
-                          href={`/cargos/${charge.id}`}
-                          className='btn btn-primary btn-sm'
+                      <div className='btn-group btn-group-sm'>
+                        <Link
+                          href={`/cargos/${cargo.id}`}
+                          className='btn btn-outline-primary'
                           title='Ver detalles'
                         >
-                          👁️
-                        </a>
-                        <a
-                          href={`/cargos/editar/${charge.id}`}
-                          className='btn btn-outline-secondary btn-sm'
-                          title='Editar'
+                          <i className='material-icons' style={{ fontSize: '16px' }}>
+                            visibility
+                          </i>
+                        </Link>
+                        <button
+                          className='btn btn-outline-secondary'
+                          title='Más opciones'
                         >
-                          ✏️
-                        </a>
-                        {charge.estado !== 'pagado' && (
-                          <button
-                            className='btn btn-success btn-sm'
-                            title='Marcar como pagado'
-                            onClick={() => handleMarkAsPaid(charge.id)}
-                          >
-                            💳
-                          </button>
-                        )}
+                          <i className='material-icons' style={{ fontSize: '16px' }}>
+                            more_vert
+                          </i>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -387,10 +340,22 @@ const CargosListado: React.FC<CargosListadoProps> = ({ comunidadId }) => {
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Results Info */}
+      {filteredCargos.length > 0 && (
+        <div className='mt-3 text-muted small'>
+          Mostrando {filteredCargos.length} de {cargos.length} cargos
+          {stats.saldoTotal > 0 && (
+            <>
+              • Saldo total: <strong>{formatCurrency(stats.saldoTotal)}</strong>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-export default CargosListado;
+export default CargosListadoSimple;

@@ -36,6 +36,21 @@ export async function getMedidor(id: number): Promise<Medidor> {
   return resp.data as Medidor;
 }
 
+export async function createMedidor(
+  data: Partial<Medidor>,
+): Promise<Medidor> {
+  const resp = await apiClient.post('/medidores', data);
+  return resp.data as Medidor;
+}
+
+export async function updateMedidor(
+  id: number,
+  data: Partial<Medidor>,
+): Promise<Medidor> {
+  const resp = await apiClient.put(`/medidores/${id}`, data);
+  return resp.data as Medidor;
+}
+
 export async function deleteMedidor(id: number): Promise<any> {
   const resp = await apiClient.delete(`/medidores/${id}`);
   return resp.data;

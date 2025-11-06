@@ -58,7 +58,7 @@ interface ConsumptionData {
   pressure?: number;
 }
 
-interface Alert {
+interface ConsumptionAlert {
   id: number;
   type: 'high' | 'low' | 'anomaly' | 'leak' | 'pressure';
   title: string;
@@ -89,7 +89,7 @@ export default function ConsumosMedidor() {
   const [loading, setLoading] = useState(true);
   const [meter, setMeter] = useState<Meter | null>(null);
   const [consumptionData, setConsumptionData] = useState<ConsumptionData[]>([]);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alerts, setAlerts] = useState<ConsumptionAlert[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState('year');
   const [selectedView, setSelectedView] = useState('chart');
   const [showAnomalyDetails, setShowAnomalyDetails] = useState(false);
@@ -128,7 +128,7 @@ export default function ConsumosMedidor() {
       );
 
       // Simular alertas
-      const mockAlerts: Alert[] = [
+      const mockAlerts: ConsumptionAlert[] = [
         {
           id: 1,
           type: 'high',

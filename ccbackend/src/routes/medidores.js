@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
-const { authorize } = require('../middleware/authorize'); // <-- añadir import
+const { authorize } = require('../middleware/authorize');
 
 /**
  * @swagger
@@ -451,5 +452,276 @@ router.get('/', authenticate, async (req, res) => {
     res.status(500).json({ error: 'Error al listar medidores' });
   }
 });
+
+// =========================================
+// CRUD OPERATIONS - POST/PUT
+// =========================================
+
+/**
+ * @swagger
+ * /medidores:
+ *   post:
+ *     tags: [Medidores]
+ *     summary: Crear nuevo medidor
+ *     description: Crea un nuevo medidor para una unidad
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [unidad_id, tipo, numero_medidor]
+ *             properties:
+ *               unidad_id:
+ *                 type: integer
+ *                 description: ID de la unidad
+ *               tipo:
+ *                 type: string
+ *                 enum: [agua, gas, electricidad, otro]
+ *                 description: Tipo de medidor
+ *               numero_medidor:
+ *                 type: string
+ *                 description: Número único del medidor
+ *               serial_number:
+ *                 type: string
+ *                 description: Número de serie
+ *               marca:
+ *                 type: string
+ *                 description: Marca del medidor
+ *               modelo:
+ *                 type: string
+ *                 description: Modelo del medidor
+ *               ubicacion:
+ *                 type: string
+ *                 description: Ubicación del medidor
+ *     responses:
+ *       201:
+ *         description: Medidor creado exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       409:
+ *         description: Medidor duplicado
+ *       500:
+ *         description: Error servidor
+ */
+router.post(
+  '/',
+  [
+    authenticate,
+    authorize('superadmin', 'admin_comunidad', 'administrador'),
+    body('unidad_id').isInt({ min: 1 }).withMessage('unidad_id requerido'),
+    body('tipo')
+      .isIn(['agua', 'gas', 'electricidad', 'otro'])
+      .withMessage('tipo inválido'),
+    body('numero_medidor')
+      .notEmpty()
+      .withMessage('numero_medidor requerido')
+      .trim(),
+    body('serial_number').optional().trim(),
+    body('marca').optional().trim(),
+    body('modelo').optional().trim(),
+    body('ubicacion').optional().trim(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const {
+        unidad_id,
+        tipo,
+        numero_medidor,
+        serial_number,
+        marca,
+        modelo,
+        ubicacion,
+      } = req.body;
+
+      // Verificar que la unidad existe
+      const [unidad] = await db.query('SELECT id, comunidad_id FROM unidad WHERE id = ?', [
+        unidad_id,
+      ]);
+      if (!unidad.length) {
+        return res.status(404).json({ error: 'Unidad no encontrada' });
+      }
+
+      // Verificar que no exista un medidor con el mismo número
+      const [duplicate] = await db.query(
+        'SELECT id FROM medidor WHERE numero_medidor = ? AND unidad_id = ?',
+        [numero_medidor, unidad_id]
+      );
+      if (duplicate.length) {
+        return res
+          .status(409)
+          .json({ error: 'Ya existe un medidor con ese número en esta unidad' });
+      }
+
+      // Insertar medidor
+      const [result] = await db.query(
+        `INSERT INTO medidor (unidad_id, tipo, numero_medidor, serial_number, marca, modelo, ubicacion, activo)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
+        [unidad_id, tipo, numero_medidor, serial_number || null, marca || null, modelo || null, ubicacion || null]
+      );
+
+      // Obtener el medidor creado
+      const [medidor] = await db.query('SELECT * FROM medidor WHERE id = ?', [
+        result.insertId,
+      ]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address)
+         VALUES (?, 'INSERT', 'medidor', ?, ?, ?)`,
+        [req.user.id, result.insertId, JSON.stringify(medidor[0]), req.ip]
+      );
+
+      res.status(201).json(medidor[0]);
+    } catch (err) {
+      console.error('Error al crear medidor:', err);
+      res.status(500).json({ error: 'Error al crear medidor' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /medidores/{id}:
+ *   put:
+ *     tags: [Medidores]
+ *     summary: Actualizar medidor existente
+ *     description: Actualiza los datos de un medidor existente
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               serial_number:
+ *                 type: string
+ *               marca:
+ *                 type: string
+ *               modelo:
+ *                 type: string
+ *               ubicacion:
+ *                 type: string
+ *               numero_medidor:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Medidor actualizado exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Medidor no encontrado
+ *       500:
+ *         description: Error servidor
+ */
+router.put(
+  '/:id',
+  [
+    authenticate,
+    authorize('superadmin', 'admin_comunidad', 'administrador'),
+    body('serial_number').optional().trim(),
+    body('marca').optional().trim(),
+    body('modelo').optional().trim(),
+    body('ubicacion').optional().trim(),
+    body('numero_medidor').optional().trim(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const medidorId = Number(req.params.id);
+
+      // Obtener medidor anterior
+      const [medidorAnterior] = await db.query('SELECT * FROM medidor WHERE id = ?', [
+        medidorId,
+      ]);
+      if (!medidorAnterior.length) {
+        return res.status(404).json({ error: 'Medidor no encontrado' });
+      }
+
+      // Preparar actualización
+      const campos = [];
+      const valores = [];
+
+      if (req.body.serial_number !== undefined) {
+        campos.push('serial_number = ?');
+        valores.push(req.body.serial_number || null);
+      }
+      if (req.body.marca !== undefined) {
+        campos.push('marca = ?');
+        valores.push(req.body.marca || null);
+      }
+      if (req.body.modelo !== undefined) {
+        campos.push('modelo = ?');
+        valores.push(req.body.modelo || null);
+      }
+      if (req.body.ubicacion !== undefined) {
+        campos.push('ubicacion = ?');
+        valores.push(req.body.ubicacion || null);
+      }
+      if (req.body.numero_medidor !== undefined) {
+        campos.push('numero_medidor = ?');
+        valores.push(req.body.numero_medidor);
+      }
+
+      if (campos.length === 0) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
+      }
+
+      valores.push(medidorId);
+
+      // Ejecutar actualización
+      await db.query(
+        `UPDATE medidor SET ${campos.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        valores
+      );
+
+      // Obtener medidor actualizado
+      const [medidorActualizado] = await db.query('SELECT * FROM medidor WHERE id = ?', [
+        medidorId,
+      ]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address)
+         VALUES (?, 'UPDATE', 'medidor', ?, ?, ?, ?)`,
+        [
+          req.user.id,
+          medidorId,
+          JSON.stringify(medidorAnterior[0]),
+          JSON.stringify(medidorActualizado[0]),
+          req.ip,
+        ]
+      );
+
+      res.json(medidorActualizado[0]);
+    } catch (err) {
+      console.error('Error al actualizar medidor:', err);
+      res.status(500).json({ error: 'Error al actualizar medidor' });
+    }
+  }
+);
 
 module.exports = router;

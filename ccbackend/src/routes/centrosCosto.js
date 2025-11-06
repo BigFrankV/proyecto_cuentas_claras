@@ -1405,54 +1405,336 @@ router.get(
   }
 );
 
+// =========================================
+// CRUD OPERATIONS - POST/PUT/DELETE
+// =========================================
+
+/**
+ * @swagger
+ * /centros-costo/comunidad/{comunidadId}:
+ *   post:
+ *     tags: [Centros de Costo]
+ *     summary: Crear nuevo centro de costo
+ *     description: Crea un nuevo centro de costo para la comunidad especificada
+ *     parameters:
+ *       - name: comunidadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [nombre, codigo]
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 description: Nombre del centro de costo
+ *               codigo:
+ *                 type: string
+ *                 description: Código único del centro de costo
+ *               descripcion:
+ *                 type: string
+ *                 description: Descripción detallada
+ *               presupuesto:
+ *                 type: number
+ *                 description: Presupuesto asignado
+ *     responses:
+ *       201:
+ *         description: Centro de costo creado exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       409:
+ *         description: Centro de costo duplicado
+ *       500:
+ *         description: Error servidor
+ */
+router.post(
+  '/comunidad/:comunidadId',
+  [
+    authenticate,
+    authorize('superadmin', 'admin_comunidad', 'tesorero'),
+    requireCommunity('comunidadId'),
+    body('nombre')
+      .notEmpty()
+      .withMessage('Nombre es requerido')
+      .trim()
+      .escape(),
+    body('codigo')
+      .notEmpty()
+      .withMessage('Código es requerido')
+      .trim()
+      .escape(),
+    body('descripcion').optional().trim(),
+    body('presupuesto').optional().isFloat({ min: 0 }).toFloat(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { nombre, codigo, descripcion, presupuesto } = req.body;
+
+      // Verificar que la comunidad existe
+      const [comunidad] = await db.query('SELECT id FROM comunidad WHERE id = ?', [
+        comunidadId,
+      ]);
+      if (!comunidad.length) {
+        return res.status(404).json({ error: 'Comunidad no encontrada' });
+      }
+
+      // Verificar que no exista un centro con el mismo código
+      const [duplicate] = await db.query(
+        'SELECT id FROM centro_costo WHERE comunidad_id = ? AND codigo = ?',
+        [comunidadId, codigo]
+      );
+      if (duplicate.length) {
+        return res
+          .status(409)
+          .json({ error: 'Ya existe un centro de costo con ese código' });
+      }
+
+      // Insertar centro de costo
+      const [result] = await db.query(
+        `INSERT INTO centro_costo (comunidad_id, nombre, codigo, descripcion, presupuesto)
+         VALUES (?, ?, ?, ?, ?)`,
+        [comunidadId, nombre, codigo, descripcion || null, presupuesto || 0]
+      );
+
+      // Obtener el centro creado
+      const [centroCosto] = await db.query(
+        'SELECT * FROM centro_costo WHERE id = ?',
+        [result.insertId]
+      );
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address)
+         VALUES (?, 'INSERT', 'centro_costo', ?, ?, ?)`,
+        [req.user.id, result.insertId, JSON.stringify(centroCosto[0]), req.ip]
+      );
+
+      res.status(201).json(centroCosto[0]);
+    } catch (err) {
+      console.error('Error al crear centro de costo:', err);
+      res.status(500).json({ error: 'Error al crear centro de costo' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /centros-costo/{id}:
+ *   put:
+ *     tags: [Centros de Costo]
+ *     summary: Actualizar centro de costo existente
+ *     description: Actualiza los datos de un centro de costo existente
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *               codigo:
+ *                 type: string
+ *               descripcion:
+ *                 type: string
+ *               presupuesto:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Centro de costo actualizado exitosamente
+ *       400:
+ *         description: Validación fallida
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Centro de costo no encontrado
+ *       500:
+ *         description: Error servidor
+ */
+router.put(
+  '/:id',
+  [
+    authenticate,
+    authorize('superadmin', 'admin_comunidad', 'tesorero'),
+    body('nombre').optional().trim().escape(),
+    body('codigo').optional().trim().escape(),
+    body('descripcion').optional().trim(),
+    body('presupuesto').optional().isFloat({ min: 0 }).toFloat(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const centroCostoId = Number(req.params.id);
+
+      // Obtener centro anterior para auditoría
+      const [centroCostoAnterior] = await db.query(
+        'SELECT * FROM centro_costo WHERE id = ?',
+        [centroCostoId]
+      );
+      if (!centroCostoAnterior.length) {
+        return res.status(404).json({ error: 'Centro de costo no encontrado' });
+      }
+
+      // Preparar actualización
+      const campos = [];
+      const valores = [];
+
+      if (req.body.nombre !== undefined) {
+        campos.push('nombre = ?');
+        valores.push(req.body.nombre);
+      }
+      if (req.body.codigo !== undefined) {
+        campos.push('codigo = ?');
+        valores.push(req.body.codigo);
+      }
+      if (req.body.descripcion !== undefined) {
+        campos.push('descripcion = ?');
+        valores.push(req.body.descripcion || null);
+      }
+      if (req.body.presupuesto !== undefined) {
+        campos.push('presupuesto = ?');
+        valores.push(req.body.presupuesto);
+      }
+
+      if (campos.length === 0) {
+        return res.status(400).json({ error: 'No hay campos para actualizar' });
+      }
+
+      valores.push(centroCostoId);
+
+      // Ejecutar actualización
+      await db.query(
+        `UPDATE centro_costo SET ${campos.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        valores
+      );
+
+      // Obtener registro actualizado
+      const [centroCostoActualizado] = await db.query(
+        'SELECT * FROM centro_costo WHERE id = ?',
+        [centroCostoId]
+      );
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address)
+         VALUES (?, 'UPDATE', 'centro_costo', ?, ?, ?, ?)`,
+        [
+          req.user.id,
+          centroCostoId,
+          JSON.stringify(centroCostoAnterior[0]),
+          JSON.stringify(centroCostoActualizado[0]),
+          req.ip,
+        ]
+      );
+
+      res.json(centroCostoActualizado[0]);
+    } catch (err) {
+      console.error('Error al actualizar centro de costo:', err);
+      res.status(500).json({ error: 'Error al actualizar centro de costo' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /centros-costo/{id}:
+ *   delete:
+ *     tags: [Centros de Costo]
+ *     summary: Eliminar centro de costo
+ *     description: Elimina un centro de costo verificando que no tenga gastos asociados
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Centro de costo eliminado exitosamente
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Centro de costo no encontrado
+ *       409:
+ *         description: Centro de costo tiene gastos asociados
+ *       500:
+ *         description: Error servidor
+ */
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('superadmin', 'admin_comunidad'),
+  async (req, res) => {
+    try {
+      const centroCostoId = Number(req.params.id);
+
+      // Obtener centro a eliminar
+      const [centroCosto] = await db.query(
+        'SELECT * FROM centro_costo WHERE id = ?',
+        [centroCostoId]
+      );
+      if (!centroCosto.length) {
+        return res.status(404).json({ error: 'Centro de costo no encontrado' });
+      }
+
+      // Verificar si tiene gastos asociados
+      const [gastosAsociados] = await db.query(
+        'SELECT COUNT(*) as total FROM gasto WHERE centro_costo_id = ?',
+        [centroCostoId]
+      );
+
+      if (gastosAsociados[0].total > 0) {
+        return res.status(409).json({
+          error:
+            'No se puede eliminar un centro de costo que tiene gastos asociados',
+        });
+      }
+
+      // Realizar eliminación
+      await db.query('DELETE FROM centro_costo WHERE id = ?', [centroCostoId]);
+
+      // Registrar en auditoría
+      await db.query(
+        `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, ip_address)
+         VALUES (?, 'DELETE', 'centro_costo', ?, ?, ?)`,
+        [req.user.id, centroCostoId, JSON.stringify(centroCosto[0]), req.ip]
+      );
+
+      res.status(204).end();
+    } catch (err) {
+      console.error('Error al eliminar centro de costo:', err);
+      res.status(500).json({ error: 'Error al eliminar centro de costo' });
+    }
+  }
+);
+
 module.exports = router;
-
-// =========================================
-// ENDPOINTS DE CENTROS DE COSTO
-// =========================================
-
-// // 1. LISTADO CON FILTROS Y PAGINACIÓN
-// GET: /centros-costo/comunidad/:comunidadId
-// GET: /centros-costo/comunidad/:comunidadId/filtrar
-
-// // 2. DETALLE DE CENTRO DE COSTO ESPECÍFICO
-// GET: /centros-costo/:id/detalle
-// GET: /centros-costo/:id/gastos
-// GET: /centros-costo/:id/resumen-mensual
-// GET: /centros-costo/:id
-
-// // 3. OPERACIONES CRUD
-// POST: /centros-costo/comunidad/:comunidadId
-// PATCH: /centros-costo/:id
-// DELETE: /centros-costo/:id
-
-// // 4. ESTADÍSTICAS Y REPORTES
-// GET: /centros-costo/comunidad/:comunidadId/estadisticas/generales
-// GET: /centros-costo/comunidad/:comunidadId/mas-utilizados
-// GET: /centros-costo/comunidad/:comunidadId/mas-costosos
-// GET: /centros-costo/comunidad/:comunidadId/sin-uso
-// GET: /centros-costo/comunidad/:comunidadId/analisis-por-categoria
-
-// // 5. VALIDACIONES
-// GET: /centros-costo/:id/existe
-// GET: /centros-costo/comunidad/:comunidadId/validar-nombre
-// GET: /centros-costo/comunidad/:comunidadId/validar-codigo
-// GET: /centros-costo/:id/tiene-gastos
-
-// // 6. LISTAS DESPLEGABLES
-// GET: /centros-costo/comunidad/:comunidadId/dropdown
-// GET: /centros-costo/comunidad/:comunidadId/con-estadisticas
-
-// // 7. REPORTES AVANZADOS
-// GET: /centros-costo/comunidad/:comunidadId/reporte/por-mes
-// GET: /centros-costo/comunidad/:comunidadId/reporte/comparativo
-// GET: /centros-costo/comunidad/:comunidadId/reporte/variabilidad
-
-// // 8. EXPORTACIÓN
-// GET: /centros-costo/comunidad/:comunidadId/exportar
-
-// // 9. DASHBOARD
-// GET: /centros-costo/comunidad/:comunidadId/dashboard/resumen
-// GET: /centros-costo/comunidad/:comunidadId/dashboard/top-mes
-// GET: /centros-costo/comunidad/:comunidadId/dashboard/sin-uso-reciente
-// GET: /centros-costo/comunidad/:comunidadId/dashboard/distribucion
