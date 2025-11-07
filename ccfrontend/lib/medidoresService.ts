@@ -1,11 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type {
-  Medidor,
-  MedidoresListResponse,
-  Reading,
-} from '@/types/medidores';
-
 import apiClient from './api';
+import http from './httpClient';
+import type { Medidor, MedidoresListResponse, Reading } from '@/types/medidores';
+
 
 export async function listMedidores(
   comunidadId: number | null,
@@ -85,4 +81,36 @@ export async function getConsumos(
     params,
   });
   return resp.data;
+}
+
+const base = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'; // <-- unificado con ConsumosPage
+
+export async function getConsumoMensual(params: Record<string,string>) {
+  const q = new URLSearchParams(params).toString();
+  const res = await http.get(`/consumos/mensual?${q}`);
+  return res.data;
+}
+
+export async function getConsumoTrimestral(params: Record<string,string>) {
+  const q = new URLSearchParams(params).toString();
+  const res = await http.get(`/consumos/trimestral?${q}`);
+  return res.data;
+}
+
+export async function getConsumoSemanal(params: Record<string,string>) {
+  const q = new URLSearchParams(params).toString();
+  const res = await http.get(`/consumos/semanal?${q}`);
+  return res.data;
+}
+
+export async function getConsumoEstadisticas(params: Record<string,string>) {
+  const q = new URLSearchParams(params).toString();
+  const res = await http.get(`/consumos/estadisticas?${q}`);
+  return res.data;
+}
+
+export async function getConsumoDetalle(params: Record<string,string>) {
+  const q = new URLSearchParams(params).toString();
+  const res = await http.get(`/consumos/detalle?${q}`);
+  return res.data;
 }

@@ -1,13 +1,26 @@
 import { Chart, registerables } from 'chart.js';
+import React, { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/router'; // <-- agregado
 import Link from 'next/link';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-
 import Sidebar from '@/components/layout/Sidebar';
+import { useAuth } from '@/lib/useAuth'; // <-- agregado para obtener usuario
+import {
+  getConsumoMensual,
+  getConsumoTrimestral,
+  getConsumoSemanal,
+  getConsumoEstadisticas,
+  getConsumoDetalle,
+  listMedidores, // <-- agregado
+  listAllMedidores, // <-- agregado
+} from '@/lib/medidoresService'; // <-- agregado listMedidores y listAllMedidores
 
 Chart.register(...registerables);
 
 // eslint-disable-next-line no-undef
 export default function ConsumosPage(): JSX.Element {
+  const router = useRouter(); // <-- agregado
+  const { user } = useAuth(); // <-- agregado para obtener usuario
+
   const mainRef = useRef<HTMLCanvasElement | null>(null);
   const monthlyRef = useRef<HTMLCanvasElement | null>(null);
   const weeklyRef = useRef<HTMLCanvasElement | null>(null);
@@ -55,90 +68,91 @@ export default function ConsumosPage(): JSX.Element {
   });
   const [detalleData, setDetalleData] = useState<DetalleItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [medidorId, setMedidorId] = useState(1);
+  const [error, setError] = useState<string | null>(null);
+
+  // ahora el medidor puede hidratarse desde la query ?medidor_id=...
+  const [medidorId, setMedidorId] = useState<number>(1);
   const [periodoInicio, setPeriodoInicio] = useState('2024-01');
   const [periodoFin, setPeriodoFin] = useState('2025-12');
   const [periodoActual, setPeriodoActual] = useState<
     'month' | 'quarter' | 'year'
   >('month');
 
-  // Función para mapear mes YYYY-MM a abreviatura
-  const mapMesToLabel = (mes: string) => {
-    const parts = mes.split('-');
-    if (parts.length !== 2) {
-      return mes;
-    }
-    const year = parts[0];
-    const monthStr = parts[1];
-    if (!monthStr) {
-      return mes;
-    }
-    const month = parseInt(monthStr, 10);
-    const months = [
-      'Ene',
-      'Feb',
-      'Mar',
-      'Abr',
-      'May',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dic',
-    ];
-    return `${months[month - 1] || 'Des'} ${year}`;
-  };
+  // Nuevo estado para lista de medidores
+  const [medidores, setMedidores] = useState<any[]>([]);
+  const [loadingMedidores, setLoadingMedidores] = useState(false);
 
-  // Función para mapear día de semana numérico a nombre
-  const mapDiaSemana = (dia: number) => {
-    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    return dias[dia - 1] || 'Desconocido';
-  };
-
-  // Fetch data from API
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const baseUrl = 'http://localhost:3000/consumos';
-      const params = `medidor_id=${medidorId}&periodo_inicio=${periodoInicio}&periodo_fin=${periodoFin}`;
-      const [
-        mensualRes,
-        trimestralRes,
-        semanalRes,
-        estadisticasRes,
-        detalleRes,
-      ] = await Promise.all([
-        fetch(`${baseUrl}/mensual?${params}`),
-        fetch(`${baseUrl}/trimestral?${params}`),
-        fetch(`${baseUrl}/semanal?medidor_id=${medidorId}`),
-        fetch(`${baseUrl}/estadisticas?${params}`),
-        fetch(`${baseUrl}/detalle?${params}`),
-      ]);
-
-      const mensual: MensualItem[] = await mensualRes.json();
-      const trimestral: TrimestralItem[] = await trimestralRes.json();
-      const semanal: SemanalItem[] = await semanalRes.json();
-      const stats: Estadisticas = await estadisticasRes.json();
-      const detalle: DetalleItem[] = await detalleRes.json();
-
-      setMensualData(mensual);
-      setTrimestralData(trimestral);
-      setSemanalData(semanal);
-      setEstadisticas(stats);
-      setDetalleData(detalle);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [medidorId, periodoInicio, periodoFin]);
-
+  // Fetch medidores dinámicamente basado en rol
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!user) return;
+    let mounted = true;
+    const loadMedidores = async () => {
+      setLoadingMedidores(true);
+      try {
+        let resp;
+        if (user.is_superadmin) {
+          resp = await listAllMedidores({ limit: 100 }); // Obtener todos para superadmin
+        } else {
+          const comunidadId = user.comunidades?.[0]?.id;
+          if (!comunidadId) {
+            setMedidores([]);
+            return;
+          }
+          resp = await listMedidores(comunidadId, { limit: 100 });
+        }
+        if (!mounted) return;
+        setMedidores(resp.data || []);
+        // Si hay medidores y medidorId no está en la lista, setear el primero
+        if (resp.data?.length > 0 && !resp.data.find((m: any) => m.id === medidorId)) {
+          setMedidorId(resp.data[0].id);
+        }
+      } catch (err) {
+        console.error('Error cargando medidores:', err);
+        setError('Error al cargar medidores.');
+      } finally {
+        setLoadingMedidores(false);
+      }
+    };
+    loadMedidores();
+    return () => { mounted = false; };
+  }, [user]);
+
+  // Fetch data from API (dinámico, usa NEXT_PUBLIC_API_BASE_URL o /api)
+  useEffect(() => {
+    if (!medidorId) return;
+    let mounted = true;
+    const periodo_inicio = '2024-01';
+    const periodo_fin = '2025-12';
+    const params = { medidor_id: String(medidorId), periodo_inicio, periodo_fin };
+
+    const load = async () => {
+      setLoading(true); // Añade loading al inicio
+      try {
+        setError(null);
+        const [mensual, trimestral, semanal, estadisticas, detalle] = await Promise.all([
+          getConsumoMensual(params),
+          getConsumoTrimestral(params),
+          getConsumoSemanal(params),
+          getConsumoEstadisticas(params),
+          getConsumoDetalle(params),
+        ]);
+        if (!mounted) return;
+        setMensualData(mensual.data ?? mensual);
+        setTrimestralData(trimestral.data ?? trimestral);
+        setSemanalData(semanal.data ?? semanal);
+        setEstadisticas(estadisticas.data ?? estadisticas);
+        setDetalleData(detalle.data ?? detalle);
+      } catch (err) {
+        console.error('Error fetching consumos:', err);
+        setError('No se pudieron cargar los consumos. Verifica backend.');
+      } finally {
+        setLoading(false); // Añade setLoading(false) aquí
+      }
+    };
+
+    load();
+    return () => { mounted = false; };
+  }, [medidorId]);
 
   useEffect(() => {
     // Try to initialize flatpickr if available (optional)
@@ -308,7 +322,13 @@ export default function ConsumosPage(): JSX.Element {
     if (e) {
       e.preventDefault();
     }
-    fetchData(); // Refetch data with current filters
+    // Llama load() para recargar datos sin recargar página
+    const periodo_inicio = periodoInicio;
+    const periodo_fin = periodoFin;
+    const params = { medidor_id: String(medidorId), periodo_inicio, periodo_fin };
+    // Define load como función global o usa un state para trigger
+    // Por simplicidad, recarga por ahora
+    window.location.reload();
   }
 
   function changePeriodo(periodo: 'month' | 'quarter' | 'year') {
@@ -382,6 +402,29 @@ export default function ConsumosPage(): JSX.Element {
     }
   }
 
+  // Función para mapear mes YYYY-MM a abreviatura
+  const mapMesToLabel = (mes: string) => {
+    const parts = mes.split('-');
+    if (parts.length !== 2) {
+      return mes;
+    }
+    const year = parts[0];
+    const monthStr = parts[1];
+    if (!monthStr) { return mes; }
+    const month = parseInt(monthStr, 10);
+    const months = [
+      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+    ];
+    return `${months[month - 1] || 'Des'} ${year}`;
+  };
+
+  // Función para mapear día de semana numérico a nombre
+  const mapDiaSemana = (dia: number) => {
+    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    return dias[dia - 1] || 'Desconocido';
+  };
+
   return (
     <div className='d-flex'>
       <Sidebar />
@@ -414,12 +457,7 @@ export default function ConsumosPage(): JSX.Element {
                     Volver a Medidores
                   </Link>
                   <div>
-                    <small className='text-muted'>
-                      Medidor seleccionado:{' '}
-                      <strong>
-                        Medidor {String(medidorId).padStart(3, '0')}
-                      </strong>
-                    </small>
+                    <small className="text-muted">Medidor seleccionado: <strong>{medidores.find(m => m.id === medidorId)?.codigo || `Medidor ${String(medidorId).padStart(3, '0')}`}</strong></small>
                   </div>
                 </div>
               </div>
@@ -472,25 +510,27 @@ export default function ConsumosPage(): JSX.Element {
           </div>
         </header>
 
-        <main className='container-fluid p-4'>
-          <div className='row'>
-            <div className='col-12 col-lg-3'>
-              <div className='filter-panel'>
-                <h5 className='mb-3'>
-                  <span className='material-icons me-2'>filter_list</span>
-                  Filtros
-                </h5>
-                <div className='mb-3'>
-                  <label className='form-label'>Medidor</label>
-                  <select
-                    id='meterSelect'
-                    className='form-select'
-                    value={medidorId}
-                    onChange={e => setMedidorId(parseInt(e.target.value, 10))}
-                  >
-                    <option value={1}>Medidor 001</option>
-                    <option value={2}>Medidor 002</option>
-                    <option value={3}>Medidor 003</option>
+        <main className="container-fluid p-4">
+          {error && (
+            <div className="alert alert-danger" role="alert">
+              <strong>Error:</strong> {error}
+            </div>
+          )}
+
+          <div className="row">
+            <div className="col-12 col-lg-3">
+              <div className="filter-panel">
+                <h5 className="mb-3"><span className="material-icons me-2">filter_list</span>Filtros</h5>
+                <div className="mb-3">
+                  <label className="form-label">Medidor</label>
+                  <select id="meterSelect" className="form-select" value={medidorId} onChange={(e) => setMedidorId(parseInt(e.target.value, 10))} disabled={loadingMedidores}>
+                    {loadingMedidores ? (
+                      <option>Cargando...</option>
+                    ) : (
+                      medidores.map(m => (
+                        <option key={m.id} value={m.id}>{m.medidor_codigo || m.codigo || `Medidor ${m.id}`}</option>
+                      ))
+                    )}
                   </select>
                 </div>
                 <div className='mb-3'>
@@ -695,7 +735,7 @@ export default function ConsumosPage(): JSX.Element {
                       {detalleData.map((item, index) => (
                         <tr key={index}>
                           <td>{item.periodo}</td>
-                          <td>Medidor {medidorId}</td>
+                          <td>{medidores.find(m => m.id === medidorId)?.codigo || `Medidor ${medidorId}`}</td>
                           <td>{item.consumo_calculado} m³</td>
                           <td>${item.costo.toFixed(2)}</td>
                           <td>

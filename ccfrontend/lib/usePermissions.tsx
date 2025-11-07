@@ -8,11 +8,13 @@ import { useAuth } from './useAuth';
 export enum UserRole {
   SUPERUSER = 'superuser',
   ADMIN = 'admin',
-  MANAGER = 'manager',
+  CONCIERGE = 'concierge', // Nuevo para conserje
+  ACCOUNTANT = 'accountant', // Nuevo para contador
+  MANAGER = 'manager', // Para tesorero, presidente, proveedor
   USER = 'user',
 }
 
-// Definición de permisos
+// Definición de permisos (añadidos nuevos)
 export enum Permission {
   // Gestión de comunidades
   MANAGE_COMMUNITIES = 'manage_communities',
@@ -33,9 +35,16 @@ export enum Permission {
 
   // Configuración del sistema
   SYSTEM_CONFIG = 'system_config',
+
+  // Nuevos permisos específicos
+  MANAGE_AMENITIES = 'manage_amenities',
+  VIEW_TICKETS = 'view_tickets',
+  CREATE_TICKETS = 'create_tickets',
+  MANAGE_MULTAS = 'manage_multas',
+  VIEW_OWN_MEMBERSHIP = 'view_own_membership',
 }
 
-// Mapa de roles y sus permisos
+// Mapa de roles y sus permisos (actualizado con ajustes)
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   [UserRole.SUPERUSER]: [
     // Superuser tiene todos los permisos
@@ -49,6 +58,11 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_REPORTS,
     Permission.EXPORT_REPORTS,
     Permission.SYSTEM_CONFIG,
+    Permission.MANAGE_AMENITIES,
+    Permission.VIEW_TICKETS,
+    Permission.CREATE_TICKETS,
+    Permission.MANAGE_MULTAS,
+    Permission.VIEW_OWN_MEMBERSHIP,
   ],
   [UserRole.ADMIN]: [
     Permission.MANAGE_COMMUNITIES,
@@ -59,6 +73,19 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_USERS,
     Permission.VIEW_REPORTS,
     Permission.EXPORT_REPORTS,
+    Permission.SYSTEM_CONFIG, // Añadido para config básica
+  ],
+  [UserRole.CONCIERGE]: [
+    Permission.VIEW_COMMUNITIES,
+    Permission.MANAGE_AMENITIES, // Añadido
+    Permission.VIEW_TICKETS, // Añadido
+  ],
+  [UserRole.ACCOUNTANT]: [
+    Permission.VIEW_COMMUNITIES,
+    Permission.VIEW_FINANCES,
+    Permission.APPROVE_PAYMENTS, // Único para contador
+    Permission.VIEW_REPORTS,
+    Permission.EXPORT_REPORTS,
   ],
   [UserRole.MANAGER]: [
     Permission.VIEW_COMMUNITIES,
@@ -66,14 +93,17 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_USERS,
     Permission.VIEW_REPORTS,
   ],
-  [UserRole.USER]: [Permission.VIEW_COMMUNITIES, Permission.VIEW_FINANCES],
+  [UserRole.USER]: [
+    Permission.VIEW_COMMUNITIES,
+    Permission.VIEW_FINANCES,
+  ],
 };
 
-// Hook para manejo de roles y permisos
+// Hook para manejo de roles y permisos (actualizado)
 export function usePermissions() {
   const { user } = useAuth();
 
-  // Determinar el rol del usuario
+  // Determinar el rol del usuario (actualizado con agrupamiento completo)
   const getUserRole = (): UserRole => {
     if (!user) {
       return UserRole.USER;
@@ -86,17 +116,21 @@ export function usePermissions() {
 
     // Si tiene roles específicos, usar el más alto
     if (user.roles && user.roles.length > 0) {
-      const roles = user.roles.map((r: any) => r.toLowerCase()); // ✅ AGREGAR tipo any
+      const roles = user.roles.map((r: any) => r.toLowerCase());
 
-      if (roles.includes('admin')) {
+      if (roles.includes('admin_comunidad')) {
         return UserRole.ADMIN;
       }
-      if (roles.includes('manager') || roles.includes('comite')) {
+      // Agrupar MANAGER: tesorero, presidente_comite, proveedor_servicio
+      if (roles.includes('tesorero') || roles.includes('presidente_comite') || roles.includes('proveedor_servicio')) {
         return UserRole.MANAGER;
       }
-      if (roles.includes('propietario') || roles.includes('residente')) {
+      // Agrupar USER: residente, propietario, inquilino
+      if (roles.includes('residente') || roles.includes('propietario') || roles.includes('inquilino')) {
         return UserRole.USER;
       }
+      if (roles.includes('conserje')) return UserRole.CONCIERGE;
+      if (roles.includes('contador')) return UserRole.ACCOUNTANT;
     }
 
     // Patrick es superuser por defecto (fallback para compatibilidad)
@@ -166,7 +200,7 @@ export function usePermissions() {
     );
   };
 
-  // ✅ MODIFICADO: Verificar permisos con contexto de comunidad
+  // ✅ MODIFICADO: Verificar permisos con contexto de comunidad y checks específicos
   const hasPermission = (
     permission: Permission,
     communityId?: number,
@@ -182,6 +216,25 @@ export function usePermissions() {
     // Si es superadmin, permitir siempre
     if (user?.is_superadmin) {
       return true;
+    }
+
+    // Checks específicos dentro de grupos
+    if (currentRole === UserRole.MANAGER) {
+      if (permission === Permission.APPROVE_PAYMENTS && !user.roles.includes('tesorero')) return false;
+      if (permission === Permission.MANAGE_MULTAS && !user.roles.includes('presidente_comite')) return false;
+      if (permission === Permission.VIEW_TICKETS && !user.roles.includes('proveedor_servicio')) return false;
+    }
+    if (currentRole === UserRole.USER) {
+      if (permission === Permission.CREATE_TICKETS && !user.roles.includes('residente')) return false;
+      if (permission === Permission.VIEW_OWN_MEMBERSHIP && !user.roles.includes('propietario')) return false;
+    }
+
+    // Para ADMIN, limitar MANAGE_COMMUNITIES a comunidades propias
+    if (currentRole === UserRole.ADMIN && permission === Permission.MANAGE_COMMUNITIES) {
+      if (!communityId) {
+        return false; // No permitir gestión global (crear/eliminar)
+      }
+      return hasAccessToCommunity(communityId); // Solo editar si pertenece
     }
 
     // Si no se especifica comunidad, verificar solo el permiso base
@@ -260,6 +313,13 @@ export function usePermissions() {
     canViewReports: hasPermission(Permission.VIEW_REPORTS),
     canExportReports: hasPermission(Permission.EXPORT_REPORTS),
     canConfigureSystem: hasPermission(Permission.SYSTEM_CONFIG),
+
+    // Añadir nuevos permisos en return
+    canManageAmenities: hasPermission(Permission.MANAGE_AMENITIES),
+    canViewTickets: hasPermission(Permission.VIEW_TICKETS),
+    canCreateTickets: hasPermission(Permission.CREATE_TICKETS),
+    canManageMultas: hasPermission(Permission.MANAGE_MULTAS),
+    canViewOwnMembership: hasPermission(Permission.VIEW_OWN_MEMBERSHIP),
   };
 }
 
