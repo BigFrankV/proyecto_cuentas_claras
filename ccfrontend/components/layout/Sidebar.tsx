@@ -117,7 +117,7 @@ export default function Sidebar() {
   // Función para determinar si una sección debe mostrarse (usando permisos)
   const shouldShowSection = (sectionTitle: string) => {
     // Superadmin ve todo
-    if (user?.is_superadmin) return true;
+    if (user?.is_superadmin) {return true;}
 
     // Verificar si al menos un item de la sección tiene permiso
     const section = menuSections.find(s => s.title === sectionTitle);
@@ -241,7 +241,7 @@ export default function Sidebar() {
               // Filtrar items según permisos
               const visibleItems = section.items.filter(item => shouldShowItem(item));
 
-              if (visibleItems.length === 0) return null;
+              if (visibleItems.length === 0) {return null;}
 
               return (
                 <div key={section.title}>

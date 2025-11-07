@@ -1,9 +1,9 @@
 import { Chart, registerables } from 'chart.js';
-import React, { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/router'; // <-- agregado
 import Link from 'next/link';
+import { useRouter } from 'next/router'; // <-- agregado
+import React, { useEffect, useRef, useState } from 'react';
+
 import Sidebar from '@/components/layout/Sidebar';
-import { useAuth } from '@/lib/useAuth'; // <-- agregado para obtener usuario
 import {
   getConsumoMensual,
   getConsumoTrimestral,
@@ -13,6 +13,7 @@ import {
   listMedidores, // <-- agregado
   listAllMedidores, // <-- agregado
 } from '@/lib/medidoresService'; // <-- agregado listMedidores y listAllMedidores
+import { useAuth } from '@/lib/useAuth'; // <-- agregado para obtener usuario
 
 Chart.register(...registerables);
 
@@ -84,7 +85,9 @@ export default function ConsumosPage(): JSX.Element {
 
   // Fetch medidores dinámicamente basado en rol
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      return undefined;
+    }
     let mounted = true;
     const loadMedidores = async () => {
       setLoadingMedidores(true);
@@ -93,20 +96,21 @@ export default function ConsumosPage(): JSX.Element {
         if (user.is_superadmin) {
           resp = await listAllMedidores({ limit: 100 }); // Obtener todos para superadmin
         } else {
-          const comunidadId = user.comunidades?.[0]?.id;
+          const comunidadId = user.comunidad_id;
           if (!comunidadId) {
             setMedidores([]);
             return;
           }
           resp = await listMedidores(comunidadId, { limit: 100 });
         }
-        if (!mounted) return;
+        if (!mounted) {return;}
         setMedidores(resp.data || []);
         // Si hay medidores y medidorId no está en la lista, setear el primero
         if (resp.data?.length > 0 && !resp.data.find((m: any) => m.id === medidorId)) {
           setMedidorId(resp.data[0].id);
         }
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Error cargando medidores:', err);
         setError('Error al cargar medidores.');
       } finally {
@@ -119,7 +123,9 @@ export default function ConsumosPage(): JSX.Element {
 
   // Fetch data from API (dinámico, usa NEXT_PUBLIC_API_BASE_URL o /api)
   useEffect(() => {
-    if (!medidorId) return;
+    if (!medidorId) {
+      return undefined;
+    }
     let mounted = true;
     const periodo_inicio = '2024-01';
     const periodo_fin = '2025-12';
@@ -136,13 +142,14 @@ export default function ConsumosPage(): JSX.Element {
           getConsumoEstadisticas(params),
           getConsumoDetalle(params),
         ]);
-        if (!mounted) return;
+        if (!mounted) {return;}
         setMensualData(mensual.data ?? mensual);
         setTrimestralData(trimestral.data ?? trimestral);
         setSemanalData(semanal.data ?? semanal);
         setEstadisticas(estadisticas.data ?? estadisticas);
         setDetalleData(detalle.data ?? detalle);
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching consumos:', err);
         setError('No se pudieron cargar los consumos. Verifica backend.');
       } finally {

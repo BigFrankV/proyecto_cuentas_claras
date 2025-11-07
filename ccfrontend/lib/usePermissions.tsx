@@ -129,8 +129,8 @@ export function usePermissions() {
       if (roles.includes('residente') || roles.includes('propietario') || roles.includes('inquilino')) {
         return UserRole.USER;
       }
-      if (roles.includes('conserje')) return UserRole.CONCIERGE;
-      if (roles.includes('contador')) return UserRole.ACCOUNTANT;
+      if (roles.includes('conserje')) {return UserRole.CONCIERGE;}
+      if (roles.includes('contador')) {return UserRole.ACCOUNTANT;}
     }
 
     // Patrick es superuser por defecto (fallback para compatibilidad)
@@ -220,13 +220,13 @@ export function usePermissions() {
 
     // Checks específicos dentro de grupos
     if (currentRole === UserRole.MANAGER) {
-      if (permission === Permission.APPROVE_PAYMENTS && !user.roles.includes('tesorero')) return false;
-      if (permission === Permission.MANAGE_MULTAS && !user.roles.includes('presidente_comite')) return false;
-      if (permission === Permission.VIEW_TICKETS && !user.roles.includes('proveedor_servicio')) return false;
+      if (permission === Permission.APPROVE_PAYMENTS && !user.roles.includes('tesorero')) {return false;}
+      if (permission === Permission.MANAGE_MULTAS && !user.roles.includes('presidente_comite')) {return false;}
+      if (permission === Permission.VIEW_TICKETS && !user.roles.includes('proveedor_servicio')) {return false;}
     }
     if (currentRole === UserRole.USER) {
-      if (permission === Permission.CREATE_TICKETS && !user.roles.includes('residente')) return false;
-      if (permission === Permission.VIEW_OWN_MEMBERSHIP && !user.roles.includes('propietario')) return false;
+      if (permission === Permission.CREATE_TICKETS && !user.roles.includes('residente')) {return false;}
+      if (permission === Permission.VIEW_OWN_MEMBERSHIP && !user.roles.includes('propietario')) {return false;}
     }
 
     // Para ADMIN, limitar MANAGE_COMMUNITIES a comunidades propias

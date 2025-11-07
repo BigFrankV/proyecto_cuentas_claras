@@ -1,6 +1,7 @@
+import type { Medidor, MedidoresListResponse, Reading } from '@/types/medidores';
+
 import apiClient from './api';
 import http from './httpClient';
-import type { Medidor, MedidoresListResponse, Reading } from '@/types/medidores';
 
 
 export async function listMedidores(
