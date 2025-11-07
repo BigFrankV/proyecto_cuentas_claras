@@ -1,8 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth, ProtectedRoute } from '@/lib/useAuth';
+import React, { useEffect, useState } from 'react';
 import {
   Button,
   Card,
@@ -15,6 +14,7 @@ import {
   Form,
   Modal,
 } from 'react-bootstrap';
+
 import Layout from '@/components/layout/Layout';
 import {
   createLectura,
@@ -23,6 +23,7 @@ import {
   getMedidor,
   listLecturas,
 } from '@/lib/medidoresService';
+import { useAuth, ProtectedRoute } from '@/lib/useAuth';
 import type { Medidor, Reading } from '@/types/medidores';
 
 export default function MedidorDetallePage() {
@@ -158,8 +159,8 @@ export default function MedidorDetallePage() {
   };
 
   const handleDelete = async () => {
-    if (!medidor) return;
-    if (!confirm('Eliminar medidor? (si tiene lecturas, será desactivado)')) return;
+    if (!medidor) {return;}
+    if (!confirm('Eliminar medidor? (si tiene lecturas, será desactivado)')) {return;}
     setLoading(true);
     try {
       const resp = await deleteMedidor(medidor.id);
@@ -185,8 +186,8 @@ export default function MedidorDetallePage() {
     alert('Configuración guardada (maquetada)');
   };
 
-  if (!id) return <div>Cargando id...</div>;
-  if (loading && !medidor) return <div>Cargando...</div>;
+  if (!id) {return <div>Cargando id...</div>;}
+  if (loading && !medidor) {return <div>Cargando...</div>;}
 
   return (
     <ProtectedRoute>
