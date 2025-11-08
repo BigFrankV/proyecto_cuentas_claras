@@ -25,7 +25,7 @@ export default function LecturasPage(): React.ReactElement {
   const [loading, setLoading] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
-
+  const [readingPeriod, setReadingPeriod] = useState<string>();
   // Cargar medidores al montar
   useEffect(() => {
     const loadMeters = async () => {
@@ -83,7 +83,7 @@ export default function LecturasPage(): React.ReactElement {
       await createLectura(selectedMeter.id, {
         fecha: readingDate.split('T')[0],  // Solo fecha (e.g., "2025-11-08"), sin hora
         lectura: Number(currentReading),
-        periodo: 'real', // Mantén como está, o ajusta si BD espera formato específico
+        periodo: readingPeriod, // Mantén como está, o ajusta si BD espera formato específico
       });
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2000);
@@ -166,6 +166,16 @@ export default function LecturasPage(): React.ReactElement {
                       </InputGroup>
                       <Form.Text>Última: {lastReading} | Consumo: {consumo}</Form.Text>
                     </Form.Group>
+                    <Form.Group className='mb-3'>
+                      <Form.Label>Periodo</Form.Label>
+                      <Form.Control
+                        type='text'
+                        placeholder='Ej: 2025-11 (Año y Mes) '
+                        value={readingPeriod}
+                        onChange={(e) => setReadingPeriod(e.target.value)}
+                        required
+                      />
+                    </Form.Group>
                     <div className='d-grid gap-2'>
                       <Button type='submit' variant='primary' disabled={loading}>
                         Guardar Lectura
@@ -185,19 +195,7 @@ export default function LecturasPage(): React.ReactElement {
                   </Form>
                 </div>
 
-                <div className='meter-selector mt-3'>
-                  <h6>Medidores</h6>
-                  {filteredMeters.map(m => (
-                    <div
-                      key={m.id}
-                      className={`meter-option p-2 ${m.id === selectedMeter?.id ? 'selected' : ''}`}
-                      onClick={() => handleMeterSelect(m)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      {m.medidor_codigo} - {m.unidad}
-                    </div>
-                  ))}
-                </div>
+                
               </div>
 
               <div className='col-lg-8'>
