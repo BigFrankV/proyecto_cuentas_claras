@@ -25,8 +25,8 @@ export async function getTarifaConsumo(id: number) {
   return apiClient.get(`/tarifas-consumo/${id}`);
 }
 
-export async function createTarifaConsumo(payload: any) {
-  return apiClient.post('/tarifas-consumo', payload);
+export async function createTarifaConsumo(comunidadId: number, payload: any) { // Agrega comunidadId como parámetro
+  return apiClient.post(`/tarifas-consumo/comunidad/${comunidadId}`, payload); // Incluye comunidadId en la URL
 }
 
 export async function updateTarifaConsumo(id: number, payload: any) {

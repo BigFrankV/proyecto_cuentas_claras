@@ -1,10 +1,10 @@
 /* eslint-disable max-len */
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Form } from 'react-bootstrap'; // Agrega Form
 
 import Layout from '@/components/layout/Layout';
-import { listTarifasConsumo, listAllTarifasConsumo } from '@/lib/tarifasConsumoService';
+import { listTarifasConsumo, listAllTarifasConsumo, createTarifaConsumo } from '@/lib/tarifasConsumoService'; // Agrega createTarifaConsumo
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
 import { ProtectedPage, UserRole } from '@/lib/usePermissions';
@@ -20,6 +20,7 @@ export default function TarifasListado() {
   // Estados para modales
   const [showImport, setShowImport] = useState(false);
   const [showDuplicate, setShowDuplicate] = useState(false);
+  const [showCreate, setShowCreate] = useState(false); // Nuevo estado para modal crear
 
   // Estados para datos dinámicos
   const [tarifas, setTarifas] = useState<any[]>([]);
@@ -27,6 +28,15 @@ export default function TarifasListado() {
   const [error, setError] = useState<string | null>(null);
   const [comunidades, setComunidades] = useState<any[]>([]);
   const [selectedComunidad, setSelectedComunidad] = useState<any | null>(null);
+
+  // Estado para formulario crear
+  const [newTarifa, setNewTarifa] = useState({
+    comunidad_id: '',
+    tipo: 'agua',
+    precio_por_unidad: '',
+    periodo_desde: '',
+    cargo_fijo: '',
+  });
 
   // Filtros dinámicos
   const [filterEstado, setFilterEstado] = useState('');
@@ -151,9 +161,28 @@ export default function TarifasListado() {
     );
   }
 
+  // Función para crear tarifa
+  const handleCreateTarifa = async () => {
+    const comunidadId = isSuper ? parseInt(newTarifa.comunidad_id) : user.memberships[0].comunidadId;
+    try {
+      await createTarifaConsumo(comunidadId, { // Pasa comunidadId como primer parámetro
+        tipo: newTarifa.tipo,
+        precio_por_unidad: parseFloat(newTarifa.precio_por_unidad),
+        periodo_desde: newTarifa.periodo_desde,
+        cargo_fijo: parseFloat(newTarifa.cargo_fijo) || 0,
+      });
+      setShowCreate(false);
+      // Recargar tarifas
+      window.location.reload(); // O usa un estado para recargar
+      alert('Tarifa creada exitosamente');
+    } catch (err) {
+      alert('Error creando tarifa');
+    }
+  };
+
   return (
     <ProtectedRoute>
-     <ProtectedPage allowedRoles={[
+      <ProtectedPage allowedRoles={[
              'Superadmin',
              'admin_comunidad',
              'conserje',
@@ -178,7 +207,7 @@ export default function TarifasListado() {
                     <button className='btn btn-outline-secondary' onClick={() => setShowImport(true)}>
                       <span className='material-icons me-1'>file_upload</span> Importar
                     </button>
-                    <button className='btn btn-primary'>
+                    <button className='btn btn-primary' onClick={() => setShowCreate(true)}> {/* Conecta el botón */}
                       <span className='material-icons me-2'>add</span> Nueva Tarifa
                     </button>
                   </div>
@@ -332,6 +361,74 @@ export default function TarifasListado() {
                 Cancelar
               </Button>
               <Button variant='primary'>Duplicar Tarifa</Button>
+            </Modal.Footer>
+          </Modal>
+
+          {/* Modal Crear Tarifa */}
+          <Modal show={showCreate} onHide={() => setShowCreate(false)} centered>
+            <Modal.Header closeButton>
+              <Modal.Title>Crear Nueva Tarifa</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Form>
+                {isSuper && (
+                  <Form.Group className='mb-3'>
+                    <Form.Label>Comunidad</Form.Label>
+                    <Form.Select
+                      value={newTarifa.comunidad_id}
+                      onChange={(e) => setNewTarifa({ ...newTarifa, comunidad_id: e.target.value })}
+                    >
+                      <option value=''>Seleccionar comunidad</option>
+                      {comunidades.map((c) => (
+                        <option key={c.id} value={c.id}>{c.nombre}</option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                )}
+                <Form.Group className='mb-3'>
+                  <Form.Label>Tipo</Form.Label>
+                  <Form.Select
+                    value={newTarifa.tipo}
+                    onChange={(e) => setNewTarifa({ ...newTarifa, tipo: e.target.value })}
+                  >
+                    <option value='agua'>Agua</option>
+                    <option value='gas'>Gas</option>
+                    <option value='electricidad'>Electricidad</option>
+                  </Form.Select>
+                </Form.Group>
+                <Form.Group className='mb-3'>
+                  <Form.Label>Precio por Unidad</Form.Label>
+                  <Form.Control
+                    type='number'
+                    value={newTarifa.precio_por_unidad}
+                    onChange={(e) => setNewTarifa({ ...newTarifa, precio_por_unidad: e.target.value })}
+                  />
+                </Form.Group>
+                <Form.Group className='mb-3'>
+                  <Form.Label>Período Desde</Form.Label>
+                  <Form.Control
+                    type='date'
+                    value={newTarifa.periodo_desde}
+                    onChange={(e) => setNewTarifa({ ...newTarifa, periodo_desde: e.target.value })}
+                  />
+                </Form.Group>
+                <Form.Group className='mb-3'>
+                  <Form.Label>Cargo Fijo (opcional)</Form.Label>
+                  <Form.Control
+                    type='number'
+                    value={newTarifa.cargo_fijo}
+                    onChange={(e) => setNewTarifa({ ...newTarifa, cargo_fijo: e.target.value })}
+                  />
+                </Form.Group>
+              </Form>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant='secondary' onClick={() => setShowCreate(false)}>
+                Cancelar
+              </Button>
+              <Button variant='primary' onClick={handleCreateTarifa}>
+                Crear Tarifa
+              </Button>
             </Modal.Footer>
           </Modal>
         </Layout>

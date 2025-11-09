@@ -176,7 +176,7 @@ export const dashboardService = {
   ): Promise<GastoPorCategoria[]> {
     try {
       const response = await apiClient.get(
-        `/dashboard/comunidad/${comunidadId}/grafico-gastos-categoria`,
+        `/categorias-gasto/comunidad/${comunidadId}/estadisticas/por-tipo`,
       );
 
       if (!response.data || !Array.isArray(response.data)) {
@@ -184,9 +184,9 @@ export const dashboardService = {
       }
 
       return response.data.map((item: any) => ({
-        categoria: item.categoria || item.nombre || 'N/A',
-        total: Number(item.total_gastos || item.total || 0),
-        color: item.color || '#3498db',
+        categoria: item.tipo || 'N/A', // Mapea 'tipo' a 'categoria'
+        total: Number(item.total_monto || 0), // Usa 'total_monto' si existe
+        color: '#3498db', // Color por defecto
       }));
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -253,42 +253,39 @@ export const dashboardService = {
   // Obtener consumos de medidores para métricas
   async getConsumosMedidores(comunidadId: number): Promise<ConsumoMedidor[]> {
     try {
-      const medidores = await apiClient.get(
-        `/medidores/comunidad/${comunidadId}`,
+      // Obtener medidores de la comunidad
+      const medidoresResponse = await apiClient.get(
+        `/medidores?comunidad_id=${comunidadId}&limit=5`,
       );
-
-      if (!medidores.data?.length) {
+      if (!medidoresResponse.data?.data?.length) {
         return [];
       }
 
-      // Obtener consumos de cada medidor (solo primeros 5 para el dashboard)
-      const consumosPromises = medidores.data
-        .slice(0, 5)
-        .map(async (medidor: any) => {
-          try {
-            const consumos = await apiClient.get(
-              `/medidores/${medidor.id}/consumos`,
-            );
-            const ultimoConsumo = consumos.data?.[0] || {};
-
-            return {
-              medidor: `${medidor.tipo} - ${medidor.ubicacion}`,
-              consumo: ultimoConsumo.consumo || 0,
-              periodo: ultimoConsumo.periodo || 'N/A',
-              unidad: medidor.unidad_medida || 'L',
-            };
-          } catch {
-            return {
-              medidor: `${medidor.tipo} - ${medidor.ubicacion}`,
-              consumo: 0,
-              periodo: 'N/A',
-              unidad: medidor.unidad_medida || 'L',
-            };
-          }
-        });
+      // Para cada medidor, obtener estadísticas de consumo
+      const consumosPromises = medidoresResponse.data.data.map(async (medidor: any) => {
+        try {
+          const response = await apiClient.get(
+            `/consumos/estadisticas?medidor_id=${medidor.id}&periodo_inicio=2025-09&periodo_fin=2025-11`,
+          );
+          return {
+            medidor: `${medidor.numero_medidor || medidor.id}`,
+            consumo: Number(response.data?.total_consumo_periodo || 0),
+            periodo: '2025-11', // Período fijo para dashboard
+            unidad: medidor.unidad_medida || 'L',
+          };
+        } catch {
+          return {
+            medidor: `${medidor.numero_medidor || medidor.id}`,
+            consumo: 0,
+            periodo: 'N/A',
+            unidad: medidor.unidad_medida || 'L',
+          };
+        }
+      });
 
       return await Promise.all(consumosPromises);
-    } catch {
+    } catch (error) {
+      console.error('Error fetching consumos de medidores:', error);
       return [];
     }
   },
