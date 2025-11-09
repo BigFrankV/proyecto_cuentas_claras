@@ -176,7 +176,6 @@ export default function TarifasListado() {
       window.location.reload(); // O usa un estado para recargar
       alert('Tarifa creada exitosamente');
     } catch (err) {
-      console.error('Error creando tarifa:', err);
       alert('Error creando tarifa');
     }
   };
