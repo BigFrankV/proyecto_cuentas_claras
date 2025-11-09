@@ -6,7 +6,7 @@ import { Modal, Button } from 'react-bootstrap';
 import Layout from '@/components/layout/Layout';
 import { listTarifasConsumo, listAllTarifasConsumo } from '@/lib/tarifasConsumoService';
 import { ProtectedRoute } from '@/lib/useAuth';
-import { useAuth } from '@/lib/useAuth'; // Corregido: import de useAuth desde useAuth, no usePermissions
+import { useAuth } from '@/lib/useAuth';
 import { ProtectedPage, UserRole } from '@/lib/usePermissions';
 import { usePermissions } from '@/lib/usePermissions';
 
@@ -56,18 +56,13 @@ export default function TarifasListado() {
     let mounted = true;
     (async () => {
       try {
-        const resp = await fetch('/api/comunidades'); // Asume que existe; ajusta si no
+        const resp = await fetch('/comunidades');
         const data = await resp.json();
         if (!mounted) {
           return;
         }
         setComunidades(data || []);
-        return; // Agrega esto para devolver en la ruta exitosa
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('Error cargando comunidades', err);
-        return; // Agrega esto para devolver en la ruta de error
-      }
+      } catch (err) { /* empty */ }
     })();
     return () => {
       mounted = false;
@@ -114,8 +109,6 @@ export default function TarifasListado() {
         if (!mounted) {
           return;
         }
-        // eslint-disable-next-line no-console
-        console.error('Error cargando tarifas:', err);
         setError(err.response?.data?.error || 'Error cargando tarifas');
       } finally {
         if (mounted) {
@@ -131,22 +124,18 @@ export default function TarifasListado() {
 
   // Función para mapear datos del backend a la estructura de la UI
   const mapTarifaToUI = (tarifa: any): Tarifa => {
-    const tipoRaw = tarifa?.tipo ?? '';
-    const tipoCapitalized = tipoRaw
-      ? tipoRaw.charAt(0).toUpperCase() + tipoRaw.slice(1)
-      : 'Tarifa';
-    const periodo = tarifa?.periodo_desde ?? '';
-
+    const servicio = tarifa.servicio || 'desconocido'; // Usa 'servicio' en lugar de 'tipo'
+    const fecha = tarifa.fecha_vigencia || 'N/A'; // Usa 'fecha_vigencia' en lugar de 'periodo_desde'
     return {
-      id: tarifa?.id,
-      nombre: `${tipoCapitalized}${periodo ? ` (${periodo})` : ''}`, // Ej: Agua (2024-01)
+      id: tarifa.id || 0,
+      nombre: `${servicio.charAt(0).toUpperCase() + servicio.slice(1)} (${fecha})`, // Ej: Agua (2025-09)
       tipo: 'Fija', // Asumido; ajusta si el backend soporta otros tipos
-      servicio: tipoRaw === 'agua' ? 'water' : tipoRaw === 'gas' ? 'gas' : 'electric',
-      estado: tarifa?.activo ? 'Activa' : 'Inactiva', // Asumido basado en BD
-      precio: tarifa?.precio_por_unidad ?? 0,
-      unidad: tarifa?.unidad || 'unidad', // Ajusta según BD si hay campo
-      fecha: periodo,
-      estructura: null, // Para tipos complejos, agrega lógica si el backend los devuelve
+      servicio: servicio === 'agua' ? 'water' : servicio === 'gas' ? 'gas' : 'electric', // Mapea a clases CSS
+      estado: tarifa.estado || 'Inactiva', // Usa 'estado' del backend
+      precio: tarifa.precio_por_unidad || 0, // Asegúrate de que el backend lo devuelva
+      unidad: tarifa.unidad || 'unidad',
+      fecha,
+      estructura: null,
     };
   };
 
@@ -164,7 +153,17 @@ export default function TarifasListado() {
 
   return (
     <ProtectedRoute>
-      <ProtectedPage allowedRoles={[UserRole.SUPERUSER, UserRole.ADMIN, UserRole.CONCIERGE]}>
+     <ProtectedPage allowedRoles={[
+             'Superadmin',
+             'admin_comunidad',
+             'conserje',
+             'contador',
+             'tesorero',
+             'presidente_comite',
+             'residente',
+             'propietario',
+             'inquilino',
+           ]}>
         <Head>
           <title>Tarifas de Consumo — Cuentas Claras</title>
         </Head>
@@ -239,39 +238,42 @@ export default function TarifasListado() {
                 {/* Listado de tarifas */}
                 {!loading && !error && (
                   <div>
-                    {tarifas.map((tarifa) => {
-                      const uiTarifa = mapTarifaToUI(tarifa);
-                      return (
-                        <div key={uiTarifa.id} className={`${styles['tariff-card']} mb-3 ${uiTarifa.servicio}`}>
-                          <div className={`${styles['tariff-header']} d-flex justify-content-between align-items-start`}>
-                            <div>
-                              <div className={styles['tariff-title']}>{uiTarifa.nombre}</div>
-                              <div className={styles['tariff-subtitle']}>Desde {uiTarifa.fecha}</div>
-                              <span className={`${styles['type-badge']} ${styles[`type-${uiTarifa.tipo.toLowerCase().replace(' ', '-')}`]}`}>
-                                {uiTarifa.tipo}
-                              </span>
-                              <span className={`${styles['status-badge']} ${styles[`status-${uiTarifa.estado.toLowerCase()}`]}`}>
-                                {uiTarifa.estado}
-                              </span>
+                    {tarifas.length === 0 ? (
+                      <div>No hay tarifas disponibles.</div> // Mensaje si no hay datos
+                    ) : (
+                      tarifas.map((tarifa) => {
+                        const uiTarifa = mapTarifaToUI(tarifa);
+                        return (
+                          <div key={uiTarifa.id} className={`${styles['tariff-card']} mb-3 ${uiTarifa.servicio}`}>
+                            <div className={`${styles['tariff-header']} d-flex justify-content-between align-items-start`}>
+                              <div>
+                                <div className={styles['tariff-title']}>{uiTarifa.nombre}</div>
+                                <div className={styles['tariff-subtitle']}>Desde {uiTarifa.fecha}</div>
+                                <span className={`${styles['type-badge']} ${styles[`type-${uiTarifa.tipo.toLowerCase().replace(' ', '-')}`]}`}>
+                                  {uiTarifa.tipo}
+                                </span>
+                                <span className={`${styles['status-badge']} ${styles[`status-${uiTarifa.estado.toLowerCase()}`]}`}>
+                                  {uiTarifa.estado}
+                                </span>
+                              </div>
+                              <div className='text-end'>
+                                {uiTarifa.tipo === 'Fija' && (
+                                  <>
+                                    <div className={styles['tariff-price']}>${uiTarifa.precio.toLocaleString('es-CL')}</div>
+                                    <div className={styles['tariff-unit']}>por {uiTarifa.unidad}</div>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                            <div className='text-end'>
-                              {uiTarifa.tipo === 'Fija' && (
-                                <>
-                                  <div className={styles['tariff-price']}>${uiTarifa.precio.toLocaleString('es-CL')}</div>
-                                  <div className={styles['tariff-unit']}>por {uiTarifa.unidad}</div>
-                                </>
-                              )}
-                              {/* Agrega lógica para otros tipos si el backend los soporta */}
+                            <div className='mt-2 d-flex gap-2'>
+                              <button className='btn btn-sm btn-outline-primary'>Editar</button>
+                              <button className='btn btn-sm btn-outline-secondary' onClick={() => setShowDuplicate(true)}>Duplicar</button>
+                              <button className='btn btn-sm btn-outline-danger'>Eliminar</button>
                             </div>
                           </div>
-                          <div className='mt-2 d-flex gap-2'>
-                            <button className='btn btn-sm btn-outline-primary'>Editar</button>
-                            <button className='btn btn-sm btn-outline-secondary' onClick={() => setShowDuplicate(true)}>Duplicar</button>
-                            <button className='btn btn-sm btn-outline-danger'>Eliminar</button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                 )}
               </div>

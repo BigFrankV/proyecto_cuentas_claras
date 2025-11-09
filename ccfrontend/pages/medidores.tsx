@@ -179,7 +179,6 @@ export default function MedidoresListadoPage() {
         'residente',
         'propietario',
         'inquilino',
-        'usuario'
       ]}>
         <Head>
           <title>Medidores — Cuentas Claras</title>
