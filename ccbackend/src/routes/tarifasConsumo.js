@@ -74,10 +74,10 @@ router.get(
       SELECT
         t.id,
         c.razon_social AS comunidad_nombre,
-        t.tipo,
+        t.tipo AS servicio,
         t.precio_por_unidad,
         t.cargo_fijo,
-        t.periodo_desde,
+        t.periodo_desde AS fecha_vigencia,
         t.periodo_hasta,
         CONCAT(UPPER(t.tipo), ' (', t.periodo_desde, ')') AS nombre,
         'Activa' AS estado,

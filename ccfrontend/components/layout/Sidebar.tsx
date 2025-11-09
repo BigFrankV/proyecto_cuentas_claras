@@ -104,7 +104,12 @@ const roleTranslations: Record<string, string> = {
   admin: 'Administrador',
   concierge: 'Conserje',
   accountant: 'Contador',
-  manager: 'Gerente',
+  tesorero: 'Tesorero',              // Agregar
+  presidente_comite: 'Presidente Comité', // Agregar
+  proveedor_servicio: 'Proveedor Servicio', // Agregar
+  residente: 'Residente',            // Agregar
+  propietario: 'Propietario',        // Agregar
+  inquilino: 'Inquilino',            // Agregar
   user: 'Usuario',
 };
 

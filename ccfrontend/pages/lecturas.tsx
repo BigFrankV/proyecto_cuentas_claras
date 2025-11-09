@@ -12,8 +12,18 @@ const LecturasPage = dynamic(
 export default function LecturasRoute() {
   return (
     <ProtectedRoute>
-      <ProtectedPage allowedRoles={['Superadmin', 'Admin', 'Conserje']}>
-        <LecturasPage />
+      <ProtectedPage allowedRoles={[
+        'Superadmin',
+        'admin_comunidad',
+        'conserje',
+        'contador',
+        'tesorero',
+        'presidente_comite',
+        'residente',
+        'propietario',
+        'inquilino',
+        'usuario'
+      ]}>        <LecturasPage />
       </ProtectedPage>
     </ProtectedRoute>
   );

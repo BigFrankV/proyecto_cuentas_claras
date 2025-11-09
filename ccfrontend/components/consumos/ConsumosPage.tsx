@@ -14,13 +14,21 @@ import {
   listAllMedidores, // <-- agregado
 } from '@/lib/medidoresService'; // <-- agregado listMedidores y listAllMedidores
 import { useAuth } from '@/lib/useAuth'; // <-- agregado para obtener usuario
+import { usePermissions } from '@/lib/usePermissions'; // Agregar si no está, para getUserCommunities
 
 Chart.register(...registerables);
 
 // eslint-disable-next-line no-undef
 export default function ConsumosPage(): JSX.Element {
-  const router = useRouter(); // <-- agregado
-  const { user } = useAuth(); // <-- agregado para obtener usuario
+  const router = useRouter();
+  const { user } = useAuth();
+  const { isSuperUser } = usePermissions(); // Agregar si es necesario
+
+  const isSuper = !!user?.is_superadmin;
+
+  // Agregar estados para comunidades y selector
+  const [comunidades, setComunidades] = useState<any[]>([]);
+  const [selectedComunidad, setSelectedComunidad] = useState<any | null>(null);
 
   const mainRef = useRef<HTMLCanvasElement | null>(null);
   const monthlyRef = useRef<HTMLCanvasElement | null>(null);
@@ -83,7 +91,32 @@ export default function ConsumosPage(): JSX.Element {
   const [medidores, setMedidores] = useState<any[]>([]);
   const [loadingMedidores, setLoadingMedidores] = useState(false);
 
-  // Fetch medidores dinámicamente basado en rol
+  // Cargar comunidades para selector (superadmin)
+  useEffect(() => {
+    if (!isSuper) {
+      return undefined;
+    }
+    let mounted = true;
+    (async () => {
+      try {
+        // Asume que hay un servicio getComunidades o similar
+        const resp = await fetch('/api/comunidades'); // Ajustar según tu API
+        const data = await resp.json();
+        if (!mounted) {
+          return;
+        }
+        setComunidades(data || []);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Error cargando comunidades:', err);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [isSuper]);
+
+  // Fetch medidores dinámicamente basado en rol (siempre usa endpoint global, backend filtra)
   useEffect(() => {
     if (!user) {
       return undefined;
@@ -92,18 +125,14 @@ export default function ConsumosPage(): JSX.Element {
     const loadMedidores = async () => {
       setLoadingMedidores(true);
       try {
-        let resp;
-        if (user.is_superadmin) {
-          resp = await listAllMedidores({ limit: 100 }); // Obtener todos para superadmin
-        } else {
-          const comunidadId = user.comunidad_id;
-          if (!comunidadId) {
-            setMedidores([]);
-            return;
-          }
-          resp = await listMedidores(comunidadId, { limit: 100 });
+        const params: any = { limit: 100 };
+        if (isSuper && selectedComunidad?.id) {
+          params.comunidad_id = selectedComunidad.id;
         }
-        if (!mounted) {return;}
+        const resp = await listAllMedidores(params);
+        if (!mounted) {
+          return;
+        }
         setMedidores(resp.data || []);
         // Si hay medidores y medidorId no está en la lista, setear el primero
         if (resp.data?.length > 0 && !resp.data.find((m: any) => m.id === medidorId)) {
@@ -118,8 +147,10 @@ export default function ConsumosPage(): JSX.Element {
       }
     };
     loadMedidores();
-    return () => { mounted = false; };
-  }, [user]);
+    return () => {
+      mounted = false;
+    };
+  }, [user, isSuper, selectedComunidad]);
 
   // Fetch data from API (dinámico, usa NEXT_PUBLIC_API_BASE_URL o /api)
   useEffect(() => {
