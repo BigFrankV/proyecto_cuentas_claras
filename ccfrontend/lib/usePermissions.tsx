@@ -8,12 +8,16 @@ import { useAuth } from './useAuth';
 export enum UserRole {
   SUPERUSER = 'superuser',
   ADMIN = 'admin',
-  CONCIERGE = 'concierge', // Nuevo para conserje
-  ACCOUNTANT = 'accountant', // Nuevo para contador
-  MANAGER = 'manager', // Para tesorero, presidente, proveedor
-  USER = 'user',
+  CONCIERGE = 'concierge',
+  ACCOUNTANT = 'accountant',
+  TESORERO = 'tesorero',        // Nuevo: para tesorero
+  PRESIDENTE_COMITE = 'presidente_comite', // Nuevo: para presidente_comite
+  PROVIDER = 'proveedor_servicio', // Ya existe, pero asegurar
+  RESIDENT = 'residente',
+  OWNER = 'propietario',
+  TENANT = 'inquilino',
+  GUEST = 'guest',
 }
-
 // Definición de permisos (añadidos nuevos)
 export enum Permission {
   // Gestión de comunidades
@@ -87,16 +91,31 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_REPORTS,
     Permission.EXPORT_REPORTS,
   ],
-  [UserRole.MANAGER]: [
+  [UserRole.TESORERO]: [
     Permission.VIEW_COMMUNITIES,
     Permission.VIEW_FINANCES,
-    Permission.VIEW_USERS,
-    Permission.VIEW_REPORTS,
+    Permission.APPROVE_PAYMENTS, // Único para tesorero
   ],
-  [UserRole.USER]: [
+  [UserRole.PRESIDENTE_COMITE]: [
     Permission.VIEW_COMMUNITIES,
-    Permission.VIEW_FINANCES,
+    Permission.MANAGE_MULTAS, // Único para presidente_comite
   ],
+  [UserRole.PROVIDER]: [
+    Permission.VIEW_COMMUNITIES,
+    Permission.VIEW_TICKETS,
+  ],
+  [UserRole.RESIDENT]: [
+    Permission.VIEW_COMMUNITIES,
+    Permission.CREATE_TICKETS,  // Solo residente puede crear tickets
+  ],
+  [UserRole.OWNER]: [
+    Permission.VIEW_COMMUNITIES,
+    Permission.VIEW_OWN_MEMBERSHIP,  // Solo propietario ve membresía propia
+  ],
+  [UserRole.TENANT]: [
+    Permission.VIEW_COMMUNITIES,  // Básico para inquilino
+  ],
+  [UserRole.GUEST]: [],  // Sin permisos
 };
 
 // Hook para manejo de roles y permisos (actualizado)
@@ -105,45 +124,25 @@ export function usePermissions() {
 
   // Determinar el rol del usuario (actualizado con agrupamiento completo)
   const getUserRole = (): UserRole => {
-    if (!user) {
-      return UserRole.USER;
-    }
+    if (!user) return UserRole.GUEST;
+    if (user.is_superadmin) return UserRole.SUPERUSER;
 
-    // Verificar si es superadmin desde el token
-    if (user.is_superadmin) {
-      return UserRole.SUPERUSER;
-    }
+    const roles = user.roles?.map((r: any) => typeof r === 'string' ? r.toLowerCase() : r.rol?.toLowerCase()).filter(Boolean) || [];
+    if (roles.includes('admin_comunidad')) return UserRole.ADMIN;
+    if (roles.includes('conserje')) return UserRole.CONCIERGE;
+    if (roles.includes('contador')) return UserRole.ACCOUNTANT;
+    if (roles.includes('tesorero')) return UserRole.TESORERO;
+    if (roles.includes('presidente_comite')) return UserRole.PRESIDENTE_COMITE;
+    if (roles.includes('proveedor_servicio')) return UserRole.PROVIDER;
+    if (roles.includes('residente')) return UserRole.RESIDENT;
+    if (roles.includes('propietario')) return UserRole.OWNER;
+    if (roles.includes('inquilino')) return UserRole.TENANT;
+    if (roles.includes('proveedor_servicio')) return UserRole.PROVIDER;
 
-    // Si tiene roles específicos, usar el más alto
-    if (user.roles && user.roles.length > 0) {
-      const roles = user.roles.map((r: any) => r.toLowerCase());
+    // Fallback para Patrick
+    if (user.username === 'patrick' || user.username === 'patricio.quintanilla') return UserRole.SUPERUSER;
 
-      if (roles.includes('admin_comunidad')) {
-        return UserRole.ADMIN;
-      }
-      // Agrupar MANAGER: tesorero, presidente_comite, proveedor_servicio
-      if (roles.includes('tesorero') || roles.includes('presidente_comite') || roles.includes('proveedor_servicio')) {
-        return UserRole.MANAGER;
-      }
-      // Agrupar USER: residente, propietario, inquilino
-      if (roles.includes('residente') || roles.includes('propietario') || roles.includes('inquilino')) {
-        return UserRole.USER;
-      }
-      if (roles.includes('conserje')) {return UserRole.CONCIERGE;}
-      if (roles.includes('contador')) {return UserRole.ACCOUNTANT;}
-    }
-
-    // Patrick es superuser por defecto (fallback para compatibilidad)
-    if (
-      user.username === 'patrick' ||
-      user.username === 'patricio.quintanilla'
-    ) {
-      return UserRole.SUPERUSER;
-    }
-
-    // En el futuro, esto vendría de la API
-    // Por ahora, defaultear a USER
-    return UserRole.USER;
+    return UserRole.GUEST;
   };
 
   const currentRole = getUserRole();
@@ -218,16 +217,6 @@ export function usePermissions() {
       return true;
     }
 
-    // Checks específicos dentro de grupos
-    if (currentRole === UserRole.MANAGER) {
-      if (permission === Permission.APPROVE_PAYMENTS && !user.roles.includes('tesorero')) {return false;}
-      if (permission === Permission.MANAGE_MULTAS && !user.roles.includes('presidente_comite')) {return false;}
-      if (permission === Permission.VIEW_TICKETS && !user.roles.includes('proveedor_servicio')) {return false;}
-    }
-    if (currentRole === UserRole.USER) {
-      if (permission === Permission.CREATE_TICKETS && !user.roles.includes('residente')) {return false;}
-      if (permission === Permission.VIEW_OWN_MEMBERSHIP && !user.roles.includes('propietario')) {return false;}
-    }
 
     // Para ADMIN, limitar MANAGE_COMMUNITIES a comunidades propias
     if (currentRole === UserRole.ADMIN && permission === Permission.MANAGE_COMMUNITIES) {
@@ -249,8 +238,14 @@ export function usePermissions() {
   // Verificar si el usuario tiene un rol específico o superior
   const hasRole = (role: UserRole): boolean => {
     const roleHierarchy = [
-      UserRole.USER,
-      UserRole.MANAGER,
+      UserRole.TENANT,
+      UserRole.RESIDENT,
+      UserRole.OWNER,
+      UserRole.PROVIDER,
+      UserRole.CONCIERGE,
+      UserRole.ACCOUNTANT,
+      UserRole.TESORERO,      // Agregar
+      UserRole.PRESIDENTE_COMITE, // Agregar
       UserRole.ADMIN,
       UserRole.SUPERUSER,
     ];
@@ -367,7 +362,7 @@ export function ProtectedPage({
   redirectTo = '/dashboard',
   showAccessDenied = true,
 }: ProtectedPageProps) {
-  const { hasPermission, hasRole, isSuperUser } = usePermissions();
+  const { hasPermission, hasRole, isSuperUser, currentRole } = usePermissions();  // ✅ Usar hook
   const { user } = useAuth();
   const router = useRouter();
 
@@ -384,12 +379,10 @@ export function ProtectedPage({
   } else if (role) {
     hasAccess = hasRole(role);
   } else if (allowedRoles && allowedRoles.length > 0) {
-    // Usar getUserRole del módulo roles
-    const { getUserRole } = require('./roles');
-    const currentUserRole = getUserRole(user);
-    hasAccess = allowedRoles.includes(currentUserRole);
+    hasAccess = allowedRoles.some(role => user?.roles?.some((r: any) =>
+      (typeof r === 'string' ? r : r.rol) === role
+    ));
   } else {
-    // Si no se especifica ningún requisito, denegar por defecto
     hasAccess = false;
   }
 

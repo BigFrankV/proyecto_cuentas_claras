@@ -1,20 +1,39 @@
 /* eslint-disable max-len */
 import Head from 'next/head';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
+import { listTarifasConsumo, listAllTarifasConsumo } from '@/lib/tarifasConsumoService';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useAuth } from '@/lib/useAuth'; // Corregido: import de useAuth desde useAuth, no usePermissions
 import { ProtectedPage, UserRole } from '@/lib/usePermissions';
+import { usePermissions } from '@/lib/usePermissions';
 
 import styles from '../styles/tarifas.module.css';
 
 export default function TarifasListado() {
-  // Estado para modales
+  const { user } = useAuth();
+  const { isSuperUser } = usePermissions();
+  const isSuper = !!user?.is_superadmin;
+
+  // Estados para modales
   const [showImport, setShowImport] = useState(false);
   const [showDuplicate, setShowDuplicate] = useState(false);
 
-  // Simulación de datos de tarifas
+  // Estados para datos dinámicos
+  const [tarifas, setTarifas] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [comunidades, setComunidades] = useState<any[]>([]);
+  const [selectedComunidad, setSelectedComunidad] = useState<any | null>(null);
+
+  // Filtros dinámicos
+  const [filterEstado, setFilterEstado] = useState('');
+  const [filterServicio, setFilterServicio] = useState('');
+  const [search, setSearch] = useState('');
+
+  // Tipos de tarifa simulados (puedes cargarlos del backend si es necesario)
   type Tramo = { min: number; max: number | null; precio: number };
   type Estacional = { estacion: string; precio: number };
   type Tarifa = {
@@ -29,264 +48,291 @@ export default function TarifasListado() {
     estructura: Tramo[] | Estacional[] | null;
   };
 
-  const tarifas: Tarifa[] = [
-    {
-      id: 1,
-      nombre: 'Tarifa Residencial Eléctrica',
-      tipo: 'Fija',
-      servicio: 'electric',
-      estado: 'Activa',
-      precio: 120,
-      unidad: 'kWh',
-      fecha: '2024-01-01',
-      estructura: null,
-    },
-    {
-      id: 2,
-      nombre: 'Tarifa Agua Potable',
-      tipo: 'Por Tramos',
-      servicio: 'water',
-      estado: 'Pendiente',
-      precio: 0,
-      unidad: 'L',
-      fecha: '2024-03-01',
-      estructura: [
-        { min: 0, max: 10000, precio: 0.8 },
-        { min: 10001, max: 20000, precio: 1.2 },
-        { min: 20001, max: null, precio: 2.0 },
-      ],
-    },
-    {
-      id: 3,
-      nombre: 'Tarifa Gas Invierno',
-      tipo: 'Estacional',
-      servicio: 'gas',
-      estado: 'Inactiva',
-      precio: 0,
-      unidad: 'm³',
-      fecha: '2024-05-01',
-      estructura: [
-        { estacion: 'Invierno', precio: 3.5 },
-        { estacion: 'Verano', precio: 2.1 },
-      ],
-    },
-  ];
+  // Cargar comunidades para selector (superadmin)
+  useEffect(() => {
+    if (!isSuper) {
+      return undefined;
+    }
+    let mounted = true;
+    (async () => {
+      try {
+        const resp = await fetch('/api/comunidades'); // Asume que existe; ajusta si no
+        const data = await resp.json();
+        if (!mounted) {
+          return;
+        }
+        setComunidades(data || []);
+        return; // Agrega esto para devolver en la ruta exitosa
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Error cargando comunidades', err);
+        return; // Agrega esto para devolver en la ruta de error
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [isSuper]);
 
-  // Filtros simulados
-  const filtros = [
-    { label: 'Todas', value: 'todas' },
-    { label: 'Activas', value: 'activa' },
-    { label: 'Pendientes', value: 'pendiente' },
-    { label: 'Inactivas', value: 'inactiva' },
-    { label: 'Eléctrico', value: 'electric' },
-    { label: 'Agua', value: 'water' },
-    { label: 'Gas', value: 'gas' },
-  ];
+  // Cargar tarifas dinámicamente
+  useEffect(() => {
+    if (!user) {
+      return undefined;
+    }
+    let mounted = true;
+    const loadTarifas = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params: any = {
+          estado: filterEstado || undefined,
+          servicio: filterServicio || undefined,
+          busqueda: search || undefined,
+        };
+
+        let resp;
+        if (isSuper) {
+          if (selectedComunidad?.id) {
+            resp = await listTarifasConsumo(selectedComunidad.id, params);
+          } else {
+            resp = await listAllTarifasConsumo(params);
+          }
+        } else {
+          const comunidadId = user.memberships?.[0]?.comunidadId;
+          if (!comunidadId) {
+            setError('No tienes comunidades asignadas.');
+            return;
+          }
+          resp = await listTarifasConsumo(comunidadId, params);
+        }
+
+        if (!mounted) {
+          return;
+        }
+        setTarifas(resp.data || []);
+      } catch (err: any) {
+        if (!mounted) {
+          return;
+        }
+        // eslint-disable-next-line no-console
+        console.error('Error cargando tarifas:', err);
+        setError(err.response?.data?.error || 'Error cargando tarifas');
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+    loadTarifas();
+    return () => {
+      mounted = false;
+    };
+  }, [user, isSuper, selectedComunidad, filterEstado, filterServicio, search]);
+
+  // Función para mapear datos del backend a la estructura de la UI
+  const mapTarifaToUI = (tarifa: any): Tarifa => {
+    const tipoRaw = tarifa?.tipo ?? '';
+    const tipoCapitalized = tipoRaw
+      ? tipoRaw.charAt(0).toUpperCase() + tipoRaw.slice(1)
+      : 'Tarifa';
+    const periodo = tarifa?.periodo_desde ?? '';
+
+    return {
+      id: tarifa?.id,
+      nombre: `${tipoCapitalized}${periodo ? ` (${periodo})` : ''}`, // Ej: Agua (2024-01)
+      tipo: 'Fija', // Asumido; ajusta si el backend soporta otros tipos
+      servicio: tipoRaw === 'agua' ? 'water' : tipoRaw === 'gas' ? 'gas' : 'electric',
+      estado: tarifa?.activo ? 'Activa' : 'Inactiva', // Asumido basado en BD
+      precio: tarifa?.precio_por_unidad ?? 0,
+      unidad: tarifa?.unidad || 'unidad', // Ajusta según BD si hay campo
+      fecha: periodo,
+      estructura: null, // Para tipos complejos, agrega lógica si el backend los devuelve
+    };
+  };
+
+  // Aviso si usuario no es superadmin y no tiene comunidades
+  const hasMemberships = user?.memberships && user.memberships.length > 0;
+  if (!isSuper && !hasMemberships) {
+    return (
+      <Layout title='Tarifas de Consumo'>
+        <div className='alert alert-warning'>
+          No estás asignado a ninguna comunidad. Contacta al administrador para asignar tu rol/comunidad.
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <ProtectedRoute>
-      <ProtectedPage role={UserRole.ADMIN}>
+      <ProtectedPage allowedRoles={[UserRole.SUPERUSER, UserRole.ADMIN, UserRole.CONCIERGE]}>
         <Head>
           <title>Tarifas de Consumo — Cuentas Claras</title>
         </Head>
         <Layout title='Tarifas de Consumo'>
-        <div className='container-fluid p-4'>
-          <div className='row'>
-            <div className='col-12'>
-              {/* Encabezado */}
-              <div className='d-flex justify-content-between align-items-center mb-4'>
-                <h1 className='h3'>Tarifas de Consumo</h1>
-                <div className='d-flex gap-2'>
-                  <button
-                    className='btn btn-outline-secondary'
-                    onClick={() => setShowImport(true)}
-                  >
-                    <span className='material-icons me-1'>file_upload</span>{' '}
-                    Importar
-                  </button>
-                  <button className='btn btn-primary'>
-                    <span className='material-icons me-2'>add</span>
-                    Nueva Tarifa
+          <div className='container-fluid p-4'>
+            <div className='row'>
+              <div className='col-12'>
+                {/* Encabezado */}
+                <div className='d-flex justify-content-between align-items-center mb-4'>
+                  <h1 className='h3'>Tarifas de Consumo</h1>
+                  <div className='d-flex gap-2'>
+                    <button className='btn btn-outline-secondary' onClick={() => setShowImport(true)}>
+                      <span className='material-icons me-1'>file_upload</span> Importar
+                    </button>
+                    <button className='btn btn-primary'>
+                      <span className='material-icons me-2'>add</span> Nueva Tarifa
+                    </button>
+                  </div>
+                </div>
+
+                {/* Selector de comunidad para superadmin */}
+                {isSuper && (
+                  <div className='mb-3'>
+                    <label className='form-label'>Comunidad</label>
+                    <select
+                      className='form-select'
+                      value={selectedComunidad?.id || ''}
+                      onChange={(e) => {
+                        const id = parseInt(e.target.value, 10);
+                        const comunidad = comunidades.find((c) => c.id === id);
+                        setSelectedComunidad(comunidad || null);
+                      }}
+                    >
+                      <option value=''>Todas las comunidades</option>
+                      {comunidades.map((c) => (
+                        <option key={c.id} value={c.id}>{c.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Filtros funcionales */}
+                <div className={`${styles['filters-panel']} mb-4`}>
+                  <input
+                    type='text'
+                    placeholder='Buscar...'
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className='form-control me-2'
+                  />
+                  <select value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)} className='form-select me-2'>
+                    <option value=''>Todos los estados</option>
+                    <option value='Activa'>Activa</option>
+                    <option value='Pendiente'>Pendiente</option>
+                    <option value='Inactiva'>Inactiva</option>
+                  </select>
+                  <select value={filterServicio} onChange={(e) => setFilterServicio(e.target.value)} className='form-select me-2'>
+                    <option value=''>Todos los servicios</option>
+                    <option value='electric'>Eléctrico</option>
+                    <option value='water'>Agua</option>
+                    <option value='gas'>Gas</option>
+                  </select>
+                  <button className='btn btn-sm btn-outline-primary float-end' onClick={() => alert('Exportando tarifas a Excel...')}>
+                    <span className='material-icons me-1'>file_download</span> Exportar
                   </button>
                 </div>
-              </div>
 
-              {/* Filtros */}
-              <div className={`${styles['filters-panel']} mb-4`}>
-                {filtros.map(f => (
-                  <span key={f.value} className={styles['filter-chip']}>
-                    {f.label}
-                  </span>
-                ))}
-                <button
-                  className='btn btn-sm btn-outline-primary float-end'
-                  onClick={() => alert('Exportando tarifas a Excel...')}
-                >
-                  <span className='material-icons me-1'>file_download</span>{' '}
-                  Exportar
-                </button>
-              </div>
+                {/* Loading y Error */}
+                {loading && <div className='text-center'>Cargando tarifas...</div>}
+                {error && <div className='alert alert-danger'>{error}</div>}
 
-              {/* Listado de tarifas (cards) */}
-              <div>
-                {tarifas.map(tarifa => (
-                  <div
-                    key={tarifa.id}
-                    className={`${styles['tariff-card']} mb-3 ${tarifa.servicio}`}
-                  >
-                    <div
-                      className={`${styles['tariff-header']} d-flex justify-content-between align-items-start`}
-                    >
-                      <div>
-                        <div className={styles['tariff-title']}>
-                          {tarifa.nombre}
-                        </div>
-                        <div className={styles['tariff-subtitle']}>
-                          Desde {tarifa.fecha}
-                        </div>
-                        <span
-                          className={`${styles['type-badge']} ${styles[`type-${tarifa.tipo.toLowerCase().replace(' ', '-')}`]}`}
-                        >
-                          {tarifa.tipo}
-                        </span>{' '}
-                        <span
-                          className={`${styles['status-badge']} ${styles[`status-${tarifa.estado.toLowerCase()}`]}`}
-                        >
-                          {tarifa.estado}
-                        </span>
-                      </div>
-                      <div className='text-end'>
-                        {tarifa.tipo === 'Fija' && (
-                          <>
-                            <div className={styles['tariff-price']}>
-                              ${tarifa.precio.toLocaleString('es-CL')}
+                {/* Listado de tarifas */}
+                {!loading && !error && (
+                  <div>
+                    {tarifas.map((tarifa) => {
+                      const uiTarifa = mapTarifaToUI(tarifa);
+                      return (
+                        <div key={uiTarifa.id} className={`${styles['tariff-card']} mb-3 ${uiTarifa.servicio}`}>
+                          <div className={`${styles['tariff-header']} d-flex justify-content-between align-items-start`}>
+                            <div>
+                              <div className={styles['tariff-title']}>{uiTarifa.nombre}</div>
+                              <div className={styles['tariff-subtitle']}>Desde {uiTarifa.fecha}</div>
+                              <span className={`${styles['type-badge']} ${styles[`type-${uiTarifa.tipo.toLowerCase().replace(' ', '-')}`]}`}>
+                                {uiTarifa.tipo}
+                              </span>
+                              <span className={`${styles['status-badge']} ${styles[`status-${uiTarifa.estado.toLowerCase()}`]}`}>
+                                {uiTarifa.estado}
+                              </span>
                             </div>
-                            <div className={styles['tariff-unit']}>
-                              por {tarifa.unidad}
-                            </div>
-                          </>
-                        )}
-                        {tarifa.tipo === 'Por Tramos' &&
-                          Array.isArray(tarifa.estructura) && (
-                            <div className={styles['tier-structure']}>
-                              {(tarifa.estructura as Tramo[]).map(
-                                (tramo, idx) => (
-                                  <div
-                                    key={idx}
-                                    className={styles['tier-item']}
-                                  >
-                                    <span className={styles['tier-range']}>
-                                      {tramo.min} -{' '}
-                                      {tramo.max !== null ? tramo.max : '∞'}{' '}
-                                      {tarifa.unidad}
-                                    </span>
-                                    <span className={styles['tier-price']}>
-                                      ${tramo.precio}
-                                    </span>
-                                  </div>
-                                ),
+                            <div className='text-end'>
+                              {uiTarifa.tipo === 'Fija' && (
+                                <>
+                                  <div className={styles['tariff-price']}>${uiTarifa.precio.toLocaleString('es-CL')}</div>
+                                  <div className={styles['tariff-unit']}>por {uiTarifa.unidad}</div>
+                                </>
                               )}
+                              {/* Agrega lógica para otros tipos si el backend los soporta */}
                             </div>
-                          )}
-                        {tarifa.tipo === 'Estacional' &&
-                          Array.isArray(tarifa.estructura) && (
-                            <div className={styles['tier-structure']}>
-                              {(tarifa.estructura as Estacional[]).map(
-                                (est, idx) => (
-                                  <div
-                                    key={idx}
-                                    className={styles['tier-item']}
-                                  >
-                                    <span className={styles['tier-range']}>
-                                      {est.estacion}
-                                    </span>
-                                    <span className={styles['tier-price']}>
-                                      ${est.precio}
-                                    </span>
-                                  </div>
-                                ),
-                              )}
-                            </div>
-                          )}
-                      </div>
-                    </div>
-                    <div className='mt-2 d-flex gap-2'>
-                      <button className='btn btn-sm btn-outline-primary'>
-                        <span className='material-icons'>edit</span> Editar
-                      </button>
-                      <button
-                        className='btn btn-sm btn-outline-secondary'
-                        onClick={() => setShowDuplicate(true)}
-                      >
-                        <span className='material-icons'>content_copy</span>{' '}
-                        Duplicar
-                      </button>
-                      <button className='btn btn-sm btn-outline-danger'>
-                        <span className='material-icons'>delete</span> Eliminar
-                      </button>
-                    </div>
+                          </div>
+                          <div className='mt-2 d-flex gap-2'>
+                            <button className='btn btn-sm btn-outline-primary'>Editar</button>
+                            <button className='btn btn-sm btn-outline-secondary' onClick={() => setShowDuplicate(true)}>Duplicar</button>
+                            <button className='btn btn-sm btn-outline-danger'>Eliminar</button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Modal Importar */}
-        <Modal show={showImport} onHide={() => setShowImport(false)} centered>
-          <Modal.Header closeButton>
-            <Modal.Title>Importar Tarifas</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <form>
-              <div className='mb-3'>
-                <label className='form-label'>Archivo Excel</label>
-                <input
-                  type='file'
-                  className='form-control'
-                  accept='.xlsx,.xls'
-                />
-              </div>
-            </form>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant='outline-secondary'>Descargar Plantilla</Button>
-            <Button variant='secondary' onClick={() => setShowImport(false)}>
-              Cancelar
-            </Button>
-            <Button variant='primary'>Importar</Button>
-          </Modal.Footer>
-        </Modal>
+          {/* Modal Importar */}
+          <Modal show={showImport} onHide={() => setShowImport(false)} centered>
+            <Modal.Header closeButton>
+              <Modal.Title>Importar Tarifas</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <form>
+                <div className='mb-3'>
+                  <label className='form-label'>Archivo Excel</label>
+                  <input
+                    type='file'
+                    className='form-control'
+                    accept='.xlsx,.xls'
+                  />
+                </div>
+              </form>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant='outline-secondary'>Descargar Plantilla</Button>
+              <Button variant='secondary' onClick={() => setShowImport(false)}>
+                Cancelar
+              </Button>
+              <Button variant='primary'>Importar</Button>
+            </Modal.Footer>
+          </Modal>
 
-        {/* Modal Duplicar */}
-        <Modal
-          show={showDuplicate}
-          onHide={() => setShowDuplicate(false)}
-          centered
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Duplicar Tarifa</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <form>
-              <div className='mb-3'>
-                <label className='form-label'>Nombre de la nueva tarifa</label>
-                <input
-                  type='text'
-                  className='form-control'
-                  placeholder='Ej: Tarifa Residencial Copia'
-                />
-              </div>
-            </form>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant='secondary' onClick={() => setShowDuplicate(false)}>
-              Cancelar
-            </Button>
-            <Button variant='primary'>Duplicar Tarifa</Button>
-          </Modal.Footer>
-        </Modal>
-      </Layout>
+          {/* Modal Duplicar */}
+          <Modal
+            show={showDuplicate}
+            onHide={() => setShowDuplicate(false)}
+            centered
+          >
+            <Modal.Header closeButton>
+              <Modal.Title>Duplicar Tarifa</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <form>
+                <div className='mb-3'>
+                  <label className='form-label'>Nombre de la nueva tarifa</label>
+                  <input
+                    type='text'
+                    className='form-control'
+                    placeholder='Ej: Tarifa Residencial Copia'
+                  />
+                </div>
+              </form>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant='secondary' onClick={() => setShowDuplicate(false)}>
+                Cancelar
+              </Button>
+              <Button variant='primary'>Duplicar Tarifa</Button>
+            </Modal.Footer>
+          </Modal>
+        </Layout>
       </ProtectedPage>
     </ProtectedRoute>
   );
