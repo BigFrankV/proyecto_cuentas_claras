@@ -124,23 +124,23 @@ export function usePermissions() {
 
   // Determinar el rol del usuario (actualizado con agrupamiento completo)
   const getUserRole = (): UserRole => {
-    if (!user) return UserRole.GUEST;
-    if (user.is_superadmin) return UserRole.SUPERUSER;
+    if (!user) {return UserRole.GUEST;}
+    if (user.is_superadmin) {return UserRole.SUPERUSER;}
 
     const roles = user.roles?.map((r: any) => typeof r === 'string' ? r.toLowerCase() : r.rol?.toLowerCase()).filter(Boolean) || [];
-    if (roles.includes('admin_comunidad')) return UserRole.ADMIN;
-    if (roles.includes('conserje')) return UserRole.CONCIERGE;
-    if (roles.includes('contador')) return UserRole.ACCOUNTANT;
-    if (roles.includes('tesorero')) return UserRole.TESORERO;
-    if (roles.includes('presidente_comite')) return UserRole.PRESIDENTE_COMITE;
-    if (roles.includes('proveedor_servicio')) return UserRole.PROVIDER;
-    if (roles.includes('residente')) return UserRole.RESIDENT;
-    if (roles.includes('propietario')) return UserRole.OWNER;
-    if (roles.includes('inquilino')) return UserRole.TENANT;
-    if (roles.includes('proveedor_servicio')) return UserRole.PROVIDER;
+    if (roles.includes('admin_comunidad')) {return UserRole.ADMIN;}
+    if (roles.includes('conserje')) {return UserRole.CONCIERGE;}
+    if (roles.includes('contador')) {return UserRole.ACCOUNTANT;}
+    if (roles.includes('tesorero')) {return UserRole.TESORERO;}
+    if (roles.includes('presidente_comite')) {return UserRole.PRESIDENTE_COMITE;}
+    if (roles.includes('proveedor_servicio')) {return UserRole.PROVIDER;}
+    if (roles.includes('residente')) {return UserRole.RESIDENT;}
+    if (roles.includes('propietario')) {return UserRole.OWNER;}
+    if (roles.includes('inquilino')) {return UserRole.TENANT;}
+    if (roles.includes('proveedor_servicio')) {return UserRole.PROVIDER;}
 
     // Fallback para Patrick
-    if (user.username === 'patrick' || user.username === 'patricio.quintanilla') return UserRole.SUPERUSER;
+    if (user.username === 'patrick' || user.username === 'patricio.quintanilla') {return UserRole.SUPERUSER;}
 
     return UserRole.GUEST;
   };
@@ -380,7 +380,7 @@ export function ProtectedPage({
     hasAccess = hasRole(role);
   } else if (allowedRoles && allowedRoles.length > 0) {
     hasAccess = allowedRoles.some(role => user?.roles?.some((r: any) =>
-      (typeof r === 'string' ? r : r.rol) === role
+      (typeof r === 'string' ? r : r.rol) === role,
     ));
   } else {
     hasAccess = false;
