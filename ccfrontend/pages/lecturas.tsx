@@ -22,7 +22,7 @@ export default function LecturasRoute() {
         'residente',
         'propietario',
         'inquilino',
-        'usuario'
+        'usuario',
       ]}>        <LecturasPage />
       </ProtectedPage>
     </ProtectedRoute>

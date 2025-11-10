@@ -215,7 +215,7 @@ export default function MedidorDetallePage() {
                   <div className="d-flex gap-2">
                     <Button variant="outline-light" size="sm" onClick={() => router.back()}><span className="material-icons">arrow_back</span></Button>
                     <Button variant="light" size="sm" onClick={() => router.push(`/medidores/${medidor?.id}/consumos`)}>Ver Consumos</Button>
-                    <Button variant="outline-light" size="sm" onClick={() => router.push(`/lecturas`)}>Gestionar Lecturas</Button>
+                    <Button variant="outline-light" size="sm" onClick={() => router.push('/lecturas')}>Gestionar Lecturas</Button>
                   </div>
                 </div>
 

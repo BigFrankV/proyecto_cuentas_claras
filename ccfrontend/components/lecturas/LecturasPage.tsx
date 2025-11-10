@@ -2,12 +2,12 @@ import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { Button, Form, InputGroup, Alert } from 'react-bootstrap';
 
 import Sidebar from '@/components/layout/Sidebar';
-import { ProtectedRoute } from '@/lib/useAuth';
 import {
   listAllMedidores,
   listLecturas,
   createLectura,
 } from '@/lib/medidoresService';
+import { ProtectedRoute } from '@/lib/useAuth';
 import { usePermissions } from '@/lib/usePermissions';
 import { Medidor as Meter, Reading as Reading } from '@/types/medidores';  // Asume que existe en types/medidores.ts
 
@@ -33,7 +33,7 @@ export default function LecturasPage(): React.ReactElement {
       try {
         const resp = await listAllMedidores({ limit: 100 }); // Global para superadmin
         setMeters(resp.data || []);
-        if (resp.data?.length > 0) setSelectedMeter(resp.data[0]);
+        if (resp.data?.length > 0) {setSelectedMeter(resp.data[0]);}
       } catch (err) {
         console.error('Error cargando medidores:', err);
       } finally {
@@ -45,7 +45,7 @@ export default function LecturasPage(): React.ReactElement {
 
   // Cargar lecturas cuando cambia medidor
   useEffect(() => {
-    if (!selectedMeter) return;
+    if (!selectedMeter) {return;}
     const loadReadings = async () => {
       try {
         const resp = await listLecturas(selectedMeter.id, { limit: 50 });
@@ -77,7 +77,7 @@ export default function LecturasPage(): React.ReactElement {
 
   const handleFormSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!selectedMeter || !currentReading) return;
+    if (!selectedMeter || !currentReading) {return;}
     setLoading(true);
     try {
       await createLectura(selectedMeter.id, {
@@ -99,7 +99,7 @@ export default function LecturasPage(): React.ReactElement {
     }
   };
 
-  if (loading && !meters.length) return <div>Cargando...</div>;
+  if (loading && !meters.length) {return <div>Cargando...</div>;}
 
   return (
     <ProtectedRoute>
@@ -134,7 +134,7 @@ export default function LecturasPage(): React.ReactElement {
                         value={selectedMeter?.id || ''}
                         onChange={(e) => {
                           const meter = meters.find(m => m.id === Number(e.target.value));
-                          if (meter) handleMeterSelect(meter);
+                          if (meter) {handleMeterSelect(meter);}
                         }}
                       >
                         {filteredMeters.map(m => (
