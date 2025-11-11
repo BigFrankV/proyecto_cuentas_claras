@@ -491,5 +491,58 @@ router.delete(
   }
 );
 
+/**
+ * @swagger
+ * /compras/{id}:
+ *   get:
+ *     tags: [Compras]
+ *     summary: Obtener detalles de una compra
+ *     description: Obtiene los detalles de una compra específica
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Detalles de la compra
+ *       401:
+ *         description: No autenticado
+ *       404:
+ *         description: Compra no encontrada
+ *       500:
+ *         description: Error servidor
+ */
+router.get('/:id', authenticate, async (req, res) => {
+  try {
+    const compra_id = Number(req.params.id);
+
+    // Obtener compra desde vista_compras
+    const [compra] = await db.query('SELECT * FROM vista_compras WHERE id = ?', [compra_id]);
+    if (!compra.length) {
+      return res.status(404).json({ error: 'Compra no encontrada' });
+    }
+
+    // Verificar acceso por comunidad si no es superadmin
+    if (!req.user?.is_superadmin) {
+      const [comRows] = await db.query(
+        `SELECT comunidad_id FROM usuario_miembro_comunidad
+         WHERE persona_id = ? AND activo = 1 AND (hasta IS NULL OR hasta > CURDATE())`,
+        [req.user.persona_id]
+      );
+      const comunidadIds = comRows.map((r) => r.comunidad_id);
+      if (!comunidadIds.includes(compra[0].comunidad_id)) {
+        return res.status(403).json({ error: 'No tienes acceso a esta compra' });
+      }
+    }
+
+    res.json(compra[0]);
+  } catch (err) {
+    console.error('Error GET /compras/:id:', err);
+    res.status(500).json({ error: 'Error al obtener compra' });
+  }
+});
+
 module.exports = router;
 
