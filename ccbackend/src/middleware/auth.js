@@ -33,6 +33,7 @@ function authenticate(req, res, next) {
     const data = jwt.verify(token, secret);
     console.log('[AUTH Middleware] Token validado exitosamente');
     console.log('[AUTH Middleware] Usuario:', {
+      sub: data.sub,
       id: data.id,
       username: data.username,
       persona_id: data.persona_id,

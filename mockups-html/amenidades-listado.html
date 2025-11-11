@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lista de Amenidades - Cuentas Claras</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Tokens / overrides -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+</head>
+
+<body>
+  <div class="d-flex">
+
+    <section>
+      <!-- Sidebar -->
+      <div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" id="sidebar"
+        style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- Navegación principal -->
+        <div class="nav-sections" style="flex: 1; overflow-y: auto;">
+
+          <!-- DASHBOARD -->
+          <div class="nav-section-header">Dashboard</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="dashboard.html" class="nav-link">
+                <span class="material-icons align-middle me-2">dashboard</span>
+                <span>Panel Principal</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="reportes-dashboard.html" class="nav-link">
+                <span class="material-icons align-middle me-2">bar_chart</span>
+                <span>Reportes</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- COMUNIDADES Y ESTRUCTURA -->
+          <div class="nav-section-header">Estructura</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="comunidades-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">domain</span>
+                <span>Comunidades</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="edificios-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">business</span>
+                <span>Edificios</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="torres-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">location_city</span>
+                <span>Torres</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="unidades-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">apartment</span>
+                <span>Unidades</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- PERSONAS Y MEMBRESÍAS -->
+          <div class="nav-section-header">Residentes</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="personas-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">people</span>
+                <span>Personas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="membresias-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">card_membership</span>
+                <span>Membresías</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- FINANZAS -->
+          <div class="nav-section-header">Finanzas</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="emisiones-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">receipt_long</span>
+                <span>Emisiones</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="cargos-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">assignment</span>
+                <span>Cargos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pagos-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">payments</span>
+                <span>Pagos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="conciliaciones-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">account_balance</span>
+                <span>Conciliaciones</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- GASTOS Y COMPRAS -->
+          <div class="nav-section-header">Gastos</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="gastos-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">shopping_cart</span>
+                <span>Gastos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="categorias-gasto-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">category</span>
+                <span>Categorías</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="centros-costo-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">account_balance_wallet</span>
+                <span>Centros de Costo</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="proveedores-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">store</span>
+                <span>Proveedores</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="documentos-compra-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">inventory</span>
+                <span>Compras</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- MEDIDORES Y SERVICIOS -->
+          <div class="nav-section-header">Servicios</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="medidores-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">speed</span>
+                <span>Medidores</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="lecturas-medidor.html" class="nav-link">
+                <span class="material-icons align-middle me-2">visibility</span>
+                <span>Lecturas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="consumos-medidor.html" class="nav-link">
+                <span class="material-icons align-middle me-2">water_drop</span>
+                <span>Consumos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="tarifas-consumo-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">price_change</span>
+                <span>Tarifas</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- AMENIDADES Y RESERVAS -->
+          <div class="nav-section-header">Amenidades</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="amenidades-listado.html" class="nav-link active">
+                <span class="material-icons align-middle me-2">pool</span>
+                <span>Amenidades</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="reservas-amenidad.html" class="nav-link">
+                <span class="material-icons align-middle me-2">event_available</span>
+                <span>Reservas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="calendario-reservas.html" class="nav-link">
+                <span class="material-icons align-middle me-2">calendar_month</span>
+                <span>Calendario</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- MULTAS Y SANCIONES -->
+          <div class="nav-section-header">Sanciones</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="multas-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">gavel</span>
+                <span>Multas</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- SOPORTE Y COMUNICACIÓN -->
+          <div class="nav-section-header">Comunicación</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="tickets-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">support_agent</span>
+                <span>Tickets</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="notificaciones-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">notifications</span>
+                <span>Notificaciones</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="documentos-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">folder</span>
+                <span>Documentos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="bitacora-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">history</span>
+                <span>Bitácora</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- UTILIDADES -->
+          <div class="nav-section-header">Utilidades</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="util-uf.html" class="nav-link">
+                <span class="material-icons align-middle me-2">trending_up</span>
+                <span>Valor UF</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="util-utm.html" class="nav-link">
+                <span class="material-icons align-middle me-2">calculate</span>
+                <span>Valor UTM</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="util-rut.html" class="nav-link">
+                <span class="material-icons align-middle me-2">verified_user</span>
+                <span>Validador RUT</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <hr>
+
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+            id="userDropdown" data-bs-toggle="dropdown">
+            <span class="material-icons me-2">settings</span>
+            <span>Configuración</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="comunidad-parametros.html">Parámetros</a></li>
+            <li><a class="dropdown-item" href="#">Preferencias</a></li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Backdrop for mobile sidebar -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Sidebar backdrop for mobile -->
+    <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+    <!-- Contenido principal -->
+    <div class="main-content flex-grow-1 bg-light">
+      <!-- Mobile Navigation Bar (solo para móviles) -->
+      <nav class="navbar navbar-dark bg-primary d-flex d-lg-none">
+        <div class="container-fluid">
+          <button class="navbar-toggler border-0" type="button" id="toggle-sidebar">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <a class="navbar-brand me-auto" href="dashboard.html">
+            <span class="material-icons align-middle me-1">apartment</span>
+            Cuentas Claras
+          </a>
+          <div class="dropdown">
+            <button class="btn btn-link text-white p-0" type="button" id="userDropdownMobile" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              <div class="avatar">PC</div>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdownMobile">
+              <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+              <li><a class="dropdown-item" href="#">Configuración</a></li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Contenido -->
+      <main class="container-fluid p-4 p-sm-3 p-md-4">
+        <!-- Amenities Header -->
+        <div class="amenities-header">
+          <div class="row align-items-center">
+            <div class="col-lg-8">
+              <h1 class="amenities-title">Gestión de Amenidades</h1>
+              <div class="amenities-subtitle">Administración de espacios comunes y servicios de las comunidades</div>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+              <div style="opacity: 0.9;">
+                <div><strong>Total Amenidades:</strong> 28</div>
+                <div><strong>Disponibles:</strong> 22</div>
+                <div><strong>Ocupación Promedio:</strong> 68%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card">
+            <div class="summary-icon">
+              <span class="material-icons">pool</span>
+            </div>
+            <div class="summary-number">8</div>
+            <div class="summary-label">Piscinas</div>
+            <div class="summary-detail">75% ocupación promedio</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-icon">
+              <span class="material-icons">fitness_center</span>
+            </div>
+            <div class="summary-number">6</div>
+            <div class="summary-label">Gimnasios</div>
+            <div class="summary-detail">82% ocupación promedio</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-icon">
+              <span class="material-icons">celebration</span>
+            </div>
+            <div class="summary-number">4</div>
+            <div class="summary-label">Salones</div>
+            <div class="summary-detail">45% ocupación promedio</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-icon">
+              <span class="material-icons">local_parking</span>
+            </div>
+            <div class="summary-number">10</div>
+            <div class="summary-label">Estacionamientos</div>
+            <div class="summary-detail">90% ocupación promedio</div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+          <div class="charts-header">
+            <h3 class="charts-title">
+              <span class="material-icons">analytics</span>
+              Análisis de Ocupación
+            </h3>
+          </div>
+          <div class="charts-body">
+            <div class="row">
+              <div class="col-lg-6">
+                <h6 class="mb-3">Ocupación por Tipo de Amenidad</h6>
+                <div class="chart-container">
+                  <canvas id="amenityTypeChart"></canvas>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <h6 class="mb-3">Tendencia de Reservas (Últimos 6 Meses)</h6>
+                <div class="chart-container">
+                  <canvas id="reservationTrendChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+          <div class="filters-header">
+            <h3 class="filters-title">
+              <span class="material-icons">filter_list</span>
+              Filtros de Búsqueda
+            </h3>
+            <button class="action-btn outline small" onclick="clearFilters()">
+              <span class="material-icons">clear</span>
+              Limpiar Filtros
+            </button>
+          </div>
+          <div class="filters-body">
+            <div class="row">
+              <div class="col-md-3 mb-3">
+                <label for="communityFilter" class="form-label">Comunidad</label>
+                <select class="form-select" id="communityFilter" onchange="filterAmenities()">
+                  <option value="">Todas las comunidades</option>
+                  <option value="torres-del-sol">Torres del Sol</option>
+                  <option value="vista-hermosa">Vista Hermosa</option>
+                  <option value="parque-central">Parque Central</option>
+                  <option value="alameda-norte">Alameda Norte</option>
+                </select>
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label for="typeFilter" class="form-label">Tipo</label>
+                <select class="form-select" id="typeFilter" onchange="filterAmenities()">
+                  <option value="">Todos los tipos</option>
+                  <option value="pool">Piscina</option>
+                  <option value="gym">Gimnasio</option>
+                  <option value="hall">Salón</option>
+                  <option value="playground">Juegos</option>
+                  <option value="parking">Estacionamiento</option>
+                  <option value="garden">Jardín</option>
+                </select>
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label for="statusFilter" class="form-label">Estado</label>
+                <select class="form-select" id="statusFilter" onchange="filterAmenities()">
+                  <option value="">Todos los estados</option>
+                  <option value="available">Disponible</option>
+                  <option value="occupied">Ocupado</option>
+                  <option value="maintenance">Mantenimiento</option>
+                  <option value="reserved">Reservado</option>
+                </select>
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label for="searchFilter" class="form-label">Buscar</label>
+                <input type="text" class="form-control" id="searchFilter" placeholder="Buscar amenidad..."
+                  onkeyup="filterAmenities()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Amenities Table -->
+        <div class="amenities-table">
+          <div class="table-responsive">
+            <table class="table custom-table mb-0">
+              <thead>
+                <tr>
+                  <th>Amenidad</th>
+                  <th>Comunidad</th>
+                  <th>Capacidad</th>
+                  <th>Ocupación</th>
+                  <th>Estado</th>
+                  <th>Tarifa</th>
+                  <th>Próxima Reserva</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="amenitiesTableBody">
+                <!-- Amenities data will be populated here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav aria-label="Paginación de amenidades" class="mt-4">
+          <ul class="pagination justify-content-center">
+            <li class="page-item disabled">
+              <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Anterior</a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+              <a class="page-link" href="#">Siguiente</a>
+            </li>
+          </ul>
+        </nav>
+      </main>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/script.js"></script>
+  <script>
+    // Mobile sidebar toggle functionality
+    document.addEventListener('DOMContentLoaded', function () {
+      const toggleBtn = document.getElementById('toggle-sidebar');
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+
+      if (toggleBtn && sidebar && backdrop) {
+        // Toggle sidebar on button click
+        toggleBtn.addEventListener('click', function () {
+          sidebar.classList.toggle('show');
+          backdrop.classList.toggle('show');
+        });
+
+        // Close sidebar on backdrop click
+        backdrop.addEventListener('click', function () {
+          sidebar.classList.remove('show');
+          backdrop.classList.remove('show');
+        });
+      }
+
+      // Initialize the rest of the page
+      populateAmenitiesTable();
+      initializeCharts();
+    });
+
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const backdrop = document.querySelector('.sidebar-backdrop');
+
+      sidebar.classList.toggle('show');
+      backdrop.classList.toggle('show');
+    }
+
+    // Sample amenities data
+    const amenitiesData = [
+      {
+        id: 1,
+        name: 'Piscina Principal',
+        type: 'pool',
+        community: 'Torres del Sol',
+        capacity: 50,
+        occupancy: 85,
+        status: 'available',
+        rate: 15000,
+        nextReservation: '2025-09-16 10:00',
+        description: 'Piscina olímpica con jacuzzi'
+      },
+      {
+        id: 2,
+        name: 'Gimnasio Torre A',
+        type: 'gym',
+        community: 'Torres del Sol',
+        capacity: 25,
+        occupancy: 92,
+        status: 'occupied',
+        rate: 8000,
+        nextReservation: '2025-09-15 18:00',
+        description: 'Gimnasio equipado con máquinas modernas'
+      },
+      {
+        id: 3,
+        name: 'Salón de Eventos',
+        type: 'hall',
+        community: 'Vista Hermosa',
+        capacity: 100,
+        occupancy: 45,
+        status: 'available',
+        rate: 35000,
+        nextReservation: '2025-09-18 19:00',
+        description: 'Salón para celebraciones y eventos'
+      },
+      {
+        id: 4,
+        name: 'Cancha de Tenis',
+        type: 'court',
+        community: 'Parque Central',
+        capacity: 4,
+        occupancy: 70,
+        status: 'maintenance',
+        rate: 12000,
+        nextReservation: '2025-09-20 09:00',
+        description: 'Cancha de tenis profesional'
+      },
+      {
+        id: 5,
+        name: 'Área de Juegos',
+        type: 'playground',
+        community: 'Vista Hermosa',
+        capacity: 20,
+        occupancy: 60,
+        status: 'available',
+        rate: 0,
+        nextReservation: '2025-09-16 15:00',
+        description: 'Área de juegos para niños'
+      },
+      {
+        id: 6,
+        name: 'Quincho Familiar',
+        type: 'bbq',
+        community: 'Alameda Norte',
+        capacity: 15,
+        occupancy: 78,
+        status: 'reserved',
+        rate: 18000,
+        nextReservation: '2025-09-15 12:00',
+        description: 'Quincho con parrilla y mesas'
+      },
+      {
+        id: 7,
+        name: 'Sala de Reuniones',
+        type: 'meeting',
+        community: 'Torres del Sol',
+        capacity: 12,
+        occupancy: 55,
+        status: 'available',
+        rate: 10000,
+        nextReservation: '2025-09-17 14:00',
+        description: 'Sala equipada para reuniones'
+      },
+      {
+        id: 8,
+        name: 'Piscina Infantil',
+        type: 'pool',
+        community: 'Parque Central',
+        capacity: 15,
+        occupancy: 40,
+        status: 'available',
+        rate: 8000,
+        nextReservation: '2025-09-16 11:00',
+        description: 'Piscina especial para niños'
+      }
+    ];
+
+    // Populate amenities table
+    function populateAmenitiesTable(data = amenitiesData) {
+      const tbody = document.getElementById('amenitiesTableBody');
+
+      tbody.innerHTML = data.map(amenity => {
+        const statusLabels = {
+          available: 'Disponible',
+          occupied: 'Ocupado',
+          maintenance: 'Mantenimiento',
+          reserved: 'Reservado'
+        };
+
+        const statusIcons = {
+          available: 'check_circle',
+          occupied: 'cancel',
+          maintenance: 'build',
+          reserved: 'schedule'
+        };
+
+        const typeIcons = {
+          pool: 'pool',
+          gym: 'fitness_center',
+          hall: 'celebration',
+          playground: 'child_friendly',
+          parking: 'local_parking',
+          garden: 'park',
+          court: 'sports_tennis',
+          bbq: 'outdoor_grill',
+          meeting: 'meeting_room'
+        };
+
+        const typeLabels = {
+          pool: 'Piscina',
+          gym: 'Gimnasio',
+          hall: 'Salón',
+          playground: 'Juegos',
+          parking: 'Estacionamiento',
+          garden: 'Jardín',
+          court: 'Cancha',
+          bbq: 'Quincho',
+          meeting: 'Sala'
+        };
+
+        return `
+            <tr>
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="amenity-icon ${amenity.type}">
+                    <span class="material-icons">${typeIcons[amenity.type] || 'place'}</span>
+                  </div>
+                  <div>
+                    <div class="fw-bold">${amenity.name}</div>
+                    <small class="text-muted">${typeLabels[amenity.type] || 'Otro'}</small>
+                  </div>
+                </div>
+              </td>
+              <td>${amenity.community}</td>
+              <td>
+                <span class="fw-bold">${amenity.capacity}</span>
+                <small class="text-muted d-block">personas</small>
+              </td>
+              <td>
+                <div class="availability-bar">
+                  <div class="availability-fill" style="width: ${amenity.occupancy}%"></div>
+                </div>
+                <div class="availability-text">${amenity.occupancy}% ocupación</div>
+              </td>
+              <td>
+                <span class="status-badge ${amenity.status}">
+                  <span class="material-icons">${statusIcons[amenity.status]}</span>
+                  ${statusLabels[amenity.status]}
+                </span>
+              </td>
+              <td>
+                ${amenity.rate > 0 ? `$${amenity.rate.toLocaleString('es-CL')}` : 'Gratuito'}
+                <small class="text-muted d-block">por hora</small>
+              </td>
+              <td>
+                ${amenity.nextReservation ? `
+                  <div>${new Date(amenity.nextReservation).toLocaleDateString('es-CL')}</div>
+                  <small class="text-muted">${new Date(amenity.nextReservation).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</small>
+                ` : '<em>Sin reservas</em>'}
+              </td>
+              <td>
+                <div class="d-flex gap-1">
+                  <button class="action-btn small primary" onclick="viewAmenity(${amenity.id})" title="Ver Detalles">
+                    <span class="material-icons">visibility</span>
+                  </button>
+                  <button class="action-btn small outline" onclick="editAmenity(${amenity.id})" title="Editar">
+                    <span class="material-icons">edit</span>
+                  </button>
+                  <button class="action-btn small outline" onclick="viewReservations(${amenity.id})" title="Reservas">
+                    <span class="material-icons">event</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+      }).join('');
+    }
+
+    // Filter amenities
+    function filterAmenities() {
+      const communityFilter = document.getElementById('communityFilter').value.toLowerCase();
+      const typeFilter = document.getElementById('typeFilter').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+      const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+      const filteredData = amenitiesData.filter(amenity => {
+        const matchesCommunity = !communityFilter || amenity.community.toLowerCase().includes(communityFilter);
+        const matchesType = !typeFilter || amenity.type === typeFilter;
+        const matchesStatus = !statusFilter || amenity.status === statusFilter;
+        const matchesSearch = !searchFilter ||
+          amenity.name.toLowerCase().includes(searchFilter) ||
+          amenity.description.toLowerCase().includes(searchFilter) ||
+          amenity.community.toLowerCase().includes(searchFilter);
+
+        return matchesCommunity && matchesType && matchesStatus && matchesSearch;
+      });
+
+      populateAmenitiesTable(filteredData);
+    }
+
+    // Clear filters
+    function clearFilters() {
+      document.getElementById('communityFilter').value = '';
+      document.getElementById('typeFilter').value = '';
+      document.getElementById('statusFilter').value = '';
+      document.getElementById('searchFilter').value = '';
+      populateAmenitiesTable();
+    }
+
+    // Action functions
+    function newAmenity() {
+      alert('Abriendo formulario para nueva amenidad...');
+    }
+
+    function viewAmenity(id) {
+      const amenity = amenitiesData.find(a => a.id === id);
+      alert(`Ver detalles de: ${amenity.name}`);
+    }
+
+    function editAmenity(id) {
+      const amenity = amenitiesData.find(a => a.id === id);
+      alert(`Editar amenidad: ${amenity.name}`);
+    }
+
+    function viewReservations(id) {
+      const amenity = amenitiesData.find(a => a.id === id);
+      alert(`Ver reservas de: ${amenity.name}`);
+    }
+
+    // Initialize charts
+    function initializeCharts() {
+      // Amenity Type Chart
+      const amenityTypeCtx = document.getElementById('amenityTypeChart').getContext('2d');
+      new Chart(amenityTypeCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Piscinas', 'Gimnasios', 'Salones', 'Canchas', 'Otros'],
+          datasets: [{
+            data: [32, 28, 18, 12, 10],
+            backgroundColor: [
+              '#007bff',
+              '#28a745',
+              '#ffc107',
+              '#17a2b8',
+              '#6c757d'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 20,
+                usePointStyle: true
+              }
+            }
+          }
+        }
+      });
+
+      // Reservation Trend Chart
+      const reservationTrendCtx = document.getElementById('reservationTrendChart').getContext('2d');
+      new Chart(reservationTrendCtx, {
+        type: 'line',
+        data: {
+          labels: ['Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre'],
+          datasets: [{
+            label: 'Reservas',
+            data: [245, 289, 312, 356, 398, 425],
+            borderColor: '#17a2b8',
+            backgroundColor: 'rgba(23, 162, 184, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(0,0,0,0.1)'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Initialize page
+    // document.addEventListener('DOMContentLoaded', function() {
+    //   populateAmenitiesTable();
+    //   initializeCharts();
+    // });
+  </script>
+</body>
+
+</html>

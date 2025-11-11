@@ -1,0 +1,1008 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crear Documento de Compra - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      /* Estilos del formulario */
+      .form-card {
+        background-color: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+      }
+      
+      .form-section {
+        margin-bottom: 2rem;
+      }
+      
+      .form-section:last-child {
+        margin-bottom: 0;
+      }
+      
+      .form-section-title {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 0.75rem;
+        margin-bottom: 1.25rem;
+      }
+      
+      /* Selector de proveedor con avatar */
+      .provider-option {
+        display: flex;
+        align-items: center;
+      }
+      
+      .provider-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 8px;
+        font-weight: 500;
+        font-size: 10px;
+        color: var(--color-primary);
+      }
+      
+      /* Tabla de ítems */
+      .items-table {
+        min-width: 600px;
+      }
+      
+      .items-table thead th {
+        background-color: #f8f9fa;
+        font-weight: 500;
+        vertical-align: middle;
+      }
+      
+      .items-table .form-control,
+      .items-table .form-select {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.875rem;
+      }
+      
+      .items-table tbody tr {
+        border-bottom: 1px solid #dee2e6;
+      }
+      
+      .items-table .input-group-sm>.btn, 
+      .items-table .input-group-sm>.form-control {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+      }
+      
+      .remove-item {
+        color: var(--color-danger);
+        cursor: pointer;
+      }
+      
+      .add-item-btn {
+        display: inline-flex;
+        align-items: center;
+      }
+      
+      /* Resumen de totales */
+      .totals-summary {
+        padding: 1.25rem;
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+        margin-top: 1rem;
+      }
+      
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+      }
+      
+      .summary-row.total {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #dee2e6;
+        font-weight: 500;
+        font-size: 1.125rem;
+      }
+      
+      /* Adjuntos */
+      .attachments-container {
+        padding: 1rem;
+        border: 2px dashed #dee2e6;
+        border-radius: var(--radius);
+        text-align: center;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+      }
+      
+      .attachments-container:hover {
+        border-color: var(--color-primary);
+        background-color: rgba(0, 123, 255, 0.03);
+      }
+      
+      .attachment-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        margin-bottom: 0.75rem;
+      }
+      
+      .attachment-icon {
+        font-size: 24px;
+        color: #6c757d;
+        margin-right: 0.75rem;
+      }
+      
+      .attachment-info {
+        flex-grow: 1;
+      }
+      
+      .attachment-name {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+      }
+      
+      .attachment-meta {
+        font-size: 0.75rem;
+        color: #6c757d;
+      }
+      
+      .attachment-actions {
+        display: flex;
+      }
+      
+      .preview-button {
+        margin-right: 0.5rem;
+      }
+      
+      /* Sticky footer para los botones de acción */
+      @media (max-width: 991.98px) {
+        .form-actions {
+          position: sticky;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background-color: #fff;
+          box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+          padding: 1rem;
+          margin: 0 -0.75rem -1rem;
+          border-bottom-left-radius: var(--radius);
+          border-bottom-right-radius: var(--radius);
+          z-index: 10;
+        }
+      }
+      
+      /* Centro de costo selector */
+      .cost-center-option {
+        display: flex;
+        align-items: center;
+      }
+      
+      .cost-center-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 8px;
+        font-weight: 500;
+        font-size: 10px;
+        color: var(--color-primary);
+      }
+      
+      /* Badge de tipo de documento */
+      .doc-type-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+      
+      .doc-type-invoice {
+        background-color: #E3F2FD;
+        color: #0D47A1;
+      }
+      
+      .doc-type-receipt {
+        background-color: #FFF8E1;
+        color: #F57F17;
+      }
+      
+      .doc-type-quote {
+        background-color: #E8F5E9;
+        color: #2E7D32;
+      }
+      
+      .doc-type-order {
+        background-color: #F3E5F5;
+        color: #7B1FA2;
+      }
+      
+      /* Vista previa de archivo */
+      .preview-container {
+        background-color: rgba(0,0,0,0.02);
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-top: 1rem;
+      }
+      
+      .preview-file {
+        text-align: center;
+      }
+      
+      .preview-file img {
+        max-width: 100%;
+        max-height: 300px;
+        object-fit: contain;
+      }
+      
+      .preview-file-icon {
+        font-size: 64px;
+        color: #6c757d;
+      }
+      
+      .preview-file-name {
+        margin-top: 1rem;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <!-- Mobile Navigation Bar -->
+    <nav class="navbar navbar-dark bg-primary d-flex d-lg-none">
+      <div class="container-fluid">
+        <button class="navbar-toggler border-0" type="button" id="toggle-sidebar">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand me-auto" href="dashboard.html">
+          <span class="material-icons align-middle me-1">apartment</span>
+          Cuentas Claras
+        </a>
+        <div class="dropdown">
+          <button class="btn btn-link text-white p-0" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="avatar">PC</div>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    
+    <!-- Backdrop for mobile sidebar -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+    
+    <!-- Sidebar -->
+    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidebar" id="sidebar" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+      <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+        <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+        <span class="fs-4">Cuentas Claras</span>
+      </a>
+      
+      <div class="d-flex align-items-center mb-3 px-2">
+        <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+        <div>
+          <span class="d-block text-white">Patricia Contreras</span>
+          <span class="small text-white-50">Administradora</span>
+        </div>
+      </div>
+      
+      <hr>
+      
+      <ul class="nav nav-sidebar flex-column mb-auto">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">domain</span>
+            <span>Comunidades</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="edificios-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">business</span>
+            <span>Edificios</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">apartment</span>
+            <span>Unidades</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">people</span>
+            <span>Personas</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="membresias-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">card_membership</span>
+            <span>Membresías</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="categorias-gasto-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">category</span>
+            <span>Categorías</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="centros-costo-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">account_balance_wallet</span>
+            <span>Centros de Costo</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="proveedores-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">inventory</span>
+            <span>Proveedores</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="documentos-compra-listado.html" class="nav-link active px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">receipt_long</span>
+            <span>Compras</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">payments</span>
+            <span>Pagos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">shopping_cart</span>
+            <span>Gastos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">bar_chart</span>
+            <span>Reportes</span>
+          </a>
+        </li>
+      </ul>
+      
+      <hr>
+      
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <strong>Patricia</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+          <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+          <li><a class="dropdown-item" href="#">Configuración</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content px-3 py-4">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+          <a href="documentos-compra-listado.html" class="btn btn-link text-secondary p-0 me-3">
+            <span class="material-icons">arrow_back</span>
+          </a>
+          <h4 class="mb-0">Nuevo Documento de Compra</h4>
+        </div>
+      </div>
+      
+      <form id="document-form">
+        <!-- Información general -->
+        <div class="form-card">
+          <div class="form-section">
+            <h5 class="form-section-title">Información General</h5>
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label for="document-type" class="form-label">Tipo de Documento*</label>
+                <select class="form-select" id="document-type" required>
+                  <option value="" selected disabled>Seleccionar tipo de documento</option>
+                  <option value="invoice">Factura</option>
+                  <option value="receipt">Boleta</option>
+                  <option value="quote">Cotización</option>
+                  <option value="order">Orden de compra</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="document-number" class="form-label">Número de Documento*</label>
+                <input type="text" class="form-control" id="document-number" placeholder="Ej: F-2025-100" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="document-provider" class="form-label">Proveedor*</label>
+                <div class="input-group mb-2">
+                  <select class="form-select" id="document-provider" required>
+                    <option value="" selected disabled>Seleccionar proveedor</option>
+                    <option value="1">
+                      <div class="provider-option">
+                        <span class="provider-avatar">CE</span>
+                        <span>Constructora Edificar</span>
+                      </div>
+                    </option>
+                    <option value="2">Servicios Eléctricos S.A.</option>
+                    <option value="3">Plomería y Mantención Express</option>
+                    <option value="4">Distribuidora de Insumos ABC</option>
+                    <option value="5">Seguridad Integral Ltda.</option>
+                  </select>
+                  <a href="proveedor-nuevo.html" class="input-group-text" id="add-provider">
+                    <span class="material-icons">add</span>
+                  </a>
+                </div>
+                <div class="form-text">
+                  <a href="#" data-bs-toggle="modal" data-bs-target="#providerQuickModal" class="small">
+                    <span class="material-icons align-text-bottom" style="font-size: 14px;">add_circle_outline</span>
+                    Agregar proveedor rápido
+                  </a>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="document-community" class="form-label">Comunidad*</label>
+                <select class="form-select" id="document-community" required>
+                  <option value="" selected disabled>Seleccionar comunidad</option>
+                  <option value="1">Comunidad Parque Real</option>
+                  <option value="2">Edificio Central</option>
+                  <option value="3">Torre Norte</option>
+                  <option value="4">Condominio Las Palmas</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="document-date" class="form-label">Fecha del Documento*</label>
+                <input type="date" class="form-control" id="document-date" value="2025-09-15" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="document-expiration" class="form-label">Fecha de Vencimiento</label>
+                <input type="date" class="form-control" id="document-expiration" value="2025-10-15">
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="document-description" class="form-label">Descripción*</label>
+                <input type="text" class="form-control" id="document-description" placeholder="Ej: Reparación de techumbre" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="document-cost-center" class="form-label">Centro de Costo*</label>
+                <select class="form-select" id="document-cost-center" required>
+                  <option value="" selected disabled>Seleccionar centro de costo</option>
+                  <option value="1">
+                    <div class="cost-center-option">
+                      <span class="cost-center-icon">M</span>
+                      <span>Mantenimiento</span>
+                    </div>
+                  </option>
+                  <option value="2">Administración</option>
+                  <option value="3">Seguridad</option>
+                  <option value="4">Limpieza</option>
+                  <option value="5">Jardinería</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="document-currency" class="form-label">Moneda*</label>
+                <select class="form-select" id="document-currency" required>
+                  <option value="CLP" selected>Peso Chileno (CLP)</option>
+                  <option value="USD">Dólar (USD)</option>
+                  <option value="EUR">Euro (EUR)</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="document-exchange-rate" class="form-label">Tipo de Cambio</label>
+                <input type="number" class="form-control" id="document-exchange-rate" value="1" min="0" step="0.01">
+                <div class="form-text">Sólo necesario si la moneda es distinta a CLP</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Ítems del documento -->
+        <div class="form-card">
+          <div class="form-section">
+            <h5 class="form-section-title">Detalle de Ítems</h5>
+            <div class="table-responsive">
+              <table class="table items-table" id="items-table">
+                <thead>
+                  <tr>
+                    <th style="width: 40%;">Descripción</th>
+                    <th style="width: 12%;">Cantidad</th>
+                    <th style="width: 15%;">Precio Unitario</th>
+                    <th style="width: 15%;">Impuesto</th>
+                    <th style="width: 15%;">Total</th>
+                    <th style="width: 3%;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr id="item-row-1">
+                    <td>
+                      <input type="text" class="form-control" name="item-description" placeholder="Descripción del ítem">
+                    </td>
+                    <td>
+                      <input type="number" class="form-control item-quantity" name="item-quantity" value="1" min="0" step="1">
+                    </td>
+                    <td>
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control item-price" name="item-price" value="0" min="0" step="1">
+                      </div>
+                    </td>
+                    <td>
+                      <select class="form-select item-tax" name="item-tax">
+                        <option value="0">Sin impuesto (0%)</option>
+                        <option value="19" selected>IVA (19%)</option>
+                        <option value="custom">Personalizado</option>
+                      </select>
+                    </td>
+                    <td>
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text">$</span>
+                        <input type="text" class="form-control item-total" name="item-total" value="0" readonly>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <span class="material-icons remove-item">close</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="d-flex mt-3">
+              <button type="button" class="btn btn-sm btn-outline-primary add-item-btn" id="add-item">
+                <span class="material-icons align-middle me-1 small">add</span> Agregar ítem
+              </button>
+            </div>
+            
+            <div class="row mt-4">
+              <div class="col-12 col-md-6 offset-md-6">
+                <div class="totals-summary">
+                  <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">$0</span>
+                  </div>
+                  <div class="summary-row">
+                    <span>Impuestos (19%):</span>
+                    <span id="taxes">$0</span>
+                  </div>
+                  <div class="summary-row total">
+                    <span>Total:</span>
+                    <span id="total">$0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Archivos adjuntos -->
+        <div class="form-card">
+          <div class="form-section">
+            <h5 class="form-section-title">Archivos Adjuntos</h5>
+            
+            <div class="attachments-container" id="drag-drop-area">
+              <span class="material-icons" style="font-size: 48px; color: #6c757d;">cloud_upload</span>
+              <h6 class="mt-2">Arrastra y suelta archivos aquí</h6>
+              <p class="text-muted">o</p>
+              <div class="mb-2">
+                <label for="file-upload" class="btn btn-outline-primary">
+                  Seleccionar archivos
+                </label>
+                <input id="file-upload" type="file" multiple style="display: none;" />
+              </div>
+              <div class="text-muted small">
+                Formatos soportados: PDF, JPG, PNG, DOCX, XLSX (Máx. 10MB)
+              </div>
+            </div>
+            
+            <!-- Archivos subidos -->
+            <div id="uploaded-files">
+              <div class="attachment-item">
+                <span class="material-icons attachment-icon">picture_as_pdf</span>
+                <div class="attachment-info">
+                  <div class="attachment-name">Cotización-original.pdf</div>
+                  <div class="attachment-meta">1.2 MB • Subido hace 5 minutos</div>
+                </div>
+                <div class="attachment-actions">
+                  <button type="button" class="btn btn-sm btn-outline-secondary preview-button">
+                    <span class="material-icons align-middle small">visibility</span>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-danger">
+                    <span class="material-icons align-middle small">delete</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="attachment-item">
+                <span class="material-icons attachment-icon">image</span>
+                <div class="attachment-info">
+                  <div class="attachment-name">Foto-trabajo.jpg</div>
+                  <div class="attachment-meta">540 KB • Subido hace 3 minutos</div>
+                </div>
+                <div class="attachment-actions">
+                  <button type="button" class="btn btn-sm btn-outline-secondary preview-button">
+                    <span class="material-icons align-middle small">visibility</span>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-danger">
+                    <span class="material-icons align-middle small">delete</span>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Vista previa de archivo -->
+              <div class="preview-container">
+                <div class="preview-file">
+                  <img src="https://via.placeholder.com/800x600" alt="Vista previa" />
+                  <div class="preview-file-name">
+                    Foto-trabajo.jpg
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Comentarios y notas -->
+        <div class="form-card">
+          <div class="form-section">
+            <h5 class="form-section-title">Comentarios y Notas</h5>
+            <div class="mb-3">
+              <label for="document-notes" class="form-label">Notas internas</label>
+              <textarea class="form-control" id="document-notes" rows="3" placeholder="Ingresa cualquier nota o comentario relevante sobre este documento..."></textarea>
+              <div class="form-text">Las notas son visibles solo para usuarios internos del sistema.</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Botones de acción -->
+        <div class="form-card">
+          <div class="form-section">
+            <div class="form-actions d-flex justify-content-between">
+              <button type="button" class="btn btn-outline-secondary" onclick="window.location='documentos-compra-listado.html'">
+                Cancelar
+              </button>
+              <div>
+                <button type="button" class="btn btn-outline-primary me-2" id="save-draft">
+                  Guardar como borrador
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  Crear documento
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    
+    <!-- Modal para agregar proveedor rápido -->
+    <div class="modal fade" id="providerQuickModal" tabindex="-1" aria-labelledby="providerQuickModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="providerQuickModalLabel">Agregar Proveedor Rápido</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="quick-provider-name" class="form-label">Nombre/Razón Social*</label>
+              <input type="text" class="form-control" id="quick-provider-name" placeholder="Ej: Servicios Generales S.A." required>
+            </div>
+            <div class="mb-3">
+              <label for="quick-provider-id" class="form-label">RUT/ID Fiscal*</label>
+              <input type="text" class="form-control" id="quick-provider-id" placeholder="Ej: 76.123.456-7" required>
+            </div>
+            <div class="mb-3">
+              <label for="quick-provider-contact" class="form-label">Email o teléfono de contacto</label>
+              <input type="text" class="form-control" id="quick-provider-contact" placeholder="Ej: contacto@empresa.com">
+            </div>
+            <div class="form-text mb-3">
+              Podrás completar la información del proveedor más adelante.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary">Agregar proveedor</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/script.js"></script>
+    
+    <script>
+      // Toggle sidebar on mobile
+      document.addEventListener('DOMContentLoaded', function() {
+        const toggleSidebar = document.getElementById('toggle-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+        
+        if (toggleSidebar && sidebar && sidebarBackdrop) {
+          toggleSidebar.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+            sidebarBackdrop.classList.toggle('show');
+          });
+          
+          sidebarBackdrop.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            sidebarBackdrop.classList.remove('show');
+          });
+        }
+        
+        // Manejo de ítems en la tabla
+        const addItemBtn = document.getElementById('add-item');
+        const itemsTable = document.getElementById('items-table').getElementsByTagName('tbody')[0];
+        
+        // Agregar nuevo ítem
+        addItemBtn.addEventListener('click', function() {
+          const rowCount = itemsTable.rows.length;
+          const newRow = itemsTable.insertRow();
+          newRow.id = `item-row-${rowCount + 1}`;
+          
+          newRow.innerHTML = `
+            <td>
+              <input type="text" class="form-control" name="item-description" placeholder="Descripción del ítem">
+            </td>
+            <td>
+              <input type="number" class="form-control item-quantity" name="item-quantity" value="1" min="0" step="1">
+            </td>
+            <td>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text">$</span>
+                <input type="number" class="form-control item-price" name="item-price" value="0" min="0" step="1">
+              </div>
+            </td>
+            <td>
+              <select class="form-select item-tax" name="item-tax">
+                <option value="0">Sin impuesto (0%)</option>
+                <option value="19" selected>IVA (19%)</option>
+                <option value="custom">Personalizado</option>
+              </select>
+            </td>
+            <td>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text">$</span>
+                <input type="text" class="form-control item-total" name="item-total" value="0" readonly>
+              </div>
+            </td>
+            <td class="text-center">
+              <span class="material-icons remove-item">close</span>
+            </td>
+          `;
+          
+          setupItemListeners(newRow);
+        });
+        
+        // Función para configurar los event listeners para un ítem
+        function setupItemListeners(row) {
+          // Eliminar ítem
+          const removeBtn = row.querySelector('.remove-item');
+          if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+              if (itemsTable.rows.length > 1) {
+                row.parentNode.removeChild(row);
+                updateTotals();
+              } else {
+                alert('Debe haber al menos un ítem en el documento.');
+              }
+            });
+          }
+          
+          // Calcular total del ítem al cambiar cantidad o precio
+          const quantityInput = row.querySelector('.item-quantity');
+          const priceInput = row.querySelector('.item-price');
+          const taxSelect = row.querySelector('.item-tax');
+          const totalInput = row.querySelector('.item-total');
+          
+          const calculateItemTotal = function() {
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            const taxRate = taxSelect.value === 'custom' ? 0 : (parseFloat(taxSelect.value) / 100);
+            
+            const subtotal = quantity * price;
+            const total = subtotal * (1 + taxRate);
+            
+            totalInput.value = total.toFixed(0);
+            updateTotals();
+          };
+          
+          quantityInput.addEventListener('input', calculateItemTotal);
+          priceInput.addEventListener('input', calculateItemTotal);
+          taxSelect.addEventListener('change', calculateItemTotal);
+        }
+        
+        // Configurar listeners para los ítems existentes
+        const existingRows = itemsTable.querySelectorAll('tr');
+        existingRows.forEach(row => setupItemListeners(row));
+        
+        // Función para actualizar los totales
+        function updateTotals() {
+          let subtotal = 0;
+          let taxes = 0;
+          
+          const rows = itemsTable.querySelectorAll('tr');
+          rows.forEach(row => {
+            const quantityInput = row.querySelector('.item-quantity');
+            const priceInput = row.querySelector('.item-price');
+            const taxSelect = row.querySelector('.item-tax');
+            
+            if (quantityInput && priceInput && taxSelect) {
+              const quantity = parseFloat(quantityInput.value) || 0;
+              const price = parseFloat(priceInput.value) || 0;
+              const taxRate = taxSelect.value === 'custom' ? 0 : (parseFloat(taxSelect.value) / 100);
+              
+              const itemSubtotal = quantity * price;
+              const itemTaxes = itemSubtotal * taxRate;
+              
+              subtotal += itemSubtotal;
+              taxes += itemTaxes;
+            }
+          });
+          
+          const total = subtotal + taxes;
+          
+          document.getElementById('subtotal').textContent = `$${subtotal.toFixed(0)}`;
+          document.getElementById('taxes').textContent = `$${taxes.toFixed(0)}`;
+          document.getElementById('total').textContent = `$${total.toFixed(0)}`;
+        }
+        
+        // Configurar vista previa de archivos
+        const fileUploadInput = document.getElementById('file-upload');
+        const dragDropArea = document.getElementById('drag-drop-area');
+        
+        // Manejo de drag & drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+          dragDropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+          dragDropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+          dragDropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+          dragDropArea.classList.add('border-primary');
+          dragDropArea.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
+        }
+        
+        function unhighlight() {
+          dragDropArea.classList.remove('border-primary');
+          dragDropArea.style.backgroundColor = '';
+        }
+        
+        dragDropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+          const dt = e.dataTransfer;
+          const files = dt.files;
+          
+          handleFiles(files);
+        }
+        
+        fileUploadInput.addEventListener('change', function() {
+          handleFiles(this.files);
+        });
+        
+        function handleFiles(files) {
+          // Aquí iría la lógica para procesar los archivos
+          console.log('Archivos a subir:', files);
+          // En una implementación real, aquí se enviarían los archivos al servidor
+        }
+        
+        // Manejar botones de vista previa
+        const previewButtons = document.querySelectorAll('.preview-button');
+        previewButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            const previewContainer = document.querySelector('.preview-container');
+            previewContainer.style.display = previewContainer.style.display === 'none' ? 'block' : 'none';
+          });
+        });
+        
+        // Manejar envío del formulario
+        const documentForm = document.getElementById('document-form');
+        documentForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          // Aquí iría la lógica para enviar los datos del formulario
+          alert('Documento creado exitosamente!');
+          window.location.href = 'documento-compra-detalle.html';
+        });
+        
+        // Manejar guardado como borrador
+        const saveDraftBtn = document.getElementById('save-draft');
+        saveDraftBtn.addEventListener('click', function() {
+          // Aquí iría la lógica para guardar el borrador
+          alert('Documento guardado como borrador!');
+          window.location.href = 'documentos-compra-listado.html';
+        });
+      });
+    </script>
+  </body>
+</html>

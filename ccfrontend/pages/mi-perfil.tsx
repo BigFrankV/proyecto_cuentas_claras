@@ -605,14 +605,12 @@ export default function MiPerfil() {
                         }}
                       >
                         {profilePhoto ? (
-                          <img
+                          <Image
                             src={profilePhoto}
                             alt='Foto de perfil'
+                            fill
                             style={{
-                              width: '100%',
-                              height: '100%',
                               objectFit: 'cover',
-                              display: 'block',
                             }}
                             onError={() => {
                               console.error('Error cargando foto de perfil desde:', profilePhoto);

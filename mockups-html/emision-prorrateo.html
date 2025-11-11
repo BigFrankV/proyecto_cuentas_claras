@@ -1,0 +1,1191 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Previsualización de Prorrateo - Septiembre 2025 - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      .avatar {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--color-primary);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50%;
+      }
+      
+      /* Prorrateo specific styles */
+      .prorrateo-header {
+        background: linear-gradient(135deg, #6f42c1 0%, #563d7c 100%);
+        color: white;
+        border-radius: var(--radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .prorrateo-header::before {
+        content: '';
+        position: absolute;
+        top: -25%;
+        right: -15%;
+        width: 120px;
+        height: 120px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        animation: pulse 4s ease-in-out infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.3; }
+        50% { transform: scale(1.1); opacity: 0.5; }
+      }
+      
+      .prorrateo-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      
+      .prorrateo-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+      }
+      
+      .prorrateo-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      
+      .stat-item {
+        background: rgba(255,255,255,0.1);
+        border-radius: var(--radius);
+        padding: 1rem;
+        text-align: center;
+      }
+      
+      .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+      }
+      
+      .stat-label {
+        font-size: 0.75rem;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      /* Summary cards */
+      .summary-card {
+        background-color: #fff;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid #e9ecef;
+        margin-bottom: 1.5rem;
+        transition: all 0.2s ease;
+      }
+      
+      .summary-card:hover {
+        box-shadow: var(--shadow-md);
+      }
+      
+      .summary-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f8f9fa;
+      }
+      
+      .summary-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .summary-title .material-icons {
+        margin-right: 0.5rem;
+        color: #6f42c1;
+      }
+      
+      .summary-amount {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #6f42c1;
+      }
+      
+      .breakdown-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f8f9fa;
+      }
+      
+      .breakdown-item:last-child {
+        border-bottom: none;
+        font-weight: 600;
+        color: #212529;
+        background-color: #f8f9fa;
+        margin: 0 -1.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0 0 var(--radius) var(--radius);
+      }
+      
+      .breakdown-label {
+        color: #6c757d;
+        font-weight: 500;
+      }
+      
+      .breakdown-amount {
+        color: #212529;
+        font-weight: 600;
+        font-family: 'Courier New', monospace;
+      }
+      
+      /* Distribution table */
+      .distribution-table {
+        background-color: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid #e9ecef;
+        overflow: hidden;
+      }
+      
+      .table-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1rem 1.5rem;
+        border-bottom: 2px solid #dee2e6;
+      }
+      
+      .table-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #212529;
+        display: flex;
+        align-items: center;
+      }
+      
+      .table-header .material-icons {
+        margin-right: 0.5rem;
+        color: #6f42c1;
+      }
+      
+      .custom-table {
+        margin: 0;
+      }
+      
+      .custom-table thead th {
+        background-color: #6f42c1;
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 1rem 0.75rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .custom-table tbody tr {
+        transition: all 0.2s ease;
+      }
+      
+      .custom-table tbody tr:hover {
+        background-color: #f8f4ff;
+      }
+      
+      .custom-table tbody td {
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+        border-color: #f8f9fa;
+      }
+      
+      .unit-number {
+        font-weight: 600;
+        color: #6f42c1;
+      }
+      
+      .unit-type {
+        background-color: #e3f2fd;
+        color: #1976d2;
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--radius);
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+      }
+      
+      .amount-cell {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        text-align: right;
+      }
+      
+      .percentage-cell {
+        font-weight: 500;
+        color: #6c757d;
+        text-align: center;
+      }
+      
+      /* Chart container */
+      .chart-container {
+        background-color: #fff;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid #e9ecef;
+        margin-bottom: 1.5rem;
+      }
+      
+      .chart-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f8f9fa;
+      }
+      
+      .chart-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .chart-title .material-icons {
+        margin-right: 0.5rem;
+        color: #6f42c1;
+      }
+      
+      /* Action buttons */
+      .action-btn {
+        border: none;
+        border-radius: var(--radius);
+        padding: 0.75rem 1.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        gap: 0.5rem;
+      }
+      
+      .action-btn .material-icons {
+        font-size: 1.1rem;
+      }
+      
+      .action-btn.primary {
+        background-color: #6f42c1;
+        color: white;
+      }
+      
+      .action-btn.primary:hover {
+        background-color: #563d7c;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+      
+      .action-btn.success {
+        background-color: #28a745;
+        color: white;
+      }
+      
+      .action-btn.success:hover {
+        background-color: #218838;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+      
+      .action-btn.danger {
+        background-color: #dc3545;
+        color: white;
+      }
+      
+      .action-btn.danger:hover {
+        background-color: #c82333;
+        color: white;
+      }
+      
+      .action-btn.outline {
+        background-color: transparent;
+        color: #6f42c1;
+        border: 2px solid #6f42c1;
+      }
+      
+      .action-btn.outline:hover {
+        background-color: #6f42c1;
+        color: white;
+        transform: translateY(-2px);
+      }
+      
+      .action-btn.warning {
+        background-color: #ffc107;
+        color: #212529;
+      }
+      
+      .action-btn.warning:hover {
+        background-color: #e0a800;
+        color: #212529;
+      }
+      
+      /* Controls section */
+      .controls-card {
+        background: linear-gradient(135deg, #f8f4ff 0%, #fff 100%);
+        border: 2px solid #e0d4ff;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      
+      .controls-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      
+      .controls-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .controls-title .material-icons {
+        margin-right: 0.5rem;
+        color: #6f42c1;
+      }
+      
+      .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        align-items: end;
+      }
+      
+      /* Status badges */
+      .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .status-badge.draft {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      
+      .status-badge.ready {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      
+      .status-badge.sent {
+        background-color: #cce7ff;
+        color: #004085;
+        border: 1px solid #b8daff;
+      }
+      
+      .status-badge .material-icons {
+        font-size: 1rem;
+      }
+      
+      /* Alerts */
+      .custom-alert {
+        border-radius: var(--radius);
+        border: none;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+      }
+      
+      .custom-alert .material-icons {
+        margin-right: 0.5rem;
+        vertical-align: middle;
+      }
+      
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .prorrateo-header {
+          padding: 1.5rem;
+        }
+        
+        .prorrateo-title {
+          font-size: 2rem;
+        }
+        
+        .prorrateo-stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .summary-header {
+          flex-direction: column;
+          align-items: start;
+          gap: 1rem;
+        }
+        
+        .controls-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .custom-table {
+          font-size: 0.875rem;
+        }
+        
+        .custom-table thead th,
+        .custom-table tbody td {
+          padding: 0.5rem 0.25rem;
+        }
+        
+        .action-btn {
+          padding: 0.5rem 1rem;
+          font-size: 0.75rem;
+        }
+      }
+      
+      /* Print styles */
+      @media print {
+        .sidebar,
+        header,
+        .controls-card,
+        .action-btn {
+          display: none !important;
+        }
+        
+        .main-content {
+          margin-left: 0 !important;
+        }
+        
+        .prorrateo-header {
+          background: #6f42c1 !important;
+          color: white !important;
+        }
+        
+        .summary-card,
+        .distribution-table,
+        .chart-container {
+          break-inside: avoid;
+          margin-bottom: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <ul class="nav nav-sidebar flex-column mb-auto">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">domain</span>
+              <span>Comunidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">apartment</span>
+              <span>Unidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">people</span>
+              <span>Personas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">bar_chart</span>
+              <span>Reportes</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="emisiones-listado.html" class="nav-link active px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">receipt</span>
+              <span>Emisiones</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="util-uf.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">calculate</span>
+              <span>Utilidades</span>
+            </a>
+          </li>
+        </ul>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+            <span class="material-icons me-2">settings</span>
+            <span>Configuración</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Sidebar backdrop for mobile -->
+      <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+      
+      <!-- Contenido principal -->
+      <div class="main-content flex-grow-1 bg-light">
+        <!-- Header con búsqueda y notificaciones -->
+        <header class="bg-white border-bottom shadow-sm p-3">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <div class="col-lg-6">
+                <button class="btn toggle-sidebar d-lg-none me-2" onclick="toggleSidebar()">
+                  <span class="material-icons">menu</span>
+                </button>
+                <nav aria-label="breadcrumb">
+                  <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="emisiones-listado.html">Emisiones</a></li>
+                    <li class="breadcrumb-item"><a href="emision-nueva.html">Nueva Emisión</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Prorrateo</li>
+                  </ol>
+                </nav>
+              </div>
+              
+              <div class="col-lg-6">
+                <div class="d-flex justify-content-end align-items-center">
+                  <div class="me-3">
+                    <span class="status-badge ready">
+                      <span class="material-icons">check_circle</span>
+                      Listo para Enviar
+                    </span>
+                  </div>
+                  
+                  <div class="me-3">
+                    <button class="btn position-relative p-0" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons">notifications</span>
+                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        3
+                      </span>
+                    </button>
+                  </div>
+                  
+                  <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                      <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+                      <div class="d-none d-sm-block">
+                        <div class="fw-bold">Patricia Contreras</div>
+                        <small class="text-muted">Administradora</small>
+                      </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                      <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+                      <li><a class="dropdown-item" href="#">Configuración</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Contenido -->
+        <main class="container-fluid p-4">
+          <!-- Prorrateo Header -->
+          <div class="prorrateo-header">
+            <div class="row align-items-center">
+              <div class="col-lg-8">
+                <h1 class="prorrateo-title">Prorrateo de Gastos</h1>
+                <div class="prorrateo-subtitle">Emisión Septiembre 2025 • Edificio Los Álamos</div>
+                <div style="opacity: 0.8;">
+                  Distribución de gastos comunes entre 45 unidades
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div class="prorrateo-stats">
+                  <div class="stat-item">
+                    <div class="stat-number">45</div>
+                    <div class="stat-label">Unidades</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">$8.450.000</div>
+                    <div class="stat-label">Total Gastos</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">$187.778</div>
+                    <div class="stat-label">Promedio</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">15 Sep</div>
+                    <div class="stat-label">Vencimiento</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alert -->
+          <div class="alert alert-info custom-alert" role="alert">
+            <span class="material-icons">info</span>
+            <strong>Información:</strong> Los valores mostrados incluyen todos los gastos comunes del período. 
+            Revisa cuidadosamente antes de proceder con el envío.
+          </div>
+
+          <!-- Controls -->
+          <div class="controls-card">
+            <div class="controls-header">
+              <h3 class="controls-title">
+                <span class="material-icons">tune</span>
+                Configuración del Prorrateo
+              </h3>
+              <div class="d-flex gap-2">
+                <button class="action-btn primary" onclick="recalculate()">
+                  <span class="material-icons">refresh</span>
+                  Recalcular
+                </button>
+                <button class="action-btn outline" onclick="saveAsDraft()">
+                  <span class="material-icons">save</span>
+                  Guardar Borrador
+                </button>
+              </div>
+            </div>
+            
+            <div class="controls-grid">
+              <div>
+                <label for="periodSelect" class="form-label">Período de Emisión</label>
+                <select class="form-select" id="periodSelect" onchange="updatePeriod()">
+                  <option value="2025-09" selected>Septiembre 2025</option>
+                  <option value="2025-08">Agosto 2025</option>
+                  <option value="2025-07">Julio 2025</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="distributionMethod" class="form-label">Método de Distribución</label>
+                <select class="form-select" id="distributionMethod" onchange="updateDistribution()">
+                  <option value="equal" selected>Igual para todas las unidades</option>
+                  <option value="area">Por superficie (m²)</option>
+                  <option value="mixed">Mixto (igual + superficie)</option>
+                  <option value="custom">Personalizado</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="dueDate" class="form-label">Fecha de Vencimiento</label>
+                <input type="date" class="form-control" id="dueDate" value="2025-10-15" onchange="updateDueDate()">
+              </div>
+              
+              <div>
+                <label for="includeInterest" class="form-label">Configuración</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="includeInterest" checked onchange="toggleInterest()">
+                  <label class="form-check-label" for="includeInterest">
+                    Incluir intereses por mora
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Left Column: Summary -->
+            <div class="col-lg-4">
+              <!-- Total Summary -->
+              <div class="summary-card">
+                <div class="summary-header">
+                  <h3 class="summary-title">
+                    <span class="material-icons">account_balance</span>
+                    Resumen Total
+                  </h3>
+                  <div class="summary-amount">$8.450.000</div>
+                </div>
+                
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Gastos de Administración</span>
+                  <span class="breakdown-amount">$3.200.000</span>
+                </div>
+                
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Mantención y Aseo</span>
+                  <span class="breakdown-amount">$1.850.000</span>
+                </div>
+                
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Servicios Básicos</span>
+                  <span class="breakdown-amount">$2.100.000</span>
+                </div>
+                
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Seguros</span>
+                  <span class="breakdown-amount">$650.000</span>
+                </div>
+                
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Fondo de Reserva</span>
+                  <span class="breakdown-amount">$450.000</span>
+                </div>
+                
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Otros Gastos</span>
+                  <span class="breakdown-amount">$200.000</span>
+                </div>
+                
+                <div class="breakdown-item">
+                  <span class="breakdown-label">TOTAL A DISTRIBUIR</span>
+                  <span class="breakdown-amount">$8.450.000</span>
+                </div>
+              </div>
+              
+              <!-- Distribution Method -->
+              <div class="summary-card">
+                <div class="summary-header">
+                  <h3 class="summary-title">
+                    <span class="material-icons">pie_chart</span>
+                    Método de Distribución
+                  </h3>
+                </div>
+                
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Tipo</span>
+                  <span class="breakdown-amount">Igual para todas</span>
+                </div>
+                
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Unidades consideradas</span>
+                  <span class="breakdown-amount">45 unidades</span>
+                </div>
+                
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Monto por unidad</span>
+                  <span class="breakdown-amount">$187.778</span>
+                </div>
+                
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Diferencia de redondeo</span>
+                  <span class="breakdown-amount">$10</span>
+                </div>
+              </div>
+              
+              <!-- Quick Actions -->
+              <div class="summary-card">
+                <div class="summary-header">
+                  <h3 class="summary-title">
+                    <span class="material-icons">flash_on</span>
+                    Acciones
+                  </h3>
+                </div>
+                
+                <div class="d-grid gap-2">
+                  <button class="action-btn success" onclick="confirmAndSend()">
+                    <span class="material-icons">send</span>
+                    Enviar Emisión
+                  </button>
+                  
+                  <button class="action-btn primary" onclick="previewEmails()">
+                    <span class="material-icons">preview</span>
+                    Previsualizar Emails
+                  </button>
+                  
+                  <button class="action-btn outline" onclick="exportPDF()">
+                    <span class="material-icons">picture_as_pdf</span>
+                    Exportar PDF
+                  </button>
+                  
+                  <button class="action-btn outline" onclick="exportExcel()">
+                    <span class="material-icons">table_chart</span>
+                    Exportar Excel
+                  </button>
+                  
+                  <button class="action-btn warning" onclick="editEmission()">
+                    <span class="material-icons">edit</span>
+                    Editar Emisión
+                  </button>
+                  
+                  <button class="action-btn danger" onclick="cancelEmission()">
+                    <span class="material-icons">cancel</span>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Right Column: Distribution Details -->
+            <div class="col-lg-8">
+              <!-- Chart -->
+              <div class="chart-container">
+                <div class="chart-header">
+                  <h3 class="chart-title">
+                    <span class="material-icons">donut_large</span>
+                    Distribución de Gastos
+                  </h3>
+                </div>
+                <div style="height: 300px;">
+                  <canvas id="expenseChart"></canvas>
+                </div>
+              </div>
+              
+              <!-- Distribution Table -->
+              <div class="distribution-table">
+                <div class="table-header">
+                  <h3>
+                    <span class="material-icons">table_chart</span>
+                    Detalle por Unidad
+                  </h3>
+                </div>
+                
+                <div class="table-responsive">
+                  <table class="table custom-table mb-0">
+                    <thead>
+                      <tr>
+                        <th>Unidad</th>
+                        <th>Torre</th>
+                        <th>Tipo</th>
+                        <th>Superficie</th>
+                        <th>Porcentaje</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody id="distributionTableBody">
+                      <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/script.js"></script>
+    <script>
+      function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.querySelector('.sidebar-backdrop');
+        
+        sidebar.classList.toggle('show');
+        backdrop.classList.toggle('show');
+      }
+
+      // Sample data for distribution
+      const unitsData = [
+        { unit: '101', tower: 'A', type: 'Depto', area: 85, percentage: 2.22, amount: 187778, status: 'active' },
+        { unit: '102', tower: 'A', type: 'Depto', area: 92, percentage: 2.22, amount: 187778, status: 'active' },
+        { unit: '103', tower: 'A', type: 'Depto', area: 85, percentage: 2.22, amount: 187778, status: 'vacant' },
+        { unit: '201', tower: 'A', type: 'Depto', area: 85, percentage: 2.22, amount: 187778, status: 'active' },
+        { unit: '202', tower: 'A', type: 'Depto', area: 92, percentage: 2.22, amount: 187778, status: 'active' },
+        { unit: '203', tower: 'A', type: 'Depto', area: 85, percentage: 2.22, amount: 187778, status: 'active' },
+        { unit: '301', tower: 'A', type: 'Depto', area: 85, percentage: 2.22, amount: 187778, status: 'active' },
+        { unit: '302', tower: 'A', type: 'Depto', area: 92, percentage: 2.22, amount: 187778, status: 'active' },
+        { unit: '303', tower: 'A', type: 'Depto', area: 85, percentage: 2.22, amount: 187778, status: 'maintenance' },
+        { unit: '401', tower: 'A', type: 'Depto', area: 85, percentage: 2.22, amount: 187778, status: 'active' },
+        { unit: '402', tower: 'A', type: 'Depto', area: 92, percentage: 2.22, amount: 187778, status: 'active' },
+        { unit: '403', tower: 'A', type: 'Depto', area: 85, percentage: 2.22, amount: 187778, status: 'active' },
+        { unit: '501', tower: 'A', type: 'Depto', area: 85, percentage: 2.22, amount: 187778, status: 'active' },
+        { unit: '502', tower: 'A', type: 'Depto', area: 92, percentage: 2.22, amount: 187778, status: 'active' },
+        { unit: '503', tower: 'A', type: 'Depto', area: 85, percentage: 2.22, amount: 187778, status: 'active' }
+      ];
+
+      // Populate distribution table
+      function populateDistributionTable() {
+        const tbody = document.getElementById('distributionTableBody');
+        
+        // Show first 15 units for better performance on initial load
+        const displayUnits = unitsData.slice(0, 15);
+        
+        tbody.innerHTML = displayUnits.map(unit => {
+          const statusClass = unit.status === 'active' ? 'success' : 
+                            unit.status === 'vacant' ? 'warning' : 'danger';
+          const statusText = unit.status === 'active' ? 'Activa' : 
+                           unit.status === 'vacant' ? 'Vacante' : 'Mantención';
+          
+          return `
+            <tr>
+              <td><span class="unit-number">${unit.unit}</span></td>
+              <td>Torre ${unit.tower}</td>
+              <td><span class="unit-type">${unit.type}</span></td>
+              <td>${unit.area} m²</td>
+              <td class="percentage-cell">${unit.percentage.toFixed(1)}%</td>
+              <td class="amount-cell">$${unit.amount.toLocaleString('es-CL')}</td>
+              <td>
+                <span class="badge bg-${statusClass}">${statusText}</span>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        
+        // Add summary row
+        const totalAmount = displayUnits.reduce((sum, unit) => sum + unit.amount, 0);
+        tbody.innerHTML += `
+          <tr style="background-color: #f8f9fa; font-weight: 600;">
+            <td colspan="4">TOTAL (mostrando ${displayUnits.length} de ${unitsData.length})</td>
+            <td class="percentage-cell">${(displayUnits.length * 2.22).toFixed(1)}%</td>
+            <td class="amount-cell">$${totalAmount.toLocaleString('es-CL')}</td>
+            <td>-</td>
+          </tr>
+        `;
+      }
+
+      // Initialize chart
+      function initializeChart() {
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        
+        new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: [
+              'Gastos de Administración',
+              'Mantención y Aseo',
+              'Servicios Básicos',
+              'Seguros',
+              'Fondo de Reserva',
+              'Otros Gastos'
+            ],
+            datasets: [{
+              data: [3200000, 1850000, 2100000, 650000, 450000, 200000],
+              backgroundColor: [
+                '#6f42c1',
+                '#28a745',
+                '#17a2b8',
+                '#ffc107',
+                '#fd7e14',
+                '#6c757d'
+              ],
+              borderWidth: 2,
+              borderColor: '#fff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  padding: 20,
+                  usePointStyle: true,
+                  font: {
+                    size: 12
+                  }
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label;
+                    const value = context.parsed;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((value / total) * 100).toFixed(1);
+                    return `${label}: $${value.toLocaleString('es-CL')} (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // Control functions
+      function updatePeriod() {
+        const period = document.getElementById('periodSelect').value;
+        console.log('Período actualizado:', period);
+        // Here you would recalculate based on the new period
+      }
+
+      function updateDistribution() {
+        const method = document.getElementById('distributionMethod').value;
+        console.log('Método de distribución actualizado:', method);
+        // Here you would recalculate the distribution
+      }
+
+      function updateDueDate() {
+        const dueDate = document.getElementById('dueDate').value;
+        console.log('Fecha de vencimiento actualizada:', dueDate);
+      }
+
+      function toggleInterest() {
+        const includeInterest = document.getElementById('includeInterest').checked;
+        console.log('Incluir intereses:', includeInterest);
+      }
+
+      function recalculate() {
+        alert('Recalculando prorrateo... Esta funcionalidad estará disponible próximamente.');
+      }
+
+      function saveAsDraft() {
+        alert('Guardando como borrador... Esta funcionalidad estará disponible próximamente.');
+      }
+
+      // Action functions
+      function confirmAndSend() {
+        if (confirm('¿Estás seguro de que quieres enviar esta emisión? Una vez enviada no podrá ser modificada.')) {
+          const button = event.target.closest('.action-btn');
+          const originalText = button.innerHTML;
+          
+          button.innerHTML = '<span class="material-icons">hourglass_empty</span> Enviando...';
+          button.disabled = true;
+          
+          setTimeout(() => {
+            button.innerHTML = '<span class="material-icons">check</span> Enviado';
+            
+            setTimeout(() => {
+              alert('Emisión enviada exitosamente a todas las unidades.');
+              window.location.href = 'emisiones-listado.html';
+            }, 1000);
+          }, 3000);
+        }
+      }
+
+      function previewEmails() {
+        alert('Previsualizando emails... Esta funcionalidad estará disponible próximamente.');
+      }
+
+      function exportPDF() {
+        alert('Exportando a PDF... Esta funcionalidad estará disponible próximamente.');
+      }
+
+      function exportExcel() {
+        alert('Exportando a Excel... Esta funcionalidad estará disponible próximamente.');
+      }
+
+      function editEmission() {
+        if (confirm('¿Quieres volver a editar la emisión? Los cambios en el prorrateo se perderán.')) {
+          window.location.href = 'emision-nueva.html';
+        }
+      }
+
+      function cancelEmission() {
+        if (confirm('¿Estás seguro de que quieres cancelar esta emisión? Todos los cambios se perderán.')) {
+          window.location.href = 'emisiones-listado.html';
+        }
+      }
+
+      // Initialize page
+      document.addEventListener('DOMContentLoaded', function() {
+        populateDistributionTable();
+        initializeChart();
+      });
+    </script>
+  </body>
+</html>

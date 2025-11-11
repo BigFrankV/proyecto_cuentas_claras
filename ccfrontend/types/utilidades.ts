@@ -1,5 +1,8 @@
+// =========================================
+// TIPOS PARA UTILIDADES DEL SISTEMA
+// =========================================
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// Tipos para las utilidades del sistema
 
 // === UTILIDAD RUT ===
 export interface RutValidation {

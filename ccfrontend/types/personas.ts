@@ -1,4 +1,21 @@
-// Tipos para el módulo de personas
+// =========================================
+// TIPOS PARA PERSONAS
+// =========================================
+
+export type TipoPersona = 'Administrador' | 'Inquilino' | 'Propietario';
+
+export type EstadoPersona = 'Activo' | 'Inactivo';
+
+export const TIPOS_PERSONA = {
+  Administrador: { label: 'Administrador' },
+  Inquilino: { label: 'Inquilino' },
+  Propietario: { label: 'Propietario' },
+} as const;
+
+export const ESTADOS_PERSONA = {
+  Activo: { label: 'Activo', color: 'success' },
+  Inactivo: { label: 'Inactivo', color: 'secondary' },
+} as const;
 export interface Persona {
   id: number;
   rut: string;
@@ -14,7 +31,7 @@ export interface Persona {
   usuario?: {
     id: number;
     username: string;
-    estado: 'Activo' | 'Inactivo';
+    estado: EstadoPersona;
     nivel_acceso: string;
   };
 }
@@ -25,8 +42,8 @@ export interface PersonaListado {
   dni: string;
   email?: string;
   telefono?: string;
-  tipo: 'Administrador' | 'Inquilino' | 'Propietario';
-  estado: 'Activo' | 'Inactivo';
+  tipo: TipoPersona;
+  estado: EstadoPersona;
   unidades: number;
   fechaRegistro: string;
   avatar?: string;
@@ -36,7 +53,7 @@ export interface PersonaConUsuario extends Persona {
   usuario: {
     id: number;
     username: string;
-    estado: 'Activo' | 'Inactivo';
+    estado: EstadoPersona;
     nivel_acceso: string;
   };
 }

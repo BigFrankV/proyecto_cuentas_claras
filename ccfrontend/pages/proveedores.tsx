@@ -252,7 +252,7 @@ export default function ProveedoresListado() {
                   </div>
                   <p>
                     ¿Eliminar proveedor{' '}
-                    <strong>{selectedProvider.nombre}</strong>?
+                    <strong>{selectedProvider.razon_social}</strong>?
                   </p>
                 </>
               )}

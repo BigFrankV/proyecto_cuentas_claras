@@ -37,6 +37,12 @@ const nextConfig = {
         port: '3000',
         pathname: '/api/files/**',
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8081',
+        pathname: '/api/files/**',
+      },
     ],
     formats: ['image/webp', 'image/avif'],
   },

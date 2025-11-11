@@ -1,3 +1,14 @@
+// =========================================
+// TIPOS PARA PROVEEDORES
+// =========================================
+
+export type EstadoProveedor = 0 | 1;
+
+export const ESTADOS_PROVEEDOR = {
+  0: { label: 'Inactivo', color: 'secondary' },
+  1: { label: 'Activo', color: 'success' },
+} as const;
+
 export interface Proveedor {
   id: number;
   comunidad_id: number;
@@ -9,7 +20,7 @@ export interface Proveedor {
   email?: string | null;
   telefono?: string | null;
   direccion?: string | null;
-  activo: number; // 1 | 0
+  activo: EstadoProveedor; // 1 | 0
   created_at?: string;
   updated_at?: string;
   // campos estadísticos opcionales (si el backend los calcula)

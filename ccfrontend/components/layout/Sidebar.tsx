@@ -1,7 +1,9 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
+import profileService from '@/lib/profileService';
 import { useAuth } from '@/lib/useAuth';
 import {
   usePermissions,
@@ -118,6 +120,7 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
   const { hasPermission, currentRole } = usePermissions(); // Usar permisos dinámicos
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
   // Función para determinar si una sección debe mostrarse (usando permisos)
   const shouldShowSection = (sectionTitle: string) => {
@@ -153,6 +156,24 @@ export default function Sidebar() {
   // Traducción del rol actual a español
   const currentRoleSpanish = roleTranslations[currentRole] || currentRole;
 
+  // Cargar foto de perfil cuando el usuario cambie
+  useEffect(() => {
+    if (user) {
+      const loadProfilePhoto = async () => {
+        try {
+          const photoUrl = await profileService.getProfilePhoto();
+          setProfilePhoto(photoUrl);
+        } catch (error) {
+          // Si hay error, dejar como null (mostrará iniciales)
+          setProfilePhoto(null);
+        }
+      };
+      loadProfilePhoto();
+    } else {
+      setProfilePhoto(null);
+    }
+  }, [user]);
+
   return (
     <>
       <div
@@ -183,26 +204,41 @@ export default function Sidebar() {
 
         {/* Información del usuario */}
         <div className='d-flex align-items-center mb-3 px-2'>
-          <div
-            className='avatar me-2'
-            style={{
-              width: '36px',
-              height: '36px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'var(--color-accent)',
-              color: '#fff',
-              fontWeight: 'bold',
-              borderRadius: '50%',
-            }}
-          >
-            {user?.persona?.nombres && user?.persona?.apellidos
-              ? `${user.persona.nombres.charAt(0)}${user.persona.apellidos.charAt(0)}`.toUpperCase()
-              : user?.username
-                ? user.username.substring(0, 2).toUpperCase()
-                : 'U'}
-          </div>
+          {profilePhoto ? (
+            <Image
+              src={profilePhoto}
+              alt="Foto de perfil"
+              className='avatar me-2'
+              width={36}
+              height={36}
+              style={{
+                borderRadius: '8px',
+                objectFit: 'cover',
+                border: '2px solid rgba(255, 255, 255, 0.2)',
+              }}
+            />
+          ) : (
+            <div
+              className='avatar me-2'
+              style={{
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'var(--color-accent)',
+                color: '#fff',
+                fontWeight: 'bold',
+                borderRadius: '8px',
+              }}
+            >
+              {user?.persona?.nombres && user?.persona?.apellidos
+                ? `${user.persona.nombres.charAt(0)}${user.persona.apellidos.charAt(0)}`.toUpperCase()
+                : user?.username
+                  ? user.username.substring(0, 2).toUpperCase()
+                  : 'U'}
+            </div>
+          )}
           <div>
             <span className='d-block text-white'>
               {user?.persona?.nombres && user?.persona?.apellidos

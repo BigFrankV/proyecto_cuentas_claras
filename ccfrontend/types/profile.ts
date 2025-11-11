@@ -1,4 +1,6 @@
-// Tipos extendidos para el perfil de usuario y funciones relacionadas
+// =========================================
+// TIPOS PARA PERFIL DE USUARIO
+// =========================================
 
 export interface UserPreferences {
   // Notificaciones

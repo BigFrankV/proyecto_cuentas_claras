@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nueva Unidad - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .form-section {
+        background-color: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+      }
+      
+      .form-section-header {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        background-color: #f9f9f9;
+      }
+      
+      .form-section-body {
+        padding: 1.5rem;
+      }
+      
+      .required:after {
+        content: " *";
+        color: var(--color-danger);
+      }
+      
+      /* Estilo para el selector de ubicación */
+      .location-picker {
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        height: 200px;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .location-picker .building {
+        position: absolute;
+        width: 80px;
+        height: 120px;
+        background-color: var(--color-primary);
+        color: white;
+        text-align: center;
+        padding-top: 50px;
+        cursor: pointer;
+        opacity: 0.5;
+        transition: opacity 0.2s ease;
+      }
+      
+      .location-picker .building.selected {
+        opacity: 1;
+        border: 2px solid var(--color-accent);
+      }
+      
+      .location-picker .building:hover {
+        opacity: 0.8;
+      }
+      
+      /* Estilo para el inventario de características */
+      .feature-tag {
+        display: inline-block;
+        background-color: #f1f1f1;
+        border-radius: 16px;
+        padding: 4px 12px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        font-size: 0.875rem;
+      }
+      
+      .feature-tag.selected {
+        background-color: var(--color-primary);
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 280px; min-height: 100vh; background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <ul class="nav nav-sidebar flex-column mb-auto">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">domain</span>
+              <span>Comunidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="edificios-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">business</span>
+              <span>Edificios</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="unidades-listado.html" class="nav-link active px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">apartment</span>
+              <span>Unidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">people</span>
+              <span>Personas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="emisiones-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">receipt_long</span>
+              <span>Emisiones</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">payments</span>
+              <span>Pagos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">money_off</span>
+              <span>Gastos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">bar_chart</span>
+              <span>Reportes</span>
+            </a>
+          </li>
+        </ul>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+            <span class="material-icons me-2">settings</span>
+            <span>Configuración</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Preferencias</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Contenido principal -->
+      <div class="flex-grow-1 bg-light">
+        <!-- Header con búsqueda y notificaciones -->
+        <header class="bg-white border-bottom shadow-sm p-3">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <div class="col-lg-4">
+                <div class="d-flex align-items-center">
+                  <span class="h4 mb-0">Nueva Unidad</span>
+                </div>
+              </div>
+              
+              <div class="col-lg-4 d-flex justify-content-center">
+                <div class="search-icon-container w-100">
+                  <span class="material-icons search-icon">search</span>
+                  <input type="text" class="form-control search-input" placeholder="Buscar...">
+                </div>
+              </div>
+              
+              <div class="col-lg-4 d-flex justify-content-end">
+                <div class="d-flex align-items-center">
+                  <a href="#" class="me-3 text-muted">
+                    <span class="material-icons">help_outline</span>
+                  </a>
+                  <a href="#" class="me-3 text-muted position-relative">
+                    <span class="material-icons">notifications</span>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                      3
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+        
+        <!-- Contenido -->
+        <div class="container-fluid py-4">
+          <!-- Breadcrumb -->
+          <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
+              <li class="breadcrumb-item"><a href="unidades-listado.html">Unidades</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Nueva Unidad</li>
+            </ol>
+          </nav>
+          
+          <!-- Formulario principal -->
+          <form>
+            <div class="row">
+              <div class="col-lg-8">
+                <!-- Información básica de la unidad -->
+                <div class="form-section mb-4">
+                  <div class="form-section-header">
+                    <h5 class="mb-0">Información Básica</h5>
+                  </div>
+                  <div class="form-section-body">
+                    <div class="mb-3">
+                      <label for="comunidadSelect" class="form-label required">Comunidad</label>
+                      <select class="form-select" id="comunidadSelect" required>
+                        <option value="" selected disabled>Seleccionar comunidad</option>
+                        <option value="1">Las Palmas</option>
+                        <option value="2">Edificio Central</option>
+                        <option value="3">Jardines del Este</option>
+                      </select>
+                    </div>
+                    
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label for="edificioSelect" class="form-label required">Edificio</label>
+                          <select class="form-select" id="edificioSelect" required>
+                            <option value="" selected disabled>Seleccionar edificio</option>
+                            <option value="1">Torre Central</option>
+                            <option value="2">Edificio Norte</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label for="torreSelect" class="form-label">Torre</label>
+                          <select class="form-select" id="torreSelect">
+                            <option value="" selected disabled>Seleccionar torre (opcional)</option>
+                            <option value="1">Torre A</option>
+                            <option value="2">Torre B</option>
+                            <option value="3">Torre C</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label for="codigoUnidad" class="form-label required">Código de Unidad</label>
+                          <input type="text" class="form-control" id="codigoUnidad" placeholder="Ej: A-101" required>
+                          <div class="form-text">Código único que identifica la unidad (Ej: A-101, 2B, Dpto. 503)</div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label for="tipoUnidad" class="form-label required">Tipo de Unidad</label>
+                          <select class="form-select" id="tipoUnidad" required>
+                            <option value="departamento" selected>Departamento</option>
+                            <option value="casa">Casa</option>
+                            <option value="oficina">Oficina</option>
+                            <option value="local_comercial">Local Comercial</option>
+                            <option value="bodega">Bodega</option>
+                            <option value="estacionamiento">Estacionamiento</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="row">
+                      <div class="col-md-4">
+                        <div class="mb-3">
+                          <label for="piso" class="form-label">Piso</label>
+                          <input type="number" class="form-control" id="piso" min="0">
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="mb-3">
+                          <label for="nroDormitorios" class="form-label">N° Dormitorios</label>
+                          <input type="number" class="form-control" id="nroDormitorios" min="0">
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="mb-3">
+                          <label for="nroBanos" class="form-label">N° Baños</label>
+                          <input type="number" class="form-control" id="nroBanos" min="0">
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <label for="descripcionUnidad" class="form-label">Descripción</label>
+                      <textarea class="form-control" id="descripcionUnidad" rows="3"></textarea>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Medidas y coeficiente -->
+                <div class="form-section mb-4">
+                  <div class="form-section-header">
+                    <h5 class="mb-0">Medidas y Coeficiente</h5>
+                  </div>
+                  <div class="form-section-body">
+                    <div class="row">
+                      <div class="col-md-4">
+                        <div class="mb-3">
+                          <label for="m2Utiles" class="form-label required">M² Útiles</label>
+                          <div class="input-group">
+                            <input type="number" class="form-control" id="m2Utiles" step="0.01" min="0" required>
+                            <span class="input-group-text">m²</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="mb-3">
+                          <label for="m2Terrazas" class="form-label">M² Terrazas</label>
+                          <div class="input-group">
+                            <input type="number" class="form-control" id="m2Terrazas" step="0.01" min="0">
+                            <span class="input-group-text">m²</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="mb-3">
+                          <label for="m2Totales" class="form-label">M² Totales</label>
+                          <div class="input-group">
+                            <input type="number" class="form-control" id="m2Totales" step="0.01" min="0" readonly>
+                            <span class="input-group-text">m²</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label for="alicuota" class="form-label required">Alícuota (Coeficiente)</label>
+                          <div class="input-group">
+                            <input type="number" class="form-control" id="alicuota" step="0.000001" min="0" max="1" required>
+                            <span class="input-group-text">%</span>
+                          </div>
+                          <div class="form-text">Coeficiente de copropiedad para el cálculo de gastos comunes</div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label for="factorAjuste" class="form-label">Factor de Ajuste</label>
+                          <input type="number" class="form-control" id="factorAjuste" step="0.01" min="0" max="2" value="1.00">
+                          <div class="form-text">Factor multiplicador para ajustes en los cargos (1.00 = sin ajuste)</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Estacionamiento y bodega -->
+                <div class="form-section mb-4">
+                  <div class="form-section-header">
+                    <h5 class="mb-0">Estacionamiento y Bodega</h5>
+                  </div>
+                  <div class="form-section-body">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label for="nroEstacionamiento" class="form-label">N° Estacionamiento</label>
+                          <input type="text" class="form-control" id="nroEstacionamiento" placeholder="Ej: E-25, 67">
+                        </div>
+                        <div class="mb-3">
+                          <label for="ubicacionEstacionamiento" class="form-label">Ubicación Estacionamiento</label>
+                          <input type="text" class="form-control" id="ubicacionEstacionamiento" placeholder="Ej: Subterráneo 2, Sector Norte">
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label for="nroBodega" class="form-label">N° Bodega</label>
+                          <input type="text" class="form-control" id="nroBodega" placeholder="Ej: B-12, 43">
+                        </div>
+                        <div class="mb-3">
+                          <label for="ubicacionBodega" class="form-label">Ubicación Bodega</label>
+                          <input type="text" class="form-control" id="ubicacionBodega" placeholder="Ej: Subterráneo 1, Pasillo Central">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-lg-4">
+                <!-- Ubicación visual -->
+                <div class="form-section mb-4">
+                  <div class="form-section-header">
+                    <h5 class="mb-0">Ubicación Visual</h5>
+                  </div>
+                  <div class="form-section-body">
+                    <div class="mb-3">
+                      <label class="form-label">Seleccione ubicación en el edificio</label>
+                      <div class="location-picker mb-2" id="locationPicker">
+                        <!-- Representación visual del edificio/torres -->
+                        <div class="building" style="top: 20px; left: 20px;" data-building="1">Torre A</div>
+                        <div class="building" style="top: 20px; left: 120px;" data-building="2">Torre B</div>
+                        <div class="building" style="top: 20px; left: 220px;" data-building="3">Torre C</div>
+                      </div>
+                      <small class="text-muted">Haga clic para seleccionar la torre/edificio</small>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Características de la unidad -->
+                <div class="form-section mb-4">
+                  <div class="form-section-header">
+                    <h5 class="mb-0">Características</h5>
+                  </div>
+                  <div class="form-section-body">
+                    <div class="mb-3">
+                      <label class="form-label">Características de la unidad</label>
+                      <div class="d-flex flex-wrap">
+                        <div class="feature-tag me-2 mb-2" data-feature="amoblado">Amoblado</div>
+                        <div class="feature-tag me-2 mb-2" data-feature="balcon">Balcón</div>
+                        <div class="feature-tag me-2 mb-2" data-feature="terraza">Terraza</div>
+                        <div class="feature-tag me-2 mb-2" data-feature="calefaccion">Calefacción</div>
+                        <div class="feature-tag me-2 mb-2" data-feature="aire_acondicionado">Aire Acondicionado</div>
+                        <div class="feature-tag me-2 mb-2" data-feature="vista">Vista</div>
+                        <div class="feature-tag me-2 mb-2" data-feature="luminoso">Luminoso</div>
+                        <div class="feature-tag me-2 mb-2" data-feature="remodelado">Remodelado</div>
+                        <div class="feature-tag me-2 mb-2" data-feature="pet_friendly">Pet Friendly</div>
+                      </div>
+                      <input type="hidden" id="caracteristicasSeleccionadas" value="">
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Servicios y medidores -->
+                <div class="form-section mb-4">
+                  <div class="form-section-header">
+                    <h5 class="mb-0">Servicios y Medidores</h5>
+                  </div>
+                  <div class="form-section-body">
+                    <div class="mb-3">
+                      <label class="form-label">Medidores individuales</label>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="medidorAgua">
+                        <label class="form-check-label" for="medidorAgua">Agua</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="medidorGas">
+                        <label class="form-check-label" for="medidorGas">Gas</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="medidorElectricidad">
+                        <label class="form-check-label" for="medidorElectricidad">Electricidad</label>
+                      </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <button type="button" class="btn btn-sm btn-outline-primary" id="agregarMedidorBtn">
+                        <span class="material-icons align-middle me-1" style="font-size: 16px;">add</span>
+                        Agregar Medidor
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Estado y configuración -->
+                <div class="form-section mb-4">
+                  <div class="form-section-header">
+                    <h5 class="mb-0">Estado y Configuración</h5>
+                  </div>
+                  <div class="form-section-body">
+                    <div class="form-check form-switch mb-3">
+                      <input class="form-check-input" type="checkbox" id="unidadActiva" checked>
+                      <label class="form-check-label" for="unidadActiva">Unidad Activa</label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                      <input class="form-check-input" type="checkbox" id="generarCargos" checked>
+                      <label class="form-check-label" for="generarCargos">Generar cargos de gastos comunes</label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                      <input class="form-check-input" type="checkbox" id="reportesDigitales">
+                      <label class="form-check-label" for="reportesDigitales">Reportes por email</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Acciones finales -->
+                <div class="d-flex justify-content-between mb-4">
+                  <a href="unidades-listado.html" class="btn btn-outline-secondary">Cancelar</a>
+                  <div>
+                    <button type="button" class="btn btn-outline-primary me-2">Guardar Borrador</button>
+                    <button type="submit" class="btn btn-primary">Crear Unidad</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal para agregar medidor -->
+    <div class="modal fade" id="agregarMedidorModal" tabindex="-1" aria-labelledby="agregarMedidorModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="agregarMedidorModalLabel">Agregar Medidor</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="tipoMedidor" class="form-label">Tipo de Medidor</label>
+              <select class="form-select" id="tipoMedidor">
+                <option value="agua">Agua</option>
+                <option value="gas">Gas</option>
+                <option value="electricidad">Electricidad</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="codigoMedidor" class="form-label">Código del Medidor</label>
+              <input type="text" class="form-control" id="codigoMedidor">
+            </div>
+            <div class="mb-3">
+              <label for="lecturaInicial" class="form-label">Lectura Inicial</label>
+              <input type="number" class="form-control" id="lecturaInicial" step="0.01" min="0">
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="esCompartido">
+              <label class="form-check-label" for="esCompartido">Es medidor compartido</label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="guardarMedidorBtn">Guardar Medidor</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Manejo de selección de comunidad-edificio-torre
+        const comunidadSelect = document.getElementById('comunidadSelect');
+        const edificioSelect = document.getElementById('edificioSelect');
+        const torreSelect = document.getElementById('torreSelect');
+        
+        if (comunidadSelect && edificioSelect) {
+          comunidadSelect.addEventListener('change', function() {
+            // Aquí se cargarían los edificios por comunidad
+            console.log('Comunidad seleccionada:', this.value);
+            // Simulación de carga
+            edificioSelect.innerHTML = '<option value="" selected disabled>Seleccionar edificio</option>';
+            if (this.value === '1') {
+              edificioSelect.innerHTML += '<option value="1">Torre Central</option><option value="2">Edificio Norte</option>';
+            } else if (this.value === '2') {
+              edificioSelect.innerHTML += '<option value="3">Edificio Central A</option><option value="4">Edificio Central B</option>';
+            }
+          });
+        }
+        
+        if (edificioSelect && torreSelect) {
+          edificioSelect.addEventListener('change', function() {
+            // Aquí se cargarían las torres por edificio
+            console.log('Edificio seleccionado:', this.value);
+            // Simulación de carga
+            torreSelect.innerHTML = '<option value="" selected disabled>Seleccionar torre (opcional)</option>';
+            if (this.value === '1') {
+              torreSelect.innerHTML += '<option value="1">Torre A</option><option value="2">Torre B</option>';
+            } else if (this.value === '2') {
+              torreSelect.innerHTML += '<option value="3">Torre Norte A</option><option value="4">Torre Norte B</option>';
+            }
+          });
+        }
+        
+        // Cálculo automático de m2 totales
+        const m2Utiles = document.getElementById('m2Utiles');
+        const m2Terrazas = document.getElementById('m2Terrazas');
+        const m2Totales = document.getElementById('m2Totales');
+        
+        function calcularM2Totales() {
+          const utiles = parseFloat(m2Utiles.value) || 0;
+          const terrazas = parseFloat(m2Terrazas.value) || 0;
+          m2Totales.value = (utiles + terrazas).toFixed(2);
+        }
+        
+        if (m2Utiles && m2Terrazas && m2Totales) {
+          m2Utiles.addEventListener('input', calcularM2Totales);
+          m2Terrazas.addEventListener('input', calcularM2Totales);
+        }
+        
+        // Selector de ubicación en el edificio
+        const buildings = document.querySelectorAll('.building');
+        buildings.forEach(building => {
+          building.addEventListener('click', function() {
+            // Remover selección previa
+            document.querySelectorAll('.building.selected').forEach(b => b.classList.remove('selected'));
+            // Seleccionar el actual
+            this.classList.add('selected');
+            // Podría actualizar algún campo oculto o selectores
+            console.log('Edificio seleccionado:', this.getAttribute('data-building'));
+          });
+        });
+        
+        // Selector de características
+        const featureTags = document.querySelectorAll('.feature-tag');
+        const caracteristicasInput = document.getElementById('caracteristicasSeleccionadas');
+        
+        function actualizarCaracteristicas() {
+          const seleccionadas = [];
+          document.querySelectorAll('.feature-tag.selected').forEach(tag => {
+            seleccionadas.push(tag.getAttribute('data-feature'));
+          });
+          caracteristicasInput.value = seleccionadas.join(',');
+        }
+        
+        featureTags.forEach(tag => {
+          tag.addEventListener('click', function() {
+            this.classList.toggle('selected');
+            actualizarCaracteristicas();
+          });
+        });
+        
+        // Modal de agregar medidor
+        const agregarMedidorBtn = document.getElementById('agregarMedidorBtn');
+        const medidorModal = new bootstrap.Modal(document.getElementById('agregarMedidorModal'));
+        
+        if (agregarMedidorBtn) {
+          agregarMedidorBtn.addEventListener('click', function() {
+            medidorModal.show();
+          });
+        }
+        
+        const guardarMedidorBtn = document.getElementById('guardarMedidorBtn');
+        if (guardarMedidorBtn) {
+          guardarMedidorBtn.addEventListener('click', function() {
+            // Aquí se agregaría la lógica para guardar el medidor
+            // Por ahora solo cerramos el modal
+            medidorModal.hide();
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
