@@ -37,6 +37,11 @@ apiClient.interceptors.request.use(
       console.warn('[API Request] No hay token en localStorage');
     }
 
+    // No sobrescribir Content-Type si es FormData
+    if (!(config.data instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
+    }
+
     return config;
   },
   error => {

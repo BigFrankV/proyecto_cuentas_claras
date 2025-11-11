@@ -35,7 +35,7 @@ export default function LecturasPage(): React.ReactElement {
         setMeters(resp.data || []);
         if (resp.data?.length > 0) {setSelectedMeter(resp.data[0]);}
       } catch (err) {
-        console.error('Error cargando medidores:', err);
+        // Error al cargar medidores - se maneja de forma silenciosa
       } finally {
         setLoading(false);
       }
@@ -51,7 +51,7 @@ export default function LecturasPage(): React.ReactElement {
         const resp = await listLecturas(selectedMeter.id, { limit: 50 });
         setReadings(resp.data || []);
       } catch (err) {
-        console.error('Error cargando lecturas:', err);
+        // Error al cargar lecturas - se maneja de forma silenciosa
       }
     };
     loadReadings();
@@ -92,7 +92,7 @@ export default function LecturasPage(): React.ReactElement {
       setReadings(resp.data || []);
       setCurrentReading('');
     } catch (err) {
-      console.error('Error creando lectura:', err);
+      // Error al crear lectura - mostrar mensaje al usuario
       alert('Error al guardar lectura');
     } finally {
       setLoading(false);
@@ -145,9 +145,9 @@ export default function LecturasPage(): React.ReactElement {
                       </Form.Select>
                     </Form.Group>
                     <Form.Group className='mb-3'>
-                      <Form.Label>Fecha</Form.Label>  // Cambia label a "Fecha"
+                      <Form.Label>Fecha</Form.Label>
                       <Form.Control
-                        type='date'  // Cambia de 'datetime-local' a 'date'
+                        type='date'
                         value={readingDate}
                         onChange={(e) => setReadingDate(e.target.value)}
                         required

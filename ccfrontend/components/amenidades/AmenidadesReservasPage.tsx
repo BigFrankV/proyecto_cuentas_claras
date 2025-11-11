@@ -295,7 +295,7 @@ const AmenidadesReservasPage: React.FC = () => {
               </button>
               <ul className='dropdown-menu dropdown-menu-end'>
                 <li>
-                  <a className='dropdown-item' href='/profile'>
+                  <a className='dropdown-item' href='/mi-perfil'>
                     Perfil
                   </a>
                 </li>

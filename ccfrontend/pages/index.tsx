@@ -123,9 +123,15 @@ export default function Home() {
     setIsLoading(true);
 
     try {
+      // eslint-disable-next-line no-console
+      console.log('📱 Enviando código 2FA...');
       await complete2FALogin(tempToken, twoFactorCode);
+      // eslint-disable-next-line no-console
+      console.log('✅ Código 2FA verificado, esperando redirección...');
       // La redirección se maneja en el useEffect cuando isAuthenticated cambie
     } catch (err: any) {
+      // eslint-disable-next-line no-console
+      console.error('❌ Error en 2FA:', err);
       setError(err.message || 'Código de verificación inválido');
     } finally {
       setIsLoading(false);

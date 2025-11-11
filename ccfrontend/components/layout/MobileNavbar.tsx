@@ -64,7 +64,7 @@ export default function MobileNavbar() {
               aria-labelledby='userDropdownMobile'
             >
               <li>
-                <Link className='dropdown-item' href='/profile'>
+                <Link className='dropdown-item' href='/mi-perfil'>
                   Perfil
                 </Link>
               </li>

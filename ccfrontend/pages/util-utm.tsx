@@ -17,7 +17,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 
 import Layout from '@/components/layout/Layout';
+import Breadcrumb, { BreadcrumbItem } from '@/components/ui/Breadcrumb';
 import SyncControlPanel from '@/components/ui/SyncControlPanel';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 // Registrar componentes de Chart.js
 ChartJS.register(
@@ -536,25 +538,18 @@ const ConsultorUTMRenovado: React.FC = () => {
   // =================== RENDER ===================
 
   return (
-    <Layout title='Consultor UTM Avanzado - Cuentas Claras'>
-      <div className='container-fluid px-4 py-4'>
-        {/* Header */}
-        <div className='row mb-4'>
-          <div className='col-12'>
-            <nav aria-label='breadcrumb'>
-              <ol className='breadcrumb'>
-                <li className='breadcrumb-item'>
-                  <Link href='/dashboard'>
-                    <i className='material-icons me-1'>home</i>
-                    Dashboard
-                  </Link>
-                </li>
-                <li className='breadcrumb-item active'>
-                  <i className='material-icons me-1'>calculate</i>
-                  Consultor UTM Avanzado
-                </li>
-              </ol>
-            </nav>
+    <ProtectedRoute>
+      <Layout title='Consultor UTM Avanzado - Cuentas Claras'>
+        <div className='container-fluid px-4 py-4'>
+          {/* Header */}
+          <div className='row mb-4'>
+            <div className='col-12'>
+              <Breadcrumb
+                items={[
+                  { label: 'Dashboard', href: '/dashboard', icon: 'home' },
+                  { label: 'Consultor UTM Avanzado', icon: 'calculate' },
+                ]}
+              />
 
             <div className='d-flex justify-content-between align-items-center'>
               <div>
@@ -1618,7 +1613,8 @@ const ConsultorUTMRenovado: React.FC = () => {
           </div>
         )}
       </div>
-    </Layout>
+      </Layout>
+    </ProtectedRoute>
   );
 };
 

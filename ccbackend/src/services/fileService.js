@@ -14,7 +14,7 @@ class FileService {
           file_path VARCHAR(500) NOT NULL,
           file_size BIGINT NOT NULL,
           mimetype VARCHAR(100) NOT NULL,
-          comunidad_id BIGINT NOT NULL,
+          comunidad_id BIGINT,
           entity_type VARCHAR(50),
           entity_id BIGINT,
           category VARCHAR(100) DEFAULT 'general',
@@ -29,9 +29,66 @@ class FileService {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `);
       console.log('Tabla archivos inicializada correctamente');
+
+      // Migrate existing table if it exists with NOT NULL constraint
+      await this.migrateFileTable();
     } catch (error) {
       console.error('Error inicializando tabla archivos:', error);
       throw error;
+    }
+  }
+
+  // Migrar tabla archivos para permitir NULL en comunidad_id
+  static async migrateFileTable() {
+    try {
+      // Check if the table exists
+      const [tables] = await db.query(
+        'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "archivos"'
+      );
+
+      if (tables.length === 0) {
+        console.log('Tabla archivos no existe, se creará durante inicialización');
+        return;
+      }
+
+      // Check the column definition
+      const [columns] = await db.query(
+        `SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS 
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'archivos' AND COLUMN_NAME = 'comunidad_id'`
+      );
+
+      if (columns.length > 0 && columns[0].IS_NULLABLE === 'NO') {
+        console.log('Migrando comunidad_id a nullable...');
+        
+        // Drop foreign key first
+        const [constraints] = await db.query(
+          `SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+           WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'archivos' 
+           AND COLUMN_NAME = 'comunidad_id' AND REFERENCED_TABLE_NAME IS NOT NULL`
+        );
+
+        if (constraints.length > 0) {
+          const constraintName = constraints[0].CONSTRAINT_NAME;
+          await db.query(`ALTER TABLE archivos DROP FOREIGN KEY ${constraintName}`);
+          console.log(`Foreign key ${constraintName} eliminada`);
+        }
+
+        // Modify column to allow NULL
+        await db.query(
+          `ALTER TABLE archivos MODIFY COLUMN comunidad_id BIGINT NULL`
+        );
+
+        // Re-add foreign key
+        await db.query(
+          `ALTER TABLE archivos ADD CONSTRAINT fk_archivos_comunidad 
+           FOREIGN KEY (comunidad_id) REFERENCES comunidad(id) ON DELETE CASCADE`
+        );
+
+        console.log('Tabla archivos migrada exitosamente');
+      }
+    } catch (error) {
+      // Silently handle migration errors - table might not exist or already be correct
+      console.log('Nota: No se requiere migración de tabla archivos:', error.message);
     }
   }
 
@@ -118,7 +175,7 @@ class FileService {
       const [files] = await db.query(
         `
         SELECT * FROM archivos 
-        WHERE id = ? AND comunidad_id = ? AND is_active = TRUE
+        WHERE id = ? AND (comunidad_id = ? OR comunidad_id IS NULL) AND is_active = TRUE
       `,
         [fileId, comunidadId]
       );

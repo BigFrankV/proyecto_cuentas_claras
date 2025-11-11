@@ -520,7 +520,7 @@ export default function ConsumosPage(): JSX.Element {
                     </button>
                     <ul className='dropdown-menu dropdown-menu-end'>
                       <li>
-                        <Link className='dropdown-item' href='/profile'>
+                        <Link className='dropdown-item' href='/mi-perfil'>
                           Mi Perfil
                         </Link>
                       </li>

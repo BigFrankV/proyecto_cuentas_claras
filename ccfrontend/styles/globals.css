@@ -1,14 +1,78 @@
-/* Variables CSS personalizadas */
+/* Variables CSS personalizadas - Paleta Corporativa Profesional con Módulos */
 :root {
-  --color-primary: #0d47a1;
-  --color-secondary: #1976d2;
-  --color-accent: #fd5d14;
-  --color-success: #28a745;
-  --color-warning: #ffc107;
-  --color-danger: #dc3545;
-  --color-info: #17a2b8;
-  --color-light: #f8f9fa;
-  --color-dark: #343a40;
+  /* ============================================
+     PALETA PRINCIPAL (90% de la interfaz)
+     ============================================ */
+
+  /* Azul Primario - Marca Principal */
+  --color-primary: #004AAD;
+  --color-primary-light: #3673D8;
+  --color-primary-lighter: #E8F1FF;
+  --color-primary-dark: #003580;
+
+  /* Azul Oscuro - Texto Principal */
+  --color-text-primary: #0A2540;
+  --color-text-secondary: #6C757D;
+  --color-text-light: #F8F9FA;
+
+  /* Naranja Acento - Call to Action */
+  --color-accent: #FF7B00;
+  --color-accent-light: #FFB84D;
+  --color-accent-lighter: #FFE8D6;
+  --color-accent-dark: #E67200;
+
+  /* Grises - Neutrales */
+  --color-white: #FFFFFF;
+  --color-light: #F8F9FA;
+  --color-gray-100: #F1F3F5;
+  --color-gray-200: #E9ECEF;
+  --color-gray-300: #DEE2E6;
+  --color-gray-400: #ADB5BD;
+  --color-gray-500: #6C757D;
+  --color-gray-600: #495057;
+  --color-dark: #0A2540;
+
+  /* ============================================
+     PALETA DE MÓDULOS (Identidad de Secciones)
+     ============================================ */
+
+  /* Dashboard / Reportes - Global */
+  --color-module-dashboard: #004AAD;
+
+  /* Estructura / Residentes - Admin Central */
+  --color-module-admin: #4A55A2;
+
+  /* Finanzas / Gastos - Dinero */
+  --color-module-finance: #208C4E;
+
+  /* Servicios / Amenidades - Operaciones */
+  --color-module-services: #138A9E;
+
+  /* Sanciones / Comunicación - Interacción */
+  --color-module-communication: #5856D6;
+
+  /* Utilidades / Bitácora - Herramientas */
+  --color-module-tools: #5A6E8A;
+
+  /* ============================================
+     COLORES DE SISTEMA (Feedback)
+     ============================================ */
+
+  --color-success: #28A745;
+  --color-success-light: #D4EDDA;
+  --color-success-dark: #1E7E34;
+
+  --color-danger: #DC3545;
+  --color-danger-light: #F8D7DA;
+  --color-danger-dark: #BB2D3B;
+
+  --color-warning: #FFC107;
+  --color-warning-light: #FFF3CD;
+  --color-warning-dark: #997404;
+
+  --color-info: #0D6EFD;
+  --color-info-light: #CFF4FC;
+  --color-info-dark: #084298;
 
   --font-family-primary:
     "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
@@ -90,6 +154,7 @@ body {
   left: 0;
   z-index: 1000;
   transform: translateX(-100%);
+  background-color: #00295f !important;
   transition: transform 0.3s ease-in-out;
   width: 280px;
 }

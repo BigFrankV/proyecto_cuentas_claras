@@ -135,7 +135,10 @@ export default function Sidebar() {
   };
 
   const isActive = (href: string) => {
-    return router.pathname === href;
+    // Comparar si la ruta actual comienza con el href del menú
+    // Esto permite que subsecciones también destaquen el menú principal
+    // Ejemplo: /centros-costo/nuevo coincide con /centros-costo
+    return router.pathname === href || router.pathname.startsWith(`${href}/`);
   };
 
   const handleLogout = async () => {
@@ -156,8 +159,7 @@ export default function Sidebar() {
         className={`sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark ${isCollapsed ? 'collapsed' : ''}`}
         id='sidebar'
         style={{
-          background:
-            'linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important',
+          background: '#004AAD !important',
           width: '280px',
           position: 'fixed',
           top: 0,
@@ -342,7 +344,7 @@ export default function Sidebar() {
             aria-labelledby='userDropdown'
           >
             <li>
-              <Link className='dropdown-item' href='/profile'>
+              <Link className='dropdown-item' href='/mi-perfil'>
                 Mi Perfil
               </Link>
             </li>

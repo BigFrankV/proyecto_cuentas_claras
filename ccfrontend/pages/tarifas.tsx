@@ -1,9 +1,11 @@
 /* eslint-disable max-len */
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap'; // Agrega Form
 
 import Layout from '@/components/layout/Layout';
+import { getCommunityIdForRequest } from '@/lib/superadminAccessHelper';
 import { listTarifasConsumo, listAllTarifasConsumo, createTarifaConsumo } from '@/lib/tarifasConsumoService'; // Agrega createTarifaConsumo
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
@@ -13,9 +15,17 @@ import { usePermissions } from '@/lib/usePermissions';
 import styles from '../styles/tarifas.module.css';
 
 export default function TarifasListado() {
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
   const { isSuperUser } = usePermissions();
   const isSuper = !!user?.is_superadmin;
+
+  // Validar permisos: si no es superadmin y no tiene comunidades asignadas, redirigir
+  useEffect(() => {
+    if (!authLoading && user && !isSuper && (!user?.memberships || user.memberships.length === 0)) {
+      router.push('/');
+    }
+  }, [authLoading, user, isSuper, router]);
 
   // Estados para modales
   const [showImport, setShowImport] = useState(false);
@@ -100,10 +110,12 @@ export default function TarifasListado() {
           if (selectedComunidad?.id) {
             resp = await listTarifasConsumo(selectedComunidad.id, params);
           } else {
+            // SUPERADMIN SIN SELECCIÓN: cargar TODO globalmente
             resp = await listAllTarifasConsumo(params);
           }
         } else {
-          const comunidadId = user.memberships?.[0]?.comunidadId;
+          // USUARIO REGULAR: restringido a su comunidad
+          const comunidadId = getCommunityIdForRequest(user);
           if (!comunidadId) {
             setError('No tienes comunidades asignadas.');
             return;
@@ -149,21 +161,22 @@ export default function TarifasListado() {
     };
   };
 
-  // Aviso si usuario no es superadmin y no tiene comunidades
-  const hasMemberships = user?.memberships && user.memberships.length > 0;
-  if (!isSuper && !hasMemberships) {
-    return (
-      <Layout title='Tarifas de Consumo'>
-        <div className='alert alert-warning'>
-          No estás asignado a ninguna comunidad. Contacta al administrador para asignar tu rol/comunidad.
-        </div>
-      </Layout>
-    );
-  }
-
   // Función para crear tarifa
   const handleCreateTarifa = async () => {
-    const comunidadId = isSuper ? parseInt(newTarifa.comunidad_id) : user.memberships[0].comunidadId;
+    if (!isSuper) {
+      // USUARIO REGULAR: necesita comunidad asignada
+      const comunidadId = getCommunityIdForRequest(user);
+      if (!comunidadId) {
+        alert('No tienes comunidades asignadas.');
+        return;
+      }
+    } else if (!newTarifa.comunidad_id) {
+      // SUPERADMIN: debe seleccionar comunidad
+      alert('Debes seleccionar una comunidad.');
+      return;
+    }
+
+    const comunidadId = isSuper ? parseInt(newTarifa.comunidad_id) : getCommunityIdForRequest(user);
     try {
       await createTarifaConsumo(comunidadId, { // Pasa comunidadId como primer parámetro
         tipo: newTarifa.tipo,
