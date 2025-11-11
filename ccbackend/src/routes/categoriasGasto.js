@@ -580,7 +580,7 @@ router.post(
   '/comunidad/:comunidadId',
   [
     authenticate,
-    requireCommunity('comunidadId', ['admin']),
+    requireCommunity('comunidadId', ['admin', 'admin_comunidad']),
     body('nombre').notEmpty().withMessage('Nombre es requerido'),
     body('tipo').optional().isIn(TIPOS_CATEGORIA).withMessage('Tipo inválido'),
     body('cta_contable').optional(),
@@ -785,7 +785,7 @@ router.get('/:id', authenticate, async (req, res) => {
 router.patch(
   '/:id',
   authenticate,
-  authorize('admin', 'superadmin'),
+  authorize('admin', 'superadmin', 'admin_comunidad'),
   async (req, res) => {
     try {
       const { id } = req.params;

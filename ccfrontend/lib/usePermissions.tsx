@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRouter } from 'next/router';
-import React from 'react'; // ✅ AGREGAR ESTA LÍNEA
+import React, { useCallback } from 'react'; // ✅ AGREGAR ESTA LÍNEA
 
 import { useAuth } from './useAuth';
 
@@ -171,15 +171,12 @@ export function usePermissions() {
   };
 
   // ✅ NUEVO: Obtener comunidades del usuario
-  const getUserCommunities = (): Array<{
-    comunidadId: number;
-    rol: string;
-  }> => {
+  const getUserCommunities = useCallback(() => {
     if (user?.is_superadmin) {
       return [];
     } // Superadmin ve todas
     return user?.memberships || [];
-  };
+  }, []); // Dependencias vacías, ya que no depende de nada
 
   // ✅ NUEVO: Verificar si tiene un rol específico en una comunidad
   const hasRoleInCommunity = (
@@ -292,10 +289,9 @@ export function usePermissions() {
     isSuperUser,
     isAdmin,
     getUserPermissions,
-
     // ✅ NUEVAS FUNCIONES para multi-tenancy
     hasAccessToCommunity,
-    getUserCommunities,
+    getUserCommunities,  // Agrega esta línea
     hasRoleInCommunity,
     canManageCommunity,
     canViewCommunityFinances,

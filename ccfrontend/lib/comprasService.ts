@@ -22,8 +22,9 @@ export async function getCompra(id: number): Promise<Compra> {
   return resp.data;
 }
 
-export async function createCompra(data: Partial<Compra>): Promise<Compra> {
-  const resp = await apiClient.post('/compras', data);
+export async function createCompra(data: { comunidad_id: number; folio: string; fecha_emision: string; monto: number; tipo_doc: string; proveedor_id: number; descripcion: string }): Promise<Compra> {
+  const { comunidad_id, ...payload } = data;
+  const resp = await apiClient.post(`/compras/comunidad/${comunidad_id}`, payload);
   return resp.data;
 }
 

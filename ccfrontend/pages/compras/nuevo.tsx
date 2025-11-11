@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Button,
   Card,
@@ -12,9 +12,18 @@ import {
   Modal,
   Badge,
 } from 'react-bootstrap';
+import { toast } from 'react-hot-toast';
 
 import Layout from '@/components/layout/Layout';
+import { createCompra } from '@/lib/comprasService';
+import comunidadesService from '@/lib/comunidadesService';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions';
+
+interface Comunidad {
+  id: number;
+  nombre: string;
+}
 
 interface Provider {
   id: number;
@@ -51,9 +60,15 @@ interface PurchaseItem {
 
 export default function NuevaCompra() {
   const router = useRouter();
+  const { isSuperUser, getUserCommunities } = usePermissions();
+  const [comunidades, setComunidades] = useState<Comunidad[]>([]);
+  const [selectedComunidadId, setSelectedComunidadId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const loadedComunidadesRef = useRef(false);
 
   const [formData, setFormData] = useState({
-    type: 'order' as 'order' | 'service' | 'maintenance' | 'supplies',
+    type: 'factura',  // Default a 'factura'
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     providerId: '',
     costCenterId: '',
@@ -81,10 +96,21 @@ export default function NuevaCompra() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [showBudgetAlert, setShowBudgetAlert] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (isSuperUser && !loadedComunidadesRef.current) {
+      loadedComunidadesRef.current = true;
+      comunidadesService.getComunidades()
+        .then(setComunidades)
+        .catch(() => toast.error('Error cargando comunidades'));
+    } else if (!isSuperUser) {
+      const userCommunities = getUserCommunities();
+      setSelectedComunidadId(userCommunities[0]?.comunidadId || null);
+    }
+  }, [isSuperUser, getUserCommunities]);
 
   useEffect(() => {
     loadInitialData();
@@ -308,32 +334,35 @@ export default function NuevaCompra() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!selectedComunidadId) {
+      setError('Selecciona una comunidad');
+      setLoading(false);
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
 
     setLoading(true);
     try {
-      // Simular envío de datos
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Generar folio único
+      const folio = `COMP-${Date.now()}`;
 
-      const purchaseData = {
-        ...formData,
-        items: items.filter(item => item.description.trim()),
-        totalAmount: getTotalAmount(),
-        status: 'pending',
-        requestedBy: 'Usuario Actual', // En implementación real vendría del contexto de auth
-        requestDate: new Date().toISOString(),
-      };
+      await createCompra({
+        comunidad_id: selectedComunidadId,
+        folio,
+        fecha_emision: formData.requiredDate,
+        monto: getTotalAmount(),
+        tipo_doc: formData.type,
+        proveedor_id: parseInt(formData.providerId),
+        descripcion: formData.description,
+      });
 
-      // eslint-disable-next-line no-console
-      console.log('Nueva compra:', purchaseData);
-      alert('Compra creada exitosamente');
+      toast.success('Compra creada exitosamente');
       router.push('/compras');
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error creating purchase:', error);
-      alert('Error al crear la compra');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al crear la compra');
     } finally {
       setLoading(false);
     }
@@ -399,6 +428,28 @@ export default function NuevaCompra() {
                   </Card.Header>
                   <Card.Body>
                     <Row className='g-3'>
+                      {isSuperUser && (
+                        <div className='col-md-12'>
+                          <Form.Group>
+                            <Form.Label className='required'>
+                              Comunidad
+                            </Form.Label>
+                            <Form.Select
+                              value={selectedComunidadId || ''}
+                              onChange={e => setSelectedComunidadId(Number(e.target.value))}
+                              required
+                            >
+                              <option value=''>Seleccionar comunidad</option>
+                              {comunidades.map(com => (
+                                <option key={com.id} value={com.id}>
+                                  {com.nombre}
+                                </option>
+                              ))}
+                            </Form.Select>
+                          </Form.Group>
+                        </div>
+                      )}
+
                       <Col md={6}>
                         <Form.Group>
                           <Form.Label className='required'>
@@ -410,12 +461,9 @@ export default function NuevaCompra() {
                               handleInputChange('type', e.target.value)
                             }
                           >
-                            <option value='order'>Orden de Compra</option>
-                            <option value='service'>
-                              Contratación de Servicio
-                            </option>
-                            <option value='maintenance'>Mantenimiento</option>
-                            <option value='supplies'>Suministros</option>
+                            <option value='factura'>Factura</option>
+                            <option value='boleta'>Boleta</option>
+                            <option value='nota_credito'>Nota de Crédito</option>
                           </Form.Select>
                         </Form.Group>
                       </Col>
@@ -549,14 +597,16 @@ export default function NuevaCompra() {
                                   ?.name.substring(0, 2)
                                   .toUpperCase()}
                               </div>
-                              <div>
+                              <div className='flex-grow-1'>
                                 <h6 className='mb-1'>
                                   {getSelectedProvider()?.name}
                                 </h6>
-                                <small className='text-muted'>
-                                  Categoría: {getSelectedProvider()?.category} •
-                                  Rating: ⭐ {getSelectedProvider()?.rating}
-                                </small>
+                                <div className='text-muted mb-2'>
+                                  <span className='me-3'>
+                                    ⭐ {getSelectedProvider()?.rating}
+                                  </span>
+                                  <span>{getSelectedProvider()?.category}</span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -642,7 +692,7 @@ export default function NuevaCompra() {
                               <strong>
                                 {formatCurrency(
                                   (getSelectedCostCenter()?.budget ?? 0) -
-                                    (getSelectedCostCenter()?.spent ?? 0),
+                                  (getSelectedCostCenter()?.spent ?? 0),
                                   formData.currency,
                                 )}
                               </strong>
@@ -1007,6 +1057,13 @@ export default function NuevaCompra() {
               </Col>
             </Row>
 
+            {error && (
+              <Alert variant='danger'>
+                <span className='material-icons me-2'>error</span>
+                {error}
+              </Alert>
+            )}
+
             {/* Botones de acción */}
             <div className='d-flex justify-content-end gap-2 mt-4'>
               <Button
@@ -1016,7 +1073,10 @@ export default function NuevaCompra() {
               >
                 Cancelar
               </Button>
-              <Button variant='outline-primary' disabled={loading}>
+              <Button
+                variant='outline-primary'
+                disabled={loading}
+              >
                 <span className='material-icons me-2'>save</span>
                 Guardar Borrador
               </Button>

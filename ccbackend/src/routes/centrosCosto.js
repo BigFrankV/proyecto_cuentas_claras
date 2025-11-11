@@ -287,7 +287,7 @@ router.post(
   '/comunidad/:comunidadId',
   [
     authenticate,
-    requireCommunity('comunidadId', ['admin']),
+    requireCommunity('comunidadId', ['admin','admin_comunidad','superadmin']),
     body('nombre').notEmpty().withMessage('Nombre es requerido'),
     body('codigo').optional(),
   ],
