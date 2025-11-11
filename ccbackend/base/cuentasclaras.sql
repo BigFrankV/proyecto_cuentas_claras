@@ -2,10 +2,10 @@
 -- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
--- Host: db
--- Generation Time: Oct 29, 2025 at 08:03 PM
--- Server version: 8.0.43
--- PHP Version: 8.3.26
+-- Servidor: db
+-- Tiempo de generación: 11-11-2025 a las 07:00:40
+-- Versión del servidor: 8.0.43
+-- Versión de PHP: 8.3.26
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,15 +18,18 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `cuentasclaras`
+-- Base de datos: `cuentasclaras`
 --
+CREATE DATABASE IF NOT EXISTS `cuentasclaras` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE `cuentasclaras`;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `amenidad`
+-- Estructura de tabla para la tabla `amenidad`
 --
 
+DROP TABLE IF EXISTS `amenidad`;
 CREATE TABLE `amenidad` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -40,7 +43,7 @@ CREATE TABLE `amenidad` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `amenidad`
+-- Volcado de datos para la tabla `amenidad`
 --
 
 INSERT INTO `amenidad` (`id`, `comunidad_id`, `nombre`, `reglas`, `capacidad`, `requiere_aprobacion`, `tarifa`, `created_at`, `updated_at`) VALUES
@@ -88,9 +91,10 @@ INSERT INTO `amenidad` (`id`, `comunidad_id`, `nombre`, `reglas`, `capacidad`, `
 -- --------------------------------------------------------
 
 --
--- Table structure for table `archivos`
+-- Estructura de tabla para la tabla `archivos`
 --
 
+DROP TABLE IF EXISTS `archivos`;
 CREATE TABLE `archivos` (
   `id` bigint NOT NULL,
   `original_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -109,7 +113,7 @@ CREATE TABLE `archivos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `archivos`
+-- Volcado de datos para la tabla `archivos`
 --
 
 INSERT INTO `archivos` (`id`, `original_name`, `filename`, `file_path`, `file_size`, `mimetype`, `comunidad_id`, `entity_type`, `entity_id`, `category`, `description`, `uploaded_at`, `uploaded_by`, `is_active`) VALUES
@@ -157,9 +161,10 @@ INSERT INTO `archivos` (`id`, `original_name`, `filename`, `file_path`, `file_si
 -- --------------------------------------------------------
 
 --
--- Table structure for table `auditoria`
+-- Estructura de tabla para la tabla `auditoria`
 --
 
+DROP TABLE IF EXISTS `auditoria`;
 CREATE TABLE `auditoria` (
   `id` bigint NOT NULL,
   `usuario_id` bigint DEFAULT NULL,
@@ -173,7 +178,7 @@ CREATE TABLE `auditoria` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `auditoria`
+-- Volcado de datos para la tabla `auditoria`
 --
 
 INSERT INTO `auditoria` (`id`, `usuario_id`, `accion`, `tabla`, `registro_id`, `valores_anteriores`, `valores_nuevos`, `ip_address`, `created_at`) VALUES
@@ -216,14 +221,17 @@ INSERT INTO `auditoria` (`id`, `usuario_id`, `accion`, `tabla`, `registro_id`, `
 (37, 7, 'INSERT', 'unidad', 21, NULL, '{\"codigo\": \"D103\"}', '192.168.1.37', '2025-10-11 10:26:00'),
 (38, 8, 'UPDATE', 'gasto', 15, '{\"estado\": \"pendiente\"}', '{\"estado\": \"aprobado\"}', '192.168.1.38', '2025-10-11 10:27:00'),
 (39, 9, 'INSERT', 'pago_aplicacion', 21, NULL, '{\"monto\": 30000, \"pago_id\": 21}', '192.168.1.39', '2025-10-11 10:28:00'),
-(40, 10, 'UPDATE', 'ticket_soporte', 10, '{\"estado\": \"abierto\"}', '{\"estado\": \"cerrado\"}', '192.168.1.40', '2025-10-11 10:29:00');
+(40, 10, 'UPDATE', 'ticket_soporte', 10, '{\"estado\": \"abierto\"}', '{\"estado\": \"cerrado\"}', '192.168.1.40', '2025-10-11 10:29:00'),
+(41, NULL, 'INSERT', 'documento_compra', 45, NULL, '{\"id\": 45, \"iva\": 72.16, \"neto\": 379.81, \"folio\": \"COMP-1762843517980\", \"glosa\": \"warzone\", \"total\": 451.97, \"exento\": 0, \"tipo_doc\": \"boleta\", \"created_at\": \"2025-11-11T06:45:18.000Z\", \"updated_at\": \"2025-11-11T06:45:18.000Z\", \"comunidad_id\": 5, \"proveedor_id\": 2, \"fecha_emision\": \"2025-11-15T00:00:00.000Z\"}', '::ffff:172.18.0.1', '2025-11-11 06:45:18'),
+(42, NULL, 'INSERT', 'documento_compra', 46, NULL, '{\"id\": 46, \"iva\": 720.4, \"neto\": 3791.6, \"folio\": \"COMP-1762844008787\", \"glosa\": \"getUserCommunities\", \"total\": 4512, \"exento\": 0, \"tipo_doc\": \"boleta\", \"created_at\": \"2025-11-11T06:53:29.000Z\", \"updated_at\": \"2025-11-11T06:53:29.000Z\", \"comunidad_id\": 5, \"proveedor_id\": 1, \"fecha_emision\": \"2025-11-13T00:00:00.000Z\"}', '::ffff:172.18.0.1', '2025-11-11 06:53:29');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `bitacora_auditoria`
+-- Estructura de tabla para la tabla `bitacora_auditoria`
 --
 
+DROP TABLE IF EXISTS `bitacora_auditoria`;
 CREATE TABLE `bitacora_auditoria` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -243,7 +251,7 @@ CREATE TABLE `bitacora_auditoria` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Sistema de auditoría y bitácora avanzada';
 
 --
--- Dumping data for table `bitacora_auditoria`
+-- Volcado de datos para la tabla `bitacora_auditoria`
 --
 
 INSERT INTO `bitacora_auditoria` (`id`, `comunidad_id`, `tipo`, `prioridad`, `titulo`, `descripcion`, `usuario`, `usuario_id`, `fecha`, `tags`, `adjuntos`, `ip`, `ubicacion`, `created_at`, `updated_at`) VALUES
@@ -258,44 +266,47 @@ INSERT INTO `bitacora_auditoria` (`id`, `comunidad_id`, `tipo`, `prioridad`, `ti
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `bitacora_conserjeria`
--- (See below for the actual view)
+-- Estructura Stand-in para la vista `bitacora_conserjeria`
+-- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `bitacora_conserjeria`;
 CREATE TABLE `bitacora_conserjeria` (
-`comunidad_id` bigint
-,`created_at` datetime
-,`detalle` varchar(1000)
-,`evento` varchar(150)
+`id` bigint
+,`comunidad_id` bigint
 ,`fecha_hora` datetime
-,`id` bigint
 ,`usuario_id` bigint
+,`evento` varchar(150)
+,`detalle` varchar(1000)
+,`created_at` datetime
 );
 
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `cargo_financiero_unidad`
--- (See below for the actual view)
+-- Estructura Stand-in para la vista `cargo_financiero_unidad`
+-- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `cargo_financiero_unidad`;
 CREATE TABLE `cargo_financiero_unidad` (
-`comunidad_id` bigint
-,`created_at` datetime
+`id` bigint
 ,`emision_id` bigint
-,`estado` enum('pendiente','pagado','vencido','parcial')
-,`id` bigint
-,`interes_acumulado` decimal(12,2)
+,`comunidad_id` bigint
+,`unidad_id` bigint
 ,`monto_total` decimal(12,2)
 ,`saldo` decimal(12,2)
-,`unidad_id` bigint
+,`estado` enum('pendiente','pagado','vencido','parcial')
+,`interes_acumulado` decimal(12,2)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `categoria_gasto`
+-- Estructura de tabla para la tabla `categoria_gasto`
 --
 
+DROP TABLE IF EXISTS `categoria_gasto`;
 CREATE TABLE `categoria_gasto` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -308,7 +319,7 @@ CREATE TABLE `categoria_gasto` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `categoria_gasto`
+-- Volcado de datos para la tabla `categoria_gasto`
 --
 
 INSERT INTO `categoria_gasto` (`id`, `comunidad_id`, `nombre`, `tipo`, `cta_contable`, `activa`, `created_at`, `updated_at`) VALUES
@@ -316,7 +327,7 @@ INSERT INTO `categoria_gasto` (`id`, `comunidad_id`, `nombre`, `tipo`, `cta_cont
 (2, 2, 'Fondo de Reserva', 'fondo_reserva', 'FR-001', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
 (3, 3, 'Gasto Extraordinario', 'extraordinario', 'EX-001', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
 (4, 4, 'Multas por Reglamento', 'multas', 'MT-001', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
-(5, 5, 'Consumo Agua Caliente', 'consumo', 'CO-001', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
+(5, 5, 'Consumo Agua', 'extraordinario', 'CO-002', 1, '2025-10-10 18:07:48', '2025-11-11 05:27:42'),
 (6, 6, 'Seguros e Impuestos', 'operacional', 'OP-002', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
 (7, 7, 'Reparaciones Mayores', 'extraordinario', 'EX-002', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
 (8, 8, 'Uso de Amenidades (Ingreso)', 'multas', 'MT-002', 1, '2025-10-10 18:07:48', '2025-10-10 18:07:48'),
@@ -342,23 +353,28 @@ INSERT INTO `categoria_gasto` (`id`, `comunidad_id`, `nombre`, `tipo`, `cta_cont
 (28, 18, 'Uso de Estacionamiento', 'multas', 'MT-005', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (29, 19, 'Consumo Electricidad Unidades', 'consumo', 'CO-006', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (30, 20, 'Gastos de Marketing', 'operacional', 'OP-009', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
-(31, 1, 'Compra de Equipos', 'extraordinario', 'EX-007', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
+(31, 1, 'Compra de Equipo', 'extraordinario', 'EX-007', 1, '2025-10-23 16:35:00', '2025-11-11 04:41:49'),
 (32, 2, 'Consumo Agua Unidades', 'consumo', 'CO-007', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (33, 3, 'Fondo de Emergencia', 'fondo_reserva', 'FR-005', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (34, 4, 'Gastos Legales', 'operacional', 'OP-010', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
-(35, 5, 'Multas por Basura', 'multas', 'MT-006', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
+(35, 5, 'Multas por', 'extraordinario', 'MT-007', 1, '2025-10-23 16:35:00', '2025-11-11 04:50:28'),
 (36, 6, 'Consumo Gas Central', 'consumo', 'CO-008', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (37, 7, 'Gasto de Recepción', 'operacional', 'OP-011', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (38, 8, 'Reparación de Techos', 'extraordinario', 'EX-008', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (39, 9, 'Multas por Ruido Nocturno', 'multas', 'MT-007', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
-(40, 10, 'Fondo de Mantenimiento', 'fondo_reserva', 'FR-006', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00');
+(40, 10, 'Fondo de Mantenimiento', 'fondo_reserva', 'FR-006', 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
+(41, 5, 'testtest', 'fondo_reserva', NULL, 1, '2025-11-11 04:40:40', '2025-11-11 04:40:40'),
+(42, 19, 'testtest', 'consumo', NULL, 1, '2025-11-11 04:41:11', '2025-11-11 04:41:11'),
+(43, 46, 'testtest', 'fondo_reserva', NULL, 1, '2025-11-11 05:24:40', '2025-11-11 05:24:40'),
+(45, 5, 'testtestdcsxsd', 'fondo_reserva', NULL, 1, '2025-11-11 05:26:19', '2025-11-11 05:26:19');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `centro_costo`
+-- Estructura de tabla para la tabla `centro_costo`
 --
 
+DROP TABLE IF EXISTS `centro_costo`;
 CREATE TABLE `centro_costo` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -369,7 +385,7 @@ CREATE TABLE `centro_costo` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `centro_costo`
+-- Volcado de datos para la tabla `centro_costo`
 --
 
 INSERT INTO `centro_costo` (`id`, `comunidad_id`, `nombre`, `codigo`, `created_at`, `updated_at`) VALUES
@@ -412,14 +428,20 @@ INSERT INTO `centro_costo` (`id`, `comunidad_id`, `nombre`, `codigo`, `created_a
 (37, 7, 'Recepción y Conserjería', 'CC037', '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (38, 8, 'Techos y Cubiertas', 'CC038', '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (39, 9, 'Reglamentos y Normas', 'CC039', '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
-(40, 10, 'Reservas y Fondos', 'CC040', '2025-10-23 16:35:00', '2025-10-23 16:35:00');
+(40, 10, 'Reservas y Fondos', 'CC040', '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
+(41, 36, ',', 'ccc412', '2025-11-11 05:15:19', '2025-11-11 05:15:19'),
+(42, 16, ',,,,,,,,,,,', 'wxs45623', '2025-11-11 05:17:08', '2025-11-11 05:17:08'),
+(43, 28, 'admin_comunidad', 'ddd512', '2025-11-11 05:20:46', '2025-11-11 05:20:46'),
+(44, 16, 'admin_comunidad', 'f7', '2025-11-11 05:22:04', '2025-11-11 05:22:04'),
+(45, 5, 'twsdtyhb', 'sc452', '2025-11-11 05:23:14', '2025-11-11 05:23:14');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `comunidad`
+-- Estructura de tabla para la tabla `comunidad`
 --
 
+DROP TABLE IF EXISTS `comunidad`;
 CREATE TABLE `comunidad` (
   `id` bigint NOT NULL,
   `razon_social` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -439,7 +461,7 @@ CREATE TABLE `comunidad` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `comunidad`
+-- Volcado de datos para la tabla `comunidad`
 --
 
 INSERT INTO `comunidad` (`id`, `razon_social`, `rut`, `dv`, `giro`, `direccion`, `email_contacto`, `telefono_contacto`, `politica_mora_json`, `moneda`, `tz`, `created_at`, `updated_at`, `created_by`, `updated_by`) VALUES
@@ -507,9 +529,10 @@ INSERT INTO `comunidad` (`id`, `razon_social`, `rut`, `dv`, `giro`, `direccion`,
 -- --------------------------------------------------------
 
 --
--- Table structure for table `conciliacion_bancaria`
+-- Estructura de tabla para la tabla `conciliacion_bancaria`
 --
 
+DROP TABLE IF EXISTS `conciliacion_bancaria`;
 CREATE TABLE `conciliacion_bancaria` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -525,7 +548,7 @@ CREATE TABLE `conciliacion_bancaria` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `conciliacion_bancaria`
+-- Volcado de datos para la tabla `conciliacion_bancaria`
 --
 
 INSERT INTO `conciliacion_bancaria` (`id`, `comunidad_id`, `fecha_mov`, `monto`, `glosa`, `referencia`, `estado`, `pago_id`, `extracto_id`, `created_at`, `updated_at`) VALUES
@@ -573,9 +596,10 @@ INSERT INTO `conciliacion_bancaria` (`id`, `comunidad_id`, `fecha_mov`, `monto`,
 -- --------------------------------------------------------
 
 --
--- Table structure for table `configuracion_interes`
+-- Estructura de tabla para la tabla `configuracion_interes`
 --
 
+DROP TABLE IF EXISTS `configuracion_interes`;
 CREATE TABLE `configuracion_interes` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -588,7 +612,7 @@ CREATE TABLE `configuracion_interes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `configuracion_interes`
+-- Volcado de datos para la tabla `configuracion_interes`
 --
 
 INSERT INTO `configuracion_interes` (`id`, `comunidad_id`, `aplica_desde`, `tasa_mensual`, `metodo`, `tope_mensual`, `created_at`, `updated_at`) VALUES
@@ -636,9 +660,10 @@ INSERT INTO `configuracion_interes` (`id`, `comunidad_id`, `aplica_desde`, `tasa
 -- --------------------------------------------------------
 
 --
--- Table structure for table `cuenta_cobro_unidad`
+-- Estructura de tabla para la tabla `cuenta_cobro_unidad`
 --
 
+DROP TABLE IF EXISTS `cuenta_cobro_unidad`;
 CREATE TABLE `cuenta_cobro_unidad` (
   `id` bigint NOT NULL,
   `emision_id` bigint NOT NULL,
@@ -653,7 +678,7 @@ CREATE TABLE `cuenta_cobro_unidad` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Cuentas de cobro o liquidaciones de gastos comunes por unidad';
 
 --
--- Dumping data for table `cuenta_cobro_unidad`
+-- Volcado de datos para la tabla `cuenta_cobro_unidad`
 --
 
 INSERT INTO `cuenta_cobro_unidad` (`id`, `emision_id`, `comunidad_id`, `unidad_id`, `monto_total`, `saldo`, `estado`, `interes_acumulado`, `created_at`, `updated_at`) VALUES
@@ -781,28 +806,30 @@ INSERT INTO `cuenta_cobro_unidad` (`id`, `emision_id`, `comunidad_id`, `unidad_i
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `detalle_cargo_unidad`
--- (See below for the actual view)
+-- Estructura Stand-in para la vista `detalle_cargo_unidad`
+-- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `detalle_cargo_unidad`;
 CREATE TABLE `detalle_cargo_unidad` (
-`cargo_unidad_id` bigint
+`id` bigint
+,`cargo_unidad_id` bigint
 ,`categoria_id` bigint
-,`created_at` datetime
 ,`glosa` varchar(250)
-,`id` bigint
-,`iva_incluido` tinyint(1)
 ,`monto` decimal(12,2)
 ,`origen` enum('gasto','multa','consumo','ajuste')
 ,`origen_id` bigint
+,`iva_incluido` tinyint(1)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `detalle_cuenta_unidad`
+-- Estructura de tabla para la tabla `detalle_cuenta_unidad`
 --
 
+DROP TABLE IF EXISTS `detalle_cuenta_unidad`;
 CREATE TABLE `detalle_cuenta_unidad` (
   `id` bigint NOT NULL,
   `cuenta_cobro_unidad_id` bigint NOT NULL,
@@ -817,7 +844,7 @@ CREATE TABLE `detalle_cuenta_unidad` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `detalle_cuenta_unidad`
+-- Volcado de datos para la tabla `detalle_cuenta_unidad`
 --
 
 INSERT INTO `detalle_cuenta_unidad` (`id`, `cuenta_cobro_unidad_id`, `categoria_id`, `glosa`, `monto`, `origen`, `origen_id`, `iva_incluido`, `created_at`, `updated_at`) VALUES
@@ -865,9 +892,10 @@ INSERT INTO `detalle_cuenta_unidad` (`id`, `cuenta_cobro_unidad_id`, `categoria_
 -- --------------------------------------------------------
 
 --
--- Table structure for table `detalle_emision_gastos`
+-- Estructura de tabla para la tabla `detalle_emision_gastos`
 --
 
+DROP TABLE IF EXISTS `detalle_emision_gastos`;
 CREATE TABLE `detalle_emision_gastos` (
   `id` bigint NOT NULL,
   `emision_id` bigint NOT NULL,
@@ -881,7 +909,7 @@ CREATE TABLE `detalle_emision_gastos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Detalle de gastos incluidos en cada emisión';
 
 --
--- Dumping data for table `detalle_emision_gastos`
+-- Volcado de datos para la tabla `detalle_emision_gastos`
 --
 
 INSERT INTO `detalle_emision_gastos` (`id`, `emision_id`, `gasto_id`, `categoria_id`, `monto`, `regla_prorrateo`, `metadata_json`, `created_at`, `updated_at`) VALUES
@@ -929,9 +957,10 @@ INSERT INTO `detalle_emision_gastos` (`id`, `emision_id`, `gasto_id`, `categoria
 -- --------------------------------------------------------
 
 --
--- Table structure for table `documento_compra`
+-- Estructura de tabla para la tabla `documento_compra`
 --
 
+DROP TABLE IF EXISTS `documento_compra`;
 CREATE TABLE `documento_compra` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -949,7 +978,7 @@ CREATE TABLE `documento_compra` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `documento_compra`
+-- Volcado de datos para la tabla `documento_compra`
 --
 
 INSERT INTO `documento_compra` (`id`, `comunidad_id`, `proveedor_id`, `tipo_doc`, `folio`, `fecha_emision`, `neto`, `iva`, `exento`, `total`, `glosa`, `created_at`, `updated_at`) VALUES
@@ -992,14 +1021,21 @@ INSERT INTO `documento_compra` (`id`, `comunidad_id`, `proveedor_id`, `tipo_doc`
 (37, 7, 7, 'factura', 'F-7037', '2025-10-17', 50000.00, 9500.00, 0.00, 59500.00, 'Mano de obra Recepción', '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (38, 8, 8, 'boleta', 'B-8038', '2025-10-18', 75000.00, 14250.00, 0.00, 89250.00, 'Compra de Ladrillos para Reparación', '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (39, 9, 9, 'factura', 'F-9039', '2025-10-19', 120000.00, 22800.00, 0.00, 142800.00, 'Fee Administración Trimestral', '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
-(40, 10, 10, 'boleta', 'B-10040', '2025-10-20', 65000.00, 12350.00, 0.00, 77350.00, 'Reparación de Medidores de Gas', '2025-10-23 16:35:00', '2025-10-23 16:35:00');
+(40, 10, 10, 'boleta', 'B-10040', '2025-10-20', 65000.00, 12350.00, 0.00, 77350.00, 'Reparación de Medidores de Gas', '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
+(41, 1, 4, 'boleta', 'COMP-1762842740364', '2025-11-12', 12605.04, 2394.96, 0.00, 15000.00, 'ALTER TABLE gasto ADD CONSTRAINT fk_gasto_doc FOREIGN KEY (documento_compra_id) REFERENCES documento_compra(id);', '2025-11-11 06:32:20', '2025-11-11 06:32:20'),
+(42, 40, 1, 'factura', 'COMP-1762842808809', '2025-11-13', 252100.84, 47899.16, 0.00, 300000.00, 'Documentación', '2025-11-11 06:33:28', '2025-11-11 06:33:28'),
+(43, 5, 1, 'boleta', 'COMP-1762842856551', '2025-11-12', 1260.47, 239.49, 0.00, 1499.96, 'Documentación', '2025-11-11 06:34:16', '2025-11-11 06:34:16'),
+(44, 5, 5, 'boleta', 'COMP-1762842896111', '2025-11-29', 8604.97, 1634.95, 0.00, 10239.92, 'DocumentaciónDocumentaciónDocumentación', '2025-11-11 06:34:56', '2025-11-11 06:34:56'),
+(45, 5, 2, 'boleta', 'COMP-1762843517980', '2025-11-15', 379.81, 72.16, 0.00, 451.97, 'warzone', '2025-11-11 06:45:18', '2025-11-11 06:45:18'),
+(46, 5, 1, 'boleta', 'COMP-1762844008787', '2025-11-13', 3791.60, 720.40, 0.00, 4512.00, 'getUserCommunities', '2025-11-11 06:53:29', '2025-11-11 06:53:29');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `documento_comunidad`
+-- Estructura de tabla para la tabla `documento_comunidad`
 --
 
+DROP TABLE IF EXISTS `documento_comunidad`;
 CREATE TABLE `documento_comunidad` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -1013,7 +1049,7 @@ CREATE TABLE `documento_comunidad` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `documento_comunidad`
+-- Volcado de datos para la tabla `documento_comunidad`
 --
 
 INSERT INTO `documento_comunidad` (`id`, `comunidad_id`, `tipo`, `titulo`, `url`, `periodo`, `visibilidad`, `created_at`, `updated_at`) VALUES
@@ -1061,9 +1097,10 @@ INSERT INTO `documento_comunidad` (`id`, `comunidad_id`, `tipo`, `titulo`, `url`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `documento_multa`
+-- Estructura de tabla para la tabla `documento_multa`
 --
 
+DROP TABLE IF EXISTS `documento_multa`;
 CREATE TABLE `documento_multa` (
   `id` bigint NOT NULL,
   `multa_id` bigint NOT NULL,
@@ -1077,7 +1114,7 @@ CREATE TABLE `documento_multa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `documento_multa`
+-- Volcado de datos para la tabla `documento_multa`
 --
 
 INSERT INTO `documento_multa` (`id`, `multa_id`, `nombre_archivo`, `ruta_archivo`, `tipo_archivo`, `tamanio_bytes`, `descripcion`, `subido_por`, `created_at`) VALUES
@@ -1125,9 +1162,10 @@ INSERT INTO `documento_multa` (`id`, `multa_id`, `nombre_archivo`, `ruta_archivo
 -- --------------------------------------------------------
 
 --
--- Table structure for table `edificio`
+-- Estructura de tabla para la tabla `edificio`
 --
 
+DROP TABLE IF EXISTS `edificio`;
 CREATE TABLE `edificio` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -1139,7 +1177,7 @@ CREATE TABLE `edificio` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `edificio`
+-- Volcado de datos para la tabla `edificio`
 --
 
 INSERT INTO `edificio` (`id`, `comunidad_id`, `nombre`, `direccion`, `codigo`, `created_at`, `updated_at`) VALUES
@@ -1227,9 +1265,10 @@ INSERT INTO `edificio` (`id`, `comunidad_id`, `nombre`, `direccion`, `codigo`, `
 -- --------------------------------------------------------
 
 --
--- Table structure for table `emision_gastos_comunes`
+-- Estructura de tabla para la tabla `emision_gastos_comunes`
 --
 
+DROP TABLE IF EXISTS `emision_gastos_comunes`;
 CREATE TABLE `emision_gastos_comunes` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -1242,7 +1281,7 @@ CREATE TABLE `emision_gastos_comunes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `emision_gastos_comunes`
+-- Volcado de datos para la tabla `emision_gastos_comunes`
 --
 
 INSERT INTO `emision_gastos_comunes` (`id`, `comunidad_id`, `periodo`, `fecha_vencimiento`, `estado`, `observaciones`, `created_at`, `updated_at`) VALUES
@@ -1334,44 +1373,47 @@ INSERT INTO `emision_gastos_comunes` (`id`, `comunidad_id`, `periodo`, `fecha_ve
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `emision_gasto_comun`
--- (See below for the actual view)
+-- Estructura Stand-in para la vista `emision_gasto_comun`
+-- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `emision_gasto_comun`;
 CREATE TABLE `emision_gasto_comun` (
-`comunidad_id` bigint
-,`created_at` datetime
-,`estado` enum('borrador','emitido','cerrado','anulado')
-,`fecha_vencimiento` date
-,`id` bigint
-,`observaciones` varchar(500)
+`id` bigint
+,`comunidad_id` bigint
 ,`periodo` char(7)
+,`fecha_vencimiento` date
+,`estado` enum('borrador','emitido','cerrado','anulado')
+,`observaciones` varchar(500)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `emision_gasto_detalle`
--- (See below for the actual view)
+-- Estructura Stand-in para la vista `emision_gasto_detalle`
+-- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `emision_gasto_detalle`;
 CREATE TABLE `emision_gasto_detalle` (
-`categoria_id` bigint
-,`created_at` datetime
+`id` bigint
 ,`emision_id` bigint
 ,`gasto_id` bigint
-,`id` bigint
-,`metadata_json` longtext
+,`categoria_id` bigint
 ,`monto` decimal(12,2)
 ,`regla_prorrateo` enum('coeficiente','partes_iguales','consumo','fijo_por_unidad')
+,`metadata_json` longtext
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `gasto`
+-- Estructura de tabla para la tabla `gasto`
 --
 
+DROP TABLE IF EXISTS `gasto`;
 CREATE TABLE `gasto` (
   `id` bigint NOT NULL,
   `numero` varchar(20) NOT NULL,
@@ -1395,7 +1437,7 @@ CREATE TABLE `gasto` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `gasto`
+-- Volcado de datos para la tabla `gasto`
 --
 
 INSERT INTO `gasto` (`id`, `numero`, `comunidad_id`, `categoria_id`, `centro_costo_id`, `documento_compra_id`, `fecha`, `monto`, `estado`, `creado_por`, `aprobado_por`, `required_aprobaciones`, `aprobaciones_count`, `anulado_por`, `fecha_anulacion`, `glosa`, `extraordinario`, `created_at`, `updated_at`) VALUES
@@ -1528,14 +1570,18 @@ INSERT INTO `gasto` (`id`, `numero`, `comunidad_id`, `categoria_id`, `centro_cos
 (137, 'G-2025-0137', 49, 1, 1, NULL, '2025-12-01', 135000.00, 'pendiente', 6, NULL, 1, 0, NULL, NULL, 'Aseo El Bosque La Florida Dic', 0, '2025-10-29 19:54:03', '2025-10-29 19:54:03'),
 (138, 'G-2025-0138', 40, 40, 40, NULL, '2025-12-02', 62000.00, 'pendiente', 6, NULL, 1, 0, NULL, NULL, 'Fondo Mantención La Dehesa Dic', 0, '2025-10-29 19:54:03', '2025-10-29 19:54:03'),
 (139, 'G-2025-0139', 41, 9, 9, NULL, '2025-12-03', 195000.00, 'pendiente', 6, NULL, 1, 0, NULL, NULL, 'Admin La Reina Alta Dic', 0, '2025-10-29 19:54:03', '2025-10-29 19:54:03'),
-(140, 'G-2025-0140', 59, 20, 20, NULL, '2025-12-04', 105000.00, 'pendiente', 6, NULL, 1, 0, NULL, NULL, 'Conserjería La Serena Dic', 0, '2025-10-29 19:54:03', '2025-10-29 19:54:03');
+(140, 'G-2025-0140', 59, 20, 20, NULL, '2025-12-04', 105000.00, 'aprobado', 6, 1, 1, 1, NULL, NULL, 'Conserjería La Serena Dic', 0, '2025-10-29 19:54:03', '2025-11-08 00:46:12'),
+(141, 'G1762833068435-5', 5, 5, 35, NULL, '2025-11-11', 7852.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'REFERENCES gasto(id);', 0, '2025-11-11 03:51:08', '2025-11-11 03:51:08'),
+(142, 'G1762833140750-36', 36, 13, 13, NULL, '2025-11-11', 452452.00, 'aprobado', 1, 1, 1, 1, NULL, NULL, 'REFERENCES gasto(id);', 0, '2025-11-11 03:52:20', '2025-11-11 03:52:26'),
+(143, 'G1762833170361-12', 12, 14, 9, NULL, '2025-11-11', 45242.00, 'pendiente', 1, NULL, 1, 0, NULL, NULL, 'REFERENCES gasto(id);', 0, '2025-11-11 03:52:50', '2025-11-11 03:52:50');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `gasto_aprobacion`
+-- Estructura de tabla para la tabla `gasto_aprobacion`
 --
 
+DROP TABLE IF EXISTS `gasto_aprobacion`;
 CREATE TABLE `gasto_aprobacion` (
   `id` bigint NOT NULL,
   `gasto_id` bigint NOT NULL,
@@ -1547,7 +1593,7 @@ CREATE TABLE `gasto_aprobacion` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `gasto_aprobacion`
+-- Volcado de datos para la tabla `gasto_aprobacion`
 --
 
 INSERT INTO `gasto_aprobacion` (`id`, `gasto_id`, `usuario_id`, `rol_id`, `accion`, `observaciones`, `created_at`) VALUES
@@ -1570,14 +1616,17 @@ INSERT INTO `gasto_aprobacion` (`id`, `gasto_id`, `usuario_id`, `rol_id`, `accio
 (37, 37, 7, 6, 'aprobar', 'Aprobado por Residente', '2025-10-23 16:35:00'),
 (38, 38, 8, 10, 'aprobar', 'Aprobado por Presidente Comité', '2025-10-23 16:35:00'),
 (39, 39, 9, 4, 'aprobar', 'Aprobado por Contador', '2025-10-23 16:35:00'),
-(40, 40, 10, 9, 'aprobar', 'Aprobado por Tesorero', '2025-10-23 16:35:00');
+(40, 40, 10, 9, 'aprobar', 'Aprobado por Tesorero', '2025-10-23 16:35:00'),
+(41, 140, 1, 1, 'aprobar', 'Aprobado', '2025-11-08 00:46:12'),
+(42, 142, 1, 1, 'aprobar', 'Aprobado', '2025-11-11 03:52:26');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `historial_gasto`
+-- Estructura de tabla para la tabla `historial_gasto`
 --
 
+DROP TABLE IF EXISTS `historial_gasto`;
 CREATE TABLE `historial_gasto` (
   `id` bigint NOT NULL,
   `gasto_id` bigint NOT NULL,
@@ -1589,7 +1638,7 @@ CREATE TABLE `historial_gasto` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `historial_gasto`
+-- Volcado de datos para la tabla `historial_gasto`
 --
 
 INSERT INTO `historial_gasto` (`id`, `gasto_id`, `usuario_id`, `campo_modificado`, `valor_anterior`, `valor_nuevo`, `created_at`) VALUES
@@ -1617,9 +1666,10 @@ INSERT INTO `historial_gasto` (`id`, `gasto_id`, `usuario_id`, `campo_modificado
 -- --------------------------------------------------------
 
 --
--- Table structure for table `lectura_medidor`
+-- Estructura de tabla para la tabla `lectura_medidor`
 --
 
+DROP TABLE IF EXISTS `lectura_medidor`;
 CREATE TABLE `lectura_medidor` (
   `id` bigint NOT NULL,
   `medidor_id` bigint NOT NULL,
@@ -1636,7 +1686,7 @@ CREATE TABLE `lectura_medidor` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `lectura_medidor`
+-- Volcado de datos para la tabla `lectura_medidor`
 --
 
 INSERT INTO `lectura_medidor` (`id`, `medidor_id`, `fecha`, `lectura`, `periodo`, `created_at`, `updated_at`, `reader_id`, `method`, `notes`, `photo_url`, `status`) VALUES
@@ -1724,9 +1774,10 @@ INSERT INTO `lectura_medidor` (`id`, `medidor_id`, `fecha`, `lectura`, `periodo`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `medidor`
+-- Estructura de tabla para la tabla `medidor`
 --
 
+DROP TABLE IF EXISTS `medidor`;
 CREATE TABLE `medidor` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -1746,7 +1797,7 @@ CREATE TABLE `medidor` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `medidor`
+-- Volcado de datos para la tabla `medidor`
 --
 
 INSERT INTO `medidor` (`id`, `comunidad_id`, `unidad_id`, `tipo`, `codigo`, `es_compartido`, `created_at`, `updated_at`, `serial_number`, `marca`, `modelo`, `estado`, `ubicacion`, `activo`, `created_by`) VALUES
@@ -1794,9 +1845,10 @@ INSERT INTO `medidor` (`id`, `comunidad_id`, `unidad_id`, `tipo`, `codigo`, `es_
 -- --------------------------------------------------------
 
 --
--- Table structure for table `multa`
+-- Estructura de tabla para la tabla `multa`
 --
 
+DROP TABLE IF EXISTS `multa`;
 CREATE TABLE `multa` (
   `id` bigint NOT NULL,
   `numero` varchar(20) DEFAULT NULL,
@@ -1822,7 +1874,7 @@ CREATE TABLE `multa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `multa`
+-- Volcado de datos para la tabla `multa`
 --
 
 INSERT INTO `multa` (`id`, `numero`, `comunidad_id`, `unidad_id`, `persona_id`, `motivo`, `descripcion`, `monto`, `estado`, `prioridad`, `creada_por`, `aprobada_por`, `fecha_aprobacion`, `fecha`, `fecha_pago`, `created_at`, `updated_at`, `anulado_por`, `motivo_anulacion`, `fecha_anulacion`, `pagado_por`) VALUES
@@ -1870,9 +1922,10 @@ INSERT INTO `multa` (`id`, `numero`, `comunidad_id`, `unidad_id`, `persona_id`, 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `multa_apelacion`
+-- Estructura de tabla para la tabla `multa_apelacion`
 --
 
+DROP TABLE IF EXISTS `multa_apelacion`;
 CREATE TABLE `multa_apelacion` (
   `id` bigint NOT NULL,
   `multa_id` bigint NOT NULL,
@@ -1889,7 +1942,7 @@ CREATE TABLE `multa_apelacion` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `multa_apelacion`
+-- Volcado de datos para la tabla `multa_apelacion`
 --
 
 INSERT INTO `multa_apelacion` (`id`, `multa_id`, `usuario_id`, `persona_id`, `comunidad_id`, `fecha_apelacion`, `motivo_apelacion`, `estado`, `resolucion`, `fecha_resolucion`, `created_at`, `updated_at`) VALUES
@@ -1934,9 +1987,10 @@ INSERT INTO `multa_apelacion` (`id`, `multa_id`, `usuario_id`, `persona_id`, `co
 -- --------------------------------------------------------
 
 --
--- Table structure for table `multa_historial`
+-- Estructura de tabla para la tabla `multa_historial`
 --
 
+DROP TABLE IF EXISTS `multa_historial`;
 CREATE TABLE `multa_historial` (
   `id` bigint NOT NULL,
   `multa_id` bigint NOT NULL,
@@ -1949,7 +2003,7 @@ CREATE TABLE `multa_historial` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `multa_historial`
+-- Volcado de datos para la tabla `multa_historial`
 --
 
 INSERT INTO `multa_historial` (`id`, `multa_id`, `usuario_id`, `accion`, `estado_anterior`, `estado_nuevo`, `observaciones`, `created_at`) VALUES
@@ -2028,9 +2082,10 @@ INSERT INTO `multa_historial` (`id`, `multa_id`, `usuario_id`, `accion`, `estado
 -- --------------------------------------------------------
 
 --
--- Table structure for table `notificacion_usuario`
+-- Estructura de tabla para la tabla `notificacion_usuario`
 --
 
+DROP TABLE IF EXISTS `notificacion_usuario`;
 CREATE TABLE `notificacion_usuario` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -2045,7 +2100,7 @@ CREATE TABLE `notificacion_usuario` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `notificacion_usuario`
+-- Volcado de datos para la tabla `notificacion_usuario`
 --
 
 INSERT INTO `notificacion_usuario` (`id`, `comunidad_id`, `persona_id`, `tipo`, `titulo`, `mensaje`, `leida`, `objeto_tipo`, `objeto_id`, `fecha_creacion`) VALUES
@@ -2093,9 +2148,10 @@ INSERT INTO `notificacion_usuario` (`id`, `comunidad_id`, `persona_id`, `tipo`, 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pago`
+-- Estructura de tabla para la tabla `pago`
 --
 
+DROP TABLE IF EXISTS `pago`;
 CREATE TABLE `pago` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -2112,7 +2168,7 @@ CREATE TABLE `pago` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `pago`
+-- Volcado de datos para la tabla `pago`
 --
 
 INSERT INTO `pago` (`id`, `comunidad_id`, `unidad_id`, `persona_id`, `fecha`, `monto`, `medio`, `referencia`, `estado`, `comprobante_num`, `created_at`, `updated_at`) VALUES
@@ -2260,9 +2316,10 @@ INSERT INTO `pago` (`id`, `comunidad_id`, `unidad_id`, `persona_id`, `fecha`, `m
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pago_aplicacion`
+-- Estructura de tabla para la tabla `pago_aplicacion`
 --
 
+DROP TABLE IF EXISTS `pago_aplicacion`;
 CREATE TABLE `pago_aplicacion` (
   `id` bigint NOT NULL,
   `pago_id` bigint NOT NULL,
@@ -2274,7 +2331,7 @@ CREATE TABLE `pago_aplicacion` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `pago_aplicacion`
+-- Volcado de datos para la tabla `pago_aplicacion`
 --
 
 INSERT INTO `pago_aplicacion` (`id`, `pago_id`, `cuenta_cobro_unidad_id`, `monto`, `prioridad`, `created_at`, `updated_at`) VALUES
@@ -2322,9 +2379,10 @@ INSERT INTO `pago_aplicacion` (`id`, `pago_id`, `cuenta_cobro_unidad_id`, `monto
 -- --------------------------------------------------------
 
 --
--- Table structure for table `parametros_cobranza`
+-- Estructura de tabla para la tabla `parametros_cobranza`
 --
 
+DROP TABLE IF EXISTS `parametros_cobranza`;
 CREATE TABLE `parametros_cobranza` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -2339,7 +2397,7 @@ CREATE TABLE `parametros_cobranza` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `parametros_cobranza`
+-- Volcado de datos para la tabla `parametros_cobranza`
 --
 
 INSERT INTO `parametros_cobranza` (`id`, `comunidad_id`, `dias_gracia`, `tasa_mora_mensual`, `mora_calculo`, `redondeo`, `interes_max_mensual`, `aplica_interes_sobre`, `created_at`, `updated_at`) VALUES
@@ -2387,9 +2445,10 @@ INSERT INTO `parametros_cobranza` (`id`, `comunidad_id`, `dias_gracia`, `tasa_mo
 -- --------------------------------------------------------
 
 --
--- Table structure for table `persona`
+-- Estructura de tabla para la tabla `persona`
 --
 
+DROP TABLE IF EXISTS `persona`;
 CREATE TABLE `persona` (
   `id` bigint NOT NULL,
   `rut` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -2404,7 +2463,7 @@ CREATE TABLE `persona` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Información personal de todas las personas relacionadas con el sistema';
 
 --
--- Dumping data for table `persona`
+-- Volcado de datos para la tabla `persona`
 --
 
 INSERT INTO `persona` (`id`, `rut`, `dv`, `nombres`, `apellidos`, `email`, `telefono`, `direccion`, `created_at`, `updated_at`) VALUES
@@ -2492,9 +2551,10 @@ INSERT INTO `persona` (`id`, `rut`, `dv`, `nombres`, `apellidos`, `email`, `tele
 -- --------------------------------------------------------
 
 --
--- Table structure for table `proveedor`
+-- Estructura de tabla para la tabla `proveedor`
 --
 
+DROP TABLE IF EXISTS `proveedor`;
 CREATE TABLE `proveedor` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -2511,7 +2571,7 @@ CREATE TABLE `proveedor` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `proveedor`
+-- Volcado de datos para la tabla `proveedor`
 --
 
 INSERT INTO `proveedor` (`id`, `comunidad_id`, `rut`, `dv`, `razon_social`, `giro`, `email`, `telefono`, `direccion`, `activo`, `created_at`, `updated_at`) VALUES
@@ -2554,14 +2614,17 @@ INSERT INTO `proveedor` (`id`, `comunidad_id`, `rut`, `dv`, `razon_social`, `gir
 (37, 7, '23789012', '8', 'Personal para Edificios', 'Suministro de personal', 'rrhh@personal.cl', NULL, NULL, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (38, 8, '23890123', '1', 'Construcción y Maestranza', 'Servicios de construcción', 'serv@constru.cl', NULL, NULL, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (39, 9, '23901234', '5', 'Administración y Cobranza', 'Administración externa', 'cobranza@adm.cl', NULL, NULL, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
-(40, 10, '24012345', '9', 'Mantención Gas Total', 'Mantención de redes de gas', 'mant@gas.cl', NULL, NULL, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00');
+(40, 10, '24012345', '9', 'Mantención Gas Total', 'Mantención de redes de gas', 'mant@gas.cl', NULL, NULL, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
+(41, 5, '20792994', '8', 'es', 'supplies', NULL, NULL, NULL, 1, '2025-11-11 05:46:29', '2025-11-11 05:46:29'),
+(42, 36, '56983447', '3', 'eseseses', 'services', NULL, '+56985349211', NULL, 1, '2025-11-11 05:47:44', '2025-11-11 05:47:44');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `registro_conserjeria`
+-- Estructura de tabla para la tabla `registro_conserjeria`
 --
 
+DROP TABLE IF EXISTS `registro_conserjeria`;
 CREATE TABLE `registro_conserjeria` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -2573,7 +2636,7 @@ CREATE TABLE `registro_conserjeria` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Libro de novedades o bitácora de conserjería';
 
 --
--- Dumping data for table `registro_conserjeria`
+-- Volcado de datos para la tabla `registro_conserjeria`
 --
 
 INSERT INTO `registro_conserjeria` (`id`, `comunidad_id`, `fecha_hora`, `usuario_id`, `evento`, `detalle`, `created_at`) VALUES
@@ -2701,9 +2764,10 @@ INSERT INTO `registro_conserjeria` (`id`, `comunidad_id`, `fecha_hora`, `usuario
 -- --------------------------------------------------------
 
 --
--- Table structure for table `reserva_amenidad`
+-- Estructura de tabla para la tabla `reserva_amenidad`
 --
 
+DROP TABLE IF EXISTS `reserva_amenidad`;
 CREATE TABLE `reserva_amenidad` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -2718,7 +2782,7 @@ CREATE TABLE `reserva_amenidad` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `reserva_amenidad`
+-- Volcado de datos para la tabla `reserva_amenidad`
 --
 
 INSERT INTO `reserva_amenidad` (`id`, `comunidad_id`, `amenidad_id`, `unidad_id`, `persona_id`, `inicio`, `fin`, `estado`, `created_at`, `updated_at`) VALUES
@@ -2846,9 +2910,10 @@ INSERT INTO `reserva_amenidad` (`id`, `comunidad_id`, `amenidad_id`, `unidad_id`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `rol_sistema`
+-- Estructura de tabla para la tabla `rol_sistema`
 --
 
+DROP TABLE IF EXISTS `rol_sistema`;
 CREATE TABLE `rol_sistema` (
   `id` int NOT NULL,
   `codigo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -2860,7 +2925,7 @@ CREATE TABLE `rol_sistema` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Catálogo de roles disponibles en el sistema';
 
 --
--- Dumping data for table `rol_sistema`
+-- Volcado de datos para la tabla `rol_sistema`
 --
 
 INSERT INTO `rol_sistema` (`id`, `codigo`, `nombre`, `descripcion`, `nivel_acceso`, `es_rol_sistema`, `created_at`) VALUES
@@ -2878,9 +2943,10 @@ INSERT INTO `rol_sistema` (`id`, `codigo`, `nombre`, `descripcion`, `nivel_acces
 -- --------------------------------------------------------
 
 --
--- Table structure for table `sesion_usuario`
+-- Estructura de tabla para la tabla `sesion_usuario`
 --
 
+DROP TABLE IF EXISTS `sesion_usuario`;
 CREATE TABLE `sesion_usuario` (
   `id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `usuario_id` bigint NOT NULL,
@@ -2892,7 +2958,7 @@ CREATE TABLE `sesion_usuario` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `sesion_usuario`
+-- Volcado de datos para la tabla `sesion_usuario`
 --
 
 INSERT INTO `sesion_usuario` (`id`, `usuario_id`, `ip_address`, `user_agent`, `data`, `last_activity`, `created_at`) VALUES
@@ -2940,9 +3006,10 @@ INSERT INTO `sesion_usuario` (`id`, `usuario_id`, `ip_address`, `user_agent`, `d
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tarifa_consumo`
+-- Estructura de tabla para la tabla `tarifa_consumo`
 --
 
+DROP TABLE IF EXISTS `tarifa_consumo`;
 CREATE TABLE `tarifa_consumo` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -2956,7 +3023,7 @@ CREATE TABLE `tarifa_consumo` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `tarifa_consumo`
+-- Volcado de datos para la tabla `tarifa_consumo`
 --
 
 INSERT INTO `tarifa_consumo` (`id`, `comunidad_id`, `tipo`, `periodo_desde`, `periodo_hasta`, `precio_por_unidad`, `cargo_fijo`, `created_at`, `updated_at`) VALUES
@@ -3004,30 +3071,32 @@ INSERT INTO `tarifa_consumo` (`id`, `comunidad_id`, `tipo`, `periodo_desde`, `pe
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `ticket`
--- (See below for the actual view)
+-- Estructura Stand-in para la vista `ticket`
+-- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `ticket`;
 CREATE TABLE `ticket` (
-`asignado_a` bigint
-,`attachments_json` longtext
-,`categoria` varchar(120)
+`id` bigint
 ,`comunidad_id` bigint
-,`created_at` datetime
+,`unidad_id` bigint
+,`categoria` varchar(120)
+,`titulo` varchar(200)
 ,`descripcion` varchar(1000)
 ,`estado` enum('abierto','en_progreso','resuelto','cerrado')
-,`id` bigint
 ,`prioridad` enum('baja','media','alta')
-,`titulo` varchar(200)
-,`unidad_id` bigint
+,`asignado_a` bigint
+,`attachments_json` longtext
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `ticket_soporte`
+-- Estructura de tabla para la tabla `ticket_soporte`
 --
 
+DROP TABLE IF EXISTS `ticket_soporte`;
 CREATE TABLE `ticket_soporte` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -3044,7 +3113,7 @@ CREATE TABLE `ticket_soporte` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Tickets o solicitudes de soporte/mantención';
 
 --
--- Dumping data for table `ticket_soporte`
+-- Volcado de datos para la tabla `ticket_soporte`
 --
 
 INSERT INTO `ticket_soporte` (`id`, `comunidad_id`, `unidad_id`, `categoria`, `titulo`, `descripcion`, `estado`, `prioridad`, `asignado_a`, `attachments_json`, `created_at`, `updated_at`) VALUES
@@ -3142,9 +3211,10 @@ INSERT INTO `ticket_soporte` (`id`, `comunidad_id`, `unidad_id`, `categoria`, `t
 -- --------------------------------------------------------
 
 --
--- Table structure for table `titulares_unidad`
+-- Estructura de tabla para la tabla `titulares_unidad`
 --
 
+DROP TABLE IF EXISTS `titulares_unidad`;
 CREATE TABLE `titulares_unidad` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -3159,7 +3229,7 @@ CREATE TABLE `titulares_unidad` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `titulares_unidad`
+-- Volcado de datos para la tabla `titulares_unidad`
 --
 
 INSERT INTO `titulares_unidad` (`id`, `comunidad_id`, `unidad_id`, `persona_id`, `tipo`, `desde`, `hasta`, `porcentaje`, `created_at`, `updated_at`) VALUES
@@ -3287,28 +3357,30 @@ INSERT INTO `titulares_unidad` (`id`, `comunidad_id`, `unidad_id`, `persona_id`,
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `titularidad_unidad`
--- (See below for the actual view)
+-- Estructura Stand-in para la vista `titularidad_unidad`
+-- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `titularidad_unidad`;
 CREATE TABLE `titularidad_unidad` (
-`comunidad_id` bigint
-,`created_at` datetime
+`id` bigint
+,`comunidad_id` bigint
+,`unidad_id` bigint
+,`persona_id` bigint
+,`tipo` enum('propietario','arrendatario')
 ,`desde` date
 ,`hasta` date
-,`id` bigint
-,`persona_id` bigint
 ,`porcentaje` decimal(5,2)
-,`tipo` enum('propietario','arrendatario')
-,`unidad_id` bigint
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `torre`
+-- Estructura de tabla para la tabla `torre`
 --
 
+DROP TABLE IF EXISTS `torre`;
 CREATE TABLE `torre` (
   `id` bigint NOT NULL,
   `edificio_id` bigint NOT NULL,
@@ -3319,7 +3391,7 @@ CREATE TABLE `torre` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `torre`
+-- Volcado de datos para la tabla `torre`
 --
 
 INSERT INTO `torre` (`id`, `edificio_id`, `nombre`, `codigo`, `created_at`, `updated_at`) VALUES
@@ -3407,16 +3479,17 @@ INSERT INTO `torre` (`id`, `edificio_id`, `nombre`, `codigo`, `created_at`, `upd
 -- --------------------------------------------------------
 
 --
--- Table structure for table `uf_valor`
+-- Estructura de tabla para la tabla `uf_valor`
 --
 
+DROP TABLE IF EXISTS `uf_valor`;
 CREATE TABLE `uf_valor` (
   `fecha` date NOT NULL,
   `valor` decimal(12,4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `uf_valor`
+-- Volcado de datos para la tabla `uf_valor`
 --
 
 INSERT INTO `uf_valor` (`fecha`, `valor`) VALUES
@@ -3466,9 +3539,10 @@ INSERT INTO `uf_valor` (`fecha`, `valor`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `unidad`
+-- Estructura de tabla para la tabla `unidad`
 --
 
+DROP TABLE IF EXISTS `unidad`;
 CREATE TABLE `unidad` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -3486,7 +3560,7 @@ CREATE TABLE `unidad` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `unidad`
+-- Volcado de datos para la tabla `unidad`
 --
 
 INSERT INTO `unidad` (`id`, `comunidad_id`, `edificio_id`, `torre_id`, `codigo`, `alicuota`, `m2_utiles`, `m2_terrazas`, `nro_bodega`, `nro_estacionamiento`, `activa`, `created_at`, `updated_at`) VALUES
@@ -3614,9 +3688,10 @@ INSERT INTO `unidad` (`id`, `comunidad_id`, `edificio_id`, `torre_id`, `codigo`,
 -- --------------------------------------------------------
 
 --
--- Table structure for table `user_preferences`
+-- Estructura de tabla para la tabla `user_preferences`
 --
 
+DROP TABLE IF EXISTS `user_preferences`;
 CREATE TABLE `user_preferences` (
   `id` int UNSIGNED NOT NULL,
   `user_id` bigint NOT NULL,
@@ -3626,7 +3701,7 @@ CREATE TABLE `user_preferences` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `user_preferences`
+-- Volcado de datos para la tabla `user_preferences`
 --
 
 INSERT INTO `user_preferences` (`id`, `user_id`, `preferences`, `created_at`, `updated_at`) VALUES
@@ -3664,9 +3739,10 @@ INSERT INTO `user_preferences` (`id`, `user_id`, `preferences`, `created_at`, `u
 -- --------------------------------------------------------
 
 --
--- Table structure for table `usuario`
+-- Estructura de tabla para la tabla `usuario`
 --
 
+DROP TABLE IF EXISTS `usuario`;
 CREATE TABLE `usuario` (
   `id` bigint NOT NULL,
   `persona_id` bigint NOT NULL COMMENT 'FK obligatoria a tabla persona',
@@ -3682,11 +3758,11 @@ CREATE TABLE `usuario` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Credenciales de acceso al sistema, siempre vinculado a una persona';
 
 --
--- Dumping data for table `usuario`
+-- Volcado de datos para la tabla `usuario`
 --
 
 INSERT INTO `usuario` (`id`, `persona_id`, `username`, `hash_password`, `email`, `activo`, `created_at`, `updated_at`, `is_superadmin`, `totp_secret`, `totp_enabled`) VALUES
-(1, 1, 'pquintanilla', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'pat.quintanilla@duocuc.cl', 1, '2025-10-10 18:07:28', '2025-10-24 19:00:05', 1, NULL, 0),
+(1, 1, 'pquintanilla', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'pat.quintanilla@duocuc.cl', 1, '2025-10-10 18:07:28', '2025-11-07 23:30:23', 1, NULL, 0),
 (2, 2, 'erobledo', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'elisabet@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:17', 0, NULL, 0),
 (3, 3, 'dtrillo', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'dalila@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:18', 0, NULL, 0),
 (4, 4, 'isedano', '$2y$10$/jLjFHOPbHFPoC1hv7BgbeNPYeg.qD61uHueljM80kvp0k9PCwmlO', 'isidora@email.cl', 1, '2025-10-10 18:07:28', '2025-10-10 18:41:18', 0, NULL, 0),
@@ -3770,27 +3846,29 @@ INSERT INTO `usuario` (`id`, `persona_id`, `username`, `hash_password`, `email`,
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `usuario_miembro_comunidad`
--- (See below for the actual view)
+-- Estructura Stand-in para la vista `usuario_miembro_comunidad`
+-- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `usuario_miembro_comunidad`;
 CREATE TABLE `usuario_miembro_comunidad` (
-`activo` tinyint(1)
+`id` bigint
 ,`comunidad_id` bigint
-,`created_at` datetime
-,`desde` date
-,`hasta` date
-,`id` bigint
 ,`persona_id` bigint
 ,`rol` varchar(50)
+,`desde` date
+,`hasta` date
+,`activo` tinyint(1)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `usuario_rol_comunidad`
+-- Estructura de tabla para la tabla `usuario_rol_comunidad`
 --
 
+DROP TABLE IF EXISTS `usuario_rol_comunidad`;
 CREATE TABLE `usuario_rol_comunidad` (
   `id` bigint NOT NULL,
   `usuario_id` bigint NOT NULL,
@@ -3804,7 +3882,7 @@ CREATE TABLE `usuario_rol_comunidad` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Roles de usuarios en cada comunidad';
 
 --
--- Dumping data for table `usuario_rol_comunidad`
+-- Volcado de datos para la tabla `usuario_rol_comunidad`
 --
 
 INSERT INTO `usuario_rol_comunidad` (`id`, `usuario_id`, `comunidad_id`, `rol_id`, `desde`, `hasta`, `activo`, `created_at`, `updated_at`) VALUES
@@ -3892,16 +3970,17 @@ INSERT INTO `usuario_rol_comunidad` (`id`, `usuario_id`, `comunidad_id`, `rol_id
 -- --------------------------------------------------------
 
 --
--- Table structure for table `utm_valor`
+-- Estructura de tabla para la tabla `utm_valor`
 --
 
+DROP TABLE IF EXISTS `utm_valor`;
 CREATE TABLE `utm_valor` (
   `fecha` date NOT NULL,
   `valor` decimal(12,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `utm_valor`
+-- Volcado de datos para la tabla `utm_valor`
 --
 
 INSERT INTO `utm_valor` (`fecha`, `valor`) VALUES
@@ -3949,106 +4028,111 @@ INSERT INTO `utm_valor` (`fecha`, `valor`) VALUES
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `vista_compras`
--- (See below for the actual view)
+-- Estructura Stand-in para la vista `vista_compras`
+-- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_compras`;
 CREATE TABLE `vista_compras` (
-`comunidad_id` bigint
+`id` bigint
+,`comunidad_id` bigint
 ,`comunidad_nombre` varchar(200)
-,`created_at` datetime
-,`exento` decimal(12,2)
-,`fecha_emision` date
-,`folio` varchar(50)
-,`glosa` varchar(250)
-,`id` bigint
-,`iva` decimal(12,2)
-,`neto` decimal(12,2)
 ,`proveedor_id` bigint
 ,`proveedor_nombre` varchar(200)
 ,`tipo_doc` enum('factura','boleta','nota_credito')
+,`folio` varchar(50)
+,`fecha_emision` date
+,`neto` decimal(12,2)
+,`iva` decimal(12,2)
+,`exento` decimal(12,2)
 ,`total` decimal(12,2)
+,`glosa` varchar(250)
+,`created_at` datetime
 ,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `vista_consumos`
--- (See below for the actual view)
+-- Estructura Stand-in para la vista `vista_consumos`
+-- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_consumos`;
 CREATE TABLE `vista_consumos` (
-`comunidad_id` bigint
-,`comunidad_nombre` varchar(200)
-,`consumo` decimal(13,3)
-,`fecha_fin_periodo` date
-,`fecha_inicio_periodo` date
-,`lecturas_en_periodo` bigint
+`medidor_id` bigint
 ,`medidor_codigo` varchar(50)
-,`medidor_id` bigint
 ,`medidor_tipo` enum('agua','gas','electricidad')
+,`comunidad_id` bigint
+,`comunidad_nombre` varchar(200)
 ,`periodo` char(7)
+,`fecha_inicio_periodo` date
+,`fecha_fin_periodo` date
+,`consumo` decimal(13,3)
+,`lecturas_en_periodo` bigint
 );
 
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `vista_medidores`
--- (See below for the actual view)
+-- Estructura Stand-in para la vista `vista_medidores`
+-- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_medidores`;
 CREATE TABLE `vista_medidores` (
-`activo` tinyint(1)
+`id` bigint
 ,`comunidad_id` bigint
 ,`comunidad_nombre` varchar(200)
-,`created_at` datetime
-,`created_by` bigint
-,`es_compartido` tinyint(1)
-,`estado` enum('activo','inactivo','mantenimiento')
-,`fecha_ultima_lectura` date
-,`id` bigint
-,`marca` varchar(100)
-,`medidor_codigo` varchar(50)
-,`modelo` varchar(100)
-,`serial_number` varchar(100)
-,`tipo` enum('agua','gas','electricidad')
-,`total_lecturas` bigint
-,`ubicacion` json
-,`ultima_lectura` decimal(12,3)
-,`unidad_codigo` varchar(50)
 ,`unidad_id` bigint
 ,`unidad_torre_id` bigint
+,`unidad_codigo` varchar(50)
+,`tipo` enum('agua','gas','electricidad')
+,`medidor_codigo` varchar(50)
+,`serial_number` varchar(100)
+,`es_compartido` tinyint(1)
+,`marca` varchar(100)
+,`modelo` varchar(100)
+,`estado` enum('activo','inactivo','mantenimiento')
+,`ubicacion` json
+,`activo` tinyint(1)
+,`created_by` bigint
+,`created_at` datetime
 ,`updated_at` datetime
+,`ultima_lectura` decimal(12,3)
+,`fecha_ultima_lectura` date
+,`total_lecturas` bigint
 );
 
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `vista_timeline_general`
--- (See below for the actual view)
+-- Estructura Stand-in para la vista `vista_timeline_general`
+-- (Véase abajo para la vista actual)
 --
+DROP VIEW IF EXISTS `vista_timeline_general`;
 CREATE TABLE `vista_timeline_general` (
-`adjuntos` json
+`id` bigint
 ,`comunidad_id` bigint
-,`created_at` datetime
-,`descripcion` mediumtext
-,`fecha` datetime
-,`id` bigint
-,`ip` varchar(45)
-,`prioridad` varchar(8)
-,`tags` json
 ,`tipo` varchar(11)
+,`prioridad` varchar(8)
 ,`titulo` varchar(200)
-,`ubicacion` varchar(255)
-,`updated_at` datetime
+,`descripcion` mediumtext
 ,`usuario` varchar(150)
 ,`usuario_id` bigint
+,`fecha` datetime
+,`tags` json
+,`adjuntos` json
+,`ip` varchar(45)
+,`ubicacion` varchar(255)
+,`created_at` datetime
+,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `webhook_pago`
+-- Estructura de tabla para la tabla `webhook_pago`
 --
 
+DROP TABLE IF EXISTS `webhook_pago`;
 CREATE TABLE `webhook_pago` (
   `id` bigint NOT NULL,
   `comunidad_id` bigint NOT NULL,
@@ -4060,7 +4144,7 @@ CREATE TABLE `webhook_pago` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `webhook_pago`
+-- Volcado de datos para la tabla `webhook_pago`
 --
 
 INSERT INTO `webhook_pago` (`id`, `comunidad_id`, `proveedor`, `payload_json`, `fecha_recepcion`, `procesado`, `pago_id`) VALUES
@@ -4106,11 +4190,11 @@ INSERT INTO `webhook_pago` (`id`, `comunidad_id`, `proveedor`, `payload_json`, `
 (40, 10, 'webpay', '{\"tx_id\": \"wp40\", \"monto\": 75000}', '2025-10-23 16:35:00', 1, 40);
 
 --
--- Indexes for dumped tables
+-- Índices para tablas volcadas
 --
 
 --
--- Indexes for table `amenidad`
+-- Indices de la tabla `amenidad`
 --
 ALTER TABLE `amenidad`
   ADD PRIMARY KEY (`id`),
@@ -4118,7 +4202,7 @@ ALTER TABLE `amenidad`
   ADD KEY `idx_comunidad_id` (`comunidad_id`);
 
 --
--- Indexes for table `archivos`
+-- Indices de la tabla `archivos`
 --
 ALTER TABLE `archivos`
   ADD PRIMARY KEY (`id`),
@@ -4127,7 +4211,7 @@ ALTER TABLE `archivos`
   ADD KEY `idx_uploaded_at` (`uploaded_at`);
 
 --
--- Indexes for table `auditoria`
+-- Indices de la tabla `auditoria`
 --
 ALTER TABLE `auditoria`
   ADD PRIMARY KEY (`id`),
@@ -4138,7 +4222,7 @@ ALTER TABLE `auditoria`
   ADD KEY `ix_auditoria_usuario_fecha` (`usuario_id`,`created_at`);
 
 --
--- Indexes for table `bitacora_auditoria`
+-- Indices de la tabla `bitacora_auditoria`
 --
 ALTER TABLE `bitacora_auditoria`
   ADD PRIMARY KEY (`id`),
@@ -4149,28 +4233,28 @@ ALTER TABLE `bitacora_auditoria`
   ADD KEY `idx_bitacora_auditoria_ip` (`ip`);
 
 --
--- Indexes for table `categoria_gasto`
+-- Indices de la tabla `categoria_gasto`
 --
 ALTER TABLE `categoria_gasto`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_catgasto_nombre` (`comunidad_id`,`nombre`);
 
 --
--- Indexes for table `centro_costo`
+-- Indices de la tabla `centro_costo`
 --
 ALTER TABLE `centro_costo`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_ccosto_codigo` (`comunidad_id`,`codigo`);
 
 --
--- Indexes for table `comunidad`
+-- Indices de la tabla `comunidad`
 --
 ALTER TABLE `comunidad`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_comunidad_rut` (`rut`,`dv`);
 
 --
--- Indexes for table `conciliacion_bancaria`
+-- Indices de la tabla `conciliacion_bancaria`
 --
 ALTER TABLE `conciliacion_bancaria`
   ADD PRIMARY KEY (`id`),
@@ -4178,14 +4262,14 @@ ALTER TABLE `conciliacion_bancaria`
   ADD KEY `fk_conc_pago` (`pago_id`);
 
 --
--- Indexes for table `configuracion_interes`
+-- Indices de la tabla `configuracion_interes`
 --
 ALTER TABLE `configuracion_interes`
   ADD PRIMARY KEY (`id`),
   ADD KEY `ix_cint_comunidad` (`comunidad_id`);
 
 --
--- Indexes for table `cuenta_cobro_unidad`
+-- Indices de la tabla `cuenta_cobro_unidad`
 --
 ALTER TABLE `cuenta_cobro_unidad`
   ADD PRIMARY KEY (`id`),
@@ -4195,7 +4279,7 @@ ALTER TABLE `cuenta_cobro_unidad`
   ADD KEY `ix_cargo_estado` (`estado`);
 
 --
--- Indexes for table `detalle_cuenta_unidad`
+-- Indices de la tabla `detalle_cuenta_unidad`
 --
 ALTER TABLE `detalle_cuenta_unidad`
   ADD PRIMARY KEY (`id`),
@@ -4203,7 +4287,7 @@ ALTER TABLE `detalle_cuenta_unidad`
   ADD KEY `ix_cargodet_cargo` (`cuenta_cobro_unidad_id`);
 
 --
--- Indexes for table `detalle_emision_gastos`
+-- Indices de la tabla `detalle_emision_gastos`
 --
 ALTER TABLE `detalle_emision_gastos`
   ADD PRIMARY KEY (`id`),
@@ -4212,7 +4296,7 @@ ALTER TABLE `detalle_emision_gastos`
   ADD KEY `ix_emidet_emision` (`emision_id`);
 
 --
--- Indexes for table `documento_compra`
+-- Indices de la tabla `documento_compra`
 --
 ALTER TABLE `documento_compra`
   ADD PRIMARY KEY (`id`),
@@ -4221,14 +4305,14 @@ ALTER TABLE `documento_compra`
   ADD KEY `ix_doc_proveedor` (`proveedor_id`);
 
 --
--- Indexes for table `documento_comunidad`
+-- Indices de la tabla `documento_comunidad`
 --
 ALTER TABLE `documento_comunidad`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_docrepo_comunidad` (`comunidad_id`);
 
 --
--- Indexes for table `documento_multa`
+-- Indices de la tabla `documento_multa`
 --
 ALTER TABLE `documento_multa`
   ADD PRIMARY KEY (`id`),
@@ -4236,21 +4320,21 @@ ALTER TABLE `documento_multa`
   ADD KEY `fk_documento_multa_usuario` (`subido_por`);
 
 --
--- Indexes for table `edificio`
+-- Indices de la tabla `edificio`
 --
 ALTER TABLE `edificio`
   ADD PRIMARY KEY (`id`),
   ADD KEY `ix_edificio_comunidad` (`comunidad_id`);
 
 --
--- Indexes for table `emision_gastos_comunes`
+-- Indices de la tabla `emision_gastos_comunes`
 --
 ALTER TABLE `emision_gastos_comunes`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_emision_periodo` (`comunidad_id`,`periodo`);
 
 --
--- Indexes for table `gasto`
+-- Indices de la tabla `gasto`
 --
 ALTER TABLE `gasto`
   ADD PRIMARY KEY (`id`),
@@ -4264,7 +4348,7 @@ ALTER TABLE `gasto`
   ADD KEY `fk_gasto_creado_por` (`creado_por`);
 
 --
--- Indexes for table `gasto_aprobacion`
+-- Indices de la tabla `gasto_aprobacion`
 --
 ALTER TABLE `gasto_aprobacion`
   ADD PRIMARY KEY (`id`),
@@ -4273,7 +4357,7 @@ ALTER TABLE `gasto_aprobacion`
   ADD KEY `fk_aprobacion_rol` (`rol_id`);
 
 --
--- Indexes for table `historial_gasto`
+-- Indices de la tabla `historial_gasto`
 --
 ALTER TABLE `historial_gasto`
   ADD PRIMARY KEY (`id`),
@@ -4281,7 +4365,7 @@ ALTER TABLE `historial_gasto`
   ADD KEY `fk_historial_usuario` (`usuario_id`);
 
 --
--- Indexes for table `lectura_medidor`
+-- Indices de la tabla `lectura_medidor`
 --
 ALTER TABLE `lectura_medidor`
   ADD PRIMARY KEY (`id`),
@@ -4289,7 +4373,7 @@ ALTER TABLE `lectura_medidor`
   ADD KEY `ix_lectura_medidor` (`medidor_id`);
 
 --
--- Indexes for table `medidor`
+-- Indices de la tabla `medidor`
 --
 ALTER TABLE `medidor`
   ADD PRIMARY KEY (`id`),
@@ -4297,7 +4381,7 @@ ALTER TABLE `medidor`
   ADD KEY `fk_medidor_unidad` (`unidad_id`);
 
 --
--- Indexes for table `multa`
+-- Indices de la tabla `multa`
 --
 ALTER TABLE `multa`
   ADD PRIMARY KEY (`id`),
@@ -4312,7 +4396,7 @@ ALTER TABLE `multa`
   ADD KEY `fk_multa_pagado_por` (`pagado_por`);
 
 --
--- Indexes for table `multa_apelacion`
+-- Indices de la tabla `multa_apelacion`
 --
 ALTER TABLE `multa_apelacion`
   ADD PRIMARY KEY (`id`),
@@ -4322,7 +4406,7 @@ ALTER TABLE `multa_apelacion`
   ADD KEY `fk_apelacion_comunidad` (`comunidad_id`);
 
 --
--- Indexes for table `multa_historial`
+-- Indices de la tabla `multa_historial`
 --
 ALTER TABLE `multa_historial`
   ADD PRIMARY KEY (`id`),
@@ -4330,7 +4414,7 @@ ALTER TABLE `multa_historial`
   ADD KEY `fk_historial_multa_usuario` (`usuario_id`);
 
 --
--- Indexes for table `notificacion_usuario`
+-- Indices de la tabla `notificacion_usuario`
 --
 ALTER TABLE `notificacion_usuario`
   ADD PRIMARY KEY (`id`),
@@ -4339,7 +4423,7 @@ ALTER TABLE `notificacion_usuario`
   ADD KEY `ix_notif_persona_leida` (`persona_id`,`leida`);
 
 --
--- Indexes for table `pago`
+-- Indices de la tabla `pago`
 --
 ALTER TABLE `pago`
   ADD PRIMARY KEY (`id`),
@@ -4351,7 +4435,7 @@ ALTER TABLE `pago`
   ADD KEY `ix_pago_comunidad_estado` (`comunidad_id`,`estado`);
 
 --
--- Indexes for table `pago_aplicacion`
+-- Indices de la tabla `pago_aplicacion`
 --
 ALTER TABLE `pago_aplicacion`
   ADD PRIMARY KEY (`id`),
@@ -4360,28 +4444,28 @@ ALTER TABLE `pago_aplicacion`
   ADD KEY `ix_papp_pago` (`pago_id`);
 
 --
--- Indexes for table `parametros_cobranza`
+-- Indices de la tabla `parametros_cobranza`
 --
 ALTER TABLE `parametros_cobranza`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `comunidad_id` (`comunidad_id`);
 
 --
--- Indexes for table `persona`
+-- Indices de la tabla `persona`
 --
 ALTER TABLE `persona`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_persona_rut` (`rut`,`dv`);
 
 --
--- Indexes for table `proveedor`
+-- Indices de la tabla `proveedor`
 --
 ALTER TABLE `proveedor`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_proveedor_rut` (`comunidad_id`,`rut`,`dv`);
 
 --
--- Indexes for table `registro_conserjeria`
+-- Indices de la tabla `registro_conserjeria`
 --
 ALTER TABLE `registro_conserjeria`
   ADD PRIMARY KEY (`id`),
@@ -4389,7 +4473,7 @@ ALTER TABLE `registro_conserjeria`
   ADD KEY `fk_regconser_usuario` (`usuario_id`);
 
 --
--- Indexes for table `reserva_amenidad`
+-- Indices de la tabla `reserva_amenidad`
 --
 ALTER TABLE `reserva_amenidad`
   ADD PRIMARY KEY (`id`),
@@ -4400,14 +4484,14 @@ ALTER TABLE `reserva_amenidad`
   ADD KEY `ix_reserva_amenidad_rango` (`amenidad_id`,`inicio`,`fin`);
 
 --
--- Indexes for table `rol_sistema`
+-- Indices de la tabla `rol_sistema`
 --
 ALTER TABLE `rol_sistema`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_rol_codigo` (`codigo`);
 
 --
--- Indexes for table `sesion_usuario`
+-- Indices de la tabla `sesion_usuario`
 --
 ALTER TABLE `sesion_usuario`
   ADD PRIMARY KEY (`id`),
@@ -4416,14 +4500,14 @@ ALTER TABLE `sesion_usuario`
   ADD KEY `ix_sesion_usuario_created` (`created_at`);
 
 --
--- Indexes for table `tarifa_consumo`
+-- Indices de la tabla `tarifa_consumo`
 --
 ALTER TABLE `tarifa_consumo`
   ADD PRIMARY KEY (`id`),
   ADD KEY `ix_tarifa_comunidad` (`comunidad_id`);
 
 --
--- Indexes for table `ticket_soporte`
+-- Indices de la tabla `ticket_soporte`
 --
 ALTER TABLE `ticket_soporte`
   ADD PRIMARY KEY (`id`),
@@ -4432,7 +4516,7 @@ ALTER TABLE `ticket_soporte`
   ADD KEY `fk_solsoporte_asignado` (`asignado_a`);
 
 --
--- Indexes for table `titulares_unidad`
+-- Indices de la tabla `titulares_unidad`
 --
 ALTER TABLE `titulares_unidad`
   ADD PRIMARY KEY (`id`),
@@ -4441,20 +4525,20 @@ ALTER TABLE `titulares_unidad`
   ADD KEY `ix_tenencia_persona` (`persona_id`);
 
 --
--- Indexes for table `torre`
+-- Indices de la tabla `torre`
 --
 ALTER TABLE `torre`
   ADD PRIMARY KEY (`id`),
   ADD KEY `ix_torre_edificio` (`edificio_id`);
 
 --
--- Indexes for table `uf_valor`
+-- Indices de la tabla `uf_valor`
 --
 ALTER TABLE `uf_valor`
   ADD PRIMARY KEY (`fecha`);
 
 --
--- Indexes for table `unidad`
+-- Indices de la tabla `unidad`
 --
 ALTER TABLE `unidad`
   ADD PRIMARY KEY (`id`),
@@ -4464,7 +4548,7 @@ ALTER TABLE `unidad`
   ADD KEY `ix_unidad_torre` (`torre_id`);
 
 --
--- Indexes for table `user_preferences`
+-- Indices de la tabla `user_preferences`
 --
 ALTER TABLE `user_preferences`
   ADD PRIMARY KEY (`id`),
@@ -4472,7 +4556,7 @@ ALTER TABLE `user_preferences`
   ADD KEY `idx_user_id` (`user_id`);
 
 --
--- Indexes for table `usuario`
+-- Indices de la tabla `usuario`
 --
 ALTER TABLE `usuario`
   ADD PRIMARY KEY (`id`),
@@ -4480,7 +4564,7 @@ ALTER TABLE `usuario`
   ADD KEY `fk_usuario_persona` (`persona_id`);
 
 --
--- Indexes for table `usuario_rol_comunidad`
+-- Indices de la tabla `usuario_rol_comunidad`
 --
 ALTER TABLE `usuario_rol_comunidad`
   ADD PRIMARY KEY (`id`),
@@ -4491,13 +4575,13 @@ ALTER TABLE `usuario_rol_comunidad`
   ADD KEY `ix_ucr_activo` (`activo`);
 
 --
--- Indexes for table `utm_valor`
+-- Indices de la tabla `utm_valor`
 --
 ALTER TABLE `utm_valor`
   ADD PRIMARY KEY (`fecha`);
 
 --
--- Indexes for table `webhook_pago`
+-- Indices de la tabla `webhook_pago`
 --
 ALTER TABLE `webhook_pago`
   ADD PRIMARY KEY (`id`),
@@ -4505,155 +4589,191 @@ ALTER TABLE `webhook_pago`
   ADD KEY `fk_wh_pago` (`pago_id`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT de las tablas volcadas
 --
 
 --
--- AUTO_INCREMENT for table `archivos`
+-- AUTO_INCREMENT de la tabla `archivos`
 --
 ALTER TABLE `archivos`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `auditoria`
+-- AUTO_INCREMENT de la tabla `auditoria`
 --
 ALTER TABLE `auditoria`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
--- AUTO_INCREMENT for table `bitacora_auditoria`
+-- AUTO_INCREMENT de la tabla `bitacora_auditoria`
 --
 ALTER TABLE `bitacora_auditoria`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- AUTO_INCREMENT for table `conciliacion_bancaria`
+-- AUTO_INCREMENT de la tabla `categoria_gasto`
+--
+ALTER TABLE `categoria_gasto`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+
+--
+-- AUTO_INCREMENT de la tabla `centro_costo`
+--
+ALTER TABLE `centro_costo`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+
+--
+-- AUTO_INCREMENT de la tabla `conciliacion_bancaria`
 --
 ALTER TABLE `conciliacion_bancaria`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
--- AUTO_INCREMENT for table `configuracion_interes`
+-- AUTO_INCREMENT de la tabla `configuracion_interes`
 --
 ALTER TABLE `configuracion_interes`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `detalle_cuenta_unidad`
+-- AUTO_INCREMENT de la tabla `detalle_cuenta_unidad`
 --
 ALTER TABLE `detalle_cuenta_unidad`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `detalle_emision_gastos`
+-- AUTO_INCREMENT de la tabla `detalle_emision_gastos`
 --
 ALTER TABLE `detalle_emision_gastos`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
--- AUTO_INCREMENT for table `documento_comunidad`
+-- AUTO_INCREMENT de la tabla `documento_compra`
+--
+ALTER TABLE `documento_compra`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+
+--
+-- AUTO_INCREMENT de la tabla `documento_comunidad`
 --
 ALTER TABLE `documento_comunidad`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `documento_multa`
+-- AUTO_INCREMENT de la tabla `documento_multa`
 --
 ALTER TABLE `documento_multa`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `gasto_aprobacion`
+-- AUTO_INCREMENT de la tabla `gasto`
 --
-ALTER TABLE `gasto_aprobacion`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+ALTER TABLE `gasto`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=144;
 
 --
--- AUTO_INCREMENT for table `historial_gasto`
+-- AUTO_INCREMENT de la tabla `gasto_aprobacion`
+--
+ALTER TABLE `gasto_aprobacion`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+
+--
+-- AUTO_INCREMENT de la tabla `historial_gasto`
 --
 ALTER TABLE `historial_gasto`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `lectura_medidor`
+-- AUTO_INCREMENT de la tabla `lectura_medidor`
 --
 ALTER TABLE `lectura_medidor`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
 
 --
--- AUTO_INCREMENT for table `multa_apelacion`
+-- AUTO_INCREMENT de la tabla `multa_apelacion`
 --
 ALTER TABLE `multa_apelacion`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `multa_historial`
+-- AUTO_INCREMENT de la tabla `multa_historial`
 --
 ALTER TABLE `multa_historial`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=96;
 
 --
--- AUTO_INCREMENT for table `notificacion_usuario`
+-- AUTO_INCREMENT de la tabla `notificacion_usuario`
 --
 ALTER TABLE `notificacion_usuario`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `pago_aplicacion`
+-- AUTO_INCREMENT de la tabla `pago`
+--
+ALTER TABLE `pago`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=141;
+
+--
+-- AUTO_INCREMENT de la tabla `pago_aplicacion`
 --
 ALTER TABLE `pago_aplicacion`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `parametros_cobranza`
+-- AUTO_INCREMENT de la tabla `parametros_cobranza`
 --
 ALTER TABLE `parametros_cobranza`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `registro_conserjeria`
+-- AUTO_INCREMENT de la tabla `proveedor`
+--
+ALTER TABLE `proveedor`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+
+--
+-- AUTO_INCREMENT de la tabla `registro_conserjeria`
 --
 ALTER TABLE `registro_conserjeria`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=121;
 
 --
--- AUTO_INCREMENT for table `reserva_amenidad`
+-- AUTO_INCREMENT de la tabla `reserva_amenidad`
 --
 ALTER TABLE `reserva_amenidad`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=121;
 
 --
--- AUTO_INCREMENT for table `tarifa_consumo`
+-- AUTO_INCREMENT de la tabla `tarifa_consumo`
 --
 ALTER TABLE `tarifa_consumo`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `ticket_soporte`
+-- AUTO_INCREMENT de la tabla `ticket_soporte`
 --
 ALTER TABLE `ticket_soporte`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
 
 --
--- AUTO_INCREMENT for table `titulares_unidad`
+-- AUTO_INCREMENT de la tabla `titulares_unidad`
 --
 ALTER TABLE `titulares_unidad`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=121;
 
 --
--- AUTO_INCREMENT for table `user_preferences`
+-- AUTO_INCREMENT de la tabla `user_preferences`
 --
 ALTER TABLE `user_preferences`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `usuario_rol_comunidad`
+-- AUTO_INCREMENT de la tabla `usuario_rol_comunidad`
 --
 ALTER TABLE `usuario_rol_comunidad`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
 
 --
--- AUTO_INCREMENT for table `webhook_pago`
+-- AUTO_INCREMENT de la tabla `webhook_pago`
 --
 ALTER TABLE `webhook_pago`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
@@ -4661,167 +4781,179 @@ ALTER TABLE `webhook_pago`
 -- --------------------------------------------------------
 
 --
--- Structure for view `bitacora_conserjeria`
+-- Estructura para la vista `bitacora_conserjeria`
 --
 DROP TABLE IF EXISTS `bitacora_conserjeria`;
 
+DROP VIEW IF EXISTS `bitacora_conserjeria`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `bitacora_conserjeria`  AS SELECT `registro_conserjeria`.`id` AS `id`, `registro_conserjeria`.`comunidad_id` AS `comunidad_id`, `registro_conserjeria`.`fecha_hora` AS `fecha_hora`, `registro_conserjeria`.`usuario_id` AS `usuario_id`, `registro_conserjeria`.`evento` AS `evento`, `registro_conserjeria`.`detalle` AS `detalle`, `registro_conserjeria`.`created_at` AS `created_at` FROM `registro_conserjeria` ;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `cargo_financiero_unidad`
+-- Estructura para la vista `cargo_financiero_unidad`
 --
 DROP TABLE IF EXISTS `cargo_financiero_unidad`;
 
+DROP VIEW IF EXISTS `cargo_financiero_unidad`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `cargo_financiero_unidad`  AS SELECT `cuenta_cobro_unidad`.`id` AS `id`, `cuenta_cobro_unidad`.`emision_id` AS `emision_id`, `cuenta_cobro_unidad`.`comunidad_id` AS `comunidad_id`, `cuenta_cobro_unidad`.`unidad_id` AS `unidad_id`, `cuenta_cobro_unidad`.`monto_total` AS `monto_total`, `cuenta_cobro_unidad`.`saldo` AS `saldo`, `cuenta_cobro_unidad`.`estado` AS `estado`, `cuenta_cobro_unidad`.`interes_acumulado` AS `interes_acumulado`, `cuenta_cobro_unidad`.`created_at` AS `created_at`, `cuenta_cobro_unidad`.`updated_at` AS `updated_at` FROM `cuenta_cobro_unidad` ;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `detalle_cargo_unidad`
+-- Estructura para la vista `detalle_cargo_unidad`
 --
 DROP TABLE IF EXISTS `detalle_cargo_unidad`;
 
+DROP VIEW IF EXISTS `detalle_cargo_unidad`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `detalle_cargo_unidad`  AS SELECT `detalle_cuenta_unidad`.`id` AS `id`, `detalle_cuenta_unidad`.`cuenta_cobro_unidad_id` AS `cargo_unidad_id`, `detalle_cuenta_unidad`.`categoria_id` AS `categoria_id`, `detalle_cuenta_unidad`.`glosa` AS `glosa`, `detalle_cuenta_unidad`.`monto` AS `monto`, `detalle_cuenta_unidad`.`origen` AS `origen`, `detalle_cuenta_unidad`.`origen_id` AS `origen_id`, `detalle_cuenta_unidad`.`iva_incluido` AS `iva_incluido`, `detalle_cuenta_unidad`.`created_at` AS `created_at`, `detalle_cuenta_unidad`.`updated_at` AS `updated_at` FROM `detalle_cuenta_unidad` ;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `emision_gasto_comun`
+-- Estructura para la vista `emision_gasto_comun`
 --
 DROP TABLE IF EXISTS `emision_gasto_comun`;
 
+DROP VIEW IF EXISTS `emision_gasto_comun`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `emision_gasto_comun`  AS SELECT `emision_gastos_comunes`.`id` AS `id`, `emision_gastos_comunes`.`comunidad_id` AS `comunidad_id`, `emision_gastos_comunes`.`periodo` AS `periodo`, `emision_gastos_comunes`.`fecha_vencimiento` AS `fecha_vencimiento`, `emision_gastos_comunes`.`estado` AS `estado`, `emision_gastos_comunes`.`observaciones` AS `observaciones`, `emision_gastos_comunes`.`created_at` AS `created_at`, `emision_gastos_comunes`.`updated_at` AS `updated_at` FROM `emision_gastos_comunes` ;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `emision_gasto_detalle`
+-- Estructura para la vista `emision_gasto_detalle`
 --
 DROP TABLE IF EXISTS `emision_gasto_detalle`;
 
+DROP VIEW IF EXISTS `emision_gasto_detalle`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `emision_gasto_detalle`  AS SELECT `detalle_emision_gastos`.`id` AS `id`, `detalle_emision_gastos`.`emision_id` AS `emision_id`, `detalle_emision_gastos`.`gasto_id` AS `gasto_id`, `detalle_emision_gastos`.`categoria_id` AS `categoria_id`, `detalle_emision_gastos`.`monto` AS `monto`, `detalle_emision_gastos`.`regla_prorrateo` AS `regla_prorrateo`, `detalle_emision_gastos`.`metadata_json` AS `metadata_json`, `detalle_emision_gastos`.`created_at` AS `created_at`, `detalle_emision_gastos`.`updated_at` AS `updated_at` FROM `detalle_emision_gastos` ;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `ticket`
+-- Estructura para la vista `ticket`
 --
 DROP TABLE IF EXISTS `ticket`;
 
+DROP VIEW IF EXISTS `ticket`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `ticket`  AS SELECT `ticket_soporte`.`id` AS `id`, `ticket_soporte`.`comunidad_id` AS `comunidad_id`, `ticket_soporte`.`unidad_id` AS `unidad_id`, `ticket_soporte`.`categoria` AS `categoria`, `ticket_soporte`.`titulo` AS `titulo`, `ticket_soporte`.`descripcion` AS `descripcion`, `ticket_soporte`.`estado` AS `estado`, `ticket_soporte`.`prioridad` AS `prioridad`, `ticket_soporte`.`asignado_a` AS `asignado_a`, `ticket_soporte`.`attachments_json` AS `attachments_json`, `ticket_soporte`.`created_at` AS `created_at`, `ticket_soporte`.`updated_at` AS `updated_at` FROM `ticket_soporte` ;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `titularidad_unidad`
+-- Estructura para la vista `titularidad_unidad`
 --
 DROP TABLE IF EXISTS `titularidad_unidad`;
 
+DROP VIEW IF EXISTS `titularidad_unidad`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `titularidad_unidad`  AS SELECT `titulares_unidad`.`id` AS `id`, `titulares_unidad`.`comunidad_id` AS `comunidad_id`, `titulares_unidad`.`unidad_id` AS `unidad_id`, `titulares_unidad`.`persona_id` AS `persona_id`, `titulares_unidad`.`tipo` AS `tipo`, `titulares_unidad`.`desde` AS `desde`, `titulares_unidad`.`hasta` AS `hasta`, `titulares_unidad`.`porcentaje` AS `porcentaje`, `titulares_unidad`.`created_at` AS `created_at`, `titulares_unidad`.`updated_at` AS `updated_at` FROM `titulares_unidad` ;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `usuario_miembro_comunidad`
+-- Estructura para la vista `usuario_miembro_comunidad`
 --
 DROP TABLE IF EXISTS `usuario_miembro_comunidad`;
 
+DROP VIEW IF EXISTS `usuario_miembro_comunidad`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `usuario_miembro_comunidad`  AS SELECT `urc`.`id` AS `id`, `urc`.`comunidad_id` AS `comunidad_id`, `u`.`persona_id` AS `persona_id`, `r`.`codigo` AS `rol`, `urc`.`desde` AS `desde`, `urc`.`hasta` AS `hasta`, `urc`.`activo` AS `activo`, `urc`.`created_at` AS `created_at`, `urc`.`updated_at` AS `updated_at` FROM ((`usuario_rol_comunidad` `urc` join `usuario` `u` on((`u`.`id` = `urc`.`usuario_id`))) join `rol_sistema` `r` on((`r`.`id` = `urc`.`rol_id`))) ;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `vista_compras`
+-- Estructura para la vista `vista_compras`
 --
 DROP TABLE IF EXISTS `vista_compras`;
 
+DROP VIEW IF EXISTS `vista_compras`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `vista_compras`  AS SELECT `dc`.`id` AS `id`, `dc`.`comunidad_id` AS `comunidad_id`, `c`.`razon_social` AS `comunidad_nombre`, `dc`.`proveedor_id` AS `proveedor_id`, `p`.`razon_social` AS `proveedor_nombre`, `dc`.`tipo_doc` AS `tipo_doc`, `dc`.`folio` AS `folio`, `dc`.`fecha_emision` AS `fecha_emision`, `dc`.`neto` AS `neto`, `dc`.`iva` AS `iva`, `dc`.`exento` AS `exento`, coalesce(`dc`.`total`,0) AS `total`, `dc`.`glosa` AS `glosa`, `dc`.`created_at` AS `created_at`, `dc`.`updated_at` AS `updated_at` FROM ((`documento_compra` `dc` left join `proveedor` `p` on((`p`.`id` = `dc`.`proveedor_id`))) left join `comunidad` `c` on((`c`.`id` = `dc`.`comunidad_id`))) ;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `vista_consumos`
+-- Estructura para la vista `vista_consumos`
 --
 DROP TABLE IF EXISTS `vista_consumos`;
 
+DROP VIEW IF EXISTS `vista_consumos`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `vista_consumos`  AS SELECT `lm`.`medidor_id` AS `medidor_id`, `m`.`codigo` AS `medidor_codigo`, `m`.`tipo` AS `medidor_tipo`, `m`.`comunidad_id` AS `comunidad_id`, `c`.`razon_social` AS `comunidad_nombre`, `lm`.`periodo` AS `periodo`, min(`lm`.`fecha`) AS `fecha_inicio_periodo`, max(`lm`.`fecha`) AS `fecha_fin_periodo`, (max(`lm`.`lectura`) - min(`lm`.`lectura`)) AS `consumo`, count(0) AS `lecturas_en_periodo` FROM ((`lectura_medidor` `lm` left join `medidor` `m` on((`m`.`id` = `lm`.`medidor_id`))) left join `comunidad` `c` on((`c`.`id` = `m`.`comunidad_id`))) GROUP BY `lm`.`medidor_id`, `lm`.`periodo` ;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `vista_medidores`
+-- Estructura para la vista `vista_medidores`
 --
 DROP TABLE IF EXISTS `vista_medidores`;
 
+DROP VIEW IF EXISTS `vista_medidores`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `vista_medidores`  AS SELECT `m`.`id` AS `id`, `m`.`comunidad_id` AS `comunidad_id`, `c`.`razon_social` AS `comunidad_nombre`, `m`.`unidad_id` AS `unidad_id`, `u`.`torre_id` AS `unidad_torre_id`, `u`.`codigo` AS `unidad_codigo`, `m`.`tipo` AS `tipo`, `m`.`codigo` AS `medidor_codigo`, `m`.`serial_number` AS `serial_number`, `m`.`es_compartido` AS `es_compartido`, `m`.`marca` AS `marca`, `m`.`modelo` AS `modelo`, `m`.`estado` AS `estado`, `m`.`ubicacion` AS `ubicacion`, `m`.`activo` AS `activo`, `m`.`created_by` AS `created_by`, `m`.`created_at` AS `created_at`, `m`.`updated_at` AS `updated_at`, (select `lm`.`lectura` from `lectura_medidor` `lm` where (`lm`.`medidor_id` = `m`.`id`) order by `lm`.`fecha` desc,`lm`.`id` desc limit 1) AS `ultima_lectura`, (select `lm`.`fecha` from `lectura_medidor` `lm` where (`lm`.`medidor_id` = `m`.`id`) order by `lm`.`fecha` desc,`lm`.`id` desc limit 1) AS `fecha_ultima_lectura`, (select count(0) from `lectura_medidor` `lm` where (`lm`.`medidor_id` = `m`.`id`)) AS `total_lecturas` FROM ((`medidor` `m` left join `unidad` `u` on((`u`.`id` = `m`.`unidad_id`))) left join `comunidad` `c` on((`c`.`id` = `m`.`comunidad_id`))) ;
 
 -- --------------------------------------------------------
 
 --
--- Structure for view `vista_timeline_general`
+-- Estructura para la vista `vista_timeline_general`
 --
 DROP TABLE IF EXISTS `vista_timeline_general`;
 
+DROP VIEW IF EXISTS `vista_timeline_general`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`api_admin`@`%` SQL SECURITY DEFINER VIEW `vista_timeline_general`  AS SELECT `ba`.`id` AS `id`, `ba`.`comunidad_id` AS `comunidad_id`, `ba`.`tipo` AS `tipo`, `ba`.`prioridad` AS `prioridad`, `ba`.`titulo` AS `titulo`, `ba`.`descripcion` AS `descripcion`, `ba`.`usuario` AS `usuario`, `ba`.`usuario_id` AS `usuario_id`, `ba`.`fecha` AS `fecha`, `ba`.`tags` AS `tags`, `ba`.`adjuntos` AS `adjuntos`, `ba`.`ip` AS `ip`, `ba`.`ubicacion` AS `ubicacion`, `ba`.`created_at` AS `created_at`, `ba`.`updated_at` AS `updated_at` FROM `bitacora_auditoria` AS `ba`union all select `rc`.`id` AS `id`,`rc`.`comunidad_id` AS `comunidad_id`,'user' AS `tipo`,'normal' AS `prioridad`,`rc`.`evento` AS `titulo`,`rc`.`detalle` AS `descripcion`,(select `usuario`.`username` from `usuario` where (`usuario`.`id` = `rc`.`usuario_id`) limit 1) AS `usuario`,`rc`.`usuario_id` AS `usuario_id`,`rc`.`fecha_hora` AS `fecha`,cast('[]' as json) AS `tags`,cast('[]' as json) AS `adjuntos`,NULL AS `ip`,'Conserjería' AS `ubicacion`,`rc`.`created_at` AS `created_at`,`rc`.`created_at` AS `updated_at` from `registro_conserjeria` `rc`  ;
 
 --
--- Constraints for dumped tables
+-- Restricciones para tablas volcadas
 --
 
 --
--- Constraints for table `amenidad`
+-- Filtros para la tabla `amenidad`
 --
 ALTER TABLE `amenidad`
   ADD CONSTRAINT `fk_amenidad_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
--- Constraints for table `archivos`
+-- Filtros para la tabla `archivos`
 --
 ALTER TABLE `archivos`
   ADD CONSTRAINT `archivos_ibfk_1` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `auditoria`
+-- Filtros para la tabla `auditoria`
 --
 ALTER TABLE `auditoria`
   ADD CONSTRAINT `fk_audit_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `bitacora_auditoria`
+-- Filtros para la tabla `bitacora_auditoria`
 --
 ALTER TABLE `bitacora_auditoria`
   ADD CONSTRAINT `fk_bitacora_auditoria_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_bitacora_auditoria_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `categoria_gasto`
+-- Filtros para la tabla `categoria_gasto`
 --
 ALTER TABLE `categoria_gasto`
   ADD CONSTRAINT `fk_categoria_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
--- Constraints for table `centro_costo`
+-- Filtros para la tabla `centro_costo`
 --
 ALTER TABLE `centro_costo`
   ADD CONSTRAINT `fk_ccosto_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
--- Constraints for table `conciliacion_bancaria`
+-- Filtros para la tabla `conciliacion_bancaria`
 --
 ALTER TABLE `conciliacion_bancaria`
   ADD CONSTRAINT `fk_conc_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
-  ADD CONSTRAINT `fk_conc_pago` FOREIGN KEY (`pago_id`) REFERENCES `pago` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `fk_conc_pago` FOREIGN KEY (`pago_id`) REFERENCES `pago` (`id`);
 
 --
--- Constraints for table `configuracion_interes`
+-- Filtros para la tabla `configuracion_interes`
 --
 ALTER TABLE `configuracion_interes`
   ADD CONSTRAINT `fk_cint_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
--- Constraints for table `cuenta_cobro_unidad`
+-- Filtros para la tabla `cuenta_cobro_unidad`
 --
 ALTER TABLE `cuenta_cobro_unidad`
   ADD CONSTRAINT `fk_cargo_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
@@ -4829,94 +4961,94 @@ ALTER TABLE `cuenta_cobro_unidad`
   ADD CONSTRAINT `fk_cargo_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`);
 
 --
--- Constraints for table `detalle_cuenta_unidad`
+-- Filtros para la tabla `detalle_cuenta_unidad`
 --
 ALTER TABLE `detalle_cuenta_unidad`
   ADD CONSTRAINT `fk_cargodet_cargo` FOREIGN KEY (`cuenta_cobro_unidad_id`) REFERENCES `cuenta_cobro_unidad` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_cargodet_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categoria_gasto` (`id`);
 
 --
--- Constraints for table `detalle_emision_gastos`
+-- Filtros para la tabla `detalle_emision_gastos`
 --
 ALTER TABLE `detalle_emision_gastos`
   ADD CONSTRAINT `fk_emidet_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categoria_gasto` (`id`),
   ADD CONSTRAINT `fk_emidet_emision` FOREIGN KEY (`emision_id`) REFERENCES `emision_gastos_comunes` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_emidet_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `fk_emidet_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`);
 
 --
--- Constraints for table `documento_compra`
+-- Filtros para la tabla `documento_compra`
 --
 ALTER TABLE `documento_compra`
   ADD CONSTRAINT `fk_doc_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
   ADD CONSTRAINT `fk_doc_proveedor` FOREIGN KEY (`proveedor_id`) REFERENCES `proveedor` (`id`);
 
 --
--- Constraints for table `documento_comunidad`
+-- Filtros para la tabla `documento_comunidad`
 --
 ALTER TABLE `documento_comunidad`
   ADD CONSTRAINT `fk_docrepo_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
--- Constraints for table `documento_multa`
+-- Filtros para la tabla `documento_multa`
 --
 ALTER TABLE `documento_multa`
   ADD CONSTRAINT `fk_documento_multa` FOREIGN KEY (`multa_id`) REFERENCES `multa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_documento_multa_usuario` FOREIGN KEY (`subido_por`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
--- Constraints for table `edificio`
+-- Filtros para la tabla `edificio`
 --
 ALTER TABLE `edificio`
   ADD CONSTRAINT `fk_edificio_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
--- Constraints for table `emision_gastos_comunes`
+-- Filtros para la tabla `emision_gastos_comunes`
 --
 ALTER TABLE `emision_gastos_comunes`
   ADD CONSTRAINT `fk_emision_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
--- Constraints for table `gasto`
+-- Filtros para la tabla `gasto`
 --
 ALTER TABLE `gasto`
   ADD CONSTRAINT `fk_gasto_anulado_por` FOREIGN KEY (`anulado_por`) REFERENCES `usuario` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_gasto_aprobado_por` FOREIGN KEY (`aprobado_por`) REFERENCES `usuario` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_gasto_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categoria_gasto` (`id`),
-  ADD CONSTRAINT `fk_gasto_ccosto` FOREIGN KEY (`centro_costo_id`) REFERENCES `centro_costo` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_gasto_ccosto` FOREIGN KEY (`centro_costo_id`) REFERENCES `centro_costo` (`id`),
   ADD CONSTRAINT `fk_gasto_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
   ADD CONSTRAINT `fk_gasto_creado_por` FOREIGN KEY (`creado_por`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_gasto_doc` FOREIGN KEY (`documento_compra_id`) REFERENCES `documento_compra` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `fk_gasto_doc` FOREIGN KEY (`documento_compra_id`) REFERENCES `documento_compra` (`id`);
 
 --
--- Constraints for table `gasto_aprobacion`
+-- Filtros para la tabla `gasto_aprobacion`
 --
 ALTER TABLE `gasto_aprobacion`
-  ADD CONSTRAINT `fk_aprobacion_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_aprobacion_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`),
   ADD CONSTRAINT `fk_aprobacion_rol` FOREIGN KEY (`rol_id`) REFERENCES `rol_sistema` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_aprobacion_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
--- Constraints for table `historial_gasto`
+-- Filtros para la tabla `historial_gasto`
 --
 ALTER TABLE `historial_gasto`
-  ADD CONSTRAINT `fk_historial_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_historial_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`),
   ADD CONSTRAINT `fk_historial_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
--- Constraints for table `lectura_medidor`
+-- Filtros para la tabla `lectura_medidor`
 --
 ALTER TABLE `lectura_medidor`
   ADD CONSTRAINT `fk_lectura_medidor` FOREIGN KEY (`medidor_id`) REFERENCES `medidor` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `medidor`
+-- Filtros para la tabla `medidor`
 --
 ALTER TABLE `medidor`
   ADD CONSTRAINT `fk_medidor_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
   ADD CONSTRAINT `fk_medidor_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `multa`
+-- Filtros para la tabla `multa`
 --
 ALTER TABLE `multa`
   ADD CONSTRAINT `fk_multa_anulado_por` FOREIGN KEY (`anulado_por`) REFERENCES `usuario` (`id`),
@@ -4928,7 +5060,7 @@ ALTER TABLE `multa`
   ADD CONSTRAINT `fk_multa_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`);
 
 --
--- Constraints for table `multa_apelacion`
+-- Filtros para la tabla `multa_apelacion`
 --
 ALTER TABLE `multa_apelacion`
   ADD CONSTRAINT `fk_apelacion_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -4937,21 +5069,21 @@ ALTER TABLE `multa_apelacion`
   ADD CONSTRAINT `fk_apelacion_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Constraints for table `multa_historial`
+-- Filtros para la tabla `multa_historial`
 --
 ALTER TABLE `multa_historial`
   ADD CONSTRAINT `fk_historial_multa_multa` FOREIGN KEY (`multa_id`) REFERENCES `multa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_historial_multa_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
--- Constraints for table `notificacion_usuario`
+-- Filtros para la tabla `notificacion_usuario`
 --
 ALTER TABLE `notificacion_usuario`
   ADD CONSTRAINT `fk_notif_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
   ADD CONSTRAINT `fk_notif_persona` FOREIGN KEY (`persona_id`) REFERENCES `persona` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `pago`
+-- Filtros para la tabla `pago`
 --
 ALTER TABLE `pago`
   ADD CONSTRAINT `fk_pago_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
@@ -4959,33 +5091,33 @@ ALTER TABLE `pago`
   ADD CONSTRAINT `fk_pago_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `pago_aplicacion`
+-- Filtros para la tabla `pago_aplicacion`
 --
 ALTER TABLE `pago_aplicacion`
   ADD CONSTRAINT `fk_papp_cargo` FOREIGN KEY (`cuenta_cobro_unidad_id`) REFERENCES `cuenta_cobro_unidad` (`id`),
-  ADD CONSTRAINT `fk_papp_pago` FOREIGN KEY (`pago_id`) REFERENCES `pago` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_papp_pago` FOREIGN KEY (`pago_id`) REFERENCES `pago` (`id`);
 
 --
--- Constraints for table `parametros_cobranza`
+-- Filtros para la tabla `parametros_cobranza`
 --
 ALTER TABLE `parametros_cobranza`
   ADD CONSTRAINT `fk_paramcobr_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
--- Constraints for table `proveedor`
+-- Filtros para la tabla `proveedor`
 --
 ALTER TABLE `proveedor`
   ADD CONSTRAINT `fk_prov_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
--- Constraints for table `registro_conserjeria`
+-- Filtros para la tabla `registro_conserjeria`
 --
 ALTER TABLE `registro_conserjeria`
   ADD CONSTRAINT `fk_bitacora_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
   ADD CONSTRAINT `fk_regconser_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `reserva_amenidad`
+-- Filtros para la tabla `reserva_amenidad`
 --
 ALTER TABLE `reserva_amenidad`
   ADD CONSTRAINT `fk_resa_amenidad` FOREIGN KEY (`amenidad_id`) REFERENCES `amenidad` (`id`),
@@ -4994,19 +5126,19 @@ ALTER TABLE `reserva_amenidad`
   ADD CONSTRAINT `fk_resa_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`);
 
 --
--- Constraints for table `sesion_usuario`
+-- Filtros para la tabla `sesion_usuario`
 --
 ALTER TABLE `sesion_usuario`
   ADD CONSTRAINT `fk_sesion_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `tarifa_consumo`
+-- Filtros para la tabla `tarifa_consumo`
 --
 ALTER TABLE `tarifa_consumo`
   ADD CONSTRAINT `fk_tarifa_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`);
 
 --
--- Constraints for table `ticket_soporte`
+-- Filtros para la tabla `ticket_soporte`
 --
 ALTER TABLE `ticket_soporte`
   ADD CONSTRAINT `fk_solsoporte_asignado` FOREIGN KEY (`asignado_a`) REFERENCES `usuario` (`id`) ON DELETE SET NULL,
@@ -5014,7 +5146,7 @@ ALTER TABLE `ticket_soporte`
   ADD CONSTRAINT `fk_ticket_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `titulares_unidad`
+-- Filtros para la tabla `titulares_unidad`
 --
 ALTER TABLE `titulares_unidad`
   ADD CONSTRAINT `fk_tenencia_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
@@ -5022,13 +5154,13 @@ ALTER TABLE `titulares_unidad`
   ADD CONSTRAINT `fk_tenencia_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`);
 
 --
--- Constraints for table `torre`
+-- Filtros para la tabla `torre`
 --
 ALTER TABLE `torre`
   ADD CONSTRAINT `fk_torre_edificio` FOREIGN KEY (`edificio_id`) REFERENCES `edificio` (`id`);
 
 --
--- Constraints for table `unidad`
+-- Filtros para la tabla `unidad`
 --
 ALTER TABLE `unidad`
   ADD CONSTRAINT `fk_unidad_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
@@ -5036,19 +5168,19 @@ ALTER TABLE `unidad`
   ADD CONSTRAINT `fk_unidad_torre` FOREIGN KEY (`torre_id`) REFERENCES `torre` (`id`);
 
 --
--- Constraints for table `user_preferences`
+-- Filtros para la tabla `user_preferences`
 --
 ALTER TABLE `user_preferences`
   ADD CONSTRAINT `fk_userpref_usuario` FOREIGN KEY (`user_id`) REFERENCES `usuario` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `usuario`
+-- Filtros para la tabla `usuario`
 --
 ALTER TABLE `usuario`
   ADD CONSTRAINT `fk_usuario_persona` FOREIGN KEY (`persona_id`) REFERENCES `persona` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
--- Constraints for table `usuario_rol_comunidad`
+-- Filtros para la tabla `usuario_rol_comunidad`
 --
 ALTER TABLE `usuario_rol_comunidad`
   ADD CONSTRAINT `fk_ucr_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`) ON DELETE CASCADE,
@@ -5056,11 +5188,11 @@ ALTER TABLE `usuario_rol_comunidad`
   ADD CONSTRAINT `fk_ucr_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `webhook_pago`
+-- Filtros para la tabla `webhook_pago`
 --
 ALTER TABLE `webhook_pago`
   ADD CONSTRAINT `fk_wh_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
-  ADD CONSTRAINT `fk_wh_pago` FOREIGN KEY (`pago_id`) REFERENCES `pago` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `fk_wh_pago` FOREIGN KEY (`pago_id`) REFERENCES `pago` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
