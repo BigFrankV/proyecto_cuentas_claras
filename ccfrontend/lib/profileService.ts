@@ -234,6 +234,52 @@ class ProfileService {
     }
   }
 
+  // Subir foto de perfil
+  async uploadProfilePhoto(file: File): Promise<any> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await apiClient.post(
+        '/auth/profile-photo',
+        formData,
+      );
+      return response.data;
+    } catch (error: any) {
+      // eslint-disable-next-line no-console
+      console.error('Error subiendo foto de perfil:', error);
+      throw new Error(
+        error.response?.data?.message || 'Error al subir foto de perfil',
+      );
+    }
+  }
+
+  // Obtener foto de perfil
+  async getProfilePhoto(): Promise<string | null> {
+    try {
+      const response = await apiClient.get('/auth/profile-photo');
+      return response.data.photoUrl || null;
+    } catch (error: any) {
+      // eslint-disable-next-line no-console
+      console.error('Error obteniendo foto de perfil:', error);
+      return null;
+    }
+  }
+
+  // Eliminar foto de perfil
+  async deleteProfilePhoto(): Promise<any> {
+    try {
+      const response = await apiClient.delete('/auth/profile-photo');
+      return response.data;
+    } catch (error: any) {
+      // eslint-disable-next-line no-console
+      console.error('Error eliminando foto de perfil:', error);
+      throw new Error(
+        error.response?.data?.message || 'Error al eliminar foto de perfil',
+      );
+    }
+  }
+
   // Datos mock para sesiones (mientras no estén implementadas en backend)
   private getMockSessions(): SessionInfo[] {
     return [

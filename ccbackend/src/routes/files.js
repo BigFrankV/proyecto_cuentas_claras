@@ -7,13 +7,13 @@ const { authenticate: authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Middleware de autenticación para todas las rutas
-router.use(authenticateToken);
-
 // Inicializar tabla de archivos solo si no estamos en modo test
 if (process.env.NODE_ENV !== 'test') {
   FileService.initializeFileTable().catch(console.error);
 }
+
+// Permitir GET de archivos sin autenticación (para fotos de perfil públicas)
+// Pero requerir autenticación para POST, DELETE, etc.
 
 /**
  * @swagger
@@ -54,6 +54,7 @@ if (process.env.NODE_ENV !== 'test') {
  */
 router.post(
   '/upload',
+  authenticateToken,
   validateUploadContext,
   upload.array('files', 10),
   async (req, res) => {
@@ -127,7 +128,7 @@ router.post(
 router.get('/:id', async (req, res) => {
   try {
     const fileId = parseInt(req.params.id);
-    const comunidadId = req.user.comunidadId;
+    const comunidadId = req.user?.comunidadId || null;
 
     const file = await FileService.getFileById(fileId, comunidadId);
 
@@ -148,12 +149,27 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    // Configurar headers para la descarga
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="${file.original_name}"`
-    );
-    res.setHeader('Content-Type', file.mimetype);
+    // Determinar si mostrar en línea o descargar
+    // Mostrar imágenes de perfil en línea, descargar otros archivos
+    const isProfilePhoto = file.category === 'perfil' && file.entity_type === 'usuario';
+    const isImage = file.mimetype.startsWith('image/');
+
+    if (isProfilePhoto || (isImage && req.query.inline === 'true')) {
+      // Mostrar imagen en línea
+      res.setHeader('Content-Type', file.mimetype);
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache por 1 hora
+      // Headers adicionales para Next.js Image Optimization
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    } else {
+      // Descargar archivo
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${file.original_name}"`
+      );
+      res.setHeader('Content-Type', file.mimetype);
+    }
 
     // Enviar archivo
     res.sendFile(path.resolve(file.file_path));
@@ -192,7 +208,7 @@ router.get('/:id', async (req, res) => {
  *           type: string
  *         description: Categoría del archivo
  */
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const comunidadId = req.user.comunidadId;
     const { entityType, entityId, category } = req.query;
@@ -244,7 +260,7 @@ router.get('/', async (req, res) => {
  *           type: integer
  *         description: ID del archivo
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const fileId = parseInt(req.params.id);
     const comunidadId = req.user.comunidadId;
@@ -284,7 +300,7 @@ router.delete('/:id', async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.get('/stats', async (req, res) => {
+router.get('/stats', authenticateToken, async (req, res) => {
   try {
     const comunidadId = req.user.comunidadId;
     const stats = await FileService.getFileStats(comunidadId);
@@ -315,7 +331,7 @@ router.get('/stats', async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
-router.post('/cleanup', async (req, res) => {
+router.post('/cleanup', authenticateToken, async (req, res) => {
   try {
     const comunidadId = req.user.comunidadId;
 

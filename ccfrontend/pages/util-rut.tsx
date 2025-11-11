@@ -3,6 +3,8 @@ import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import Breadcrumb, { BreadcrumbItem } from '@/components/ui/Breadcrumb';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 import {
   RutValidation,
@@ -212,27 +214,20 @@ const ValidadorRUT: React.FC = () => {
   };
 
   return (
-    <Layout title='Validador de RUT - Cuentas Claras'>
-      <div className='container-fluid px-4 py-4'>
-        {/* Header */}
-        <div className='row mb-4'>
-          <div className='col-12'>
-            <nav aria-label='breadcrumb'>
-              <ol className='breadcrumb'>
-                <li className='breadcrumb-item'>
-                  <Link href='/dashboard'>
-                    <i className='material-icons me-1'>home</i>
-                    Dashboard
-                  </Link>
-                </li>
-                <li className='breadcrumb-item active'>
-                  <i className='material-icons me-1'>badge</i>
-                  Validador RUT
-                </li>
-              </ol>
-            </nav>
+    <ProtectedRoute>
+      <Layout title='Validador de RUT - Cuentas Claras'>
+        <div className='container-fluid px-4 py-4'>
+          {/* Header */}
+          <div className='row mb-4'>
+            <div className='col-12'>
+              <Breadcrumb
+                items={[
+                  { label: 'Dashboard', href: '/dashboard', icon: 'home' },
+                  { label: 'Validador de RUT', icon: 'badge' },
+                ]}
+              />
 
-            <div className='d-flex justify-content-between align-items-center'>
+              <div className='d-flex justify-content-between align-items-center'>
               <div>
                 <h1 className='h3 mb-1'>
                   <i className='material-icons me-2'>badge</i>
@@ -568,7 +563,8 @@ const ValidadorRUT: React.FC = () => {
           </div>
         </div>
       </div>
-    </Layout>
+      </Layout>
+    </ProtectedRoute>
   );
 };
 

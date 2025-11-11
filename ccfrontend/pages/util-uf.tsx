@@ -16,7 +16,9 @@ import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 
 import Layout from '@/components/layout/Layout';
+import Breadcrumb, { BreadcrumbItem } from '@/components/ui/Breadcrumb';
 import SyncControlPanel from '@/components/ui/SyncControlPanel';
+import { ProtectedRoute } from '@/lib/useAuth';
 
 import * as indicadoresAPI from '../lib/api/indicadores';
 import {
@@ -323,27 +325,20 @@ const ConsultorUF: React.FC = () => {
   const formatUF = indicadoresAPI.formatUF;
 
   return (
-    <Layout title='Consultor UF - Cuentas Claras'>
-      <div className='container-fluid px-4 py-4'>
+    <ProtectedRoute>
+      <Layout title='Consultor UF - Cuentas Claras'>
+        <div className='container-fluid px-4 py-4'>
         {/* Header */}
         <div className='row mb-4'>
           <div className='col-12'>
-            <nav aria-label='breadcrumb'>
-              <ol className='breadcrumb'>
-                <li className='breadcrumb-item'>
-                  <Link href='/dashboard'>
-                    <i className='material-icons me-1'>home</i>
-                    Dashboard
-                  </Link>
-                </li>
-                <li className='breadcrumb-item active'>
-                  <i className='material-icons me-1'>attach_money</i>
-                  Consultor UF
-                </li>
-              </ol>
-            </nav>
+            <Breadcrumb
+              items={[
+                { label: 'Dashboard', href: '/dashboard', icon: 'home' },
+                { label: 'Consultor UF', icon: 'attach_money' },
+              ]}
+            />
 
-            <div className='d-flex justify-content-between align-items-center'>
+            <div className='d-flex justify-content-between align-items-center mb-4'>
               <div>
                 <h1 className='h3 mb-1'>
                   <i className='material-icons me-2'>attach_money</i>
@@ -807,7 +802,8 @@ const ConsultorUF: React.FC = () => {
           </div>
         )}
       </div>
-    </Layout>
+      </Layout>
+    </ProtectedRoute>
   );
 };
 

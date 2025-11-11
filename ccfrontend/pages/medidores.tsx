@@ -23,6 +23,7 @@ export default function MedidoresListadoPage() {
 
   const [medidores, setMedidores] = useState<Medidor[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [pagination, setPagination] = useState({
@@ -67,6 +68,7 @@ export default function MedidoresListadoPage() {
     let mounted = true;
     const load = async () => {
       setLoading(true);
+      setError(null);
       try {
         const params: any = {
           page,
@@ -93,9 +95,9 @@ export default function MedidoresListadoPage() {
         // eslint-disable-next-line no-console
         console.error('Error cargando medidores', err);
         if (err?.response?.status === 403) {
-          alert('No autorizado');
+          setError('No autorizado para cargar medidores');
         } else {
-          alert('Error cargando medidores');
+          setError('Error al cargar medidores');
         }
       } finally {
         if (mounted) {
@@ -490,6 +492,19 @@ export default function MedidoresListadoPage() {
                     administrador para asignar tu rol/comunidad.
                   </div>
                 )}
+
+              {/* Mensaje de error al cargar */}
+              {error && (
+                <div className='alert alert-danger alert-dismissible fade show' role='alert'>
+                  <span className='material-icons me-2' style={{ verticalAlign: 'middle' }}>error</span>
+                  {error}
+                  <button
+                    type='button'
+                    className='btn-close'
+                    onClick={() => setError(null)}
+                  />
+                </div>
+              )}
 
               {/* Vista de tabla */}
               <div className='medidores-table'>
