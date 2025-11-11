@@ -4,7 +4,7 @@ export interface Proveedor {
   comunidad_nombre?: string;
   rut: string;
   dv: string;
-  nombre: string; // razon_social
+  razon_social: string; // razon_social
   giro?: string;
   email?: string | null;
   telefono?: string | null;

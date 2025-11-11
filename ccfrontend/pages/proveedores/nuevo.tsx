@@ -3,11 +3,20 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button, Card, Form, Row, Col, Alert, Badge } from 'react-bootstrap';
+import { toast } from 'react-hot-toast';
 
 import Layout from '@/components/layout/Layout';
+import comunidadesService from '@/lib/comunidadesService';
+import { createProveedor } from '@/lib/proveedoresService';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions';
+
+interface Comunidad {
+  id: number;
+  nombre: string;
+}
 
 interface Contact {
   id: string;
@@ -31,9 +40,17 @@ export default function ProveedorNuevo() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const { isSuperUser, getUserCommunities } = usePermissions();
+  const [comunidades, setComunidades] = useState<Comunidad[]>([]);
+  const [selectedComunidadId, setSelectedComunidadId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const loadedComunidadesRef = useRef(false);
 
   const [formData, setFormData] = useState({
     name: '',
+    rut: '',  // Agregado
+    dv: '',   // Agregado
     businessName: '',
     category: '',
     type: '',
@@ -41,7 +58,7 @@ export default function ProveedorNuevo() {
     website: '',
     status: 'active',
     description: '',
-    address: '',
+    address: '',  // Agregado
     city: '',
     state: '',
     country: 'Venezuela',
@@ -54,6 +71,8 @@ export default function ProveedorNuevo() {
     currency: 'ves',
     tags: '',
     rating: 0,
+    email: '',  // Agregado
+    telefono: '',  // Agregado
   });
 
   const [contacts, setContacts] = useState<Contact[]>([
@@ -72,8 +91,19 @@ export default function ProveedorNuevo() {
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>(['Confiable', 'Preferente']);
-  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (isSuperUser && !loadedComunidadesRef.current) {
+      loadedComunidadesRef.current = true;
+      comunidadesService.getComunidades()
+        .then(setComunidades)
+        .catch(() => toast.error('Error cargando comunidades'));
+    } else if (!isSuperUser) {
+      const userCommunities = getUserCommunities();
+      setSelectedComunidadId(userCommunities[0]?.comunidadId || null);
+    }
+  }, [isSuperUser, getUserCommunities]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -170,6 +200,12 @@ export default function ProveedorNuevo() {
     if (!formData.name.trim()) {
       newErrors.name = 'El nombre es requerido';
     }
+    if (!formData.rut.trim()) {
+      newErrors.rut = 'El RUT es requerido';
+    }
+    if (!formData.dv.trim()) {
+      newErrors.dv = 'El DV es requerido';
+    }
     if (!formData.category) {
       newErrors.category = 'La categoría es requerida';
     }
@@ -188,30 +224,32 @@ export default function ProveedorNuevo() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!selectedComunidadId) {
+      setError('Selecciona una comunidad');
+      setLoading(false);
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
 
     setLoading(true);
     try {
-      // Simular envío de datos
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // eslint-disable-next-line no-console
-      console.log('Datos del proveedor:', {
-        ...formData,
-        contacts: contacts.filter(c => c.name.trim()),
-        files: uploadedFiles,
-        tags,
-        logo: logoPreview,
+      await createProveedor(selectedComunidadId, {
+        rut: formData.rut.trim(),
+        dv: formData.dv.trim(),
+        razon_social: formData.name.trim(),
+        giro: formData.category || undefined,
+        email: formData.email || undefined,
+        telefono: formData.telefono || undefined,
+        direccion: formData.address || undefined,
       });
 
-      alert('Proveedor creado exitosamente');
+      toast.success('Proveedor creado exitosamente');
       router.push('/proveedores');
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error creating provider:', error);
-      alert('Error al crear el proveedor');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al crear el proveedor');
     } finally {
       setLoading(false);
     }
@@ -294,6 +332,28 @@ export default function ProveedorNuevo() {
                   </Card.Header>
                   <Card.Body>
                     <Row className='g-3'>
+                      {isSuperUser && (
+                        <div className='col-md-12'>
+                          <Form.Group>
+                            <Form.Label className='required'>
+                              Comunidad
+                            </Form.Label>
+                            <Form.Select
+                              value={selectedComunidadId || ''}
+                              onChange={e => setSelectedComunidadId(Number(e.target.value))}
+                              required
+                            >
+                              <option value=''>Seleccionar comunidad</option>
+                              {comunidades.map(com => (
+                                <option key={com.id} value={com.id}>
+                                  {com.nombre}
+                                </option>
+                              ))}
+                            </Form.Select>
+                          </Form.Group>
+                        </div>
+                      )}
+
                       <Col md={6}>
                         <Form.Group>
                           <Form.Label className='required'>
@@ -313,17 +373,42 @@ export default function ProveedorNuevo() {
                           </Form.Control.Feedback>
                         </Form.Group>
                       </Col>
-                      <Col md={6}>
+                      <Col md={3}>
                         <Form.Group>
-                          <Form.Label>RIF/ID Fiscal</Form.Label>
+                          <Form.Label className='required'>
+                            RUT
+                          </Form.Label>
                           <Form.Control
                             type='text'
-                            placeholder='J-12345678-9'
-                            value={formData.rif}
+                            placeholder='J-12345678'
+                            value={formData.rut}
                             onChange={e =>
-                              handleInputChange('rif', e.target.value)
+                              handleInputChange('rut', e.target.value)
                             }
+                            isInvalid={!!errors.rut}
                           />
+                          <Form.Control.Feedback type='invalid'>
+                            {errors.rut}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
+                        <Form.Group>
+                          <Form.Label className='required'>
+                            DV
+                          </Form.Label>
+                          <Form.Control
+                            type='text'
+                            placeholder='9'
+                            value={formData.dv}
+                            onChange={e =>
+                              handleInputChange('dv', e.target.value)
+                            }
+                            isInvalid={!!errors.dv}
+                          />
+                          <Form.Control.Feedback type='invalid'>
+                            {errors.dv}
+                          </Form.Control.Feedback>
                         </Form.Group>
                       </Col>
                       <Col md={6}>
@@ -351,20 +436,41 @@ export default function ProveedorNuevo() {
                       </Col>
                       <Col md={6}>
                         <Form.Group>
-                          <Form.Label>Tipo de Proveedor</Form.Label>
-                          <Form.Select
-                            value={formData.type}
+                          <Form.Label>Email</Form.Label>
+                          <Form.Control
+                            type='email'
+                            placeholder='contacto@ejemplo.com'
+                            value={formData.email}
                             onChange={e =>
-                              handleInputChange('type', e.target.value)
+                              handleInputChange('email', e.target.value)
                             }
-                          >
-                            <option value=''>Seleccione un tipo</option>
-                            <option value='empresa'>Empresa</option>
-                            <option value='individual'>
-                              Persona Individual
-                            </option>
-                            <option value='externo'>Proveedor Externo</option>
-                          </Form.Select>
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group>
+                          <Form.Label>Teléfono</Form.Label>
+                          <Form.Control
+                            type='tel'
+                            placeholder='+58 212 555-0123'
+                            value={formData.telefono}
+                            onChange={e =>
+                              handleInputChange('telefono', e.target.value)
+                            }
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col xs={12}>
+                        <Form.Group>
+                          <Form.Label>Dirección</Form.Label>
+                          <Form.Control
+                            type='text'
+                            placeholder='Calle, número, oficina, etc.'
+                            value={formData.address}
+                            onChange={e =>
+                              handleInputChange('address', e.target.value)
+                            }
+                          />
                         </Form.Group>
                       </Col>
                       <Col xs={12}>
@@ -379,34 +485,6 @@ export default function ProveedorNuevo() {
                               handleInputChange('description', e.target.value)
                             }
                           />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Sitio Web</Form.Label>
-                          <Form.Control
-                            type='url'
-                            placeholder='https://www.ejemplo.com'
-                            value={formData.website}
-                            onChange={e =>
-                              handleInputChange('website', e.target.value)
-                            }
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group>
-                          <Form.Label>Estado</Form.Label>
-                          <Form.Select
-                            value={formData.status}
-                            onChange={e =>
-                              handleInputChange('status', e.target.value)
-                            }
-                          >
-                            <option value='active'>Activo</option>
-                            <option value='inactive'>Inactivo</option>
-                            <option value='pending'>Pendiente</option>
-                          </Form.Select>
                         </Form.Group>
                       </Col>
                     </Row>
@@ -941,6 +1019,13 @@ export default function ProveedorNuevo() {
                 </Card>
               </Col>
             </Row>
+
+            {error && (
+              <Alert variant='danger'>
+                <span className='material-icons me-2'>error</span>
+                {error}
+              </Alert>
+            )}
 
             {/* Botones de acción */}
             <div className='d-flex justify-content-end gap-2 mt-4'>

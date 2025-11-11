@@ -4,6 +4,7 @@ const db = require('../db');
 const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
+const { requireCommunity } = require('../middleware/tenancy'); // Agrega si no está
 
 /**
  * @swagger
@@ -221,10 +222,10 @@ router.get('/', authenticate, async (req, res) => {
  *         description: Error servidor
  */
 router.post(
-  '/',
+  '/comunidad/:comunidadId',
   [
     authenticate,
-    authorize('superadmin', 'admin_comunidad', 'administrador'),
+    requireCommunity('comunidadId', ['admin', 'admin_comunidad', 'administrador']),
     body('folio').notEmpty().withMessage('folio requerido').trim(),
     body('fecha_emision')
       .isISO8601()
@@ -232,15 +233,12 @@ router.post(
       .toDate(),
     body('monto')
       .isFloat({ min: 0 })
-      .withMessage('monto debe ser número positivo'),
+      .withMessage('monto debe ser número positivo'),  // Cambia a total
     body('tipo_doc').notEmpty().withMessage('tipo_doc requerido').trim(),
     body('proveedor_id')
       .isInt({ min: 1 })
       .withMessage('proveedor_id requerido'),
-    body('comunidad_id')
-      .isInt({ min: 1 })
-      .withMessage('comunidad_id requerido'),
-    body('descripcion').optional().trim(),
+    body('descripcion').optional().trim(),  // Cambia a glosa
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -249,54 +247,53 @@ router.post(
     }
 
     try {
-      const {
-        folio,
-        fecha_emision,
-        monto,
-        tipo_doc,
-        proveedor_id,
-        comunidad_id,
-        descripcion,
-      } = req.body;
+      const comunidad_id = req.params.comunidadId;
+      const { folio, fecha_emision, monto, tipo_doc, proveedor_id, descripcion } = req.body;
 
-      // Verificar que el proveedor existe
-      const [proveedor] = await db.query('SELECT id FROM proveedor WHERE id = ?', [
-        proveedor_id,
-      ]);
+
+      // Calcular IVA (19% en Chile)
+      const total = parseFloat(monto);
+      const neto = total / 1.19;
+      const iva = neto * 0.19;
+      const exento = 0;
+
+      // Verificar proveedor
+      const [proveedor] = await db.query('SELECT id FROM proveedor WHERE id = ?', [proveedor_id]);
       if (!proveedor.length) {
         return res.status(404).json({ error: 'Proveedor no encontrado' });
       }
 
-      // Verificar que la comunidad existe
-      const [comunidad] = await db.query('SELECT id FROM comunidad WHERE id = ?', [
-        comunidad_id,
-      ]);
+      // Verificar comunidad
+      const [comunidad] = await db.query('SELECT id FROM comunidad WHERE id = ?', [comunidad_id]);
       if (!comunidad.length) {
         return res.status(404).json({ error: 'Comunidad no encontrada' });
       }
 
-      // Insertar compra
+      // Insertar con columnas correctas
       const [result] = await db.query(
-        `INSERT INTO compra (folio, fecha_emision, monto, tipo_doc, proveedor_id, comunidad_id, descripcion, activo)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-        [folio, fecha_emision, monto, tipo_doc, proveedor_id, comunidad_id, descripcion || null]
+        `INSERT INTO documento_compra (folio, fecha_emision, neto, iva, exento, total, tipo_doc, proveedor_id, comunidad_id, glosa)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [folio, fecha_emision, neto, iva, exento, total, tipo_doc, proveedor_id, comunidad_id, descripcion || null]
       );
 
       // Obtener la compra creada
-      const [compra] = await db.query('SELECT * FROM compra WHERE id = ?', [
+      const [compra] = await db.query('SELECT * FROM documento_compra WHERE id = ?', [
         result.insertId,
       ]);
 
       // Registrar en auditoría
       await db.query(
         `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_nuevos, ip_address)
-         VALUES (?, 'INSERT', 'compra', ?, ?, ?)`,
+         VALUES (?, 'INSERT', 'documento_compra', ?, ?, ?)`,
         [req.user.id, result.insertId, JSON.stringify(compra[0]), req.ip]
       );
 
       res.status(201).json(compra[0]);
     } catch (err) {
       console.error('Error al crear compra:', err);
+      if (err.code === 'ER_DUP_ENTRY') {
+        return res.status(409).json({ error: 'Compra ya existe' });
+      }
       res.status(500).json({ error: 'Error al crear compra' });
     }
   }
@@ -370,7 +367,7 @@ router.patch(
       const compra_id = Number(req.params.id);
 
       // Obtener compra anterior
-      const [compra_anterior] = await db.query('SELECT * FROM compra WHERE id = ?', [
+      const [compra_anterior] = await db.query('SELECT * FROM documento_compra WHERE id = ?', [
         compra_id,
       ]);
       if (!compra_anterior.length) {
@@ -390,11 +387,15 @@ router.patch(
         valores.push(req.body.fecha_emision);
       }
       if (req.body.monto !== undefined) {
-        campos.push('monto = ?');
-        valores.push(req.body.monto);
+        const total = parseFloat(req.body.monto);
+        const neto = total / 1.19;
+        const iva = neto * 0.19;
+        const exento = 0;
+        campos.push('neto = ?, iva = ?, exento = ?, total = ?');
+        valores.push(neto, iva, exento, total);
       }
       if (req.body.descripcion !== undefined) {
-        campos.push('descripcion = ?');
+        campos.push('glosa = ?');
         valores.push(req.body.descripcion || null);
       }
 
@@ -406,19 +407,19 @@ router.patch(
 
       // Ejecutar actualización
       await db.query(
-        `UPDATE compra SET ${campos.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        `UPDATE documento_compra SET ${campos.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
         valores
       );
 
       // Obtener compra actualizada
-      const [compra_actualizada] = await db.query('SELECT * FROM compra WHERE id = ?', [
+      const [compra_actualizada] = await db.query('SELECT * FROM documento_compra WHERE id = ?', [
         compra_id,
       ]);
 
       // Registrar en auditoría
       await db.query(
         `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, valores_nuevos, ip_address)
-         VALUES (?, 'UPDATE', 'compra', ?, ?, ?, ?)`,
+         VALUES (?, 'UPDATE', 'documento_compra', ?, ?, ?, ?)`,
         [
           req.user.id,
           compra_id,
@@ -467,21 +468,18 @@ router.delete(
       const compra_id = Number(req.params.id);
 
       // Obtener compra anterior
-      const [compra] = await db.query('SELECT * FROM compra WHERE id = ?', [compra_id]);
+      const [compra] = await db.query('SELECT * FROM documento_compra WHERE id = ?', [compra_id]);
       if (!compra.length) {
         return res.status(404).json({ error: 'Compra no encontrada' });
       }
 
-      // Soft delete - marcar como inactivo
-      await db.query(
-        'UPDATE compra SET activo = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-        [compra_id]
-      );
+      // Hard delete
+      await db.query('DELETE FROM documento_compra WHERE id = ?', [compra_id]);
 
       // Registrar en auditoría
       await db.query(
         `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, ip_address)
-         VALUES (?, 'DELETE', 'compra', ?, ?, ?)`,
+         VALUES (?, 'DELETE', 'documento_compra', ?, ?, ?)`,
         [req.user.id, compra_id, JSON.stringify(compra[0]), req.ip]
       );
 
@@ -492,6 +490,59 @@ router.delete(
     }
   }
 );
+
+/**
+ * @swagger
+ * /compras/{id}:
+ *   get:
+ *     tags: [Compras]
+ *     summary: Obtener detalles de una compra
+ *     description: Obtiene los detalles de una compra específica
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Detalles de la compra
+ *       401:
+ *         description: No autenticado
+ *       404:
+ *         description: Compra no encontrada
+ *       500:
+ *         description: Error servidor
+ */
+router.get('/:id', authenticate, async (req, res) => {
+  try {
+    const compra_id = Number(req.params.id);
+
+    // Obtener compra desde vista_compras
+    const [compra] = await db.query('SELECT * FROM vista_compras WHERE id = ?', [compra_id]);
+    if (!compra.length) {
+      return res.status(404).json({ error: 'Compra no encontrada' });
+    }
+
+    // Verificar acceso por comunidad si no es superadmin
+    if (!req.user?.is_superadmin) {
+      const [comRows] = await db.query(
+        `SELECT comunidad_id FROM usuario_miembro_comunidad
+         WHERE persona_id = ? AND activo = 1 AND (hasta IS NULL OR hasta > CURDATE())`,
+        [req.user.persona_id]
+      );
+      const comunidadIds = comRows.map((r) => r.comunidad_id);
+      if (!comunidadIds.includes(compra[0].comunidad_id)) {
+        return res.status(403).json({ error: 'No tienes acceso a esta compra' });
+      }
+    }
+
+    res.json(compra[0]);
+  } catch (err) {
+    console.error('Error GET /compras/:id:', err);
+    res.status(500).json({ error: 'Error al obtener compra' });
+  }
+});
 
 module.exports = router;
 

@@ -28,12 +28,11 @@ interface ValidationErrors {
 }
 
 const TIPOS_CATEGORIA = [
-  { value: 'servicios_basicos', label: 'Servicios Básicos' },
-  { value: 'mantenimiento', label: 'Mantenimiento' },
-  { value: 'seguridad', label: 'Seguridad' },
-  { value: 'limpieza', label: 'Limpieza' },
-  { value: 'administracion', label: 'Administración' },
-  { value: 'otros', label: 'Otros' },
+  { value: 'operacional', label: 'Operacional' },
+  { value: 'extraordinario', label: 'Extraordinario' },
+  { value: 'fondo_reserva', label: 'Fondo Reserva' },
+  { value: 'multas', label: 'Multas' },
+  { value: 'consumo', label: 'Consumo' },
 ];
 
 export default function EditarCategoriaGasto() {

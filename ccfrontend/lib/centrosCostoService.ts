@@ -21,7 +21,7 @@ export async function getCentroById(id: number): Promise<CentroCosto> {
 
 export async function createCentro(
   comunidadId: number,
-  data: Partial<CentroCosto>,
+  data: { nombre: string; codigo: string },
 ): Promise<CentroCosto> {
   const response = await apiClient.post(
     `/centros-costo/comunidad/${comunidadId}`,

@@ -1043,7 +1043,7 @@ router.post(
   '/comunidad/:comunidadId',
   [
     authenticate,
-    requireCommunity('comunidadId', ['admin', 'superadmin']),
+    requireCommunity('comunidadId', ['admin', 'superadmin', 'admin_comunidad']),
     body('rut').notEmpty(),
     body('dv').notEmpty(),
     body('razon_social').notEmpty(),
