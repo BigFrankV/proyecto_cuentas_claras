@@ -22,7 +22,7 @@ import { EstadoPago } from '@/types/pagos';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { isSuperUser } = usePermissions();
+  const { isSuperUser, getUserRoleName } = usePermissions();
 
   // Estados para datos dinámicos
   const [selectedComunidad, setSelectedComunidad] = useState<number | null>(
@@ -168,11 +168,9 @@ export default function Dashboard() {
                   <div>
                     <h1 className='h2 mb-1 fw-bold'>
                       Dashboard
-                      {isSuperUser() && (
-                        <span className='badge bg-warning text-dark ms-2 fs-6'>
-                          SUPERUSER
-                        </span>
-                      )}
+                      <span className={`badge ms-2 fs-6 ${isSuperUser() ? 'bg-warning text-dark' : 'bg-primary text-white'}`}>
+                        {getUserRoleName()}
+                      </span>
                     </h1>
                     <p className='mb-0 opacity-75'>
                       Bienvenido de vuelta, {user?.username || 'Usuario'}

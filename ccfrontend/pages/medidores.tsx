@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import comunidadesService from '@/lib/comunidadesService';
 import {
   listMedidores,
@@ -187,42 +189,31 @@ export default function MedidoresListadoPage() {
         </Head>
 
         <Layout>
-          <div className='medidores-container'>
-            {/* Header */}
-            <div className='page-header'>
-              <div className='container-fluid'>
-                <div className='row align-items-center'>
-                  <div className='col'>
-                    <h1 className='page-title'>
-                      <span
-                        className='material-icons me-3'
-                        style={{ fontSize: '2.5rem' }}
-                      >
-                        speed
-                      </span>
-                      Gestión de Medidores
-                    </h1>
-                    <p className='page-subtitle'>
-                      Control y monitoreo integral de medidores de servicios
-                      básicos
-                    </p>
-                  </div>
-                  <div className='col-auto'>
-                    {user && (user.is_superadmin || canManage()) && (
-                      <button
-                        className='btn btn-primary'
-                        onClick={() => router.push('/medidores/nuevo')}
-                      >
-                        <span className='material-icons me-2'>add</span>
-                        Nuevo Medidor
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+          <PageHeader
+            title="Gestión de Medidores"
+            subtitle="Control y monitoreo integral de medidores de servicios básicos"
+            icon="speed"
+            stats={[
+              {
+                label: 'Total Medidores',
+                value: pagination.total.toString(),
+                icon: 'speed',
+                color: 'primary',
+              },
+            ]}
+          >
+            {user && (user.is_superadmin || canManage()) && (
+              <button
+                className='btn btn-light btn-lg'
+                onClick={() => router.push('/medidores/nuevo')}
+              >
+                <span className='material-icons me-2'>add</span>
+                Nuevo Medidor
+              </button>
+            )}
+          </PageHeader>
 
-            <div className='container-fluid px-4'>
+          <div className='container-fluid px-4'>
               {/* Stats Cards */}
               <div className='row stats-row g-3 mb-4'>
                 <div className='col-md-6 col-lg-3'>
@@ -588,32 +579,18 @@ export default function MedidoresListadoPage() {
                 </div>
               </div>
 
-              {/* Paginación */}
+              {/* Paginación moderna */}
               {pagination.pages > 1 && (
-                <div className='d-flex justify-content-between align-items-center mt-4'>
-                  <button
-                    className='btn btn-outline-primary btn-sm'
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page <= 1}
-                  >
-                    Anterior
-                  </button>
-                  <span className='text-muted'>
-                    Página {page} / {pagination.pages}
-                  </span>
-                  <button
-                    className='btn btn-outline-primary btn-sm'
-                    onClick={() =>
-                      setPage(p => Math.min(pagination.pages, p + 1))
-                    }
-                    disabled={page >= pagination.pages}
-                  >
-                    Siguiente
-                  </button>
-                </div>
+                <ModernPagination
+                  currentPage={page}
+                  totalPages={pagination.pages}
+                  totalItems={pagination.total}
+                  itemsPerPage={limit}
+                  itemName="medidores"
+                  onPageChange={setPage}
+                />
               )}
             </div>
-          </div>
         </Layout>
       </ProtectedPage>
     </ProtectedRoute>

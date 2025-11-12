@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import { ticketsApi } from '@/lib/api/tickets';
 import { ProtectedRoute } from '@/lib/useAuth';
 import type { Ticket } from '@/types/tickets';
@@ -92,6 +94,7 @@ const mapPrioridadToFrontend = (
 export default function TicketsListado() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
+  const [totalFilteredItems, setTotalFilteredItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
@@ -103,6 +106,13 @@ export default function TicketsListado() {
     category: '',
     assignee: '',
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
 
   useEffect(() => {
     const loadTickets = async () => {
@@ -173,8 +183,18 @@ export default function TicketsListado() {
       );
     }
 
-    setFilteredTickets(filtered);
-  }, [tickets, searchTerm, filters]);
+    // Calcular paginación
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    setTotalPages(totalPages);
+    setTotalFilteredItems(filtered.length);
+
+    // Aplicar paginación
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedTickets = filtered.slice(startIndex, endIndex);
+
+    setFilteredTickets(paginatedTickets);
+  }, [tickets, searchTerm, filters, currentPage, itemsPerPage]);
 
   const getStats = () => {
     const open = tickets.filter(t => t.estado === 'abierto').length;
@@ -209,6 +229,11 @@ export default function TicketsListado() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const handleFilterChange = (filterName: string, value: string) => {
+    setFilters(prev => ({ ...prev, [filterName]: value }));
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleSelectAll = () => {
@@ -253,19 +278,42 @@ export default function TicketsListado() {
 
       <Layout title='Tickets de Soporte'>
         <div className='container-fluid py-3'>
-          {/* Header */}
-          <div className='d-flex justify-content-between align-items-center mb-4'>
-            <div>
-              <h1 className='h3 mb-1'>Tickets de Soporte</h1>
-              <p className='text-muted mb-0'>
-                Gestión de solicitudes y reportes
-              </p>
-            </div>
-            <Link href='/tickets/nuevo' className='btn btn-primary'>
-              <i className='material-icons me-2'>add</i>
-              Nuevo Ticket
-            </Link>
-          </div>
+          <PageHeader
+            title="Tickets de Soporte"
+            subtitle="Gestión de solicitudes y reportes"
+            icon="support"
+            primaryAction={{
+              href: '/tickets/nuevo',
+              label: 'Nuevo Ticket',
+              icon: 'add',
+            }}
+            stats={[
+              {
+                label: 'Abiertos',
+                value: stats.open.toString(),
+                icon: 'bug_report',
+                color: '#1565C0',
+              },
+              {
+                label: 'En Progreso',
+                value: stats.inProgress.toString(),
+                icon: 'hourglass_empty',
+                color: '#F57F17',
+              },
+              {
+                label: 'Resueltos',
+                value: stats.resolved.toString(),
+                icon: 'check_circle',
+                color: '#2E7D32',
+              },
+              {
+                label: 'Escalados',
+                value: stats.escalated.toString(),
+                icon: 'warning',
+                color: '#C62828',
+              },
+            ]}
+          />
 
           {/* Statistics Cards */}
           <div className='row mb-4'>
@@ -1053,40 +1101,16 @@ export default function TicketsListado() {
           </div>
 
           {/* Pagination */}
-          <div className='d-flex justify-content-between align-items-center mt-4'>
-            <div className='text-muted small'>
-              Mostrando {filteredTickets.length} de {tickets.length} tickets
-            </div>
-            <nav>
-              <ul className='pagination mb-0'>
-                <li className='page-item disabled'>
-                  <button className='page-link' type='button'>
-                    Anterior
-                  </button>
-                </li>
-                <li className='page-item active'>
-                  <button className='page-link' type='button'>
-                    1
-                  </button>
-                </li>
-                <li className='page-item'>
-                  <button className='page-link' type='button'>
-                    2
-                  </button>
-                </li>
-                <li className='page-item'>
-                  <button className='page-link' type='button'>
-                    3
-                  </button>
-                </li>
-                <li className='page-item'>
-                  <button className='page-link' type='button'>
-                    Siguiente
-                  </button>
-                </li>
-              </ul>
-            </nav>
-          </div>
+          {totalPages > 1 && (
+            <ModernPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalFilteredItems}
+              itemsPerPage={itemsPerPage}
+              itemName="tickets"
+              onPageChange={goToPage}
+            />
+          )}
         </div>
       </Layout>
     </ProtectedRoute>

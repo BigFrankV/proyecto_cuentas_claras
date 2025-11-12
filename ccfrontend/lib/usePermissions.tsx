@@ -257,9 +257,22 @@ export function usePermissions() {
     return currentRole === UserRole.SUPERUSER;
   };
 
-  // Verificar si el usuario es admin o superior
-  const isAdmin = (): boolean => {
-    return hasRole(UserRole.ADMIN);
+  // Obtener el nombre legible del rol del usuario
+  const getUserRoleName = (): string => {
+    const roleNames: Record<UserRole, string> = {
+      [UserRole.SUPERUSER]: 'Superusuario',
+      [UserRole.ADMIN]: 'Administrador',
+      [UserRole.CONCIERGE]: 'Conserje',
+      [UserRole.ACCOUNTANT]: 'Contador',
+      [UserRole.TESORERO]: 'Tesorero',
+      [UserRole.PRESIDENTE_COMITE]: 'Presidente de Comité',
+      [UserRole.PROVIDER]: 'Proveedor de Servicio',
+      [UserRole.RESIDENT]: 'Residente',
+      [UserRole.OWNER]: 'Propietario',
+      [UserRole.TENANT]: 'Inquilino',
+      [UserRole.GUEST]: 'Invitado',
+    };
+    return roleNames[currentRole] || 'Usuario';
   };
 
   // Obtener todos los permisos del usuario actual
@@ -287,7 +300,7 @@ export function usePermissions() {
     hasPermission,
     hasRole,
     isSuperUser,
-    isAdmin,
+    getUserRoleName, // ✅ Incluir la nueva función aquí
     getUserPermissions,
     // ✅ NUEVAS FUNCIONES para multi-tenancy
     hasAccessToCommunity,

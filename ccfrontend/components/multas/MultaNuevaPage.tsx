@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect, useRef } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import PageHeader from '@/components/ui/PageHeader';
 import multasService, { fetchWithAuth } from '@/lib/multasService';
 
 const MultaNuevaPage: React.FC = () => {
@@ -380,16 +381,19 @@ const MultaNuevaPage: React.FC = () => {
   return (
     <Layout title='Nueva Multa'>
       <div className='container-fluid p-4'>
-        <div className='d-flex justify-content-between align-items-center mb-4'>
-          <h1 className='h3'>Nueva Multa</h1>
+        <PageHeader
+          title="Nueva Multa"
+          subtitle="Crear una nueva multa paso a paso"
+          icon="add_circle"
+        >
           <button
-            className='btn btn-secondary'
+            className="btn btn-secondary"
             onClick={() => window.history.back()}
           >
-            <i className='material-icons me-2'>arrow_back</i>
+            <i className="material-icons me-2">arrow_back</i>
             Cancelar
           </button>
-        </div>
+        </PageHeader>
 
         {/* Wizard steps */}
         <div className='wizard-steps mb-4 d-flex gap-3'>

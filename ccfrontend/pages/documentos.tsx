@@ -11,6 +11,8 @@ import {
   DocumentCard,
 } from '@/components/documentos';
 import Layout from '@/components/layout/Layout';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import { ProtectedRoute } from '@/lib/useAuth';
 
 interface Document {
@@ -44,6 +46,15 @@ export default function DocumentosListado() {
   const [selectedAccess, setSelectedAccess] = useState<string>('all');
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(12);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
 
   // Mock data
   useEffect(() => {
@@ -143,6 +154,21 @@ export default function DocumentosListado() {
     return matchesSearch && matchesCategory && matchesAccess;
   });
 
+  // Pagination logic
+  const paginatedDocuments = filteredDocuments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
+  // Update pagination when filters change
+  useEffect(() => {
+    const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+    setTotalPages(totalPages);
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredDocuments.length, itemsPerPage, currentPage]);
+
   const handleDocumentAction = (action: string, id: string) => {
     switch (action) {
       case 'view':
@@ -165,10 +191,22 @@ export default function DocumentosListado() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedDocuments.length === filteredDocuments.length) {
-      setSelectedDocuments([]);
+    const currentPageDocIds = paginatedDocuments.map(doc => doc.id);
+    const allCurrentPageSelected = currentPageDocIds.every(id =>
+      selectedDocuments.includes(id),
+    );
+
+    if (allCurrentPageSelected) {
+      // Deselect all on current page
+      setSelectedDocuments(prev =>
+        prev.filter(id => !currentPageDocIds.includes(id)),
+      );
     } else {
-      setSelectedDocuments(filteredDocuments.map(doc => doc.id));
+      // Select all on current page
+      setSelectedDocuments(prev => [
+        ...prev.filter(id => !currentPageDocIds.includes(id)),
+        ...currentPageDocIds,
+      ]);
     }
   };
 
@@ -284,98 +322,47 @@ export default function DocumentosListado() {
 
       <Layout title='Documentos'>
         <div className='container-fluid p-4'>
-          {/* Header */}
-          <div className='d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3'>
-            <div>
-              <h1 className='h3 mb-1'>Documentos</h1>
-              <p className='text-muted mb-0'>
-                Gestiona todos los documentos de la copropiedad
-              </p>
-            </div>
-            <div className='d-flex gap-2'>
-              <Link
-                href='/documentos/nuevo'
-                className='btn btn-outline-primary'
-              >
-                <i className='material-icons me-2'>upload</i>
-                Subir Documento
-              </Link>
-              <Link href='/documentos-compra' className='btn btn-primary'>
-                <i className='material-icons me-2'>add</i>
-                Documento Compra
-              </Link>
-            </div>
-          </div>
-
-          {/* Stats cards */}
-          <div className='row g-3 mb-4'>
-            <div className='col-sm-6 col-lg-3'>
-              <div className='stats-card card border-0 shadow-sm h-100'>
-                <div className='card-body d-flex align-items-center'>
-                  <div className='stats-icon bg-primary text-white rounded-3 p-3 me-3'>
-                    <i className='material-icons'>folder</i>
-                  </div>
-                  <div>
-                    <div className='stats-number h4 mb-0'>
-                      {documents.length}
-                    </div>
-                    <div className='stats-label text-muted small'>
-                      Total Documentos
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className='col-sm-6 col-lg-3'>
-              <div className='stats-card card border-0 shadow-sm h-100'>
-                <div className='card-body d-flex align-items-center'>
-                  <div className='stats-icon bg-success text-white rounded-3 p-3 me-3'>
-                    <i className='material-icons'>public</i>
-                  </div>
-                  <div>
-                    <div className='stats-number h4 mb-0'>
-                      {documents.filter(d => d.access === 'public').length}
-                    </div>
-                    <div className='stats-label text-muted small'>Públicos</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className='col-sm-6 col-lg-3'>
-              <div className='stats-card card border-0 shadow-sm h-100'>
-                <div className='card-body d-flex align-items-center'>
-                  <div className='stats-icon bg-warning text-white rounded-3 p-3 me-3'>
-                    <i className='material-icons'>vpn_key</i>
-                  </div>
-                  <div>
-                    <div className='stats-number h4 mb-0'>
-                      {documents.filter(d => d.access === 'owners').length}
-                    </div>
-                    <div className='stats-label text-muted small'>
-                      Solo Propietarios
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className='col-sm-6 col-lg-3'>
-              <div className='stats-card card border-0 shadow-sm h-100'>
-                <div className='card-body d-flex align-items-center'>
-                  <div className='stats-icon bg-info text-white rounded-3 p-3 me-3'>
-                    <i className='material-icons'>update</i>
-                  </div>
-                  <div>
-                    <div className='stats-number h4 mb-0'>
-                      {documents.filter(d => d.isLatest).length}
-                    </div>
-                    <div className='stats-label text-muted small'>
-                      Versiones Actuales
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <PageHeader
+            title="Documentos"
+            subtitle="Gestión de documentos de la copropiedad"
+            icon="folder"
+            primaryAction={{
+              href: '/documentos/nuevo',
+              label: 'Subir Documento',
+              icon: 'upload',
+            }}
+            stats={[
+              {
+                label: 'Total',
+                value: documents.length.toString(),
+                icon: 'folder',
+                color: '#007bff',
+              },
+              {
+                label: 'Públicos',
+                value: documents.filter(d => d.access === 'public').length.toString(),
+                icon: 'public',
+                color: '#28a745',
+              },
+              {
+                label: 'Propietarios',
+                value: documents.filter(d => d.access === 'owners').length.toString(),
+                icon: 'vpn_key',
+                color: '#ffc107',
+              },
+              {
+                label: 'Actuales',
+                value: documents.filter(d => d.isLatest).length.toString(),
+                icon: 'update',
+                color: '#17a2b8',
+              },
+            ]}
+          >
+            <Link href='/documentos-compra' className='btn btn-light'>
+              <i className='material-icons me-2'>add</i>
+              Documento Compra
+            </Link>
+          </PageHeader>
 
           {/* Filters */}
           <div className='filters-card card border-0 shadow-sm mb-4'>
@@ -535,7 +522,7 @@ export default function DocumentosListado() {
           {/* Documents Grid View */}
           {view === 'grid' && (
             <div className='row g-3'>
-              {filteredDocuments.map(document => (
+              {paginatedDocuments.map(document => (
                 <div key={document.id} className='col-sm-6 col-lg-4 col-xl-3'>
                   <DocumentCard
                     document={document}
@@ -578,7 +565,7 @@ export default function DocumentosListado() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredDocuments.map(document => (
+                    {paginatedDocuments.map(document => (
                       <tr key={document.id}>
                         <td>
                           <input
@@ -727,6 +714,18 @@ export default function DocumentosListado() {
                 </Link>
               )}
             </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <ModernPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredDocuments.length}
+              itemsPerPage={itemsPerPage}
+              itemName="documentos"
+              onPageChange={goToPage}
+            />
           )}
         </div>
       </Layout>
