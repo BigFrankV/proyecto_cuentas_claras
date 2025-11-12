@@ -396,21 +396,25 @@ export default function Profile() {
       <Layout title='Mi Perfil'>
         <div className='container-fluid fade-in'>
           {/* Hero Section */}
-          <div className='profile-hero bg-gradient-primary text-white rounded-3 p-4 mb-4 shadow-sm'>
-            <div className='d-flex align-items-center justify-content-between'>
-              <div>
-                <h1 className='h2 mb-1 fw-bold'>Mi Perfil</h1>
-                <p className='mb-0 opacity-75'>
-                  Gestiona tu información personal y preferencias de cuenta
-                </p>
-              </div>
-              <div className='d-none d-md-block'>
-                <span
-                  className='material-icons'
-                  style={{ fontSize: '4rem', opacity: '0.3' }}
-                >
-                  account_circle
-                </span>
+          <div className='container-fluid p-0'>
+            <div className='profile-hero bg-gradient-primary text-white shadow-sm'>
+              <div className='p-4'>
+                <div className='d-flex align-items-center justify-content-between'>
+                  <div>
+                    <h1 className='h2 mb-1 fw-bold'>Mi Perfil</h1>
+                    <p className='mb-0 opacity-75'>
+                      Gestiona tu información personal y preferencias de cuenta
+                    </p>
+                  </div>
+                  <div className='d-none d-md-block'>
+                    <span
+                      className='material-icons'
+                      style={{ fontSize: '4rem', opacity: '0.3' }}
+                    >
+                      account_circle
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

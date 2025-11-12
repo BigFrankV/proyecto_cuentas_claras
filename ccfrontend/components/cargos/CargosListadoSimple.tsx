@@ -140,57 +140,192 @@ const CargosListadoSimple: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className='mb-4'>
-        <div className='d-flex justify-content-between align-items-center mb-3'>
-          <h2 className='mb-0'>Gestión de Cargos</h2>
-          <Link href='/cargos/nuevo' className='btn btn-success'>
-            <i className='material-icons me-2'>add</i>
-            Nuevo Cargo
-          </Link>
-        </div>
-        <p className='text-muted mb-0'>
-          Administra y da seguimiento a todos los cargos
-        </p>
-      </div>
+      <div className='container-fluid p-0'>
+        <div
+          className='text-white'
+          style={{
+            background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <div className='p-4'>
+          <div
+            style={{
+              position: 'absolute',
+              top: '-50%',
+              right: '-10%',
+              width: '200px',
+              height: '200px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '-10%',
+              left: '-5%',
+              width: '150px',
+              height: '150px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '50%',
+            }}
+          />
+          <div className='d-flex align-items-center justify-content-between'>
+            <div className='d-flex align-items-center'>
+              <div
+                className='me-4'
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <i
+                  className='material-icons'
+                  style={{ fontSize: '32px', color: 'white' }}
+                >
+                  receipt
+                </i>
+              </div>
+              <div>
+                <h1 className='h2 mb-1 text-white'>Cargos</h1>
+                <p className='mb-0 opacity-75'>
+                  Gestión y seguimiento de cargos
+                </p>
+              </div>
+            </div>
+            <div className='text-end'>
+              <Link
+                href='/cargos/nuevo'
+                className='btn btn-light btn-lg'
+              >
+                <i className='material-icons me-2'>add</i>
+                Nuevo Cargo
+              </Link>
+            </div>
+          </div>
 
-      {/* Statistics Cards */}
-      <div className='row mb-4'>
-        <div className='col-md-3'>
-          <div className='card text-center'>
-            <div className='card-body'>
-              <h5 className='card-title text-muted mb-2'>Total Cargos</h5>
-              <h2 className='mb-0'>{stats.total}</h2>
-              <small className='text-muted'>
-                {formatCurrency(stats.montoTotal)}
-              </small>
+          {/* Estadísticas */}
+          <div className='row mt-4'>
+            <div className='col-md-3 mb-3'>
+              <div
+                className='p-3 rounded-3 text-white'
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+              >
+                <div className='d-flex align-items-center'>
+                  <div
+                    className='me-3'
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '8px',
+                      backgroundColor: 'var(--color-primary)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <i className='material-icons'>receipt</i>
+                  </div>
+                  <div>
+                    <div className='h3 mb-0'>{stats.total}</div>
+                    <div className='text-white-50'>Total Cargos</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className='col-md-3 mb-3'>
+              <div
+                className='p-3 rounded-3 text-white'
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+              >
+                <div className='d-flex align-items-center'>
+                  <div
+                    className='me-3'
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '8px',
+                      backgroundColor: 'var(--color-warning)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <i className='material-icons'>schedule</i>
+                  </div>
+                  <div>
+                    <div className='h3 mb-0'>{stats.pendientes}</div>
+                    <div className='text-white-50'>Pendientes</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className='col-md-3 mb-3'>
+              <div
+                className='p-3 rounded-3 text-white'
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+              >
+                <div className='d-flex align-items-center'>
+                  <div
+                    className='me-3'
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '8px',
+                      backgroundColor: 'var(--color-success)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <i className='material-icons'>check_circle</i>
+                  </div>
+                  <div>
+                    <div className='h3 mb-0'>{stats.pagados}</div>
+                    <div className='text-white-50'>Pagados</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className='col-md-3 mb-3'>
+              <div
+                className='p-3 rounded-3 text-white'
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+              >
+                <div className='d-flex align-items-center'>
+                  <div
+                    className='me-3'
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '8px',
+                      backgroundColor: 'var(--color-danger)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <i className='material-icons'>error</i>
+                  </div>
+                  <div>
+                    <div className='h3 mb-0'>{stats.vencidos}</div>
+                    <div className='text-white-50'>Vencidos</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div className='col-md-3'>
-          <div className='card text-center border-warning'>
-            <div className='card-body'>
-              <h5 className='card-title text-warning mb-2'>Pendientes</h5>
-              <h2 className='text-warning mb-0'>{stats.pendientes}</h2>
-              <small className='text-muted'>Por cobrar</small>
-            </div>
-          </div>
-        </div>
-        <div className='col-md-3'>
-          <div className='card text-center border-success'>
-            <div className='card-body'>
-              <h5 className='card-title text-success mb-2'>Pagados</h5>
-              <h2 className='text-success mb-0'>{stats.pagados}</h2>
-              <small className='text-muted'>Completado</small>
-            </div>
-          </div>
-        </div>
-        <div className='col-md-3'>
-          <div className='card text-center border-danger'>
-            <div className='card-body'>
-              <h5 className='card-title text-danger mb-2'>Vencidos</h5>
-              <h2 className='text-danger mb-0'>{stats.vencidos}</h2>
-              <small className='text-muted'>Requieren atención</small>
-            </div>
           </div>
         </div>
       </div>

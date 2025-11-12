@@ -153,13 +153,14 @@ export default function Dashboard() {
 
       <Layout title='Dashboard'>
         {/* Header mejorado del dashboard */}
-        <header className='text-white shadow-lg mb-4' style={{ background: 'var(--gradient-dashboard-header)' }}>
-          <div className='container-fluid py-4'>
+        <div className='container-fluid p-0'>
+          <header className='text-white shadow-lg' style={{ background: 'var(--gradient-dashboard-header)' }}>
+            <div className='p-4'>
             <div className='row align-items-center'>
               {/* Información principal */}
               <div className='col-lg-6'>
                 <div className='d-flex align-items-center mb-3'>
-                  <div className='icon-box bg-white bg-opacity-20 rounded-circle p-3 me-3'>
+                  <div className='icon-box bg-warning bg-opacity-20 rounded-circle p-3 me-3'>
                     <span className='material-icons' style={{ fontSize: '32px' }}>
                       dashboard
                     </span>
@@ -308,8 +309,9 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </div>
-        </header>
+            </div>
+          </header>
+        </div>
 
         {/* Contenido del dashboard */}
         <main className='container-fluid py-4'>

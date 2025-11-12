@@ -331,35 +331,199 @@ export default function EmisionesListado() {
       </Head>
 
       <Layout title='Emisiones'>
-        <div className='container-fluid p-4'>
-          {/* Header */}
-          <div className='d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3'>
-            <div>
-              <h1 className='h2 mb-1'>
-                <i className='fa-solid fa-file-invoice-dollar me-2'></i>
-                Emisiones
-              </h1>
-              <p className='text-muted mb-0'>
-                Gestión de emisiones de gastos comunes y extraordinarias
-              </p>
-            </div>
-            <div className='d-flex gap-2'>
-              <div className='btn-group'>
-                <button className='btn btn-outline-secondary'>
-                  <i className='material-icons me-2'>print</i>
-                  Imprimir
-                </button>
-                <button className='btn btn-outline-secondary'>
-                  <i className='material-icons me-2'>file_download</i>
-                  Exportar
-                </button>
+        {/* Header Profesional */}
+        <div className='container-fluid p-0'>
+          <div
+            className='text-white'
+            style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div className='p-4'>
+            <div
+              style={{
+                position: 'absolute',
+                top: '-50%',
+                right: '-10%',
+                width: '200px',
+                height: '200px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '50%',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-10%',
+                left: '-5%',
+                width: '150px',
+                height: '150px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '50%',
+              }}
+            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <div className='d-flex align-items-center'>
+                <div
+                  className='me-4'
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <i
+                    className='material-icons'
+                    style={{ fontSize: '32px', color: 'white' }}
+                  >
+                    receipt_long
+                  </i>
+                </div>
+                <div>
+                  <h1 className='h2 mb-1 text-white'>Emisiones</h1>
+                  <p className='mb-0 opacity-75'>
+                    Gestión de emisiones de gastos comunes
+                  </p>
+                </div>
               </div>
-              <Link href='/emisiones/nueva' className='btn btn-primary'>
-                <i className='material-icons me-2'>add</i>
-                Nueva Emisión
-              </Link>
+              <div className='text-end'>
+                <Link
+                  href='/emisiones/nueva'
+                  className='btn btn-light btn-lg'
+                >
+                  <i className='material-icons me-2'>add</i>
+                  Nueva Emisión
+                </Link>
+              </div>
+            </div>
+
+            {/* Estadísticas */}
+            <div className='row mt-4'>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>receipt_long</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{filteredEmissions.length}</div>
+                      <div className='text-white-50'>Total Emisiones</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-success)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>send</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{filteredEmissions.filter(e => e.status === 'sent').length}</div>
+                      <div className='text-white-50'>Emitidas</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-warning)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>edit</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{filteredEmissions.filter(e => e.status === 'draft').length}</div>
+                      <div className='text-white-50'>Borradores</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-info)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>check_circle</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{filteredEmissions.filter(e => e.status === 'paid').length}</div>
+                      <div className='text-white-50'>Pagadas</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             </div>
           </div>
+        </div>
+
+        {/* Contenido principal */}
+        <div className='container-fluid pt-4 pb-4'>
 
           {/* Filtros */}
           <EmissionFilters

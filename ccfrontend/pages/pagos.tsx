@@ -185,69 +185,193 @@ const Pagos: React.FC = () => {
   return (
     <ProtectedRoute>
       <Layout>
-        <Container fluid className='py-4'>
-          {/* Header con gradiente mejorado - EJEMPLO PARA OTRAS SECCIONES */}
-          <div className='payments-header mb-4'>
-            <Row className='align-items-center'>
-              <Col lg={8}>
-                <div className='d-flex align-items-center mb-3'>
-                  <span
-                    className='material-icons me-3'
-                    style={{ fontSize: '3rem' }}
-                  >
-                    payments
-                  </span>
-                  <div>
-                    <h1 className='payments-title mb-2'>Gestión de Pagos</h1>
-                    <p className='payments-subtitle mb-0'>
-                      Administra todos los pagos y transacciones de la comunidad
-                    </p>
+        <div className='container-fluid py-4'>
+          {/* Header Profesional */}
+          <div className='container-fluid p-0'>
+            <div
+              className='text-white'
+              style={{
+                background: 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <div className='p-4'>
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '-50%',
+                    right: '-10%',
+                    width: '200px',
+                    height: '200px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '50%',
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '-10%',
+                    left: '-5%',
+                    width: '150px',
+                    height: '150px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '50%',
+                  }}
+                />
+                <div className='d-flex align-items-center justify-content-between'>
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-4'
+                      style={{
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i
+                        className='material-icons'
+                        style={{ fontSize: '32px', color: 'white' }}
+                      >
+                        payments
+                      </i>
+                    </div>
+                    <div>
+                      <h1 className='h2 mb-1 text-white'>Pagos</h1>
+                      <p className='mb-0 opacity-75'>
+                        Gestión de pagos y transacciones
+                      </p>
+                    </div>
+                  </div>
+                  <div className='text-end'>
+                    <Button variant='light' size='lg'>
+                      <span className='material-icons me-2'>add_circle</span>
+                      Nuevo Pago
+                    </Button>
                   </div>
                 </div>
 
-                {/* Stats compactos en el header */}
-                <div className='payments-stats'>
-                  <div className='stat-item'>
-                    <div className='stat-number'>{stats.totalPayments}</div>
-                    <div className='stat-label'>Total</div>
-                  </div>
-                  <div className='stat-item'>
-                    <div className='stat-number'>{stats.approvedPayments}</div>
-                    <div className='stat-label'>Confirmados</div>
-                  </div>
-                  <div className='stat-item'>
-                    <div className='stat-number'>{stats.pendingPayments}</div>
-                    <div className='stat-label'>Pendientes</div>
-                  </div>
-                  <div className='stat-item'>
-                    <div className='stat-number'>
-                      {formatCurrency(stats.totalAmount).includes('M')
-                        ? formatCurrency(stats.totalAmount)
-                        : `${(stats.totalAmount / 1000000).toFixed(1)}M`}
+                {/* Estadísticas */}
+                <div className='row mt-4'>
+                  <div className='col-md-3 mb-3'>
+                    <div
+                      className='p-3 rounded-3 text-white'
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    >
+                      <div className='d-flex align-items-center'>
+                        <div
+                          className='me-3'
+                          style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--color-primary)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <i className='material-icons'>payments</i>
+                        </div>
+                        <div>
+                          <div className='h3 mb-0'>{stats.totalPayments}</div>
+                          <div className='text-white-50'>Total Pagos</div>
+                        </div>
+                      </div>
                     </div>
-                    <div className='stat-label'>Recaudado</div>
+                  </div>
+                  <div className='col-md-3 mb-3'>
+                    <div
+                      className='p-3 rounded-3 text-white'
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    >
+                      <div className='d-flex align-items-center'>
+                        <div
+                          className='me-3'
+                          style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--color-success)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <i className='material-icons'>check_circle</i>
+                        </div>
+                        <div>
+                          <div className='h3 mb-0'>{stats.approvedPayments}</div>
+                          <div className='text-white-50'>Confirmados</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='col-md-3 mb-3'>
+                    <div
+                      className='p-3 rounded-3 text-white'
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    >
+                      <div className='d-flex align-items-center'>
+                        <div
+                          className='me-3'
+                          style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--color-warning)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <i className='material-icons'>schedule</i>
+                        </div>
+                        <div>
+                          <div className='h3 mb-0'>{stats.pendingPayments}</div>
+                          <div className='text-white-50'>Pendientes</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='col-md-3 mb-3'>
+                    <div
+                      className='p-3 rounded-3 text-white'
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    >
+                      <div className='d-flex align-items-center'>
+                        <div
+                          className='me-3'
+                          style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--color-danger)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <i className='material-icons'>cancel</i>
+                        </div>
+                        <div>
+                          <div className='h3 mb-0'>{stats.cancelledPayments}</div>
+                          <div className='text-white-50'>Cancelados</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </Col>
-              <Col lg={4} className='text-end'>
-                <div className='d-flex flex-column gap-2'>
-                  <div>
-                    <Button variant='light' size='sm' className='me-2'>
-                      <span className='material-icons me-1'>print</span>
-                      Imprimir
-                    </Button>
-                    <Button variant='light' size='sm' className='me-2'>
-                      <span className='material-icons me-1'>file_download</span>
-                      Exportar
-                    </Button>
-                  </div>
-                  <Button variant='warning' size='lg'>
-                    <span className='material-icons me-2'>add_circle</span>
-                    Registrar Nuevo Pago
-                  </Button>
-                </div>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
           {/* Tarjetas de estadísticas mejoradas */}
@@ -809,7 +933,7 @@ const Pagos: React.FC = () => {
               </Card.Body>
             </Card>
           </div>
-        </Container>
+        </div>
       </Layout>
     </ProtectedRoute>
   );

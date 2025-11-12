@@ -262,74 +262,208 @@ export default function GastosListado() {
           <title>Gastos — Cuentas Claras</title>
         </Head>
 
-        <Layout>
-        <div className='expenses-container'>
-          {/* Header */}
-          <div className='expenses-header'>
-            <div className='d-flex justify-content-between align-items-start mb-4'>
-              <div>
-                <h1 className='expenses-title'>
-                  <span className='material-icons me-2'>receipt_long</span>
-                  Gestión de Gastos
-                </h1>
-                <p className='expenses-subtitle'>
-                  Administra y controla todos los gastos de la comunidad
-                </p>
-                <div className='header-stats'>
-                  <div className='stat-item'>
-                    <div className='stat-number'>{expenses.length}</div>
-                    <div className='stat-label'>Total Gastos</div>
-                  </div>
-                  <div className='stat-item'>
-                    <div className='stat-number'>
-                      {expenses.filter(e => e.status === 'pending').length}
-                    </div>
-                    <div className='stat-label'>Pendientes</div>
-                  </div>
-                  <div className='stat-item'>
-                    <div className='stat-number'>
-                      {expenses.filter(e => e.status === 'approved').length}
-                    </div>
-                    <div className='stat-label'>Aprobados</div>
-                  </div>
-                  <div className='stat-item'>
-                    <div className='stat-number'>
-                      {formatCurrency(
-                        expenses.reduce((sum, e) => sum + e.amount, 0),
-                      )}
-                    </div>
-                    <div className='stat-label'>Monto Total</div>
-                  </div>
+        <Layout title='Gastos'>
+        {/* Header Profesional */}
+        <div className='container-fluid p-0'>
+          <div
+            className='text-white'
+            style={{
+              background: 'linear-gradient(135deg, #ff5722 0%, #d84315 100%)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div className='p-4'>
+            <div
+              style={{
+                position: 'absolute',
+                top: '-50%',
+                right: '-10%',
+                width: '200px',
+                height: '200px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '50%',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-10%',
+                left: '-5%',
+                width: '150px',
+                height: '150px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '50%',
+              }}
+            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <div className='d-flex align-items-center'>
+                <div
+                  className='me-4'
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <i
+                    className='material-icons'
+                    style={{ fontSize: '32px', color: 'white' }}
+                  >
+                    receipt_long
+                  </i>
+                </div>
+                <div>
+                  <h1 className='h2 mb-1 text-white'>Gastos</h1>
+                  <p className='mb-0 opacity-75'>
+                    Gestión y administración de gastos
+                  </p>
                 </div>
               </div>
-              <div className='d-flex gap-2'>
-                <Button
-                  variant='outline-light'
-                  onClick={() => setShowFilters(!showFilters)}
-                  className='position-relative'
-                >
-                  <span className='material-icons me-2'>filter_list</span>
-                  Filtros
-                  {getActiveFiltersCount() > 0 && (
-                    <Badge
-                      bg='light'
-                      text='dark'
-                      className='position-absolute top-0 start-100 translate-middle badge rounded-pill'
-                    >
-                      {getActiveFiltersCount()}
-                    </Badge>
-                  )}
-                </Button>
+              <div className='text-end'>
                 <Button
                   variant='light'
                   onClick={() => router.push('/gastos/nuevo')}
+                  className='btn-lg'
                 >
-                  <span className='material-icons me-2'>add</span>
+                  <i className='material-icons me-2'>add</i>
                   Nuevo Gasto
                 </Button>
               </div>
             </div>
+
+            {/* Estadísticas */}
+            <div className='row mt-4'>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>receipt_long</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{expenses.length}</div>
+                      <div className='text-white-50'>Total Gastos</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-warning)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>pending</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>
+                        {expenses.filter(e => e.status === 'pending').length}
+                      </div>
+                      <div className='text-white-50'>Pendientes</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-success)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>check_circle</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>
+                        {expenses.filter(e => e.status === 'approved').length}
+                      </div>
+                      <div className='text-white-50'>Aprobados</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-info)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>attach_money</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>
+                        {formatCurrency(
+                          expenses.reduce((sum, e) => sum + e.amount, 0),
+                        )}
+                      </div>
+                      <div className='text-white-50'>Monto Total</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
           </div>
+        </div>
+
+        <div className='expenses-container'>
 
           {/* Filtros */}
           {showFilters && (
@@ -787,7 +921,7 @@ export default function GastosListado() {
           </div>
         </div>
       </Layout>
-      </ProtectedPage>
-    </ProtectedRoute>
-  );
+    </ProtectedPage>
+  </ProtectedRoute>
+);
 }
