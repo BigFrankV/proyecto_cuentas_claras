@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import PageHeader from '@/components/ui/PageHeader';
 import TwoFactorModal from '@/components/ui/TwoFactorModal';
 import profileService from '@/lib/profileService';
 import { getUserRole } from '@/lib/roles';
@@ -501,55 +502,31 @@ export default function MiPerfil() {
 
       <Layout title='Mi Perfil'>
         <div className='container-fluid fade-in'>
-          {/* Hero Section */}
-          <div className='container-fluid p-0'>
-            <div className='profile-hero bg-gradient-primary text-white shadow-sm'>
-              <div className='p-4'>
-                <div className='d-flex align-items-center justify-content-between'>
-                  <div>
-                    <h1 className='h2 mb-1 fw-bold'>Mi Perfil</h1>
-                    <p className='mb-0 opacity-75'>
-                      Gestiona tu información personal y preferencias de cuenta
-                    </p>
-                  </div>
-                  <div className='d-none d-md-block'>
-                    <span
-                      className='material-icons'
-                      style={{ fontSize: '4rem', opacity: '0.3' }}
-                    >
-                      account_circle
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Breadcrumb */}
-          <nav aria-label='breadcrumb' className='mb-4'>
-            <ol className='breadcrumb'>
-              <li className='breadcrumb-item'>
-                <Link href='/dashboard' className='text-decoration-none'>
-                  <span
-                    className='material-icons me-1'
-                    style={{ fontSize: '16px' }}
-                  >
-                    dashboard
-                  </span>
-                  Dashboard
-                </Link>
-              </li>
-              <li className='breadcrumb-item active' aria-current='page'>
-                <span
-                  className='material-icons me-1'
-                  style={{ fontSize: '16px' }}
-                >
-                  person
-                </span>
-                Mi Perfil
-              </li>
-            </ol>
-          </nav>
+          <PageHeader
+            title="Mi Perfil"
+            subtitle="Gestiona tu información personal y preferencias de cuenta"
+            icon="person"
+            stats={[
+              {
+                label: 'Rol',
+                value: getUserRole(user),
+                icon: 'badge',
+                color: 'var(--color-primary)',
+              },
+              {
+                label: '2FA',
+                value: totp2FAEnabled ? 'Activado' : 'Desactivado',
+                icon: totp2FAEnabled ? 'verified_user' : 'security',
+                color: totp2FAEnabled ? 'var(--color-success)' : 'var(--color-warning)',
+              },
+              {
+                label: 'Comunidades',
+                value: userProfile?.communities?.length || 0,
+                icon: 'business',
+                color: 'var(--color-info)',
+              },
+            ]}
+          />
 
           {/* Mensaje de estado */}
           {message && (

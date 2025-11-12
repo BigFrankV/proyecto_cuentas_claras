@@ -3,7 +3,7 @@ import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
-import Breadcrumb, { BreadcrumbItem } from '@/components/ui/Breadcrumb';
+import PageHeader from '@/components/ui/PageHeader';
 import { ProtectedRoute } from '@/lib/useAuth';
 
 import {
@@ -217,42 +217,24 @@ const ValidadorRUT: React.FC = () => {
     <ProtectedRoute>
       <Layout title='Validador de RUT - Cuentas Claras'>
         <div className='container-fluid px-4 py-4'>
-          {/* Header */}
-          <div className='row mb-4'>
-            <div className='col-12'>
-              <Breadcrumb
-                items={[
-                  { label: 'Dashboard', href: '/dashboard', icon: 'home' },
-                  { label: 'Validador de RUT', icon: 'badge' },
-                ]}
-              />
-
-              <div className='d-flex justify-content-between align-items-center'>
-              <div>
-                <h1 className='h3 mb-1'>
-                  <i className='material-icons me-2'>badge</i>
-                  Validador de RUT
-                </h1>
-                <p className='text-muted mb-0'>
-                  Valida y genera RUTs chilenos usando el algoritmo oficial
-                </p>
-              </div>
-
-              <div className='btn-group'>
-                <Link href='/util-uf' className='btn btn-outline-primary'>
-                  <i className='material-icons me-1'>attach_money</i>
-                  Consultar UF
-                </Link>
-                <Link href='/util-utm' className='btn btn-outline-primary'>
-                  <i className='material-icons me-1'>calculate</i>
-                  Consultar UTM
-                </Link>
-              </div>
+          <PageHeader
+            title="Validador de RUT"
+            subtitle="Valida y genera RUTs chilenos usando el algoritmo oficial"
+            icon="badge"
+          >
+            <div className='btn-group'>
+              <Link href='/util-uf' className='btn btn-outline-primary'>
+                <i className='material-icons me-1'>attach_money</i>
+                Consultar UF
+              </Link>
+              <Link href='/util-utm' className='btn btn-outline-primary'>
+                <i className='material-icons me-1'>calculate</i>
+                Consultar UTM
+              </Link>
             </div>
-          </div>
-        </div>
+          </PageHeader>
 
-        {/* Alert de copiado */}
+          {/* Alert de copiado */}
         {showCopiedAlert && (
           <div
             className='alert alert-success alert-dismissible fade show'
@@ -562,7 +544,7 @@ const ValidadorRUT: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+        </div>
       </Layout>
     </ProtectedRoute>
   );

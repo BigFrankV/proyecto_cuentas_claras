@@ -100,25 +100,10 @@ const menuSections = [
   },
 ];
 
-// Mapeo de roles a español
-const roleTranslations: Record<string, string> = {
-  superuser: 'Superusuario',
-  admin: 'Administrador',
-  concierge: 'Conserje',
-  accountant: 'Contador',
-  tesorero: 'Tesorero',              // Agregar
-  presidente_comite: 'Presidente Comité', // Agregar
-  proveedor_servicio: 'Proveedor Servicio', // Agregar
-  residente: 'Residente',            // Agregar
-  propietario: 'Propietario',        // Agregar
-  inquilino: 'Inquilino',            // Agregar
-  user: 'Usuario',
-};
-
 export default function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { hasPermission, currentRole } = usePermissions(); // Usar permisos dinámicos
+  const { hasPermission, currentRole, getUserRoleName } = usePermissions(); // Usar permisos dinámicos
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
@@ -154,7 +139,7 @@ export default function Sidebar() {
   };
 
   // Traducción del rol actual a español
-  const currentRoleSpanish = roleTranslations[currentRole] || currentRole;
+  const currentRoleSpanish = getUserRoleName();
 
   // Cargar foto de perfil cuando el usuario cambie
   useEffect(() => {
@@ -244,21 +229,12 @@ export default function Sidebar() {
               {user?.persona?.nombres && user?.persona?.apellidos
                 ? `${user.persona.nombres} ${user.persona.apellidos}`
                 : user?.username || 'Usuario'}
-              {user?.is_superadmin ? (
-                <span
-                  className='badge bg-warning text-dark ms-1'
-                  style={{ fontSize: '0.6rem' }}
-                >
-                  SUPERADMIN
-                </span>
-              ) : (
-                <span
-                  className='badge bg-secondary ms-1'
-                  style={{ fontSize: '0.6rem' }}
-                >
-                  {currentRoleSpanish?.toUpperCase()}
-                </span>
-              )}
+              <span
+                className={`badge ms-1 ${user?.is_superadmin ? 'bg-warning text-dark' : 'bg-primary text-white'}`}
+                style={{ fontSize: '0.6rem' }}
+              >
+                {getUserRoleName().toUpperCase()}
+              </span>
             </span>
             <span className='small text-white-50'>
               {user?.email || 'Sin email configurado'}
@@ -309,14 +285,7 @@ export default function Sidebar() {
                     }}
                   >
                     {section.title}
-                    {user?.is_superadmin && section.title === 'Dashboard' && (
-                      <span
-                        className='badge bg-warning text-dark ms-2'
-                        style={{ fontSize: '0.6rem' }}
-                      >
-                        ADMIN
-                      </span>
-                    )}
+  
                   </div>
 
                   {/* Items de navegación con PermissionGuard */}

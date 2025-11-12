@@ -4,6 +4,8 @@ import { useRouter } from 'next/router'; // <-- agregado
 import React, { useEffect, useRef, useState } from 'react';
 
 import Sidebar from '@/components/layout/Sidebar';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import {
   getConsumoMensual,
   getConsumoTrimestral,
@@ -466,89 +468,77 @@ export default function ConsumosPage(): JSX.Element {
   return (
     <div className='d-flex'>
       <Sidebar />
-      <div
-        className='main-content flex-grow-1 bg-light'
-        style={{ marginLeft: 280 }}
-      >
-        <header className='bg-white border-bottom shadow-sm p-3'>
-          <div className='container-fluid'>
-            <div className='row align-items-center'>
-              <div className='col-lg-4 d-flex align-items-center'>
-                <button
-                  className='btn toggle-sidebar d-lg-none me-2'
-                  onClick={() => {
-                    const sidebar = document.querySelector('.sidebar');
-                    const backdrop =
-                      document.querySelector('.sidebar-backdrop');
-                    sidebar?.classList.toggle('show');
-                    backdrop?.classList.toggle('show');
-                  }}
+        <div
+          className='main-content flex-grow-1 bg-light'
+          style={{ marginLeft: 280 }}
+        >
+          <PageHeader
+            title="Análisis de Consumos"
+            subtitle="Visualización y análisis de consumos de medidores"
+            icon="analytics"
+          >
+            <div className='d-flex justify-content-between align-items-center w-100'>
+              <div className='d-flex align-items-center'>
+                <Link
+                  href='/medidores'
+                  className='btn btn-outline-secondary me-3'
                 >
-                  <span className='material-icons'>menu</span>
-                </button>
-
-                <div className='d-flex align-items-center'>
-                  <Link
-                    href='/medidores'
-                    className='btn btn-outline-secondary me-2'
-                  >
-                    Volver a Medidores
-                  </Link>
-                  <div>
-                    <small className="text-muted">Medidor seleccionado: <strong>{medidores.find(m => m.id === medidorId)?.codigo || `Medidor ${String(medidorId).padStart(3, '0')}`}</strong></small>
-                  </div>
+                  Volver a Medidores
+                </Link>
+                <div>
+                  <small className="text-muted">
+                    Medidor seleccionado: <strong>
+                      {medidores.find(m => m.id === medidorId)?.codigo ||
+                       `Medidor ${String(medidorId).padStart(3, '0')}`}
+                    </strong>
+                  </small>
                 </div>
               </div>
 
-              <div className='col-lg-8'>
-                <div className='d-flex justify-content-end align-items-center'>
-                  <div className='me-3'>
-                    <input
-                      id='dateRange'
-                      className='form-control form-control-sm'
-                      placeholder='Rango de fechas'
-                      style={{ width: 220 }}
-                    />
-                  </div>
+              <div className='d-flex align-items-center'>
+                <div className='me-3'>
+                  <input
+                    id='dateRange'
+                    className='form-control form-control-sm'
+                    placeholder='Rango de fechas'
+                    style={{ width: 220 }}
+                  />
+                </div>
 
-                  <div className='dropdown'>
-                    <button
-                      className='btn btn-sm btn-outline-secondary dropdown-toggle'
-                      data-bs-toggle='dropdown'
-                    >
-                      Configuración
-                    </button>
-                    <ul className='dropdown-menu dropdown-menu-end'>
-                      <li>
-                        <Link className='dropdown-item' href='/mi-perfil'>
-                          Mi Perfil
-                        </Link>
-                      </li>
-                      <li>
-                        <Link className='dropdown-item' href='/tarifas'>
-                          Tarifas de Consumo
-                        </Link>
-                      </li>
-                      <li>
-                        <hr className='dropdown-divider' />
-                      </li>
-                      <li>
-                        <Link
-                          className='dropdown-item text-danger'
-                          href='/login'
-                        >
-                          Cerrar Sesión
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
+                <div className='dropdown'>
+                  <button
+                    className='btn btn-sm btn-outline-secondary dropdown-toggle'
+                    data-bs-toggle='dropdown'
+                  >
+                    Configuración
+                  </button>
+                  <ul className='dropdown-menu dropdown-menu-end'>
+                    <li>
+                      <Link className='dropdown-item' href='/mi-perfil'>
+                        Mi Perfil
+                      </Link>
+                    </li>
+                    <li>
+                      <Link className='dropdown-item' href='/tarifas'>
+                        Tarifas de Consumo
+                      </Link>
+                    </li>
+                    <li>
+                      <hr className='dropdown-divider' />
+                    </li>
+                    <li>
+                      <Link
+                        className='dropdown-item text-danger'
+                        href='/login'
+                      >
+                        Cerrar Sesión
+                      </Link>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
-          </div>
-        </header>
-
-        <main className="container-fluid p-4">
+          </PageHeader>        <main className="container-fluid p-4">
           {error && (
             <div className="alert alert-danger" role="alert">
               <strong>Error:</strong> {error}

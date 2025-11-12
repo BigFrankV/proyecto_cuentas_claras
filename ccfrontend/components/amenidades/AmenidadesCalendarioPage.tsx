@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
 
 import Sidebar from '../layout/Sidebar';
+import PageHeader from '../ui/PageHeader';
 
 // Dynamic import for FullCalendar to avoid SSR issues
 const FullCalendar = dynamic(() => import('@fullcalendar/react'), {
@@ -78,27 +79,18 @@ const AmenidadesCalendarioPage: React.FC = () => {
     <div className='d-flex'>
       <Sidebar />
       <div className='main-content flex-grow-1'>
-        <div className='header bg-white p-3 rounded shadow-sm mb-3'>
-          <div className='d-flex justify-content-between align-items-center'>
-            <div>
-              <h4>
-                <i className='material-icons'>calendar_today</i> Calendario de
-                Reservas - Amenidades
-              </h4>
-              <p className='mb-0 text-muted'>
-                Vista general de todas las reservas por día
-              </p>
-            </div>
-            <div>
-              <button
-                className='btn btn-primary'
-                onClick={handleNewReservation}
-              >
-                <i className='material-icons'>add</i> Nueva Reserva
-              </button>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="Calendario de Reservas - Amenidades"
+          subtitle="Vista general de todas las reservas por día"
+          icon="calendar_today"
+        >
+          <button
+            className="btn btn-light btn-lg"
+            onClick={handleNewReservation}
+          >
+            <i className="material-icons">add</i> Nueva Reserva
+          </button>
+        </PageHeader>
 
         <div className='calendar-container bg-white p-3 rounded shadow-sm'>
           <FullCalendar

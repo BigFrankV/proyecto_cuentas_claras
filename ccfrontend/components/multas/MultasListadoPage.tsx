@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import multasService from '@/lib/multasService';
 import { useAuth } from '@/lib/useAuth';
 import { ProtectedRoute } from '@/lib/useAuth'; // Agrega si no está
@@ -28,14 +30,18 @@ const MultasListadoPage: React.FC = () => {
     busqueda: '',
   });
   const [selectedFines, setSelectedFines] = useState<string[]>([]);
-  const [pagina, setPagina] = useState(1);
-  const [totalPaginas, setTotalPaginas] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
 
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.log('🔄 useEffect ejecutado en MultasListadoPage'); // ✅ Agrega esto
     cargarMultas();
-  }, [filtros, pagina]);
+  }, [filtros, currentPage]);
 
   const cargarMultas = async () => {
     // eslint-disable-next-line no-console
@@ -43,10 +49,10 @@ const MultasListadoPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await multasService.getMultas({ ...filtros, pagina });
+      const response = await multasService.getMultas({ ...filtros, pagina: currentPage });
       // ✅ Asegúrate de que response tenga data y totalPaginas
       setMultas(response.data || []);
-      setTotalPaginas(response.totalPaginas || 1);
+      setTotalPages(response.totalPaginas || 1);
     } catch (err) {
       setError('Error al cargar multas');
       // eslint-disable-next-line no-console
@@ -58,7 +64,7 @@ const MultasListadoPage: React.FC = () => {
 
   const handleFiltroChange = (key: string, value: string) => {
     setFiltros({ ...filtros, [key]: value });
-    setPagina(1);
+    setCurrentPage(1);
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -177,46 +183,36 @@ const MultasListadoPage: React.FC = () => {
     <ProtectedRoute>
       <Layout title='Lista de Multas'>
         <div className='container-fluid p-4'>
-          {/* Header con búsqueda y notificaciones */}
-          <header className='bg-white border-bottom shadow-sm p-3 mb-4'>
-            <div className='d-flex justify-content-between align-items-center'>
-              <div className='d-flex align-items-center'>
-                <button
-                  className='btn btn-link d-lg-none me-3'
-                  onClick={() => {
-                    /* toggle sidebar */
-                  }}
-                >
-                  <i className='material-icons'>menu</i>
-                </button>
-                <h1 className='h4 mb-0'>Multas</h1>
+          <PageHeader
+            title="Multas"
+            subtitle="Gestión completa de multas y sanciones"
+            icon="gavel"
+            primaryAction={canManageFinances ? {
+              href: '/multas/nueva',
+              label: 'Nueva Multa',
+              icon: 'add',
+            } : undefined}
+          >
+            <div className="d-flex align-items-center gap-3">
+              <div className='input-group' style={{ maxWidth: '300px' }}>
+                <span className='input-group-text'>
+                  <i className='material-icons'>search</i>
+                </span>
+                <input
+                  type='text'
+                  className='form-control'
+                  placeholder='Buscar multas...'
+                  value={filtros.busqueda}
+                  onChange={e =>
+                    handleFiltroChange('busqueda', e.target.value)
+                  }
+                />
               </div>
-              <div className='d-flex align-items-center'>
-                <div className='input-group me-3' style={{ maxWidth: '300px' }}>
-                  <span className='input-group-text'>
-                    <i className='material-icons'>search</i>
-                  </span>
-                  <input
-                    type='text'
-                    className='form-control'
-                    placeholder='Buscar multas...'
-                    value={filtros.busqueda}
-                    onChange={e =>
-                      handleFiltroChange('busqueda', e.target.value)
-                    }
-                  />
-                </div>
-                <button className='btn btn-outline-secondary me-2'>
-                  <i className='material-icons'>notifications</i>
-                </button>
-                {canManageFinances && (
-                  <Link href='/multas/nueva' className='btn btn-primary'>
-                    <i className='material-icons me-2'>add</i>Nueva Multa
-                  </Link>
-                )}
-              </div>
+              <button className='btn btn-outline-secondary'>
+                <i className='material-icons'>notifications</i>
+              </button>
             </div>
-          </header>
+          </PageHeader>
 
           {/* Filtros */}
           <div className='filters-panel mb-4'>
@@ -427,41 +423,16 @@ const MultasListadoPage: React.FC = () => {
           </div>
 
           {/* Paginación */}
-          <nav aria-label='Paginación' className='mt-4'>
-            <ul className='pagination justify-content-center'>
-              <li className={`page-item ${pagina === 1 ? 'disabled' : ''}`}>
-                <button
-                  className='page-link'
-                  onClick={() => setPagina(pagina - 1)}
-                >
-                  Anterior
-                </button>
-              </li>
-              {Array.from({ length: totalPaginas }, (_, i) => (
-                <li
-                  key={i}
-                  className={`page-item ${pagina === i + 1 ? 'active' : ''}`}
-                >
-                  <button
-                    className='page-link'
-                    onClick={() => setPagina(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                </li>
-              ))}
-              <li
-                className={`page-item ${pagina === totalPaginas ? 'disabled' : ''}`}
-              >
-                <button
-                  className='page-link'
-                  onClick={() => setPagina(pagina + 1)}
-                >
-                  Siguiente
-                </button>
-              </li>
-            </ul>
-          </nav>
+          {totalPages > 1 && (
+            <ModernPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={multas.length}
+              itemsPerPage={multas.length}
+              itemName="multas"
+              onPageChange={goToPage}
+            />
+          )}
 
           {/* Modal para registrar pago */}
           <div className='modal fade' id='paymentModal' tabIndex={-1}>

@@ -2,6 +2,8 @@ import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { Button, Form, InputGroup, Alert } from 'react-bootstrap';
 
 import Sidebar from '@/components/layout/Sidebar';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import {
   listAllMedidores,
   listLecturas,
@@ -106,21 +108,22 @@ export default function LecturasPage(): React.ReactElement {
       <div className='d-flex'>
         <Sidebar />
         <div className='main-content flex-grow-1 bg-light' style={{ marginLeft: 280 }}>
-          <header className='bg-white border-bottom shadow-sm p-3'>
-            <div className='container-fluid d-flex align-items-center justify-content-between'>
-              <h4 className='mb-0'>Lecturas de Medidor</h4>
-              <div className='d-flex align-items-center gap-2'>
-                <input
-                  id='meterSearch'
-                  className='form-control form-control-sm'
-                  placeholder='Buscar medidor...'
-                  style={{ width: 220 }}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
+          <PageHeader
+            title="Lecturas de Medidor"
+            subtitle="Registro y consulta de lecturas de medidores"
+            icon="straighten"
+          >
+            <div className='d-flex align-items-center gap-2'>
+              <input
+                id='meterSearch'
+                className='form-control form-control-sm'
+                placeholder='Buscar medidor...'
+                style={{ width: 220 }}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
-          </header>
+          </PageHeader>
 
           <main className='container-fluid p-4'>
             <div className='row'>

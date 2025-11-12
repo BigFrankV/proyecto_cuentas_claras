@@ -3,6 +3,7 @@ import React from 'react';
 
 import ApelacionForm from '@/components/apelaciones/ApelacionForm';
 import Layout from '@/components/layout/Layout';
+import PageHeader from '@/components/ui/PageHeader';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 
 export default function ApelacionesNueva() {
@@ -15,16 +16,19 @@ export default function ApelacionesNueva() {
         <div className='container-fluid p-4'>
           <div className='row'>
             <div className='col-12'>
-              <div className='d-flex justify-content-between align-items-center mb-4'>
-                <h1 className='h3'>Nueva Apelación</h1>
+              <PageHeader
+                title="Nueva Apelación"
+                subtitle="Crear una nueva apelación contra una multa"
+                icon="gavel"
+              >
                 <button
-                  className='btn btn-secondary'
+                  className="btn btn-secondary"
                   onClick={() => router.push('/apelaciones')}
                 >
-                  <i className='material-icons me-2'>arrow_back</i>
+                  <i className="material-icons me-2">arrow_back</i>
                   Cancelar
                 </button>
-              </div>
+              </PageHeader>
 
               <div className='card'>
                 <div className='card-body'>
