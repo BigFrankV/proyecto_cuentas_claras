@@ -210,7 +210,7 @@ const MultasListadoPage: React.FC = () => {
                   <i className='material-icons'>notifications</i>
                 </button>
                 {canManageFinances && (
-                  <Link href='/multas/nueva' className='btn btn-primary'>
+                  <Link href='/multas-nueva' className='btn btn-primary'>
                     <i className='material-icons me-2'>add</i>Nueva Multa
                   </Link>
                 )}
