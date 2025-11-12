@@ -1,4 +1,17 @@
-// Tipos para el módulo de Conciliaciones Bancarias
+// =========================================
+// TIPOS PARA CONCILIACIONES BANCARIAS
+// =========================================
+
+export type EstadoConciliacion = 'pendiente' | 'reconciliado' | 'descartado';
+
+export type EstadoConciliacionDetalle = 'pendiente' | 'conciliado' | 'descartado';
+
+export const ESTADOS_CONCILIACION = {
+  pendiente: { label: 'Pendiente', color: 'warning' },
+  reconciliado: { label: 'Reconciliado', color: 'success' },
+  conciliado: { label: 'Conciliado', color: 'success' },
+  descartado: { label: 'Descartado', color: 'secondary' },
+} as const;
 
 export interface Conciliacion {
   id: number;
@@ -8,7 +21,7 @@ export interface Conciliacion {
   amount: number;
   movementType: string;
   bankReference: string;
-  reconciliationStatus: 'pendiente' | 'reconciliado' | 'descartado';
+  reconciliationStatus: EstadoConciliacion;
   paymentId?: number;
   paymentCode?: string;
   paymentReference?: string;
@@ -25,13 +38,13 @@ export interface ConciliacionDetalle {
   amount: number;
   movementType: string;
   bankReference: string;
-  reconciliationStatus: 'pendiente' | 'reconciliado' | 'descartado';
+  reconciliationStatus: EstadoConciliacion;
   paymentId?: number;
   paymentCode?: string;
   paymentReference?: string;
   communityName: string;
   comunidad_id: number;
-  estado: 'pendiente' | 'conciliado' | 'descartado';
+  estado: EstadoConciliacionDetalle;
   fecha_mov: string;
   monto: number;
   referencia: string;
@@ -59,7 +72,7 @@ export interface ConciliacionFormData {
 
 export interface ConciliacionFiltros {
   comunidad_id?: number;
-  estado?: 'pendiente' | 'conciliado' | 'descartado';
+  estado?: EstadoConciliacionDetalle;
   fecha_inicio?: string;
   fecha_fin?: string;
   limit?: number;
@@ -86,7 +99,7 @@ export interface ConciliacionPendiente {
 }
 
 export interface ConciliacionPorEstado {
-  estado: 'pendiente' | 'conciliado' | 'descartado';
+  estado: EstadoConciliacionDetalle;
   cantidad: number;
   porcentaje: number;
   monto: number;

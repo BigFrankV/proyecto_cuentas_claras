@@ -1,3 +1,15 @@
+// =========================================
+// TIPOS PARA APELACIONES
+// =========================================
+
+export type EstadoApelacion = 'pendiente' | 'aprobada' | 'rechazada';
+
+export const ESTADOS_APELACION = {
+  pendiente: { label: 'Pendiente', color: 'warning' },
+  aprobada: { label: 'Aprobada', color: 'success' },
+  rechazada: { label: 'Rechazada', color: 'danger' },
+} as const;
+
 export interface Apelacion {
   id: number;
   multa_id: number;
@@ -6,7 +18,7 @@ export interface Apelacion {
   comunidad_id?: number;
   motivo: string;
   documentos_json?: any;
-  estado: 'pendiente' | 'aprobada' | 'rechazada' | string;
+  estado: EstadoApelacion | string;
   resolucion?: string;
   resuelto_por?: number;
   fecha_apelacion?: string;

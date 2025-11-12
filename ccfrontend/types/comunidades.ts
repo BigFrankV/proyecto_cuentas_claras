@@ -1,4 +1,6 @@
-// Tipos para el módulo de comunidades
+// =========================================
+// TIPOS PARA COMUNIDADES
+// =========================================
 
 export interface Comunidad {
   id: number;

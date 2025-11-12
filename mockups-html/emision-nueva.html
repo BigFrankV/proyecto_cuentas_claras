@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nueva Emisión | Cuentas Claras</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body class="bg-light">
+
+  <!-- Header -->
+  <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="dashboard.html">
+      <i class="fa-solid fa-wallet me-2"></i>
+      Cuentas Claras
+    </a>
+    <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse"
+      data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="w-100 d-none d-md-block"></div>
+    <div class="dropdown">
+      <a class="nav-link px-3 text-white dropdown-toggle" href="#" id="userDropdown" role="button"
+        data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fa-solid fa-user-circle me-1"></i>
+        Administrador
+      </a>
+      <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="userDropdown">
+        <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+        <li>
+          <hr class="dropdown-divider">
+        </li>
+        <li><a class="dropdown-item" href="login.html">Cerrar Sesión</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+        <div class="position-sticky pt-3">
+          <ul class="nav flex-column">
+            <li class="nav-item">
+              <a class="nav-link text-white" href="dashboard.html">
+                <i class="fa-solid fa-gauge me-2"></i>
+                Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="comunidades-listado.html">
+                <i class="fa-solid fa-building-user me-2"></i>
+                Comunidades
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="edificios-listado.html">
+                <i class="fa-solid fa-building me-2"></i>
+                Edificios
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="torres-listado.html">
+                <i class="fa-solid fa-city me-2"></i>
+                Torres
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="unidades-listado.html">
+                <i class="fa-solid fa-house me-2"></i>
+                Unidades
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="proveedores-listado.html">
+                <i class="fa-solid fa-truck-field me-2"></i>
+                Proveedores
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="gastos-listado.html">
+                <i class="fa-solid fa-money-bill-transfer me-2"></i>
+                Gastos
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white active" aria-current="page" href="emisiones-listado.html">
+                <i class="fa-solid fa-file-invoice-dollar me-2"></i>
+                Emisiones y Cargos
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="documentos-compra-listado.html">
+                <i class="fa-solid fa-file-contract me-2"></i>
+                Documentos de Compra
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="reportes-dashboard.html">
+                <i class="fa-solid fa-chart-column me-2"></i>
+                Reportes
+              </a>
+            </li>
+          </ul>
+
+          <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+            <span>Configuración</span>
+          </h6>
+          <ul class="nav flex-column mb-2">
+            <li class="nav-item">
+              <a class="nav-link text-white" href="profile.html">
+                <i class="fa-solid fa-user-gear me-2"></i>
+                Mi Cuenta
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="comunidad-parametros.html">
+                <i class="fa-solid fa-gears me-2"></i>
+                Parámetros
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+          <h1 class="h2">
+            <i class="fa-solid fa-file-invoice-dollar me-2"></i>
+            Nueva Emisión
+          </h1>
+          <div class="btn-toolbar mb-2 mb-md-0">
+            <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="history.back()">
+              <i class="fa-solid fa-arrow-left me-1"></i> Volver
+            </button>
+          </div>
+        </div>
+
+        <!-- Formulario de nueva emisión -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <form class="needs-validation" novalidate>
+              
+              <!-- Información básica -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <h4 class="mb-3">Información básica</h4>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="comunidad" class="form-label">Comunidad <span class="text-danger">*</span></label>
+                  <select class="form-select" id="comunidad" required>
+                    <option value="">Seleccionar comunidad...</option>
+                    <option>Edificio Central</option>
+                    <option>Condominio Las Palmas</option>
+                    <option>Residencial Los Pinos</option>
+                  </select>
+                  <div class="invalid-feedback">
+                    Por favor seleccione una comunidad.
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="tipoEmision" class="form-label">Tipo de emisión <span class="text-danger">*</span></label>
+                  <select class="form-select" id="tipoEmision" required>
+                    <option value="">Seleccionar tipo...</option>
+                    <option>Expensas ordinarias</option>
+                    <option>Expensas extraordinarias</option>
+                    <option>Cargos particulares</option>
+                  </select>
+                  <div class="invalid-feedback">
+                    Por favor seleccione un tipo de emisión.
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="periodo" class="form-label">Periodo <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <input type="month" class="form-control" id="periodo" required>
+                    <div class="invalid-feedback">
+                      Por favor seleccione un periodo válido.
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="descripcion" class="form-label">Descripción</label>
+                  <input type="text" class="form-control" id="descripcion" placeholder="Breve descripción de la emisión">
+                </div>
+              </div>
+
+              <!-- Fechas y plazos -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <h4 class="mb-3">Fechas y plazos</h4>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="fechaEmision" class="form-label">Fecha de emisión <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="fechaEmision" required>
+                  <div class="invalid-feedback">
+                    Por favor seleccione una fecha de emisión.
+                  </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="fechaVencimiento" class="form-label">Fecha de vencimiento <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="fechaVencimiento" required>
+                  <div class="invalid-feedback">
+                    Por favor seleccione una fecha de vencimiento.
+                  </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="diasMora" class="form-label">Días de gracia antes de mora</label>
+                  <input type="number" class="form-control" id="diasMora" value="5" min="0">
+                </div>
+              </div>
+
+              <!-- Conceptos de emisión -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <h4 class="mb-3">Conceptos de emisión</h4>
+                  <div class="table-responsive">
+                    <table class="table table-hover" id="tablaCargos">
+                      <thead class="table-light">
+                        <tr>
+                          <th>Concepto</th>
+                          <th>Categoría</th>
+                          <th>Método de prorrateo</th>
+                          <th>Importe</th>
+                          <th>Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Gastos comunes</td>
+                          <td>Administrativo</td>
+                          <td>Superficie cubierta</td>
+                          <td>$45,000.00</td>
+                          <td>
+                            <button type="button" class="btn btn-sm btn-outline-danger">
+                              <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Servicio de limpieza</td>
+                          <td>Mantenimiento</td>
+                          <td>Partes iguales</td>
+                          <td>$28,000.00</td>
+                          <td>
+                            <button type="button" class="btn btn-sm btn-outline-danger">
+                              <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Seguridad</td>
+                          <td>Servicios</td>
+                          <td>Ponderado por tipo</td>
+                          <td>$32,500.00</td>
+                          <td>
+                            <button type="button" class="btn btn-sm btn-outline-danger">
+                              <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                          <td><strong>$105,500.00</strong></td>
+                          <td></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+
+                  <button type="button" class="btn btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#agregarConceptoModal">
+                    <i class="fa-solid fa-plus me-1"></i> Agregar concepto
+                  </button>
+                </div>
+              </div>
+
+              <!-- Gastos a incluir -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <h4 class="mb-3">Gastos a incluir</h4>
+                  <p class="text-muted">Seleccione los gastos que desea incluir en esta emisión.</p>
+
+                  <div class="table-responsive">
+                    <table class="table table-hover" id="tablaGastos">
+                      <thead class="table-light">
+                        <tr>
+                          <th style="width: 40px;">
+                            <div class="form-check">
+                              <input class="form-check-input" type="checkbox" id="seleccionarTodos">
+                            </div>
+                          </th>
+                          <th>Concepto</th>
+                          <th>Proveedor</th>
+                          <th>Fecha</th>
+                          <th>Importe</th>
+                          <th>Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <div class="form-check">
+                              <input class="form-check-input" type="checkbox" checked>
+                            </div>
+                          </td>
+                          <td>Limpieza áreas comunes</td>
+                          <td>Limpieza Total S.A.</td>
+                          <td>01/09/2025</td>
+                          <td>$15,000.00</td>
+                          <td><span class="badge bg-success">Aprobado</span></td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="form-check">
+                              <input class="form-check-input" type="checkbox" checked>
+                            </div>
+                          </td>
+                          <td>Servicio de seguridad</td>
+                          <td>Seguridad Integral S.A.</td>
+                          <td>01/09/2025</td>
+                          <td>$22,500.00</td>
+                          <td><span class="badge bg-success">Aprobado</span></td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="form-check">
+                              <input class="form-check-input" type="checkbox">
+                            </div>
+                          </td>
+                          <td>Mantenimiento ascensores</td>
+                          <td>Elevadores Seguros S.R.L.</td>
+                          <td>05/09/2025</td>
+                          <td>$12,800.00</td>
+                          <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="form-check">
+                              <input class="form-check-input" type="checkbox" checked>
+                            </div>
+                          </td>
+                          <td>Servicio de jardinería</td>
+                          <td>Jardines S.A.</td>
+                          <td>03/09/2025</td>
+                          <td>$8,500.00</td>
+                          <td><span class="badge bg-success">Aprobado</span></td>
+                        </tr>
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colspan="4" class="text-end"><strong>Total seleccionado:</strong></td>
+                          <td><strong>$46,000.00</strong></td>
+                          <td></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Opciones de prorrateo -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <h4 class="mb-3">Opciones de prorrateo</h4>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="metodoProrrateo" class="form-label">Método de prorrateo por defecto</label>
+                  <select class="form-select" id="metodoProrrateo">
+                    <option>Superficie cubierta</option>
+                    <option>Partes iguales</option>
+                    <option>Ponderado por tipo</option>
+                    <option>Coeficiente fiscal</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="recargoPorMora" class="form-label">Recargo por mora (%)</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="recargoPorMora" value="2" min="0" step="0.01">
+                    <span class="input-group-text">%</span>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="diasDistribucion" class="form-label">Distribuir gastos por</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="diasDistribucion" value="30" min="1">
+                    <span class="input-group-text">días</span>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="redondeo" class="form-label">Redondeo</label>
+                  <select class="form-select" id="redondeo">
+                    <option>Sin redondeo</option>
+                    <option selected>Al peso más cercano</option>
+                    <option>A los $10 más cercanos</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Notas adicionales -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <h4 class="mb-3">Notas adicionales</h4>
+                  <textarea class="form-control" rows="3" placeholder="Información adicional para incluir en la emisión..."></textarea>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-secondary" onclick="history.back()">
+                  Cancelar
+                </button>
+                <div>
+                  <button type="button" class="btn btn-primary me-2">
+                    <i class="fa-solid fa-eye me-1"></i> Previsualizar prorrateo
+                  </button>
+                  <button type="submit" class="btn btn-success">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Guardar como borrador
+                  </button>
+                  <button type="button" class="btn btn-danger">
+                    <i class="fa-solid fa-check-double me-1"></i> Emitir
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal para agregar concepto -->
+  <div class="modal fade" id="agregarConceptoModal" tabindex="-1" aria-labelledby="agregarConceptoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="agregarConceptoModalLabel">Agregar concepto</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="conceptoNombre" class="form-label">Concepto <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="conceptoNombre" required>
+              </div>
+              <div class="col-md-6">
+                <label for="conceptoCategoria" class="form-label">Categoría <span class="text-danger">*</span></label>
+                <select class="form-select" id="conceptoCategoria" required>
+                  <option value="">Seleccionar categoría...</option>
+                  <option>Administrativo</option>
+                  <option>Mantenimiento</option>
+                  <option>Servicios</option>
+                  <option>Extraordinarios</option>
+                  <option>Otros</option>
+                </select>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="conceptoMetodo" class="form-label">Método de prorrateo <span class="text-danger">*</span></label>
+                <select class="form-select" id="conceptoMetodo" required>
+                  <option value="">Seleccionar método...</option>
+                  <option>Superficie cubierta</option>
+                  <option>Partes iguales</option>
+                  <option>Ponderado por tipo</option>
+                  <option>Coeficiente fiscal</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="conceptoImporte" class="form-label">Importe <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input type="number" class="form-control" id="conceptoImporte" min="0" step="0.01" required>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="conceptoDescripcion" class="form-label">Descripción</label>
+              <textarea class="form-control" id="conceptoDescripcion" rows="2"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary">Agregar concepto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
+
+  <!-- Custom JS -->
+  <script>
+    // Validación de formularios
+    (function () {
+      'use strict'
+
+      // Fetch all the forms we want to apply custom Bootstrap validation styles to
+      const forms = document.querySelectorAll('.needs-validation')
+
+      // Loop over them and prevent submission
+      Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+          form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+              event.preventDefault()
+              event.stopPropagation()
+            }
+
+            form.classList.add('was-validated')
+          }, false)
+        })
+    })()
+
+    // Seleccionar todos los gastos
+    document.getElementById('seleccionarTodos').addEventListener('change', function() {
+      const checkboxes = document.querySelectorAll('#tablaGastos tbody input[type="checkbox"]');
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = this.checked;
+      });
+    });
+  </script>
+</body>
+
+</html>

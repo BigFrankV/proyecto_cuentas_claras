@@ -1,4 +1,10 @@
-// Tipos para el sistema de edificios
+// =========================================
+// TIPOS PARA EDIFICIOS
+// =========================================
+
+export type EstadoEdificio = 'activo' | 'inactivo' | 'construccion' | 'mantenimiento';
+
+export type TipoEdificio = 'residencial' | 'comercial' | 'mixto' | 'oficinas';
 
 export interface Edificio {
   id: string;
@@ -7,8 +13,8 @@ export interface Edificio {
   direccion: string;
   comunidadId: string;
   comunidadNombre?: string;
-  estado: 'activo' | 'inactivo' | 'construccion' | 'mantenimiento';
-  tipo: 'residencial' | 'comercial' | 'mixto' | 'oficinas';
+  estado: EstadoEdificio;
+  tipo: TipoEdificio;
   fechaCreacion: string;
   fechaActualizacion?: string;
 

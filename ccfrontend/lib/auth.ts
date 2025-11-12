@@ -26,6 +26,7 @@ export interface Persona {
   email?: string;
   telefono?: string;
   direccion?: string;
+  avatar?: string;
 }
 
 export interface Membership {

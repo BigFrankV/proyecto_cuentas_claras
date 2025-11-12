@@ -1,5 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Tipos para módulo Gastos (backend <-> frontend)
+// =========================================
+// TIPOS PARA GASTOS
+// =========================================
 
 export type GastoStatus =
   | 'pending'
@@ -8,6 +9,20 @@ export type GastoStatus =
   | 'paid'
   | 'completed';
 export type GastoPriority = 'low' | 'medium' | 'high';
+
+export const ESTADOS_GASTO = {
+  pending: { label: 'Pendiente', color: 'warning' },
+  approved: { label: 'Aprobado', color: 'success' },
+  rejected: { label: 'Rechazado', color: 'danger' },
+  paid: { label: 'Pagado', color: 'info' },
+  completed: { label: 'Completado', color: 'primary' },
+} as const;
+
+export const PRIORIDADES_GASTO = {
+  low: { label: 'Baja', color: 'secondary' },
+  medium: { label: 'Media', color: 'warning' },
+  high: { label: 'Alta', color: 'danger' },
+} as const;
 
 export interface AttachmentFile {
   id: number;

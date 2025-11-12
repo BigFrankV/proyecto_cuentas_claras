@@ -1,3 +1,7 @@
+// =========================================
+// TIPOS PARA MEDIDORES
+// =========================================
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface MedidorLocation {
   building?: string;

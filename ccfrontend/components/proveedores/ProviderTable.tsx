@@ -46,7 +46,7 @@ export default function ProviderTable({
           {providers.map(p => (
             <tr key={p.id}>
               <td>
-                <div className='fw-medium'>{p.nombre}</div>
+                <div className='fw-medium'>{p.razon_social}</div>
                 <small className='text-muted'>
                   {p.rut}-{p.dv}
                 </small>

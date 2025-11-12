@@ -17,11 +17,15 @@ const fs = require('fs').promises;
 
 // Configure profile photo upload middleware
 const createProfilePhotoUpload = () => {
-  const uploadDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'profile-photos');
+  const uploadDir = path.join(__dirname, '..', process.env.UPLOAD_DIR || 'uploads', 'profile-photos');
+  console.log('Profile photo upload dir:', uploadDir);
+  console.log('Current working directory:', process.cwd());
+  console.log('__dirname:', __dirname);
 
   const ensureDir = async () => {
     try {
       await fs.mkdir(uploadDir, { recursive: true });
+      console.log('Directory ensured:', uploadDir);
     } catch (error) {
       console.error('Error creating directory:', error);
     }
@@ -1442,6 +1446,9 @@ router.post(
   profilePhotoUpload.single('file'),
   async (req, res) => {
     try {
+      console.log('Profile photo upload - req.file:', req.file);
+      console.log('Profile photo upload - req.user:', req.user);
+      
       if (!req.file) {
         return res.status(400).json({
           success: false,

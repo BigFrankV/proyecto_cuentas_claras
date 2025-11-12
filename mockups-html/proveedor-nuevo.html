@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nuevo Proveedor - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      .form-section {
+        border-radius: var(--radius);
+        background-color: #fff;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+      }
+      
+      .form-section-header {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        background-color: #f9f9fa;
+      }
+      
+      .form-section-body {
+        padding: 1.5rem;
+      }
+      
+      .required:after {
+        content: " *";
+        color: var(--color-danger);
+      }
+      
+      .contact-item {
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        position: relative;
+      }
+      
+      .contact-item .remove-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+      }
+      
+      .provider-logo-upload {
+        width: 120px;
+        height: 120px;
+        border-radius: var(--radius);
+        border: 2px dashed #dee2e6;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 0 auto;
+        overflow: hidden;
+        position: relative;
+      }
+      
+      .provider-logo-upload:hover {
+        border-color: var(--color-primary);
+        background-color: rgba(0, 123, 255, 0.05);
+      }
+      
+      .provider-logo-upload img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: none;
+      }
+      
+      .provider-logo-upload.has-image .upload-placeholder {
+        display: none;
+      }
+      
+      .provider-logo-upload.has-image img {
+        display: block;
+      }
+      
+      .provider-logo-upload.has-image:hover .upload-overlay {
+        opacity: 1;
+      }
+      
+      .upload-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      
+      .upload-overlay .material-icons {
+        color: white;
+        font-size: 24px;
+      }
+      
+      .upload-placeholder {
+        text-align: center;
+      }
+      
+      .upload-placeholder .material-icons {
+        font-size: 32px;
+        color: #adb5bd;
+        margin-bottom: 0.5rem;
+      }
+      
+      .category-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        background-color: #f5f5f5;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+      }
+      
+      .rating-input {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+      }
+      
+      .rating-input input {
+        display: none;
+      }
+      
+      .rating-input label {
+        cursor: pointer;
+        font-size: 1.5rem;
+        color: #ddd;
+        margin: 0 2px;
+      }
+      
+      .rating-input label:before {
+        content: "\2605";
+      }
+      
+      .rating-input input:checked ~ label {
+        color: #FFB300;
+      }
+      
+      .rating-input label:hover,
+      .rating-input label:hover ~ label {
+        color: #FFB300;
+      }
+      
+      .file-upload-box {
+        border: 2px dashed #dee2e6;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .file-upload-box:hover {
+        border-color: var(--color-primary);
+        background-color: rgba(0, 123, 255, 0.05);
+      }
+      
+      .file-upload-box .material-icons {
+        font-size: 48px;
+        color: #adb5bd;
+        margin-bottom: 1rem;
+      }
+      
+      .uploaded-file-list {
+        margin-top: 1rem;
+      }
+      
+      .uploaded-file {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        background-color: #f8f9fa;
+      }
+      
+      .file-icon {
+        font-size: 24px;
+        color: #6c757d;
+        margin-right: 0.5rem;
+      }
+      
+      .file-info {
+        flex-grow: 1;
+      }
+      
+      .file-info .file-name {
+        font-weight: 500;
+        margin-bottom: 0;
+      }
+      
+      .file-info .file-size {
+        font-size: 0.75rem;
+        color: #6c757d;
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <!-- Mobile Navigation Bar -->
+    <nav class="navbar navbar-dark bg-primary d-flex d-lg-none">
+      <div class="container-fluid">
+        <button class="navbar-toggler border-0" type="button" id="toggle-sidebar">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand me-auto" href="dashboard.html">
+          <span class="material-icons align-middle me-1">apartment</span>
+          Cuentas Claras
+        </a>
+        <div class="dropdown">
+          <button class="btn btn-link text-white p-0" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="avatar">PC</div>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    
+    <!-- Backdrop for mobile sidebar -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+    
+    <!-- Sidebar -->
+    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidebar" id="sidebar" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+      <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+        <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+        <span class="fs-4">Cuentas Claras</span>
+      </a>
+      
+      <div class="d-flex align-items-center mb-3 px-2">
+        <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+        <div>
+          <span class="d-block text-white">Patricia Contreras</span>
+          <span class="small text-white-50">Administradora</span>
+        </div>
+      </div>
+      
+      <hr>
+      
+      <ul class="nav nav-sidebar flex-column mb-auto">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">domain</span>
+            <span>Comunidades</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="edificios-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">business</span>
+            <span>Edificios</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">apartment</span>
+            <span>Unidades</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">people</span>
+            <span>Personas</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="membresias-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">card_membership</span>
+            <span>Membresías</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="categorias-gasto-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">category</span>
+            <span>Categorías</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="centros-costo-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">account_balance_wallet</span>
+            <span>Centros de Costo</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="proveedores-listado.html" class="nav-link active px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">inventory</span>
+            <span>Proveedores</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="documentos-compra-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">receipt_long</span>
+            <span>Compras</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">payments</span>
+            <span>Pagos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">shopping_cart</span>
+            <span>Gastos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">bar_chart</span>
+            <span>Reportes</span>
+          </a>
+        </li>
+      </ul>
+      
+      <hr>
+      
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <strong>Patricia</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+          <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+          <li><a class="dropdown-item" href="#">Configuración</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content px-3 py-4">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+          <a href="proveedores-listado.html" class="btn btn-link text-secondary p-0 me-3">
+            <span class="material-icons">arrow_back</span>
+          </a>
+          <h4 class="mb-0">Nuevo Proveedor</h4>
+        </div>
+      </div>
+      
+      <form>
+        <div class="row">
+          <!-- Columna izquierda para información general -->
+          <div class="col-12 col-lg-8 mb-4 mb-lg-0">
+            <div class="form-section mb-4">
+              <div class="form-section-header">
+                <h6 class="mb-0">Información General</h6>
+              </div>
+              <div class="form-section-body">
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
+                    <label for="nombreProveedor" class="form-label required">Nombre o Razón Social</label>
+                    <input type="text" class="form-control" id="nombreProveedor" placeholder="Ej: Constructora Edificar">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="rut" class="form-label">RUT/ID Fiscal</label>
+                    <input type="text" class="form-control" id="rut" placeholder="12.345.678-9">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="categoriaProveedor" class="form-label required">Categoría</label>
+                    <select class="form-select" id="categoriaProveedor">
+                      <option value="">Seleccione una categoría</option>
+                      <option value="supplies">Suministros</option>
+                      <option value="services">Servicios</option>
+                      <option value="construction">Construcción</option>
+                      <option value="others">Otros</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="tipoProveedor" class="form-label">Tipo de Proveedor</label>
+                    <select class="form-select" id="tipoProveedor">
+                      <option value="">Seleccione un tipo</option>
+                      <option value="empresa">Empresa</option>
+                      <option value="individual">Persona Individual</option>
+                      <option value="externo">Proveedor Externo</option>
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <label for="descripcionProveedor" class="form-label">Descripción</label>
+                    <textarea class="form-control" id="descripcionProveedor" rows="3" placeholder="Describe brevemente los productos o servicios que ofrece este proveedor..."></textarea>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="sitioWeb" class="form-label">Sitio Web</label>
+                    <input type="url" class="form-control" id="sitioWeb" placeholder="https://www.ejemplo.com">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="estadoProveedor" class="form-label">Estado</label>
+                    <select class="form-select" id="estadoProveedor">
+                      <option value="active" selected>Activo</option>
+                      <option value="inactive">Inactivo</option>
+                      <option value="pending">Pendiente</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-section mb-4">
+              <div class="form-section-header">
+                <h6 class="mb-0">Dirección</h6>
+              </div>
+              <div class="form-section-body">
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label for="direccionProveedor" class="form-label">Dirección</label>
+                    <input type="text" class="form-control" id="direccionProveedor" placeholder="Calle, número, oficina, etc.">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="ciudadProveedor" class="form-label">Ciudad</label>
+                    <input type="text" class="form-control" id="ciudadProveedor">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="regionProveedor" class="form-label">Región/Estado</label>
+                    <input type="text" class="form-control" id="regionProveedor">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="paisProveedor" class="form-label">País</label>
+                    <input type="text" class="form-control" id="paisProveedor" value="Chile">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="codigoPostal" class="form-label">Código Postal</label>
+                    <input type="text" class="form-control" id="codigoPostal">
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-section mb-4">
+              <div class="form-section-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Contactos</h6>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="addContactBtn">
+                  <span class="material-icons align-middle small">add</span> Añadir Contacto
+                </button>
+              </div>
+              <div class="form-section-body">
+                <div id="contactsList">
+                  <!-- Contacto 1 -->
+                  <div class="contact-item">
+                    <button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-btn">
+                      <span class="material-icons small">close</span>
+                    </button>
+                    <div class="row g-3">
+                      <div class="col-12 col-md-6">
+                        <label class="form-label required">Nombre</label>
+                        <input type="text" class="form-control" placeholder="Nombre del contacto">
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <label class="form-label">Cargo</label>
+                        <input type="text" class="form-control" placeholder="Ej: Gerente de Ventas">
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <label class="form-label required">Teléfono</label>
+                        <input type="tel" class="form-control" placeholder="+56 9 1234 5678">
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" placeholder="contacto@ejemplo.com">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Notas</label>
+                        <textarea class="form-control" rows="2" placeholder="Información adicional sobre este contacto..."></textarea>
+                      </div>
+                      <div class="col-12">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" id="contactoPrincipal">
+                          <label class="form-check-label" for="contactoPrincipal">
+                            Contacto principal
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="alert alert-light border text-center mt-3 mb-0 d-none" id="emptyContactsAlert">
+                  <span class="material-icons mb-2 text-muted">person_add</span>
+                  <p class="mb-0">No hay contactos añadidos. Haz clic en "Añadir Contacto" para agregar personas de contacto para este proveedor.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-section mb-4">
+              <div class="form-section-header">
+                <h6 class="mb-0">Información Financiera</h6>
+              </div>
+              <div class="form-section-body">
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
+                    <label for="bancoProveedor" class="form-label">Banco</label>
+                    <input type="text" class="form-control" id="bancoProveedor" placeholder="Ej: Banco Estado">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="tipoCuenta" class="form-label">Tipo de Cuenta</label>
+                    <select class="form-select" id="tipoCuenta">
+                      <option value="">Seleccione un tipo</option>
+                      <option value="corriente">Cuenta Corriente</option>
+                      <option value="vista">Cuenta Vista</option>
+                      <option value="ahorro">Cuenta de Ahorro</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="numeroCuenta" class="form-label">Número de Cuenta</label>
+                    <input type="text" class="form-control" id="numeroCuenta">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="titularCuenta" class="form-label">Titular de la Cuenta</label>
+                    <input type="text" class="form-control" id="titularCuenta">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="condicionPago" class="form-label">Condición de Pago</label>
+                    <select class="form-select" id="condicionPago">
+                      <option value="">Seleccione una condición</option>
+                      <option value="contado">Contado</option>
+                      <option value="30dias">30 días</option>
+                      <option value="60dias">60 días</option>
+                      <option value="90dias">90 días</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label for="monedaPago" class="form-label">Moneda de Pago</label>
+                    <select class="form-select" id="monedaPago">
+                      <option value="clp" selected>Peso Chileno (CLP)</option>
+                      <option value="usd">Dólar Estadounidense (USD)</option>
+                      <option value="eur">Euro (EUR)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-section mb-4">
+              <div class="form-section-header">
+                <h6 class="mb-0">Documentos</h6>
+              </div>
+              <div class="form-section-body">
+                <div class="file-upload-box" id="fileUploadBox">
+                  <div class="upload-content">
+                    <span class="material-icons">cloud_upload</span>
+                    <h6 class="mb-2">Sube tus archivos aquí</h6>
+                    <p class="text-muted small mb-0">Arrastra y suelta archivos o haz clic para seleccionarlos</p>
+                    <input type="file" id="fileUpload" class="d-none" multiple>
+                  </div>
+                </div>
+                <div class="uploaded-file-list">
+                  <div class="uploaded-file">
+                    <span class="material-icons file-icon">description</span>
+                    <div class="file-info">
+                      <p class="file-name mb-0">contrato-ejemplo.pdf</p>
+                      <span class="file-size">1.2 MB</span>
+                    </div>
+                    <button class="btn btn-sm btn-icon btn-outline-danger">
+                      <span class="material-icons small">delete</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-section">
+              <div class="form-section-header">
+                <h6 class="mb-0">Etiquetas</h6>
+              </div>
+              <div class="form-section-body">
+                <div class="mb-3">
+                  <label for="etiquetasProveedor" class="form-label">Etiquetas</label>
+                  <input type="text" class="form-control" id="etiquetasProveedor" placeholder="Añadir etiquetas separadas por comas...">
+                  <div class="form-text">Las etiquetas facilitan la búsqueda y organización de los proveedores.</div>
+                </div>
+                <div class="d-flex flex-wrap">
+                  <span class="category-badge">
+                    Confiable <button class="btn-close btn-close-sm ms-2" aria-label="Close"></button>
+                  </span>
+                  <span class="category-badge">
+                    Construcción <button class="btn-close btn-close-sm ms-2" aria-label="Close"></button>
+                  </span>
+                  <span class="category-badge">
+                    Preferente <button class="btn-close btn-close-sm ms-2" aria-label="Close"></button>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Columna derecha para detalles adicionales -->
+          <div class="col-12 col-lg-4">
+            <div class="form-section mb-4">
+              <div class="form-section-header">
+                <h6 class="mb-0">Logo y Clasificación</h6>
+              </div>
+              <div class="form-section-body">
+                <!-- Logo upload -->
+                <div class="text-center mb-4">
+                  <label for="logoUpload" class="form-label">Logo del Proveedor</label>
+                  <div class="provider-logo-upload" id="logoUploadContainer">
+                    <div class="upload-placeholder">
+                      <span class="material-icons">add_photo_alternate</span>
+                      <span class="d-block small text-muted">Subir logo</span>
+                    </div>
+                    <img id="logoPreview" src="#" alt="Logo del proveedor">
+                    <div class="upload-overlay">
+                      <span class="material-icons">edit</span>
+                    </div>
+                    <input type="file" id="logoUpload" accept="image/*" class="d-none">
+                  </div>
+                </div>
+                
+                <!-- Rating -->
+                <div class="mb-4">
+                  <label class="form-label">Calificación Inicial</label>
+                  <div class="rating-input">
+                    <input type="radio" id="star5" name="rating" value="5">
+                    <label for="star5"></label>
+                    <input type="radio" id="star4" name="rating" value="4" checked>
+                    <label for="star4"></label>
+                    <input type="radio" id="star3" name="rating" value="3">
+                    <label for="star3"></label>
+                    <input type="radio" id="star2" name="rating" value="2">
+                    <label for="star2"></label>
+                    <input type="radio" id="star1" name="rating" value="1">
+                    <label for="star1"></label>
+                  </div>
+                  <div class="form-text">Esta será la calificación inicial del proveedor.</div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="proveedorDestacado">
+                    <label class="form-check-label" for="proveedorDestacado">Proveedor Destacado</label>
+                  </div>
+                  <div class="form-text">Los proveedores destacados aparecerán en la parte superior de los listados.</div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="proveedorVerificado">
+                    <label class="form-check-label" for="proveedorVerificado">Proveedor Verificado</label>
+                  </div>
+                  <div class="form-text">Indica que este proveedor ha sido verificado por el equipo de administración.</div>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3">
+                  <label for="notasInternas" class="form-label">Notas Internas</label>
+                  <textarea class="form-control" id="notasInternas" rows="4" placeholder="Notas privadas sobre este proveedor..."></textarea>
+                  <div class="form-text">Estas notas no serán visibles para el proveedor.</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-section mb-4">
+              <div class="form-section-header">
+                <h6 class="mb-0">Comunidades Asociadas</h6>
+              </div>
+              <div class="form-section-body">
+                <div class="mb-3">
+                  <label for="comunidadesProveedor" class="form-label">Comunidades</label>
+                  <select class="form-select" id="comunidadesProveedor" multiple size="4">
+                    <option value="1">Comunidad Parque Real</option>
+                    <option value="2">Edificio Central</option>
+                    <option value="3">Torre Norte</option>
+                    <option value="4">Condominio Las Palmas</option>
+                  </select>
+                  <div class="form-text">Seleccione las comunidades en las que este proveedor prestará servicios.</div>
+                </div>
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="checkbox" id="todasComunidades">
+                  <label class="form-check-label" for="todasComunidades">
+                    Disponible para todas las comunidades
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Botones de acción -->
+        <div class="d-flex justify-content-end mt-4 gap-2">
+          <a href="proveedores-listado.html" class="btn btn-outline-secondary">Cancelar</a>
+          <button type="submit" class="btn btn-primary">
+            <span class="material-icons align-middle me-1">save</span>
+            Guardar Proveedor
+          </button>
+        </div>
+      </form>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/script.js"></script>
+    
+    <script>
+      // Toggle sidebar on mobile
+      document.addEventListener('DOMContentLoaded', function() {
+        const toggleSidebar = document.getElementById('toggle-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+        
+        if (toggleSidebar && sidebar && sidebarBackdrop) {
+          toggleSidebar.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+            sidebarBackdrop.classList.toggle('show');
+          });
+          
+          sidebarBackdrop.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            sidebarBackdrop.classList.remove('show');
+          });
+        }
+        
+        // Logo upload preview
+        const logoUpload = document.getElementById('logoUpload');
+        const logoPreview = document.getElementById('logoPreview');
+        const logoUploadContainer = document.getElementById('logoUploadContainer');
+        
+        if (logoUpload && logoPreview && logoUploadContainer) {
+          logoUploadContainer.addEventListener('click', function() {
+            logoUpload.click();
+          });
+          
+          logoUpload.addEventListener('change', function(e) {
+            if (e.target.files[0]) {
+              const reader = new FileReader();
+              reader.onload = function(e) {
+                logoPreview.src = e.target.result;
+                logoUploadContainer.classList.add('has-image');
+              }
+              reader.readAsDataURL(e.target.files[0]);
+            }
+          });
+        }
+        
+        // File upload
+        const fileUploadBox = document.getElementById('fileUploadBox');
+        const fileUpload = document.getElementById('fileUpload');
+        
+        if (fileUploadBox && fileUpload) {
+          fileUploadBox.addEventListener('click', function() {
+            fileUpload.click();
+          });
+          
+          // Prevent defaults for drag and drop
+          ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUploadBox.addEventListener(eventName, preventDefaults, false);
+          });
+          
+          function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          
+          // Highlight drop area when item is dragged over
+          ['dragenter', 'dragover'].forEach(eventName => {
+            fileUploadBox.addEventListener(eventName, highlight, false);
+          });
+          
+          ['dragleave', 'drop'].forEach(eventName => {
+            fileUploadBox.addEventListener(eventName, unhighlight, false);
+          });
+          
+          function highlight() {
+            fileUploadBox.classList.add('bg-light');
+            fileUploadBox.style.borderColor = 'var(--color-primary)';
+          }
+          
+          function unhighlight() {
+            fileUploadBox.classList.remove('bg-light');
+            fileUploadBox.style.borderColor = '';
+          }
+          
+          // Handle dropped files
+          fileUploadBox.addEventListener('drop', handleDrop, false);
+          
+          function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            // Here you would handle the file upload to the server
+            console.log('Files dropped:', files);
+          }
+        }
+        
+        // Add new contact
+        const addContactBtn = document.getElementById('addContactBtn');
+        const contactsList = document.getElementById('contactsList');
+        const emptyContactsAlert = document.getElementById('emptyContactsAlert');
+        
+        if (addContactBtn && contactsList) {
+          // Show the empty alert if no contacts
+          if (contactsList.children.length === 0) {
+            emptyContactsAlert.classList.remove('d-none');
+          }
+          
+          addContactBtn.addEventListener('click', function() {
+            // Hide empty alert if it was shown
+            if (emptyContactsAlert) {
+              emptyContactsAlert.classList.add('d-none');
+            }
+            
+            // Create new contact item
+            const contactItem = document.createElement('div');
+            contactItem.className = 'contact-item';
+            contactItem.innerHTML = `
+              <button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-btn">
+                <span class="material-icons small">close</span>
+              </button>
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label required">Nombre</label>
+                  <input type="text" class="form-control" placeholder="Nombre del contacto">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">Cargo</label>
+                  <input type="text" class="form-control" placeholder="Ej: Gerente de Ventas">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label required">Teléfono</label>
+                  <input type="tel" class="form-control" placeholder="+56 9 1234 5678">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label">Email</label>
+                  <input type="email" class="form-control" placeholder="contacto@ejemplo.com">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Notas</label>
+                  <textarea class="form-control" rows="2" placeholder="Información adicional sobre este contacto..."></textarea>
+                </div>
+                <div class="col-12">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="contactoPrincipal_${Date.now()}">
+                    <label class="form-check-label" for="contactoPrincipal_${Date.now()}">
+                      Contacto principal
+                    </label>
+                  </div>
+                </div>
+              </div>
+            `;
+            
+            // Add event listener to remove button
+            const removeBtn = contactItem.querySelector('.remove-btn');
+            removeBtn.addEventListener('click', function() {
+              contactItem.remove();
+              
+              // Show empty alert if no contacts left
+              if (contactsList.children.length === 0 && emptyContactsAlert) {
+                emptyContactsAlert.classList.remove('d-none');
+              }
+            });
+            
+            // Add to contacts list
+            contactsList.appendChild(contactItem);
+          });
+          
+          // Setup existing remove buttons
+          const existingRemoveButtons = document.querySelectorAll('.contact-item .remove-btn');
+          existingRemoveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+              const contactItem = this.closest('.contact-item');
+              contactItem.remove();
+              
+              // Show empty alert if no contacts left
+              if (contactsList.children.length === 0 && emptyContactsAlert) {
+                emptyContactsAlert.classList.remove('d-none');
+              }
+            });
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

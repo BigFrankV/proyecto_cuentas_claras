@@ -1,4 +1,13 @@
-// Tipos para el módulo de Categorías de Gasto
+// =========================================
+// TIPOS PARA CATEGORÍAS DE GASTO
+// =========================================
+
+export type StatusCategoria = 'active' | 'inactive';
+
+export const STATUS_CATEGORIA = {
+  active: { label: 'Activa', color: 'success' },
+  inactive: { label: 'Inactiva', color: 'secondary' },
+} as const;
 
 export interface CategoriaGasto {
   id: number;
@@ -7,7 +16,7 @@ export interface CategoriaGasto {
   tipo: string;
   cta_contable?: string;
   activa: boolean;
-  status: 'active' | 'inactive';
+  status: StatusCategoria;
   comunidad_nombre?: string;
   created_at: string;
   updated_at: string;

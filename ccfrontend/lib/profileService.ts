@@ -243,6 +243,9 @@ class ProfileService {
       const response = await apiClient.post(
         '/auth/profile-photo',
         formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        },
       );
       return response.data;
     } catch (error: any) {
@@ -258,7 +261,17 @@ class ProfileService {
   async getProfilePhoto(): Promise<string | null> {
     try {
       const response = await apiClient.get('/auth/profile-photo');
-      return response.data.photoUrl || null;
+      // Si la respuesta incluye photoUrl, construir la URL completa
+      if (response.data.photoUrl) {
+        // Si ya es una URL absoluta, devolverla tal cual
+        if (response.data.photoUrl.startsWith('http')) {
+          return response.data.photoUrl;
+        }
+        // Si es una ruta relativa, construir la URL completa usando la base URL de la API
+        const baseUrl = apiClient.defaults.baseURL || '';
+        return `${baseUrl}${response.data.photoUrl}`.replace(/\/$/, '');
+      }
+      return null;
     } catch (error: any) {
       // eslint-disable-next-line no-console
       console.error('Error obteniendo foto de perfil:', error);

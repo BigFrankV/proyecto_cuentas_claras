@@ -1,0 +1,1656 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lista de Cargos - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      .avatar {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--color-primary);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50%;
+      }
+      
+      /* Charges specific styles */
+      .charges-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border-radius: var(--radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .charges-header::before {
+        content: '';
+        position: absolute;
+        top: -40%;
+        right: -25%;
+        width: 150px;
+        height: 150px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        animation: bounce 8s ease-in-out infinite;
+      }
+      
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        25% { transform: translateY(-10px) rotate(90deg); }
+        50% { transform: translateY(-5px) rotate(180deg); }
+        75% { transform: translateY(-15px) rotate(270deg); }
+      }
+      
+      .charges-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      
+      .charges-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+      }
+      
+      .charges-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      
+      .stat-item {
+        background: rgba(255,255,255,0.1);
+        border-radius: var(--radius);
+        padding: 1rem;
+        text-align: center;
+      }
+      
+      .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+      }
+      
+      .stat-label {
+        font-size: 0.75rem;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      /* Filters */
+      .filters-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-sm);
+      }
+      
+      .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      
+      .filters-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .filters-title .material-icons {
+        margin-right: 0.5rem;
+        color: #dc3545;
+      }
+      
+      .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+      }
+      
+      /* Table styles */
+      .charges-table {
+        background-color: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid #e9ecef;
+        overflow: hidden;
+      }
+      
+      .table-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1rem 1.5rem;
+        border-bottom: 2px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .table-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #212529;
+        display: flex;
+        align-items: center;
+      }
+      
+      .table-title .material-icons {
+        margin-right: 0.5rem;
+        color: #dc3545;
+      }
+      
+      .table-info {
+        color: #6c757d;
+        font-size: 0.875rem;
+      }
+      
+      .custom-table {
+        margin: 0;
+      }
+      
+      .custom-table thead th {
+        background-color: #dc3545;
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 1rem 0.75rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      
+      .custom-table tbody tr {
+        transition: all 0.2s ease;
+      }
+      
+      .custom-table tbody tr:hover {
+        background-color: #fff5f5;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.1);
+      }
+      
+      .custom-table tbody td {
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+        border-color: #f8f9fa;
+      }
+      
+      .charge-id {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        color: #dc3545;
+      }
+      
+      .charge-type {
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .charge-type.administration {
+        background-color: #cce7ff;
+        color: #004085;
+      }
+      
+      .charge-type.maintenance {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      
+      .charge-type.service {
+        background-color: #d1ecf1;
+        color: #0c5460;
+      }
+      
+      .charge-type.insurance {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      
+      .charge-type.other {
+        background-color: #e2e3e5;
+        color: #383d41;
+      }
+      
+      .amount-cell {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        text-align: right;
+        color: #212529;
+      }
+      
+      .amount-cell.positive {
+        color: #28a745;
+      }
+      
+      .amount-cell.negative {
+        color: #dc3545;
+      }
+      
+      .status-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      
+      .status-badge.pending {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      
+      .status-badge.approved {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      
+      .status-badge.rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f1aeb5;
+      }
+      
+      .status-badge.paid {
+        background-color: #cce7ff;
+        color: #004085;
+        border: 1px solid #b8daff;
+      }
+      
+      .status-badge .material-icons {
+        font-size: 0.875rem;
+      }
+      
+      /* Action buttons */
+      .action-btn {
+        border: none;
+        border-radius: var(--radius);
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        gap: 0.5rem;
+      }
+      
+      .action-btn .material-icons {
+        font-size: 1rem;
+      }
+      
+      .action-btn.primary {
+        background-color: #dc3545;
+        color: white;
+      }
+      
+      .action-btn.primary:hover {
+        background-color: #c82333;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+      
+      .action-btn.success {
+        background-color: #28a745;
+        color: white;
+      }
+      
+      .action-btn.success:hover {
+        background-color: #218838;
+        color: white;
+      }
+      
+      .action-btn.danger {
+        background-color: #dc3545;
+        color: white;
+      }
+      
+      .action-btn.danger:hover {
+        background-color: #c82333;
+        color: white;
+      }
+      
+      .action-btn.outline {
+        background-color: transparent;
+        color: #dc3545;
+        border: 2px solid #dc3545;
+      }
+      
+      .action-btn.outline:hover {
+        background-color: #dc3545;
+        color: white;
+        transform: translateY(-2px);
+      }
+      
+      .action-btn.small {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+      }
+      
+      .action-btn.small .material-icons {
+        font-size: 0.875rem;
+      }
+      
+      /* Quick stats */
+      .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      
+      .stat-card {
+        background-color: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+      }
+      
+      .stat-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: #dc3545;
+        transform: translateY(-2px);
+      }
+      
+      .stat-card-icon {
+        width: 50px;
+        height: 50px;
+        background-color: #dc3545;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+        font-size: 1.2rem;
+      }
+      
+      .stat-card-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #dc3545;
+        margin-bottom: 0.5rem;
+      }
+      
+      .stat-card-label {
+        color: #6c757d;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      /* Pagination */
+      .pagination-container {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        background-color: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+      }
+      
+      .pagination-info {
+        color: #6c757d;
+        font-size: 0.875rem;
+      }
+      
+      .pagination .page-link {
+        color: #dc3545;
+        border-color: #dee2e6;
+      }
+      
+      .pagination .page-link:hover {
+        color: #c82333;
+        background-color: #fff5f5;
+        border-color: #dc3545;
+      }
+      
+      .pagination .page-item.active .page-link {
+        background-color: #dc3545;
+        border-color: #dc3545;
+      }
+      
+      /* Search and bulk actions */
+      .search-bar {
+        position: relative;
+        margin-bottom: 1.5rem;
+      }
+      
+      .search-input {
+        padding-left: 3rem;
+        border: 2px solid #e9ecef;
+        border-radius: var(--radius);
+        font-size: 1rem;
+        transition: all 0.2s ease;
+      }
+      
+      .search-input:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        outline: none;
+      }
+      
+      .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        z-index: 5;
+      }
+      
+      .bulk-actions {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: none;
+      }
+      
+      .bulk-actions.show {
+        display: block;
+      }
+      
+      .bulk-actions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+      
+      .bulk-actions-title {
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+      }
+      
+      .bulk-actions-buttons {
+        display: flex;
+        gap: 0.5rem;
+      }
+      
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .charges-header {
+          padding: 1.5rem;
+        }
+        
+        .charges-title {
+          font-size: 2rem;
+        }
+        
+        .charges-stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .filters-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .quick-stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .custom-table {
+          font-size: 0.875rem;
+        }
+        
+        .custom-table thead th,
+        .custom-table tbody td {
+          padding: 0.5rem 0.25rem;
+        }
+        
+        .table-header {
+          flex-direction: column;
+          align-items: start;
+          gap: 1rem;
+        }
+        
+        .pagination-container {
+          flex-direction: column;
+          gap: 1rem;
+        }
+      }
+      
+      /* Loading states */
+      .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem;
+        color: #6c757d;
+      }
+      
+      .spinner {
+        width: 2rem;
+        height: 2rem;
+        border: 0.25rem solid #f3f3f3;
+        border-top: 0.25rem solid #dc3545;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 1rem;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      /* Empty state */
+      .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6c757d;
+      }
+      
+      .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        background-color: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: #adb5bd;
+        font-size: 2rem;
+      }
+      
+      .empty-state-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 1rem;
+      }
+      
+      .empty-state-description {
+        margin-bottom: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <section class="supermenu-cuentasclaras">
+             <!-- Sidebar -->
+      <div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" id="sidebar" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <!-- Navegación principal -->
+        <div class="nav-sections" style="flex: 1; overflow-y: auto;">
+          
+          <!-- DASHBOARD -->
+          <div class="nav-section-header">Dashboard</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="dashboard.html" class="nav-link">
+                <span class="material-icons align-middle me-2">dashboard</span>
+                <span>Panel Principal</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="reportes-dashboard.html" class="nav-link">
+                <span class="material-icons align-middle me-2">bar_chart</span>
+                <span>Reportes</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- COMUNIDADES Y ESTRUCTURA -->
+          <div class="nav-section-header">Estructura</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="comunidades-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">domain</span>
+                <span>Comunidades</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="edificios-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">business</span>
+                <span>Edificios</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="torres-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">location_city</span>
+                <span>Torres</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="unidades-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">apartment</span>
+                <span>Unidades</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- PERSONAS Y MEMBRESÍAS -->
+          <div class="nav-section-header">Residentes</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="personas-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">people</span>
+                <span>Personas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="membresias-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">card_membership</span>
+                <span>Membresías</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- FINANZAS -->
+          <div class="nav-section-header">Finanzas</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="emisiones-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">receipt_long</span>
+                <span>Emisiones</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="cargos-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">assignment</span>
+                <span>Cargos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pagos-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">payments</span>
+                <span>Pagos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="conciliaciones-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">account_balance</span>
+                <span>Conciliaciones</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- GASTOS Y COMPRAS -->
+          <div class="nav-section-header">Gastos</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="gastos-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">shopping_cart</span>
+                <span>Gastos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="categorias-gasto-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">category</span>
+                <span>Categorías</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="centros-costo-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">account_balance_wallet</span>
+                <span>Centros de Costo</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="proveedores-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">store</span>
+                <span>Proveedores</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="documentos-compra-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">inventory</span>
+                <span>Compras</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- MEDIDORES Y SERVICIOS -->
+          <div class="nav-section-header">Servicios</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="medidores-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">speed</span>
+                <span>Medidores</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="lecturas-medidor.html" class="nav-link">
+                <span class="material-icons align-middle me-2">visibility</span>
+                <span>Lecturas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="consumos-medidor.html" class="nav-link">
+                <span class="material-icons align-middle me-2">water_drop</span>
+                <span>Consumos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="tarifas-consumo-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">price_change</span>
+                <span>Tarifas</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- AMENIDADES Y RESERVAS -->
+          <div class="nav-section-header">Amenidades</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="amenidades-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">pool</span>
+                <span>Amenidades</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="reservas-amenidad.html" class="nav-link">
+                <span class="material-icons align-middle me-2">event_available</span>
+                <span>Reservas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="calendario-reservas.html" class="nav-link">
+                <span class="material-icons align-middle me-2">calendar_month</span>
+                <span>Calendario</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- MULTAS Y SANCIONES -->
+          <div class="nav-section-header">Sanciones</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="multas-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">gavel</span>
+                <span>Multas</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- SOPORTE Y COMUNICACIÓN -->
+          <div class="nav-section-header">Comunicación</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="tickets-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">support_agent</span>
+                <span>Tickets</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="notificaciones-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">notifications</span>
+                <span>Notificaciones</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="documentos-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">folder</span>
+                <span>Documentos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="bitacora-listado.html" class="nav-link active">
+                <span class="material-icons align-middle me-2">history</span>
+                <span>Bitácora</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- UTILIDADES -->
+          <div class="nav-section-header">Utilidades</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="util-uf.html" class="nav-link">
+                <span class="material-icons align-middle me-2">trending_up</span>
+                <span>Valor UF</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="util-utm.html" class="nav-link">
+                <span class="material-icons align-middle me-2">calculate</span>
+                <span>Valor UTM</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="util-rut.html" class="nav-link">
+                <span class="material-icons align-middle me-2">verified_user</span>
+                <span>Validador RUT</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+            <span class="material-icons me-2">settings</span>
+            <span>Configuración</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="comunidad-parametros.html">Parámetros</a></li>
+            <li><a class="dropdown-item" href="#">Preferencias</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      </div>
+      </section>
+      
+      <!-- Sidebar backdrop for mobile -->
+      <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+      
+      <!-- Contenido principal -->
+      <div class="main-content flex-grow-1 bg-light">
+        <!-- Header con búsqueda y notificaciones -->
+        <header class="bg-white border-bottom shadow-sm p-3">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <div class="col-lg-6">
+                <button class="btn toggle-sidebar d-lg-none me-2" onclick="toggleSidebar()">
+                  <span class="material-icons">menu</span>
+                </button>
+                <h5 class="mb-0">Lista de Cargos</h5>
+                <small class="text-muted">Gestión de cargos y conceptos de facturación</small>
+              </div>
+              
+              <div class="col-lg-6">
+                <div class="d-flex justify-content-end align-items-center">
+                  <div class="me-3">
+                    <button class="action-btn primary" onclick="showNewChargeModal()">
+                      <span class="material-icons">add</span>
+                      <span class="d-none d-sm-inline">Nuevo Cargo</span>
+                    </button>
+                  </div>
+                  
+                  <div class="me-3">
+                    <button class="btn position-relative p-0" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons">notifications</span>
+                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        3
+                      </span>
+                    </button>
+                  </div>
+                  
+                  <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                      <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+                      <div class="d-none d-sm-block">
+                        <div class="fw-bold">Patricia Contreras</div>
+                        <small class="text-muted">Administradora</small>
+                      </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                      <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+                      <li><a class="dropdown-item" href="#">Configuración</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Contenido -->
+        <main class="container-fluid p-4">
+          <!-- Charges Header -->
+          <div class="charges-header">
+            <div class="row align-items-center">
+              <div class="col-lg-8">
+                <h1 class="charges-title">Lista de Cargos</h1>
+                <div class="charges-subtitle">Gestión completa de cargos y conceptos</div>
+                <div style="opacity: 0.8;">
+                  Administra todos los tipos de cargos aplicables a las unidades
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div class="charges-stats">
+                  <div class="stat-item">
+                    <div class="stat-number">156</div>
+                    <div class="stat-label">Total Cargos</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Pendientes</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">89</div>
+                    <div class="stat-label">Aprobados</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-number">55</div>
+                    <div class="stat-label">Pagados</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Statistics -->
+          <div class="quick-stats">
+            <div class="stat-card">
+              <div class="stat-card-icon">
+                <span class="material-icons">account_balance</span>
+              </div>
+              <div class="stat-card-number">$12.450.000</div>
+              <div class="stat-card-label">Total Facturado</div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-card-icon">
+                <span class="material-icons">trending_up</span>
+              </div>
+              <div class="stat-card-number">$8.750.000</div>
+              <div class="stat-card-label">Total Recaudado</div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-card-icon">
+                <span class="material-icons">pending</span>
+              </div>
+              <div class="stat-card-number">$3.700.000</div>
+              <div class="stat-card-label">Total Pendiente</div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-card-icon">
+                <span class="material-icons">schedule</span>
+              </div>
+              <div class="stat-card-number">29.7%</div>
+              <div class="stat-card-label">Tasa de Morosidad</div>
+            </div>
+          </div>
+
+          <!-- Search Bar -->
+          <div class="search-bar">
+            <span class="material-icons search-icon">search</span>
+            <input type="text" class="form-control search-input" id="searchInput" 
+                   placeholder="Buscar por código, descripción, unidad o propietario..." 
+                   oninput="filterCharges()">
+          </div>
+
+          <!-- Bulk Actions -->
+          <div class="bulk-actions" id="bulkActions">
+            <div class="bulk-actions-header">
+              <div class="bulk-actions-title">
+                <span id="selectedCount">0</span> cargos seleccionados
+              </div>
+              <button class="btn-close" onclick="clearSelection()"></button>
+            </div>
+            <div class="bulk-actions-buttons">
+              <button class="action-btn success small" onclick="bulkApprove()">
+                <span class="material-icons">check</span>
+                Aprobar Seleccionados
+              </button>
+              <button class="action-btn danger small" onclick="bulkReject()">
+                <span class="material-icons">close</span>
+                Rechazar Seleccionados
+              </button>
+              <button class="action-btn outline small" onclick="bulkExport()">
+                <span class="material-icons">download</span>
+                Exportar Seleccionados
+              </button>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="filters-card">
+            <div class="filters-header">
+              <h3 class="filters-title">
+                <span class="material-icons">filter_list</span>
+                Filtros Avanzados
+              </h3>
+              <div class="d-flex gap-2">
+                <button class="action-btn outline small" onclick="clearFilters()">
+                  <span class="material-icons">clear</span>
+                  Limpiar Filtros
+                </button>
+                <button class="action-btn outline small" onclick="exportData()">
+                  <span class="material-icons">download</span>
+                  Exportar Todo
+                </button>
+              </div>
+            </div>
+            
+            <div class="filters-grid">
+              <div>
+                <label for="statusFilter" class="form-label">Estado</label>
+                <select class="form-select" id="statusFilter" onchange="applyFilters()">
+                  <option value="">Todos los estados</option>
+                  <option value="pending">Pendiente</option>
+                  <option value="approved">Aprobado</option>
+                  <option value="rejected">Rechazado</option>
+                  <option value="paid">Pagado</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="typeFilter" class="form-label">Tipo de Cargo</label>
+                <select class="form-select" id="typeFilter" onchange="applyFilters()">
+                  <option value="">Todos los tipos</option>
+                  <option value="administration">Administración</option>
+                  <option value="maintenance">Mantención</option>
+                  <option value="service">Servicios</option>
+                  <option value="insurance">Seguros</option>
+                  <option value="other">Otros</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="unitFilter" class="form-label">Unidad</label>
+                <select class="form-select" id="unitFilter" onchange="applyFilters()">
+                  <option value="">Todas las unidades</option>
+                  <option value="101">Unidad 101</option>
+                  <option value="102">Unidad 102</option>
+                  <option value="103">Unidad 103</option>
+                  <option value="201">Unidad 201</option>
+                  <option value="202">Unidad 202</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="dateFromFilter" class="form-label">Desde</label>
+                <input type="date" class="form-control" id="dateFromFilter" onchange="applyFilters()">
+              </div>
+              
+              <div>
+                <label for="dateToFilter" class="form-label">Hasta</label>
+                <input type="date" class="form-control" id="dateToFilter" onchange="applyFilters()">
+              </div>
+              
+              <div>
+                <label for="amountFilter" class="form-label">Monto Mínimo</label>
+                <input type="number" class="form-control" id="amountFilter" placeholder="$0" onchange="applyFilters()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Charges Table -->
+          <div class="charges-table">
+            <div class="table-header">
+              <h3 class="table-title">
+                <span class="material-icons">receipt_long</span>
+                Cargos Registrados
+              </h3>
+              <div class="table-info">
+                Mostrando <span id="showingCount">25</span> de <span id="totalCount">156</span> registros
+              </div>
+            </div>
+            
+            <div class="table-responsive">
+              <table class="table custom-table mb-0">
+                <thead>
+                  <tr>
+                    <th>
+                      <input type="checkbox" class="form-check-input" id="selectAll" onchange="toggleSelectAll()">
+                    </th>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                    <th>Tipo</th>
+                    <th>Unidad</th>
+                    <th>Propietario</th>
+                    <th>Fecha</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="chargesTableBody">
+                  <!-- Data will be populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination-container">
+              <div class="pagination-info">
+                Mostrando 1-25 de 156 registros
+              </div>
+              <nav aria-label="Paginación de cargos">
+                <ul class="pagination mb-0">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">
+                      <span class="material-icons">chevron_left</span>
+                    </a>
+                  </li>
+                  <li class="page-item active">
+                    <a class="page-link" href="#">1</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">3</a>
+                  </li>
+                  <li class="page-item">
+                    <span class="page-link">...</span>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">7</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">
+                      <span class="material-icons">chevron_right</span>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/script.js"></script>
+    <script>
+      function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.querySelector('.sidebar-backdrop');
+        
+        sidebar.classList.toggle('show');
+        backdrop.classList.toggle('show');
+      }
+
+      // Sample charges data
+      const chargesData = [
+        {
+          id: 'CGO-2025-001',
+          description: 'Gastos Comunes Septiembre',
+          type: 'administration',
+          unit: '101',
+          owner: 'Juan Pérez',
+          date: '2025-09-01',
+          amount: 187778,
+          status: 'approved'
+        },
+        {
+          id: 'CGO-2025-002',
+          description: 'Mantención Ascensor',
+          type: 'maintenance',
+          unit: '102',
+          owner: 'María González',
+          date: '2025-09-05',
+          amount: 25000,
+          status: 'paid'
+        },
+        {
+          id: 'CGO-2025-003',
+          description: 'Agua Potable',
+          type: 'service',
+          unit: '103',
+          owner: 'Carlos Silva',
+          date: '2025-09-10',
+          amount: 45000,
+          status: 'pending'
+        },
+        {
+          id: 'CGO-2025-004',
+          description: 'Seguro Contra Incendios',
+          type: 'insurance',
+          unit: '201',
+          owner: 'Ana Martínez',
+          date: '2025-09-15',
+          amount: 15000,
+          status: 'approved'
+        },
+        {
+          id: 'CGO-2025-005',
+          description: 'Limpieza Área Común',
+          type: 'maintenance',
+          unit: '202',
+          owner: 'Luis López',
+          date: '2025-09-08',
+          amount: 35000,
+          status: 'paid'
+        },
+        {
+          id: 'CGO-2025-006',
+          description: 'Electricidad',
+          type: 'service',
+          unit: '203',
+          owner: 'Patricia Morales',
+          date: '2025-09-12',
+          amount: 55000,
+          status: 'pending'
+        },
+        {
+          id: 'CGO-2025-007',
+          description: 'Fondo de Reserva',
+          type: 'administration',
+          unit: '301',
+          owner: 'Diego Ramírez',
+          date: '2025-09-01',
+          amount: 10000,
+          status: 'rejected'
+        },
+        {
+          id: 'CGO-2025-008',
+          description: 'Jardinería',
+          type: 'maintenance',
+          unit: '302',
+          owner: 'Sofia Herrera',
+          date: '2025-09-06',
+          amount: 18000,
+          status: 'approved'
+        },
+        {
+          id: 'CGO-2025-009',
+          description: 'Internet Fibra',
+          type: 'service',
+          unit: '303',
+          owner: 'Fernando Torres',
+          date: '2025-09-14',
+          amount: 28000,
+          status: 'paid'
+        },
+        {
+          id: 'CGO-2025-010',
+          description: 'Mantención General',
+          type: 'other',
+          unit: '401',
+          owner: 'Camila Vargas',
+          date: '2025-09-11',
+          amount: 75000,
+          status: 'pending'
+        }
+      ];
+
+      let filteredCharges = [...chargesData];
+      let selectedCharges = new Set();
+
+      // Populate charges table
+      function populateChargesTable(charges = filteredCharges) {
+        const tbody = document.getElementById('chargesTableBody');
+        
+        if (charges.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="10">
+                <div class="empty-state">
+                  <div class="empty-state-icon">
+                    <span class="material-icons">receipt_long</span>
+                  </div>
+                  <div class="empty-state-title">No se encontraron cargos</div>
+                  <div class="empty-state-description">
+                    No hay cargos que coincidan con los filtros aplicados.
+                  </div>
+                  <button class="action-btn primary" onclick="clearFilters()">
+                    <span class="material-icons">clear</span>
+                    Limpiar Filtros
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        tbody.innerHTML = charges.map(charge => {
+          const typeLabels = {
+            administration: 'Administración',
+            maintenance: 'Mantención',
+            service: 'Servicios',
+            insurance: 'Seguros',
+            other: 'Otros'
+          };
+          
+          const statusLabels = {
+            pending: 'Pendiente',
+            approved: 'Aprobado',
+            rejected: 'Rechazado',
+            paid: 'Pagado'
+          };
+          
+          const statusIcons = {
+            pending: 'schedule',
+            approved: 'check_circle',
+            rejected: 'cancel',
+            paid: 'payment'
+          };
+          
+          const amountClass = charge.amount > 0 ? 'positive' : 'negative';
+          
+          return `
+            <tr>
+              <td>
+                <input type="checkbox" class="form-check-input charge-checkbox" 
+                       value="${charge.id}" onchange="toggleChargeSelection('${charge.id}')">
+              </td>
+              <td>
+                <span class="charge-id">${charge.id}</span>
+              </td>
+              <td>
+                <div style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  ${charge.description}
+                </div>
+              </td>
+              <td>
+                <span class="charge-type ${charge.type}">${typeLabels[charge.type]}</span>
+              </td>
+              <td>
+                <strong>Unidad ${charge.unit}</strong>
+              </td>
+              <td>${charge.owner}</td>
+              <td>${new Date(charge.date).toLocaleDateString('es-CL')}</td>
+              <td class="amount-cell ${amountClass}">
+                $${Math.abs(charge.amount).toLocaleString('es-CL')}
+              </td>
+              <td>
+                <span class="status-badge ${charge.status}">
+                  <span class="material-icons">${statusIcons[charge.status]}</span>
+                  ${statusLabels[charge.status]}
+                </span>
+              </td>
+              <td>
+                <div class="d-flex gap-1">
+                  <button class="action-btn small outline" onclick="viewCharge('${charge.id}')">
+                    <span class="material-icons">visibility</span>
+                  </button>
+                  <button class="action-btn small outline" onclick="editCharge('${charge.id}')">
+                    <span class="material-icons">edit</span>
+                  </button>
+                  <button class="action-btn small danger" onclick="deleteCharge('${charge.id}')">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        
+        updateTableInfo(charges.length);
+      }
+
+      // Filter functions
+      function filterCharges() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        filteredCharges = chargesData.filter(charge => {
+          return charge.id.toLowerCase().includes(searchTerm) ||
+                 charge.description.toLowerCase().includes(searchTerm) ||
+                 charge.unit.includes(searchTerm) ||
+                 charge.owner.toLowerCase().includes(searchTerm);
+        });
+        
+        populateChargesTable();
+      }
+
+      function applyFilters() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const typeFilter = document.getElementById('typeFilter').value;
+        const unitFilter = document.getElementById('unitFilter').value;
+        const dateFromFilter = document.getElementById('dateFromFilter').value;
+        const dateToFilter = document.getElementById('dateToFilter').value;
+        const amountFilter = parseFloat(document.getElementById('amountFilter').value) || 0;
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        filteredCharges = chargesData.filter(charge => {
+          const matchesSearch = !searchTerm || 
+            charge.id.toLowerCase().includes(searchTerm) ||
+            charge.description.toLowerCase().includes(searchTerm) ||
+            charge.unit.includes(searchTerm) ||
+            charge.owner.toLowerCase().includes(searchTerm);
+          
+          const matchesStatus = !statusFilter || charge.status === statusFilter;
+          const matchesType = !typeFilter || charge.type === typeFilter;
+          const matchesUnit = !unitFilter || charge.unit === unitFilter;
+          const matchesAmount = charge.amount >= amountFilter;
+          
+          const chargeDate = new Date(charge.date);
+          const matchesDateFrom = !dateFromFilter || chargeDate >= new Date(dateFromFilter);
+          const matchesDateTo = !dateToFilter || chargeDate <= new Date(dateToFilter);
+          
+          return matchesSearch && matchesStatus && matchesType && 
+                 matchesUnit && matchesAmount && matchesDateFrom && matchesDateTo;
+        });
+        
+        populateChargesTable();
+      }
+
+      function clearFilters() {
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('typeFilter').value = '';
+        document.getElementById('unitFilter').value = '';
+        document.getElementById('dateFromFilter').value = '';
+        document.getElementById('dateToFilter').value = '';
+        document.getElementById('amountFilter').value = '';
+        document.getElementById('searchInput').value = '';
+        
+        filteredCharges = [...chargesData];
+        populateChargesTable();
+      }
+
+      // Selection functions
+      function toggleChargeSelection(chargeId) {
+        if (selectedCharges.has(chargeId)) {
+          selectedCharges.delete(chargeId);
+        } else {
+          selectedCharges.add(chargeId);
+        }
+        
+        updateBulkActions();
+        updateSelectAllCheckbox();
+      }
+
+      function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.charge-checkbox');
+        
+        if (selectAll.checked) {
+          checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+            selectedCharges.add(checkbox.value);
+          });
+        } else {
+          checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+            selectedCharges.delete(checkbox.value);
+          });
+        }
+        
+        updateBulkActions();
+      }
+
+      function updateSelectAllCheckbox() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.charge-checkbox');
+        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+        
+        selectAll.checked = checkboxes.length > 0 && checkedCount === checkboxes.length;
+        selectAll.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+      }
+
+      function updateBulkActions() {
+        const bulkActions = document.getElementById('bulkActions');
+        const selectedCount = document.getElementById('selectedCount');
+        
+        selectedCount.textContent = selectedCharges.size;
+        
+        if (selectedCharges.size > 0) {
+          bulkActions.classList.add('show');
+        } else {
+          bulkActions.classList.remove('show');
+        }
+      }
+
+      function clearSelection() {
+        selectedCharges.clear();
+        document.querySelectorAll('.charge-checkbox').forEach(cb => cb.checked = false);
+        document.getElementById('selectAll').checked = false;
+        updateBulkActions();
+      }
+
+      function updateTableInfo(count) {
+        document.getElementById('showingCount').textContent = count;
+        document.getElementById('totalCount').textContent = chargesData.length;
+      }
+
+      // Action functions
+      function showNewChargeModal() {
+        alert('Abriendo formulario para nuevo cargo... Esta funcionalidad estará disponible próximamente.');
+      }
+
+      function viewCharge(id) {
+        alert(`Viendo detalles del cargo ${id}... Esta funcionalidad estará disponible próximamente.`);
+      }
+
+      function editCharge(id) {
+        alert(`Editando cargo ${id}... Esta funcionalidad estará disponible próximamente.`);
+      }
+
+      function deleteCharge(id) {
+        if (confirm(`¿Estás seguro de que quieres eliminar el cargo ${id}?`)) {
+          alert(`Cargo ${id} eliminado exitosamente.`);
+          // Here you would remove from data and refresh table
+        }
+      }
+
+      function bulkApprove() {
+        if (confirm(`¿Aprobar ${selectedCharges.size} cargos seleccionados?`)) {
+          alert(`${selectedCharges.size} cargos aprobados exitosamente.`);
+          clearSelection();
+        }
+      }
+
+      function bulkReject() {
+        if (confirm(`¿Rechazar ${selectedCharges.size} cargos seleccionados?`)) {
+          alert(`${selectedCharges.size} cargos rechazados.`);
+          clearSelection();
+        }
+      }
+
+      function bulkExport() {
+        alert(`Exportando ${selectedCharges.size} cargos seleccionados... Esta funcionalidad estará disponible próximamente.`);
+      }
+
+      function exportData() {
+        alert('Exportando todos los cargos... Esta funcionalidad estará disponible próximamente.');
+      }
+
+      // Initialize page
+      document.addEventListener('DOMContentLoaded', function() {
+        populateChargesTable();
+      });
+    </script>
+  </body>
+</html>

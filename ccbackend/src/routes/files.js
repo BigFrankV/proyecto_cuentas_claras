@@ -141,7 +141,10 @@ router.get('/:id', async (req, res) => {
 
     // Verificar que el archivo existe físicamente
     try {
-      await fs.access(file.file_path);
+      const fullPath = path.isAbsolute(file.file_path) 
+        ? file.file_path 
+        : path.resolve(process.cwd(), file.file_path);
+      await fs.access(fullPath);
     } catch (error) {
       return res.status(404).json({
         success: false,
@@ -172,7 +175,10 @@ router.get('/:id', async (req, res) => {
     }
 
     // Enviar archivo
-    res.sendFile(path.resolve(file.file_path));
+    const fullPath = path.isAbsolute(file.file_path) 
+      ? file.file_path 
+      : path.resolve(process.cwd(), file.file_path);
+    res.sendFile(fullPath);
   } catch (error) {
     console.error('Error descargando archivo:', error);
     res.status(500).json({

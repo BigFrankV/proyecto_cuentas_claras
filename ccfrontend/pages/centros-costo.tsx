@@ -127,29 +127,172 @@ export default function CentrosCostoListado() {
           <title>Centros de Costo — Cuentas Claras</title>
         </Head>
 
-        <Layout>
-        <div className='cost-centers-container'>
-          {/* Header (duplicado de Categorías, incluye icono, título, descripción y botón) */}
-          <div className='categories-header'>
-            <div className='d-flex justify-content-between align-items-start mb-4'>
-              <div>
-                <h1 className='categories-title'>
-                  <span className='material-icons me-2'>account_balance</span>
-                  Centros de Costo
-                </h1>
-                <p className='categories-subtitle'>
-                  Gestiona los centros de costo para el control presupuestario
-                </p>
+        <Layout title='Centros de Costo'>
+        {/* Header Profesional */}
+        <div className='container-fluid p-0'>
+          <div
+            className='text-white'
+            style={{
+              background: 'linear-gradient(135deg, #3f51b5 0%, #303f9f 100%)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div className='p-4'>
+            <div
+              style={{
+                position: 'absolute',
+                top: '-50%',
+                right: '-10%',
+                width: '200px',
+                height: '200px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '50%',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-10%',
+                left: '-5%',
+                width: '150px',
+                height: '150px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '50%',
+              }}
+            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <div className='d-flex align-items-center'>
+                <div
+                  className='me-4'
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <i
+                    className='material-icons'
+                    style={{ fontSize: '32px', color: 'white' }}
+                  >
+                    account_balance
+                  </i>
+                </div>
+                <div>
+                  <h1 className='h2 mb-1 text-white'>Centros de Costo</h1>
+                  <p className='mb-0 opacity-75'>
+                    Gestión de centros de costo
+                  </p>
+                </div>
               </div>
-              <Button
-                variant='light'
-                onClick={() => router.push('/centros-costo/nuevo')}
-              >
-                <span className='material-icons me-2'>add</span>
-                Nuevo Centro de Costo
-              </Button>
+              <div className='text-end'>
+                <Button
+                  variant='light'
+                  onClick={() => router.push('/centros-costo/nuevo')}
+                  className='btn-lg'
+                >
+                  <i className='material-icons me-2'>add</i>
+                  Nuevo Centro
+                </Button>
+              </div>
+            </div>
+
+            {/* Estadísticas */}
+            <div className='row mt-4'>
+              <div className='col-md-4 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>account_balance</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{pagination.total}</div>
+                      <div className='text-white-50'>Total Centros</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-4 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-success)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>check_circle</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{filteredCentros.length}</div>
+                      <div className='text-white-50'>Activos</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-4 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-info)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>trending_up</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>0</div>
+                      <div className='text-white-50'>Presupuesto Total</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             </div>
           </div>
+        </div>
+
+        <div className='cost-centers-container'>
 
           <CentroFilters
             search={search}
@@ -275,7 +418,7 @@ export default function CentrosCostoListado() {
           </Modal>
         </div>
       </Layout>
-      </ProtectedPage>
-    </ProtectedRoute>
-  );
+    </ProtectedPage>
+  </ProtectedRoute>
+);
 }

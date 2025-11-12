@@ -25,6 +25,7 @@ export default function TorresListado() {
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
   const [selectedTorres, setSelectedTorres] = useState<string[]>([]);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   const [torres, setTorres] = useState<Torre[]>([]);
   const [stats, setStats] = useState({
     totalTorres: 0,
@@ -119,6 +120,32 @@ export default function TorresListado() {
     return filtered;
   }, [torres, searchTerm, sortBy, filterBy]);
 
+  // Paginación
+  const totalPages = Math.ceil(filteredAndSortedTorres.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTorres = filteredAndSortedTorres.slice(startIndex, endIndex);
+
+  // Funciones de paginación
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    goToPage(currentPage - 1);
+  };
+
+  const goToNextPage = () => {
+    goToPage(currentPage + 1);
+  };
+
+  // Resetear página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy, filterBy]);
+
   // Manejo de selección
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -164,24 +191,195 @@ export default function TorresListado() {
       </Head>
 
       <Layout title='Torres'>
-        <div className='container-fluid py-4'>
-          {/* Breadcrumb */}
-          <nav aria-label='breadcrumb' className='mb-4'>
-            <ol className='breadcrumb'>
-              <li className='breadcrumb-item'>
-                <Link href='/dashboard'>Dashboard</Link>
-              </li>
-              <li className='breadcrumb-item'>
-                <Link href='/edificios'>Edificios</Link>
-              </li>
-              <li className='breadcrumb-item'>
-                <Link href='/edificios/1'>Edificio Central</Link>
-              </li>
-              <li className='breadcrumb-item active' aria-current='page'>
-                Torres
-              </li>
-            </ol>
-          </nav>
+        {/* Header Profesional */}
+        <div className='container-fluid p-0'>
+          <div
+            className='text-white rounded-0'
+            style={{
+              background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div className='p-4'>
+            <div
+              style={{
+                position: 'absolute',
+                top: '-50%',
+                right: '-10%',
+                width: '200px',
+                height: '200px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '50%',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-10%',
+                left: '-5%',
+                width: '150px',
+                height: '150px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '50%',
+              }}
+            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <div className='d-flex align-items-center'>
+                <div
+                  className='me-4'
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <i
+                    className='material-icons'
+                    style={{ fontSize: '32px', color: 'white' }}
+                  >
+                    location_city
+                  </i>
+                </div>
+                <div>
+                  <h1 className='h2 mb-1 text-white'>Torres</h1>
+                  <p className='mb-0 opacity-75'>
+                    Gestión y administración de torres
+                  </p>
+                </div>
+              </div>
+              <div className='text-end'>
+                <Link href='/torres/nueva' className='btn btn-light btn-lg'>
+                  <i className='material-icons me-2'>add</i>
+                  Nueva Torre
+                </Link>
+              </div>
+            </div>
+
+            {/* Estadísticas */}
+            <div className='row mt-4'>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>location_city</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats.totalTorres}</div>
+                      <div className='text-white-50'>Total Torres</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-success)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>apartment</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats.totalUnidades}</div>
+                      <div className='text-white-50'>Total Unidades</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-warning)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>grid_view</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats.promedioUnidades}</div>
+                      <div className='text-white-50'>Promedio Unidades</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-info)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>filter_list</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{filteredAndSortedTorres.length}</div>
+                      <div className='text-white-50'>Filtradas</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+
+        <div className='container-fluid pt-4 pb-4'>
 
           {/* Loading and Error States */}
           {loading && (
@@ -266,12 +464,12 @@ export default function TorresListado() {
               <div className='row mb-4'>
                 <div className='col-lg-8'>
                   <div className='card'>
-                    <div
-                      className='card-body'
-                      style={{ backgroundColor: '#f8f9fa' }}
-                    >
-                      <div className='row g-2'>
+                    <div className='card-body' style={{ backgroundColor: '#f8f9fa' }}>
+                      <form className='row g-2' onSubmit={(e) => e.preventDefault()}>
                         <div className='col-md-4'>
+                          <label htmlFor='searchInput' className='visually-hidden'>
+                            Buscar torre
+                          </label>
                           <div className='position-relative'>
                             <i
                               className='material-icons position-absolute'
@@ -282,24 +480,32 @@ export default function TorresListado() {
                                 color: '#6c757d',
                                 fontSize: '20px',
                               }}
+                              aria-hidden='true'
                             >
                               search
                             </i>
                             <input
+                              id='searchInput'
                               type='text'
                               className='form-control'
                               placeholder='Buscar torre...'
                               style={{ paddingLeft: '35px' }}
                               value={searchTerm}
-                              onChange={e => setSearchTerm(e.target.value)}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              aria-label='Buscar torre por nombre o código'
                             />
                           </div>
                         </div>
                         <div className='col-md-4'>
+                          <label htmlFor='sortSelect' className='visually-hidden'>
+                            Ordenar por
+                          </label>
                           <select
+                            id='sortSelect'
                             className='form-select'
                             value={sortBy}
-                            onChange={e => setSortBy(e.target.value)}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            aria-label='Ordenar torres'
                           >
                             <option value='nombre-asc'>Nombre (A-Z)</option>
                             <option value='nombre-desc'>Nombre (Z-A)</option>
@@ -308,17 +514,22 @@ export default function TorresListado() {
                           </select>
                         </div>
                         <div className='col-md-4'>
+                          <label htmlFor='filterSelect' className='visually-hidden'>
+                            Filtrar por
+                          </label>
                           <select
+                            id='filterSelect'
                             className='form-select'
                             value={filterBy}
-                            onChange={e => setFilterBy(e.target.value)}
+                            onChange={(e) => setFilterBy(e.target.value)}
+                            aria-label='Filtrar torres'
                           >
                             <option value='todas'>Todas las torres</option>
                             <option value='norte'>Torre Norte</option>
                             <option value='sur'>Torre Sur</option>
                           </select>
                         </div>
-                      </div>
+                      </form>
                     </div>
                   </div>
                 </div>
@@ -355,114 +566,31 @@ export default function TorresListado() {
                 </div>
               </div>
 
-              {/* Estadísticas */}
-              <div className='row mb-4'>
-                <div className='col-lg-4 col-md-6 mb-3'>
-                  <div className='card h-100'>
-                    <div className='card-body'>
-                      <div className='d-flex align-items-center'>
-                        <div
-                          className='me-3'
-                          style={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '8px',
-                            backgroundColor: 'var(--color-primary)',
-                            color: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <i className='material-icons'>location_city</i>
-                        </div>
-                        <div>
-                          <div className='h3 mb-0'>{stats.totalTorres}</div>
-                          <div className='text-muted'>Total Torres</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className='col-lg-4 col-md-6 mb-3'>
-                  <div className='card h-100'>
-                    <div className='card-body'>
-                      <div className='d-flex align-items-center'>
-                        <div
-                          className='me-3'
-                          style={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '8px',
-                            backgroundColor: 'var(--color-accent)',
-                            color: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <i className='material-icons'>apartment</i>
-                        </div>
-                        <div>
-                          <div className='h3 mb-0'>{stats.totalUnidades}</div>
-                          <div className='text-muted'>Total Unidades</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className='col-lg-4 col-md-6 mb-3'>
-                  <div className='card h-100'>
-                    <div className='card-body'>
-                      <div className='d-flex align-items-center'>
-                        <div
-                          className='me-3'
-                          style={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '8px',
-                            backgroundColor: 'var(--color-success)',
-                            color: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <i className='material-icons'>grid_view</i>
-                        </div>
-                        <div>
-                          <div className='h3 mb-0'>
-                            {stats.promedioUnidades}
-                          </div>
-                          <div className='text-muted'>Promedio Unidades</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Selector de vista */}
               <div className='d-flex justify-content-between align-items-center mb-3'>
-                <h5 className='mb-0'>
+                <h2 className='h5 mb-0' id='viewModeHeading'>
                   {viewMode === 'table'
                     ? 'Vista de tabla'
                     : 'Vista de tarjetas'}
-                </h5>
-                <div className='btn-group' role='group'>
+                </h2>
+                <div className='btn-group' role='group' aria-labelledby='viewModeHeading'>
                   <button
                     type='button'
                     className={`btn btn-outline-secondary ${viewMode === 'cards' ? 'active' : ''}`}
                     onClick={() => setViewMode('cards')}
+                    aria-pressed={viewMode === 'cards'}
+                    aria-label='Cambiar a vista de tarjetas'
                   >
-                    <i className='material-icons'>grid_view</i>
+                    <i className='material-icons' aria-hidden='true'>grid_view</i>
                   </button>
                   <button
                     type='button'
                     className={`btn btn-outline-secondary ${viewMode === 'table' ? 'active' : ''}`}
                     onClick={() => setViewMode('table')}
+                    aria-pressed={viewMode === 'table'}
+                    aria-label='Cambiar a vista de tabla'
                   >
-                    <i className='material-icons'>view_list</i>
+                    <i className='material-icons' aria-hidden='true'>view_list</i>
                   </button>
                 </div>
               </div>
@@ -507,7 +635,10 @@ export default function TorresListado() {
                   </div>
                   <div className='card-body p-0'>
                     <div className='table-responsive'>
-                      <table className='table table-hover mb-0'>
+                      <table className='table table-hover mb-0' role='table' aria-label='Lista de torres'>
+                        <caption className='visually-hidden'>
+                          Tabla de torres con información de nombre, código, pisos, unidades, estado y acciones disponibles
+                        </caption>
                         <thead className='table-light'>
                           <tr>
                             <th scope='col' style={{ width: '40px' }}>
@@ -521,10 +652,17 @@ export default function TorresListado() {
                                       filteredAndSortedTorres.length &&
                                     filteredAndSortedTorres.length > 0
                                   }
-                                  onChange={e =>
+                                  onChange={(e) =>
                                     handleSelectAll(e.target.checked)
                                   }
+                                  aria-label='Seleccionar todas las torres'
                                 />
+                                <label
+                                  className='form-check-label visually-hidden'
+                                  htmlFor='selectAllCheckbox'
+                                >
+                                  Seleccionar todas
+                                </label>
                               </div>
                             </th>
                             <th scope='col'>Nombre</th>
@@ -538,21 +676,29 @@ export default function TorresListado() {
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredAndSortedTorres.map(torre => (
+                          {paginatedTorres.map(torre => (
                             <tr key={torre.id}>
                               <td>
                                 <div className='form-check'>
                                   <input
                                     className='form-check-input'
                                     type='checkbox'
+                                    id={`checkbox-${torre.id}`}
                                     checked={selectedTorres.includes(torre.id)}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       handleSelectTorre(
                                         torre.id,
                                         e.target.checked,
                                       )
                                     }
+                                    aria-label={`Seleccionar torre ${torre.nombre}`}
                                   />
+                                  <label
+                                    className='form-check-label visually-hidden'
+                                    htmlFor={`checkbox-${torre.id}`}
+                                  >
+                                    Seleccionar {torre.nombre}
+                                  </label>
                                 </div>
                               </td>
                               <td>
@@ -599,14 +745,16 @@ export default function TorresListado() {
                                 </span>
                               </td>
                               <td className='text-end'>
-                                <div className='btn-group'>
+                                <div className='btn-group' role='group' aria-label={`Acciones para ${torre.nombre}`}>
                                   <Link
                                     href={`/torres/${torre.id}`}
                                     className='btn btn-sm btn-outline-secondary'
+                                    aria-label={`Ver detalles de ${torre.nombre}`}
                                   >
                                     <i
                                       className='material-icons'
                                       style={{ fontSize: '16px' }}
+                                      aria-hidden='true'
                                     >
                                       visibility
                                     </i>
@@ -614,10 +762,12 @@ export default function TorresListado() {
                                   <Link
                                     href={`/torres/${torre.id}`}
                                     className='btn btn-sm btn-outline-primary'
+                                    aria-label={`Editar ${torre.nombre}`}
                                   >
                                     <i
                                       className='material-icons'
                                       style={{ fontSize: '16px' }}
+                                      aria-hidden='true'
                                     >
                                       edit
                                     </i>
@@ -625,10 +775,12 @@ export default function TorresListado() {
                                   <button
                                     type='button'
                                     className='btn btn-sm btn-outline-danger'
+                                    aria-label={`Eliminar ${torre.nombre}`}
                                   >
                                     <i
                                       className='material-icons'
                                       style={{ fontSize: '16px' }}
+                                      aria-hidden='true'
                                     >
                                       delete
                                     </i>
@@ -641,66 +793,40 @@ export default function TorresListado() {
                       </table>
                     </div>
                   </div>
-                  <div className='card-footer bg-white'>
-                    <div className='row align-items-center'>
-                      <div className='col-auto'>
-                        <select
-                          className='form-select form-select-sm'
-                          value={itemsPerPage}
-                          onChange={e =>
-                            setItemsPerPage(Number(e.target.value))
-                          }
-                        >
-                          <option value={10}>10 por página</option>
-                          <option value={25}>25 por página</option>
-                          <option value={50}>50 por página</option>
-                          <option value={100}>100 por página</option>
-                        </select>
-                      </div>
-                      <div className='col-auto'>
-                        <span className='text-muted'>
-                          Mostrando 1-{filteredAndSortedTorres.length} de{' '}
-                          {filteredAndSortedTorres.length} torres
-                        </span>
-                      </div>
-                      <div className='col d-flex justify-content-end'>
-                        <nav aria-label='Page navigation'>
-                          <ul className='pagination pagination-sm mb-0'>
-                            <li className='page-item disabled'>
-                              <button
-                                className='page-link'
-                                type='button'
-                                aria-label='Previous'
-                              >
-                                <span aria-hidden='true'>&laquo;</span>
-                              </button>
-                            </li>
-                            <li className='page-item active'>
-                              <button className='page-link' type='button'>
-                                1
-                              </button>
-                            </li>
-                            <li className='page-item disabled'>
-                              <button
-                                className='page-link'
-                                type='button'
-                                aria-label='Next'
-                              >
-                                <span aria-hidden='true'>&raquo;</span>
-                              </button>
-                            </li>
-                          </ul>
-                        </nav>
-                      </div>
-                    </div>
-                  </div>
                 </div>
+              )}
+
+              {/* Paginación moderna */}
+              {totalPages > 1 && (
+                <nav aria-label='Navegación de páginas' className='pagination-modern'>
+                  <button
+                    className='btn'
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    aria-label='Página anterior'
+                  >
+                    <span className='material-icons'>chevron_left</span>
+                  </button>
+
+                  <div className='page-info'>
+                    Página {currentPage} de {totalPages} ({filteredAndSortedTorres.length} torres)
+                  </div>
+
+                  <button
+                    className='btn'
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    aria-label='Página siguiente'
+                  >
+                    <span className='material-icons'>chevron_right</span>
+                  </button>
+                </nav>
               )}
 
               {/* Vista de tarjetas */}
               {viewMode === 'cards' && (
                 <div className='row'>
-                  {filteredAndSortedTorres.map(torre => (
+                  {paginatedTorres.map(torre => (
                     <div
                       key={torre.id}
                       className='col-xl-4 col-lg-6 col-md-6 mb-4'

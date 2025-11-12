@@ -130,6 +130,10 @@ export default function UnidadesListado() {
   });
   const [selectedUnidades, setSelectedUnidades] = useState<string[]>([]);
 
+  // Estados de paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   // Filtrar edificios según comunidad seleccionada
   const [availableEdificios, setAvailableEdificios] = useState<any[]>([]);
   const [availableTorres, setAvailableTorres] = useState<any[]>([]);
@@ -295,6 +299,33 @@ export default function UnidadesListado() {
     );
   };
 
+  // Funciones de paginación
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const goToPreviousPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1));
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage(prev => Math.min(totalPages, prev + 1));
+  };
+
+  // Reset paginación cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filters]);
+
+  // Datos paginados
+  const paginatedUnidades = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredUnidades.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredUnidades, currentPage, itemsPerPage]);
+
+  // Total de páginas
+  const totalPages = Math.ceil(filteredUnidades.length / itemsPerPage);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
@@ -442,22 +473,199 @@ export default function UnidadesListado() {
       </Head>
 
       <Layout title='Lista de Unidades'>
-        <div className='container-fluid py-4'>
-          {/* Header */}
-          <div className='row mb-4 align-items-center'>
-            <div className='col-md-8'>
-              <h1 className='h3 mb-2'>Lista de Unidades</h1>
-              <p className='text-muted'>
-                Gestione todas las unidades/departamentos en la comunidad
-              </p>
+        {/* Header Profesional */}
+        <div className='container-fluid p-0'>
+          <div
+            className='text-white'
+            style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div className='p-4'>
+            <div
+              style={{
+                position: 'absolute',
+                top: '-50%',
+                right: '-10%',
+                width: '200px',
+                height: '200px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '50%',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-10%',
+                left: '-5%',
+                width: '150px',
+                height: '150px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '50%',
+              }}
+            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <div className='d-flex align-items-center'>
+                <div
+                  className='me-4'
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <i
+                    className='material-icons'
+                    style={{ fontSize: '32px', color: 'white' }}
+                  >
+                    apartment
+                  </i>
+                </div>
+                <div>
+                  <h1 className='h2 mb-1 text-white'>Unidades</h1>
+                  <p className='mb-0 opacity-75'>
+                    Gestión completa de unidades y departamentos
+                  </p>
+                </div>
+              </div>
+              <div className='text-end'>
+                <Link
+                  href='/unidades/nueva'
+                  className='btn btn-light btn-lg'
+                >
+                  <i className='material-icons me-2'>add</i>
+                  Nueva Unidad
+                </Link>
+              </div>
             </div>
-            <div className='col-md-4 text-md-end'>
-              <Link href='/unidades/nueva' className='btn btn-primary'>
-                <i className='material-icons align-middle me-1'>add</i>
-                Nueva Unidad
-              </Link>
+
+            {/* Estadísticas */}
+            <div className='row mt-4'>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>grid_view</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats.total}</div>
+                      <div className='text-white-50'>Total Unidades</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-success)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>check_circle</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats.activas}</div>
+                      <div className='text-white-50'>Unidades Activas</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-warning)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>warning</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats.inactivas}</div>
+                      <div className='text-white-50'>Unidades Inactivas</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-info)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>build</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats.mantenimiento}</div>
+                      <div className='text-white-50'>En Mantenimiento</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             </div>
           </div>
+        </div>
+
+        {/* Contenido principal */}
+        <div className='container-fluid pb-4'>
 
           {/* Filtros */}
           <div className='row mb-4'>
@@ -623,44 +831,6 @@ export default function UnidadesListado() {
             </div>
           </div>
 
-          {/* Estadísticas */}
-          <div className='row mb-4'>
-            <div className='col-md-3 mb-3'>
-              <div className='card bg-primary text-white'>
-                <div className='card-body text-center'>
-                  <h2 className='card-title'>{stats.total}</h2>
-                  <p className='card-text'>Total Unidades</p>
-                </div>
-              </div>
-            </div>
-            <div className='col-md-3 mb-3'>
-              <div className='card bg-success text-white'>
-                <div className='card-body text-center'>
-                  <h2 className='card-title'>{stats.activas}</h2>
-                  <p className='card-text'>Activas</p>
-                </div>
-              </div>
-            </div>
-            <div className='col-md-3 mb-3'>
-              <div className='card bg-warning text-white'>
-                <div className='card-body text-center'>
-                  <h2 className='card-title'>{stats.inactivas}</h2>
-                  <p className='card-text'>Inactivas</p>
-                </div>
-              </div>
-            </div>
-            <div className='col-md-3 mb-3'>
-              <div className='card bg-danger text-white'>
-                <div className='card-body text-center'>
-                  <h2 className='card-title'>
-                    {formatCurrency(stats.saldoTotal)}
-                  </h2>
-                  <p className='card-text'>Saldo Pendiente</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Acciones masivas */}
           {selectedUnidades.length > 0 && (
             <div className='alert alert-info d-flex justify-content-between align-items-center mb-4'>
@@ -711,7 +881,7 @@ export default function UnidadesListado() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredUnidades.map(unidad => (
+                      {paginatedUnidades.map(unidad => (
                         <tr key={unidad.id}>
                           <td>
                             <input
@@ -825,7 +995,7 @@ export default function UnidadesListado() {
             </div>
           ) : (
             <div className='row'>
-              {filteredUnidades.map(unidad => (
+              {paginatedUnidades.map(unidad => (
                 <div
                   key={unidad.id}
                   className='col-xl-3 col-lg-4 col-md-6 mb-4'
@@ -941,6 +1111,33 @@ export default function UnidadesListado() {
                 </div>
               ))}
             </div>
+          )}
+
+          {/* Paginación moderna */}
+          {totalPages > 1 && (
+            <nav aria-label='Navegación de páginas' className='pagination-modern'>
+              <button
+                className='btn'
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+                aria-label='Página anterior'
+              >
+                <span className='material-icons'>chevron_left</span>
+              </button>
+
+              <div className='page-info'>
+                Página {currentPage} de {totalPages} ({filteredUnidades.length} unidades)
+              </div>
+
+              <button
+                className='btn'
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                aria-label='Página siguiente'
+              >
+                <span className='material-icons'>chevron_right</span>
+              </button>
+            </nav>
           )}
 
           {filteredUnidades.length === 0 && (

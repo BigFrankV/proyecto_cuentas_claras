@@ -114,47 +114,193 @@ export default function ConciliacionesListado() {
         </Head>
 
         <Layout title='Conciliaciones Bancarias'>
-        <Container fluid className='p-4'>
-          {/* Header */}
-          <div className='conciliations-header'>
-            <div className='d-flex justify-content-between align-items-start'>
-              <div>
-                <h1 className='conciliations-title'>
-                  Conciliaciones Bancarias
-                </h1>
-                <p className='conciliations-subtitle'>
-                  Gestiona y controla las conciliaciones bancarias mensuales
-                </p>
-                <div className='header-stats'>
-                  <div className='stat-item'>
-                    <div className='stat-number'>{stats.total}</div>
-                    <div className='stat-label'>Total</div>
+        <div className='container-fluid py-4'>
+          {/* Header Profesional */}
+          <div className='container-fluid p-0'>
+            <div
+              className='text-white'
+              style={{
+                background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <div className='p-4'>
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '-50%',
+                  right: '-10%',
+                  width: '200px',
+                  height: '200px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%',
+                }}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '-10%',
+                  left: '-5%',
+                  width: '150px',
+                  height: '150px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '50%',
+                }}
+              />
+              <div className='d-flex align-items-center justify-content-between'>
+                <div className='d-flex align-items-center'>
+                  <div
+                    className='me-4'
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <i
+                      className='material-icons'
+                      style={{ fontSize: '32px', color: 'white' }}
+                    >
+                      account_balance
+                    </i>
                   </div>
-                  <div className='stat-item'>
-                    <div className='stat-number'>{stats.conciliadas}</div>
-                    <div className='stat-label'>Completadas</div>
+                  <div>
+                    <h1 className='h2 mb-1 text-white'>Conciliaciones</h1>
+                    <p className='mb-0 opacity-75'>
+                      Gestión de conciliaciones bancarias
+                    </p>
                   </div>
-                  <div className='stat-item'>
-                    <div className='stat-number'>{stats.pendientes}</div>
-                    <div className='stat-label'>En Proceso</div>
+                </div>
+                <div className='text-end'>
+                  <Link href='/conciliaciones/nueva' passHref>
+                    <Button variant='light' size='lg'>
+                      <span className='material-icons me-2'>add</span>
+                      Nueva Conciliación
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Estadísticas */}
+              <div className='row mt-4'>
+                <div className='col-md-3 mb-3'>
+                  <div
+                    className='p-3 rounded-3 text-white'
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                  >
+                    <div className='d-flex align-items-center'>
+                      <div
+                        className='me-3'
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '8px',
+                          backgroundColor: 'var(--color-primary)',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <i className='material-icons'>account_balance</i>
+                      </div>
+                      <div>
+                        <div className='h3 mb-0'>{stats.total}</div>
+                        <div className='text-white-50'>Total Conciliaciones</div>
+                      </div>
+                    </div>
                   </div>
-                  <div className='stat-item'>
-                    <div className='stat-number'>{stats.descartadas}</div>
-                    <div className='stat-label'>Con Diferencias</div>
+                </div>
+                <div className='col-md-3 mb-3'>
+                  <div
+                    className='p-3 rounded-3 text-white'
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                  >
+                    <div className='d-flex align-items-center'>
+                      <div
+                        className='me-3'
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '8px',
+                          backgroundColor: 'var(--color-success)',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <i className='material-icons'>check_circle</i>
+                      </div>
+                      <div>
+                        <div className='h3 mb-0'>{stats.conciliadas}</div>
+                        <div className='text-white-50'>Conciliadas</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className='col-md-3 mb-3'>
+                  <div
+                    className='p-3 rounded-3 text-white'
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                  >
+                    <div className='d-flex align-items-center'>
+                      <div
+                        className='me-3'
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '8px',
+                          backgroundColor: 'var(--color-warning)',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <i className='material-icons'>schedule</i>
+                      </div>
+                      <div>
+                        <div className='h3 mb-0'>{stats.pendientes}</div>
+                        <div className='text-white-50'>Pendientes</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className='col-md-3 mb-3'>
+                  <div
+                    className='p-3 rounded-3 text-white'
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                  >
+                    <div className='d-flex align-items-center'>
+                      <div
+                        className='me-3'
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '8px',
+                          backgroundColor: 'var(--color-danger)',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <i className='material-icons'>error</i>
+                      </div>
+                      <div>
+                        <div className='h3 mb-0'>{stats.descartadas}</div>
+                        <div className='text-white-50'>Descartadas</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className='d-flex gap-2'>
-                <Link href='/conciliaciones/nueva' passHref>
-                  <Button variant='light' size='lg'>
-                    <span className='material-icons me-2'>add</span>
-                    Nueva Conciliación
-                  </Button>
-                </Link>
-                <Button variant='outline-light' size='lg'>
-                  <span className='material-icons me-2'>upload</span>
-                  Importar Estados
-                </Button>
               </div>
             </div>
           </div>
@@ -165,50 +311,6 @@ export default function ConciliacionesListado() {
               {error}
             </Alert>
           )}
-
-          {/* Summary Cards */}
-          <div className='summary-cards'>
-            <div className='summary-card'>
-              <div className='summary-card-icon'>
-                <span className='material-icons'>account_balance</span>
-              </div>
-              <div className='summary-card-number'>{stats.total}</div>
-              <div className='summary-card-label'>Total Conciliaciones</div>
-              <div className='summary-card-description'>
-                Conciliaciones registradas
-              </div>
-            </div>
-            <div className='summary-card'>
-              <div className='summary-card-icon'>
-                <span className='material-icons'>check_circle</span>
-              </div>
-              <div className='summary-card-number'>{stats.conciliadas}</div>
-              <div className='summary-card-label'>Conciliadas</div>
-              <div className='summary-card-description'>
-                Movimientos conciliados
-              </div>
-            </div>
-            <div className='summary-card'>
-              <div className='summary-card-icon'>
-                <span className='material-icons'>schedule</span>
-              </div>
-              <div className='summary-card-number'>{stats.pendientes}</div>
-              <div className='summary-card-label'>Pendientes</div>
-              <div className='summary-card-description'>
-                Esperando conciliación
-              </div>
-            </div>
-            <div className='summary-card'>
-              <div className='summary-card-icon'>
-                <span className='material-icons'>error</span>
-              </div>
-              <div className='summary-card-number'>{stats.descartadas}</div>
-              <div className='summary-card-label'>Descartadas</div>
-              <div className='summary-card-description'>
-                Movimientos descartados
-              </div>
-            </div>
-          </div>
 
           {/* Filters */}
           <div className='filters-card'>
@@ -395,7 +497,7 @@ export default function ConciliacionesListado() {
               )}
             </div>
           </div>
-        </Container>
+        </div>
       </Layout>
       </ProtectedPage>
     </ProtectedRoute>

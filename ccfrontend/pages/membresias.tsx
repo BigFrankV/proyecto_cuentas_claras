@@ -163,7 +163,199 @@ const MembresiasListado = () => {
         </Head>
 
         <Layout title='Membresías'>
-        <div className='container-fluid py-4'>
+        {/* Header Profesional */}
+        <div className='container-fluid p-0'>
+          <div
+            className='text-white'
+            style={{
+              background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div className='p-4'>
+            <div
+              style={{
+                position: 'absolute',
+                top: '-50%',
+                right: '-10%',
+                width: '200px',
+                height: '200px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '50%',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-10%',
+                left: '-5%',
+                width: '150px',
+                height: '150px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '50%',
+              }}
+            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <div className='d-flex align-items-center'>
+                <div
+                  className='me-4'
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <i
+                    className='material-icons'
+                    style={{ fontSize: '32px', color: 'white' }}
+                  >
+                    card_membership
+                  </i>
+                </div>
+                <div>
+                  <h1 className='h2 mb-1 text-white'>Membresías</h1>
+                  <p className='mb-0 opacity-75'>
+                    Gestión de membresías y roles de usuarios
+                  </p>
+                </div>
+              </div>
+              <div className='text-end'>
+                <Link
+                  href='/membresias/nueva'
+                  className='btn btn-light btn-lg'
+                >
+                  <i className='material-icons me-2'>person_add</i>
+                  Nueva Membresía
+                </Link>
+              </div>
+            </div>
+
+            {/* Estadísticas */}
+            <div className='row mt-4'>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>card_membership</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{total}</div>
+                      <div className='text-white-50'>Total Membresías</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-success)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>check_circle</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats.activas}</div>
+                      <div className='text-white-50'>Membresías Activas</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-warning)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>schedule</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats.vencenEsteMes}</div>
+                      <div className='text-white-50'>Vencen Este Mes</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-danger)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>error</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats.vencidas}</div>
+                      <div className='text-white-50'>Membresías Vencidas</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Contenido principal */}
+        <div className='container-fluid pt-4 pb-4'>
           {/* Filtros */}
           <div className='row mb-4'>
             <div className='col-12'>

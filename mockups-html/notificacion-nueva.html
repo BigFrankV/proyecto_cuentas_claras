@@ -1,0 +1,1272 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nueva Notificación - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      .avatar {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--color-primary);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50%;
+      }
+      
+      /* Form Cards */
+      .form-card {
+        background-color: #fff;
+        border-radius: var(--radius);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid #e9ecef;
+      }
+      
+      .form-card-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+      }
+      
+      .form-card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .form-card-title .material-icons {
+        margin-right: 0.5rem;
+        color: var(--color-primary);
+      }
+      
+      /* Type Selection Cards */
+      .type-selection {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .type-card {
+        border: 2px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: #fff;
+      }
+      
+      .type-card:hover {
+        border-color: var(--color-primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+      
+      .type-card.active {
+        border-color: var(--color-primary);
+        background-color: rgba(253, 93, 20, 0.05);
+      }
+      
+      .type-card .type-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.5rem;
+        color: white;
+      }
+      
+      .type-card.system .type-icon {
+        background-color: #17a2b8;
+      }
+      
+      .type-card.announcement .type-icon {
+        background-color: #7B1FA2;
+      }
+      
+      .type-card.reminder .type-icon {
+        background-color: #F57F17;
+      }
+      
+      .type-card.alert .type-icon {
+        background-color: #dc3545;
+      }
+      
+      .type-card.maintenance .type-icon {
+        background-color: #28a745;
+      }
+      
+      .type-card-title {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 0.5rem;
+      }
+      
+      .type-card-description {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin: 0;
+      }
+      
+      /* Channel Selection */
+      .channel-selection {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .channel-option {
+        border: 2px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: #fff;
+        position: relative;
+      }
+      
+      .channel-option:hover {
+        border-color: var(--color-primary);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+      }
+      
+      .channel-option.active {
+        border-color: var(--color-primary);
+        background-color: rgba(253, 93, 20, 0.05);
+      }
+      
+      .channel-option .channel-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+        font-size: 1.2rem;
+        color: white;
+        background-color: var(--color-primary);
+      }
+      
+      .channel-option .channel-name {
+        font-weight: 500;
+        color: #212529;
+        font-size: 0.875rem;
+      }
+      
+      .channel-option input[type="checkbox"] {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+      }
+      
+      /* Audience Selection */
+      .audience-option {
+        border: 1px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: #fff;
+      }
+      
+      .audience-option:hover {
+        border-color: var(--color-primary);
+        background-color: rgba(253, 93, 20, 0.02);
+      }
+      
+      .audience-option.active {
+        border-color: var(--color-primary);
+        background-color: rgba(253, 93, 20, 0.05);
+      }
+      
+      .audience-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+      }
+      
+      .audience-title {
+        font-weight: 600;
+        color: #212529;
+        display: flex;
+        align-items: center;
+      }
+      
+      .audience-title .material-icons {
+        margin-right: 0.5rem;
+        color: var(--color-primary);
+      }
+      
+      .audience-count {
+        font-size: 0.875rem;
+        color: #6c757d;
+        background-color: #f8f9fa;
+        padding: 0.25rem 0.5rem;
+        border-radius: 1rem;
+      }
+      
+      .audience-description {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin: 0;
+      }
+      
+      /* Custom audience */
+      .custom-audience-section {
+        display: none;
+        margin-top: 1rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+      }
+      
+      .custom-audience-section.show {
+        display: block;
+      }
+      
+      /* Rich text editor wrapper */
+      .editor-toolbar {
+        border: 1px solid #e9ecef;
+        border-bottom: none;
+        border-radius: var(--radius) var(--radius) 0 0;
+        padding: 0.5rem;
+        background-color: #f8f9fa;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+      }
+      
+      .editor-btn {
+        border: none;
+        background: none;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      
+      .editor-btn:hover {
+        background-color: #e9ecef;
+      }
+      
+      .editor-btn.active {
+        background-color: var(--color-primary);
+        color: white;
+      }
+      
+      .message-editor {
+        min-height: 200px;
+        border-radius: 0 0 var(--radius) var(--radius);
+        border-top: none;
+        padding: 1rem;
+      }
+      
+      /* Scheduling */
+      .schedule-option {
+        border: 1px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: #fff;
+      }
+      
+      .schedule-option:hover {
+        border-color: var(--color-primary);
+        background-color: rgba(253, 93, 20, 0.02);
+      }
+      
+      .schedule-option.active {
+        border-color: var(--color-primary);
+        background-color: rgba(253, 93, 20, 0.05);
+      }
+      
+      .schedule-title {
+        font-weight: 600;
+        color: #212529;
+        display: flex;
+        align-items: center;
+      }
+      
+      .schedule-title .material-icons {
+        margin-right: 0.5rem;
+        color: var(--color-primary);
+      }
+      
+      .schedule-description {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin: 0;
+      }
+      
+      .schedule-details {
+        display: none;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+      }
+      
+      .schedule-details.show {
+        display: block;
+      }
+      
+      /* Preview */
+      .preview-card {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .preview-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+      }
+      
+      .preview-title {
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+      }
+      
+      .preview-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        color: #6c757d;
+      }
+      
+      .preview-meta-item {
+        display: flex;
+        align-items: center;
+      }
+      
+      .preview-meta-item .material-icons {
+        font-size: 1rem;
+        margin-right: 0.25rem;
+      }
+      
+      .preview-content {
+        background-color: white;
+        border: 1px solid #e9ecef;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-top: 1rem;
+      }
+      
+      .preview-subject {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 0.5rem;
+      }
+      
+      .preview-message {
+        color: #495057;
+        line-height: 1.6;
+      }
+      
+      /* Action buttons */
+      .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: end;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+      }
+      
+      .btn-primary {
+        background-color: var(--color-primary);
+        border-color: var(--color-primary);
+      }
+      
+      .btn-primary:hover {
+        background-color: #e85a14;
+        border-color: #e85a14;
+      }
+      
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .type-selection {
+          grid-template-columns: 1fr;
+        }
+        
+        .channel-selection {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .action-buttons {
+          justify-content: stretch;
+        }
+        
+        .action-buttons .btn {
+          flex: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <ul class="nav nav-sidebar flex-column mb-auto">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">domain</span>
+              <span>Comunidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">apartment</span>
+              <span>Unidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">people</span>
+              <span>Personas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">bar_chart</span>
+              <span>Reportes</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="tickets-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">support</span>
+              <span>Soporte</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="notificaciones-listado.html" class="nav-link active px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">notifications</span>
+              <span>Notificaciones</span>
+            </a>
+          </li>
+        </ul>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+            <span class="material-icons me-2">settings</span>
+            <span>Configuración</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Sidebar backdrop for mobile -->
+      <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+      
+      <!-- Contenido principal -->
+      <div class="main-content flex-grow-1 bg-light">
+        <!-- Header -->
+        <header class="bg-white border-bottom shadow-sm p-3">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <div class="col-lg-6">
+                <button class="btn toggle-sidebar d-lg-none me-2" onclick="toggleSidebar()">
+                  <span class="material-icons">menu</span>
+                </button>
+                <nav aria-label="breadcrumb">
+                  <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="notificaciones-listado.html">Notificaciones</a></li>
+                    <li class="breadcrumb-item active">Nueva Notificación</li>
+                  </ol>
+                </nav>
+                <h5 class="mb-0">Nueva Notificación</h5>
+                <small class="text-muted">Crear y enviar comunicaciones a residentes</small>
+              </div>
+              
+              <div class="col-lg-6">
+                <div class="d-flex justify-content-end align-items-center">
+                  <div class="me-3">
+                    <button class="btn position-relative p-0" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons">notifications</span>
+                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        3
+                      </span>
+                    </button>
+                  </div>
+                  
+                  <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                      <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+                      <div class="d-none d-sm-block">
+                        <div class="fw-bold">Patricia Contreras</div>
+                        <small class="text-muted">Administradora</small>
+                      </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                      <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+                      <li><a class="dropdown-item" href="#">Configuración</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Contenido -->
+        <main class="container-fluid p-4">
+          <form id="notificationForm">
+            <!-- Tipo de Notificación -->
+            <div class="form-card">
+              <div class="form-card-header">
+                <h6 class="form-card-title">
+                  <span class="material-icons">category</span>
+                  Tipo de Notificación
+                </h6>
+              </div>
+              
+              <div class="type-selection">
+                <div class="type-card system" onclick="selectType('system')">
+                  <div class="type-icon">
+                    <span class="material-icons">settings</span>
+                  </div>
+                  <div class="type-card-title">Sistema</div>
+                  <p class="type-card-description">Notificaciones automáticas del sistema</p>
+                  <input type="radio" name="notificationType" value="system" class="d-none">
+                </div>
+                
+                <div class="type-card announcement" onclick="selectType('announcement')">
+                  <div class="type-icon">
+                    <span class="material-icons">campaign</span>
+                  </div>
+                  <div class="type-card-title">Anuncio</div>
+                  <p class="type-card-description">Comunicados y noticias generales</p>
+                  <input type="radio" name="notificationType" value="announcement" class="d-none">
+                </div>
+                
+                <div class="type-card reminder active" onclick="selectType('reminder')">
+                  <div class="type-icon">
+                    <span class="material-icons">alarm</span>
+                  </div>
+                  <div class="type-card-title">Recordatorio</div>
+                  <p class="type-card-description">Recordatorios de pagos y fechas importantes</p>
+                  <input type="radio" name="notificationType" value="reminder" class="d-none" checked>
+                </div>
+                
+                <div class="type-card alert" onclick="selectType('alert')">
+                  <div class="type-icon">
+                    <span class="material-icons">warning</span>
+                  </div>
+                  <div class="type-card-title">Alerta</div>
+                  <p class="type-card-description">Alertas urgentes y emergencias</p>
+                  <input type="radio" name="notificationType" value="alert" class="d-none">
+                </div>
+                
+                <div class="type-card maintenance" onclick="selectType('maintenance')">
+                  <div class="type-icon">
+                    <span class="material-icons">build</span>
+                  </div>
+                  <div class="type-card-title">Mantenimiento</div>
+                  <p class="type-card-description">Información sobre mantenimientos y reparaciones</p>
+                  <input type="radio" name="notificationType" value="maintenance" class="d-none">
+                </div>
+              </div>
+            </div>
+
+            <!-- Contenido del Mensaje -->
+            <div class="form-card">
+              <div class="form-card-header">
+                <h6 class="form-card-title">
+                  <span class="material-icons">edit</span>
+                  Contenido del Mensaje
+                </h6>
+              </div>
+              
+              <div class="row">
+                <div class="col-12 mb-3">
+                  <label for="notificationSubject" class="form-label">Asunto <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="notificationSubject" placeholder="Escribe el asunto de la notificación" required>
+                </div>
+                
+                <div class="col-12 mb-3">
+                  <label for="notificationMessage" class="form-label">Mensaje <span class="text-danger">*</span></label>
+                  <div class="editor-toolbar">
+                    <button type="button" class="editor-btn" onclick="formatText('bold')">
+                      <span class="material-icons">format_bold</span>
+                    </button>
+                    <button type="button" class="editor-btn" onclick="formatText('italic')">
+                      <span class="material-icons">format_italic</span>
+                    </button>
+                    <button type="button" class="editor-btn" onclick="formatText('underline')">
+                      <span class="material-icons">format_underlined</span>
+                    </button>
+                    <button type="button" class="editor-btn" onclick="formatText('insertOrderedList')">
+                      <span class="material-icons">format_list_numbered</span>
+                    </button>
+                    <button type="button" class="editor-btn" onclick="formatText('insertUnorderedList')">
+                      <span class="material-icons">format_list_bulleted</span>
+                    </button>
+                    <button type="button" class="editor-btn" onclick="insertVariable('{{nombre}}')">
+                      <span class="material-icons">person</span>
+                    </button>
+                    <button type="button" class="editor-btn" onclick="insertVariable('{{unidad}}')">
+                      <span class="material-icons">apartment</span>
+                    </button>
+                    <button type="button" class="editor-btn" onclick="insertVariable('{{fecha}}')">
+                      <span class="material-icons">calendar_today</span>
+                    </button>
+                  </div>
+                  <div class="message-editor form-control" contenteditable="true" id="notificationMessage" placeholder="Escribe el contenido de la notificación...">
+                    <p>Estimado(a) <strong>{{nombre}}</strong>,</p>
+                    <p>Le recordamos que el pago de gastos comunes del mes de septiembre vence el día 30 del presente mes.</p>
+                    <p>Detalles del pago:</p>
+                    <ul>
+                      <li>Unidad: <strong>{{unidad}}</strong></li>
+                      <li>Monto: $45.000</li>
+                      <li>Fecha límite: 30/09/2024</li>
+                    </ul>
+                    <p>Puede realizar el pago a través de transferencia bancaria o en las oficinas de administración.</p>
+                    <p>Saludos cordiales,<br>Administración</p>
+                  </div>
+                </div>
+                
+                <div class="col-12">
+                  <small class="text-muted">
+                    <strong>Variables disponibles:</strong> {{nombre}}, {{unidad}}, {{fecha}}, {{monto}}, {{edificio}}
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Canales de Envío -->
+            <div class="form-card">
+              <div class="form-card-header">
+                <h6 class="form-card-title">
+                  <span class="material-icons">send</span>
+                  Canales de Envío
+                </h6>
+              </div>
+              
+              <div class="channel-selection">
+                <div class="channel-option active" onclick="toggleChannel('email')">
+                  <input type="checkbox" name="channels" value="email" checked>
+                  <div class="channel-icon">
+                    <span class="material-icons">email</span>
+                  </div>
+                  <div class="channel-name">Email</div>
+                </div>
+                
+                <div class="channel-option" onclick="toggleChannel('sms')">
+                  <input type="checkbox" name="channels" value="sms">
+                  <div class="channel-icon">
+                    <span class="material-icons">sms</span>
+                  </div>
+                  <div class="channel-name">SMS</div>
+                </div>
+                
+                <div class="channel-option" onclick="toggleChannel('push')">
+                  <input type="checkbox" name="channels" value="push">
+                  <div class="channel-icon">
+                    <span class="material-icons">notifications</span>
+                  </div>
+                  <div class="channel-name">Push</div>
+                </div>
+                
+                <div class="channel-option" onclick="toggleChannel('app')">
+                  <input type="checkbox" name="channels" value="app">
+                  <div class="channel-icon">
+                    <span class="material-icons">phone_android</span>
+                  </div>
+                  <div class="channel-name">App</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Audiencia -->
+            <div class="form-card">
+              <div class="form-card-header">
+                <h6 class="form-card-title">
+                  <span class="material-icons">group</span>
+                  Destinatarios
+                </h6>
+              </div>
+              
+              <div class="audience-option active" onclick="selectAudience('all-residents')">
+                <div class="audience-header">
+                  <div class="audience-title">
+                    <span class="material-icons">people</span>
+                    Todos los residentes
+                  </div>
+                  <span class="audience-count">156 personas</span>
+                </div>
+                <p class="audience-description">Enviar a todos los residentes registrados en el sistema</p>
+                <input type="radio" name="audience" value="all-residents" class="d-none" checked>
+              </div>
+              
+              <div class="audience-option" onclick="selectAudience('owners')">
+                <div class="audience-header">
+                  <div class="audience-title">
+                    <span class="material-icons">home</span>
+                    Solo propietarios
+                  </div>
+                  <span class="audience-count">89 personas</span>
+                </div>
+                <p class="audience-description">Enviar únicamente a los propietarios de unidades</p>
+                <input type="radio" name="audience" value="owners" class="d-none">
+              </div>
+              
+              <div class="audience-option" onclick="selectAudience('tenants')">
+                <div class="audience-header">
+                  <div class="audience-title">
+                    <span class="material-icons">key</span>
+                    Solo arrendatarios
+                  </div>
+                  <span class="audience-count">67 personas</span>
+                </div>
+                <p class="audience-description">Enviar únicamente a los arrendatarios</p>
+                <input type="radio" name="audience" value="tenants" class="d-none">
+              </div>
+              
+              <div class="audience-option" onclick="selectAudience('building')">
+                <div class="audience-header">
+                  <div class="audience-title">
+                    <span class="material-icons">domain</span>
+                    Por edificio
+                  </div>
+                  <span class="audience-count">Variable</span>
+                </div>
+                <p class="audience-description">Seleccionar edificios específicos</p>
+                <input type="radio" name="audience" value="building" class="d-none">
+                <div class="custom-audience-section" id="buildingSelection">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label class="form-label">Seleccionar edificios:</label>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="tower-a" id="tower-a">
+                        <label class="form-check-label" for="tower-a">
+                          Torre Norte (78 residentes)
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="tower-b" id="tower-b">
+                        <label class="form-check-label" for="tower-b">
+                          Torre Sur (78 residentes)
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="audience-option" onclick="selectAudience('custom')">
+                <div class="audience-header">
+                  <div class="audience-title">
+                    <span class="material-icons">tune</span>
+                    Personalizada
+                  </div>
+                  <span class="audience-count">0 personas</span>
+                </div>
+                <p class="audience-description">Seleccionar destinatarios específicos</p>
+                <input type="radio" name="audience" value="custom" class="d-none">
+                <div class="custom-audience-section" id="customSelection">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label for="unitNumbers" class="form-label">Números de unidad (separados por coma):</label>
+                      <input type="text" class="form-control" id="unitNumbers" placeholder="101, 102, 201, 205...">
+                    </div>
+                    <div class="col-md-6">
+                      <label for="residentsSelect" class="form-label">O seleccionar personas:</label>
+                      <select class="form-select" id="residentsSelect" multiple>
+                        <option value="1">Juan Pérez - Unidad 101</option>
+                        <option value="2">María González - Unidad 102</option>
+                        <option value="3">Carlos Silva - Unidad 201</option>
+                        <option value="4">Ana Rodríguez - Unidad 202</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Programación -->
+            <div class="form-card">
+              <div class="form-card-header">
+                <h6 class="form-card-title">
+                  <span class="material-icons">schedule</span>
+                  Programación de Envío
+                </h6>
+              </div>
+              
+              <div class="schedule-option active" onclick="selectSchedule('now')">
+                <div class="schedule-title">
+                  <span class="material-icons">send</span>
+                  Enviar ahora
+                </div>
+                <p class="schedule-description">La notificación se enviará inmediatamente</p>
+                <input type="radio" name="schedule" value="now" class="d-none" checked>
+              </div>
+              
+              <div class="schedule-option" onclick="selectSchedule('scheduled')">
+                <div class="schedule-title">
+                  <span class="material-icons">schedule_send</span>
+                  Programar envío
+                </div>
+                <p class="schedule-description">Especificar fecha y hora de envío</p>
+                <input type="radio" name="schedule" value="scheduled" class="d-none">
+                <div class="schedule-details" id="scheduledDetails">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label for="scheduleDate" class="form-label">Fecha de envío:</label>
+                      <input type="text" class="form-control" id="scheduleDate" placeholder="Seleccionar fecha">
+                    </div>
+                    <div class="col-md-6">
+                      <label for="scheduleTime" class="form-label">Hora de envío:</label>
+                      <input type="time" class="form-control" id="scheduleTime" value="09:00">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="schedule-option" onclick="selectSchedule('draft')">
+                <div class="schedule-title">
+                  <span class="material-icons">drafts</span>
+                  Guardar como borrador
+                </div>
+                <p class="schedule-description">Guardar para enviar más tarde</p>
+                <input type="radio" name="schedule" value="draft" class="d-none">
+              </div>
+            </div>
+
+            <!-- Vista Previa -->
+            <div class="form-card">
+              <div class="form-card-header">
+                <h6 class="form-card-title">
+                  <span class="material-icons">preview</span>
+                  Vista Previa
+                </h6>
+              </div>
+              
+              <div class="preview-card">
+                <div class="preview-header">
+                  <div class="preview-title">Vista previa de la notificación</div>
+                </div>
+                <div class="preview-meta">
+                  <div class="preview-meta-item">
+                    <span class="material-icons">category</span>
+                    <span id="previewType">Recordatorio</span>
+                  </div>
+                  <div class="preview-meta-item">
+                    <span class="material-icons">send</span>
+                    <span id="previewChannels">Email</span>
+                  </div>
+                  <div class="preview-meta-item">
+                    <span class="material-icons">group</span>
+                    <span id="previewAudience">156 destinatarios</span>
+                  </div>
+                  <div class="preview-meta-item">
+                    <span class="material-icons">schedule</span>
+                    <span id="previewSchedule">Envío inmediato</span>
+                  </div>
+                </div>
+                <div class="preview-content">
+                  <div class="preview-subject" id="previewSubject">Vencimiento gastos comunes</div>
+                  <div class="preview-message" id="previewMessage">
+                    <p>Estimado(a) <strong>Juan Pérez</strong>,</p>
+                    <p>Le recordamos que el pago de gastos comunes del mes de septiembre vence el día 30 del presente mes.</p>
+                    <p>Detalles del pago:</p>
+                    <ul>
+                      <li>Unidad: <strong>101</strong></li>
+                      <li>Monto: $45.000</li>
+                      <li>Fecha límite: 30/09/2024</li>
+                    </ul>
+                    <p>Puede realizar el pago a través de transferencia bancaria o en las oficinas de administración.</p>
+                    <p>Saludos cordiales,<br>Administración</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="action-buttons">
+              <a href="notificaciones-listado.html" class="btn btn-outline-secondary">
+                <span class="material-icons me-1">arrow_back</span>
+                Cancelar
+              </a>
+              <button type="button" class="btn btn-outline-primary" onclick="saveAsDraft()">
+                <span class="material-icons me-1">save</span>
+                Guardar Borrador
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="sendTest()">
+                <span class="material-icons me-1">mail_outline</span>
+                Envío de Prueba
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <span class="material-icons me-1">send</span>
+                Enviar Notificación
+              </button>
+            </div>
+          </form>
+        </main>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script src="assets/js/script.js"></script>
+    <script>
+      function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.querySelector('.sidebar-backdrop');
+        
+        sidebar.classList.toggle('show');
+        backdrop.classList.toggle('show');
+      }
+
+      // Type selection
+      function selectType(type) {
+        // Remove active class from all type cards
+        document.querySelectorAll('.type-card').forEach(card => {
+          card.classList.remove('active');
+        });
+        
+        // Add active class to selected card
+        document.querySelector(`.type-card.${type}`).classList.add('active');
+        
+        // Update radio button
+        document.querySelector(`input[value="${type}"]`).checked = true;
+        
+        updatePreview();
+      }
+
+      // Channel selection
+      function toggleChannel(channel) {
+        const channelOption = document.querySelector(`.channel-option input[value="${channel}"]`).parentElement;
+        const checkbox = document.querySelector(`.channel-option input[value="${channel}"]`);
+        
+        checkbox.checked = !checkbox.checked;
+        
+        if (checkbox.checked) {
+          channelOption.classList.add('active');
+        } else {
+          channelOption.classList.remove('active');
+        }
+        
+        updatePreview();
+      }
+
+      // Audience selection
+      function selectAudience(audience) {
+        // Remove active class from all audience options
+        document.querySelectorAll('.audience-option').forEach(option => {
+          option.classList.remove('active');
+        });
+        
+        // Hide all custom sections
+        document.querySelectorAll('.custom-audience-section').forEach(section => {
+          section.classList.remove('show');
+        });
+        
+        // Add active class to selected option
+        document.querySelector(`.audience-option input[value="${audience}"]`).parentElement.classList.add('active');
+        
+        // Update radio button
+        document.querySelector(`input[value="${audience}"]`).checked = true;
+        
+        // Show custom section if needed
+        if (audience === 'building') {
+          document.getElementById('buildingSelection').classList.add('show');
+        } else if (audience === 'custom') {
+          document.getElementById('customSelection').classList.add('show');
+        }
+        
+        updatePreview();
+      }
+
+      // Schedule selection
+      function selectSchedule(schedule) {
+        // Remove active class from all schedule options
+        document.querySelectorAll('.schedule-option').forEach(option => {
+          option.classList.remove('active');
+        });
+        
+        // Hide all schedule details
+        document.querySelectorAll('.schedule-details').forEach(details => {
+          details.classList.remove('show');
+        });
+        
+        // Add active class to selected option
+        document.querySelector(`.schedule-option input[value="${schedule}"]`).parentElement.classList.add('active');
+        
+        // Update radio button
+        document.querySelector(`input[name="schedule"][value="${schedule}"]`).checked = true;
+        
+        // Show schedule details if needed
+        if (schedule === 'scheduled') {
+          document.getElementById('scheduledDetails').classList.add('show');
+        }
+        
+        updatePreview();
+      }
+
+      // Text formatting
+      function formatText(command) {
+        document.execCommand(command, false, null);
+        updatePreview();
+      }
+
+      // Insert variable
+      function insertVariable(variable) {
+        const editor = document.getElementById('notificationMessage');
+        editor.focus();
+        document.execCommand('insertText', false, variable);
+        updatePreview();
+      }
+
+      // Update preview
+      function updatePreview() {
+        // Update type
+        const selectedType = document.querySelector('input[name="notificationType"]:checked')?.value || 'reminder';
+        const typeLabels = {
+          'system': 'Sistema',
+          'announcement': 'Anuncio',
+          'reminder': 'Recordatorio',
+          'alert': 'Alerta',
+          'maintenance': 'Mantenimiento'
+        };
+        document.getElementById('previewType').textContent = typeLabels[selectedType];
+        
+        // Update channels
+        const selectedChannels = Array.from(document.querySelectorAll('input[name="channels"]:checked')).map(cb => cb.value);
+        const channelLabels = {
+          'email': 'Email',
+          'sms': 'SMS',
+          'push': 'Push',
+          'app': 'App'
+        };
+        const channelText = selectedChannels.map(ch => channelLabels[ch]).join(', ') || 'Ningún canal seleccionado';
+        document.getElementById('previewChannels').textContent = channelText;
+        
+        // Update audience
+        const selectedAudience = document.querySelector('input[name="audience"]:checked')?.value || 'all-residents';
+        const audienceLabels = {
+          'all-residents': '156 destinatarios (Todos)',
+          'owners': '89 destinatarios (Propietarios)',
+          'tenants': '67 destinatarios (Arrendatarios)',
+          'building': 'Edificios seleccionados',
+          'custom': 'Selección personalizada'
+        };
+        document.getElementById('previewAudience').textContent = audienceLabels[selectedAudience];
+        
+        // Update schedule
+        const selectedSchedule = document.querySelector('input[name="schedule"]:checked')?.value || 'now';
+        const scheduleLabels = {
+          'now': 'Envío inmediato',
+          'scheduled': 'Envío programado',
+          'draft': 'Guardar como borrador'
+        };
+        document.getElementById('previewSchedule').textContent = scheduleLabels[selectedSchedule];
+        
+        // Update subject
+        const subject = document.getElementById('notificationSubject').value || 'Vencimiento gastos comunes';
+        document.getElementById('previewSubject').textContent = subject;
+        
+        // Update message
+        const message = document.getElementById('notificationMessage').innerHTML;
+        document.getElementById('previewMessage').innerHTML = message;
+      }
+
+      // Form submission
+      document.getElementById('notificationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validate required fields
+        const subject = document.getElementById('notificationSubject').value;
+        const message = document.getElementById('notificationMessage').textContent;
+        const channels = document.querySelectorAll('input[name="channels"]:checked');
+        
+        if (!subject.trim()) {
+          alert('Por favor ingresa un asunto para la notificación');
+          return;
+        }
+        
+        if (!message.trim()) {
+          alert('Por favor ingresa el mensaje de la notificación');
+          return;
+        }
+        
+        if (channels.length === 0) {
+          alert('Por favor selecciona al menos un canal de envío');
+          return;
+        }
+        
+        // Show loading and simulate sending
+        const submitBtn = document.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
+        submitBtn.disabled = true;
+        
+        setTimeout(() => {
+          alert('Notificación enviada exitosamente');
+          window.location.href = 'notificaciones-listado.html';
+        }, 3000);
+      });
+
+      // Save as draft
+      function saveAsDraft() {
+        if (confirm('¿Guardar la notificación como borrador?')) {
+          setTimeout(() => {
+            alert('Notificación guardada como borrador');
+            window.location.href = 'notificaciones-listado.html';
+          }, 1000);
+        }
+      }
+
+      // Send test
+      function sendTest() {
+        const email = prompt('Ingresa el email para el envío de prueba:');
+        if (email) {
+          setTimeout(() => {
+            alert(`Notificación de prueba enviada a ${email}`);
+          }, 1500);
+        }
+      }
+
+      // Initialize flatpickr for date picker
+      flatpickr("#scheduleDate", {
+        locale: "es",
+        dateFormat: "d/m/Y",
+        minDate: "today"
+      });
+
+      // Initialize preview
+      updatePreview();
+
+      // Add event listeners for real-time preview updates
+      document.getElementById('notificationSubject').addEventListener('input', updatePreview);
+      document.getElementById('notificationMessage').addEventListener('input', updatePreview);
+    </script>
+  </body>
+</html>

@@ -1,4 +1,15 @@
-// Tipos para el módulo de Compras
+// =========================================
+// TIPOS PARA COMPRAS
+// =========================================
+
+export type TipoDocumento = string; // e.g., 'Factura', 'Boleta', etc.
+
+export const TIPOS_DOCUMENTO = {
+  factura: { label: 'Factura', value: 'Factura' },
+  boleta: { label: 'Boleta', value: 'Boleta' },
+  recibo: { label: 'Recibo', value: 'Recibo' },
+  // Agregar más según necesidad
+} as const;
 
 export interface CompraBackend {
   id: number;

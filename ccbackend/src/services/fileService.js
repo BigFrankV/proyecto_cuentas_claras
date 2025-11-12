@@ -175,7 +175,11 @@ class FileService {
       const [files] = await db.query(
         `
         SELECT * FROM archivos 
-        WHERE id = ? AND (comunidad_id = ? OR comunidad_id IS NULL) AND is_active = TRUE
+        WHERE id = ? AND (
+          comunidad_id = ? OR 
+          comunidad_id IS NULL OR 
+          category = 'perfil'
+        ) AND is_active = TRUE
       `,
         [fileId, comunidadId]
       );
