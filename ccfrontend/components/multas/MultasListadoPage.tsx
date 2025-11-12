@@ -183,34 +183,44 @@ const MultasListadoPage: React.FC = () => {
     <ProtectedRoute>
       <Layout title='Lista de Multas'>
         <div className='container-fluid p-4'>
-          <PageHeader
-            title="Multas"
-            subtitle="Gestión completa de multas y sanciones"
-            icon="gavel"
-            primaryAction={canManageFinances ? {
-              href: '/multas/nueva',
-              label: 'Nueva Multa',
-              icon: 'add',
-            } : undefined}
-          >
-            <div className="d-flex align-items-center gap-3">
-              <div className='input-group' style={{ maxWidth: '300px' }}>
-                <span className='input-group-text'>
-                  <i className='material-icons'>search</i>
-                </span>
-                <input
-                  type='text'
-                  className='form-control'
-                  placeholder='Buscar multas...'
-                  value={filtros.busqueda}
-                  onChange={e =>
-                    handleFiltroChange('busqueda', e.target.value)
-                  }
-                />
+          {/* Header con búsqueda y notificaciones */}
+          <header className='bg-white border-bottom shadow-sm p-3 mb-4'>
+            <div className='d-flex justify-content-between align-items-center'>
+              <div className='d-flex align-items-center'>
+                <button
+                  className='btn btn-link d-lg-none me-3'
+                  onClick={() => {
+                    /* toggle sidebar */
+                  }}
+                >
+                  <i className='material-icons'>menu</i>
+                </button>
+                <h1 className='h4 mb-0'>Multas</h1>
               </div>
-              <button className='btn btn-outline-secondary'>
-                <i className='material-icons'>notifications</i>
-              </button>
+              <div className='d-flex align-items-center'>
+                <div className='input-group me-3' style={{ maxWidth: '300px' }}>
+                  <span className='input-group-text'>
+                    <i className='material-icons'>search</i>
+                  </span>
+                  <input
+                    type='text'
+                    className='form-control'
+                    placeholder='Buscar multas...'
+                    value={filtros.busqueda}
+                    onChange={e =>
+                      handleFiltroChange('busqueda', e.target.value)
+                    }
+                  />
+                </div>
+                <button className='btn btn-outline-secondary me-2'>
+                  <i className='material-icons'>notifications</i>
+                </button>
+                {canManageFinances && (
+                  <Link href='/multas-nueva' className='btn btn-primary'>
+                    <i className='material-icons me-2'>add</i>Nueva Multa
+                  </Link>
+                )}
+              </div>
             </div>
           </PageHeader>
 

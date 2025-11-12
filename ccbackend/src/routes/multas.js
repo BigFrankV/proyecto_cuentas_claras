@@ -423,13 +423,7 @@ router.post(
     body('fecha_infraccion')
       .optional()
       .isISO8601()
-      .withMessage('fecha_infraccion debe ser una fecha válida')
-      .custom((fecha) => {
-        if (fecha && new Date(fecha) > new Date()) {
-          throw new Error('fecha_infraccion no puede ser futura');
-        }
-        return true;
-      }),
+      .withMessage('fecha_infraccion debe ser una fecha válida'),
     body('fecha_vencimiento')
       .optional()
       .isISO8601()
@@ -533,7 +527,7 @@ router.post(
       // Intentar INSERT con reintentos en caso de conflicto en multa.numero
       let numeroGenerado = await generarNumeroMulta(comunidad_id);
       let insertResult = null;
-      const maxRetries = 20;
+      const maxRetries = 10000;
 
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
@@ -1268,7 +1262,7 @@ router.post(
         [
           id,
           req.user.sub,
-          multa.persona_id || null,
+          req.user.persona_id,  // ✅ Usa persona_id del usuario
           multa.comunidad_id || null,
           motivo,
         ]

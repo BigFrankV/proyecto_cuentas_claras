@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: db
--- Tiempo de generación: 11-11-2025 a las 07:00:40
+-- Tiempo de generación: 12-11-2025 a las 21:54:53
 -- Versión del servidor: 8.0.43
 -- Versión de PHP: 8.3.26
 
@@ -102,7 +102,7 @@ CREATE TABLE `archivos` (
   `file_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `file_size` bigint NOT NULL,
   `mimetype` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `comunidad_id` bigint NOT NULL,
+  `comunidad_id` bigint DEFAULT NULL,
   `entity_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `entity_id` bigint DEFAULT NULL,
   `category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'general',
@@ -1870,54 +1870,58 @@ CREATE TABLE `multa` (
   `anulado_por` bigint DEFAULT NULL COMMENT 'Usuario que anuló la multa',
   `motivo_anulacion` varchar(500) DEFAULT NULL COMMENT 'Motivo de la anulación',
   `fecha_anulacion` datetime DEFAULT NULL COMMENT 'Fecha y hora de la anulación',
-  `pagado_por` bigint DEFAULT NULL COMMENT 'Usuario que registró el pago'
+  `pagado_por` bigint DEFAULT NULL COMMENT 'Usuario que registró el pago',
+  `tipo_infraccion_id` bigint DEFAULT NULL,
+  `fecha_vencimiento` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Volcado de datos para la tabla `multa`
 --
 
-INSERT INTO `multa` (`id`, `numero`, `comunidad_id`, `unidad_id`, `persona_id`, `motivo`, `descripcion`, `monto`, `estado`, `prioridad`, `creada_por`, `aprobada_por`, `fecha_aprobacion`, `fecha`, `fecha_pago`, `created_at`, `updated_at`, `anulado_por`, `motivo_anulacion`, `fecha_anulacion`, `pagado_por`) VALUES
-(1, 'M-2025-0001', 1, 1, 1, 'Mascota sin correa', 'Infracción por mascota sin correa en áreas comunes.', 5000.00, 'pagado', 'media', 1, NULL, NULL, '2025-11-20', '2025-09-01 00:00:00', '2025-09-25 20:00:00', '2025-10-16 04:17:35', 1, NULL, '2025-10-01 00:45:06', NULL),
-(2, 'M-2025-0002', 2, 3, 3, 'Ruido excesivo', 'Ruido excesivo generado por fiestas nocturnas.', 15000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-02', '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-17 01:29:55', NULL, NULL, NULL, 1),
-(3, 'M-2025-0003', 3, 4, 4, 'Bloqueo de acceso', 'Bloqueo de acceso vehicular sin autorización.', 10000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-03', '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-16 05:14:42', NULL, NULL, NULL, NULL),
-(4, 'M-2025-0004', 4, 5, 5, 'Fumar en áreas comunes', 'Fumar en áreas comunes del edificio.', 20000.00, 'apelada', 'media', 1, NULL, NULL, '2025-09-04', '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-17 01:06:55', 1, 'Error en la emisión', '2025-10-14 14:00:00', NULL),
-(5, 'M-2025-0005', 5, 6, 6, 'Daño a propiedad común', 'Daño a propiedad común (pintura en pared).', 30000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-05', '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-16 05:07:33', NULL, NULL, NULL, NULL),
-(6, 'M-2025-0006', 6, 7, 7, 'Mascota peligrosa sin bozal', 'Mascota peligrosa sin bozal en espacios públicos.', 12000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-06', '2025-10-16 11:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 1),
-(7, 'M-2025-0007', 7, 8, 8, 'Uso no autorizado de ascensor', 'Uso no autorizado del ascensor de servicio.', 8000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-07', NULL, '2025-10-10 18:10:15', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL),
-(8, 'M-2025-0008', 8, 9, 9, 'Dejar basura en pasillo', 'Dejar basura en pasillo común.', 6000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-08', '2025-10-17 12:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 1),
-(9, 'M-2025-0009', 9, 10, 10, 'Instalación de antena sin permiso', 'Instalación de antena sin permiso administrativo.', 25000.00, 'apelada', 'media', 1, NULL, NULL, '2025-09-09', NULL, '2025-10-10 18:10:15', '2025-10-16 05:38:29', NULL, NULL, NULL, NULL),
-(10, 'M-2025-0010', 10, 10, 10, 'Fiesta hasta tarde', 'Fiesta hasta tarde generando molestias.', 18000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-10', '2025-10-18 13:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 1),
-(11, 'M-2025-0011', 1, 1, 1, 'Uso de quincho fuera de horario', 'Usó el quincho después de las 23:00 hrs.', 15000.00, 'pendiente', 'media', 6, NULL, NULL, '2025-09-11', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15', NULL, NULL, NULL, NULL),
-(12, 'M-2025-0012', 2, 3, 3, 'Estacionamiento indebido', 'Vehículo estacionado en zona no permitida.', 8000.00, 'pagado', 'baja', 6, NULL, NULL, '2025-09-12', '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-17 01:29:55', NULL, NULL, NULL, 3),
-(13, 'M-2025-0013', 3, 4, 4, 'Desperdicio de agua', 'Se dejó llave abierta en zona común.', 10000.00, 'anulada', 'alta', 6, NULL, NULL, '2025-09-13', NULL, '2025-10-10 18:10:15', '2025-10-16 05:14:42', 1, 'Error de identificación de unidad', '2025-10-15 12:00:00', NULL),
-(14, 'M-2025-0014', 4, 5, 5, 'Incumplimiento reglamento basura', 'Dejar bolsas de basura en el pasillo por más de 1 hr.', 5000.00, 'pendiente', 'media', 6, NULL, NULL, '2025-09-14', NULL, '2025-10-10 18:10:15', '2025-10-17 01:06:55', NULL, NULL, NULL, NULL),
-(15, 'M-2025-0015', 5, 6, 6, 'Ruidos en Cowork', 'Llamada telefónica con volumen alto en sala Cowork.', 12000.00, 'pagado', 'media', 6, NULL, NULL, '2025-09-15', '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-16 05:07:33', NULL, NULL, NULL, 6),
-(16, 'M-2025-0016', 6, 7, 7, 'Uso de amenidad sin reserva', 'Uso de sala de cine sin reserva previa.', 10000.00, 'apelada', 'media', 6, NULL, NULL, '2025-09-16', NULL, '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, NULL),
-(17, 'M-2025-0017', 7, 8, 8, 'Instalación de toldo no permitido', 'Instalación de un toldo en balcón sin permiso.', 20000.00, 'pendiente', 'alta', 6, NULL, NULL, '2025-09-17', NULL, '2025-10-10 18:10:15', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL),
-(18, 'M-2025-0018', 8, 9, 9, 'Modificación de fachada', 'Cambio de color de cortinas exteriores.', 15000.00, 'pagado', 'baja', 6, NULL, NULL, '2025-09-18', '2025-10-17 12:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 9),
-(19, 'M-2025-0019', 9, 10, 10, 'Uso de Salón de Yoga con comida', 'Consumir alimentos dentro del Salón de Yoga.', 5000.00, 'pendiente', 'media', 6, NULL, NULL, '2025-09-19', NULL, '2025-10-10 18:10:15', '2025-10-16 05:38:29', NULL, NULL, NULL, NULL),
-(20, 'M-2025-0020', 10, 10, 10, 'Obstrucción de acceso de emergencia', 'Dejar bicicleta en el pasillo de emergencia.', 18000.00, 'pagado', 'critica', 6, NULL, NULL, '2025-09-20', '2025-10-18 13:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 10),
-(21, 'M-2025-0021', 11, 11, 11, 'Estacionar en zona prohibida', 'Vehículo en estacionamiento de visitas por más de 12 hrs.', 10000.00, 'pendiente', 'media', 11, NULL, NULL, '2025-09-21', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL),
-(22, 'M-2025-0022', 12, 13, 13, 'Ruido de construcción', 'Ruido de martillo después de las 18:00 hrs.', 8000.00, 'pagado', 'media', 12, NULL, NULL, '2025-09-22', '2025-10-22 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 13),
-(23, 'M-2025-0023', 13, 14, 14, 'No usar pulsera en piscina', 'Uso de piscina sin identificación de residente.', 5000.00, 'pendiente', 'baja', 13, NULL, NULL, '2025-09-23', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL),
-(24, 'M-2025-0024', 14, 15, 15, 'Basura voluminosa', 'Dejar sillón viejo en área de basura común.', 15000.00, 'apelada', 'alta', 14, NULL, NULL, '2025-09-24', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL),
-(25, 'M-2025-0025', 15, 16, 16, 'Mascota sin permiso', 'Tener mascota sin registro administrativo.', 10000.00, 'pagado', 'media', 15, NULL, NULL, '2025-09-25', '2025-10-21 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 16),
-(26, 'M-2025-0026', 16, 17, 17, 'Uso de asadera no permitido', 'Usar parrilla a carbón en balcón.', 20000.00, 'pendiente', 'critica', 16, NULL, NULL, '2025-09-26', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL),
-(27, 'M-2025-0027', 17, 18, 18, 'Obstrucción de pasillo', 'Cajas de mudanza en pasillo de emergencia.', 8000.00, 'pagado', 'alta', 17, NULL, NULL, '2025-09-27', '2025-10-20 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 18),
-(28, 'M-2025-0028', 18, 19, 19, 'Mala disposición de escombros', 'Dejar escombros fuera del contenedor autorizado.', 12000.00, 'pendiente', 'media', 18, NULL, NULL, '2025-09-28', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL),
-(29, 'M-2025-0029', 19, 20, 20, 'Ruido de motor en la noche', 'Motor de auto encendido por largo tiempo en la noche.', 10000.00, 'anulada', 'media', 19, NULL, NULL, '2025-09-29', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', 1, 'Error de registro de unidad', '2025-10-23 10:00:00', NULL),
-(30, 'M-2025-0030', 20, 20, 20, 'Fiesta en zona común no autorizada', 'Uso de Terraza Panorámica sin permiso.', 30000.00, 'pagado', 'critica', 20, NULL, NULL, '2025-09-30', '2025-10-19 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 20),
-(31, 'M-2025-0031', 1, 1, 1, 'Mascota sin correa (2da vez)', 'Reincidencia de mascota sin correa.', 10000.00, 'pendiente', 'alta', 1, NULL, NULL, '2025-10-01', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL),
-(32, 'M-2025-0032', 2, 2, 2, 'Ruido excesivo (2da vez)', 'Reincidencia de ruido nocturno.', 30000.00, 'pagado', 'critica', 2, NULL, NULL, '2025-10-02', '2025-10-21 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 2),
-(33, 'M-2025-0033', 3, 3, 3, 'Bloqueo de acceso (2da vez)', 'Bloqueo de entrada de servicio.', 20000.00, 'pendiente', 'alta', 3, NULL, NULL, '2025-10-03', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL),
-(34, 'M-2025-0034', 4, 4, 4, 'Fumar en áreas comunes (2da vez)', 'Fumar en zona de juegos infantiles.', 40000.00, 'apelada', 'critica', 4, NULL, NULL, '2025-10-04', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL),
-(35, 'M-2025-0035', 5, 5, 5, 'Daño a propiedad común (2da vez)', 'Graffiti en muro de estacionamiento.', 60000.00, 'pagado', 'critica', 5, NULL, NULL, '2025-10-05', '2025-10-18 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 5),
-(36, 'M-2025-0036', 6, 6, 6, 'Mascota peligrosa sin bozal (2da vez)', 'Perro de raza peligrosa sin control.', 24000.00, 'pendiente', 'critica', 6, NULL, NULL, '2025-10-06', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL),
-(37, 'M-2025-0037', 7, 7, 7, 'Uso no autorizado de ascensor (2da vez)', 'Uso de ascensor de servicio para mudanza sin aviso.', 16000.00, 'pagado', 'media', 7, NULL, NULL, '2025-10-07', '2025-10-17 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 7),
-(38, 'M-2025-0038', 8, 8, 8, 'Dejar basura en pasillo (2da vez)', 'Bolsa de basura dejada por más de 1 hora.', 12000.00, 'pendiente', 'media', 8, NULL, NULL, '2025-10-08', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL),
-(39, 'M-2025-0039', 9, 9, 9, 'Instalación de antena sin permiso (2da vez)', 'Reinstalación de antena tras aviso de retiro.', 50000.00, 'anulada', 'alta', 9, NULL, NULL, '2025-10-09', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', 1, 'Autorización posterior del comité', '2025-10-23 12:00:00', NULL),
-(40, 'M-2025-0040', 10, 10, 10, 'Fiesta hasta tarde (2da vez)', 'Ruidos molestos y música alta.', 36000.00, 'pagado', 'critica', 10, NULL, NULL, '2025-10-10', '2025-10-16 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 10);
+INSERT INTO `multa` (`id`, `numero`, `comunidad_id`, `unidad_id`, `persona_id`, `motivo`, `descripcion`, `monto`, `estado`, `prioridad`, `creada_por`, `aprobada_por`, `fecha_aprobacion`, `fecha`, `fecha_pago`, `created_at`, `updated_at`, `anulado_por`, `motivo_anulacion`, `fecha_anulacion`, `pagado_por`, `tipo_infraccion_id`, `fecha_vencimiento`) VALUES
+(1, 'M-2025-0001', 1, 1, 1, 'Mascota sin correa', 'Infracción por mascota sin correa en áreas comunes.', 5000.00, 'pagado', 'media', 1, NULL, NULL, '2025-11-20', '2025-09-01 00:00:00', '2025-09-25 20:00:00', '2025-10-16 04:17:35', 1, NULL, '2025-10-01 00:45:06', NULL, NULL, NULL),
+(2, 'M-2025-0002', 2, 3, 3, 'Ruido excesivo', 'Ruido excesivo generado por fiestas nocturnas.', 15000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-02', '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-17 01:29:55', NULL, NULL, NULL, 1, NULL, NULL),
+(3, 'M-2025-0003', 3, 4, 4, 'Bloqueo de acceso', 'Bloqueo de acceso vehicular sin autorización.', 10000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-03', '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-16 05:14:42', NULL, NULL, NULL, NULL, NULL, NULL),
+(4, 'M-2025-0004', 4, 5, 5, 'Fumar en áreas comunes', 'Fumar en áreas comunes del edificio.', 20000.00, 'apelada', 'media', 1, NULL, NULL, '2025-09-04', '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-17 01:06:55', 1, 'Error en la emisión', '2025-10-14 14:00:00', NULL, NULL, NULL),
+(5, 'M-2025-0005', 5, 6, 6, 'Daño a propiedad común', 'Daño a propiedad común (pintura en pared).', 30000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-05', '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-16 05:07:33', NULL, NULL, NULL, NULL, NULL, NULL),
+(6, 'M-2025-0006', 6, 7, 7, 'Mascota peligrosa sin bozal', 'Mascota peligrosa sin bozal en espacios públicos.', 12000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-06', '2025-10-16 11:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 1, NULL, NULL),
+(7, 'M-2025-0007', 7, 8, 8, 'Uso no autorizado de ascensor', 'Uso no autorizado del ascensor de servicio.', 8000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-09-07', NULL, '2025-10-10 18:10:15', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL, NULL, NULL),
+(8, 'M-2025-0008', 8, 9, 9, 'Dejar basura en pasillo', 'Dejar basura en pasillo común.', 6000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-08', '2025-10-17 12:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 1, NULL, NULL),
+(9, 'M-2025-0009', 9, 10, 10, 'Instalación de antena sin permiso', 'Instalación de antena sin permiso administrativo.', 25000.00, 'apelada', 'media', 1, NULL, NULL, '2025-09-09', NULL, '2025-10-10 18:10:15', '2025-10-16 05:38:29', NULL, NULL, NULL, NULL, NULL, NULL),
+(10, 'M-2025-0010', 10, 10, 10, 'Fiesta hasta tarde', 'Fiesta hasta tarde generando molestias.', 18000.00, 'pagado', 'media', 1, NULL, NULL, '2025-09-10', '2025-10-18 13:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 1, NULL, NULL),
+(11, 'M-2025-0011', 1, 1, 1, 'Uso de quincho fuera de horario', 'Usó el quincho después de las 23:00 hrs.', 15000.00, 'pendiente', 'media', 6, NULL, NULL, '2025-09-11', NULL, '2025-10-10 18:10:15', '2025-10-10 18:10:15', NULL, NULL, NULL, NULL, NULL, NULL),
+(12, 'M-2025-0012', 2, 3, 3, 'Estacionamiento indebido', 'Vehículo estacionado en zona no permitida.', 8000.00, 'pagado', 'baja', 6, NULL, NULL, '2025-09-12', '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-17 01:29:55', NULL, NULL, NULL, 3, NULL, NULL),
+(13, 'M-2025-0013', 3, 4, 4, 'Desperdicio de agua', 'Se dejó llave abierta en zona común.', 10000.00, 'anulada', 'alta', 6, NULL, NULL, '2025-09-13', NULL, '2025-10-10 18:10:15', '2025-10-16 05:14:42', 1, 'Error de identificación de unidad', '2025-10-15 12:00:00', NULL, NULL, NULL),
+(14, 'M-2025-0014', 4, 5, 5, 'Incumplimiento reglamento basura', 'Dejar bolsas de basura en el pasillo por más de 1 hr.', 5000.00, 'pendiente', 'media', 6, NULL, NULL, '2025-09-14', NULL, '2025-10-10 18:10:15', '2025-10-17 01:06:55', NULL, NULL, NULL, NULL, NULL, NULL),
+(15, 'M-2025-0015', 5, 6, 6, 'Ruidos en Cowork', 'Llamada telefónica con volumen alto en sala Cowork.', 12000.00, 'pagado', 'media', 6, NULL, NULL, '2025-09-15', '2025-10-16 00:00:00', '2025-10-10 18:10:15', '2025-10-16 05:07:33', NULL, NULL, NULL, 6, NULL, NULL),
+(16, 'M-2025-0016', 6, 7, 7, 'Uso de amenidad sin reserva', 'Uso de sala de cine sin reserva previa.', 10000.00, 'apelada', 'media', 6, NULL, NULL, '2025-09-16', NULL, '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, NULL, NULL, NULL),
+(17, 'M-2025-0017', 7, 8, 8, 'Instalación de toldo no permitido', 'Instalación de un toldo en balcón sin permiso.', 20000.00, 'pendiente', 'alta', 6, NULL, NULL, '2025-09-17', NULL, '2025-10-10 18:10:15', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL, NULL, NULL),
+(18, 'M-2025-0018', 8, 9, 9, 'Modificación de fachada', 'Cambio de color de cortinas exteriores.', 15000.00, 'pagado', 'baja', 6, NULL, NULL, '2025-09-18', '2025-10-17 12:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 9, NULL, NULL),
+(19, 'M-2025-0019', 9, 10, 10, 'Uso de Salón de Yoga con comida', 'Consumir alimentos dentro del Salón de Yoga.', 5000.00, 'pendiente', 'media', 6, NULL, NULL, '2025-09-19', NULL, '2025-10-10 18:10:15', '2025-10-16 05:38:29', NULL, NULL, NULL, NULL, NULL, NULL),
+(20, 'M-2025-0020', 10, 10, 10, 'Obstrucción de acceso de emergencia', 'Dejar bicicleta en el pasillo de emergencia.', 18000.00, 'pagado', 'critica', 6, NULL, NULL, '2025-09-20', '2025-10-18 13:00:00', '2025-10-10 18:10:15', '2025-10-15 03:48:34', NULL, NULL, NULL, 10, NULL, NULL),
+(21, 'M-2025-0021', 11, 11, 11, 'Estacionar en zona prohibida', 'Vehículo en estacionamiento de visitas por más de 12 hrs.', 10000.00, 'pendiente', 'media', 11, NULL, NULL, '2025-09-21', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL, NULL),
+(22, 'M-2025-0022', 12, 13, 13, 'Ruido de construcción', 'Ruido de martillo después de las 18:00 hrs.', 8000.00, 'pagado', 'media', 12, NULL, NULL, '2025-09-22', '2025-10-22 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 13, NULL, NULL),
+(23, 'M-2025-0023', 13, 14, 14, 'No usar pulsera en piscina', 'Uso de piscina sin identificación de residente.', 5000.00, 'pendiente', 'baja', 13, NULL, NULL, '2025-09-23', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL, NULL),
+(24, 'M-2025-0024', 14, 15, 15, 'Basura voluminosa', 'Dejar sillón viejo en área de basura común.', 15000.00, 'apelada', 'alta', 14, NULL, NULL, '2025-09-24', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL, NULL),
+(25, 'M-2025-0025', 15, 16, 16, 'Mascota sin permiso', 'Tener mascota sin registro administrativo.', 10000.00, 'pagado', 'media', 15, NULL, NULL, '2025-09-25', '2025-10-21 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 16, NULL, NULL),
+(26, 'M-2025-0026', 16, 17, 17, 'Uso de asadera no permitido', 'Usar parrilla a carbón en balcón.', 20000.00, 'pendiente', 'critica', 16, NULL, NULL, '2025-09-26', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL, NULL),
+(27, 'M-2025-0027', 17, 18, 18, 'Obstrucción de pasillo', 'Cajas de mudanza en pasillo de emergencia.', 8000.00, 'pagado', 'alta', 17, NULL, NULL, '2025-09-27', '2025-10-20 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 18, NULL, NULL),
+(28, 'M-2025-0028', 18, 19, 19, 'Mala disposición de escombros', 'Dejar escombros fuera del contenedor autorizado.', 12000.00, 'pendiente', 'media', 18, NULL, NULL, '2025-09-28', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL, NULL),
+(29, 'M-2025-0029', 19, 20, 20, 'Ruido de motor en la noche', 'Motor de auto encendido por largo tiempo en la noche.', 10000.00, 'anulada', 'media', 19, NULL, NULL, '2025-09-29', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', 1, 'Error de registro de unidad', '2025-10-23 10:00:00', NULL, NULL, NULL),
+(30, 'M-2025-0030', 20, 20, 20, 'Fiesta en zona común no autorizada', 'Uso de Terraza Panorámica sin permiso.', 30000.00, 'pagado', 'critica', 20, NULL, NULL, '2025-09-30', '2025-10-19 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 20, NULL, NULL),
+(31, 'M-2025-0031', 1, 1, 1, 'Mascota sin correa (2da vez)', 'Reincidencia de mascota sin correa.', 10000.00, 'pendiente', 'alta', 1, NULL, NULL, '2025-10-01', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL, NULL),
+(32, 'M-2025-0032', 2, 2, 2, 'Ruido excesivo (2da vez)', 'Reincidencia de ruido nocturno.', 30000.00, 'pagado', 'critica', 2, NULL, NULL, '2025-10-02', '2025-10-21 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 2, NULL, NULL),
+(33, 'M-2025-0033', 3, 3, 3, 'Bloqueo de acceso (2da vez)', 'Bloqueo de entrada de servicio.', 20000.00, 'pendiente', 'alta', 3, NULL, NULL, '2025-10-03', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL, NULL),
+(34, 'M-2025-0034', 4, 4, 4, 'Fumar en áreas comunes (2da vez)', 'Fumar en zona de juegos infantiles.', 40000.00, 'apelada', 'critica', 4, NULL, NULL, '2025-10-04', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL, NULL),
+(35, 'M-2025-0035', 5, 5, 5, 'Daño a propiedad común (2da vez)', 'Graffiti en muro de estacionamiento.', 60000.00, 'pagado', 'critica', 5, NULL, NULL, '2025-10-05', '2025-10-18 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 5, NULL, NULL),
+(36, 'M-2025-0036', 6, 6, 6, 'Mascota peligrosa sin bozal (2da vez)', 'Perro de raza peligrosa sin control.', 24000.00, 'pendiente', 'critica', 6, NULL, NULL, '2025-10-06', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL, NULL),
+(37, 'M-2025-0037', 7, 7, 7, 'Uso no autorizado de ascensor (2da vez)', 'Uso de ascensor de servicio para mudanza sin aviso.', 16000.00, 'pagado', 'media', 7, NULL, NULL, '2025-10-07', '2025-10-17 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 7, NULL, NULL),
+(38, 'M-2025-0038', 8, 8, 8, 'Dejar basura en pasillo (2da vez)', 'Bolsa de basura dejada por más de 1 hora.', 12000.00, 'pendiente', 'media', 8, NULL, NULL, '2025-10-08', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL, NULL),
+(39, 'M-2025-0039', 9, 9, 9, 'Instalación de antena sin permiso (2da vez)', 'Reinstalación de antena tras aviso de retiro.', 50000.00, 'anulada', 'alta', 9, NULL, NULL, '2025-10-09', NULL, '2025-10-23 16:35:00', '2025-10-23 16:35:00', 1, 'Autorización posterior del comité', '2025-10-23 12:00:00', NULL, NULL, NULL),
+(40, 'M-2025-0040', 10, 10, 10, 'Fiesta hasta tarde (2da vez)', 'Ruidos molestos y música alta.', 36000.00, 'pagado', 'critica', 10, NULL, NULL, '2025-10-10', '2025-10-16 00:00:00', '2025-10-23 16:35:00', '2025-10-23 16:35:00', NULL, NULL, NULL, 10, NULL, NULL),
+(121, 'M-2025-0041', 44, 47, NULL, 'Falta de limpieza', 'ALTER TABLE multa AUTO_INCREMENT = 1;  -- Ajusta si hay filas existentesALTER TABLE multa MODIFY id bigint NOT NULL AUTO_INCREMENT;\n', 20000.00, 'pendiente', 'media', 1, NULL, NULL, '2025-11-12', NULL, '2025-11-12 21:34:58', '2025-11-12 21:34:58', NULL, NULL, NULL, NULL, 4, NULL),
+(122, 'M-2025-0042', 44, 47, NULL, 'Falta de limpieza', 'multa_historial ADD COLUMN valor_anterior TEXT NULL COMMENT \'Valor anterior del campo\'; [ Editar en línea ] [ Editar ] [ Crear código PHP ] MySQL ha devuelto', 20000.00, 'apelada', 'media', 1, NULL, NULL, '2025-11-12', NULL, '2025-11-12 21:42:23', '2025-11-12 21:51:22', NULL, NULL, NULL, NULL, 4, NULL);
 
 -- --------------------------------------------------------
 
@@ -1982,7 +1986,8 @@ INSERT INTO `multa_apelacion` (`id`, `multa_id`, `usuario_id`, `persona_id`, `co
 (37, 35, 5, 5, 5, '2025-10-23 16:35:00', 'Se presenta recibo de pago por la reparación total.', 'aceptada', 'Pago de reparación verificado, multa pagada.', '2025-10-23 17:00:00', '2025-10-23 16:35:00', '2025-10-23 17:00:00'),
 (38, 37, 7, 7, 7, '2025-10-23 16:35:00', 'Pago realizado para cierre de caso.', 'aceptada', 'Pago verificado, cierre de multa.', '2025-10-23 17:00:00', '2025-10-23 16:35:00', '2025-10-23 17:00:00'),
 (39, 40, 10, 10, 10, '2025-10-23 16:35:00', 'Pago efectuado tras el segundo aviso.', 'aceptada', 'Pago verificado, cierre de multa.', '2025-10-23 17:00:00', '2025-10-23 16:35:00', '2025-10-23 17:00:00'),
-(40, 39, 1, 10, 9, '2025-10-23 16:35:00', 'Anulación por votación del comité.', 'aceptada', 'Multa anulada por aprobación de comité.', '2025-10-23 17:00:00', '2025-10-23 16:35:00', '2025-10-23 17:00:00');
+(40, 39, 1, 10, 9, '2025-10-23 16:35:00', 'Anulación por votación del comité.', 'aceptada', 'Multa anulada por aprobación de comité.', '2025-10-23 17:00:00', '2025-10-23 16:35:00', '2025-10-23 17:00:00'),
+(41, 122, 1, 1, 44, '2025-11-12 21:51:22', 'multa.comunidad_id || null,\n    motivo,', 'pendiente', NULL, NULL, '2025-11-12 21:51:22', '2025-11-12 21:51:22');
 
 -- --------------------------------------------------------
 
@@ -1999,85 +2004,92 @@ CREATE TABLE `multa_historial` (
   `estado_anterior` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `estado_nuevo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `campo_modificado` varchar(255) DEFAULT NULL COMMENT 'Campo modificado (opcional)',
+  `valor_anterior` text COMMENT 'Valor anterior del campo',
+  `valor_nuevo` text COMMENT 'Valor nuevo del campo',
+  `descripcion` text COMMENT 'Descripción del cambio',
+  `ip_address` varchar(45) DEFAULT NULL COMMENT 'Dirección IP del usuario'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Volcado de datos para la tabla `multa_historial`
 --
 
-INSERT INTO `multa_historial` (`id`, `multa_id`, `usuario_id`, `accion`, `estado_anterior`, `estado_nuevo`, `observaciones`, `created_at`) VALUES
-(1, 1, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:44:26'),
-(2, 2, 1, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-15 03:44:26'),
-(4, 4, 1, 'Multa creada', NULL, 'anulada', 'Multa emitida y anulada', '2025-10-15 03:44:26'),
-(5, 5, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:44:26'),
-(6, 6, 1, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-15 03:44:26'),
-(7, 7, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:44:26'),
-(9, 9, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:44:26'),
-(10, 10, 1, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-15 03:44:26'),
-(14, 4, 1, 'Multa creada', NULL, 'anulada', 'Multa emitida y anulada', '2025-10-15 03:46:54'),
-(16, 6, 1, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-15 03:46:54'),
-(17, 7, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:46:54'),
-(18, 8, 1, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-15 03:46:54'),
-(19, 9, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:46:54'),
-(20, 10, 1, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-15 03:46:54'),
-(25, 4, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:48:34'),
-(26, 4, 1, 'Multa anulada', 'pendiente', 'anulada', 'Anulada por error administrativo', '2025-10-15 03:48:34'),
-(28, 6, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:48:34'),
-(29, 6, 1, 'Pago registrado', 'pendiente', 'pagado', 'Pago realizado por el propietario', '2025-10-15 03:48:34'),
-(30, 7, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:48:34'),
-(33, 9, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:48:34'),
-(34, 10, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:48:34'),
-(35, 10, 1, 'Pago registrado', 'pendiente', 'pagado', 'Pago realizado por el propietario', '2025-10-15 03:48:34'),
-(40, 4, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:52:57'),
-(41, 4, 1, 'Multa anulada', 'pendiente', 'anulada', 'Anulada por error administrativo', '2025-10-15 03:52:57'),
-(43, 6, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:52:57'),
-(44, 6, 1, 'Pago registrado', 'pendiente', 'pagado', 'Pago realizado por el propietario', '2025-10-15 03:52:57'),
-(45, 7, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:52:57'),
-(48, 9, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:52:57'),
-(49, 10, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:52:57'),
-(50, 10, 1, 'Pago registrado', 'pendiente', 'pagado', 'Pago realizado por el propietario', '2025-10-15 03:52:57'),
-(55, 7, 1, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación por uso de ascensor', '2025-10-15 03:52:57'),
-(56, 11, 6, 'Multa creada', NULL, 'pendiente', 'Multa emitida por uso fuera de horario', '2025-10-23 16:30:00'),
-(57, 12, 6, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-23 16:30:00'),
-(58, 13, 6, 'Multa creada', NULL, 'pendiente', 'Multa emitida por desperdicio de agua', '2025-10-23 16:30:00'),
-(59, 13, 1, 'Multa anulada', 'pendiente', 'anulada', 'Anulada por error de identificación', '2025-10-23 16:30:00'),
-(60, 14, 6, 'Multa creada', NULL, 'pendiente', 'Multa emitida por reglamento de basura', '2025-10-23 16:30:00'),
-(61, 15, 6, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-23 16:30:00'),
-(62, 16, 6, 'Multa creada', NULL, 'pendiente', 'Multa emitida por uso sin reserva', '2025-10-23 16:30:00'),
-(63, 16, 7, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación de residente', '2025-10-23 16:30:00'),
-(64, 17, 6, 'Multa creada', NULL, 'pendiente', 'Multa emitida por instalación no permitida', '2025-10-23 16:30:00'),
-(65, 18, 6, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-23 16:30:00'),
-(66, 19, 6, 'Multa creada', NULL, 'pendiente', 'Multa emitida por uso indebido de salón', '2025-10-23 16:30:00'),
-(67, 20, 6, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-23 16:30:00'),
-(68, 1, 1, 'Pago registrado', 'pendiente', 'pagado', 'Pago de multa 1', '2025-10-23 16:30:00'),
-(69, 3, 4, 'Pago registrado', 'vencido', 'pagado', 'Pago de multa 3', '2025-10-23 16:30:00'),
-(70, 5, 6, 'Pago registrado', 'pendiente', 'pagado', 'Pago de multa 5', '2025-10-23 16:30:00'),
-(71, 10, 10, 'Pago registrado', 'pendiente', 'pagado', 'Pago de multa 10', '2025-10-23 16:30:00'),
-(72, 11, 1, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación presentada', '2025-10-23 16:30:00'),
-(73, 17, 8, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación presentada', '2025-10-23 16:30:00'),
-(74, 13, 1, 'Resolución apelación', 'apelada', 'anulada', 'Apelación aceptada: error de unidad', '2025-10-23 16:30:00'),
-(75, 4, 4, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación por fumar en balcón', '2025-10-23 16:30:00'),
-(76, 21, 11, 'Multa creada', NULL, 'pendiente', 'Multa emitida por estacionamiento indebido', '2025-10-23 16:35:00'),
-(77, 22, 12, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-23 16:35:00'),
-(78, 23, 13, 'Multa creada', NULL, 'pendiente', 'Multa emitida por no usar pulsera', '2025-10-23 16:35:00'),
-(79, 24, 14, 'Multa creada', NULL, 'pendiente', 'Multa por basura voluminosa', '2025-10-23 16:35:00'),
-(80, 24, 15, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación por basura', '2025-10-23 16:35:00'),
-(81, 25, 15, 'Multa creada', NULL, 'pagado', 'Multa por mascota sin permiso', '2025-10-23 16:35:00'),
-(82, 26, 16, 'Multa creada', NULL, 'pendiente', 'Multa por parrilla a carbón', '2025-10-23 16:35:00'),
-(83, 27, 17, 'Multa creada', NULL, 'pagado', 'Multa por obstrucción de pasillo', '2025-10-23 16:35:00'),
-(84, 28, 18, 'Multa creada', NULL, 'pendiente', 'Multa por escombros', '2025-10-23 16:35:00'),
-(85, 29, 19, 'Multa creada', NULL, 'pendiente', 'Multa por ruido de motor', '2025-10-23 16:35:00'),
-(86, 29, 1, 'Multa anulada', 'pendiente', 'anulada', 'Anulada por error de unidad', '2025-10-23 16:35:00'),
-(87, 30, 20, 'Multa creada', NULL, 'pagado', 'Multa por fiesta no autorizada', '2025-10-23 16:35:00'),
-(88, 31, 1, 'Multa creada', NULL, 'pendiente', '2da Multa por mascota sin correa', '2025-10-23 16:35:00'),
-(89, 32, 2, 'Multa creada', NULL, 'pagado', '2da Multa por ruido excesivo', '2025-10-23 16:35:00'),
-(90, 33, 3, 'Multa creada', NULL, 'pendiente', '2da Multa por bloqueo de acceso', '2025-10-23 16:35:00'),
-(91, 34, 4, 'Multa creada', NULL, 'pendiente', '2da Multa por fumar en común', '2025-10-23 16:35:00'),
-(92, 34, 5, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación por vapeo', '2025-10-23 16:35:00'),
-(93, 35, 5, 'Multa creada', NULL, 'pagado', '2da Multa por daño a propiedad', '2025-10-23 16:35:00'),
-(94, 39, 9, 'Multa creada', NULL, 'pendiente', '2da Multa por antena', '2025-10-23 16:35:00'),
-(95, 39, 1, 'Multa anulada', 'pendiente', 'anulada', 'Anulada por autorización comité', '2025-10-23 16:35:00');
+INSERT INTO `multa_historial` (`id`, `multa_id`, `usuario_id`, `accion`, `estado_anterior`, `estado_nuevo`, `observaciones`, `created_at`, `campo_modificado`, `valor_anterior`, `valor_nuevo`, `descripcion`, `ip_address`) VALUES
+(1, 1, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL, NULL),
+(2, 2, 1, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL, NULL),
+(4, 4, 1, 'Multa creada', NULL, 'anulada', 'Multa emitida y anulada', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL, NULL),
+(5, 5, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL, NULL),
+(6, 6, 1, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL, NULL),
+(7, 7, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL, NULL),
+(9, 9, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL, NULL),
+(10, 10, 1, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-15 03:44:26', NULL, NULL, NULL, NULL, NULL),
+(14, 4, 1, 'Multa creada', NULL, 'anulada', 'Multa emitida y anulada', '2025-10-15 03:46:54', NULL, NULL, NULL, NULL, NULL),
+(16, 6, 1, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-15 03:46:54', NULL, NULL, NULL, NULL, NULL),
+(17, 7, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:46:54', NULL, NULL, NULL, NULL, NULL),
+(18, 8, 1, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-15 03:46:54', NULL, NULL, NULL, NULL, NULL),
+(19, 9, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:46:54', NULL, NULL, NULL, NULL, NULL),
+(20, 10, 1, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-15 03:46:54', NULL, NULL, NULL, NULL, NULL),
+(25, 4, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:48:34', NULL, NULL, NULL, NULL, NULL),
+(26, 4, 1, 'Multa anulada', 'pendiente', 'anulada', 'Anulada por error administrativo', '2025-10-15 03:48:34', NULL, NULL, NULL, NULL, NULL),
+(28, 6, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:48:34', NULL, NULL, NULL, NULL, NULL),
+(29, 6, 1, 'Pago registrado', 'pendiente', 'pagado', 'Pago realizado por el propietario', '2025-10-15 03:48:34', NULL, NULL, NULL, NULL, NULL),
+(30, 7, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:48:34', NULL, NULL, NULL, NULL, NULL),
+(33, 9, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:48:34', NULL, NULL, NULL, NULL, NULL),
+(34, 10, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:48:34', NULL, NULL, NULL, NULL, NULL),
+(35, 10, 1, 'Pago registrado', 'pendiente', 'pagado', 'Pago realizado por el propietario', '2025-10-15 03:48:34', NULL, NULL, NULL, NULL, NULL),
+(40, 4, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:52:57', NULL, NULL, NULL, NULL, NULL),
+(41, 4, 1, 'Multa anulada', 'pendiente', 'anulada', 'Anulada por error administrativo', '2025-10-15 03:52:57', NULL, NULL, NULL, NULL, NULL),
+(43, 6, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:52:57', NULL, NULL, NULL, NULL, NULL),
+(44, 6, 1, 'Pago registrado', 'pendiente', 'pagado', 'Pago realizado por el propietario', '2025-10-15 03:52:57', NULL, NULL, NULL, NULL, NULL),
+(45, 7, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:52:57', NULL, NULL, NULL, NULL, NULL),
+(48, 9, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:52:57', NULL, NULL, NULL, NULL, NULL),
+(49, 10, 1, 'Multa creada', NULL, 'pendiente', 'Multa emitida por infracción', '2025-10-15 03:52:57', NULL, NULL, NULL, NULL, NULL),
+(50, 10, 1, 'Pago registrado', 'pendiente', 'pagado', 'Pago realizado por el propietario', '2025-10-15 03:52:57', NULL, NULL, NULL, NULL, NULL),
+(55, 7, 1, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación por uso de ascensor', '2025-10-15 03:52:57', NULL, NULL, NULL, NULL, NULL),
+(56, 11, 6, 'Multa creada', NULL, 'pendiente', 'Multa emitida por uso fuera de horario', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(57, 12, 6, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(58, 13, 6, 'Multa creada', NULL, 'pendiente', 'Multa emitida por desperdicio de agua', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(59, 13, 1, 'Multa anulada', 'pendiente', 'anulada', 'Anulada por error de identificación', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(60, 14, 6, 'Multa creada', NULL, 'pendiente', 'Multa emitida por reglamento de basura', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(61, 15, 6, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(62, 16, 6, 'Multa creada', NULL, 'pendiente', 'Multa emitida por uso sin reserva', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(63, 16, 7, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación de residente', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(64, 17, 6, 'Multa creada', NULL, 'pendiente', 'Multa emitida por instalación no permitida', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(65, 18, 6, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(66, 19, 6, 'Multa creada', NULL, 'pendiente', 'Multa emitida por uso indebido de salón', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(67, 20, 6, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(68, 1, 1, 'Pago registrado', 'pendiente', 'pagado', 'Pago de multa 1', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(69, 3, 4, 'Pago registrado', 'vencido', 'pagado', 'Pago de multa 3', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(70, 5, 6, 'Pago registrado', 'pendiente', 'pagado', 'Pago de multa 5', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(71, 10, 10, 'Pago registrado', 'pendiente', 'pagado', 'Pago de multa 10', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(72, 11, 1, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación presentada', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(73, 17, 8, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación presentada', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(74, 13, 1, 'Resolución apelación', 'apelada', 'anulada', 'Apelación aceptada: error de unidad', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(75, 4, 4, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación por fumar en balcón', '2025-10-23 16:30:00', NULL, NULL, NULL, NULL, NULL),
+(76, 21, 11, 'Multa creada', NULL, 'pendiente', 'Multa emitida por estacionamiento indebido', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(77, 22, 12, 'Multa creada', NULL, 'pagado', 'Multa emitida y pagada', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(78, 23, 13, 'Multa creada', NULL, 'pendiente', 'Multa emitida por no usar pulsera', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(79, 24, 14, 'Multa creada', NULL, 'pendiente', 'Multa por basura voluminosa', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(80, 24, 15, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación por basura', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(81, 25, 15, 'Multa creada', NULL, 'pagado', 'Multa por mascota sin permiso', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(82, 26, 16, 'Multa creada', NULL, 'pendiente', 'Multa por parrilla a carbón', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(83, 27, 17, 'Multa creada', NULL, 'pagado', 'Multa por obstrucción de pasillo', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(84, 28, 18, 'Multa creada', NULL, 'pendiente', 'Multa por escombros', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(85, 29, 19, 'Multa creada', NULL, 'pendiente', 'Multa por ruido de motor', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(86, 29, 1, 'Multa anulada', 'pendiente', 'anulada', 'Anulada por error de unidad', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(87, 30, 20, 'Multa creada', NULL, 'pagado', 'Multa por fiesta no autorizada', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(88, 31, 1, 'Multa creada', NULL, 'pendiente', '2da Multa por mascota sin correa', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(89, 32, 2, 'Multa creada', NULL, 'pagado', '2da Multa por ruido excesivo', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(90, 33, 3, 'Multa creada', NULL, 'pendiente', '2da Multa por bloqueo de acceso', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(91, 34, 4, 'Multa creada', NULL, 'pendiente', '2da Multa por fumar en común', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(92, 34, 5, 'Apelación presentada', 'pendiente', 'apelada', 'Apelación por vapeo', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(93, 35, 5, 'Multa creada', NULL, 'pagado', '2da Multa por daño a propiedad', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(94, 39, 9, 'Multa creada', NULL, 'pendiente', '2da Multa por antena', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(95, 39, 1, 'Multa anulada', 'pendiente', 'anulada', 'Anulada por autorización comité', '2025-10-23 16:35:00', NULL, NULL, NULL, NULL, NULL),
+(96, 122, 1, 'creada', NULL, 'pendiente', NULL, '2025-11-12 21:42:23', NULL, NULL, NULL, 'Multa M-2025-0042 creada', '::ffff:172.18.0.1'),
+(97, 122, 1, 'apelada', 'pendiente', 'apelada', NULL, '2025-11-12 21:51:22', NULL, NULL, NULL, 'Apelación creada para multa M-2025-0042', '::ffff:172.18.0.1');
 
 -- --------------------------------------------------------
 
@@ -3207,6 +3219,36 @@ INSERT INTO `ticket_soporte` (`id`, `comunidad_id`, `unidad_id`, `categoria`, `t
 (88, 40, 40, 'Iluminación', 'Foco quemado subterráneo -2', 'Zona E100 oscura.', 'abierto', 'media', 8, NULL, '2025-10-29 19:54:07', '2025-10-29 19:54:07'),
 (89, 41, 41, 'Infraestructura', 'Cerámica suelta pasillo piso 5', 'Cerámica cerca de D501.', 'abierto', 'media', NULL, NULL, '2025-10-29 19:54:07', '2025-10-29 19:54:07'),
 (90, 59, 59, 'Seguridad', 'Problema con tarjeta acceso', 'Tarjeta de residente D2001 no funciona.', 'abierto', 'alta', 2, NULL, '2025-10-29 19:54:07', '2025-10-29 19:54:07');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `tipo_infraccion`
+--
+
+DROP TABLE IF EXISTS `tipo_infraccion`;
+CREATE TABLE `tipo_infraccion` (
+  `id` bigint NOT NULL,
+  `comunidad_id` bigint DEFAULT NULL,
+  `clave` varchar(50) NOT NULL,
+  `nombre` varchar(120) NOT NULL,
+  `descripcion` varchar(500) DEFAULT NULL,
+  `monto_default` decimal(12,2) DEFAULT NULL,
+  `prioridad_default` enum('baja','media','alta','critica') NOT NULL DEFAULT 'media',
+  `icono` varchar(100) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Volcado de datos para la tabla `tipo_infraccion`
+--
+
+INSERT INTO `tipo_infraccion` (`id`, `comunidad_id`, `clave`, `nombre`, `descripcion`, `monto_default`, `prioridad_default`, `icono`, `activo`, `created_at`) VALUES
+(1, 1, 'ruido', 'Ruido excesivo', 'Violación de normas de ruido', 50000.00, 'media', 'volume-up', 1, '2025-10-24 01:27:49'),
+(2, 2, 'estacionamiento', 'Estacionamiento indebido', 'Vehículo mal estacionado', 35000.00, 'media', 'parking', 1, '2025-10-24 01:27:49'),
+(3, 3, 'mascotas', 'Mascotas sin control', 'Mascotas sin correa o supervisión', 25000.00, 'baja', 'paw', 1, '2025-10-24 01:27:49'),
+(4, 5, 'limpieza', 'Falta de limpieza', 'Áreas comunes sucias', 20000.00, 'baja', 'broom', 1, '2025-10-24 01:27:49');
 
 -- --------------------------------------------------------
 
@@ -4393,7 +4435,8 @@ ALTER TABLE `multa`
   ADD KEY `fk_multa_creada_por` (`creada_por`),
   ADD KEY `fk_multa_aprobada_por` (`aprobada_por`),
   ADD KEY `fk_multa_anulado_por` (`anulado_por`),
-  ADD KEY `fk_multa_pagado_por` (`pagado_por`);
+  ADD KEY `fk_multa_pagado_por` (`pagado_por`),
+  ADD KEY `fk_multa_tipo_infraccion` (`tipo_infraccion_id`);
 
 --
 -- Indices de la tabla `multa_apelacion`
@@ -4514,6 +4557,15 @@ ALTER TABLE `ticket_soporte`
   ADD KEY `fk_ticket_comunidad` (`comunidad_id`),
   ADD KEY `fk_ticket_unidad` (`unidad_id`),
   ADD KEY `fk_solsoporte_asignado` (`asignado_a`);
+
+--
+-- Indices de la tabla `tipo_infraccion`
+--
+ALTER TABLE `tipo_infraccion`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `clave` (`clave`),
+  ADD UNIQUE KEY `uq_tipo_comunidad_clave` (`comunidad_id`,`clave`),
+  ADD KEY `idx_tipo_comunidad` (`comunidad_id`);
 
 --
 -- Indices de la tabla `titulares_unidad`
@@ -4689,16 +4741,22 @@ ALTER TABLE `lectura_medidor`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
 
 --
+-- AUTO_INCREMENT de la tabla `multa`
+--
+ALTER TABLE `multa`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=123;
+
+--
 -- AUTO_INCREMENT de la tabla `multa_apelacion`
 --
 ALTER TABLE `multa_apelacion`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- AUTO_INCREMENT de la tabla `multa_historial`
 --
 ALTER TABLE `multa_historial`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=96;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=98;
 
 --
 -- AUTO_INCREMENT de la tabla `notificacion_usuario`
@@ -4753,6 +4811,12 @@ ALTER TABLE `tarifa_consumo`
 --
 ALTER TABLE `ticket_soporte`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
+
+--
+-- AUTO_INCREMENT de la tabla `tipo_infraccion`
+--
+ALTER TABLE `tipo_infraccion`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `titulares_unidad`
@@ -4912,7 +4976,7 @@ ALTER TABLE `amenidad`
 -- Filtros para la tabla `archivos`
 --
 ALTER TABLE `archivos`
-  ADD CONSTRAINT `archivos_ibfk_1` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_archivos_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `auditoria`
@@ -5057,6 +5121,7 @@ ALTER TABLE `multa`
   ADD CONSTRAINT `fk_multa_creada_por` FOREIGN KEY (`creada_por`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_multa_pagado_por` FOREIGN KEY (`pagado_por`) REFERENCES `usuario` (`id`),
   ADD CONSTRAINT `fk_multa_persona` FOREIGN KEY (`persona_id`) REFERENCES `persona` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_multa_tipo_infraccion` FOREIGN KEY (`tipo_infraccion_id`) REFERENCES `tipo_infraccion` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_multa_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`);
 
 --
@@ -5072,7 +5137,7 @@ ALTER TABLE `multa_apelacion`
 -- Filtros para la tabla `multa_historial`
 --
 ALTER TABLE `multa_historial`
-  ADD CONSTRAINT `fk_historial_multa_multa` FOREIGN KEY (`multa_id`) REFERENCES `multa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_historial_multa` FOREIGN KEY (`multa_id`) REFERENCES `multa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_historial_multa_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
@@ -5144,6 +5209,12 @@ ALTER TABLE `ticket_soporte`
   ADD CONSTRAINT `fk_solsoporte_asignado` FOREIGN KEY (`asignado_a`) REFERENCES `usuario` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_ticket_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
   ADD CONSTRAINT `fk_ticket_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `tipo_infraccion`
+--
+ALTER TABLE `tipo_infraccion`
+  ADD CONSTRAINT `fk_tipo_infraccion_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `titulares_unidad`
