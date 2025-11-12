@@ -4,6 +4,8 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import { ProtectedRoute } from '@/lib/useAuth';
 
 interface NotificationData {
@@ -131,6 +133,7 @@ export default function NotificacionesListado() {
   const [filteredNotifications, setFilteredNotifications] = useState<
     NotificationData[]
   >([]);
+  const [totalFilteredItems, setTotalFilteredItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedNotifications, setSelectedNotifications] = useState<string[]>(
     [],
@@ -143,6 +146,13 @@ export default function NotificacionesListado() {
     channel: '',
     dateRange: '',
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
 
   useEffect(() => {
     // Mock data - reemplazar con API call
@@ -279,8 +289,18 @@ export default function NotificacionesListado() {
       );
     }
 
-    setFilteredNotifications(filtered);
-  }, [notifications, searchTerm, filters]);
+    // Calcular paginación
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    setTotalPages(totalPages);
+    setTotalFilteredItems(filtered.length);
+
+    // Aplicar paginación
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedNotifications = filtered.slice(startIndex, endIndex);
+
+    setFilteredNotifications(paginatedNotifications);
+  }, [notifications, searchTerm, filters, currentPage, itemsPerPage]);
 
   const getStats = () => {
     const sent = notifications.filter(n => n.status === 'sent').length;
@@ -301,6 +321,11 @@ export default function NotificacionesListado() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const handleFilterChange = (filterName: string, value: string) => {
+    setFilters(prev => ({ ...prev, [filterName]: value }));
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleSelectAll = () => {
@@ -511,19 +536,42 @@ export default function NotificacionesListado() {
 
       <Layout title='Notificaciones'>
         <div className='container-fluid py-3'>
-          {/* Header */}
-          <div className='d-flex justify-content-between align-items-center mb-4'>
-            <div>
-              <h1 className='h3 mb-1'>Notificaciones</h1>
-              <p className='text-muted mb-0'>
-                Gestión de comunicaciones masivas
-              </p>
-            </div>
-            <Link href='/notificaciones/nueva' className='btn btn-primary'>
-              <i className='material-icons me-2'>add</i>
-              Nueva Notificación
-            </Link>
-          </div>
+          <PageHeader
+            title="Notificaciones"
+            subtitle="Gestión de comunicaciones masivas"
+            icon="notifications"
+            primaryAction={{
+              href: '/notificaciones/nueva',
+              label: 'Nueva Notificación',
+              icon: 'add',
+            }}
+            stats={[
+              {
+                label: 'Enviadas',
+                value: stats.sent.toString(),
+                icon: 'send',
+                color: '#2E7D32',
+              },
+              {
+                label: 'Borradores',
+                value: stats.draft.toString(),
+                icon: 'draft',
+                color: '#757575',
+              },
+              {
+                label: 'Programadas',
+                value: stats.scheduled.toString(),
+                icon: 'schedule',
+                color: '#1565C0',
+              },
+              {
+                label: 'Fallidas',
+                value: stats.failed.toString(),
+                icon: 'error',
+                color: '#C62828',
+              },
+            ]}
+          />
 
           {/* Statistics Cards */}
           <div className='row mb-4'>
@@ -1500,35 +1548,16 @@ export default function NotificacionesListado() {
           </div>
 
           {/* Pagination */}
-          <div className='d-flex justify-content-between align-items-center mt-4'>
-            <div className='text-muted small'>
-              Mostrando {filteredNotifications.length} de {notifications.length}{' '}
-              notificaciones
-            </div>
-            <nav>
-              <ul className='pagination mb-0'>
-                <li className='page-item disabled'>
-                  <button className='page-link' disabled>
-                    Anterior
-                  </button>
-                </li>
-                <li className='page-item active'>
-                  <button className='page-link' disabled>
-                    1
-                  </button>
-                </li>
-                <li className='page-item'>
-                  <button className='page-link'>2</button>
-                </li>
-                <li className='page-item'>
-                  <button className='page-link'>3</button>
-                </li>
-                <li className='page-item'>
-                  <button className='page-link'>Siguiente</button>
-                </li>
-              </ul>
-            </nav>
-          </div>
+          {totalPages > 1 && (
+            <ModernPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalFilteredItems}
+              itemsPerPage={itemsPerPage}
+              itemName="notificaciones"
+              onPageChange={goToPage}
+            />
+          )}
         </div>
       </Layout>
     </ProtectedRoute>

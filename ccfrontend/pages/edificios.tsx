@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import ModernPagination from '@/components/ui/ModernPagination';
 import { useEdificios } from '@/hooks/useEdificios';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
@@ -720,29 +721,14 @@ export default function EdificiosListado() {
 
           {/* Paginación moderna */}
           {totalPages > 1 && (
-            <nav aria-label='Navegación de páginas' className='pagination-modern'>
-              <button
-                className='btn'
-                onClick={goToPreviousPage}
-                disabled={currentPage === 1}
-                aria-label='Página anterior'
-              >
-                <span className='material-icons'>chevron_left</span>
-              </button>
-
-              <div className='page-info'>
-                Página {currentPage} de {totalPages} ({filteredEdificios.length} edificios)
-              </div>
-
-              <button
-                className='btn'
-                onClick={goToNextPage}
-                disabled={currentPage === totalPages}
-                aria-label='Página siguiente'
-              >
-                <span className='material-icons'>chevron_right</span>
-              </button>
-            </nav>
+            <ModernPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredEdificios.length}
+              itemsPerPage={itemsPerPage}
+              itemName="edificios"
+              onPageChange={goToPage}
+            />
           )}
 
 

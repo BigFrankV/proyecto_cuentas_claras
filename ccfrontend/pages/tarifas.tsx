@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap'; // Agrega Form
 
 import Layout from '@/components/layout/Layout';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import { getCommunityIdForRequest } from '@/lib/superadminAccessHelper';
 import { listTarifasConsumo, listAllTarifasConsumo, createTarifaConsumo } from '@/lib/tarifasConsumoService'; // Agrega createTarifaConsumo
 import { ProtectedRoute } from '@/lib/useAuth';
@@ -211,20 +213,33 @@ export default function TarifasListado() {
         </Head>
         <Layout title='Tarifas de Consumo'>
           <div className='container-fluid p-4'>
-            <div className='row'>
-              <div className='col-12'>
-                {/* Encabezado */}
-                <div className='d-flex justify-content-between align-items-center mb-4'>
-                  <h1 className='h3'>Tarifas de Consumo</h1>
-                  <div className='d-flex gap-2'>
-                    <button className='btn btn-outline-secondary' onClick={() => setShowImport(true)}>
-                      <span className='material-icons me-1'>file_upload</span> Importar
-                    </button>
-                    <button className='btn btn-primary' onClick={() => setShowCreate(true)}> {/* Conecta el botón */}
-                      <span className='material-icons me-2'>add</span> Nueva Tarifa
-                    </button>
-                  </div>
-                </div>
+            <PageHeader
+              title="Tarifas de Consumo"
+              subtitle="Gestión de tarifas y precios de servicios básicos"
+              icon="attach_money"
+              primaryAction={{
+                href: '#',
+                label: 'Nueva Tarifa',
+                icon: 'add',
+              }}
+              stats={[
+                {
+                  label: 'Total Tarifas',
+                  value: tarifas.length.toString(),
+                  icon: 'list',
+                  color: 'primary',
+                },
+              ]}
+            >
+              <div className='d-flex gap-2'>
+                <button className='btn btn-outline-secondary' onClick={() => setShowImport(true)}>
+                  <span className='material-icons me-1'>file_upload</span> Importar
+                </button>
+                <button className='btn btn-primary' onClick={() => setShowCreate(true)}>
+                  <span className='material-icons me-2'>add</span> Nueva Tarifa
+                </button>
+              </div>
+            </PageHeader>
 
                 {/* Selector de comunidad para superadmin */}
                 {isSuper && (
@@ -318,8 +333,6 @@ export default function TarifasListado() {
                     )}
                   </div>
                 )}
-              </div>
-            </div>
           </div>
 
           {/* Modal Importar */}

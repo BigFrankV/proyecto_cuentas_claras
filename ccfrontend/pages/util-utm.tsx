@@ -17,7 +17,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 
 import Layout from '@/components/layout/Layout';
-import Breadcrumb, { BreadcrumbItem } from '@/components/ui/Breadcrumb';
+import PageHeader from '@/components/ui/PageHeader';
 import SyncControlPanel from '@/components/ui/SyncControlPanel';
 import { ProtectedRoute } from '@/lib/useAuth';
 
@@ -541,30 +541,11 @@ const ConsultorUTMRenovado: React.FC = () => {
     <ProtectedRoute>
       <Layout title='Consultor UTM Avanzado - Cuentas Claras'>
         <div className='container-fluid px-4 py-4'>
-          {/* Header */}
-          <div className='row mb-4'>
-            <div className='col-12'>
-              <Breadcrumb
-                items={[
-                  { label: 'Dashboard', href: '/dashboard', icon: 'home' },
-                  { label: 'Consultor UTM Avanzado', icon: 'calculate' },
-                ]}
-              />
-
-            <div className='d-flex justify-content-between align-items-center'>
-              <div>
-                <h1 className='h3 mb-1'>
-                  <i className='material-icons me-2'>calculate</i>
-                  Consultor de UTM - Análisis Completo
-                </h1>
-                <p className='text-muted mb-0'>
-                  Dashboard avanzado con gráficos, análisis histórico y
-                  conversiones
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+          <PageHeader
+            title="Consultor de UTM - Análisis Completo"
+            subtitle="Dashboard avanzado con gráficos, análisis histórico y conversiones"
+            icon="calculate"
+          />
 
         {/* Mensaje de error global */}
         {error && (

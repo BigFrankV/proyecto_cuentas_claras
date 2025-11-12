@@ -3,6 +3,8 @@ import { Chart, registerables } from 'chart.js';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 
 import Sidebar from '@/components/layout/Sidebar';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import { useAmenidades, useReservasAmenidades } from '@/hooks/useAmenidades';
 import { AmenidadStats } from '@/types/amenidades';
 
@@ -45,6 +47,10 @@ export default function AmenidadesPage(): JSX.Element {
     labels: [] as string[],
     data: [] as number[],
   });
+
+  // Estados de paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     if (amenityTypeRef.current && amenityTypeData.data.length > 0) {
@@ -210,6 +216,17 @@ export default function AmenidadesPage(): JSX.Element {
     calculateStats();
   }, [calculateStats]);
 
+  // Lógica de paginación
+  const totalPages = Math.ceil(amenidades.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedAmenidades = amenidades.slice(startIndex, startIndex + itemsPerPage);
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   return (
     <div className='d-flex'>
       <Sidebar />
@@ -217,17 +234,36 @@ export default function AmenidadesPage(): JSX.Element {
         className='main-content flex-grow-1 bg-light'
         style={{ marginLeft: 280 }}
       >
-        <header className='bg-white border-bottom shadow-sm p-3'>
-          <div className='container-fluid d-flex justify-content-between align-items-center'>
-            <h4 className='mb-0'>Lista de Amenidades</h4>
-            <div>
-              <button className='btn btn-primary me-2'>
-                <span className='material-icons me-1'>add</span>
-                Nueva Amenidad
-              </button>
-            </div>
-          </div>
-        </header>
+        <PageHeader
+          title="Lista de Amenidades"
+          subtitle="Gestión completa de amenidades y espacios comunes"
+          icon="pool"
+          primaryAction={{
+            href: '#',
+            label: 'Nueva Amenidad',
+            icon: 'add',
+          }}
+          stats={[
+            {
+              label: 'Total Amenidades',
+              value: stats.total_amenidades.toString(),
+              icon: 'pool',
+              color: 'primary',
+            },
+            {
+              label: 'Amenidades Activas',
+              value: stats.amenidades_activas.toString(),
+              icon: 'check_circle',
+              color: 'success',
+            },
+            {
+              label: 'Reservas del Mes',
+              value: stats.reservas_mes_actual.toString(),
+              icon: 'event_available',
+              color: 'info',
+            },
+          ]}
+        />
 
         <main className='container-fluid p-4'>
           <div className='row'>
@@ -301,7 +337,7 @@ export default function AmenidadesPage(): JSX.Element {
                         </tr>
                       </thead>
                       <tbody>
-                        {amenidades.map(amenidad => (
+                        {paginatedAmenidades.map(amenidad => (
                           <tr key={amenidad.id}>
                             <td>{amenidad.nombre}</td>
                             <td>{amenidad.comunidad || 'N/A'}</td>
@@ -334,33 +370,17 @@ export default function AmenidadesPage(): JSX.Element {
                     </table>
                   </div>
                 </div>
-                <div className='card-footer d-flex justify-content-between align-items-center'>
-                  <small className='text-muted'>
-                    Mostrando {amenidades.length} amenidades
-                  </small>
-                  <nav>
-                    <ul className='pagination mb-0'>
-                      <li className='page-item disabled'>
-                        <button className='page-link' disabled>
-                          «
-                        </button>
-                      </li>
-                      <li className='page-item active'>
-                        <button className='page-link' disabled>
-                          1
-                        </button>
-                      </li>
-                      <li className='page-item'>
-                        <button className='page-link'>2</button>
-                      </li>
-                      <li className='page-item'>
-                        <button className='page-link'>3</button>
-                      </li>
-                      <li className='page-item'>
-                        <button className='page-link'>»</button>
-                      </li>
-                    </ul>
-                  </nav>
+                <div className='card-footer d-flex justify-content-center'>
+                  {totalPages > 1 && (
+                    <ModernPagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      totalItems={amenidades.length}
+                      itemsPerPage={itemsPerPage}
+                      itemName="amenidades"
+                      onPageChange={goToPage}
+                    />
+                  )}
                 </div>
               </div>
             </div>

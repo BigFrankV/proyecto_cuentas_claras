@@ -6,6 +6,8 @@ import React, { useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import type { TarifaConsumo } from '@/lib/tarifasConsumoService';
 import { listAllTarifasConsumo, deleteTarifaConsumo } from '@/lib/tarifasConsumoService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
@@ -22,6 +24,15 @@ export default function TarifasListado() {
   const [selectedTarifa, setSelectedTarifa] = useState<TarifaConsumo | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
@@ -44,8 +55,8 @@ export default function TarifasListado() {
 
   const filteredTarifas = tarifas.filter(tarifa => {
     const matchesSearch = 
-      tarifa.tipo_consumo.toLowerCase().includes(search.toLowerCase()) ||
-      tarifa.unidad_medida.toLowerCase().includes(search.toLowerCase());
+      (tarifa.tipo_consumo?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (tarifa.unidad_medida?.toLowerCase() || '').includes(search.toLowerCase());
     
     const matchesStatus = 
       filterType === 'todas' ||
@@ -54,6 +65,21 @@ export default function TarifasListado() {
 
     return matchesSearch && matchesStatus;
   });
+
+  // Pagination logic
+  const paginatedTarifas = filteredTarifas.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
+  // Update pagination when filteredTarifas change
+  useEffect(() => {
+    const totalPages = Math.ceil(filteredTarifas.length / itemsPerPage);
+    setTotalPages(totalPages);
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredTarifas.length, itemsPerPage, currentPage]);
 
   const handleCreate = () => router.push('/parametros/nueva');
   const handleEdit = (id: number) => router.push(`/parametros/${id}`);
@@ -114,30 +140,44 @@ export default function TarifasListado() {
 
         <Layout title='Tarifas de Consumo'>
           <div className='container-fluid p-4'>
-            {/* Encabezado */}
-            <div className='row mb-4'>
-              <div className='col-12'>
-                <div className='d-flex justify-content-between align-items-center'>
-                  <div>
-                    <h1 className='h3 mb-1'>Tarifas de Consumo</h1>
-                    <p className='text-muted mb-0'>Gestión de tarifas por tipo de servicio</p>
-                  </div>
-                  <div className='d-flex gap-2'>
-                    <Button 
-                      variant='outline-primary' 
-                      onClick={() => alert('Funcionalidad de importar en desarrollo')}
-                    >
-                      <i className='material-icons me-1'>file_upload</i>
-                      Importar
-                    </Button>
-                    <Button variant='primary' onClick={handleCreate}>
-                      <i className='material-icons me-1'>add</i>
-                      Nueva Tarifa
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <PageHeader
+              title="Tarifas de Consumo"
+              subtitle="Gestión de tarifas por tipo de servicio"
+              icon="attach_money"
+              primaryAction={{
+                href: '/parametros/nueva',
+                label: 'Nueva Tarifa',
+                icon: 'add',
+              }}
+              stats={[
+                {
+                  label: 'Total',
+                  value: stats.total.toString(),
+                  icon: 'attach_money',
+                  color: '#007bff',
+                },
+                {
+                  label: 'Activas',
+                  value: stats.activas.toString(),
+                  icon: 'check_circle',
+                  color: '#28a745',
+                },
+                {
+                  label: 'Inactivas',
+                  value: stats.inactivas.toString(),
+                  icon: 'cancel',
+                  color: '#dc3545',
+                },
+              ]}
+            >
+              <Button 
+                variant='outline-primary' 
+                onClick={() => alert('Funcionalidad de importar en desarrollo')}
+              >
+                <i className='material-icons me-1'>file_upload</i>
+                Importar
+              </Button>
+            </PageHeader>
 
             {/* Filtros y búsqueda */}
             <div className='row mb-4'>
@@ -294,7 +334,7 @@ export default function TarifasListado() {
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredTarifas.map((tarifa) => (
+                          {paginatedTarifas.map((tarifa) => (
                             <tr key={tarifa.id}>
                               <td>
                                 <div className='d-flex align-items-center'>
@@ -314,7 +354,7 @@ export default function TarifasListado() {
                                 </small>
                               </td>
                               <td className='fw-medium'>
-                                ${tarifa.valor_unitario.toLocaleString('es-CL')}
+                                ${(tarifa.valor_unitario || 0).toLocaleString('es-CL')}
                               </td>
                               <td>
                                 <span
@@ -350,6 +390,18 @@ export default function TarifasListado() {
                 </div>
               </div>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <ModernPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filteredTarifas.length}
+                itemsPerPage={itemsPerPage}
+                itemName="tarifas"
+                onPageChange={goToPage}
+              />
+            )}
           </div>
         </Layout>
 

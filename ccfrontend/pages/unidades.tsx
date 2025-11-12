@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useState, useEffect, useMemo } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import PageHeader from '@/components/ui/PageHeader';
 import apiClient from '@/lib/api';
 import { ProtectedRoute } from '@/lib/useAuth';
 
@@ -473,196 +474,42 @@ export default function UnidadesListado() {
       </Head>
 
       <Layout title='Lista de Unidades'>
-        {/* Header Profesional */}
-        <div className='container-fluid p-0'>
-          <div
-            className='text-white'
-            style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          >
-            <div className='p-4'>
-            <div
-              style={{
-                position: 'absolute',
-                top: '-50%',
-                right: '-10%',
-                width: '200px',
-                height: '200px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '50%',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '-10%',
-                left: '-5%',
-                width: '150px',
-                height: '150px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '50%',
-              }}
-            />
-            <div className='d-flex align-items-center justify-content-between'>
-              <div className='d-flex align-items-center'>
-                <div
-                  className='me-4'
-                  style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '12px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <i
-                    className='material-icons'
-                    style={{ fontSize: '32px', color: 'white' }}
-                  >
-                    apartment
-                  </i>
-                </div>
-                <div>
-                  <h1 className='h2 mb-1 text-white'>Unidades</h1>
-                  <p className='mb-0 opacity-75'>
-                    Gestión completa de unidades y departamentos
-                  </p>
-                </div>
-              </div>
-              <div className='text-end'>
-                <Link
-                  href='/unidades/nueva'
-                  className='btn btn-light btn-lg'
-                >
-                  <i className='material-icons me-2'>add</i>
-                  Nueva Unidad
-                </Link>
-              </div>
-            </div>
-
-            {/* Estadísticas */}
-            <div className='row mt-4'>
-              <div className='col-md-3 mb-3'>
-                <div
-                  className='p-3 rounded-3 text-white'
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                >
-                  <div className='d-flex align-items-center'>
-                    <div
-                      className='me-3'
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '8px',
-                        backgroundColor: 'var(--color-primary)',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <i className='material-icons'>grid_view</i>
-                    </div>
-                    <div>
-                      <div className='h3 mb-0'>{stats.total}</div>
-                      <div className='text-white-50'>Total Unidades</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className='col-md-3 mb-3'>
-                <div
-                  className='p-3 rounded-3 text-white'
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                >
-                  <div className='d-flex align-items-center'>
-                    <div
-                      className='me-3'
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '8px',
-                        backgroundColor: 'var(--color-success)',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <i className='material-icons'>check_circle</i>
-                    </div>
-                    <div>
-                      <div className='h3 mb-0'>{stats.activas}</div>
-                      <div className='text-white-50'>Unidades Activas</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className='col-md-3 mb-3'>
-                <div
-                  className='p-3 rounded-3 text-white'
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                >
-                  <div className='d-flex align-items-center'>
-                    <div
-                      className='me-3'
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '8px',
-                        backgroundColor: 'var(--color-warning)',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <i className='material-icons'>warning</i>
-                    </div>
-                    <div>
-                      <div className='h3 mb-0'>{stats.inactivas}</div>
-                      <div className='text-white-50'>Unidades Inactivas</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className='col-md-3 mb-3'>
-                <div
-                  className='p-3 rounded-3 text-white'
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                >
-                  <div className='d-flex align-items-center'>
-                    <div
-                      className='me-3'
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '8px',
-                        backgroundColor: 'var(--color-info)',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <i className='material-icons'>build</i>
-                    </div>
-                    <div>
-                      <div className='h3 mb-0'>{stats.mantenimiento}</div>
-                      <div className='text-white-50'>En Mantenimiento</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="Unidades"
+          subtitle="Gestión completa de unidades y departamentos"
+          icon="apartment"
+          primaryAction={{
+            href: '/unidades/nueva',
+            label: 'Nueva Unidad',
+            icon: 'add',
+          }}
+          stats={[
+            {
+              icon: 'grid_view',
+              value: stats.total,
+              label: 'Total Unidades',
+              color: 'var(--color-primary)',
+            },
+            {
+              icon: 'check_circle',
+              value: stats.activas,
+              label: 'Unidades Activas',
+              color: 'var(--color-success)',
+            },
+            {
+              icon: 'warning',
+              value: stats.inactivas,
+              label: 'Unidades Inactivas',
+              color: 'var(--color-warning)',
+            },
+            {
+              icon: 'build',
+              value: stats.mantenimiento,
+              label: 'En Mantenimiento',
+              color: 'var(--color-info)',
+            },
+          ]}
+        />
 
         {/* Contenido principal */}
         <div className='container-fluid pb-4'>
