@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import ModernPagination from '@/components/ui/ModernPagination';
-import PageHeader from '@/components/ui/PageHeader';
 import multasService from '@/lib/multasService';
 import { useAuth } from '@/lib/useAuth';
 import { ProtectedRoute } from '@/lib/useAuth'; // Agrega si no está
@@ -222,7 +221,8 @@ const MultasListadoPage: React.FC = () => {
                 )}
               </div>
             </div>
-          </PageHeader>
+          </header>
+          
 
           {/* Filtros */}
           <div className='filters-panel mb-4'>

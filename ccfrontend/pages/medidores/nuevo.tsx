@@ -4,6 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { Button, Card, Form, Row, Col, Alert, Modal } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
+import comunidadesService from '@/lib/comunidadesService';
+import { listEdificios } from '@/lib/edificiosService';
+import { createMedidor } from '@/lib/medidoresService'; // Asegúrate de importar la función createMedidor
+import unidadesService from '@/lib/unidadesService';
 import { ProtectedRoute } from '@/lib/useAuth';
 
 interface Community {
@@ -123,62 +127,28 @@ export default function NuevoMedidor() {
 
   const loadInitialData = async () => {
     try {
-      // Simular carga de datos
-      const mockCommunities: Community[] = [
-        {
-          id: 1,
-          name: 'Condominio Las Condes',
-          address: 'Av. Las Condes 12345',
-        },
-        { id: 2, name: 'Residencial Vitacura', address: 'Av. Vitacura 6789' },
-        { id: 3, name: 'Edificio Lo Barnechea', address: 'Av. La Dehesa 3456' },
-        {
-          id: 4,
-          name: 'Centro Comercial Maipú',
-          address: 'Av. Pajaritos 8901',
-        },
-      ];
-
-      setCommunities(mockCommunities);
+      const comunidadesData = await comunidadesService.getComunidades();
+      setCommunities(comunidadesData.map(c => ({ id: c.id, name: c.nombre, address: c.direccion })));
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error loading initial data:', error);
+      setErrors({ general: 'Error al cargar comunidades' });
     }
   };
 
   const loadBuildings = async (communityId: number) => {
     try {
-      // Simular carga de edificios según la comunidad
-      const mockBuildings: Building[] = [
-        { id: 1, name: 'Torre A', floors: 15 },
-        { id: 2, name: 'Torre B', floors: 12 },
-        { id: 3, name: 'Torre C', floors: 18 },
-        { id: 4, name: 'Edificio Principal', floors: 8 },
-      ];
-
-      setBuildings(mockBuildings);
+      const edificiosData = await listEdificios({ comunidad_id: communityId });
+      setBuildings(edificiosData.data || []);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error loading buildings:', error);
+      setErrors({ general: 'Error al cargar edificios' });
     }
   };
 
   const loadUnits = async (buildingId: number) => {
     try {
-      // Simular carga de unidades según el edificio
-      const mockUnits: Unit[] = [
-        { id: 1, number: 'Apto 101', floor: '1', type: 'apartment' },
-        { id: 2, number: 'Apto 102', floor: '1', type: 'apartment' },
-        { id: 3, number: 'Apto 201', floor: '2', type: 'apartment' },
-        { id: 4, number: 'Apto 202', floor: '2', type: 'apartment' },
-        { id: 5, number: 'Local 001', floor: '1', type: 'commercial' },
-        { id: 6, number: 'Estacion. 001', floor: '-1', type: 'parking' },
-      ];
-
-      setUnits(mockUnits);
+      const unidadesData = await unidadesService.getUnidades({ edificio_id: buildingId });
+      setUnits(unidadesData.data || []);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error loading units:', error);
+      setErrors({ general: 'Error al cargar unidades' });
     }
   };
 
@@ -238,6 +208,9 @@ export default function NuevoMedidor() {
     if (!formData.company) {
       newErrors.company = 'La empresa instaladora es requerida';
     }
+    if (!formData.code) {
+      newErrors.code = 'El código del medidor es requerido';
+    }
 
     // Validaciones específicas por tipo
     if (formData.type === 'water' && !formData.maxPressure) {
@@ -262,23 +235,32 @@ export default function NuevoMedidor() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
+    if (!formData.unitId || !formData.type || !formData.code) {
+      setErrors({ general: 'Completa unidad, tipo y código' });
       return;
     }
-
+    setLoading(true);
     try {
-      setLoading(true);
+      const tipoMapped =
+        formData.type === 'electric'
+          ? 'electricidad'
+          : formData.type === 'water'
+            ? 'agua'
+            : 'gas';
 
-      // Simular guardado
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      alert('Medidor creado exitosamente');
+      const data = {
+        unidad_id: Number(formData.unitId),
+        tipo: tipoMapped,
+        codigo: formData.code,
+        serial_number: formData.serialNumber,
+        marca: formData.brand,
+        modelo: formData.model,
+        ubicacion: formData.position,
+      };
+      await createMedidor(data);
       router.push('/medidores');
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error creating meter:', error);
-      alert('Error al crear el medidor');
+    } catch (err: any) {
+      setErrors({ general: err.response?.data?.error || 'Error al crear' });
     } finally {
       setLoading(false);
     }
@@ -418,8 +400,9 @@ export default function NuevoMedidor() {
                               handleInputChange('code', e.target.value)
                             }
                             placeholder='Ej: MED-ELC-001'
-                            readOnly
+                            isInvalid={!!errors.code}
                           />
+                          {errors.code && <Form.Control.Feedback type='invalid'>{errors.code}</Form.Control.Feedback>}
                           <Form.Text>
                             Se genera automáticamente según el tipo
                           </Form.Text>
@@ -1181,8 +1164,8 @@ export default function NuevoMedidor() {
                       <strong>Fecha:</strong>{' '}
                       {formData.installationDate
                         ? new Date(
-                            formData.installationDate,
-                          ).toLocaleDateString()
+                          formData.installationDate,
+                        ).toLocaleDateString()
                         : '-'}
                     </li>
                     <li>
