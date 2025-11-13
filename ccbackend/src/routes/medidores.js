@@ -479,7 +479,7 @@ router.get('/', authenticate, async (req, res) => {
  *                 type: string
  *                 enum: [agua, gas, electricidad, otro]
  *                 description: Tipo de medidor
- *               numero_medidor:
+ *               codigo:
  *                 type: string
  *                 description: Número único del medidor
  *               serial_number:
@@ -517,9 +517,9 @@ router.post(
     body('tipo')
       .isIn(['agua', 'gas', 'electricidad', 'otro'])
       .withMessage('tipo inválido'),
-    body('numero_medidor')
+    body('codigo')
       .notEmpty()
-      .withMessage('numero_medidor requerido')
+      .withMessage('codigo requerido')
       .trim(),
     body('serial_number').optional().trim(),
     body('marca').optional().trim(),
@@ -536,7 +536,7 @@ router.post(
       const {
         unidad_id,
         tipo,
-        numero_medidor,
+        codigo,
         serial_number,
         marca,
         modelo,
@@ -553,8 +553,8 @@ router.post(
 
       // Verificar que no exista un medidor con el mismo número
       const [duplicate] = await db.query(
-        'SELECT id FROM medidor WHERE numero_medidor = ? AND unidad_id = ?',
-        [numero_medidor, unidad_id]
+        'SELECT id FROM medidor WHERE codigo = ? AND unidad_id = ?',
+        [codigo, unidad_id]
       );
       if (duplicate.length) {
         return res
@@ -562,11 +562,14 @@ router.post(
           .json({ error: 'Ya existe un medidor con ese número en esta unidad' });
       }
 
+      // En POST /, después de verificar la unidad:
+      const comunidad_id = unidad[0].comunidad_id;
+
       // Insertar medidor
       const [result] = await db.query(
-        `INSERT INTO medidor (unidad_id, tipo, numero_medidor, serial_number, marca, modelo, ubicacion, activo)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-        [unidad_id, tipo, numero_medidor, serial_number || null, marca || null, modelo || null, ubicacion || null]
+        `INSERT INTO medidor (comunidad_id, unidad_id, tipo, codigo, serial_number, marca, modelo, ubicacion, activo)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+        [comunidad_id, unidad_id, tipo, codigo, serial_number || null, marca || null, modelo || null, ubicacion ? JSON.stringify(ubicacion) : null]
       );
 
       // Obtener el medidor creado
@@ -617,7 +620,7 @@ router.post(
  *                 type: string
  *               ubicacion:
  *                 type: string
- *               numero_medidor:
+ *               codigo:
  *                 type: string
  *     responses:
  *       200:
@@ -642,7 +645,7 @@ router.put(
     body('marca').optional().trim(),
     body('modelo').optional().trim(),
     body('ubicacion').optional().trim(),
-    body('numero_medidor').optional().trim(),
+    body('codigo').optional().trim(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -679,11 +682,11 @@ router.put(
       }
       if (req.body.ubicacion !== undefined) {
         campos.push('ubicacion = ?');
-        valores.push(req.body.ubicacion || null);
+        valores.push(req.body.ubicacion ? JSON.stringify(req.body.ubicacion) : null);
       }
-      if (req.body.numero_medidor !== undefined) {
-        campos.push('numero_medidor = ?');
-        valores.push(req.body.numero_medidor);
+      if (req.body.codigo !== undefined) {
+        campos.push('codigo = ?');
+        valores.push(req.body.codigo);
       }
 
       if (campos.length === 0) {
