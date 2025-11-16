@@ -11,6 +11,7 @@ import {
   usePermissions,
   ProtectedPage,
   UserRole,
+  Permission,
 } from '@/lib/usePermissions';
 import { CategoriaGasto } from '@/types/categoriasGasto';
 
@@ -18,7 +19,7 @@ type ExpenseCategory = CategoriaGasto;
 
 export default function CategoriasGastoListado() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const { isSuperUser, currentRole } = usePermissions();
+  const { isSuperUser, currentRole, hasPermission } = usePermissions();
   const router = useRouter();
   const [categories, setCategories] = useState<CategoriaGasto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -222,16 +223,18 @@ export default function CategoriasGastoListado() {
                   </p>
                 </div>
               </div>
-              <div className='text-end'>
-                <Button
-                  variant='light'
-                  onClick={() => router.push('/categorias-gasto/nueva')}
-                  className='btn-lg'
-                >
-                  <i className='material-icons me-2'>add</i>
-                  Nueva Categoría
-                </Button>
-              </div>
+              {hasPermission(Permission.CREATE_CATEGORIA_GASTO) && (
+                <div className='text-end'>
+                  <Button
+                    variant='light'
+                    onClick={() => router.push('/categorias-gasto/nueva')}
+                    className='btn-lg'
+                  >
+                    <i className='material-icons me-2'>add</i>
+                    Nueva Categoría
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Estadísticas */}

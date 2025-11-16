@@ -319,18 +319,14 @@ export default function MedidorDetallePage() {
                   </div>
                   <div className="content-section-body p-0">
                     <Table hover className="mb-0">
-                      <thead><tr><th>Fecha</th><th>Periodo</th><th>Lectura</th><th>Estado</th></tr></thead>
+                      <thead><tr><th>Fecha</th><th>Periodo</th><th>Lectura</th></tr></thead>
                       <tbody>
                         {lecturas.map(r => (
                           <tr key={r.id}>
                             <td>{new Date(r.fecha).toLocaleDateString()}</td>
                             <td>{r.periodo}</td>
                             <td className="fw-medium">{r.lectura.toLocaleString()}</td>
-                            <td>
-                              <span className={`badge ${r.status === 'valida' ? 'bg-success' : r.status === 'estimada' ? 'bg-warning' : 'bg-danger'}`}>
-                                {r.status === 'valida' ? 'Válida' : r.status === 'estimada' ? 'Estimada' : 'Error'}
-                              </span>
-                            </td>
+                            
                           </tr>
                         ))}
                         {lecturas.length === 0 && (<tr><td colSpan={4}>Sin lecturas</td></tr>)}

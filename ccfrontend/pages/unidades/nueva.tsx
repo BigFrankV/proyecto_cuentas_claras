@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import apiClient from '@/lib/api';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface FormData {
   comunidad: string;

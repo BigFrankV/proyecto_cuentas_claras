@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { StatusBadge, TypeBadge, FileIcon } from '@/components/documentos';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface PurchaseDocument {
   id: string;
@@ -30,6 +31,7 @@ interface PurchaseDocument {
 
 export default function DocumentosCompraListado() {
   const router = useRouter();
+  const { hasPermission } = usePermissions();
   const [documents, setDocuments] = useState<PurchaseDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'grid' | 'table'>('grid');
@@ -360,10 +362,12 @@ export default function DocumentosCompraListado() {
                 <i className='material-icons me-2'>folder</i>
                 Ver Documentos
               </Link>
-              <Link href='/documentos-compra/nuevo' className='btn btn-primary'>
-                <i className='material-icons me-2'>add</i>
-                Nuevo Documento
-              </Link>
+              {hasPermission(Permission.CREATE_COMPRA) && (
+                <Link href='/documentos-compra/nuevo' className='btn btn-primary'>
+                  <i className='material-icons me-2'>add</i>
+                  Nuevo Documento
+                </Link>
+              )}
             </div>
           </div>
 
@@ -1063,7 +1067,7 @@ export default function DocumentosCompraListado() {
                   ? 'Intenta cambiar los filtros de búsqueda'
                   : 'Comienza creando tu primer documento de compra'}
               </p>
-              {!searchTerm && (
+              {!searchTerm && hasPermission(Permission.CREATE_COMPRA) && (
                 <Link
                   href='/documentos-compra/nuevo'
                   className='btn btn-primary'

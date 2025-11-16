@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { Permission, usePermissions } from '@/lib/usePermissions';
 import { Edificio } from '@/types/edificios';
 
 interface EdificiosTableProps {
@@ -21,6 +22,8 @@ export default function EdificiosTable({
   onDelete,
   loading = false,
 }: EdificiosTableProps) {
+  const { hasPermission } = usePermissions();
+  
   const getEstadoBadge = (estado: string) => {
     const badges = {
       activo: 'bg-success',
@@ -292,20 +295,24 @@ export default function EdificiosTable({
                         >
                           <i className='material-icons'>visibility</i>
                         </Link>
-                        <button
-                          className='btn btn-sm btn-outline-secondary'
-                          title='Editar'
-                          onClick={() => onEdit(edificio)}
-                        >
-                          <i className='material-icons'>edit</i>
-                        </button>
-                        <button
-                          className='btn btn-sm btn-outline-danger'
-                          title='Eliminar'
-                          onClick={() => onDelete(edificio)}
-                        >
-                          <i className='material-icons'>delete</i>
-                        </button>
+                        {hasPermission(Permission.EDIT_EDIFICIO) && (
+                          <button
+                            className='btn btn-sm btn-outline-secondary'
+                            title='Editar'
+                            onClick={() => onEdit(edificio)}
+                          >
+                            <i className='material-icons'>edit</i>
+                          </button>
+                        )}
+                        {hasPermission(Permission.DELETE_EDIFICIO) && (
+                          <button
+                            className='btn btn-sm btn-outline-danger'
+                            title='Eliminar'
+                            onClick={() => onDelete(edificio)}
+                          >
+                            <i className='material-icons'>delete</i>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

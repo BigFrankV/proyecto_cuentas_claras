@@ -10,6 +10,7 @@ import {
   useEdificiosUtils,
 } from '@/hooks/useEdificios';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 import {
   EdificioFormData,
   TIPOS_EDIFICIO,
@@ -21,6 +22,14 @@ export default function EdificioNuevo() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const { hasPermission } = usePermissions();
+
+  // Validar permisos al cargar
+  useEffect(() => {
+    if (!hasPermission(Permission.CREATE_EDIFICIO)) {
+      router.push('/edificios');
+    }
+  }, [hasPermission, router]);
 
   // Hooks personalizados
   const { createEdificio, loading, error } = useEdificios();

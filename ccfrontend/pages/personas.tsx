@@ -13,7 +13,7 @@ import {
 } from '@/components/personas';
 import { usePersonas } from '@/hooks/usePersonas';
 import { ProtectedRoute } from '@/lib/useAuth';
-import { ProtectedPage, UserRole } from '@/lib/usePermissions';
+import { ProtectedPage, UserRole, Permission, usePermissions } from '@/lib/usePermissions';
 import { Persona, PersonaFilters as ApiFilters } from '@/types/personas';
 
 interface PersonaUI {
@@ -30,6 +30,7 @@ interface PersonaUI {
 }
 
 const PersonasListado = () => {
+  const { hasPermission } = usePermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoFilter, setTipoFilter] = useState('todos');
   const [estadoFilter, setEstadoFilter] = useState('todos');
@@ -192,15 +193,17 @@ const PersonasListado = () => {
                   </p>
                 </div>
               </div>
-              <div className='text-end'>
-                <Link
-                  href='/personas/nueva'
-                  className='btn btn-light btn-lg'
-                >
-                  <i className='material-icons me-2'>person_add</i>
-                  Nueva Persona
-                </Link>
-              </div>
+              {hasPermission(Permission.CREATE_PERSONA) && (
+                <div className='text-end'>
+                  <Link
+                    href='/personas/nueva'
+                    className='btn btn-light btn-lg'
+                  >
+                    <i className='material-icons me-2'>person_add</i>
+                    Nueva Persona
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Estadísticas */}

@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { useEdificios, useTorres, useUnidades } from '@/hooks/useEdificios';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 import {
   Edificio,
   ESTADOS_EDIFICIO,
@@ -34,6 +35,7 @@ export default function EdificioDetalle() {
     loading: unidadesLoading,
     fetchUnidades,
   } = useUnidades(id as string);
+  const { hasPermission } = usePermissions();
 
   useEffect(() => {
     const loadEdificioData = async () => {
@@ -199,21 +201,25 @@ export default function EdificioDetalle() {
             <div className='edificio-cover-overlay'>
               <div className='cover-actions'>
                 <div className='btn-group'>
-                  <Link
-                    href={`/edificios/${id}/editar`}
-                    className='btn btn-light btn-sm'
-                  >
-                    <i className='material-icons'>edit</i>
-                  </Link>
+                  {hasPermission(Permission.EDIT_EDIFICIO) && (
+                    <Link
+                      href={`/edificios/${id}/editar`}
+                      className='btn btn-light btn-sm'
+                    >
+                      <i className='material-icons'>edit</i>
+                    </Link>
+                  )}
                   <button className='btn btn-light btn-sm'>
                     <i className='material-icons'>share</i>
                   </button>
-                  <button
-                    className='btn btn-danger btn-sm'
-                    onClick={() => setShowDeleteModal(true)}
-                  >
-                    <i className='material-icons'>delete</i>
-                  </button>
+                  {hasPermission(Permission.DELETE_EDIFICIO) && (
+                    <button
+                      className='btn btn-danger btn-sm'
+                      onClick={() => setShowDeleteModal(true)}
+                    >
+                      <i className='material-icons'>delete</i>
+                    </button>
+                  )}
                 </div>
               </div>
               <div>
@@ -697,10 +703,12 @@ export default function EdificioDetalle() {
                       <p className='text-muted'>
                         Este edificio aún no tiene torres registradas.
                       </p>
-                      <button className='btn btn-primary'>
-                        <i className='material-icons me-2'>add</i>
-                        Crear Primera Torre
-                      </button>
+                      {hasPermission(Permission.CREATE_TORRE) && (
+                        <button className='btn btn-primary'>
+                          <i className='material-icons me-2'>add</i>
+                          Crear Primera Torre
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -712,10 +720,12 @@ export default function EdificioDetalle() {
               <div className='content-section'>
                 <div className='content-section-header'>
                   <h5 className='mb-0'>Unidades del Edificio</h5>
-                  <button className='btn btn-sm btn-primary'>
-                    <i className='material-icons me-1'>add</i>
-                    Nueva Unidad
-                  </button>
+                  {hasPermission(Permission.CREATE_UNIDAD) && (
+                    <button className='btn btn-sm btn-primary'>
+                      <i className='material-icons me-1'>add</i>
+                      Nueva Unidad
+                    </button>
+                  )}
                 </div>
                 <div className='content-section-body'>
                   {unidadesLoading ? (
@@ -778,10 +788,12 @@ export default function EdificioDetalle() {
                       <p className='text-muted'>
                         Este edificio aún no tiene unidades registradas.
                       </p>
-                      <button className='btn btn-primary'>
-                        <i className='material-icons me-2'>add</i>
-                        Crear Primera Unidad
-                      </button>
+                      {hasPermission(Permission.CREATE_UNIDAD) && (
+                        <button className='btn btn-primary'>
+                          <i className='material-icons me-2'>add</i>
+                          Crear Primera Unidad
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -795,13 +807,15 @@ export default function EdificioDetalle() {
                   <div className='content-section'>
                     <div className='content-section-header'>
                       <h5 className='mb-0'>Servicios Disponibles</h5>
-                      <Link
-                        href={`/edificios/${id}/editar`}
-                        className='btn btn-sm btn-outline-primary'
-                      >
-                        <i className='material-icons me-1'>edit</i>
-                        Editar
-                      </Link>
+                      {hasPermission(Permission.EDIT_EDIFICIO) && (
+                        <Link
+                          href={`/edificios/${id}/editar`}
+                          className='btn btn-sm btn-outline-primary'
+                        >
+                          <i className='material-icons me-1'>edit</i>
+                          Editar
+                        </Link>
+                      )}
                     </div>
                     <div className='content-section-body'>
                       <div className='row'>
@@ -846,13 +860,15 @@ export default function EdificioDetalle() {
                   <div className='content-section'>
                     <div className='content-section-header'>
                       <h5 className='mb-0'>Amenidades</h5>
-                      <Link
-                        href={`/edificios/${id}/editar`}
-                        className='btn btn-sm btn-outline-primary'
-                      >
-                        <i className='material-icons me-1'>edit</i>
-                        Editar
-                      </Link>
+                      {hasPermission(Permission.EDIT_EDIFICIO) && (
+                        <Link
+                          href={`/edificios/${id}/editar`}
+                          className='btn btn-sm btn-outline-primary'
+                        >
+                          <i className='material-icons me-1'>edit</i>
+                          Editar
+                        </Link>
+                      )}
                     </div>
                     <div className='content-section-body'>
                       <div className='row'>

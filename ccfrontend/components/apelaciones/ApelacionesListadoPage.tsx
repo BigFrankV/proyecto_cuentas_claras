@@ -232,8 +232,8 @@ const ApelacionesListadoPage: React.FC = () => {
           icon="gavel"
         >
           <div className="d-flex gap-2">
-            {canCreate && (
-              <Link href="/apelaciones/nueva" className="btn btn-primary">
+            {(hasPermission(Permission.VIEW_APELACION) || hasPermission(Permission.CREATE_APELACION)) && (
+              <Link href="/apelaciones-nueva" className="btn btn-primary">
                 <i className="material-icons me-2">add</i>
                 Nueva Apelación
               </Link>

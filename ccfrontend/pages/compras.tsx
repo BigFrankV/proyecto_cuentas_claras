@@ -16,7 +16,7 @@ import {
 import Layout from '@/components/layout/Layout';
 import { comprasApi } from '@/lib/api/compras';
 import { ProtectedRoute } from '@/lib/useAuth';
-import { ProtectedPage, UserRole } from '@/lib/usePermissions';
+import { ProtectedPage, UserRole, Permission, usePermissions } from '@/lib/usePermissions';
 import { CompraBackend } from '@/types/compras';
 
 interface Purchase {
@@ -433,15 +433,17 @@ export default function ComprasListado() {
                         Crea una nueva solicitud de compra y optimiza tus
                         procesos
                       </p>
-                      <Button
-                        variant='primary'
-                        size='lg'
-                        className='hero-cta'
-                        onClick={() => router.push('/compras/nuevo')}
-                      >
-                        <span className='material-icons me-2'>add</span>
-                        Nueva Compra
-                      </Button>
+                      {hasPermission(Permission.CREATE_COMPRA) && (
+                        <Button
+                          variant='primary'
+                          size='lg'
+                          className='hero-cta'
+                          onClick={() => router.push('/compras/nuevo')}
+                        >
+                          <span className='material-icons me-2'>add</span>
+                          Nueva Compra
+                        </Button>
+                      )}
 
                       <div className='quick-stats'>
                         <div className='quick-stat'>

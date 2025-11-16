@@ -6,6 +6,7 @@ import Layout from '@/components/layout/Layout';
 import PageHeader from '@/components/ui/PageHeader';
 import apiClient from '@/lib/api';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface Unidad {
   id: string;
@@ -116,6 +117,7 @@ const mockUnidades: Unidad[] = [
 ];
 
 export default function UnidadesListado() {
+  const { hasPermission } = usePermissions();
   const [unidades, setUnidades] = useState<Unidad[]>([]);
   const [filteredUnidades, setFilteredUnidades] = useState<Unidad[]>([]);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -130,7 +132,7 @@ export default function UnidadesListado() {
     tipo: '',
   });
   const [selectedUnidades, setSelectedUnidades] = useState<string[]>([]);
-
+  
   // Estados de paginación
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -478,11 +480,11 @@ export default function UnidadesListado() {
           title="Unidades"
           subtitle="Gestión completa de unidades y departamentos"
           icon="apartment"
-          primaryAction={{
+          primaryAction={hasPermission(Permission.CREATE_UNIDAD) ? {
             href: '/unidades/nueva',
             label: 'Nueva Unidad',
             icon: 'add',
-          }}
+          } : undefined}
           stats={[
             {
               icon: 'grid_view',
@@ -686,14 +688,18 @@ export default function UnidadesListado() {
                 {selectedUnidades.length} unidad(es) seleccionada(s)
               </span>
               <div>
-                <button className='btn btn-sm btn-outline-primary me-2'>
-                  <i className='material-icons me-1'>receipt</i>
-                  Generar Cargos
-                </button>
-                <button className='btn btn-sm btn-outline-danger'>
-                  <i className='material-icons me-1'>delete</i>
-                  Eliminar
-                </button>
+                {hasPermission(Permission.EDIT_UNIDAD) && (
+                  <button className='btn btn-sm btn-outline-primary me-2'>
+                    <i className='material-icons me-1'>receipt</i>
+                    Generar Cargos
+                  </button>
+                )}
+                {hasPermission(Permission.DELETE_UNIDAD) && (
+                  <button className='btn btn-sm btn-outline-danger'>
+                    <i className='material-icons me-1'>delete</i>
+                    Eliminar
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -820,17 +826,19 @@ export default function UnidadesListado() {
                                   visibility
                                 </i>
                               </Link>
-                              <Link
-                                href={`/unidades/${unidad.id}/cargos`}
-                                className='btn btn-sm btn-outline-secondary'
-                              >
-                                <i
-                                  className='material-icons'
-                                  style={{ fontSize: '16px' }}
+                              {hasPermission(Permission.EDIT_UNIDAD) && (
+                                <Link
+                                  href={`/unidades/${unidad.id}/cargos`}
+                                  className='btn btn-sm btn-outline-secondary'
                                 >
-                                  receipt
-                                </i>
-                              </Link>
+                                  <i
+                                    className='material-icons'
+                                    style={{ fontSize: '16px' }}
+                                  >
+                                    receipt
+                                  </i>
+                                </Link>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -940,18 +948,20 @@ export default function UnidadesListado() {
                           </i>
                           Ver
                         </Link>
-                        <Link
-                          href={`/unidades/${unidad.id}/cargos`}
-                          className='btn btn-primary btn-sm'
-                        >
-                          <i
-                            className='material-icons me-1'
-                            style={{ fontSize: '16px' }}
+                        {hasPermission(Permission.EDIT_UNIDAD) && (
+                          <Link
+                            href={`/unidades/${unidad.id}/cargos`}
+                            className='btn btn-primary btn-sm'
                           >
-                            receipt
-                          </i>
-                          Cargos
-                        </Link>
+                            <i
+                              className='material-icons me-1'
+                              style={{ fontSize: '16px' }}
+                            >
+                              receipt
+                            </i>
+                            Cargos
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </div>

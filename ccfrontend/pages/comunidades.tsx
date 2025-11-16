@@ -9,7 +9,8 @@ import FilterContainer from '@/components/comunidades/FilterContainer';
 import ViewToggle from '@/components/comunidades/ViewToggle';
 import Layout from '@/components/layout/Layout';
 import comunidadesService from '@/lib/comunidadesService';
-import { ProtectedRoute, useAuth } from '@/lib/useAuth'; // ✅ AGREGAR useAuth
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 import {
   Comunidad,
   ComunidadFiltros,
@@ -18,7 +19,8 @@ import {
 
 export default function ComunidadesListado() {
   const router = useRouter();
-  const { user } = useAuth(); // ✅ AGREGAR hook de autenticación
+  const { user } = useAuth();
+  const { hasPermission } = usePermissions();
 
   // Estados principales
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
@@ -256,7 +258,7 @@ export default function ComunidadesListado() {
                     </div>
 
                     {/* Botón de nueva comunidad */}
-                    {user?.is_superadmin && (
+                    {hasPermission(Permission.CREATE_COMUNIDAD) && (
                       <Link href='/comunidades/nueva' className='btn btn-light d-flex align-items-center'>
                         <span className='material-icons me-2'>add</span>
                         Nueva Comunidad

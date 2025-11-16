@@ -13,6 +13,7 @@ import {
 import Layout from '@/components/layout/Layout';
 import emisionesService from '@/lib/emisionesService';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 
 export default function EmisionesListado() {
   const [emissions, setEmissions] = useState<Emission[]>([]);
@@ -20,6 +21,7 @@ export default function EmisionesListado() {
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'table' | 'cards'>('table');
   const [selectedEmissions, setSelectedEmissions] = useState<string[]>([]);
+  const { hasPermission } = usePermissions();
 
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
@@ -393,13 +395,15 @@ export default function EmisionesListado() {
                 </div>
               </div>
               <div className='text-end'>
-                <Link
-                  href='/emisiones/nueva'
-                  className='btn btn-light btn-lg'
-                >
-                  <i className='material-icons me-2'>add</i>
-                  Nueva Emisión
-                </Link>
+                {hasPermission(Permission.CREATE_EMISION) && (
+                  <Link
+                    href='/emisiones/nueva'
+                    className='btn btn-light btn-lg'
+                  >
+                    <i className='material-icons me-2'>add</i>
+                    Nueva Emisión
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -614,10 +618,12 @@ export default function EmisionesListado() {
               <p className='text-muted'>
                 No hay emisiones que coincidan con los filtros aplicados
               </p>
-              <Link href='/emisiones/nueva' className='btn btn-primary'>
-                <i className='material-icons me-2'>add</i>
-                Crear Primera Emisión
-              </Link>
+              {hasPermission(Permission.CREATE_EMISION) && (
+                <Link href='/emisiones/nueva' className='btn btn-primary'>
+                  <i className='material-icons me-2'>add</i>
+                  Crear Primera Emisión
+                </Link>
+              )}
             </div>
           )}
 

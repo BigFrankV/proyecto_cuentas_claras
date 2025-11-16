@@ -14,13 +14,13 @@ import {
 } from '@/components/proveedores';
 import { listProveedores, deleteProveedor } from '@/lib/proveedoresService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { usePermissions } from '@/lib/usePermissions';
+import { usePermissions, Permission } from '@/lib/usePermissions';
 import type { Proveedor } from '@/types/proveedores';
 
 export default function ProveedoresListado() {
   const router = useRouter();
   const { isLoading: authLoading, isAuthenticated } = useAuth();
-  const { isSuperUser } = usePermissions();
+  const { isSuperUser, hasPermission } = usePermissions();
 
   const [providers, setProviders] = useState<Proveedor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -202,16 +202,18 @@ export default function ProveedoresListado() {
                   </p>
                 </div>
               </div>
-              <div className='text-end'>
-                <Button
-                  variant='light'
-                  onClick={() => router.push('/proveedores/nuevo')}
-                  className='btn-lg'
-                >
-                  <i className='material-icons me-2'>add</i>
-                  Nuevo Proveedor
-                </Button>
-              </div>
+              {hasPermission(Permission.CREATE_PROVEEDOR) && (
+                <div className='text-end'>
+                  <Button
+                    variant='light'
+                    onClick={() => router.push('/proveedores/nuevo')}
+                    className='btn-lg'
+                  >
+                    <i className='material-icons me-2'>add</i>
+                    Nuevo Proveedor
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Estadísticas */}

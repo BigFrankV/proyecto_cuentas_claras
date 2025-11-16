@@ -2,12 +2,14 @@ import Link from 'next/link';
 import React, { useState, useEffect, useMemo } from 'react';
 
 import { useCargos } from '@/hooks/useCargos';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 import { Cargo } from '@/types/cargos';
 
 const CargosListadoSimple: React.FC = () => {
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('todos');
+  const { hasPermission } = usePermissions();
 
   const { listarCargos, loading, error } = useCargos();
 
@@ -201,13 +203,15 @@ const CargosListadoSimple: React.FC = () => {
               </div>
             </div>
             <div className='text-end'>
-              <Link
-                href='/cargos/nuevo'
-                className='btn btn-light btn-lg'
-              >
-                <i className='material-icons me-2'>add</i>
-                Nuevo Cargo
-              </Link>
+              {hasPermission(Permission.CREATE_CARGO) && (
+                <Link
+                  href='/cargos/nuevo'
+                  className='btn btn-light btn-lg'
+                >
+                  <i className='material-icons me-2'>add</i>
+                  Nuevo Cargo
+                </Link>
+              )}
             </div>
           </div>
 

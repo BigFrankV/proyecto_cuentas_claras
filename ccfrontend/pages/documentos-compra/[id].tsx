@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { StatusBadge, TypeBadge, FileIcon } from '@/components/documentos';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface DocumentItem {
   id: string;

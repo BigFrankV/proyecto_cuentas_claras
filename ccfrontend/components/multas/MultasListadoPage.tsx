@@ -7,7 +7,7 @@ import ModernPagination from '@/components/ui/ModernPagination';
 import multasService from '@/lib/multasService';
 import { useAuth } from '@/lib/useAuth';
 import { ProtectedRoute } from '@/lib/useAuth'; // Agrega si no está
-import { usePermissions } from '@/lib/usePermissions';
+import { usePermissions, Permission } from '@/lib/usePermissions';
 
 const MultasListadoPage: React.FC = () => {
   // eslint-disable-next-line no-console
@@ -15,7 +15,7 @@ const MultasListadoPage: React.FC = () => {
 
   const router = useRouter();
   const { user } = useAuth();
-  const { canManageFinances } = usePermissions();
+  const { canManageFinances, hasPermission } = usePermissions();
 
   // eslint-disable-next-line no-console
   console.log('👤 Usuario en MultasListadoPage:', user); // ✅ Agrega esto
@@ -214,7 +214,7 @@ const MultasListadoPage: React.FC = () => {
                 <button className='btn btn-outline-secondary me-2'>
                   <i className='material-icons'>notifications</i>
                 </button>
-                {canManageFinances && (
+                {(hasPermission(Permission.MANAGE_MULTAS) || hasPermission(Permission.VIEW_MULTA)) && (
                   <Link href='/multas-nueva' className='btn btn-primary'>
                     <i className='material-icons me-2'>add</i>Nueva Multa
                   </Link>
