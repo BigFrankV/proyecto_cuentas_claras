@@ -4231,6 +4231,37 @@ INSERT INTO `webhook_pago` (`id`, `comunidad_id`, `proveedor`, `payload_json`, `
 (39, 9, 'transferencia', '{\"tx_id\": \"tr39\", \"monto\": 52000}', '2025-10-23 16:35:00', 0, NULL),
 (40, 10, 'webpay', '{\"tx_id\": \"wp40\", \"monto\": 75000}', '2025-10-23 16:35:00', 1, 40);
 
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `payment_transaction`
+--
+
+DROP TABLE IF EXISTS `payment_transaction`;
+CREATE TABLE `payment_transaction` (
+  `id` bigint NOT NULL,
+  `order_id` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `comunidad_id` bigint NOT NULL,
+  `multa_id` bigint DEFAULT NULL,
+  `amount` decimal(12,2) NOT NULL,
+  `gateway` enum('webpay','khipu','mercadopago') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `status` enum('pending','completed','failed','refunded') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'pending',
+  `transaction_token` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT 'Token de Webpay o ID de transacción',
+  `gateway_transaction_id` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT 'ID de transacción del gateway',
+  `gateway_response` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin COMMENT 'Respuesta completa del gateway en JSON',
+  `payer_email` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Transacciones de pago de pasarelas de pago';
+
+--
+-- Volcado de datos para la tabla `payment_transaction`
+--
+
+INSERT INTO `payment_transaction` (`id`, `order_id`, `comunidad_id`, `multa_id`, `amount`, `gateway`, `status`, `transaction_token`, `gateway_transaction_id`, `gateway_response`, `payer_email`, `created_at`, `updated_at`) VALUES
+(1, 'ORD-1-101-20251116001', 1, 101, 25000.00, 'webpay', 'completed', 'tk_webpay_demo_001', '1234567890', '{\"vci\":\"TSY\",\"amount\":25000,\"status\":\"AUTHORIZED\"}', 'usuario1@ejemplo.cl', '2025-11-16 10:00:00', '2025-11-16 10:05:00'),
+(2, 'ORD-2-102-20251116002', 2, 102, 15000.00, 'webpay', 'completed', 'tk_webpay_demo_002', '1234567891', '{\"vci\":\"TSY\",\"amount\":15000,\"status\":\"AUTHORIZED\"}', 'usuario2@ejemplo.cl', '2025-11-16 11:00:00', '2025-11-16 11:03:00');
+
 --
 -- Índices para tablas volcadas
 --
@@ -4641,6 +4672,18 @@ ALTER TABLE `webhook_pago`
   ADD KEY `fk_wh_pago` (`pago_id`);
 
 --
+-- Indices de la tabla `payment_transaction`
+--
+ALTER TABLE `payment_transaction`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_order_id` (`order_id`),
+  ADD KEY `fk_payment_comunidad` (`comunidad_id`),
+  ADD KEY `fk_payment_multa` (`multa_id`),
+  ADD KEY `ix_payment_status` (`status`),
+  ADD KEY `ix_payment_gateway` (`gateway`),
+  ADD KEY `ix_payment_created` (`created_at`);
+
+--
 -- AUTO_INCREMENT de las tablas volcadas
 --
 
@@ -4841,6 +4884,12 @@ ALTER TABLE `usuario_rol_comunidad`
 --
 ALTER TABLE `webhook_pago`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+
+--
+-- AUTO_INCREMENT de la tabla `payment_transaction`
+--
+ALTER TABLE `payment_transaction`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 -- --------------------------------------------------------
 
