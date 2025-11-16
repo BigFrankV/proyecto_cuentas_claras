@@ -435,6 +435,34 @@ class MultasService {
       }`.trim(),
     }));
   }
+
+  // PAGO DE MULTAS
+  async iniciarPago(
+    multaId: number,
+    payload: {
+      gateway: 'webpay' | 'khipu' | 'mercadopago';
+      payerEmail?: string;
+    }
+  ): Promise<{
+    orderId: string;
+    transactionId: number;
+    paymentUrl: string;
+    token: string;
+    gateway: string;
+  }> {
+    const response = await api.post(`/multas/${multaId}/iniciar-pago`, payload);
+    return response.data.data;
+  }
+
+  async confirmarPago(token_ws: string): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    const response = await api.post('/multas/pago/confirmar', { token_ws });
+    return response.data;
+  }
 }
 
 //  CREAR LA INSTANCIA Y EXPORTARLA

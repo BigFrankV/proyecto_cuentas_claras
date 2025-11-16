@@ -51,7 +51,7 @@ class PaymentGatewayService {
    */
   async createWebpayTransaction(orderData) {
     try {
-      const { amount, orderId, sessionId, communityId, unitId, description } =
+      const { amount, orderId, sessionId, communityId, unitId, multaId, description } =
         orderData;
 
       // Configurar Webpay
@@ -68,7 +68,7 @@ class PaymentGatewayService {
         orderId,
         sessionId,
         amount,
-        `${this.returnUrls.success}?orderId=${orderId}`
+        `${this.baseUrl}/multas/pago/resultado`
       );
 
       // Guardar transacción en BD
@@ -76,6 +76,7 @@ class PaymentGatewayService {
         orderId,
         communityId,
         unitId,
+        multaId,
         amount,
         gateway: 'webpay',
         gatewayTransactionId: response.token,
@@ -114,7 +115,7 @@ class PaymentGatewayService {
       // Actualizar transacción en BD
       await this.updateTransactionStatus(
         token,
-        response.response_code === 0 ? 'approved' : 'rejected',
+        response.response_code === 0 ? 'completed' : 'failed',
         response
       );
 
@@ -268,6 +269,7 @@ class PaymentGatewayService {
       orderId,
       communityId,
       unitId,
+      multaId,
       amount,
       gateway,
       gatewayTransactionId,
@@ -279,18 +281,17 @@ class PaymentGatewayService {
     try {
       const [result] = await db.query(
         `INSERT INTO payment_transaction 
-         (order_id, comunidad_id, unidad_id, amount, gateway, gateway_transaction_id, 
-          status, description, gateway_response, created_at) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+         (order_id, comunidad_id, multa_id, amount, gateway, gateway_transaction_id, 
+          status, gateway_response, created_at) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           orderId,
           communityId,
-          unitId,
+          multaId || null,
           amount,
           gateway,
           gatewayTransactionId,
           status,
-          description,
           gatewayResponse,
         ]
       );
@@ -315,7 +316,7 @@ class PaymentGatewayService {
       );
 
       // Si el pago fue aprobado, crear registro en tabla pago
-      if (status === 'approved') {
+      if (status === 'completed') {
         await this.createPaymentRecord(gatewayTransactionId);
       }
     } catch (error) {
@@ -344,15 +345,13 @@ class PaymentGatewayService {
       // Crear pago en tabla principal
       await db.query(
         `INSERT INTO pago 
-         (comunidad_id, unidad_id, fecha, monto, medio, referencia, estado, 
-          gateway_transaction_id, created_at) 
-         VALUES (?, ?, NOW(), ?, ?, ?, 'aplicado', ?, NOW())`,
+         (comunidad_id, unidad_id, fecha, monto, medio, referencia, estado, created_at) 
+         VALUES (?, ?, NOW(), ?, ?, ?, 'aplicado', NOW())`,
         [
           transaction.comunidad_id,
-          transaction.unidad_id,
+          transaction.multa_id ? null : transaction.unidad_id,
           transaction.amount,
           transaction.gateway,
-          gatewayTransactionId,
           gatewayTransactionId,
         ]
       );

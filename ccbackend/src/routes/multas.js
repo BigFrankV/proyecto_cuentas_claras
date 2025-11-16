@@ -26,10 +26,10 @@ async function obtenerComunidadesUsuario(
     return Array.isArray(all) ? all.map((r) => Number(r.id)) : [];
   }
 
-  // por rol en usuariorolcomunidad (mantener filtro de activo y vigencia aquí)
+  // por rol en usuario_rol_comunidad (mantener filtro de activo y vigencia aquí)
   const [porRol] = await db.query(
     `SELECT DISTINCT comunidad_id
-     FROM usuariorolcomunidad
+     FROM usuario_rol_comunidad
      WHERE usuario_id = ?
        AND activo = 1
        AND (desde <= CURDATE())
@@ -1474,6 +1474,350 @@ router.get(
     } catch (err) {
       console.error(err);
       res.status(500).json({ success: false, error: 'Error del servidor' });
+    }
+  }
+);
+
+// ============================================
+// ENDPOINT: Iniciar pago de multa con Webpay
+// ============================================
+/**
+ * @swagger
+ * /multas/{id}/iniciar-pago:
+ *   post:
+ *     summary: Iniciar pago de una multa con Webpay
+ *     tags: [Multas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la multa
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - gateway
+ *             properties:
+ *               gateway:
+ *                 type: string
+ *                 enum: [webpay]
+ *                 description: Pasarela de pago (solo webpay por ahora)
+ *               payerEmail:
+ *                 type: string
+ *                 format: email
+ *                 description: Email del pagador
+ *     responses:
+ *       200:
+ *         description: Transacción iniciada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     orderId:
+ *                       type: string
+ *                     transactionId:
+ *                       type: integer
+ *                     paymentUrl:
+ *                       type: string
+ *                     token:
+ *                       type: string
+ *       400:
+ *         description: Error de validación
+ *       403:
+ *         description: No tiene permisos
+ *       404:
+ *         description: Multa no encontrada
+ *       500:
+ *         description: Error del servidor
+ */
+router.post(
+  '/:id/iniciar-pago',
+  authenticate,
+  [
+    param('id').isInt({ min: 1 }).withMessage('ID de multa inválido'),
+    body('gateway')
+      .isIn(['webpay'])
+      .withMessage('Gateway debe ser webpay'),
+    body('payerEmail')
+      .optional()
+      .isEmail()
+      .withMessage('Email inválido')
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const multaId = parseInt(req.params.id, 10);
+    const { gateway, payerEmail } = req.body;
+    const usuarioId = req.user.id;
+
+    try {
+      // 1. Obtener la multa
+      const [multas] = await db.query(
+        `SELECT m.*, c.razon_social as comunidad_nombre
+         FROM multa m
+         INNER JOIN comunidad c ON m.comunidad_id = c.id
+         WHERE m.id = ?`,
+        [multaId]
+      );
+
+      if (!multas || multas.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Multa no encontrada'
+        });
+      }
+
+      const multa = multas[0];
+
+      // 2. Validar que la multa esté pendiente
+      if (multa.estado !== 'pendiente') {
+        return res.status(400).json({
+          success: false,
+          error: `La multa está en estado '${multa.estado}'. Solo se pueden pagar multas pendientes.`
+        });
+      }
+
+      // 3. Validar permisos del usuario en la comunidad
+      const comunidadesUsuario = await obtenerComunidadesUsuario(
+        usuarioId,
+        req.user.persona_id,
+        req.user.is_super_admin
+      );
+
+      if (!comunidadesUsuario.includes(multa.comunidad_id)) {
+        return res.status(403).json({
+          success: false,
+          error: 'No tiene permisos para pagar esta multa'
+        });
+      }
+
+      // 4. Generar order_id único
+      const timestamp = Date.now();
+      const orderId = `MULTA-${multa.comunidad_id}-${multaId}-${timestamp}`;
+
+      // 5. Crear transacción en payment_transaction
+      const [result] = await db.query(
+        `INSERT INTO payment_transaction 
+         (order_id, comunidad_id, multa_id, amount, gateway, status, payer_email)
+         VALUES (?, ?, ?, ?, ?, 'pending', ?)`,
+        [orderId, multa.comunidad_id, multaId, multa.monto, gateway, payerEmail || null]
+      );
+
+      const transactionId = result.insertId;
+
+      // 6. Iniciar transacción con Webpay
+      const paymentGatewayService = require('../services/paymentGatewayService');
+      
+      const paymentData = {
+        orderId,
+        sessionId: `session-${usuarioId}-${multaId}-${timestamp}`,
+        communityId: multa.comunidad_id,
+        unitId: multa.unidad_id,
+        multaId: multaId,
+        amount: parseFloat(multa.monto),
+        description: `Pago de multa #${multa.numero || multaId} - ${multa.motivo}`
+      };
+
+      const webpayResult = await paymentGatewayService.createWebpayTransaction(paymentData);
+
+      // 7. Actualizar transaction_token en la BD
+      await db.query(
+        `UPDATE payment_transaction 
+         SET transaction_token = ?, gateway_transaction_id = ?
+         WHERE id = ?`,
+        [webpayResult.transactionId, webpayResult.transactionId, transactionId]
+      );
+
+      // 8. Responder con URL de pago
+      res.json({
+        success: true,
+        data: {
+          orderId,
+          transactionId,
+          paymentUrl: webpayResult.paymentUrl,
+          token: webpayResult.transactionId,
+          gateway: 'webpay',
+          amount: multa.monto,
+          description: paymentData.description
+        }
+      });
+
+    } catch (err) {
+      console.error('Error al iniciar pago de multa:', err);
+      res.status(500).json({
+        success: false,
+        error: 'Error al iniciar pago',
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      });
+    }
+  }
+);
+
+// ============================================
+// ENDPOINT: Confirmar pago de multa con Webpay
+// ============================================
+/**
+ * @swagger
+ * /multas/pago/confirmar:
+ *   post:
+ *     summary: Confirmar pago de multa después de Webpay
+ *     tags: [Multas]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token_ws
+ *             properties:
+ *               token_ws:
+ *                 type: string
+ *                 description: Token de respuesta de Webpay
+ *     responses:
+ *       200:
+ *         description: Pago confirmado exitosamente
+ *       400:
+ *         description: Error en la confirmación
+ *       500:
+ *         description: Error del servidor
+ */
+router.post(
+  '/pago/confirmar',
+  [body('token_ws').notEmpty().withMessage('Token de Webpay requerido')],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { token_ws } = req.body;
+
+    try {
+      const paymentGatewayService = require('../services/paymentGatewayService');
+
+      // 1. Confirmar transacción con Webpay
+      const webpayResponse = await paymentGatewayService.confirmWebpayTransaction(token_ws);
+      
+      // DEBUG: Ver respuesta de Webpay
+      console.log('🔍 Webpay Response:', JSON.stringify(webpayResponse, null, 2));
+
+      // 2. Buscar la transacción en payment_transaction
+      const [transactions] = await db.query(
+        `SELECT * FROM payment_transaction WHERE transaction_token = ?`,
+        [token_ws]
+      );
+
+      if (!transactions || transactions.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Transacción no encontrada'
+        });
+      }
+
+      const transaction = transactions[0];
+
+      // 3. Actualizar estado de la transacción
+      const transactionStatus = webpayResponse.success && webpayResponse.response.response_code === 0 ? 'completed' : 'failed';
+      
+      await db.query(
+        `UPDATE payment_transaction 
+         SET status = ?, gateway_response = ?, gateway_transaction_id = ?, updated_at = NOW()
+         WHERE id = ?`,
+        [transactionStatus, JSON.stringify(webpayResponse.response), webpayResponse.response.authorization_code, transaction.id]
+      );
+
+      // 4. Si el pago fue exitoso y hay multa_id, actualizar la multa
+      if (transactionStatus === 'completed' && transaction.multa_id) {
+        const multaId = transaction.multa_id;
+
+        // Actualizar estado de la multa a 'pagado'
+        await db.query(
+          `UPDATE multa 
+           SET estado = 'pagado', fecha_pago = NOW(), updated_at = NOW()
+           WHERE id = ?`,
+          [multaId]
+        );
+
+        // Crear registro en la tabla pago
+        await db.query(
+          `INSERT INTO pago 
+           (comunidad_id, unidad_id, fecha, monto, medio, referencia, estado, comprobante_num)
+           VALUES (?, ?, CURDATE(), ?, 'webpay', ?, 'aplicado', ?)`,
+          [
+            transaction.comunidad_id,
+            null, // unidad_id puede venir de multa si lo necesitas
+            transaction.amount,
+            transaction.order_id,
+            webpayResponse.authorization_code
+          ]
+        );
+
+        // Registrar en historial de multa
+        await db.query(
+          `INSERT INTO multa_historial 
+           (multa_id, accion, descripcion, usuario_id, created_at)
+           VALUES (?, 'pago_webpay', ?, NULL, NOW())`,
+          [multaId, `Pago confirmado con Webpay. Auth: ${webpayResponse.response.authorization_code}`]
+        );
+
+        res.json({
+          success: true,
+          message: 'Pago confirmado exitosamente',
+          data: {
+            transactionId: transaction.id,
+            orderId: transaction.order_id,
+            multaId,
+            amount: transaction.amount,
+            authorizationCode: webpayResponse.response.authorization_code,
+            status: 'completed'
+          }
+        });
+      } else if (transactionStatus === 'failed') {
+        res.status(400).json({
+          success: false,
+          error: 'El pago fue rechazado',
+          data: {
+            transactionId: transaction.id,
+            orderId: transaction.order_id,
+            responseCode: webpayResponse.response.response_code,
+            status: 'failed'
+          }
+        });
+      } else {
+        res.json({
+          success: true,
+          message: 'Transacción confirmada',
+          data: {
+            transactionId: transaction.id,
+            status: transactionStatus
+          }
+        });
+      }
+
+    } catch (err) {
+      console.error('Error al confirmar pago:', err);
+      res.status(500).json({
+        success: false,
+        error: 'Error al confirmar el pago',
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+      });
     }
   }
 );

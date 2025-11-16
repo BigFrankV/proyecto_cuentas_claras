@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console, react-hooks/exhaustive-deps */
+import { useRouter } from 'next/router';
 import React, { useEffect, useState, useRef } from 'react';
 
 import multasService from '@/lib/multasService';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 import { Multa, MultaActividad } from '@/types/multas';
+
 
 interface MultaDetallePageProps {
   multa?: Multa | null;
@@ -90,6 +93,8 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
   multa,
   historial = [],
 }) => {
+  const router = useRouter();
+  const { hasPermission } = usePermissions();
   const [activeTab, setActiveTab] = useState<
     'overview' | 'evidence' | 'payments' | 'appeals' | 'communications'
   >('overview');
@@ -99,6 +104,9 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
   const [comms, setComms] = useState<any[] | null>(
     historial.length ? historial : null,
   );
+
+  // Permiso para pagar multas
+  const canPayMulta = hasPermission(Permission.EDIT_MULTA);
   const [loadingTab, setLoadingTab] = useState(false);
   const paymentFormRef = useRef<HTMLFormElement | null>(null);
   const appealFormRef = useRef<HTMLFormElement | null>(null);
@@ -387,6 +395,24 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
 
         {/* Botones de acción */}
         <div className='d-flex flex-wrap align-items-center gap-3 mb-3'>
+          {/* Botón Pagar con Webpay - Solo para multas pendientes */}
+          {multa.estado === 'pendiente' && (
+            <button
+              className='btn btn-primary btn-lg d-flex align-items-center'
+              onClick={() => router.push(`/multas/${multa.id}/pagar`)}
+            >
+              <i className='material-icons me-2'>credit_card</i>Pagar con Webpay
+            </button>
+          )}
+
+          {/* Badge de pagado */}
+          {multa.estado === 'pagado' && (
+            <span className='badge bg-success fs-6 px-3 py-2'>
+              <i className='material-icons me-1' style={{ fontSize: 18 }}>check_circle</i>
+              Pagado
+            </span>
+          )}
+
           <button
             className='btn btn-success btn-lg d-flex align-items-center'
             data-bs-toggle='modal'
