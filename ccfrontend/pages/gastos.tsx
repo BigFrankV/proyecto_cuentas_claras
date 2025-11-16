@@ -30,13 +30,14 @@ import {
   usePermissions,
   ProtectedPage,
   UserRole,
+  Permission,
 } from '@/lib/usePermissions';
 import { Expense, mapBackendToExpense } from '@/types/gastos';
 
 export default function GastosListado() {
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const { isSuperUser, currentRole } = usePermissions();
+  const { isSuperUser, currentRole, hasPermission } = usePermissions();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
@@ -324,16 +325,18 @@ export default function GastosListado() {
                   </p>
                 </div>
               </div>
-              <div className='text-end'>
-                <Button
-                  variant='light'
-                  onClick={() => router.push('/gastos/nuevo')}
-                  className='btn-lg'
-                >
-                  <i className='material-icons me-2'>add</i>
-                  Nuevo Gasto
-                </Button>
-              </div>
+              {hasPermission(Permission.CREATE_GASTO) && (
+                <div className='text-end'>
+                  <Button
+                    variant='light'
+                    onClick={() => router.push('/gastos/nuevo')}
+                    className='btn-lg'
+                  >
+                    <i className='material-icons me-2'>add</i>
+                    Nuevo Gasto
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Estadísticas */}

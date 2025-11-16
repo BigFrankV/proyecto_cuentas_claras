@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+import { Permission, usePermissions } from '@/lib/usePermissions';
+
 import AmountCell from './AmountCell';
 import { Cargo } from './CargoCard';
 import PaymentProgress from './PaymentProgress';
@@ -118,6 +120,7 @@ export default function CargoDetalle({
   className = '',
 }: CargoDetalleProps) {
   const [activeTab, setActiveTab] = useState('detalles');
+  const { hasPermission } = usePermissions();
 
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat('es-CO', {
@@ -288,17 +291,21 @@ export default function CargoDetalle({
               <i className='material-icons me-2'>notifications</i>
               Enviar Recordatorio
             </button>
-            <button className='action-btn secondary' onClick={handleEditCargo}>
-              <i className='material-icons me-2'>edit</i>
-              Editar
-            </button>
-            <button
-              className='action-btn outline'
-              onClick={handleDuplicateCargo}
-            >
-              <i className='material-icons me-2'>content_copy</i>
-              Duplicar
-            </button>
+            {hasPermission(Permission.EDIT_CARGO) && (
+              <button className='action-btn secondary' onClick={handleEditCargo}>
+                <i className='material-icons me-2'>edit</i>
+                Editar
+              </button>
+            )}
+            {hasPermission(Permission.CREATE_CARGO) && (
+              <button
+                className='action-btn outline'
+                onClick={handleDuplicateCargo}
+              >
+                <i className='material-icons me-2'>content_copy</i>
+                Duplicar
+              </button>
+            )}
             <button className='action-btn outline' onClick={handlePrintCargo}>
               <i className='material-icons me-2'>print</i>
               Imprimir
@@ -307,10 +314,12 @@ export default function CargoDetalle({
               <i className='material-icons me-2'>download</i>
               Exportar
             </button>
-            <button className='action-btn danger' onClick={handleCancelCargo}>
-              <i className='material-icons me-2'>cancel</i>
-              Cancelar
-            </button>
+            {hasPermission(Permission.DELETE_CARGO) && (
+              <button className='action-btn danger' onClick={handleCancelCargo}>
+                <i className='material-icons me-2'>cancel</i>
+                Cancelar
+              </button>
+            )}
           </div>
         </div>
       </div>

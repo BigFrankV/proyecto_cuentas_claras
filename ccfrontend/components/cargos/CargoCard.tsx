@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { Permission, usePermissions } from '@/lib/usePermissions';
+
 import AmountCell from './AmountCell';
 import StatusBadge from './StatusBadge';
 import TypeBadge from './TypeBadge';
@@ -35,6 +37,7 @@ export default function CargoCard({
   onDelete,
   className = '',
 }: CargoCardProps) {
+  const { hasPermission } = usePermissions();
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
@@ -128,20 +131,24 @@ export default function CargoCard({
             <i className='material-icons me-1'>visibility</i>
             Ver
           </button>
-          <button
-            className='btn btn-outline-secondary btn-sm'
-            onClick={() => onEdit(cargo.id)}
-          >
-            <i className='material-icons me-1'>edit</i>
-            Editar
-          </button>
-          <button
-            className='btn btn-outline-danger btn-sm'
-            onClick={() => onDelete(cargo.id)}
-          >
-            <i className='material-icons me-1'>delete</i>
-            Eliminar
-          </button>
+          {hasPermission(Permission.EDIT_CARGO) && (
+            <button
+              className='btn btn-outline-secondary btn-sm'
+              onClick={() => onEdit(cargo.id)}
+            >
+              <i className='material-icons me-1'>edit</i>
+              Editar
+            </button>
+          )}
+          {hasPermission(Permission.DELETE_CARGO) && (
+            <button
+              className='btn btn-outline-danger btn-sm'
+              onClick={() => onDelete(cargo.id)}
+            >
+              <i className='material-icons me-1'>delete</i>
+              Eliminar
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -1,3 +1,5 @@
+import { Permission, usePermissions } from '@/lib/usePermissions';
+
 interface Unidad {
   id: string;
   numero: string;
@@ -28,6 +30,7 @@ const UnidadActions: React.FC<UnidadActionsProps> = ({
   onDeleteSelected,
 }) => {
   const hasSelectedUnidades = selectedUnidades.length > 0;
+  const { hasPermission } = usePermissions();
 
   return (
     <>
@@ -43,34 +46,40 @@ const UnidadActions: React.FC<UnidadActionsProps> = ({
             </span>
           </div>
           <div className='d-flex gap-2'>
-            <button
-              className='btn btn-sm btn-outline-primary'
-              title='Asignar cargos en lote'
-            >
-              <i className='material-icons me-1' style={{ fontSize: '16px' }}>
-                assignment
-              </i>
-              Asignar Cargos
-            </button>
-            <button
-              className='btn btn-sm btn-outline-warning'
-              title='Cambiar estado en lote'
-            >
-              <i className='material-icons me-1' style={{ fontSize: '16px' }}>
-                edit
-              </i>
-              Cambiar Estado
-            </button>
-            <button
-              className='btn btn-sm btn-outline-danger'
-              onClick={onDeleteSelected}
-              title='Eliminar seleccionadas'
-            >
-              <i className='material-icons me-1' style={{ fontSize: '16px' }}>
-                delete
-              </i>
-              Eliminar
-            </button>
+            {hasPermission(Permission.EDIT_UNIDAD) && (
+              <button
+                className='btn btn-sm btn-outline-primary'
+                title='Asignar cargos en lote'
+              >
+                <i className='material-icons me-1' style={{ fontSize: '16px' }}>
+                  assignment
+                </i>
+                Asignar Cargos
+              </button>
+            )}
+            {hasPermission(Permission.EDIT_UNIDAD) && (
+              <button
+                className='btn btn-sm btn-outline-warning'
+                title='Cambiar estado en lote'
+              >
+                <i className='material-icons me-1' style={{ fontSize: '16px' }}>
+                  edit
+                </i>
+                Cambiar Estado
+              </button>
+            )}
+            {hasPermission(Permission.DELETE_UNIDAD) && (
+              <button
+                className='btn btn-sm btn-outline-danger'
+                onClick={onDeleteSelected}
+                title='Eliminar seleccionadas'
+              >
+                <i className='material-icons me-1' style={{ fontSize: '16px' }}>
+                  delete
+                </i>
+                Eliminar
+              </button>
+            )}
           </div>
         </div>
       )}

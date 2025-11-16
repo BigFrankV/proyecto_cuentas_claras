@@ -8,6 +8,7 @@ import ModernPagination from '@/components/ui/ModernPagination';
 import { useEdificios } from '@/hooks/useEdificios';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 import {
   Edificio,
   EdificioFilters,
@@ -20,6 +21,7 @@ import {
 export default function EdificiosListado() {
   const { user } = useAuth();
   const router = useRouter();
+  const { hasPermission } = usePermissions();
 
   // Hooks personalizados
   const {
@@ -225,10 +227,12 @@ export default function EdificiosListado() {
                     </div>
 
                     {/* Botón de nuevo edificio */}
-                    <Link href='/edificios/nuevo' className='btn btn-light d-flex align-items-center'>
-                      <span className='material-icons me-2'>add</span>
-                      Nuevo Edificio
-                    </Link>
+                    {hasPermission(Permission.CREATE_EDIFICIO) && (
+                      <Link href='/edificios/nuevo' className='btn btn-light d-flex align-items-center'>
+                        <span className='material-icons me-2'>add</span>
+                        Nuevo Edificio
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
@@ -299,10 +303,12 @@ export default function EdificiosListado() {
               </div>
             </div>
             <div className='col-lg-4 d-flex justify-content-end'>
-              <Link href='/edificios/nuevo' className='btn btn-primary'>
-                <i className='material-icons me-2'>add</i>
-                Nuevo Edificio
-              </Link>
+              {hasPermission(Permission.CREATE_EDIFICIO) && (
+                <Link href='/edificios/nuevo' className='btn btn-primary'>
+                  <i className='material-icons me-2'>add</i>
+                  Nuevo Edificio
+                </Link>
+              )}
             </div>
           </div>
 
@@ -571,29 +577,33 @@ export default function EdificiosListado() {
                               >
                                 <i className='material-icons'>visibility</i>
                               </Link>
-                              <button
-                                className='btn btn-sm btn-outline-secondary'
-                                title='Editar'
-                                onClick={() =>
-                                  router.push(
-                                    `/edificios/${edificio.id}/editar`,
-                                  )
-                                }
-                              >
-                                <i className='material-icons'>edit</i>
-                              </button>
-                              <button
-                                className='btn btn-sm btn-outline-danger'
-                                title='Eliminar'
-                                onClick={() =>
-                                  handleDeleteEdificio(
-                                    edificio.id,
-                                    edificio.nombre,
-                                  )
-                                }
-                              >
-                                <i className='material-icons'>delete</i>
-                              </button>
+                              {hasPermission(Permission.EDIT_EDIFICIO) && (
+                                <button
+                                  className='btn btn-sm btn-outline-secondary'
+                                  title='Editar'
+                                  onClick={() =>
+                                    router.push(
+                                      `/edificios/${edificio.id}/editar`,
+                                    )
+                                  }
+                                >
+                                  <i className='material-icons'>edit</i>
+                                </button>
+                              )}
+                              {hasPermission(Permission.DELETE_EDIFICIO) && (
+                                <button
+                                  className='btn btn-sm btn-outline-danger'
+                                  title='Eliminar'
+                                  onClick={() =>
+                                    handleDeleteEdificio(
+                                      edificio.id,
+                                      edificio.nombre,
+                                    )
+                                  }
+                                >
+                                  <i className='material-icons'>delete</i>
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -702,14 +712,16 @@ export default function EdificiosListado() {
                           >
                             <i className='material-icons'>visibility</i>
                           </Link>
-                          <button
-                            className='btn btn-sm btn-outline-secondary'
-                            onClick={() =>
-                              router.push(`/edificios/${edificio.id}/editar`)
-                            }
-                          >
-                            <i className='material-icons'>edit</i>
-                          </button>
+                          {hasPermission(Permission.EDIT_EDIFICIO) && (
+                            <button
+                              className='btn btn-sm btn-outline-secondary'
+                              onClick={() =>
+                                router.push(`/edificios/${edificio.id}/editar`)
+                              }
+                            >
+                              <i className='material-icons'>edit</i>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>

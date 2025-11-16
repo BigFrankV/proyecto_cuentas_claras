@@ -75,10 +75,10 @@ const menuSections = [
   {
     title: 'Sanciones',
     items: [
-      { href: '/multas', label: 'Multas', icon: 'gavel', permission: Permission.VIEW_FINANCES },
-      { href: '/multas-nueva', label: 'Nueva Multa', icon: 'add_circle', permission: Permission.MANAGE_MULTAS },
-      { href: '/apelaciones', label: 'Apelaciones', icon: 'gavel', permission: Permission.VIEW_FINANCES },
-      { href: '/apelaciones-nueva', label: 'Nueva Apelación', icon: 'add_circle_outline', permission: Permission.VIEW_FINANCES },
+      { href: '/multas', label: 'Multas', icon: 'gavel', permission: Permission.VIEW_MULTA },
+      { href: '/multas-nueva', label: 'Nueva Multa', icon: 'add_circle', permission: Permission.CREATE_MULTA },
+      { href: '/apelaciones', label: 'Apelaciones', icon: 'gavel', permission: Permission.VIEW_APELACION },
+      { href: '/apelaciones-nueva', label: 'Nueva Apelación', icon: 'add_circle_outline', permission: Permission.CREATE_APELACION },
     ],
   },
   {

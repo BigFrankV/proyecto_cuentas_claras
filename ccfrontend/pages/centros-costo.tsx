@@ -16,13 +16,14 @@ import {
   usePermissions,
   ProtectedPage,
   UserRole,
+  Permission,
 } from '@/lib/usePermissions';
 import type { CentroCosto } from '@/types/centrosCosto';
 
 export default function CentrosCostoListado() {
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const { isSuperUser } = usePermissions();
+  const { isSuperUser, hasPermission } = usePermissions();
 
   const [centros, setCentros] = useState<CentroCosto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -189,16 +190,18 @@ export default function CentrosCostoListado() {
                   </p>
                 </div>
               </div>
-              <div className='text-end'>
-                <Button
-                  variant='light'
-                  onClick={() => router.push('/centros-costo/nuevo')}
-                  className='btn-lg'
-                >
-                  <i className='material-icons me-2'>add</i>
-                  Nuevo Centro
-                </Button>
-              </div>
+              {hasPermission(Permission.CREATE_CENTRO_COSTO) && (
+                <div className='text-end'>
+                  <Button
+                    variant='light'
+                    onClick={() => router.push('/centros-costo/nuevo')}
+                    className='btn-lg'
+                  >
+                    <i className='material-icons me-2'>add</i>
+                    Nuevo Centro
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Estadísticas */}

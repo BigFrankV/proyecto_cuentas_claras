@@ -12,11 +12,12 @@ import {
   deleteMedidor,
 } from '@/lib/medidoresService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { ProtectedPage } from '@/lib/usePermissions';
+import { ProtectedPage, Permission, usePermissions } from '@/lib/usePermissions';
 import type { Medidor } from '@/types/medidores';
 
 export default function MedidoresListadoPage() {
   const { user } = useAuth();
+  const { hasPermission } = usePermissions();
   const router = useRouter();
 
   const isSuper = !!user?.is_superadmin;
@@ -202,7 +203,7 @@ export default function MedidoresListadoPage() {
               },
             ]}
           >
-            {user && (user.is_superadmin || canManage()) && (
+            {hasPermission(Permission.CREATE_MEDIDOR) && (
               <button
                 className='btn btn-light btn-lg'
                 onClick={() => router.push('/medidores/nuevo')}

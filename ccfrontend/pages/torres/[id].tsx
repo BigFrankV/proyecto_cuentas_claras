@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import apiClient from '@/lib/api';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface Torre {
   id: string;
@@ -83,6 +84,7 @@ const mockTorre: Torre = {
 export default function TorreDetalle() {
   const router = useRouter();
   const { id } = router.query;
+  const { hasPermission } = usePermissions();
   const [torre, setTorre] = useState<Torre>(mockTorre);
   const [unidades, setUnidades] = useState<Unidad[]>([]);
   const [activeTab, setActiveTab] = useState('info');
@@ -377,10 +379,12 @@ export default function TorreDetalle() {
 
           {/* Action Buttons */}
           <div className='d-flex justify-content-end mb-4'>
-            <button className='btn btn-primary me-2' onClick={handleEditToggle}>
-              <i className='material-icons me-1'>edit</i>
-              {editMode ? 'Cancelar Edición' : 'Editar Torre'}
-            </button>
+            {hasPermission(Permission.EDIT_TORRE) && (
+              <button className='btn btn-primary me-2' onClick={handleEditToggle}>
+                <i className='material-icons me-1'>edit</i>
+                {editMode ? 'Cancelar Edición' : 'Editar Torre'}
+              </button>
+            )}
             <div className='dropdown'>
               <button
                 className='btn btn-outline-secondary dropdown-toggle'
@@ -421,27 +425,29 @@ export default function TorreDetalle() {
                 <li role='none'>
                   <hr className='dropdown-divider' />
                 </li>
-                <li role='none'>
-                  <button
-                    className='dropdown-item text-danger'
-                    type='button'
-                    onClick={() => {
-                      if (
-                        confirm(
-                          '¿Estás seguro de que quieres eliminar esta torre?',
-                        )
-                      ) {
-                        // TODO: Implementar eliminación de torre
-                        alert(
-                          'Funcionalidad de eliminación próximamente disponible',
-                        );
-                      }
-                    }}
-                    role='menuitem'
-                  >
-                    <i className='material-icons me-2'>delete</i>Eliminar Torre
-                  </button>
-                </li>
+                {hasPermission(Permission.DELETE_TORRE) && (
+                  <li role='none'>
+                    <button
+                      className='dropdown-item text-danger'
+                      type='button'
+                      onClick={() => {
+                        if (
+                          confirm(
+                            '¿Estás seguro de que quieres eliminar esta torre?',
+                          )
+                        ) {
+                          // TODO: Implementar eliminación de torre
+                          alert(
+                            'Funcionalidad de eliminación próximamente disponible',
+                          );
+                        }
+                      }}
+                      role='menuitem'
+                    >
+                      <i className='material-icons me-2'>delete</i>Eliminar Torre
+                    </button>
+                  </li>
+                )}
               </ul>
             </div>
           </div>

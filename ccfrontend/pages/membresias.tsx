@@ -9,9 +9,10 @@ import {
   MembresiaFilters,
 } from '@/hooks/useMembresias';
 import { ProtectedRoute } from '@/lib/useAuth';
-import { ProtectedPage, UserRole } from '@/lib/usePermissions';
+import { ProtectedPage, UserRole, Permission, usePermissions } from '@/lib/usePermissions';
 
 const MembresiasListado = () => {
+  const { hasPermission } = usePermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [nivelFilter, setNivelFilter] = useState<number | 'todos'>('todos');
   const [estadoFilter, setEstadoFilter] = useState<
@@ -224,15 +225,17 @@ const MembresiasListado = () => {
                   </p>
                 </div>
               </div>
-              <div className='text-end'>
-                <Link
-                  href='/membresias/nueva'
-                  className='btn btn-light btn-lg'
-                >
-                  <i className='material-icons me-2'>person_add</i>
-                  Nueva Membresía
-                </Link>
-              </div>
+              {hasPermission(Permission.CREATE_MEMBRESIA) && (
+                <div className='text-end'>
+                  <Link
+                    href='/membresias/nueva'
+                    className='btn btn-light btn-lg'
+                  >
+                    <i className='material-icons me-2'>person_add</i>
+                    Nueva Membresía
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Estadísticas */}

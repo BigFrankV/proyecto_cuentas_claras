@@ -1,11 +1,13 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useState, useMemo, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import apiClient from '@/lib/api';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface Torre {
   id: string;
@@ -19,6 +21,10 @@ interface Torre {
 }
 
 export default function TorresListado() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { hasPermission } = usePermissions();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('nombre-asc');
   const [filterBy, setFilterBy] = useState('todas');
@@ -253,10 +259,12 @@ export default function TorresListado() {
                 </div>
               </div>
               <div className='text-end'>
-                <Link href='/torres/nueva' className='btn btn-light btn-lg'>
-                  <i className='material-icons me-2'>add</i>
-                  Nueva Torre
-                </Link>
+                {hasPermission(Permission.CREATE_TORRE) && (
+                  <Link href='/torres/nueva' className='btn btn-light btn-lg'>
+                    <i className='material-icons me-2'>add</i>
+                    Nueva Torre
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -451,10 +459,12 @@ export default function TorresListado() {
                         </i>
                         Volver
                       </Link>
-                      <Link href='/torres/nueva' className='btn btn-primary'>
-                        <i className='material-icons align-middle me-1'>add</i>
-                        Nueva Torre
-                      </Link>
+                      {hasPermission(Permission.CREATE_TORRE) && (
+                        <Link href='/torres/nueva' className='btn btn-primary'>
+                          <i className='material-icons align-middle me-1'>add</i>
+                          Nueva Torre
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -759,32 +769,41 @@ export default function TorresListado() {
                                       visibility
                                     </i>
                                   </Link>
-                                  <Link
-                                    href={`/torres/${torre.id}`}
-                                    className='btn btn-sm btn-outline-primary'
-                                    aria-label={`Editar ${torre.nombre}`}
-                                  >
-                                    <i
-                                      className='material-icons'
-                                      style={{ fontSize: '16px' }}
-                                      aria-hidden='true'
+                                  {hasPermission(Permission.EDIT_TORRE) && (
+                                    <Link
+                                      href={`/torres/${torre.id}`}
+                                      className='btn btn-sm btn-outline-primary'
+                                      aria-label={`Editar ${torre.nombre}`}
                                     >
-                                      edit
-                                    </i>
-                                  </Link>
-                                  <button
-                                    type='button'
-                                    className='btn btn-sm btn-outline-danger'
-                                    aria-label={`Eliminar ${torre.nombre}`}
-                                  >
-                                    <i
-                                      className='material-icons'
-                                      style={{ fontSize: '16px' }}
-                                      aria-hidden='true'
+                                      <i
+                                        className='material-icons'
+                                        style={{ fontSize: '16px' }}
+                                        aria-hidden='true'
+                                      >
+                                        edit
+                                      </i>
+                                    </Link>
+                                  )}
+                                  {hasPermission(Permission.DELETE_TORRE) && (
+                                    <button
+                                      type='button'
+                                      className='btn btn-sm btn-outline-danger'
+                                      aria-label={`Eliminar ${torre.nombre}`}
+                                      onClick={() => {
+                                        if (confirm(`¿Estás seguro de eliminar ${torre.nombre}?`)) {
+                                          // Lógica de eliminación
+                                        }
+                                      }}
                                     >
-                                      delete
-                                    </i>
-                                  </button>
+                                      <i
+                                        className='material-icons'
+                                        style={{ fontSize: '16px' }}
+                                        aria-hidden='true'
+                                      >
+                                        delete
+                                      </i>
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             </tr>
@@ -856,28 +875,37 @@ export default function TorresListado() {
                             role='presentation'
                           >
                             <div className='btn-group'>
-                              <Link
-                                href={`/torres/${torre.id}`}
-                                className='btn btn-sm btn-light'
-                              >
-                                <i
-                                  className='material-icons'
-                                  style={{ fontSize: '16px' }}
+                              {hasPermission(Permission.EDIT_TORRE) && (
+                                <Link
+                                  href={`/torres/${torre.id}`}
+                                  className='btn btn-sm btn-light'
                                 >
-                                  edit
-                                </i>
-                              </Link>
-                              <button
-                                type='button'
-                                className='btn btn-sm btn-light'
-                              >
-                                <i
-                                  className='material-icons'
-                                  style={{ fontSize: '16px' }}
+                                  <i
+                                    className='material-icons'
+                                    style={{ fontSize: '16px' }}
+                                  >
+                                    edit
+                                  </i>
+                                </Link>
+                              )}
+                              {hasPermission(Permission.DELETE_TORRE) && (
+                                <button
+                                  type='button'
+                                  className='btn btn-sm btn-light'
+                                  onClick={() => {
+                                    if (confirm(`¿Estás seguro de eliminar ${torre.nombre}?`)) {
+                                      // Lógica de eliminación
+                                    }
+                                  }}
                                 >
-                                  delete
-                                </i>
-                              </button>
+                                  <i
+                                    className='material-icons'
+                                    style={{ fontSize: '16px' }}
+                                  >
+                                    delete
+                                  </i>
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -920,18 +948,20 @@ export default function TorresListado() {
                               </i>
                               Ver detalle
                             </Link>
-                            <Link
-                              href={`/torres/${torre.id}`}
-                              className='btn btn-primary btn-sm'
-                            >
-                              <i
-                                className='material-icons me-1'
-                                style={{ fontSize: '16px' }}
+                            {hasPermission(Permission.EDIT_TORRE) && (
+                              <Link
+                                href={`/torres/${torre.id}`}
+                                className='btn btn-primary btn-sm'
                               >
-                                edit
-                              </i>
-                              Editar
-                            </Link>
+                                <i
+                                  className='material-icons me-1'
+                                  style={{ fontSize: '16px' }}
+                                >
+                                  edit
+                                </i>
+                                Editar
+                              </Link>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -941,24 +971,26 @@ export default function TorresListado() {
               )}
 
               {/* Botón flotante para agregar nueva torre */}
-              <Link
-                href='/torres/nueva'
-                className='btn btn-primary position-fixed'
-                style={{
-                  bottom: '20px',
-                  right: '20px',
-                  borderRadius: '50%',
-                  width: '56px',
-                  height: '56px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  zIndex: 1000,
-                }}
-              >
-                <i className='material-icons'>add</i>
-              </Link>
+              {hasPermission(Permission.CREATE_TORRE) && (
+                <Link
+                  href='/torres/nueva'
+                  className='btn btn-primary position-fixed'
+                  style={{
+                    bottom: '20px',
+                    right: '20px',
+                    borderRadius: '50%',
+                    width: '56px',
+                    height: '56px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    zIndex: 1000,
+                  }}
+                >
+                  <i className='material-icons'>add</i>
+                </Link>
+              )}
             </>
           )}
         </div>
