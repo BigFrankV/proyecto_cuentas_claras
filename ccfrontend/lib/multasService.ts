@@ -440,15 +440,15 @@ class MultasService {
   async iniciarPago(
     multaId: number,
     payload: {
-      gateway: 'webpay' | 'khipu' | 'mercadopago';
-      payerEmail?: string;
-    }
+      gateway: 'webpay' | 'khipu' | 'mercadopago',
+      payerEmail?: string,
+    },
   ): Promise<{
-    orderId: string;
-    transactionId: number;
-    paymentUrl: string;
-    token: string;
-    gateway: string;
+    orderId: string,
+    transactionId: number,
+    paymentUrl: string,
+    token: string,
+    gateway: string,
   }> {
     const response = await api.post(`/multas/${multaId}/iniciar-pago`, payload);
     return response.data.data;

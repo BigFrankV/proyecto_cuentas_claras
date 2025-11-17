@@ -36,7 +36,7 @@ ChartJS.register(
 );
 
 // Configuración de la API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = 'https://mindicador.cl/api';
 
 // =================== INTERFACES ===================
 
@@ -51,47 +51,6 @@ interface UtmValor {
   mes_nombre?: string;
 }
 
-interface DashboardData {
-  kpis: {
-    meses_registrados: number;
-    valor_minimo: number;
-    valor_maximo: number;
-    valor_promedio: number;
-    rango: number;
-    variacion_porcentual: number;
-    periodo_desde: string;
-    periodo_hasta: string;
-  };
-  ultimos_valores: Array<{
-    fecha: string;
-    valor: number;
-    periodo: string;
-    variacion: number;
-    variacion_porcentual: number;
-  }>;
-}
-
-interface VariacionMensual {
-  fecha: string;
-  valor_actual: number;
-  periodo: string;
-  valor_anterior: number;
-  periodo_anterior: string;
-  variacion_absoluta: number;
-  variacion_porcentual: number;
-}
-
-interface ComparacionAnos {
-  mes: number;
-  mes_nombre: string;
-  [year: string]: any;
-}
-
-interface TopValores {
-  mayores: UtmValor[];
-  menores: UtmValor[];
-}
-
 interface ConversionData {
   monto_pesos?: number;
   cantidad_utm?: number;
@@ -104,29 +63,16 @@ interface ConversionData {
 
 // =================== COMPONENTE PRINCIPAL ===================
 
-const ConsultorUTMRenovado: React.FC = () => {
+const ConsultorUTM: React.FC = () => {
   // Estados principales
   const [activeTab, setActiveTab] = useState<
-    | 'dashboard'
-    | 'consulta'
-    | 'calculadora'
-    | 'historico'
-    | 'analisis'
-    | 'comparacion'
-  >('dashboard');
+    'consulta' | 'calculadora' | 'historico'
+  >('consulta');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   // Estados para datos
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    null,
-  );
-  const [graficoData, setGraficoData] = useState<UtmValor[]>([]);
-  const [variacionMensual, setVariacionMensual] = useState<VariacionMensual[]>(
-    [],
-  );
-  const [comparacionAnos, setComparacionAnos] = useState<ComparacionAnos[]>([]);
-  const [topValores, setTopValores] = useState<TopValores | null>(null);
+  const [currentUTM, setCurrentUTM] = useState<any>(null);
   const [historicoAno, setHistoricoAno] = useState<UtmValor[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(
     new Date().getFullYear(),
@@ -145,167 +91,62 @@ const ConsultorUTMRenovado: React.FC = () => {
   const [conversionResult, setConversionResult] =
     useState<ConversionData | null>(null);
 
-  // Estados para análisis avanzado
-  const [trimestralData, setTrimestralData] = useState<any[]>([]);
-  const [semestralData, setSemestralData] = useState<any[]>([]);
-  const [estadisticas, setEstadisticas] = useState<any[]>([]);
-  const [resumenAnos, setResumenAnos] = useState<any[]>([]);
-
-  // Referencias para gráficos
-  const chartRef = useRef<any>(null);
-
   // =================== FUNCIONES API ===================
 
-  const getAuthToken = (): string | null => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('token');
-    }
-    return null;
-  };
-
-  const apiRequest = async (endpoint: string) => {
-    const token = getAuthToken();
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
+  const fetchCurrentIndicators = async () => {
+    const response = await fetch(`${API_BASE_URL}`);
     if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`);
+      throw new Error('Error al consultar la API de mindicador.cl');
     }
-
     return await response.json();
   };
 
-  // =================== CARGAR DATOS ===================
+  const fetchUTMHistory = async (year: number) => {
+    const response = await fetch(`${API_BASE_URL}/utm/${year}`);
+    if (!response.ok) {
+      throw new Error('Error al consultar el histórico UTM');
+    }
+    return await response.json();
+  };
 
-  const cargarDashboard = async () => {
+  // =================== FUNCIONES ===================
+
+  const cargarUTMActual = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiRequest('/api/valor-utm/dashboard?meses=12');
-      setDashboardData(data);
-    } catch (err: any) {
-      setError(err.message);
-      // eslint-disable-next-line no-console
-      console.error('Error al cargar dashboard:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cargarGrafico = async (meses: number = 24) => {
-    try {
-      const data = await apiRequest(`/api/valor-utm/grafico?meses=${meses}`);
-      setGraficoData(data.data || []);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Error al cargar gráfico:', err);
-    }
-  };
-
-  const cargarVariacionMensual = async (meses: number = 12) => {
-    try {
-      const data = await apiRequest(
-        `/api/valor-utm/variacion-mensual?meses=${meses}`,
-      );
-      setVariacionMensual(data.data || []);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Error al cargar variación mensual:', err);
-    }
-  };
-
-  const cargarComparacionAnos = async (anos?: string) => {
-    try {
-      const endpoint = anos
-        ? `/api/valor-utm/comparacion-anos?anos=${anos}`
-        : '/api/valor-utm/comparacion-anos';
-      const data = await apiRequest(endpoint);
-      setComparacionAnos(data.data || []);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Error al cargar comparación de años:', err);
-    }
-  };
-
-  const cargarTopValores = async (limit: number = 10) => {
-    try {
-      const data = await apiRequest(
-        `/api/valor-utm/top-valores?limit=${limit}`,
-      );
-      setTopValores(data);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Error al cargar top valores:', err);
-    }
-  };
-
-  const cargarHistoricoAno = async (ano: number) => {
-    try {
-      setLoading(true);
-      const data = await apiRequest(`/api/valor-utm/historico/${ano}`);
-      setHistoricoAno(data.data || []);
+      const data = await fetchCurrentIndicators();
+      setCurrentUTM(data.utm);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
-
-  const cargarTrimestral = async (meses: number = 24) => {
-    try {
-      const data = await apiRequest(`/api/valor-utm/trimestral?meses=${meses}`);
-      setTrimestralData(data.data || []);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Error al cargar datos trimestrales:', err);
-    }
-  };
-
-  const cargarSemestral = async (desde?: number) => {
-    try {
-      const endpoint = desde
-        ? `/api/valor-utm/semestral?desde=${desde}`
-        : '/api/valor-utm/semestral';
-      const data = await apiRequest(endpoint);
-      setSemestralData(data.data || []);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Error al cargar datos semestrales:', err);
-    }
-  };
-
-  const cargarEstadisticas = async () => {
-    try {
-      const data = await apiRequest('/api/valor-utm/estadisticas');
-      setEstadisticas(data.data || []);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Error al cargar estadísticas:', err);
-    }
-  };
-
-  const cargarResumenAnos = async () => {
-    try {
-      const data = await apiRequest('/api/valor-utm/resumen-anos');
-      setResumenAnos(data.data || []);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Error al cargar resumen de años:', err);
-    }
-  };
-
-  // =================== CONSULTAS Y CONVERSIONES ===================
 
   const consultarUTM = async (mes: number, ano: number) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiRequest(`/api/valor-utm/periodo/${mes}/${ano}`);
-      setConsultaResult(data.data);
+      const data = await fetchUTMHistory(ano);
+      // Find the value for the specific month
+      const monthData = data.find((item: any) => {
+        const itemDate = new Date(item.fecha);
+        return itemDate.getMonth() + 1 === mes && itemDate.getFullYear() === ano;
+      });
+      if (monthData) {
+        setConsultaResult({
+          fecha: monthData.fecha,
+          valor: monthData.valor,
+          mes,
+          ano,
+          periodo: `${mes}/${ano}`,
+          periodo_formato: new Date(monthData.fecha).toLocaleDateString('es-CL', { month: 'long', year: 'numeric' }),
+        });
+      } else {
+        setConsultaResult(null);
+        setError('No se encontró valor UTM para el período seleccionado');
+      }
     } catch (err: any) {
       setError(err.message);
       setConsultaResult(null);
@@ -314,29 +155,52 @@ const ConsultorUTMRenovado: React.FC = () => {
     }
   };
 
-  const convertirPesosAUtm = async () => {
-    try {
-      setLoading(true);
-      const data = await apiRequest(
-        `/api/valor-utm/conversion/pesos-a-utm?pesos=${montoPesos}`,
-      );
-      setConversionResult(data.data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  const convertirPesosAUtm = () => {
+    if (!currentUTM || montoPesos <= 0) {
+      return;
     }
+    const utm = montoPesos / currentUTM.valor;
+    setConversionResult({
+      monto_pesos: montoPesos,
+      valor_utm: currentUTM.valor,
+      fecha: currentUTM.fecha,
+      periodo: new Date(currentUTM.fecha).toLocaleDateString('es-CL', { month: 'long', year: 'numeric' }),
+      equivalente_utm: Math.round(utm * 10000) / 10000,
+    });
   };
 
-  const convertirUtmAPesos = async () => {
+  const convertirUtmAPesos = () => {
+    if (!currentUTM || montoUtm <= 0) {
+      return;
+    }
+    const pesos = montoUtm * currentUTM.valor;
+    setConversionResult({
+      cantidad_utm: montoUtm,
+      valor_utm: currentUTM.valor,
+      fecha: currentUTM.fecha,
+      periodo: new Date(currentUTM.fecha).toLocaleDateString('es-CL', { month: 'long', year: 'numeric' }),
+      equivalente_pesos: Math.round(pesos),
+    });
+  };
+
+  const cargarHistoricoAno = async (ano: number) => {
     try {
       setLoading(true);
-      const data = await apiRequest(
-        `/api/valor-utm/conversion/utm-a-pesos?utm=${montoUtm}`,
-      );
-      setConversionResult(data.data);
+      setError(null);
+      const data = await fetchUTMHistory(ano);
+      const formattedData: UtmValor[] = data.map((item: any) => ({
+        fecha: item.fecha,
+        valor: item.valor,
+        mes: new Date(item.fecha).getMonth() + 1,
+        ano: new Date(item.fecha).getFullYear(),
+        periodo: `${new Date(item.fecha).getMonth() + 1}/${ano}`,
+        periodo_formato: new Date(item.fecha).toLocaleDateString('es-CL', { month: 'long', year: 'numeric' }),
+        mes_nombre: new Date(item.fecha).toLocaleDateString('es-CL', { month: 'long' }),
+      }));
+      setHistoricoAno(formattedData);
     } catch (err: any) {
       setError(err.message);
+      setHistoricoAno([]);
     } finally {
       setLoading(false);
     }
@@ -345,22 +209,12 @@ const ConsultorUTMRenovado: React.FC = () => {
   // =================== EFECTOS ===================
 
   useEffect(() => {
-    cargarDashboard();
-    cargarGrafico(24);
-    cargarVariacionMensual(12);
-    cargarTopValores(10);
-    cargarResumenAnos();
+    cargarUTMActual();
   }, []);
 
   useEffect(() => {
     if (activeTab === 'historico') {
       cargarHistoricoAno(selectedYear);
-    } else if (activeTab === 'analisis') {
-      cargarTrimestral(24);
-      cargarSemestral();
-      cargarEstadisticas();
-    } else if (activeTab === 'comparacion') {
-      cargarComparacionAnos();
     }
   }, [activeTab, selectedYear]);
 
@@ -376,163 +230,11 @@ const ConsultorUTMRenovado: React.FC = () => {
   };
 
   const formatUTM = (value: number): string => {
-    return `${value.toFixed(4)} UTM`;
+    return `${value.toFixed(2)} UTM`;
   };
 
   const formatPercent = (value: number): string => {
     return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
-  };
-
-  // =================== CONFIGURACIONES DE GRÁFICOS ===================
-
-  const graficoLineaConfig = {
-    data: {
-      labels: graficoData.map(d => d.periodo_formato || d.periodo || d.fecha),
-      datasets: [
-        {
-          label: 'Valor UTM',
-          data: graficoData.map(d => d.valor),
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          fill: true,
-          tension: 0.4,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'top' as const,
-        },
-        title: {
-          display: true,
-          text: 'Evolución del Valor UTM',
-          font: {
-            size: 16,
-          },
-        },
-        tooltip: {
-          callbacks: {
-            label(context: any) {
-              return `${context.dataset.label}: ${formatPesos(context.parsed.y)}`;
-            },
-          },
-        },
-      },
-      scales: {
-        y: {
-          beginAtZero: false,
-          ticks: {
-            callback(value: any) {
-              return formatPesos(value);
-            },
-          },
-        },
-      },
-    },
-  };
-
-  const variacionMensualConfig = {
-    data: {
-      labels: variacionMensual.map(v => v.periodo),
-      datasets: [
-        {
-          label: 'Variación Absoluta',
-          data: variacionMensual.map(v => v.variacion_absoluta || 0),
-          backgroundColor: variacionMensual.map(v =>
-            (v.variacion_absoluta || 0) >= 0
-              ? 'rgba(75, 192, 192, 0.6)'
-              : 'rgba(255, 99, 132, 0.6)',
-          ),
-          borderColor: variacionMensual.map(v =>
-            (v.variacion_absoluta || 0) >= 0
-              ? 'rgb(75, 192, 192)'
-              : 'rgb(255, 99, 132)',
-          ),
-          borderWidth: 2,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false,
-        },
-        title: {
-          display: true,
-          text: 'Variación Mensual del Valor UTM',
-          font: {
-            size: 16,
-          },
-        },
-        tooltip: {
-          callbacks: {
-            label(context: any) {
-              return `Variación: ${formatPesos(context.parsed.y)}`;
-            },
-          },
-        },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback(value: any) {
-              return formatPesos(value);
-            },
-          },
-        },
-      },
-    },
-  };
-
-  const topValoresConfig = {
-    data: {
-      labels: ['Mayores Valores', 'Menores Valores'],
-      datasets: [
-        {
-          data: [
-            topValores?.mayores[0]?.valor || 0,
-            topValores?.menores[0]?.valor || 0,
-          ],
-          backgroundColor: [
-            'rgba(255, 99, 132, 0.6)',
-            'rgba(54, 162, 235, 0.6)',
-          ],
-          borderColor: ['rgb(255, 99, 132)', 'rgb(54, 162, 235)'],
-          borderWidth: 2,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom' as const,
-        },
-        title: {
-          display: true,
-          text: 'Valores Extremos UTM',
-          font: {
-            size: 16,
-          },
-        },
-        tooltip: {
-          callbacks: {
-            label(context: any) {
-              return `${context.label}: ${formatPesos(context.parsed)}`;
-            },
-          },
-        },
-      },
-    },
   };
 
   // =================== RENDER ===================
@@ -569,15 +271,6 @@ const ConsultorUTMRenovado: React.FC = () => {
             <ul className='nav nav-tabs nav-fill'>
               <li className='nav-item'>
                 <button
-                  className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('dashboard')}
-                >
-                  <i className='material-icons me-1'>dashboard</i>
-                  Dashboard
-                </button>
-              </li>
-              <li className='nav-item'>
-                <button
                   className={`nav-link ${activeTab === 'consulta' ? 'active' : ''}`}
                   onClick={() => setActiveTab('consulta')}
                 >
@@ -603,319 +296,11 @@ const ConsultorUTMRenovado: React.FC = () => {
                   Histórico
                 </button>
               </li>
-              <li className='nav-item'>
-                <button
-                  className={`nav-link ${activeTab === 'analisis' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('analisis')}
-                >
-                  <i className='material-icons me-1'>analytics</i>
-                  Análisis
-                </button>
-              </li>
-              <li className='nav-item'>
-                <button
-                  className={`nav-link ${activeTab === 'comparacion' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('comparacion')}
-                >
-                  <i className='material-icons me-1'>compare_arrows</i>
-                  Comparación
-                </button>
-              </li>
             </ul>
           </div>
         </div>
 
-        {/* TAB: DASHBOARD */}
-        {activeTab === 'dashboard' && (
-          <>
-            {/* KPIs principales */}
-            {dashboardData && (
-              <div className='row mb-4'>
-                <div className='col-md-3'>
-                  <div className='card text-white bg-primary mb-3'>
-                    <div className='card-body'>
-                      <div className='d-flex justify-content-between align-items-center'>
-                        <div>
-                          <h6 className='card-title mb-1'>Valor Promedio</h6>
-                          <h4 className='mb-0'>
-                            {formatPesos(dashboardData.kpis.valor_promedio)}
-                          </h4>
-                          <small>
-                            Últimos {dashboardData.kpis.meses_registrados} meses
-                          </small>
-                        </div>
-                        <i
-                          className='material-icons'
-                          style={{ fontSize: '3rem', opacity: 0.5 }}
-                        >
-                          trending_up
-                        </i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className='col-md-3'>
-                  <div className='card text-white bg-success mb-3'>
-                    <div className='card-body'>
-                      <div className='d-flex justify-content-between align-items-center'>
-                        <div>
-                          <h6 className='card-title mb-1'>Valor Mínimo</h6>
-                          <h4 className='mb-0'>
-                            {formatPesos(dashboardData.kpis.valor_minimo)}
-                          </h4>
-                          <small>{dashboardData.kpis.periodo_desde}</small>
-                        </div>
-                        <i
-                          className='material-icons'
-                          style={{ fontSize: '3rem', opacity: 0.5 }}
-                        >
-                          arrow_downward
-                        </i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className='col-md-3'>
-                  <div className='card text-white bg-danger mb-3'>
-                    <div className='card-body'>
-                      <div className='d-flex justify-content-between align-items-center'>
-                        <div>
-                          <h6 className='card-title mb-1'>Valor Máximo</h6>
-                          <h4 className='mb-0'>
-                            {formatPesos(dashboardData.kpis.valor_maximo)}
-                          </h4>
-                          <small>{dashboardData.kpis.periodo_hasta}</small>
-                        </div>
-                        <i
-                          className='material-icons'
-                          style={{ fontSize: '3rem', opacity: 0.5 }}
-                        >
-                          arrow_upward
-                        </i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className='col-md-3'>
-                  <div className='card text-white bg-info mb-3'>
-                    <div className='card-body'>
-                      <div className='d-flex justify-content-between align-items-center'>
-                        <div>
-                          <h6 className='card-title mb-1'>Variación Total</h6>
-                          <h4 className='mb-0'>
-                            {formatPercent(
-                              dashboardData.kpis.variacion_porcentual,
-                            )}
-                          </h4>
-                          <small>
-                            Rango: {formatPesos(dashboardData.kpis.rango)}
-                          </small>
-                        </div>
-                        <i
-                          className='material-icons'
-                          style={{ fontSize: '3rem', opacity: 0.5 }}
-                        >
-                          show_chart
-                        </i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Gráficos principales */}
-            <div className='row mb-4'>
-              <div className='col-lg-8'>
-                <div className='card'>
-                  <div className='card-header'>
-                    <h5 className='card-title mb-0'>
-                      <i className='material-icons me-2'>show_chart</i>
-                      Evolución del Valor UTM
-                    </h5>
-                  </div>
-                  <div className='card-body' style={{ height: '400px' }}>
-                    {graficoData.length > 0 && (
-                      <Line
-                        data={graficoLineaConfig.data}
-                        options={graficoLineaConfig.options}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className='col-lg-4'>
-                <div className='card'>
-                  <div className='card-header'>
-                    <h5 className='card-title mb-0'>
-                      <i className='material-icons me-2'>pie_chart</i>
-                      Valores Extremos
-                    </h5>
-                  </div>
-                  <div className='card-body' style={{ height: '400px' }}>
-                    {topValores && (
-                      <Doughnut
-                        data={topValoresConfig.data}
-                        options={topValoresConfig.options}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Variación mensual */}
-            <div className='row mb-4'>
-              <div className='col-12'>
-                <div className='card'>
-                  <div className='card-header'>
-                    <h5 className='card-title mb-0'>
-                      <i className='material-icons me-2'>bar_chart</i>
-                      Variación Mensual
-                    </h5>
-                  </div>
-                  <div className='card-body' style={{ height: '350px' }}>
-                    {variacionMensual.length > 0 && (
-                      <Bar
-                        data={variacionMensualConfig.data}
-                        options={variacionMensualConfig.options}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Últimos valores */}
-            {dashboardData && dashboardData.ultimos_valores && (
-              <div className='row'>
-                <div className='col-12'>
-                  <div className='card'>
-                    <div className='card-header'>
-                      <h5 className='card-title mb-0'>
-                        <i className='material-icons me-2'>history</i>
-                        Últimos 5 Valores
-                      </h5>
-                    </div>
-                    <div className='card-body'>
-                      <div className='table-responsive'>
-                        <table className='table table-hover'>
-                          <thead className='table-light'>
-                            <tr>
-                              <th>Período</th>
-                              <th>Valor UTM</th>
-                              <th>Variación</th>
-                              <th>Variación %</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {dashboardData.ultimos_valores.map((valor, idx) => (
-                              <tr key={idx}>
-                                <td>
-                                  <strong>{valor.periodo}</strong>
-                                </td>
-                                <td className='text-primary'>
-                                  {formatPesos(valor.valor)}
-                                </td>
-                                <td
-                                  className={
-                                    valor.variacion >= 0
-                                      ? 'text-success'
-                                      : 'text-danger'
-                                  }
-                                >
-                                  <i className='material-icons me-1'>
-                                    {valor.variacion >= 0
-                                      ? 'trending_up'
-                                      : 'trending_down'}
-                                  </i>
-                                  {formatPesos(Math.abs(valor.variacion || 0))}
-                                </td>
-                                <td
-                                  className={
-                                    valor.variacion_porcentual >= 0
-                                      ? 'text-success'
-                                      : 'text-danger'
-                                  }
-                                >
-                                  {formatPercent(
-                                    valor.variacion_porcentual || 0,
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Top valores */}
-            {topValores && (
-              <div className='row mt-4'>
-                <div className='col-md-6'>
-                  <div className='card border-danger'>
-                    <div className='card-header bg-danger text-white'>
-                      <h6 className='card-title mb-0'>
-                        <i className='material-icons me-2'>trending_up</i>
-                        Top 10 Valores Más Altos
-                      </h6>
-                    </div>
-                    <div className='card-body'>
-                      <div className='list-group list-group-flush'>
-                        {topValores.mayores.map((valor, idx) => (
-                          <div
-                            key={idx}
-                            className='list-group-item d-flex justify-content-between align-items-center'
-                          >
-                            <div>
-                              <strong>#{idx + 1}</strong>
-                              <span className='ms-2'>{valor.periodo}</span>
-                            </div>
-                            <span className='badge bg-danger rounded-pill'>
-                              {formatPesos(valor.valor)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className='col-md-6'>
-                  <div className='card border-success'>
-                    <div className='card-header bg-success text-white'>
-                      <h6 className='card-title mb-0'>
-                        <i className='material-icons me-2'>trending_down</i>
-                        Top 10 Valores Más Bajos
-                      </h6>
-                    </div>
-                    <div className='card-body'>
-                      <div className='list-group list-group-flush'>
-                        {topValores.menores.map((valor, idx) => (
-                          <div
-                            key={idx}
-                            className='list-group-item d-flex justify-content-between align-items-center'
-                          >
-                            <div>
-                              <strong>#{idx + 1}</strong>
-                              <span className='ms-2'>{valor.periodo}</span>
-                            </div>
-                            <span className='badge bg-success rounded-pill'>
-                              {formatPesos(valor.valor)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+        {/* TAB: DASHBOARD - REMOVED FOR SIMPLIFICATION */}
 
         {/* TAB: CONSULTA */}
         {activeTab === 'consulta' && (
@@ -1198,9 +583,12 @@ const ConsultorUTMRenovado: React.FC = () => {
                           setSelectedYear(parseInt(e.target.value))
                         }
                       >
-                        {resumenAnos.map(resumen => (
-                          <option key={resumen.ano} value={resumen.ano}>
-                            {resumen.ano}
+                        {Array.from(
+                          { length: 5 },
+                          (_, i) => new Date().getFullYear() - i,
+                        ).map(ano => (
+                          <option key={ano} value={ano}>
+                            {ano}
                           </option>
                         ))}
                       </select>
@@ -1357,246 +745,13 @@ const ConsultorUTMRenovado: React.FC = () => {
           </div>
         )}
 
-        {/* TAB: ANÁLISIS */}
-        {activeTab === 'analisis' && (
-          <>
-            {/* Análisis Trimestral */}
-            <div className='row mb-4'>
-              <div className='col-12'>
-                <div className='card'>
-                  <div className='card-header bg-primary text-white'>
-                    <h5 className='card-title mb-0'>
-                      <i className='material-icons me-2'>calendar_view_month</i>
-                      Análisis Trimestral
-                    </h5>
-                  </div>
-                  <div className='card-body'>
-                    <div className='table-responsive'>
-                      <table className='table table-hover'>
-                        <thead className='table-light'>
-                          <tr>
-                            <th>Período</th>
-                            <th>Registros</th>
-                            <th>Valor Mínimo</th>
-                            <th>Valor Máximo</th>
-                            <th>Promedio</th>
-                            <th>Variación</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {trimestralData.map((trim, idx) => (
-                            <tr key={idx}>
-                              <td>
-                                <strong>{trim.periodo}</strong>
-                              </td>
-                              <td>
-                                <span className='badge bg-secondary'>
-                                  {trim.registros}
-                                </span>
-                              </td>
-                              <td className='text-success'>
-                                {formatPesos(trim.valor_minimo)}
-                              </td>
-                              <td className='text-danger'>
-                                {formatPesos(trim.valor_maximo)}
-                              </td>
-                              <td className='text-primary'>
-                                {formatPesos(trim.valor_promedio)}
-                              </td>
-                              <td>{formatPesos(trim.variacion_trimestre)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* TAB: ANÁLISIS - REMOVED FOR SIMPLIFICATION */}
 
-            {/* Análisis Semestral */}
-            <div className='row mb-4'>
-              <div className='col-12'>
-                <div className='card'>
-                  <div className='card-header bg-success text-white'>
-                    <h5 className='card-title mb-0'>
-                      <i className='material-icons me-2'>calendar_today</i>
-                      Análisis Semestral
-                    </h5>
-                  </div>
-                  <div className='card-body'>
-                    <div className='table-responsive'>
-                      <table className='table table-hover'>
-                        <thead className='table-light'>
-                          <tr>
-                            <th>Año</th>
-                            <th>Semestre</th>
-                            <th>Registros</th>
-                            <th>Valor Mínimo</th>
-                            <th>Valor Máximo</th>
-                            <th>Promedio</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {semestralData.map((sem, idx) => (
-                            <tr key={idx}>
-                              <td>
-                                <strong>{sem.ano}</strong>
-                              </td>
-                              <td>{sem.semestre_nombre}</td>
-                              <td>
-                                <span className='badge bg-secondary'>
-                                  {sem.registros}
-                                </span>
-                              </td>
-                              <td className='text-success'>
-                                {formatPesos(sem.valor_minimo)}
-                              </td>
-                              <td className='text-danger'>
-                                {formatPesos(sem.valor_maximo)}
-                              </td>
-                              <td className='text-primary'>
-                                {formatPesos(sem.valor_promedio)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Estadísticas Avanzadas */}
-            <div className='row'>
-              <div className='col-12'>
-                <div className='card'>
-                  <div className='card-header bg-info text-white'>
-                    <h5 className='card-title mb-0'>
-                      <i className='material-icons me-2'>analytics</i>
-                      Estadísticas Avanzadas por Año
-                    </h5>
-                  </div>
-                  <div className='card-body'>
-                    <div className='table-responsive'>
-                      <table className='table table-hover'>
-                        <thead className='table-light'>
-                          <tr>
-                            <th>Año</th>
-                            <th>Registros</th>
-                            <th>Promedio</th>
-                            <th>Mínimo</th>
-                            <th>Máximo</th>
-                            <th>Desv. Estándar</th>
-                            <th>Coef. Variación</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {estadisticas.map((est, idx) => (
-                            <tr key={idx}>
-                              <td>
-                                <strong>{est.ano}</strong>
-                              </td>
-                              <td>
-                                <span className='badge bg-secondary'>
-                                  {est.registros}
-                                </span>
-                              </td>
-                              <td className='text-primary'>
-                                {formatPesos(est.promedio)}
-                              </td>
-                              <td className='text-success'>
-                                {formatPesos(est.minimo)}
-                              </td>
-                              <td className='text-danger'>
-                                {formatPesos(est.maximo)}
-                              </td>
-                              <td>{formatPesos(est.desviacion_estandar)}</td>
-                              <td>{est.coeficiente_variacion?.toFixed(2)}%</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* TAB: COMPARACIÓN */}
-        {activeTab === 'comparacion' && (
-          <div className='row'>
-            <div className='col-12'>
-              <div className='card'>
-                <div className='card-header bg-warning'>
-                  <h5 className='card-title mb-0'>
-                    <i className='material-icons me-2'>compare_arrows</i>
-                    Comparación entre Años
-                  </h5>
-                </div>
-                <div className='card-body'>
-                  {comparacionAnos.length > 0 && comparacionAnos[0] ? (
-                    <div className='table-responsive'>
-                      <table className='table table-bordered table-hover'>
-                        <thead className='table-dark'>
-                          <tr>
-                            <th>Mes</th>
-                            {Object.keys(comparacionAnos[0] || {})
-                              .filter(
-                                key => key !== 'mes' && key !== 'mes_nombre',
-                              )
-                              .map(year => (
-                                <th key={year} className='text-center'>
-                                  {year}
-                                </th>
-                              ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {comparacionAnos.map((fila, idx) => (
-                            <tr key={idx}>
-                              <td>
-                                <strong>{fila.mes_nombre}</strong>
-                              </td>
-                              {Object.keys(fila)
-                                .filter(
-                                  key => key !== 'mes' && key !== 'mes_nombre',
-                                )
-                                .map(year => (
-                                  <td key={year} className='text-center'>
-                                    {fila[year] ? formatPesos(fila[year]) : '-'}
-                                  </td>
-                                ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className='text-center py-5'>
-                      <i
-                        className='material-icons'
-                        style={{ fontSize: '4rem', color: '#ccc' }}
-                      >
-                        query_stats
-                      </i>
-                      <p className='text-muted'>
-                        Cargando datos de comparación...
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* TAB: COMPARACIÓN - REMOVED FOR SIMPLIFICATION */}
       </div>
       </Layout>
     </ProtectedRoute>
   );
 };
 
-export default ConsultorUTMRenovado;
+export default ConsultorUTM;

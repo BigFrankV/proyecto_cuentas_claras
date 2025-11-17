@@ -77,6 +77,7 @@ interface PurchaseItem {
 
 export default function ComprasListado() {
   const router = useRouter();
+  const { hasPermission } = usePermissions();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');

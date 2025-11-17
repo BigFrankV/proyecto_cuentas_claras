@@ -7,7 +7,6 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
 
-import Sidebar from '../layout/Sidebar';
 import PageHeader from '../ui/PageHeader';
 
 // Dynamic import for FullCalendar to avoid SSR issues
@@ -76,39 +75,37 @@ const AmenidadesCalendarioPage: React.FC = () => {
   }, []);
 
   return (
-    <div className='d-flex'>
-      <Sidebar />
-      <div className='main-content flex-grow-1'>
-        <PageHeader
-          title="Calendario de Reservas - Amenidades"
-          subtitle="Vista general de todas las reservas por día"
-          icon="calendar_today"
-        >
-          <button
-            className="btn btn-light btn-lg"
-            onClick={handleNewReservation}
-          >
-            <i className="material-icons">add</i> Nueva Reserva
-          </button>
-        </PageHeader>
+    <>
+    <PageHeader
+      title="Calendario de Reservas - Amenidades"
+      subtitle="Vista general de todas las reservas por día"
+      icon="calendar_today"
+    >
+      <button
+        className="btn btn-light btn-lg"
+        onClick={handleNewReservation}
+      >
+        <i className="material-icons">add</i> Nueva Reserva
+      </button>
+    </PageHeader>
 
-        <div className='calendar-container bg-white p-3 rounded shadow-sm'>
-          <FullCalendar
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView='dayGridMonth'
-            headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay',
-            }}
-            events={events}
-            eventClick={handleEventClick}
-            dateClick={handleDateClick}
-            dayMaxEvents={3}
-            moreLinkClick='popover'
-            height='auto'
-          />
-        </div>
+    <div className='calendar-container bg-white p-3 rounded shadow-sm'>
+      <FullCalendar
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView='dayGridMonth'
+        headerToolbar={{
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay',
+        }}
+        events={events}
+        eventClick={handleEventClick}
+        dateClick={handleDateClick}
+        dayMaxEvents={3}
+        moreLinkClick='popover'
+        height='auto'
+      />
+    </div>
 
         {/* Modal for New Reservation */}
         {showModal && (
@@ -203,13 +200,8 @@ const AmenidadesCalendarioPage: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
 
       <style jsx>{`
-        .main-content {
-          margin-left: 250px;
-          padding: 20px;
-        }
         .calendar-container {
           min-height: 600px;
         }
@@ -236,13 +228,59 @@ const AmenidadesCalendarioPage: React.FC = () => {
           border-color: #dc3545;
           color: white;
         }
-        @media (max-width: 768px) {
-          .main-content {
-            margin-left: 0;
+
+        /* Mobile Styles */
+        @media (max-width: 991.98px) {
+          .calendar-container {
+            padding: 1rem !important;
+            min-height: 400px;
+          }
+
+          .fc-header-toolbar {
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+          }
+
+          .fc-toolbar-chunk {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 767.98px) {
+          .calendar-container {
+            padding: 0.75rem !important;
+            min-height: 350px;
+          }
+
+          .fc-button {
+            padding: 0.375rem 0.75rem !important;
+            font-size: 0.875rem !important;
+          }
+
+          .fc-toolbar-title {
+            font-size: 1.25rem !important;
+          }
+        }
+
+        @media (max-width: 575.98px) {
+          .calendar-container {
+            padding: 0.5rem !important;
+            min-height: 300px;
+          }
+
+          .fc-button {
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.8rem !important;
+          }
+
+          .fc-toolbar-title {
+            font-size: 1.1rem !important;
           }
         }
       `}</style>
-    </div>
+    </>
   );
 };
 
