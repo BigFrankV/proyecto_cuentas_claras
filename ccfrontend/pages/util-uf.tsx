@@ -20,14 +20,12 @@ import Breadcrumb, { BreadcrumbItem } from '@/components/ui/Breadcrumb';
 import SyncControlPanel from '@/components/ui/SyncControlPanel';
 import { ProtectedRoute } from '@/lib/useAuth';
 
-import * as indicadoresAPI from '../lib/api/indicadores';
 import {
   UfConsultaResult,
   UfCalculatorInputs,
   UfCalculatorResult,
   UfHistoryItem,
   UfChartData,
-  PERIODOS_RAPIDOS_UF,
 } from '../types/utilidades';
 
 // Registrar Chart.js components
@@ -42,12 +40,26 @@ ChartJS.register(
   Filler,
 );
 
+// API functions for mindicador.cl
+const fetchCurrentIndicators = async () => {
+  const response = await fetch('https://mindicador.cl/api');
+  if (!response.ok) {
+    throw new Error('Error al consultar la API de mindicador.cl');
+  }
+  return await response.json();
+};
+
+const fetchUFHistory = async (year: number) => {
+  const response = await fetch(`https://mindicador.cl/api/uf/${year}`);
+  if (!response.ok) {
+    throw new Error('Error al consultar el histórico UF');
+  }
+  return await response.json();
+};
+
 const ConsultorUF: React.FC = () => {
   // Estados principales
-  const [fechaConsulta, setFechaConsulta] = useState<string>('');
-  const [consultaResult, setConsultaResult] = useState<UfConsultaResult | null>(
-    null,
-  );
+  const [currentUF, setCurrentUF] = useState<any>(null);
   const [calculatorInputs, setCalculatorInputs] = useState<UfCalculatorInputs>({
     pesos: 0,
     uf: 0,
@@ -65,80 +77,25 @@ const ConsultorUF: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     'consulta' | 'calculadora' | 'historico'
   >('consulta');
+  const [error, setError] = useState<string | null>(null);
 
-  // Función para consultar UF por fecha
-  const consultarUF = async (fecha: string) => {
+  // Función para consultar UF actual
+  const consultarUFActual = async () => {
     setLoading(true);
-
+    setError(null);
     try {
-      const apiResponse = await indicadoresAPI.getUfByDate(fecha);
-
-      if (apiResponse.success) {
-        const dateObj = new Date(fecha);
-        const result: UfConsultaResult = {
-          fecha,
-          valor: apiResponse.valor,
-          fechaFormateada: dateObj.toLocaleDateString('es-CL', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          }),
-          success: true,
-        };
-
-        setConsultaResult(result);
-
-        // Actualizar calculadora con el nuevo valor
-        setCalculatorInputs(prev => ({
-          ...prev,
-          valorUfActual: result.valor,
-        }));
-      } else {
-        setConsultaResult({
-          fecha,
-          valor: 0,
-          fechaFormateada: '',
-          success: false,
-          errorMessage:
-            apiResponse.error || 'Error al consultar el valor de la UF',
-        });
-      }
-    } catch (error) {
-      setConsultaResult({
-        fecha,
-        valor: 0,
-        fechaFormateada: '',
-        success: false,
-        errorMessage: 'Error de conexión al consultar la UF',
-      });
+      const data = await fetchCurrentIndicators();
+      setCurrentUF(data.uf);
+      // Actualizar calculadora con el nuevo valor
+      setCalculatorInputs(prev => ({
+        ...prev,
+        valorUfActual: data.uf.valor,
+      }));
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Función para usar períodos rápidos
-  const handlePeriodoRapido = (key: string) => {
-    const today = new Date();
-    const targetDate = new Date(today);
-
-    switch (key) {
-      case 'today':
-        break;
-      case 'yesterday':
-        targetDate.setDate(today.getDate() - 1);
-        break;
-      case 'week':
-        targetDate.setDate(today.getDate() - 7);
-        break;
-      case 'month':
-        targetDate.setDate(today.getDate() - 30);
-        break;
-    }
-
-    const fechaStr = targetDate.toISOString().split('T')[0] as string;
-    setFechaConsulta(fechaStr);
-    consultarUF(fechaStr);
   };
 
   // Función para calcular conversiones
@@ -146,8 +103,7 @@ const ConsultorUF: React.FC = () => {
     setCalculatorLoading(true);
 
     setTimeout(() => {
-      const valorUf =
-        calculatorInputs.valorUfActual || consultaResult?.valor || 37250;
+      const valorUf = currentUF?.valor || calculatorInputs.valorUfActual || 39643.59;
 
       let result: UfCalculatorResult;
 
@@ -159,8 +115,7 @@ const ConsultorUF: React.FC = () => {
           toPesos: Math.round(pesos * 100) / 100,
           toUf: 0,
           valorUfUsado: valorUf,
-          fechaConsulta: (consultaResult?.fecha ||
-            new Date().toISOString().split('T')[0]) as string,
+          fechaConsulta: currentUF?.fecha || new Date().toISOString().split('T')[0],
         };
       } else {
         const uf = calculatorInputs.pesos / valorUf;
@@ -170,8 +125,7 @@ const ConsultorUF: React.FC = () => {
           toPesos: 0,
           toUf: Math.round(uf * 10000) / 10000,
           valorUfUsado: valorUf,
-          fechaConsulta: (consultaResult?.fecha ||
-            new Date().toISOString().split('T')[0]) as string,
+          fechaConsulta: currentUF?.fecha || new Date().toISOString().split('T')[0],
         };
       }
 
@@ -184,51 +138,62 @@ const ConsultorUF: React.FC = () => {
   const cargarHistorico = async (period: '7d' | '30d' | '90d' | '1y') => {
     setSelectedPeriod(period);
     setLoading(true);
+    setError(null);
 
     try {
-      const dateRange = indicadoresAPI.getDateRange(period);
-      const apiResponse = await indicadoresAPI.getUfHistorico(
-        dateRange.start,
-        dateRange.end,
-      );
+      const currentYear = new Date().getFullYear();
+      const data = await fetchUFHistory(currentYear);
 
-      if (apiResponse.success) {
-        // Convertir datos de API al formato esperado por el componente
-        const data: UfHistoryItem[] = apiResponse.data.map((item, index) => {
-          const prevItem = index > 0 ? apiResponse.data[index - 1] : null;
-          const prevValue = prevItem ? prevItem.valor : item.valor;
-          const variacionAbsoluta = item.valor - prevValue;
-          const variacionPorcentaje =
-            prevValue > 0 ? (variacionAbsoluta / prevValue) * 100 : 0;
-
-          return {
-            fecha: item.fecha,
-            valor: Math.round(item.valor * 100) / 100,
-            variacion: Math.round(variacionAbsoluta * 100) / 100,
-            variacionPorcentaje:
-              Math.round(variacionPorcentaje * 10000) / 10000,
-          };
-        });
-
-        setHistorialUf(data);
-
-        const chartData: UfChartData = {
-          labels: data.map(item => item.fecha),
-          values: data.map(item => item.valor),
-          period,
-        };
-
-        setChartData(chartData);
-      } else {
-        // eslint-disable-next-line no-console
-        console.error('Error al cargar histórico UF:', apiResponse.error);
-        // En caso de error, limpiar datos
-        setHistorialUf([]);
-        setChartData(null);
+      // Filtrar según el período
+      const now = new Date();
+      let daysBack: number;
+      switch (period) {
+        case '7d':
+          daysBack = 7;
+          break;
+        case '30d':
+          daysBack = 30;
+          break;
+        case '90d':
+          daysBack = 90;
+          break;
+        case '1y':
+          daysBack = 365;
+          break;
+        default:
+          daysBack = 30;
       }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error al cargar datos históricos:', error);
+
+      const cutoffDate = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
+      const filteredData = data.filter((item: any) => new Date(item.fecha) >= cutoffDate);
+
+      // Convertir datos al formato esperado
+      const historyItems: UfHistoryItem[] = filteredData.map((item: any, index: number) => {
+        const prevItem = index > 0 ? filteredData[index - 1] : null;
+        const prevValue = prevItem ? prevItem.valor : item.valor;
+        const variacionAbsoluta = item.valor - prevValue;
+        const variacionPorcentaje =
+          prevValue > 0 ? (variacionAbsoluta / prevValue) * 100 : 0;
+
+        return {
+          fecha: item.fecha,
+          valor: Math.round(item.valor * 100) / 100,
+          variacion: Math.round(variacionAbsoluta * 100) / 100,
+          variacionPorcentaje: Math.round(variacionPorcentaje * 10000) / 10000,
+        };
+      });
+
+      setHistorialUf(historyItems);
+
+      const chartData: UfChartData = {
+        labels: historyItems.map(item => item.fecha),
+        values: historyItems.map(item => item.valor),
+        period,
+      };
+
+      setChartData(chartData);
+    } catch (err: any) {
+      setError(err.message);
       setHistorialUf([]);
       setChartData(null);
     } finally {
@@ -309,20 +274,26 @@ const ConsultorUF: React.FC = () => {
   // Efectos
   useEffect(() => {
     const initializeData = async () => {
-      // Inicializar con fecha de hoy
-      const today = new Date().toISOString().split('T')[0] as string;
-      setFechaConsulta(today);
-
       // Cargar UF actual y datos históricos en paralelo
-      await Promise.all([consultarUF(today), cargarHistorico('30d')]);
+      await Promise.all([consultarUFActual(), cargarHistorico('30d')]);
     };
 
     initializeData();
   }, []);
 
-  // Formatear números usando las funciones del servicio API
-  const formatPesos = indicadoresAPI.formatPesos;
-  const formatUF = indicadoresAPI.formatUF;
+  // Funciones de formato
+  const formatPesos = (value: number): string => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const formatUF = (value: number): string => {
+    return `${value.toFixed(2)} UF`;
+  };
 
   return (
     <ProtectedRoute>
@@ -402,98 +373,73 @@ const ConsultorUF: React.FC = () => {
         {activeTab === 'consulta' && (
           <div className='row'>
             <div className='col-lg-8'>
-              <div className='card'>
-                <div className='card-header bg-primary text-white'>
+              <div className='card shadow-sm'>
+                <div className='card-header bg-primary text-white d-flex justify-content-between align-items-center'>
                   <h5 className='card-title mb-0'>
                     <i className='material-icons me-2'>search</i>
-                    Consultar Valor UF
+                    Valor UF Actual
                   </h5>
+                  <button
+                    className='btn btn-light btn-sm'
+                    onClick={consultarUFActual}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <span className='spinner-border spinner-border-sm me-2'></span>
+                        Actualizando...
+                      </>
+                    ) : (
+                      <>
+                        <i className='material-icons me-1'>refresh</i>
+                        Actualizar
+                      </>
+                    )}
+                  </button>
                 </div>
                 <div className='card-body'>
-                  <div className='row g-3'>
-                    <div className='col-md-6'>
-                      <label htmlFor='fechaConsulta' className='form-label'>
-                        Fecha de consulta:
-                      </label>
-                      <input
-                        type='date'
-                        className='form-control'
-                        id='fechaConsulta'
-                        value={fechaConsulta}
-                        onChange={e => setFechaConsulta(e.target.value)}
-                        max={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
-                    <div className='col-md-6 d-flex align-items-end'>
-                      <button
-                        className='btn btn-primary w-100'
-                        onClick={() => consultarUF(fechaConsulta)}
-                        disabled={loading || !fechaConsulta}
-                      >
-                        {loading ? (
-                          <>
-                            <span className='spinner-border spinner-border-sm me-2'></span>
-                            Consultando...
-                          </>
-                        ) : (
-                          <>
-                            <i className='material-icons me-2'>search</i>
-                            Consultar
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Períodos rápidos */}
-                  <div className='mt-4'>
-                    <h6 className='mb-3'>Consultas rápidas:</h6>
-                    <div className='row g-2'>
-                      {PERIODOS_RAPIDOS_UF.map(periodo => (
-                        <div key={periodo.key} className='col-md-3'>
-                          <button
-                            className='btn btn-outline-secondary w-100'
-                            onClick={() => handlePeriodoRapido(periodo.key)}
-                            disabled={loading}
-                          >
-                            <i className='material-icons me-1'>
-                              {periodo.icon}
-                            </i>
-                            {periodo.label}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Resultado de consulta */}
-                  {consultaResult && (
-                    <div className='mt-4'>
-                      {consultaResult.success ? (
-                        <div className='alert alert-success'>
-                          <div className='d-flex align-items-center'>
-                            <i className='material-icons me-2'>check_circle</i>
-                            <div className='flex-grow-1'>
-                              <h6 className='mb-1'>Valor UF encontrado</h6>
-                              <p className='mb-1'>
-                                <strong>Fecha:</strong>{' '}
-                                {consultaResult.fechaFormateada}
-                              </p>
-                              <p className='mb-0'>
-                                <strong>Valor:</strong>
-                                <span className='h5 ms-2 text-success'>
-                                  {formatPesos(consultaResult.valor)}
-                                </span>
-                              </p>
-                            </div>
+                  {currentUF ? (
+                    <div className='text-center py-4'>
+                      <div className='mb-4'>
+                        <h2 className='display-4 text-primary font-weight-bold'>
+                          {formatPesos(currentUF.valor)}
+                        </h2>
+                        <p className='text-muted mb-2'>Valor UF al {new Date(currentUF.fecha).toLocaleDateString('es-CL')}</p>
+                        <small className='text-muted'>
+                          Última actualización: {new Date(currentUF.fecha).toLocaleString('es-CL')}
+                        </small>
+                      </div>
+                      <div className='row text-center'>
+                        <div className='col-md-4'>
+                          <div className='p-3 bg-light rounded'>
+                            <h6 className='text-muted'>Código</h6>
+                            <p className='mb-0 font-weight-bold'>{currentUF.codigo.toUpperCase()}</p>
                           </div>
                         </div>
-                      ) : (
-                        <div className='alert alert-danger'>
-                          <i className='material-icons me-2'>error</i>
-                          {consultaResult.errorMessage}
+                        <div className='col-md-4'>
+                          <div className='p-3 bg-light rounded'>
+                            <h6 className='text-muted'>Nombre</h6>
+                            <p className='mb-0 font-weight-bold'>{currentUF.nombre}</p>
+                          </div>
                         </div>
-                      )}
+                        <div className='col-md-4'>
+                          <div className='p-3 bg-light rounded'>
+                            <h6 className='text-muted'>Unidad</h6>
+                            <p className='mb-0 font-weight-bold'>{currentUF.unidad_medida}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className='text-center py-5'>
+                      <i className='material-icons text-muted' style={{ fontSize: '4rem' }}>schedule</i>
+                      <p className='text-muted mt-3'>Cargando valor UF...</p>
+                    </div>
+                  )}
+                  {error && (
+                    <div className='alert alert-danger mt-3'>
+                      <i className='material-icons me-2'>error</i>
+                      {error}
                     </div>
                   )}
                 </div>
@@ -501,7 +447,7 @@ const ConsultorUF: React.FC = () => {
             </div>
 
             <div className='col-lg-4'>
-              <div className='card'>
+              <div className='card shadow-sm'>
                 <div className='card-header'>
                   <h6 className='card-title mb-0'>
                     <i className='material-icons me-1'>info</i>
@@ -509,17 +455,27 @@ const ConsultorUF: React.FC = () => {
                   </h6>
                 </div>
                 <div className='card-body'>
-                  <p className='text-muted small'>
-                    La Unidad de Fomento (UF) es una unidad de cuenta
-                    reajustable de acuerdo con la inflación, establecida en
-                    Chile.
+                  <p className='text-muted small mb-3'>
+                    La Unidad de Fomento (UF) es una unidad de cuenta reajustable de acuerdo con la inflación, establecida en Chile.
                   </p>
-                  <ul className='text-muted small'>
-                    <li>Se actualiza diariamente</li>
-                    <li>Basada en la variación del IPC</li>
-                    <li>Utilizada en créditos hipotecarios</li>
-                    <li>Valor expresado en pesos chilenos</li>
-                  </ul>
+                  <div className='list-group list-group-flush'>
+                    <div className='list-group-item px-0'>
+                      <i className='material-icons me-2 text-primary'>update</i>
+                      <small>Se actualiza diariamente</small>
+                    </div>
+                    <div className='list-group-item px-0'>
+                      <i className='material-icons me-2 text-success'>trending_up</i>
+                      <small>Basada en la variación del IPC</small>
+                    </div>
+                    <div className='list-group-item px-0'>
+                      <i className='material-icons me-2 text-warning'>account_balance</i>
+                      <small>Utilizada en créditos hipotecarios</small>
+                    </div>
+                    <div className='list-group-item px-0'>
+                      <i className='material-icons me-2 text-info'>attach_money</i>
+                      <small>Valor expresado en pesos chilenos</small>
+                    </div>
+                  </div>
                 </div>
               </div>
 

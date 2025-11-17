@@ -2,7 +2,6 @@
 import { Chart, registerables } from 'chart.js';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 
-import Sidebar from '@/components/layout/Sidebar';
 import ModernPagination from '@/components/ui/ModernPagination';
 import PageHeader from '@/components/ui/PageHeader';
 import { useAmenidades, useReservasAmenidades } from '@/hooks/useAmenidades';
@@ -228,46 +227,41 @@ export default function AmenidadesPage(): JSX.Element {
   };
 
   return (
-    <div className='d-flex'>
-      <Sidebar />
-      <div
-        className='main-content flex-grow-1 bg-light'
-        style={{ marginLeft: 280 }}
-      >
-        <PageHeader
-          title="Lista de Amenidades"
-          subtitle="Gestión completa de amenidades y espacios comunes"
-          icon="pool"
-          primaryAction={{
-            href: '#',
-            label: 'Nueva Amenidad',
-            icon: 'add',
-          }}
-          stats={[
-            {
-              label: 'Total Amenidades',
-              value: stats.total_amenidades.toString(),
-              icon: 'pool',
-              color: 'primary',
-            },
-            {
-              label: 'Amenidades Activas',
-              value: stats.amenidades_activas.toString(),
-              icon: 'check_circle',
-              color: 'success',
-            },
-            {
-              label: 'Reservas del Mes',
-              value: stats.reservas_mes_actual.toString(),
-              icon: 'event_available',
-              color: 'info',
-            },
-          ]}
-        />
+    <>
+    <PageHeader
+      title="Lista de Amenidades"
+      subtitle="Gestión completa de amenidades y espacios comunes"
+      icon="pool"
+      primaryAction={{
+        href: '#',
+        label: 'Nueva Amenidad',
+        icon: 'add',
+      }}
+      stats={[
+        {
+          label: 'Total Amenidades',
+          value: stats.total_amenidades.toString(),
+          icon: 'pool',
+          color: 'primary',
+        },
+        {
+          label: 'Amenidades Activas',
+          value: stats.amenidades_activas.toString(),
+          icon: 'check_circle',
+          color: 'success',
+        },
+        {
+          label: 'Reservas del Mes',
+          value: stats.reservas_mes_actual.toString(),
+          icon: 'event_available',
+          color: 'info',
+        },
+      ]}
+    />
 
-        <main className='container-fluid p-4'>
-          <div className='row'>
-            <div className='col-12'>
+    <main className='container-fluid p-4'>
+      <div className='row'>
+        <div className='col-12'>
               <div className='stats-grid'>
                 <div className='summary-card'>
                   <div className='summary-icon'>
@@ -386,7 +380,130 @@ export default function AmenidadesPage(): JSX.Element {
             </div>
           </div>
         </main>
-      </div>
-    </div>
+
+      <style jsx>{`
+        /* Mobile Styles */
+        @media (max-width: 991.98px) {
+          .container-fluid {
+            padding: 1rem !important;
+          }
+
+          .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+            gap: 1rem !important;
+          }
+
+          .amenity-card {
+            margin-bottom: 1rem;
+          }
+        }
+
+        @media (max-width: 767.98px) {
+          .container-fluid {
+            padding: 1rem !important;
+          }
+
+          .stats-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.75rem !important;
+          }
+
+          .amenity-card {
+            margin-bottom: 0.75rem;
+          }
+
+          .chart-container {
+            margin-bottom: 1.5rem;
+          }
+
+          .chart-container canvas {
+            max-height: 250px !important;
+          }
+        }
+
+        @media (max-width: 575.98px) {
+          .container-fluid {
+            padding: 0.75rem !important;
+          }
+
+          .stats-grid {
+            gap: 0.5rem !important;
+          }
+
+          .amenity-card {
+            padding: 1rem !important;
+          }
+
+          .chart-container canvas {
+            max-height: 200px !important;
+          }
+        }
+
+        /* Enhanced Styles */
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .stats-card {
+          background: white;
+          border-radius: 12px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          text-align: center;
+          transition: transform 0.2s ease;
+        }
+
+        .stats-card:hover {
+          transform: translateY(-2px);
+        }
+
+        .stats-card h3 {
+          color: #007bff;
+          margin-bottom: 0.5rem;
+          font-size: 1.5rem;
+        }
+
+        .stats-card p {
+          color: #6c757d;
+          margin: 0;
+          font-weight: 500;
+        }
+
+        .amenity-card {
+          background: white;
+          border-radius: 12px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          margin-bottom: 1rem;
+          transition: transform 0.2s ease;
+        }
+
+        .amenity-card:hover {
+          transform: translateY(-2px);
+        }
+
+        .chart-container {
+          background: white;
+          border-radius: 12px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          margin-bottom: 2rem;
+        }
+
+        .btn {
+          border-radius: 6px;
+          font-weight: 500;
+          transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+      `}</style>
+    </>
   );
 }

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { Button, Form, InputGroup, Alert } from 'react-bootstrap';
 
-import Sidebar from '@/components/layout/Sidebar';
 import ModernPagination from '@/components/ui/ModernPagination';
 import PageHeader from '@/components/ui/PageHeader';
 import {
@@ -101,136 +100,503 @@ export default function LecturasPage(): React.ReactElement {
     }
   };
 
-  if (loading && !meters.length) {return <div>Cargando...</div>;}
-
   return (
     <ProtectedRoute>
-      <div className='d-flex'>
-        <Sidebar />
-        <div className='main-content flex-grow-1 bg-light' style={{ marginLeft: 280 }}>
-          <PageHeader
-            title="Lecturas de Medidor"
-            subtitle="Registro y consulta de lecturas de medidores"
-            icon="straighten"
-          >
-            <div className='d-flex align-items-center gap-2'>
-              <input
-                id='meterSearch'
-                className='form-control form-control-sm'
-                placeholder='Buscar medidor...'
-                style={{ width: 220 }}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </PageHeader>
+      <PageHeader
+        title="Lecturas de Medidor"
+        subtitle="Registro y consulta de lecturas de medidores"
+        icon="straighten"
+      >
+        <div className='d-flex align-items-center gap-2 flex-wrap'>
+          <div className='input-group input-group-sm' style={{ minWidth: '200px', maxWidth: '300px' }}>
+            <span className='input-group-text'>
+              <span className='material-icons' style={{ fontSize: '16px' }}>search</span>
+            </span>
+            <input
+              id='meterSearch'
+              className='form-control'
+              placeholder='Buscar medidor...'
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+      </PageHeader>
 
-          <main className='container-fluid p-4'>
-            <div className='row'>
-              <div className='col-lg-4'>
-                <div className='reading-form-card'>
-                  <h5>Registrar Lectura</h5>
-                  <Form onSubmit={handleFormSubmit}>
-                    <Form.Group className='mb-3'>
-                      <Form.Label>Medidor</Form.Label>
-                      <Form.Select
-                        value={selectedMeter?.id || ''}
-                        onChange={(e) => {
-                          const meter = meters.find(m => m.id === Number(e.target.value));
-                          if (meter) {handleMeterSelect(meter);}
-                        }}
-                      >
-                        {filteredMeters.map(m => (
-                          <option key={m.id} value={m.id}>
-                            {m.medidor_codigo} - {m.unidad}
-                          </option>
-                        ))}
-                      </Form.Select>
-                    </Form.Group>
-                    <Form.Group className='mb-3'>
-                      <Form.Label>Fecha</Form.Label>
-                      <Form.Control
-                        type='date'
-                        value={readingDate}
-                        onChange={(e) => setReadingDate(e.target.value)}
-                        required
-                      />
-                    </Form.Group>
-                    <Form.Group className='mb-3'>
-                      <Form.Label>Lectura Actual</Form.Label>
-                      <InputGroup>
+      <main className='container-fluid p-4'>
+        <div className='row'>
+          {/* Formulario de registro - Full width en mobile, 4 columnas en desktop */}
+          <div className='col-12 col-lg-4 mb-4 mb-lg-0'>
+            <div className='reading-form-card card shadow-sm'>
+                  <div className='card-header bg-primary text-white'>
+                    <h5 className='mb-0'>
+                      <span className='material-icons me-2' style={{ fontSize: '20px' }}>edit</span>
+                      Registrar Lectura
+                    </h5>
+                  </div>
+                  <div className='card-body'>
+                    <Form onSubmit={handleFormSubmit}>
+                      <Form.Group className='mb-3'>
+                        <Form.Label>Medidor</Form.Label>
+                        <Form.Select
+                          value={selectedMeter?.id || ''}
+                          onChange={(e) => {
+                            const meter = meters.find(m => m.id === Number(e.target.value));
+                            if (meter) {handleMeterSelect(meter);}
+                          }}
+                          className='form-select-sm'
+                        >
+                          {filteredMeters.map(m => (
+                            <option key={m.id} value={m.id}>
+                              {m.medidor_codigo} - {m.unidad}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+
+                      <Form.Group className='mb-3'>
+                        <Form.Label>Fecha</Form.Label>
                         <Form.Control
-                          type='number'
-                          value={currentReading}
-                          onChange={(e) => setCurrentReading(e.target.value)}
+                          type='date'
+                          value={readingDate}
+                          onChange={(e) => setReadingDate(e.target.value)}
                           required
+                          className='form-control-sm'
                         />
-                        <InputGroup.Text>kWh</InputGroup.Text>
-                      </InputGroup>
-                      <Form.Text>Última: {lastReading} | Consumo: {consumo}</Form.Text>
-                    </Form.Group>
-                    <Form.Group className='mb-3'>
-                      <Form.Label>Periodo</Form.Label>
-                      <Form.Control
-                        type='text'
-                        placeholder='Ej: 2025-11 (Año y Mes) '
-                        value={readingPeriod}
-                        onChange={(e) => setReadingPeriod(e.target.value)}
-                        required
-                      />
-                    </Form.Group>
-                    <div className='d-grid gap-2'>
-                      <Button type='submit' variant='primary' disabled={loading}>
-                        Guardar Lectura
-                      </Button>
-                      <Button
-                        type='button'
-                        variant='outline-secondary'
-                        onClick={() => {
-                          setCurrentReading('');
-                          setReadingDate(new Date().toISOString().slice(0, 10));  // Para 'date', usa slice(0,10)
-                          setReadingPeriod('');  // Agrega esto
-                        }}
-                      >
-                        Limpiar
-                      </Button>
-                    </div>
-                    {showSuccess && <Alert variant='success' className='mt-3'>Lectura guardada</Alert>}
-                  </Form>
-                </div>
+                      </Form.Group>
 
-                
+                      <Form.Group className='mb-3'>
+                        <Form.Label>Lectura Actual</Form.Label>
+                        <InputGroup size='sm'>
+                          <Form.Control
+                            type='number'
+                            value={currentReading}
+                            onChange={(e) => setCurrentReading(e.target.value)}
+                            placeholder='0'
+                            required
+                          />
+                          <InputGroup.Text>kWh</InputGroup.Text>
+                        </InputGroup>
+                        <Form.Text className='text-muted'>
+                          Última: <strong>{lastReading}</strong> |
+                          Consumo calculado: <strong>{consumo} kWh</strong>
+                        </Form.Text>
+                      </Form.Group>
+
+                      <Form.Group className='mb-3'>
+                        <Form.Label>Periodo</Form.Label>
+                        <Form.Control
+                          type='text'
+                          placeholder='Ej: 2025-11 (Año y Mes)'
+                          value={readingPeriod}
+                          onChange={(e) => setReadingPeriod(e.target.value)}
+                          required
+                          className='form-control-sm'
+                        />
+                      </Form.Group>
+
+                      <div className='d-grid gap-2'>
+                        <Button type='submit' variant='primary' size='sm' disabled={loading}>
+                          {loading ? 'Guardando...' : 'Guardar Lectura'}
+                        </Button>
+                        <Button
+                          type='button'
+                          variant='outline-secondary'
+                          size='sm'
+                          onClick={() => {
+                            setCurrentReading('');
+                            setReadingDate(new Date().toISOString().slice(0, 10));
+                            setReadingPeriod('');
+                          }}
+                        >
+                          Limpiar
+                        </Button>
+                      </div>
+
+                      {showSuccess && (
+                        <Alert variant='success' className='mt-3 mb-0' dismissible onClose={() => setShowSuccess(false)}>
+                          <span className='material-icons me-1' style={{ fontSize: '16px' }}>check_circle</span>
+                          Lectura guardada exitosamente
+                        </Alert>
+                      )}
+                    </Form>
+                  </div>
+                </div>
               </div>
 
-              <div className='col-lg-8'>
-                <div className='reading-history'>
-                  <div className='reading-history-header d-flex justify-content-between align-items-center p-3'>
-                    <h5 className='mb-0'>Historial de Lecturas</h5>
-                    <div>
-                      <Button variant='outline-secondary' size='sm'>Exportar</Button>
-                      <Button variant='primary' size='sm'>Agregar Masiva</Button>
+              {/* Historial de lecturas - Full width en mobile, 8 columnas en desktop */}
+              <div className='col-12 col-lg-8'>
+                <div className='reading-history card shadow-sm'>
+                  <div className='card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2'>
+                    <h5 className='mb-0'>
+                      <span className='material-icons me-2' style={{ fontSize: '20px' }}>history</span>
+                      Historial de Lecturas
+                    </h5>
+                    <div className='d-flex gap-2 flex-wrap'>
+                      <Button variant='outline-secondary' size='sm'>
+                        <span className='material-icons me-1' style={{ fontSize: '16px' }}>download</span>
+                        Exportar
+                      </Button>
+                      <Button variant='primary' size='sm'>
+                        <span className='material-icons me-1' style={{ fontSize: '16px' }}>add</span>
+                        Agregar Masiva
+                      </Button>
                     </div>
                   </div>
-                  <div className='p-3'>
-                    {readings.map(r => (
-                      <div key={r.id} className='reading-item d-flex justify-content-between'>
-                        <div>
-                          <div className='fw-bold'>{new Date(r.fecha).toLocaleString()}</div>
-                          <div className='small text-muted'>{selectedMeter?.medidor_codigo}</div>
-                        </div>
-                        <div className='text-end'>
-                          <div className='consumption-value'>{r.lectura}</div>
-                          <div className='small text-muted'>{r.status}</div>
-                        </div>
+                  <div className='card-body p-0'>
+                    {readings.length === 0 ? (
+                      <div className='text-center py-5 text-muted'>
+                        <span className='material-icons' style={{ fontSize: '48px', opacity: 0.3 }}>history</span>
+                        <p className='mt-2'>No hay lecturas registradas para este medidor</p>
                       </div>
-                    ))}
+                    ) : (
+                      <div className='list-group list-group-flush'>
+                        {readings.map(r => (
+                          <div key={r.id} className='list-group-item px-3 py-3'>
+                            <div className='d-flex justify-content-between align-items-center flex-wrap gap-2'>
+                              <div className='flex-grow-1'>
+                                <div className='fw-bold text-primary mb-1 d-flex align-items-center'>
+                                  <span className='material-icons me-2' style={{ fontSize: '18px' }}>date_range</span>
+                                  {new Date(r.fecha).toLocaleDateString('es-ES', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })}
+                                </div>
+                                <div className='small text-muted d-flex align-items-center'>
+                                  <span className='material-icons me-1' style={{ fontSize: '14px' }}>speed</span>
+                                  {selectedMeter?.medidor_codigo} • {r.periodo || 'Sin periodo'}
+                                </div>
+                              </div>
+                              <div className='text-end d-flex flex-column align-items-end'>
+                                <div className='d-flex align-items-center mb-1'>
+                                  <span className='material-icons me-1 text-success' style={{ fontSize: '20px' }}>bolt</span>
+                                  <span className='h4 mb-0 text-success fw-bold'>{r.lectura.toLocaleString()}</span>
+                                </div>
+                                <div className='small text-muted'>kWh</div>
+                                <span className={`badge ${r.status === 'activa' ? 'bg-success' : 'bg-secondary'} mt-1`}>
+                                  {r.status || 'Sin estado'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           </main>
-        </div>
-      </div>
+
+      <style jsx>{`
+        /* Mobile Styles */
+        @media (max-width: 991.98px) {
+          .reading-form-card .card-header h5 {
+            font-size: 1.1rem;
+          }
+
+          .reading-history .card-header {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 1rem !important;
+          }
+
+          .reading-history .card-header .d-flex {
+            justify-content: center !important;
+            width: 100% !important;
+          }
+
+          .reading-history .card-header .d-flex .btn {
+            flex: 1;
+            min-width: 0;
+          }
+        }
+
+        @media (max-width: 767.98px) {
+          .container-fluid {
+            padding: 1rem !important;
+          }
+
+          .reading-form-card .card-body {
+            padding: 1rem;
+          }
+
+          .reading-history .card-body {
+            max-height: 400px;
+          }
+
+          .list-group-item {
+            padding: 1rem 0.75rem !important;
+          }
+
+          .list-group-item .d-flex {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.75rem !important;
+            text-align: center !important;
+          }
+
+          .list-group-item .text-end {
+            text-align: center !important;
+          }
+
+          .card-header .d-flex {
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+          }
+
+          .card-header .d-flex .btn {
+            width: 100%;
+          }
+
+          /* PageHeader responsive */
+          .page-header .header-actions {
+            width: 100% !important;
+            margin-top: 1rem !important;
+          }
+
+          .page-header .header-actions .input-group {
+            width: 100% !important;
+            max-width: none !important;
+          }
+        }
+
+        @media (max-width: 575.98px) {
+          .container-fluid {
+            padding: 0.75rem !important;
+          }
+
+          .reading-form-card .card-body {
+            padding: 0.75rem;
+          }
+
+          .reading-history .card-header {
+            padding: 0.75rem 1rem;
+          }
+
+          .reading-history .card-body {
+            max-height: 300px;
+          }
+
+          .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+          }
+
+          .form-control-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+          }
+
+          .form-select-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+          }
+        }
+
+        /* Enhanced Card Styles */
+        .reading-form-card {
+          border: none;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .reading-form-card .card-header {
+          background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+          border: none;
+          padding: 1rem 1.25rem;
+        }
+
+        .reading-form-card .card-body {
+          padding: 1.5rem;
+        }
+
+        .reading-history {
+          border: none;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .reading-history .card-header {
+          background: #f8f9fa;
+          border-bottom: 1px solid #dee2e6;
+          padding: 1rem 1.25rem;
+        }
+
+        .reading-history .card-body {
+          max-height: 600px;
+          overflow-y: auto;
+        }
+
+        /* Mobile Card Enhancements */
+        @media (max-width: 767.98px) {
+          .reading-form-card,
+          .reading-history {
+            margin-bottom: 1rem;
+            border-radius: 8px;
+          }
+
+          .reading-form-card .card-header,
+          .reading-history .card-header {
+            padding: 0.75rem 1rem;
+          }
+
+          .reading-form-card .card-body {
+            padding: 1rem;
+          }
+        }
+
+        /* Form Enhancements */
+        .form-control-sm {
+          border-radius: 6px;
+        }
+
+        .form-select-sm {
+          border-radius: 6px;
+        }
+
+        .input-group-sm .form-control {
+          border-top-right-radius: 0;
+          border-bottom-right-radius: 0;
+        }
+
+        .input-group-sm .input-group-text {
+          border-top-left-radius: 0;
+          border-bottom-left-radius: 0;
+        }
+
+        /* Button Enhancements */
+        .btn-sm {
+          border-radius: 6px;
+          font-weight: 500;
+          min-height: 36px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .btn {
+          transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Mobile Button Enhancements */
+        @media (max-width: 767.98px) {
+          .btn-sm {
+            min-height: 44px;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+          }
+
+          .d-grid .btn {
+            margin-bottom: 0.5rem;
+          }
+
+          .d-grid .btn:last-child {
+            margin-bottom: 0;
+          }
+        }
+
+        /* List Item Enhancements */
+        .list-group-item {
+          border-left: 4px solid transparent;
+          transition: all 0.2s ease;
+          cursor: pointer;
+        }
+
+        .list-group-item:hover {
+          background-color: #f8f9fa;
+          border-left-color: #007bff;
+          transform: translateX(2px);
+        }
+
+        /* Mobile List Item Enhancements */
+        @media (max-width: 767.98px) {
+          .list-group-item {
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            border: 1px solid #dee2e6;
+          }
+
+          .list-group-item:last-child {
+            margin-bottom: 0;
+          }
+        }
+
+        /* Badge Enhancements */
+        .badge {
+          font-size: 0.7em;
+          padding: 0.35em 0.65em;
+        }
+
+        /* Alert Enhancements */
+        .alert {
+          border-radius: 8px;
+          border: none;
+        }
+
+        .alert-success {
+          background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+          color: #155724;
+        }
+
+        /* Loading State */
+        .loading-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(255, 255, 255, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 12px;
+          z-index: 10;
+        }
+
+        /* Scrollbar Styling */
+        .reading-history .card-body::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .reading-history .card-body::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 3px;
+        }
+
+        .reading-history .card-body::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 3px;
+        }
+
+        .reading-history .card-body::-webkit-scrollbar-thumb:hover {
+          background: #a8a8a8;
+        }
+
+        /* Animation for new items */
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .list-group-item {
+          animation: slideIn 0.3s ease-out;
+        }
+      `}</style>
     </ProtectedRoute>
   );
 }

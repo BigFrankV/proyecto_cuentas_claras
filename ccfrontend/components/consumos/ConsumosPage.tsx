@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/router'; // <-- agregado
 import React, { useEffect, useRef, useState } from 'react';
 
-import Sidebar from '@/components/layout/Sidebar';
 import ModernPagination from '@/components/ui/ModernPagination';
 import PageHeader from '@/components/ui/PageHeader';
 import {
@@ -466,38 +465,33 @@ export default function ConsumosPage(): JSX.Element {
   };
 
   return (
-    <div className='d-flex'>
-      <Sidebar />
-        <div
-          className='main-content flex-grow-1 bg-light'
-          style={{ marginLeft: 280 }}
-        >
-          <PageHeader
-            title="Análisis de Consumos"
-            subtitle="Visualización y análisis de consumos de medidores"
-            icon="analytics"
+    <>
+    <PageHeader
+      title="Análisis de Consumos"
+      subtitle="Visualización y análisis de consumos de medidores"
+      icon="analytics"
+    >
+      <div className='d-flex justify-content-between align-items-center w-100 flex-wrap gap-2'>
+        <div className='d-flex align-items-center flex-wrap gap-2'>
+          <Link
+            href='/medidores'
+            className='btn btn-outline-secondary'
           >
-            <div className='d-flex justify-content-between align-items-center w-100'>
-              <div className='d-flex align-items-center'>
-                <Link
-                  href='/medidores'
-                  className='btn btn-outline-secondary me-3'
-                >
-                  Volver a Medidores
-                </Link>
-                <div>
-                  <small className="text-muted">
-                    Medidor seleccionado: <strong>
-                      {medidores.find(m => m.id === medidorId)?.codigo ||
-                       `Medidor ${String(medidorId).padStart(3, '0')}`}
-                    </strong>
-                  </small>
-                </div>
-              </div>
+            Volver a Medidores
+          </Link>
+          <div>
+            <small className="text-muted">
+              Medidor seleccionado: <strong>
+                {medidores.find(m => m.id === medidorId)?.codigo ||
+                 `Medidor ${String(medidorId).padStart(3, '0')}`}
+              </strong>
+            </small>
+          </div>
+        </div>
 
-              <div className='d-flex align-items-center'>
-                <div className='me-3'>
-                  <input
+        <div className='d-flex align-items-center flex-wrap gap-2'>
+          <div className='me-3'>
+            <input
                     id='dateRange'
                     className='form-control form-control-sm'
                     placeholder='Rango de fechas'
@@ -780,7 +774,178 @@ export default function ConsumosPage(): JSX.Element {
             </div>
           </div>
         </main>
-      </div>
-    </div>
+
+      <style jsx>{`
+        /* Mobile Styles */
+        @media (max-width: 991.98px) {
+          .page-header .header-actions {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 1rem !important;
+          }
+
+          .page-header .header-actions .d-flex {
+            justify-content: center !important;
+            width: 100% !important;
+          }
+
+          .page-header .header-actions .btn {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 767.98px) {
+          .container-fluid {
+            padding: 1rem !important;
+          }
+
+          .chart-container {
+            margin-bottom: 2rem;
+          }
+
+          .chart-container canvas {
+            max-height: 300px !important;
+          }
+
+          .stats-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+          }
+
+          .stats-card {
+            padding: 1rem !important;
+          }
+
+          .table-responsive {
+            font-size: 0.875rem;
+          }
+
+          .table-responsive .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+          }
+        }
+
+        @media (max-width: 575.98px) {
+          .container-fluid {
+            padding: 0.75rem !important;
+          }
+
+          .page-header h1 {
+            font-size: 1.5rem !important;
+          }
+
+          .page-header .subtitle {
+            font-size: 0.875rem !important;
+          }
+
+          .chart-container canvas {
+            max-height: 250px !important;
+          }
+
+          .stats-card h3 {
+            font-size: 1.25rem !important;
+          }
+
+          .stats-card p {
+            font-size: 0.875rem !important;
+          }
+        }
+
+        /* Enhanced Card Styles */
+        .chart-container {
+          background: white;
+          border-radius: 12px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .stats-card {
+          background: white;
+          border-radius: 12px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          text-align: center;
+          transition: transform 0.2s ease;
+        }
+
+        .stats-card:hover {
+          transform: translateY(-2px);
+        }
+
+        .stats-card h3 {
+          color: #007bff;
+          margin-bottom: 0.5rem;
+          font-size: 1.5rem;
+        }
+
+        .stats-card p {
+          color: #6c757d;
+          margin: 0;
+          font-weight: 500;
+        }
+
+        /* Button Enhancements */
+        .btn {
+          border-radius: 6px;
+          font-weight: 500;
+          transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Table Enhancements */
+        .table-responsive {
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .table thead th {
+          background: #f8f9fa;
+          border-bottom: 2px solid #dee2e6;
+          font-weight: 600;
+          color: #495057;
+        }
+
+        .table tbody tr:hover {
+          background-color: #f8f9fa;
+        }
+
+        /* Form Controls */
+        .form-select, .form-control {
+          border-radius: 6px;
+          border: 1px solid #ced4da;
+        }
+
+        .form-select:focus, .form-control:focus {
+          border-color: #007bff;
+          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        /* Mobile Form Controls */
+        @media (max-width: 767.98px) {
+          .form-select, .form-control {
+            font-size: 0.9rem;
+          }
+
+          .input-group .btn {
+            min-height: 38px;
+          }
+        }
+      `}</style>
+    </>
   );
 }

@@ -101,7 +101,7 @@ const options = {
         description: 'Servidor de Desarrollo',
       },
       {
-        url: 'https://api.cuentasclaras.com',
+        url: 'https://apicc.pquintanilla.cl/',
         description: 'Servidor de Producción',
       },
     ],

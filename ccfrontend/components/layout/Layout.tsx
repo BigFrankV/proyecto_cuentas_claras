@@ -37,6 +37,21 @@ export default function Layout({
           <main>{children}</main>
         </div>
       </div>
+
+      <style jsx>{`
+        /* Layout responsive */
+        @media (min-width: 992px) {
+          .main-content {
+            margin-left: 280px;
+          }
+        }
+
+        @media (max-width: 991.98px) {
+          .main-content {
+            margin-left: 0;
+          }
+        }
+      `}</style>
     </>
   );
 }
