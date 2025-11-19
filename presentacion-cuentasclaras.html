@@ -139,7 +139,34 @@
       letter-spacing: 2px;
     }
 
-    /* --- CONTENEDORES DE DIAGRAMAS --- */
+    #slide-final {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      text-align: center;
+      align-items: center;
+    }
+
+    #slide-final h1 {
+      color: white;
+      font-size: 56px;
+      margin-bottom: 10px;
+      letter-spacing: -1px;
+    }
+
+    #slide-final p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 22px;
+      font-weight: 300;
+    }
+
+    #slide-final h2 {
+      border: none;
+      color: white;
+      font-size: 18px;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
     .mermaid-container {
       background: #fff;
       border: 1px solid #e2e8f0;
@@ -1246,12 +1273,12 @@
 
     <section class="slide">
       <!-- Slide 29: Autenticación y Seguridad -->
-      <h2 style="font-size: 48px;"><i class="material-icons">security</i> Autenticación y Seguridad</h2>
-      <h3 style="font-size: 32px;">8.1 Autenticación JWT</h3>
-      <p style="font-size: 24px;"><strong>Flujo básico:</strong></p>
-      <p style="font-size: 24px;">Login → validación → emisión JWT → uso en headers Authorization</p>
-      <h3 style="font-size: 32px;">8.2 2FA con TOTP (speakeasy)</h3>
-      <ul style="font-size: 22px;">
+      <h2><i class="material-icons">security</i> Autenticación y Seguridad</h2>
+      <h3>8.1 Autenticación JWT</h3>
+      <p><strong>Flujo básico:</strong></p>
+      <p>Login → validación → emisión JWT → uso en headers Authorization</p>
+      <h3>8.2 2FA con TOTP (speakeasy)</h3>
+      <ul>
         <li>Generación de secreto</li>
         <li>QR para apps como Authy / Google Authenticator</li>
         <li>Validación basada en ventana de tiempo</li>
