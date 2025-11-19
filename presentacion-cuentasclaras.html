@@ -987,12 +987,11 @@
           PARAMETRO { bigint id PK bigint comunidad_id FK varchar clave varchar valor }
           CENTRO_COSTO { bigint id PK bigint comunidad_id FK varchar codigo UK varchar nombre }
           CATEGORIA { bigint id PK bigint comunidad_id FK varchar codigo varchar nombre }
-          ALIQUOTA { bigint id PK bigint comunidad_id FK decimal porcentaje varchar descripcion }
           COMUNIDAD ||--o{ PARAMETRO : "tiene"
           COMUNIDAD ||--o{ CENTRO_COSTO : "contiene"
           COMUNIDAD ||--o{ CATEGORIA : "contiene"
-          COMUNIDAD ||--o{ ALIQUOTA : "define"
           CENTRO_COSTO ||--o{ CATEGORIA : "clasifica"
+        
         </div>
       </div>
     </div>
