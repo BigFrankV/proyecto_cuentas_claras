@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { Permission, usePermissions } from '@/lib/usePermissions';
+
 import {
   EmissionStatusBadge,
   EmissionTypeBadge,
@@ -27,6 +29,8 @@ interface EmissionCardProps {
 }
 
 export function EmissionCard({ emission }: EmissionCardProps) {
+  const { hasPermission } = usePermissions();
+  
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
@@ -97,18 +101,22 @@ export function EmissionCard({ emission }: EmissionCardProps) {
               <li>
                 <hr className='dropdown-divider' />
               </li>
-              <li>
-                <button className='dropdown-item text-primary'>
-                  <i className='material-icons me-2'>edit</i>
-                  Editar
-                </button>
-              </li>
-              <li>
-                <button className='dropdown-item text-danger'>
-                  <i className='material-icons me-2'>delete</i>
-                  Eliminar
-                </button>
-              </li>
+              {hasPermission(Permission.EDIT_EMISION) && (
+                <li>
+                  <button className='dropdown-item text-primary'>
+                    <i className='material-icons me-2'>edit</i>
+                    Editar
+                  </button>
+                </li>
+              )}
+              {hasPermission(Permission.DELETE_EMISION) && (
+                <li>
+                  <button className='dropdown-item text-danger'>
+                    <i className='material-icons me-2'>delete</i>
+                    Eliminar
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
         </div>
@@ -203,7 +211,7 @@ export function EmissionCard({ emission }: EmissionCardProps) {
             Ver detalles
           </Link>
 
-          {emission.status === 'draft' && (
+          {emission.status === 'draft' && hasPermission(Permission.EDIT_EMISION) && (
             <button className='btn btn-sm btn-primary'>
               <i className='material-icons me-1'>send</i>
               Enviar

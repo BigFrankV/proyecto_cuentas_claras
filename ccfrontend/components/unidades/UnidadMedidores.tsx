@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { Permission, usePermissions } from '@/lib/usePermissions';
+
 interface Medidor {
   id: string;
   tipo: 'Agua' | 'Gas' | 'Electricidad' | 'Calefacción';
@@ -95,6 +97,8 @@ const UnidadMedidores: React.FC<UnidadMedidoresProps> = ({
     }
   };
 
+  const { hasPermission } = usePermissions();
+  
   return (
     <div className='card h-100'>
       <div className='card-header d-flex justify-content-between align-items-center'>
@@ -102,16 +106,18 @@ const UnidadMedidores: React.FC<UnidadMedidoresProps> = ({
           <i className='material-icons me-2'>speed</i>
           Medidores ({medidores.length})
         </h6>
-        <button
-          className='btn btn-sm btn-primary'
-          data-bs-toggle='collapse'
-          data-bs-target='#addMedidorForm'
-        >
-          <i className='material-icons me-1' style={{ fontSize: '16px' }}>
-            add
-          </i>
-          Agregar
-        </button>
+        {hasPermission(Permission.CREATE_MEDIDOR) && (
+          <button
+            className='btn btn-sm btn-primary'
+            data-bs-toggle='collapse'
+            data-bs-target='#addMedidorForm'
+          >
+            <i className='material-icons me-1' style={{ fontSize: '16px' }}>
+              add
+            </i>
+            Agregar
+          </button>
+        )}
       </div>
       <div className='card-body'>
         {/* Formulario para agregar medidor */}
@@ -324,39 +330,45 @@ const UnidadMedidores: React.FC<UnidadMedidoresProps> = ({
                           </i>
                         </button>
                         <ul className='dropdown-menu'>
-                          <li>
-                            <button
-                              className='dropdown-item'
-                              onClick={() =>
-                                setEditingMedidor(isEditing ? null : medidor.id)
-                              }
-                            >
-                              <i
-                                className='material-icons me-2'
-                                style={{ fontSize: '16px' }}
+                          {hasPermission(Permission.EDIT_MEDIDOR) && (
+                            <li>
+                              <button
+                                className='dropdown-item'
+                                onClick={() =>
+                                  setEditingMedidor(isEditing ? null : medidor.id)
+                                }
                               >
-                                edit
-                              </i>
-                              {isEditing ? 'Cancelar' : 'Editar'}
-                            </button>
-                          </li>
-                          <li>
-                            <hr className='dropdown-divider' />
-                          </li>
-                          <li>
-                            <button
-                              className='dropdown-item text-danger'
-                              onClick={() => handleRemoveMedidor(medidor.id)}
-                            >
-                              <i
-                                className='material-icons me-2'
-                                style={{ fontSize: '16px' }}
+                                <i
+                                  className='material-icons me-2'
+                                  style={{ fontSize: '16px' }}
+                                >
+                                  edit
+                                </i>
+                                {isEditing ? 'Cancelar' : 'Editar'}
+                              </button>
+                            </li>
+                          )}
+                          {hasPermission(Permission.EDIT_MEDIDOR) && hasPermission(Permission.DELETE_MEDIDOR) && (
+                            <li>
+                              <hr className='dropdown-divider' />
+                            </li>
+                          )}
+                          {hasPermission(Permission.DELETE_MEDIDOR) && (
+                            <li>
+                              <button
+                                className='dropdown-item text-danger'
+                                onClick={() => handleRemoveMedidor(medidor.id)}
                               >
-                                delete
-                              </i>
-                              Eliminar
-                            </button>
-                          </li>
+                                <i
+                                  className='material-icons me-2'
+                                  style={{ fontSize: '16px' }}
+                                >
+                                  delete
+                                </i>
+                                Eliminar
+                              </button>
+                            </li>
+                          )}
                         </ul>
                       </div>
                     </div>

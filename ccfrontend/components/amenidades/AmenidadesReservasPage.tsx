@@ -4,6 +4,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import Sidebar from '@/components/layout/Sidebar';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import { useAmenidades, useReservasAmenidades } from '@/hooks/useAmenidades';
 import unidadesService from '@/lib/unidadesService';
 import { useAuth } from '@/lib/useAuth';
@@ -20,6 +22,10 @@ const AmenidadesReservasPage: React.FC = () => {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [showModal, setShowModal] = useState(false);
+
+  // Estados de paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Usar hooks de API
   const { fetchAmenidades } = useAmenidades();
@@ -263,6 +269,17 @@ const AmenidadesReservasPage: React.FC = () => {
     }
   };
 
+  // Lógica de paginación
+  const totalPages = Math.ceil(reservas.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedReservas = reservas.slice(startIndex, startIndex + itemsPerPage);
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   return (
     <div className='d-flex'>
       <Sidebar />
@@ -295,7 +312,7 @@ const AmenidadesReservasPage: React.FC = () => {
               </button>
               <ul className='dropdown-menu dropdown-menu-end'>
                 <li>
-                  <a className='dropdown-item' href='/profile'>
+                  <a className='dropdown-item' href='/mi-perfil'>
                     Perfil
                   </a>
                 </li>
@@ -317,31 +334,44 @@ const AmenidadesReservasPage: React.FC = () => {
 
         {/* Main Content */}
         <main className='container-fluid p-4 p-sm-3 p-md-4'>
-          {/* Header */}
-          <div className='amenities-header'>
-            <div className='row align-items-center'>
-              <div className='col-lg-8'>
-                <h1 className='h2 mb-2'>
-                  <span className='material-icons align-middle me-2'>
-                    event_available
-                  </span>
-                  Reservas de Amenidades
-                </h1>
-                <p className='text-muted mb-0'>
-                  Gestiona las reservas de amenidades de la comunidad
-                </p>
-              </div>
-              <div className='col-lg-4 text-lg-end'>
-                <button
-                  className='btn btn-primary'
-                  onClick={() => setShowModal(true)}
-                >
-                  <span className='material-icons me-2'>add</span>
-                  Nueva Reserva
-                </button>
-              </div>
-            </div>
-          </div>
+          <PageHeader
+            title="Reservas de Amenidades"
+            subtitle="Gestión completa de reservas de espacios comunes"
+            icon="event_available"
+            primaryAction={{
+              href: '#',
+              label: 'Nueva Reserva',
+              icon: 'add',
+            }}
+            stats={[
+              {
+                label: 'Reservas Hoy',
+                value: summaryData.todayReservations.toString(),
+                icon: 'event_available',
+                color: 'primary',
+              },
+              {
+                label: 'Pendientes',
+                value: summaryData.pendingConfirmations.toString(),
+                icon: 'schedule',
+                color: 'warning',
+              },
+              {
+                label: 'Próximas Horas',
+                value: summaryData.nextHours.toString(),
+                icon: 'access_time',
+                color: 'info',
+              },
+            ]}
+          >
+            <button
+              className='btn btn-primary'
+              onClick={() => setShowModal(true)}
+            >
+              <span className='material-icons me-2'>add</span>
+              Nueva Reserva
+            </button>
+          </PageHeader>
 
           {/* Summary Cards */}
           <div className='summary-cards'>
@@ -466,7 +496,7 @@ const AmenidadesReservasPage: React.FC = () => {
               </h3>
             </div>
 
-            {reservas.map(reservation => (
+            {paginatedReservas.map(reservation => (
               <div
                 key={reservation.id}
                 className={`reservation-card ${reservation.estado}`}
@@ -568,31 +598,16 @@ const AmenidadesReservasPage: React.FC = () => {
           </div>
 
           {/* Pagination */}
-          <nav aria-label='Paginación de reservas' className='mt-4'>
-            <ul className='pagination justify-content-center'>
-              <li className='page-item disabled'>
-                <button className='page-link' disabled tabIndex={-1}>
-                  <span className='material-icons'>chevron_left</span>
-                </button>
-              </li>
-              <li className='page-item active'>
-                <button className='page-link' disabled>
-                  1
-                </button>
-              </li>
-              <li className='page-item'>
-                <button className='page-link'>2</button>
-              </li>
-              <li className='page-item'>
-                <button className='page-link'>3</button>
-              </li>
-              <li className='page-item'>
-                <button className='page-link'>
-                  <span className='material-icons'>chevron_right</span>
-                </button>
-              </li>
-            </ul>
-          </nav>
+          {totalPages > 1 && (
+            <ModernPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={reservas.length}
+              itemsPerPage={itemsPerPage}
+              itemName="reservas"
+              onPageChange={goToPage}
+            />
+          )}
         </main>
       </div>
 

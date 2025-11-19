@@ -11,6 +11,62 @@ const {
 const crypto = require('crypto');
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs').promises;
+
+// Configure profile photo upload middleware
+const createProfilePhotoUpload = () => {
+  const uploadDir = path.join(__dirname, '..', process.env.UPLOAD_DIR || 'uploads', 'profile-photos');
+  console.log('Profile photo upload dir:', uploadDir);
+  console.log('Current working directory:', process.cwd());
+  console.log('__dirname:', __dirname);
+
+  const ensureDir = async () => {
+    try {
+      await fs.mkdir(uploadDir, { recursive: true });
+      console.log('Directory ensured:', uploadDir);
+    } catch (error) {
+      console.error('Error creating directory:', error);
+    }
+  };
+
+  // Ensure directory exists when module loads
+  ensureDir();
+
+  const storage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+      await ensureDir();
+      cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+      const ext = path.extname(file.originalname);
+      const filename = `user_${req.user.sub}_profile${ext}`;
+      cb(null, filename);
+    },
+  });
+
+  const fileFilter = (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+
+    if (allowedExts.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Tipo de archivo no permitido: ${ext}`), false);
+    }
+  };
+
+  return multer({
+    storage,
+    fileFilter,
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB
+    },
+  });
+};
+
+const profilePhotoUpload = createProfilePhotoUpload();
 
 /**
  * @swagger
@@ -1354,6 +1410,242 @@ router.patch('/preferences', authenticate, async (req, res) => {
   } catch (err) {
     console.error('Update preferences error:', err);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/profile-photo:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Upload user profile photo
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Profile photo image file
+ *     responses:
+ *       200:
+ *         description: Profile photo uploaded successfully
+ *       400:
+ *         description: Invalid file or validation error
+ *       500:
+ *         description: Server error
+ */
+router.post(
+  '/profile-photo',
+  authenticate,
+  profilePhotoUpload.single('file'),
+  async (req, res) => {
+    try {
+      console.log('Profile photo upload - req.file:', req.file);
+      console.log('Profile photo upload - req.user:', req.user);
+      
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'No se subió archivo',
+        });
+      }
+
+      const userId = req.user.sub;
+      const fileInfo = {
+        originalName: req.file.originalname,
+        filename: req.file.filename,
+        path: req.file.path,
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+        comunidadId: null,
+        entityType: 'usuario',
+        entityId: userId,
+        category: 'perfil',
+        description: 'Foto de perfil del usuario',
+        uploadedAt: new Date(),
+        uploadedBy: userId,
+      };
+
+      // Delete old profile photo if exists
+      const [oldFiles] = await db.query(
+        'SELECT file_path FROM archivos WHERE uploaded_by = ? AND entity_type = ? AND entity_id = ? AND category = ?',
+        [userId, 'usuario', userId, 'perfil']
+      );
+
+      if (oldFiles.length > 0) {
+        // Delete from database
+        await db.query(
+          'DELETE FROM archivos WHERE uploaded_by = ? AND entity_type = ? AND entity_id = ? AND category = ?',
+          [userId, 'usuario', userId, 'perfil']
+        );
+
+        // Delete file from disk
+        for (const file of oldFiles) {
+          try {
+            await fs.unlink(file.file_path);
+          } catch (unlinkErr) {
+            console.error('Error deleting old file:', unlinkErr);
+          }
+        }
+      }
+
+      // Save file record to database
+      const FileService = require('../services/fileService');
+      await FileService.initializeFileTable();
+      const fileId = await FileService.saveFileRecord(fileInfo);
+
+      res.json({
+        success: true,
+        message: 'Foto de perfil subida correctamente',
+        fileId,
+        filename: req.file.filename,
+        url: `/api/files/${fileId}`,
+      });
+    } catch (error) {
+      console.error('Error saving file record:', error);
+      // Clean up uploaded file
+      if (req.file) {
+        try {
+          await fs.unlink(req.file.path);
+        } catch (unlinkErr) {
+          console.error('Error deleting file on error:', unlinkErr);
+        }
+      }
+
+      res.status(500).json({
+        success: false,
+        message: 'Error al guardar la foto de perfil',
+        error: error.message,
+      });
+    }
+  },
+  // Error handler for multer
+  (err, req, res, next) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Error al procesar la carga: ' + err.message,
+      });
+    } else if (err) {
+      return res.status(400).json({
+        success: false,
+        message: err.message || 'Error al subir archivo',
+      });
+    }
+    next();
+  }
+);
+
+/**
+ * @swagger
+ * /auth/profile-photo:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Get user profile photo
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile photo URL
+ *       404:
+ *         description: Profile photo not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/profile-photo', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.sub;
+
+    // Get latest profile photo
+    const [files] = await db.query(
+      'SELECT id, filename FROM archivos WHERE uploaded_by = ? AND entity_type = ? AND entity_id = ? AND category = ? ORDER BY uploaded_at DESC LIMIT 1',
+      [userId, 'usuario', userId, 'perfil']
+    );
+
+    if (files.length === 0) {
+      return res.json({ photoUrl: null });
+    }
+
+    res.json({
+      photoUrl: `/api/files/${files[0].id}`,
+      fileId: files[0].id,
+    });
+  } catch (error) {
+    console.error('Get profile photo error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener foto de perfil',
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/profile-photo:
+ *   delete:
+ *     tags: [Auth]
+ *     summary: Delete user profile photo
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile photo deleted successfully
+ *       404:
+ *         description: Profile photo not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/profile-photo', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.sub;
+    const fs = require('fs').promises;
+
+    // Get profile photos
+    const [files] = await db.query(
+      'SELECT id, file_path FROM archivos WHERE uploaded_by = ? AND entity_type = ? AND entity_id = ? AND category = ?',
+      [userId, 'usuario', userId, 'perfil']
+    );
+
+    if (files.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Foto de perfil no encontrada',
+      });
+    }
+
+    // Delete from database
+    await db.query(
+      'DELETE FROM archivos WHERE uploaded_by = ? AND entity_type = ? AND entity_id = ? AND category = ?',
+      [userId, 'usuario', userId, 'perfil']
+    );
+
+    // Delete files from disk
+    for (const file of files) {
+      try {
+        await fs.unlink(file.file_path);
+      } catch (unlinkErr) {
+        console.error('Error deleting file:', unlinkErr);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Foto de perfil eliminada correctamente',
+    });
+  } catch (error) {
+    console.error('Delete profile photo error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al eliminar foto de perfil',
+      error: error.message,
+    });
   }
 });
 

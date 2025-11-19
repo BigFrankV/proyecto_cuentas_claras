@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/router'; // <-- agregado
 import React, { useEffect, useRef, useState } from 'react';
 
-import Sidebar from '@/components/layout/Sidebar';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import {
   getConsumoMensual,
   getConsumoTrimestral,
@@ -14,13 +15,21 @@ import {
   listAllMedidores, // <-- agregado
 } from '@/lib/medidoresService'; // <-- agregado listMedidores y listAllMedidores
 import { useAuth } from '@/lib/useAuth'; // <-- agregado para obtener usuario
+import { usePermissions } from '@/lib/usePermissions'; // Agregar si no está, para getUserCommunities
 
 Chart.register(...registerables);
 
 // eslint-disable-next-line no-undef
 export default function ConsumosPage(): JSX.Element {
-  const router = useRouter(); // <-- agregado
-  const { user } = useAuth(); // <-- agregado para obtener usuario
+  const router = useRouter();
+  const { user } = useAuth();
+  const { isSuperUser } = usePermissions(); // Agregar si es necesario
+
+  const isSuper = !!user?.is_superadmin;
+
+  // Agregar estados para comunidades y selector
+  const [comunidades, setComunidades] = useState<any[]>([]);
+  const [selectedComunidad, setSelectedComunidad] = useState<any | null>(null);
 
   const mainRef = useRef<HTMLCanvasElement | null>(null);
   const monthlyRef = useRef<HTMLCanvasElement | null>(null);
@@ -83,7 +92,32 @@ export default function ConsumosPage(): JSX.Element {
   const [medidores, setMedidores] = useState<any[]>([]);
   const [loadingMedidores, setLoadingMedidores] = useState(false);
 
-  // Fetch medidores dinámicamente basado en rol
+  // Cargar comunidades para selector (superadmin)
+  useEffect(() => {
+    if (!isSuper) {
+      return undefined;
+    }
+    let mounted = true;
+    (async () => {
+      try {
+        // Asume que hay un servicio getComunidades o similar
+        const resp = await fetch('/api/comunidades'); // Ajustar según tu API
+        const data = await resp.json();
+        if (!mounted) {
+          return;
+        }
+        setComunidades(data || []);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Error cargando comunidades:', err);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [isSuper]);
+
+  // Fetch medidores dinámicamente basado en rol (siempre usa endpoint global, backend filtra)
   useEffect(() => {
     if (!user) {
       return undefined;
@@ -92,18 +126,14 @@ export default function ConsumosPage(): JSX.Element {
     const loadMedidores = async () => {
       setLoadingMedidores(true);
       try {
-        let resp;
-        if (user.is_superadmin) {
-          resp = await listAllMedidores({ limit: 100 }); // Obtener todos para superadmin
-        } else {
-          const comunidadId = user.comunidad_id;
-          if (!comunidadId) {
-            setMedidores([]);
-            return;
-          }
-          resp = await listMedidores(comunidadId, { limit: 100 });
+        const params: any = { limit: 100 };
+        if (isSuper && selectedComunidad?.id) {
+          params.comunidad_id = selectedComunidad.id;
         }
-        if (!mounted) {return;}
+        const resp = await listAllMedidores(params);
+        if (!mounted) {
+          return;
+        }
         setMedidores(resp.data || []);
         // Si hay medidores y medidorId no está en la lista, setear el primero
         if (resp.data?.length > 0 && !resp.data.find((m: any) => m.id === medidorId)) {
@@ -118,8 +148,10 @@ export default function ConsumosPage(): JSX.Element {
       }
     };
     loadMedidores();
-    return () => { mounted = false; };
-  }, [user]);
+    return () => {
+      mounted = false;
+    };
+  }, [user, isSuper, selectedComunidad]);
 
   // Fetch data from API (dinámico, usa NEXT_PUBLIC_API_BASE_URL o /api)
   useEffect(() => {
@@ -433,91 +465,74 @@ export default function ConsumosPage(): JSX.Element {
   };
 
   return (
-    <div className='d-flex'>
-      <Sidebar />
-      <div
-        className='main-content flex-grow-1 bg-light'
-        style={{ marginLeft: 280 }}
-      >
-        <header className='bg-white border-bottom shadow-sm p-3'>
-          <div className='container-fluid'>
-            <div className='row align-items-center'>
-              <div className='col-lg-4 d-flex align-items-center'>
-                <button
-                  className='btn toggle-sidebar d-lg-none me-2'
-                  onClick={() => {
-                    const sidebar = document.querySelector('.sidebar');
-                    const backdrop =
-                      document.querySelector('.sidebar-backdrop');
-                    sidebar?.classList.toggle('show');
-                    backdrop?.classList.toggle('show');
-                  }}
-                >
-                  <span className='material-icons'>menu</span>
-                </button>
+    <>
+    <PageHeader
+      title="Análisis de Consumos"
+      subtitle="Visualización y análisis de consumos de medidores"
+      icon="analytics"
+    >
+      <div className='d-flex justify-content-between align-items-center w-100 flex-wrap gap-2'>
+        <div className='d-flex align-items-center flex-wrap gap-2'>
+          <Link
+            href='/medidores'
+            className='btn btn-outline-secondary'
+          >
+            Volver a Medidores
+          </Link>
+          <div>
+            <small className="text-muted">
+              Medidor seleccionado: <strong>
+                {medidores.find(m => m.id === medidorId)?.codigo ||
+                 `Medidor ${String(medidorId).padStart(3, '0')}`}
+              </strong>
+            </small>
+          </div>
+        </div>
 
-                <div className='d-flex align-items-center'>
-                  <Link
-                    href='/medidores'
-                    className='btn btn-outline-secondary me-2'
-                  >
-                    Volver a Medidores
-                  </Link>
-                  <div>
-                    <small className="text-muted">Medidor seleccionado: <strong>{medidores.find(m => m.id === medidorId)?.codigo || `Medidor ${String(medidorId).padStart(3, '0')}`}</strong></small>
-                  </div>
+        <div className='d-flex align-items-center flex-wrap gap-2'>
+          <div className='me-3'>
+            <input
+                    id='dateRange'
+                    className='form-control form-control-sm'
+                    placeholder='Rango de fechas'
+                    style={{ width: 220 }}
+                  />
                 </div>
-              </div>
 
-              <div className='col-lg-8'>
-                <div className='d-flex justify-content-end align-items-center'>
-                  <div className='me-3'>
-                    <input
-                      id='dateRange'
-                      className='form-control form-control-sm'
-                      placeholder='Rango de fechas'
-                      style={{ width: 220 }}
-                    />
-                  </div>
-
-                  <div className='dropdown'>
-                    <button
-                      className='btn btn-sm btn-outline-secondary dropdown-toggle'
-                      data-bs-toggle='dropdown'
-                    >
-                      Configuración
-                    </button>
-                    <ul className='dropdown-menu dropdown-menu-end'>
-                      <li>
-                        <Link className='dropdown-item' href='/profile'>
-                          Mi Perfil
-                        </Link>
-                      </li>
-                      <li>
-                        <Link className='dropdown-item' href='/tarifas'>
-                          Tarifas de Consumo
-                        </Link>
-                      </li>
-                      <li>
-                        <hr className='dropdown-divider' />
-                      </li>
-                      <li>
-                        <Link
-                          className='dropdown-item text-danger'
-                          href='/login'
-                        >
-                          Cerrar Sesión
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
+                <div className='dropdown'>
+                  <button
+                    className='btn btn-sm btn-outline-secondary dropdown-toggle'
+                    data-bs-toggle='dropdown'
+                  >
+                    Configuración
+                  </button>
+                  <ul className='dropdown-menu dropdown-menu-end'>
+                    <li>
+                      <Link className='dropdown-item' href='/mi-perfil'>
+                        Mi Perfil
+                      </Link>
+                    </li>
+                    <li>
+                      <Link className='dropdown-item' href='/tarifas'>
+                        Tarifas de Consumo
+                      </Link>
+                    </li>
+                    <li>
+                      <hr className='dropdown-divider' />
+                    </li>
+                    <li>
+                      <Link
+                        className='dropdown-item text-danger'
+                        href='/login'
+                      >
+                        Cerrar Sesión
+                      </Link>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
-          </div>
-        </header>
-
-        <main className="container-fluid p-4">
+          </PageHeader>        <main className="container-fluid p-4">
           {error && (
             <div className="alert alert-danger" role="alert">
               <strong>Error:</strong> {error}
@@ -759,7 +774,178 @@ export default function ConsumosPage(): JSX.Element {
             </div>
           </div>
         </main>
-      </div>
-    </div>
+
+      <style jsx>{`
+        /* Mobile Styles */
+        @media (max-width: 991.98px) {
+          .page-header .header-actions {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 1rem !important;
+          }
+
+          .page-header .header-actions .d-flex {
+            justify-content: center !important;
+            width: 100% !important;
+          }
+
+          .page-header .header-actions .btn {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 767.98px) {
+          .container-fluid {
+            padding: 1rem !important;
+          }
+
+          .chart-container {
+            margin-bottom: 2rem;
+          }
+
+          .chart-container canvas {
+            max-height: 300px !important;
+          }
+
+          .stats-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+          }
+
+          .stats-card {
+            padding: 1rem !important;
+          }
+
+          .table-responsive {
+            font-size: 0.875rem;
+          }
+
+          .table-responsive .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+          }
+        }
+
+        @media (max-width: 575.98px) {
+          .container-fluid {
+            padding: 0.75rem !important;
+          }
+
+          .page-header h1 {
+            font-size: 1.5rem !important;
+          }
+
+          .page-header .subtitle {
+            font-size: 0.875rem !important;
+          }
+
+          .chart-container canvas {
+            max-height: 250px !important;
+          }
+
+          .stats-card h3 {
+            font-size: 1.25rem !important;
+          }
+
+          .stats-card p {
+            font-size: 0.875rem !important;
+          }
+        }
+
+        /* Enhanced Card Styles */
+        .chart-container {
+          background: white;
+          border-radius: 12px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .stats-card {
+          background: white;
+          border-radius: 12px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          text-align: center;
+          transition: transform 0.2s ease;
+        }
+
+        .stats-card:hover {
+          transform: translateY(-2px);
+        }
+
+        .stats-card h3 {
+          color: #007bff;
+          margin-bottom: 0.5rem;
+          font-size: 1.5rem;
+        }
+
+        .stats-card p {
+          color: #6c757d;
+          margin: 0;
+          font-weight: 500;
+        }
+
+        /* Button Enhancements */
+        .btn {
+          border-radius: 6px;
+          font-weight: 500;
+          transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Table Enhancements */
+        .table-responsive {
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .table thead th {
+          background: #f8f9fa;
+          border-bottom: 2px solid #dee2e6;
+          font-weight: 600;
+          color: #495057;
+        }
+
+        .table tbody tr:hover {
+          background-color: #f8f9fa;
+        }
+
+        /* Form Controls */
+        .form-select, .form-control {
+          border-radius: 6px;
+          border: 1px solid #ced4da;
+        }
+
+        .form-select:focus, .form-control:focus {
+          border-color: #007bff;
+          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        /* Mobile Form Controls */
+        @media (max-width: 767.98px) {
+          .form-select, .form-control {
+            font-size: 0.9rem;
+          }
+
+          .input-group .btn {
+            min-height: 38px;
+          }
+        }
+      `}</style>
+    </>
   );
 }

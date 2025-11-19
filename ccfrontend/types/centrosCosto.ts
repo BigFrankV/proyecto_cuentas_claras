@@ -1,3 +1,7 @@
+// =========================================
+// TIPOS PARA CENTROS DE COSTO
+// =========================================
+
 export interface CentroCosto {
   id: number;
   nombre: string;

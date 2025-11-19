@@ -1,8 +1,13 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { useAuth } from '@/lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions';
+
 export default function MobileNavbar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
+  const { getUserRoleName } = usePermissions();
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -36,14 +41,14 @@ export default function MobileNavbar() {
 
           <div className='dropdown'>
             <button
-              className='btn btn-link text-white p-0'
+              className='btn btn-link text-white p-0 d-flex align-items-center'
               type='button'
               id='userDropdownMobile'
               data-bs-toggle='dropdown'
               aria-expanded='false'
             >
               <div
-                className='avatar'
+                className='avatar me-2'
                 style={{
                   width: '36px',
                   height: '36px',
@@ -56,7 +61,24 @@ export default function MobileNavbar() {
                   borderRadius: '50%',
                 }}
               >
-                PC
+                {user?.persona?.nombres && user?.persona?.apellidos
+                  ? `${user.persona.nombres.charAt(0)}${user.persona.apellidos.charAt(0)}`.toUpperCase()
+                  : user?.username
+                    ? user.username.substring(0, 2).toUpperCase()
+                    : 'U'}
+              </div>
+              <div className='d-flex flex-column align-items-start d-none d-sm-block'>
+                <span className='small fw-semibold'>
+                  {user?.persona?.nombres && user?.persona?.apellidos
+                    ? `${user.persona.nombres} ${user.persona.apellidos}`
+                    : user?.username || 'Usuario'}
+                </span>
+                <span
+                  className={`badge ${user?.is_superadmin ? 'bg-warning text-dark' : 'bg-primary text-white'}`}
+                  style={{ fontSize: '0.5rem' }}
+                >
+                  {getUserRoleName().toUpperCase()}
+                </span>
               </div>
             </button>
             <ul
@@ -64,7 +86,7 @@ export default function MobileNavbar() {
               aria-labelledby='userDropdownMobile'
             >
               <li>
-                <Link className='dropdown-item' href='/profile'>
+                <Link className='dropdown-item' href='/mi-perfil'>
                   Perfil
                 </Link>
               </li>

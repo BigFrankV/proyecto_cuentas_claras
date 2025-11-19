@@ -1,13 +1,43 @@
+// =========================================
+// TIPOS PARA TICKETS
+// =========================================
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// Tipos para el módulo de Tickets
+
+export type EstadoTicket = 'abierto' | 'en_progreso' | 'resuelto' | 'cerrado';
+
+export type PrioridadTicket = 'alta' | 'media' | 'baja';
+
+export type NivelUrgencia = 'finalizado' | 'vencido' | 'critico' | 'urgente' | 'normal';
+
+export const ESTADOS_TICKET = {
+  abierto: { label: 'Abierto', color: 'warning' },
+  en_progreso: { label: 'En Progreso', color: 'info' },
+  resuelto: { label: 'Resuelto', color: 'success' },
+  cerrado: { label: 'Cerrado', color: 'secondary' },
+} as const;
+
+export const PRIORIDADES_TICKET = {
+  alta: { label: 'Alta', color: 'danger' },
+  media: { label: 'Media', color: 'warning' },
+  baja: { label: 'Baja', color: 'secondary' },
+} as const;
+
+export const NIVELES_URGENCIA = {
+  finalizado: { label: 'Finalizado', color: 'success' },
+  vencido: { label: 'Vencido', color: 'danger' },
+  critico: { label: 'Crítico', color: 'danger' },
+  urgente: { label: 'Urgente', color: 'warning' },
+  normal: { label: 'Normal', color: 'info' },
+} as const;
 
 export interface Ticket {
   id: number;
   numero: number;
   titulo: string;
   descripcion: string;
-  estado: 'abierto' | 'en_progreso' | 'resuelto' | 'cerrado';
-  prioridad: 'alta' | 'media' | 'baja';
+  estado: EstadoTicket;
+  prioridad: PrioridadTicket;
   categoria: string;
   comunidad: string;
   unidad: string;
@@ -18,7 +48,7 @@ export interface Ticket {
   fecha_vencimiento: string;
   fecha_cierre: string;
   dias_vencimiento: number | null;
-  nivel_urgencia: 'finalizado' | 'vencido' | 'critico' | 'urgente' | 'normal';
+  nivel_urgencia: NivelUrgencia;
   dias_abiertos: number;
 }
 
@@ -36,8 +66,8 @@ export interface TicketDetalle {
   numero: number;
   titulo: string;
   descripcion: string;
-  estado: 'abierto' | 'en_progreso' | 'resuelto' | 'cerrado';
-  prioridad: 'alta' | 'media' | 'baja';
+  estado: EstadoTicket;
+  prioridad: PrioridadTicket;
   categoria: string;
   comunidad_id: number;
   comunidad_nombre: string;

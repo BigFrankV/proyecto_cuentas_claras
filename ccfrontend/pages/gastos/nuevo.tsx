@@ -19,6 +19,7 @@ import {
   getProveedores,
   getComunidades,
 } from '@/lib/gastosService';
+import { getCommunityIdForRequest } from '@/lib/superadminAccessHelper';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { usePermissions } from '@/lib/usePermissions';
 
@@ -46,11 +47,15 @@ export default function GastoNuevo() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { isSuperUser, currentRole } = usePermissions();
-  // Obtener currentComunidadId del user
-  const currentComunidadId =
-    user?.comunidad_id || user?.memberships?.[0]?.comunidadId;
+
+  // Obtener currentComunidadId usando el helper
+  // Para superadmin: null (carga TODO globalmente)
+  // Para usuario regular: su primera membresía
+  const currentComunidadId = getCommunityIdForRequest(user);
+
   // para superadmin
   const isSuper = Boolean(user?.is_superadmin);
+
   // Normalizar isSuper (puede ser función o boolean)
   const comunidadParaEnviar = user?.is_superadmin ? null : currentComunidadId;
 

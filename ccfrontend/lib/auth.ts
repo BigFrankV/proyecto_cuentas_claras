@@ -26,6 +26,7 @@ export interface Persona {
   email?: string;
   telefono?: string;
   direccion?: string;
+  avatar?: string;
 }
 
 export interface Membership {
@@ -210,18 +211,22 @@ class AuthService {
         throw new Error('No se recibió token de autenticación');
       }
 
+      // eslint-disable-next-line no-console
+      console.log('Token 2FA recibido:', token);
+
       // Decodificar el token para extraer los datos del usuario
       let user: User;
       try {
         const decodedToken = jwtDecode<JWTPayload>(token);
         // eslint-disable-next-line no-console
+        console.log('Token 2FA decodificado:', decodedToken);
 
         //  CORREGIR: Crear objeto usuario con valores por defecto seguros
         const userObj: User = {
           id: decodedToken.sub,
           username: decodedToken.username,
           persona_id: decodedToken.persona_id,
-          is_superadmin: Boolean(decodedToken.is_superadmin), //
+          is_superadmin: Boolean(decodedToken.is_superadmin),
           roles: decodedToken.roles || [],
           comunidad_id: decodedToken.comunidad_id,
           memberships: decodedToken.memberships || [],
@@ -230,6 +235,7 @@ class AuthService {
         user = userObj;
 
         // eslint-disable-next-line no-console
+        console.log('Usuario extraído del token 2FA:', user);
 
         // Intentar obtener información completa del usuario del servidor
         try {
@@ -239,6 +245,11 @@ class AuthService {
             user = { ...user, ...fullUserData };
             // eslint-disable-next-line no-console
             console.log('Usuario 2FA completo con datos del servidor:', user);
+            // eslint-disable-next-line no-console
+            if (user.memberships) {
+              // eslint-disable-next-line no-console
+              console.log('Membresías obtenidas del servidor en 2FA:', user.memberships);
+            }
           }
         } catch (serverError) {
           // eslint-disable-next-line no-console
@@ -256,10 +267,12 @@ class AuthService {
       if (typeof window !== 'undefined') {
         localStorage.setItem('auth_token', token);
         localStorage.setItem('user_data', JSON.stringify(user));
+        // eslint-disable-next-line no-console
+        console.log('Datos de sesión guardados en localStorage después de 2FA');
       }
 
       // eslint-disable-next-line no-console
-
+      console.log('Login 2FA completado exitosamente');
       return { token, user };
     } catch (error: any) {
       // eslint-disable-next-line no-console

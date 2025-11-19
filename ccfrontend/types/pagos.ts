@@ -1,12 +1,33 @@
-// Tipos para el módulo de Pagos
+// =========================================
+// TIPOS PARA PAGOS
+// =========================================
+
+export type EstadoPago = 'pending' | 'approved' | 'cancelled' | 'failed';
+
+export type MetodoPago = 'transferencia' | 'efectivo' | 'tarjeta' | 'webpay' | 'khipu';
+
+export const ESTADOS_PAGO = {
+  pending: { label: 'Pendiente', color: 'warning' },
+  approved: { label: 'Aprobado', color: 'success' },
+  cancelled: { label: 'Cancelado', color: 'secondary' },
+  failed: { label: 'Fallido', color: 'danger' },
+} as const;
+
+export const METODOS_PAGO = {
+  transferencia: { label: 'Transferencia' },
+  efectivo: { label: 'Efectivo' },
+  tarjeta: { label: 'Tarjeta' },
+  webpay: { label: 'Webpay' },
+  khipu: { label: 'Khipu' },
+} as const;
 
 export interface Pago {
   id: number;
   concepto: string;
   monto: number;
   fecha: string;
-  estado: string;
-  metodoPago: string;
+  estado: EstadoPago;
+  metodoPago: MetodoPago;
   personaId: number;
   comunidadId: number;
   transactionId?: string;

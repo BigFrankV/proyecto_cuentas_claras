@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { Permission, usePermissions } from '@/lib/usePermissions';
 import { Edificio } from '@/types/edificios';
 
 interface EdificioCardProps {
@@ -19,6 +20,8 @@ export default function EdificioCard({
   isSelected = false,
   showActions = true,
 }: EdificioCardProps) {
+  const { hasPermission } = usePermissions();
+  
   const getEstadoBadge = (estado: string) => {
     const badges = {
       activo: 'bg-success',
@@ -155,7 +158,7 @@ export default function EdificioCard({
               Ver Detalle
             </Link>
             <div className='btn-group' role='group'>
-              {onEdit && (
+              {onEdit && hasPermission(Permission.EDIT_EDIFICIO) && (
                 <button
                   className='btn btn-sm btn-outline-secondary'
                   onClick={onEdit}
@@ -164,7 +167,7 @@ export default function EdificioCard({
                   <i className='material-icons'>edit</i>
                 </button>
               )}
-              {onDelete && (
+              {onDelete && hasPermission(Permission.DELETE_EDIFICIO) && (
                 <button
                   className='btn btn-sm btn-outline-danger'
                   onClick={onDelete}

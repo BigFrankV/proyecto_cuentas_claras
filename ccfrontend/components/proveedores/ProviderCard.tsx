@@ -30,7 +30,7 @@ export default function ProviderCard({
             <Card.Body>
               <div className='d-flex justify-content-between'>
                 <div>
-                  <Card.Title className='mb-1'>{p.nombre}</Card.Title>
+                  <Card.Title className='mb-1'>{p.razon_social}</Card.Title>
                   <Card.Subtitle className='text-muted'>
                     {p.comunidad_nombre}
                   </Card.Subtitle>

@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useState, useMemo, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
@@ -12,7 +13,7 @@ import {
 } from '@/components/personas';
 import { usePersonas } from '@/hooks/usePersonas';
 import { ProtectedRoute } from '@/lib/useAuth';
-import { ProtectedPage, UserRole } from '@/lib/usePermissions';
+import { ProtectedPage, UserRole, Permission, usePermissions } from '@/lib/usePermissions';
 import { Persona, PersonaFilters as ApiFilters } from '@/types/personas';
 
 interface PersonaUI {
@@ -29,6 +30,7 @@ interface PersonaUI {
 }
 
 const PersonasListado = () => {
+  const { hasPermission } = usePermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoFilter, setTipoFilter] = useState('todos');
   const [estadoFilter, setEstadoFilter] = useState('todos');
@@ -130,7 +132,201 @@ const PersonasListado = () => {
         </Head>
 
         <Layout title='Personas'>
-        <div className='container-fluid py-4'>
+        {/* Header Profesional */}
+        <div className='container-fluid p-0'>
+          <div
+            className='text-white'
+            style={{
+              background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div className='p-4'>
+            <div
+              style={{
+                position: 'absolute',
+                top: '-50%',
+                right: '-10%',
+                width: '200px',
+                height: '200px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '50%',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-10%',
+                left: '-5%',
+                width: '150px',
+                height: '150px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '50%',
+              }}
+            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <div className='d-flex align-items-center'>
+                <div
+                  className='me-4'
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <i
+                    className='material-icons'
+                    style={{ fontSize: '32px', color: 'white' }}
+                  >
+                    people
+                  </i>
+                </div>
+                <div>
+                  <h1 className='h2 mb-1 text-white'>Personas</h1>
+                  <p className='mb-0 opacity-75'>
+                    Gestión de propietarios, inquilinos y administradores
+                  </p>
+                </div>
+              </div>
+              {hasPermission(Permission.CREATE_PERSONA) && (
+                <div className='text-end'>
+                  <Link
+                    href='/personas/nueva'
+                    className='btn btn-light btn-lg'
+                  >
+                    <i className='material-icons me-2'>person_add</i>
+                    Nueva Persona
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Estadísticas */}
+            <div className='row mt-4'>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>people</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats?.total || 0}</div>
+                      <div className='text-white-50'>Total Personas</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-success)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>person</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats?.propietarios || 0}</div>
+                      <div className='text-white-50'>Propietarios</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-warning)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>group</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats?.inquilinos || 0}</div>
+                      <div className='text-white-50'>Inquilinos</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-3 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-info)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>admin_panel_settings</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{stats?.administradores || 0}</div>
+                      <div className='text-white-50'>Administradores</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Contenido principal */}
+        <div className='container-fluid pt-4 pb-4'>
           {/* Mostrar error si existe */}
           {error && (
             <div

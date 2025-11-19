@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { useState, useEffect, useMemo } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import PageHeader from '@/components/ui/PageHeader';
 import apiClient from '@/lib/api';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface Unidad {
   id: string;
@@ -115,6 +117,7 @@ const mockUnidades: Unidad[] = [
 ];
 
 export default function UnidadesListado() {
+  const { hasPermission } = usePermissions();
   const [unidades, setUnidades] = useState<Unidad[]>([]);
   const [filteredUnidades, setFilteredUnidades] = useState<Unidad[]>([]);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -129,6 +132,10 @@ export default function UnidadesListado() {
     tipo: '',
   });
   const [selectedUnidades, setSelectedUnidades] = useState<string[]>([]);
+  
+  // Estados de paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Filtrar edificios según comunidad seleccionada
   const [availableEdificios, setAvailableEdificios] = useState<any[]>([]);
@@ -295,6 +302,33 @@ export default function UnidadesListado() {
     );
   };
 
+  // Funciones de paginación
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const goToPreviousPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1));
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage(prev => Math.min(totalPages, prev + 1));
+  };
+
+  // Reset paginación cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filters]);
+
+  // Datos paginados
+  const paginatedUnidades = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredUnidades.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredUnidades, currentPage, itemsPerPage]);
+
+  // Total de páginas
+  const totalPages = Math.ceil(filteredUnidades.length / itemsPerPage);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
@@ -442,22 +476,45 @@ export default function UnidadesListado() {
       </Head>
 
       <Layout title='Lista de Unidades'>
-        <div className='container-fluid py-4'>
-          {/* Header */}
-          <div className='row mb-4 align-items-center'>
-            <div className='col-md-8'>
-              <h1 className='h3 mb-2'>Lista de Unidades</h1>
-              <p className='text-muted'>
-                Gestione todas las unidades/departamentos en la comunidad
-              </p>
-            </div>
-            <div className='col-md-4 text-md-end'>
-              <Link href='/unidades/nueva' className='btn btn-primary'>
-                <i className='material-icons align-middle me-1'>add</i>
-                Nueva Unidad
-              </Link>
-            </div>
-          </div>
+        <PageHeader
+          title="Unidades"
+          subtitle="Gestión completa de unidades y departamentos"
+          icon="apartment"
+          primaryAction={hasPermission(Permission.CREATE_UNIDAD) ? {
+            href: '/unidades/nueva',
+            label: 'Nueva Unidad',
+            icon: 'add',
+          } : undefined}
+          stats={[
+            {
+              icon: 'grid_view',
+              value: stats.total,
+              label: 'Total Unidades',
+              color: 'var(--color-primary)',
+            },
+            {
+              icon: 'check_circle',
+              value: stats.activas,
+              label: 'Unidades Activas',
+              color: 'var(--color-success)',
+            },
+            {
+              icon: 'warning',
+              value: stats.inactivas,
+              label: 'Unidades Inactivas',
+              color: 'var(--color-warning)',
+            },
+            {
+              icon: 'build',
+              value: stats.mantenimiento,
+              label: 'En Mantenimiento',
+              color: 'var(--color-info)',
+            },
+          ]}
+        />
+
+        {/* Contenido principal */}
+        <div className='container-fluid pb-4'>
 
           {/* Filtros */}
           <div className='row mb-4'>
@@ -623,44 +680,6 @@ export default function UnidadesListado() {
             </div>
           </div>
 
-          {/* Estadísticas */}
-          <div className='row mb-4'>
-            <div className='col-md-3 mb-3'>
-              <div className='card bg-primary text-white'>
-                <div className='card-body text-center'>
-                  <h2 className='card-title'>{stats.total}</h2>
-                  <p className='card-text'>Total Unidades</p>
-                </div>
-              </div>
-            </div>
-            <div className='col-md-3 mb-3'>
-              <div className='card bg-success text-white'>
-                <div className='card-body text-center'>
-                  <h2 className='card-title'>{stats.activas}</h2>
-                  <p className='card-text'>Activas</p>
-                </div>
-              </div>
-            </div>
-            <div className='col-md-3 mb-3'>
-              <div className='card bg-warning text-white'>
-                <div className='card-body text-center'>
-                  <h2 className='card-title'>{stats.inactivas}</h2>
-                  <p className='card-text'>Inactivas</p>
-                </div>
-              </div>
-            </div>
-            <div className='col-md-3 mb-3'>
-              <div className='card bg-danger text-white'>
-                <div className='card-body text-center'>
-                  <h2 className='card-title'>
-                    {formatCurrency(stats.saldoTotal)}
-                  </h2>
-                  <p className='card-text'>Saldo Pendiente</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Acciones masivas */}
           {selectedUnidades.length > 0 && (
             <div className='alert alert-info d-flex justify-content-between align-items-center mb-4'>
@@ -669,14 +688,18 @@ export default function UnidadesListado() {
                 {selectedUnidades.length} unidad(es) seleccionada(s)
               </span>
               <div>
-                <button className='btn btn-sm btn-outline-primary me-2'>
-                  <i className='material-icons me-1'>receipt</i>
-                  Generar Cargos
-                </button>
-                <button className='btn btn-sm btn-outline-danger'>
-                  <i className='material-icons me-1'>delete</i>
-                  Eliminar
-                </button>
+                {hasPermission(Permission.EDIT_UNIDAD) && (
+                  <button className='btn btn-sm btn-outline-primary me-2'>
+                    <i className='material-icons me-1'>receipt</i>
+                    Generar Cargos
+                  </button>
+                )}
+                {hasPermission(Permission.DELETE_UNIDAD) && (
+                  <button className='btn btn-sm btn-outline-danger'>
+                    <i className='material-icons me-1'>delete</i>
+                    Eliminar
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -711,7 +734,7 @@ export default function UnidadesListado() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredUnidades.map(unidad => (
+                      {paginatedUnidades.map(unidad => (
                         <tr key={unidad.id}>
                           <td>
                             <input
@@ -803,17 +826,19 @@ export default function UnidadesListado() {
                                   visibility
                                 </i>
                               </Link>
-                              <Link
-                                href={`/unidades/${unidad.id}/cargos`}
-                                className='btn btn-sm btn-outline-secondary'
-                              >
-                                <i
-                                  className='material-icons'
-                                  style={{ fontSize: '16px' }}
+                              {hasPermission(Permission.EDIT_UNIDAD) && (
+                                <Link
+                                  href={`/unidades/${unidad.id}/cargos`}
+                                  className='btn btn-sm btn-outline-secondary'
                                 >
-                                  receipt
-                                </i>
-                              </Link>
+                                  <i
+                                    className='material-icons'
+                                    style={{ fontSize: '16px' }}
+                                  >
+                                    receipt
+                                  </i>
+                                </Link>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -825,7 +850,7 @@ export default function UnidadesListado() {
             </div>
           ) : (
             <div className='row'>
-              {filteredUnidades.map(unidad => (
+              {paginatedUnidades.map(unidad => (
                 <div
                   key={unidad.id}
                   className='col-xl-3 col-lg-4 col-md-6 mb-4'
@@ -923,24 +948,53 @@ export default function UnidadesListado() {
                           </i>
                           Ver
                         </Link>
-                        <Link
-                          href={`/unidades/${unidad.id}/cargos`}
-                          className='btn btn-primary btn-sm'
-                        >
-                          <i
-                            className='material-icons me-1'
-                            style={{ fontSize: '16px' }}
+                        {hasPermission(Permission.EDIT_UNIDAD) && (
+                          <Link
+                            href={`/unidades/${unidad.id}/cargos`}
+                            className='btn btn-primary btn-sm'
                           >
-                            receipt
-                          </i>
-                          Cargos
-                        </Link>
+                            <i
+                              className='material-icons me-1'
+                              style={{ fontSize: '16px' }}
+                            >
+                              receipt
+                            </i>
+                            Cargos
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+          )}
+
+          {/* Paginación moderna */}
+          {totalPages > 1 && (
+            <nav aria-label='Navegación de páginas' className='pagination-modern'>
+              <button
+                className='btn'
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+                aria-label='Página anterior'
+              >
+                <span className='material-icons'>chevron_left</span>
+              </button>
+
+              <div className='page-info'>
+                Página {currentPage} de {totalPages} ({filteredUnidades.length} unidades)
+              </div>
+
+              <button
+                className='btn'
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                aria-label='Página siguiente'
+              >
+                <span className='material-icons'>chevron_right</span>
+              </button>
+            </nav>
           )}
 
           {filteredUnidades.length === 0 && (

@@ -5,6 +5,8 @@ import { useState, useEffect, useCallback } from 'react';
 
 import { TimelineItem } from '@/components/bitacora';
 import Layout from '@/components/layout/Layout';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import { useCurrentComunidad } from '@/hooks/useComunidad';
 import bitacoraService, { ActivityFilters } from '@/lib/api/bitacora';
 import { ProtectedRoute } from '@/lib/useAuth';
@@ -43,6 +45,15 @@ export default function BitacoraListado() {
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(20);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -105,6 +116,21 @@ export default function BitacoraListado() {
     }
   }, [comunidadId, searchTerm, selectedType, selectedPriority, dateRange]);
 
+  // Pagination logic
+  const paginatedActivities = filteredActivities.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
+  // Update pagination when activities change
+  useEffect(() => {
+    const totalPages = Math.ceil(filteredActivities.length / itemsPerPage);
+    setTotalPages(totalPages);
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredActivities.length, itemsPerPage, currentPage]);
+
   useEffect(() => {
     loadActivities();
   }, [loadActivities]);
@@ -160,14 +186,37 @@ export default function BitacoraListado() {
 
         <Layout title='Bitácora de Actividades'>
         <div className='container-fluid p-4'>
-          {/* Header */}
-          <div className='d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3'>
-            <div>
-              <h1 className='h3 mb-1'>Bitácora de Actividades</h1>
-              <p className='text-muted mb-0'>
-                Registro completo de actividades del sistema
-              </p>
-            </div>
+          <PageHeader
+            title="Bitácora de Actividades"
+            subtitle="Registro completo de actividades del sistema"
+            icon="list"
+            stats={[
+              {
+                label: 'Total',
+                value: stats.total.toString(),
+                icon: 'list',
+                color: '#007bff',
+              },
+              {
+                label: 'Hoy',
+                value: stats.today.toString(),
+                icon: 'today',
+                color: '#28a745',
+              },
+              {
+                label: 'Alta',
+                value: stats.high.toString(),
+                icon: 'warning',
+                color: '#ffc107',
+              },
+              {
+                label: 'Crítica',
+                value: stats.critical.toString(),
+                icon: 'error',
+                color: '#dc3545',
+              },
+            ]}
+          >
             <div className='d-flex gap-2'>
               <button
                 type='button'
@@ -194,7 +243,7 @@ export default function BitacoraListado() {
                 Nueva Entrada
               </Link>
             </div>
-          </div>
+          </PageHeader>
 
           {/* Stats Cards */}
           <div className='row g-3 mb-4'>
@@ -369,9 +418,9 @@ export default function BitacoraListado() {
               </div>
             </div>
 
-            {filteredActivities.length > 0 ? (
+            {paginatedActivities.length > 0 ? (
               <div className='timeline position-relative'>
-                {filteredActivities.map(activity => (
+                {paginatedActivities.map(activity => (
                   <TimelineItem
                     key={activity.id}
                     id={activity.id}
@@ -415,6 +464,18 @@ export default function BitacoraListado() {
               </div>
             )}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <ModernPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredActivities.length}
+              itemsPerPage={itemsPerPage}
+              itemName="actividades"
+              onPageChange={goToPage}
+            />
+          )}
         </div>
 
         <style jsx>{`

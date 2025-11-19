@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import apiClient from '@/lib/api';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface TorreFormData {
   edificioId: string;
@@ -57,6 +58,14 @@ export default function TorreNueva() {
   const [codigoValidating, setCodigoValidating] = useState(false);
   const [codigoExists, setCodigoExists] = useState<boolean | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { hasPermission } = usePermissions();
+
+  // Validar permisos al cargar
+  useEffect(() => {
+    if (!hasPermission(Permission.CREATE_TORRE)) {
+      router.push('/torres');
+    }
+  }, [hasPermission, router]);
 
   // Validate codigo uniqueness
   useEffect(() => {

@@ -234,6 +234,65 @@ class ProfileService {
     }
   }
 
+  // Subir foto de perfil
+  async uploadProfilePhoto(file: File): Promise<any> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await apiClient.post(
+        '/auth/profile-photo',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        },
+      );
+      return response.data;
+    } catch (error: any) {
+      // eslint-disable-next-line no-console
+      console.error('Error subiendo foto de perfil:', error);
+      throw new Error(
+        error.response?.data?.message || 'Error al subir foto de perfil',
+      );
+    }
+  }
+
+  // Obtener foto de perfil
+  async getProfilePhoto(): Promise<string | null> {
+    try {
+      const response = await apiClient.get('/auth/profile-photo');
+      // Si la respuesta incluye photoUrl, construir la URL completa
+      if (response.data.photoUrl) {
+        // Si ya es una URL absoluta, devolverla tal cual
+        if (response.data.photoUrl.startsWith('http')) {
+          return response.data.photoUrl;
+        }
+        // Si es una ruta relativa, construir la URL completa usando la base URL de la API
+        const baseUrl = apiClient.defaults.baseURL || '';
+        return `${baseUrl}${response.data.photoUrl}`.replace(/\/$/, '');
+      }
+      return null;
+    } catch (error: any) {
+      // eslint-disable-next-line no-console
+      console.error('Error obteniendo foto de perfil:', error);
+      return null;
+    }
+  }
+
+  // Eliminar foto de perfil
+  async deleteProfilePhoto(): Promise<any> {
+    try {
+      const response = await apiClient.delete('/auth/profile-photo');
+      return response.data;
+    } catch (error: any) {
+      // eslint-disable-next-line no-console
+      console.error('Error eliminando foto de perfil:', error);
+      throw new Error(
+        error.response?.data?.message || 'Error al eliminar foto de perfil',
+      );
+    }
+  }
+
   // Datos mock para sesiones (mientras no estén implementadas en backend)
   private getMockSessions(): SessionInfo[] {
     return [

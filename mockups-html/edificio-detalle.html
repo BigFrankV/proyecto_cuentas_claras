@@ -1,0 +1,1087 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Detalle de Edificio - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .edificio-cover {
+        height: 240px;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      
+      .edificio-cover-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(0deg, rgba(3,14,39,0.7) 0%, rgba(3,14,39,0.4) 50%, rgba(3,14,39,0.2) 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 1.5rem;
+      }
+      
+      .cover-actions {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+      }
+      
+      .tab-edificio {
+        padding: 0.75rem 1.5rem;
+        border-bottom: 2px solid transparent;
+        font-weight: 600;
+        color: var(--color-muted);
+        cursor: pointer;
+      }
+      
+      .tab-edificio:hover {
+        color: var(--color-primary);
+      }
+      
+      .tab-edificio.active {
+        border-bottom: 2px solid var(--color-accent);
+        color: var(--color-primary);
+      }
+      
+      .content-section {
+        margin-bottom: 2rem;
+        background-color: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+      }
+      
+      .content-section-header {
+        padding: 1rem 1.5rem;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .content-section-body {
+        padding: 1.5rem;
+      }
+      
+      .detail-item {
+        margin-bottom: 1.25rem;
+      }
+      
+      .detail-label {
+        font-size: 0.875rem;
+        color: var(--color-muted);
+        margin-bottom: 0.25rem;
+      }
+      
+      .detail-value {
+        font-weight: 500;
+      }
+      
+      .stat-card {
+        background-color: #fff;
+        border-radius: var(--radius);
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        height: 100%;
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      
+      .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+      }
+      
+      .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background-color: rgba(3,14,39,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+      }
+      
+      .stat-icon .material-icons {
+        color: var(--color-accent);
+        font-size: 24px;
+      }
+      
+      .stat-content {
+        flex: 1;
+      }
+      
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+      }
+      
+      .stat-label {
+        color: var(--color-muted);
+        font-size: 0.875rem;
+      }
+      
+      .map-container {
+        height: 280px;
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      
+      .torres-list {
+        max-height: 280px;
+        overflow-y: auto;
+      }
+      
+      .torre-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      
+      .torre-item:last-child {
+        border-bottom: none;
+      }
+      
+      .btn-floating {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: var(--color-accent);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 5px -1px rgba(0,0,0,0.2), 0 6px 10px 0 rgba(0,0,0,0.14), 0 1px 18px 0 rgba(0,0,0,0.12);
+        z-index: 1000;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      
+      .btn-floating:hover {
+        transform: scale(1.1);
+        box-shadow: 0 5px 8px -1px rgba(0,0,0,0.2), 0 9px 14px 0 rgba(0,0,0,0.14), 0 2px 20px 0 rgba(0,0,0,0.12);
+        color: white;
+      }
+      
+      .btn-floating .material-icons {
+        font-size: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 280px; min-height: 100vh; background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <ul class="nav nav-sidebar flex-column mb-auto">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">domain</span>
+              <span>Comunidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="edificios-listado.html" class="nav-link active px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">business</span>
+              <span>Edificios</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">apartment</span>
+              <span>Unidades</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">people</span>
+              <span>Personas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="emisiones-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">receipt_long</span>
+              <span>Emisiones</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">payments</span>
+              <span>Pagos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">money_off</span>
+              <span>Gastos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+              <span class="material-icons align-middle me-2">bar_chart</span>
+              <span>Reportes</span>
+            </a>
+          </li>
+        </ul>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+            <span class="material-icons me-2">settings</span>
+            <span>Configuración</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Preferencias</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Contenido principal -->
+      <div class="flex-grow-1 bg-light">
+        <!-- Header con búsqueda y notificaciones -->
+        <header class="bg-white border-bottom shadow-sm p-3">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <div class="col-lg-4">
+                <div class="d-flex align-items-center">
+                  <a href="edificios-listado.html" class="btn btn-sm btn-outline-secondary me-3">
+                    <span class="material-icons align-middle">arrow_back</span>
+                  </a>
+                  <span class="h4 mb-0">Detalle del Edificio</span>
+                </div>
+              </div>
+              
+              <div class="col-lg-4 d-flex justify-content-center">
+                <div class="search-icon-container w-100">
+                  <span class="material-icons search-icon">search</span>
+                  <input type="text" class="form-control search-input" placeholder="Buscar...">
+                </div>
+              </div>
+              
+              <div class="col-lg-4 d-flex justify-content-end">
+                <div class="d-flex align-items-center">
+                  <a href="#" class="me-3 text-muted">
+                    <span class="material-icons">help_outline</span>
+                  </a>
+                  <a href="#" class="me-3 text-muted position-relative">
+                    <span class="material-icons">notifications</span>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                      3
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+        
+        <!-- Contenido -->
+        <div class="container-fluid py-4">
+          <!-- Breadcrumb -->
+          <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
+              <li class="breadcrumb-item"><a href="edificios-listado.html">Edificios</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Edificio Central</li>
+            </ol>
+          </nav>
+          
+          <!-- Portada del edificio -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="edificio-cover" style="background-image: url('https://via.placeholder.com/1200x400?text=Edificio+Central');">
+                <div class="edificio-cover-overlay">
+                  <div class="cover-actions">
+                    <button class="btn btn-light" data-bs-toggle="dropdown">
+                      <span class="material-icons">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalEditarImagen">Cambiar imagen</a></li>
+                      <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalEliminarEdificio">Eliminar edificio</a></li>
+                    </ul>
+                  </div>
+                  <h1 class="text-white mb-0">Edificio Central</h1>
+                  <p class="text-white-50 mb-2">Comunidad Las Palmas</p>
+                  <div class="d-flex align-items-center">
+                    <span class="badge bg-light text-dark me-2">
+                      <span class="material-icons align-text-bottom fs-6 me-1">business</span>
+                      Código: EC-001
+                    </span>
+                    <span class="badge bg-light text-dark me-2">
+                      <span class="material-icons align-text-bottom fs-6 me-1">location_city</span>
+                      2 Torres
+                    </span>
+                    <span class="badge bg-light text-dark">
+                      <span class="material-icons align-text-bottom fs-6 me-1">apartment</span>
+                      48 Unidades
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Pestañas -->
+          <div class="d-flex border-bottom mb-4">
+            <div class="tab-edificio active" data-tab="general">Información General</div>
+            <div class="tab-edificio" data-tab="torres">Torres</div>
+            <div class="tab-edificio" data-tab="unidades">Unidades</div>
+            <div class="tab-edificio" data-tab="estadisticas">Estadísticas</div>
+            <div class="tab-edificio" data-tab="documentos">Documentos</div>
+          </div>
+          
+          <!-- Contenido de pestañas -->
+          <div class="tab-content">
+            <!-- Tab: Información General -->
+            <div class="tab-pane active" id="tab-general">
+              <div class="row">
+                <div class="col-lg-8">
+                  <!-- Información básica -->
+                  <div class="content-section mb-4">
+                    <div class="content-section-header">
+                      <h5 class="mb-0">Información Básica</h5>
+                      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEditarInfo">
+                        <span class="material-icons align-middle fs-6 me-1">edit</span>
+                        Editar
+                      </button>
+                    </div>
+                    <div class="content-section-body">
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="detail-item">
+                            <div class="detail-label">Nombre del Edificio</div>
+                            <div class="detail-value">Edificio Central</div>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="detail-item">
+                            <div class="detail-label">Código</div>
+                            <div class="detail-value">EC-001</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="detail-item">
+                            <div class="detail-label">Comunidad</div>
+                            <div class="detail-value">Las Palmas</div>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="detail-item">
+                            <div class="detail-label">Tipo de Edificio</div>
+                            <div class="detail-value">Residencial</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="detail-item">
+                        <div class="detail-label">Dirección</div>
+                        <div class="detail-value">Av. Principal 123, Santiago, Región Metropolitana</div>
+                      </div>
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="detail-item">
+                            <div class="detail-label">Año de Construcción</div>
+                            <div class="detail-value">2010</div>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="detail-item">
+                            <div class="detail-label">Metros Cuadrados Totales</div>
+                            <div class="detail-value">5.240 m²</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="detail-item mb-0">
+                        <div class="detail-label">Descripción</div>
+                        <div class="detail-value">
+                          Edificio residencial ubicado en zona central, con amplias áreas comunes, acceso controlado y estacionamientos cubiertos. Cuenta con 2 torres y servicios como piscina, gimnasio y sala comunitaria.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Servicios comunes -->
+                  <div class="content-section mb-4">
+                    <div class="content-section-header">
+                      <h5 class="mb-0">Servicios Comunes</h5>
+                      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEditarServicios">
+                        <span class="material-icons align-middle fs-6 me-1">edit</span>
+                        Editar
+                      </button>
+                    </div>
+                    <div class="content-section-body">
+                      <div class="row">
+                        <div class="col-md-4 mb-3">
+                          <div class="d-flex align-items-center">
+                            <span class="material-icons me-2 text-success">check_circle</span>
+                            <span>Piscina</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                          <div class="d-flex align-items-center">
+                            <span class="material-icons me-2 text-success">check_circle</span>
+                            <span>Gimnasio</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                          <div class="d-flex align-items-center">
+                            <span class="material-icons me-2 text-success">check_circle</span>
+                            <span>Sala Comunal</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                          <div class="d-flex align-items-center">
+                            <span class="material-icons me-2 text-success">check_circle</span>
+                            <span>Estacionamiento</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                          <div class="d-flex align-items-center">
+                            <span class="material-icons me-2 text-success">check_circle</span>
+                            <span>Seguridad 24/7</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                          <div class="d-flex align-items-center">
+                            <span class="material-icons me-2 text-success">check_circle</span>
+                            <span>Áreas Verdes</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                          <div class="d-flex align-items-center">
+                            <span class="material-icons me-2 text-danger">cancel</span>
+                            <span class="text-muted">Lavandería</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                          <div class="d-flex align-items-center">
+                            <span class="material-icons me-2 text-danger">cancel</span>
+                            <span class="text-muted">Sala de Juegos</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Contacto y administración -->
+                  <div class="content-section mb-4">
+                    <div class="content-section-header">
+                      <h5 class="mb-0">Contacto y Administración</h5>
+                      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEditarContacto">
+                        <span class="material-icons align-middle fs-6 me-1">edit</span>
+                        Editar
+                      </button>
+                    </div>
+                    <div class="content-section-body">
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="detail-item">
+                            <div class="detail-label">Email de Contacto</div>
+                            <div class="detail-value">edificiocentral@laspalmas.cl</div>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="detail-item">
+                            <div class="detail-label">Teléfono de Contacto</div>
+                            <div class="detail-value">+56 2 2345 6789</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="detail-item">
+                            <div class="detail-label">Administrador</div>
+                            <div class="detail-value">Patricia Contreras</div>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="detail-item">
+                            <div class="detail-label">Horario de Atención</div>
+                            <div class="detail-value">Lunes a Viernes 9:00 - 18:00</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-lg-4">
+                  <!-- Estado y configuración -->
+                  <div class="content-section mb-4">
+                    <div class="content-section-header">
+                      <h5 class="mb-0">Estado y Configuración</h5>
+                    </div>
+                    <div class="content-section-body">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Edificio Activo</span>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" id="switchActivo" checked>
+                        </div>
+                      </div>
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Permite Unidades sin Torre</span>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" id="switchUnidadesSinTorre">
+                        </div>
+                      </div>
+                      <div class="d-flex justify-content-between align-items-center mb-0">
+                        <span>Visible en Portal Público</span>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" id="switchVisiblePortal" checked>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Ubicación -->
+                  <div class="content-section mb-4">
+                    <div class="content-section-header">
+                      <h5 class="mb-0">Ubicación</h5>
+                    </div>
+                    <div class="content-section-body p-0">
+                      <div class="map-container">
+                        <!-- Aquí iría un mapa interactivo -->
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                          <div class="text-center">
+                            <span class="material-icons mb-2" style="font-size: 36px; color: #aaa;">place</span>
+                            <p class="text-muted">Ver en mapa</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="p-3">
+                        <div class="small text-muted mb-1">Coordenadas</div>
+                        <div class="d-flex">
+                          <div class="me-3">
+                            <span class="small fw-medium">Lat: -33.4513</span>
+                          </div>
+                          <div>
+                            <span class="small fw-medium">Long: -70.6653</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Observaciones -->
+                  <div class="content-section mb-4">
+                    <div class="content-section-header">
+                      <h5 class="mb-0">Observaciones</h5>
+                      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEditarObservaciones">
+                        <span class="material-icons align-middle fs-6 me-1">edit</span>
+                        Editar
+                      </button>
+                    </div>
+                    <div class="content-section-body">
+                      <p class="mb-0">
+                        Edificio con buena mantención general. Se planifica renovación de áreas comunes durante el próximo semestre. Importante revisar el estado de los ascensores en el tercer trimestre del año.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <!-- Acciones -->
+                  <div class="d-grid gap-2">
+                    <a href="torres-listado.html" class="btn btn-primary">
+                      <span class="material-icons align-middle me-1">location_city</span>
+                      Ver Torres
+                    </a>
+                    <a href="#" class="btn btn-outline-primary">
+                      <span class="material-icons align-middle me-1">print</span>
+                      Imprimir Ficha
+                    </a>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalEliminarEdificio">
+                      <span class="material-icons align-middle me-1">delete</span>
+                      Eliminar Edificio
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Tab: Torres -->
+            <div class="tab-pane" id="tab-torres">
+              <div class="row mb-4">
+                <div class="col-lg-8">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Torres del Edificio</h5>
+                    <a href="torre-nueva.html" class="btn btn-primary">
+                      <span class="material-icons align-middle me-1">add</span>
+                      Nueva Torre
+                    </a>
+                  </div>
+                  
+                  <div class="content-section">
+                    <div class="table-responsive">
+                      <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                          <tr>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Código</th>
+                            <th scope="col">Unidades</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col" class="text-end">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>
+                              <div class="d-flex align-items-center">
+                                <div class="me-3" style="width: 40px; height: 40px; background: #f1f3f4; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                  <span class="material-icons text-secondary">location_city</span>
+                                </div>
+                                <div>
+                                  <div class="fw-medium">Torre Norte</div>
+                                  <div class="small text-muted">Agregada el 05/09/2025</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td>TN-001</td>
+                            <td>24 unidades</td>
+                            <td>
+                              <span class="badge bg-success">Activa</span>
+                            </td>
+                            <td class="text-end">
+                              <div class="btn-group">
+                                <a href="torre-detalle.html" class="btn btn-sm btn-outline-secondary">
+                                  <span class="material-icons fs-6">visibility</span>
+                                </a>
+                                <a href="torre-detalle.html" class="btn btn-sm btn-outline-primary">
+                                  <span class="material-icons fs-6">edit</span>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                  <span class="material-icons fs-6">delete</span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <div class="d-flex align-items-center">
+                                <div class="me-3" style="width: 40px; height: 40px; background: #f1f3f4; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                  <span class="material-icons text-secondary">location_city</span>
+                                </div>
+                                <div>
+                                  <div class="fw-medium">Torre Sur</div>
+                                  <div class="small text-muted">Agregada el 05/09/2025</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td>TS-002</td>
+                            <td>24 unidades</td>
+                            <td>
+                              <span class="badge bg-success">Activa</span>
+                            </td>
+                            <td class="text-end">
+                              <div class="btn-group">
+                                <a href="torre-detalle.html" class="btn btn-sm btn-outline-secondary">
+                                  <span class="material-icons fs-6">visibility</span>
+                                </a>
+                                <a href="torre-detalle.html" class="btn btn-sm btn-outline-primary">
+                                  <span class="material-icons fs-6">edit</span>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                  <span class="material-icons fs-6">delete</span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-lg-4">
+                  <div class="content-section mb-4">
+                    <div class="content-section-header">
+                      <h5 class="mb-0">Resumen de Torres</h5>
+                    </div>
+                    <div class="content-section-body">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                          <div class="h4 mb-0">2</div>
+                          <div class="text-muted">Total Torres</div>
+                        </div>
+                        <span class="material-icons text-primary" style="font-size: 40px;">location_city</span>
+                      </div>
+                      <hr>
+                      <div class="d-flex justify-content-between mb-2">
+                        <span>Torres Activas</span>
+                        <span class="fw-medium">2</span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-2">
+                        <span>Unidades por Torre (promedio)</span>
+                        <span class="fw-medium">24</span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-0">
+                        <span>Unidades Totales en Torres</span>
+                        <span class="fw-medium">48</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="content-section">
+                    <div class="content-section-header">
+                      <h5 class="mb-0">Acciones Rápidas</h5>
+                    </div>
+                    <div class="content-section-body">
+                      <div class="d-grid gap-2">
+                        <a href="torre-nueva.html" class="btn btn-primary">
+                          <span class="material-icons align-middle me-1">add</span>
+                          Agregar Torre
+                        </a>
+                        <a href="unidades-listado.html" class="btn btn-outline-secondary">
+                          <span class="material-icons align-middle me-1">apartment</span>
+                          Ver Unidades del Edificio
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Tab: Unidades (contenido oculto) -->
+            <div class="tab-pane" id="tab-unidades">
+              <div class="text-center py-5">
+                <span class="material-icons mb-3" style="font-size: 48px; color: #aaa;">apartment</span>
+                <h4>Ver Unidades del Edificio</h4>
+                <p class="text-muted">Aquí se mostrarán todas las unidades pertenecientes a este edificio.</p>
+                <a href="unidades-listado.html" class="btn btn-primary mt-2">
+                  Ver Unidades
+                </a>
+              </div>
+            </div>
+            
+            <!-- Tab: Estadísticas (contenido oculto) -->
+            <div class="tab-pane" id="tab-estadisticas">
+              <div class="text-center py-5">
+                <span class="material-icons mb-3" style="font-size: 48px; color: #aaa;">bar_chart</span>
+                <h4>Estadísticas del Edificio</h4>
+                <p class="text-muted">Análisis y métricas de las unidades, gastos y pagos del edificio.</p>
+                <button class="btn btn-primary mt-2">
+                  Generar Reporte
+                </button>
+              </div>
+            </div>
+            
+            <!-- Tab: Documentos (contenido oculto) -->
+            <div class="tab-pane" id="tab-documentos">
+              <div class="text-center py-5">
+                <span class="material-icons mb-3" style="font-size: 48px; color: #aaa;">folder</span>
+                <h4>Documentos del Edificio</h4>
+                <p class="text-muted">Documentación relacionada con el edificio, permisos y reglamentos.</p>
+                <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#modalSubirDocumento">
+                  Subir Documento
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Botón flotante para agregar nueva torre -->
+          <a href="torre-nueva.html" class="btn-floating">
+            <span class="material-icons">add</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal Editar Información Básica -->
+    <div class="modal fade" id="modalEditarInfo" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Editar Información Básica</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="row">
+                <div class="col-md-8 mb-3">
+                  <label for="editNombre" class="form-label required">Nombre del Edificio</label>
+                  <input type="text" class="form-control" id="editNombre" value="Edificio Central" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="editCodigo" class="form-label required">Código</label>
+                  <input type="text" class="form-control" id="editCodigo" value="EC-001" required>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="editDireccion" class="form-label required">Dirección</label>
+                <input type="text" class="form-control" id="editDireccion" value="Av. Principal 123, Santiago, Región Metropolitana" required>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="editTipo" class="form-label">Tipo de Edificio</label>
+                  <select class="form-select" id="editTipo">
+                    <option selected>Residencial</option>
+                    <option>Comercial</option>
+                    <option>Mixto</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editAnioConstruccion" class="form-label">Año de Construcción</label>
+                  <input type="number" class="form-control" id="editAnioConstruccion" value="2010">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="editMetrosCuadrados" class="form-label">Metros Cuadrados Totales</label>
+                <input type="number" class="form-control" id="editMetrosCuadrados" value="5240" step="0.01">
+              </div>
+              <div class="mb-3">
+                <label for="editDescripcion" class="form-label">Descripción</label>
+                <textarea class="form-control" id="editDescripcion" rows="3">Edificio residencial ubicado en zona central, con amplias áreas comunes, acceso controlado y estacionamientos cubiertos. Cuenta con 2 torres y servicios como piscina, gimnasio y sala comunitaria.</textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary">Guardar Cambios</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal Editar Servicios -->
+    <div class="modal fade" id="modalEditarServicios" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Editar Servicios Comunes</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="servPiscina" checked>
+                <label class="form-check-label" for="servPiscina">Piscina</label>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="servGimnasio" checked>
+                <label class="form-check-label" for="servGimnasio">Gimnasio</label>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="servSalaComunal" checked>
+                <label class="form-check-label" for="servSalaComunal">Sala Comunal</label>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="servEstacionamiento" checked>
+                <label class="form-check-label" for="servEstacionamiento">Estacionamiento</label>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="servSeguridad" checked>
+                <label class="form-check-label" for="servSeguridad">Seguridad 24/7</label>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="servAreasVerdes" checked>
+                <label class="form-check-label" for="servAreasVerdes">Áreas Verdes</label>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="servLavanderia">
+                <label class="form-check-label" for="servLavanderia">Lavandería</label>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="servSalaJuegos">
+                <label class="form-check-label" for="servSalaJuegos">Sala de Juegos</label>
+              </div>
+              <div class="mb-3">
+                <label for="nuevoServicio" class="form-label">Agregar Nuevo Servicio</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="nuevoServicio" placeholder="Nombre del servicio">
+                  <button class="btn btn-outline-secondary" type="button">Agregar</button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary">Guardar Cambios</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal Editar Contacto -->
+    <div class="modal fade" id="modalEditarContacto" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Editar Contacto y Administración</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label for="editEmail" class="form-label">Email de Contacto</label>
+                <input type="email" class="form-control" id="editEmail" value="edificiocentral@laspalmas.cl">
+              </div>
+              <div class="mb-3">
+                <label for="editTelefono" class="form-label">Teléfono de Contacto</label>
+                <input type="tel" class="form-control" id="editTelefono" value="+56 2 2345 6789">
+              </div>
+              <div class="mb-3">
+                <label for="editAdministrador" class="form-label">Administrador</label>
+                <select class="form-select" id="editAdministrador">
+                  <option selected>Patricia Contreras</option>
+                  <option>Juan Pérez</option>
+                  <option>María González</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="editHorario" class="form-label">Horario de Atención</label>
+                <input type="text" class="form-control" id="editHorario" value="Lunes a Viernes 9:00 - 18:00">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary">Guardar Cambios</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal Editar Observaciones -->
+    <div class="modal fade" id="modalEditarObservaciones" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Editar Observaciones</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label for="editObservaciones" class="form-label">Observaciones</label>
+                <textarea class="form-control" id="editObservaciones" rows="5">Edificio con buena mantención general. Se planifica renovación de áreas comunes durante el próximo semestre. Importante revisar el estado de los ascensores en el tercer trimestre del año.</textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary">Guardar Cambios</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal Eliminar Edificio -->
+    <div class="modal fade" id="modalEliminarEdificio" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Confirmar Eliminación</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-danger">
+              <span class="material-icons align-middle me-2">warning</span>
+              Esta acción no se puede deshacer.
+            </div>
+            <p>¿Está seguro que desea eliminar el edificio <strong>Edificio Central</strong>?</p>
+            <p>Esta acción también eliminará todas las torres y unidades asociadas al edificio.</p>
+            <div class="mb-3">
+              <label for="confirmEliminar" class="form-label">Para confirmar, escriba "ELIMINAR":</label>
+              <input type="text" class="form-control" id="confirmEliminar" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger">Eliminar Edificio</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+      // Script para manejar las pestañas
+      document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.tab-edificio');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        tabs.forEach(tab => {
+          tab.addEventListener('click', () => {
+            // Desactivar todas las pestañas
+            tabs.forEach(t => t.classList.remove('active'));
+            tabPanes.forEach(p => p.classList.remove('active'));
+            
+            // Activar la pestaña seleccionada
+            tab.classList.add('active');
+            const tabId = `tab-${tab.getAttribute('data-tab')}`;
+            document.getElementById(tabId).classList.add('active');
+          });
+        });
+        
+        // Manejar los estados de los switches
+        const switches = document.querySelectorAll('.form-check-input[type="checkbox"]');
+        switches.forEach(switchEl => {
+          switchEl.addEventListener('change', function() {
+            // Aquí se podría agregar código para guardar el estado
+            console.log(`Switch ${this.id} cambiado a: ${this.checked}`);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

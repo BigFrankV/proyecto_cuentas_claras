@@ -1,5 +1,6 @@
 const express = require('express');
 const pool = require('../db');
+const { authenticate } = require('../middleware/auth'); // Importa authenticate si no está
 
 const router = express.Router();
 
@@ -381,6 +382,123 @@ router.get('/detalle', async (req, res) => {
   } catch (error) {
     console.error('Error en /detalle:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+/**
+ * @swagger
+ * /consumos:
+ *   get:
+ *     tags: [Consumos]
+ *     summary: Listar consumos globales con filtros y paginación
+ *     description: Devuelve una lista paginada de consumos de medidores en comunidades del usuario (si no es superadmin).
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: limit
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           default: 100
+ *       - name: search
+ *         in: query
+ *         schema:
+ *           type: string
+ *       - name: tipo
+ *         in: query
+ *         schema:
+ *           type: string
+ *       - name: comunidad_id
+ *         in: query
+ *         schema:
+ *           type: integer
+ *         description: Solo para superadmin
+ *     responses:
+ *       200:
+ *         description: Lista de consumos
+ *       500:
+ *         description: Error interno
+ */
+router.get('/', authenticate, async (req, res) => {
+  try {
+    console.log('GET /consumos - user:', {
+      id: req.user?.id,
+      persona_id: req.user?.persona_id,
+      is_superadmin: req.user?.is_superadmin,
+      roles: req.user?.roles,
+    });
+
+    const page = Math.max(1, Number(req.query.page || 1));
+    const limit = Math.min(200, Number(req.query.limit || 100));
+    const offset =
+      typeof req.query.offset !== 'undefined'
+        ? Number(req.query.offset)
+        : (page - 1) * limit;
+    const { search, tipo, comunidad_id } = req.query;
+
+    let where = ' WHERE 1=1 ';
+    const params = [];
+
+    // Filtrar por comunidades del usuario si no es superadmin
+    if (!req.user?.is_superadmin) {
+      const [userCommunities] = await pool.query(
+        'SELECT comunidad_id FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1',
+        [req.user.persona_id]
+      );
+      if (userCommunities.length === 0) {
+        return res.json({ data: [], pagination: { total: 0, limit, offset, pages: 0 } });
+      }
+      const communityIds = userCommunities.map((c) => c.comunidad_id); // Removido : any
+      where += ` AND m.comunidad_id IN (${communityIds.map(() => '?').join(',')})`;
+      params.push(...communityIds);
+    } else if (comunidad_id) {
+      where += ' AND m.comunidad_id = ?';
+      params.push(comunidad_id);
+    }
+
+    if (search) {
+      where += ' AND (m.numero_medidor LIKE ? OR m.ubicacion LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
+    if (tipo) {
+      where += ' AND m.tipo = ?';
+      params.push(tipo);
+    }
+
+    const sql = `
+      SELECT vc.*, m.numero_medidor, m.ubicacion, m.tipo, m.comunidad_id
+      FROM vista_consumos vc
+      INNER JOIN medidor m ON m.id = vc.medidor_id
+      ${where}
+      ORDER BY vc.fecha DESC
+      LIMIT ? OFFSET ?
+    `;
+    const [rows] = await pool.query(sql, [...params, limit, offset]);
+
+    const countSql = `
+      SELECT COUNT(*) AS total
+      FROM vista_consumos vc
+      INNER JOIN medidor m ON m.id = vc.medidor_id
+      ${where}
+    `;
+    const [countRows] = await pool.query(countSql, params);
+    const total = countRows[0]?.total ?? rows.length;
+
+    res.json({
+      data: rows,
+      pagination: {
+        total,
+        limit,
+        offset,
+        pages: Math.max(1, Math.ceil(total / limit)),
+      },
+    });
+  } catch (err) {
+    console.error('GET /consumos error', err);
+    res.status(500).json({ error: 'Error al listar consumos' });
   }
 });
 

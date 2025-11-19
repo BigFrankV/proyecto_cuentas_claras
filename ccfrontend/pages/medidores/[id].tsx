@@ -159,8 +159,8 @@ export default function MedidorDetallePage() {
   };
 
   const handleDelete = async () => {
-    if (!medidor) {return;}
-    if (!confirm('Eliminar medidor? (si tiene lecturas, será desactivado)')) {return;}
+    if (!medidor) { return; }
+    if (!confirm('Eliminar medidor? (si tiene lecturas, será desactivado)')) { return; }
     setLoading(true);
     try {
       const resp = await deleteMedidor(medidor.id);
@@ -186,8 +186,8 @@ export default function MedidorDetallePage() {
     alert('Configuración guardada (maquetada)');
   };
 
-  if (!id) {return <div>Cargando id...</div>;}
-  if (loading && !medidor) {return <div>Cargando...</div>;}
+  if (!id) { return <div>Cargando id...</div>; }
+  if (loading && !medidor) { return <div>Cargando...</div>; }
 
   return (
     <ProtectedRoute>
@@ -215,7 +215,7 @@ export default function MedidorDetallePage() {
                   <div className="d-flex gap-2">
                     <Button variant="outline-light" size="sm" onClick={() => router.back()}><span className="material-icons">arrow_back</span></Button>
                     <Button variant="light" size="sm" onClick={() => router.push(`/medidores/${medidor?.id}/consumos`)}>Ver Consumos</Button>
-                    <Button variant="outline-light" size="sm" onClick={() => router.push(`/medidores/${medidor?.id}/lecturas`)}>Gestionar Lecturas</Button>
+                    <Button variant="outline-light" size="sm" onClick={() => router.push('/lecturas')}>Gestionar Lecturas</Button>
                   </div>
                 </div>
 
@@ -315,22 +315,18 @@ export default function MedidorDetallePage() {
                 <div className="content-section">
                   <div className="content-section-header d-flex justify-content-between align-items-center">
                     <h5 className="mb-0"><span className="material-icons me-2">visibility</span>Últimas Lecturas</h5>
-                    <Button variant="primary" size="sm" onClick={() => router.push(`/medidores/${medidor?.id}/lecturas`)}>Nueva Lectura</Button>
+                    <Button variant="primary" size="sm" onClick={() => router.push(`/lecturas?medidor_id=${medidor?.id}`)}>Nueva Lectura</Button>
                   </div>
                   <div className="content-section-body p-0">
                     <Table hover className="mb-0">
-                      <thead><tr><th>Fecha</th><th>Periodo</th><th>Lectura</th><th>Estado</th></tr></thead>
+                      <thead><tr><th>Fecha</th><th>Periodo</th><th>Lectura</th></tr></thead>
                       <tbody>
                         {lecturas.map(r => (
                           <tr key={r.id}>
                             <td>{new Date(r.fecha).toLocaleDateString()}</td>
                             <td>{r.periodo}</td>
                             <td className="fw-medium">{r.lectura.toLocaleString()}</td>
-                            <td>
-                              <span className={`badge ${r.status === 'valida' ? 'bg-success' : r.status === 'estimada' ? 'bg-warning' : 'bg-danger'}`}>
-                                {r.status === 'valida' ? 'Válida' : r.status === 'estimada' ? 'Estimada' : 'Error'}
-                              </span>
-                            </td>
+                            
                           </tr>
                         ))}
                         {lecturas.length === 0 && (<tr><td colSpan={4}>Sin lecturas</td></tr>)}
@@ -399,7 +395,7 @@ export default function MedidorDetallePage() {
               <Row className="g-3">
                 <Col md={6}>
                   <Form.Group><Form.Label>Frecuencia</Form.Label>
-                    <Form.Select value={config.readingFrequency} onChange={e => setConfig({...config, readingFrequency: e.target.value})}>
+                    <Form.Select value={config.readingFrequency} onChange={e => setConfig({ ...config, readingFrequency: e.target.value })}>
                       <option value="daily">Diaria</option>
                       <option value="weekly">Semanal</option>
                       <option value="monthly">Mensual</option>
@@ -408,11 +404,11 @@ export default function MedidorDetallePage() {
                 </Col>
                 <Col md={6}>
                   <Form.Group><Form.Label>Umbral consumo</Form.Label>
-                    <Form.Control type="number" value={config.consumptionThreshold} onChange={e => setConfig({...config, consumptionThreshold: Number(e.target.value)})}/>
+                    <Form.Control type="number" value={config.consumptionThreshold} onChange={e => setConfig({ ...config, consumptionThreshold: Number(e.target.value) })} />
                   </Form.Group>
                 </Col>
-                <Col md={6}><Form.Check type="switch" id="autoReading" label="Lectura automática" checked={config.autoReading} onChange={e => setConfig({...config, autoReading: e.target.checked})}/></Col>
-                <Col md={6}><Form.Check type="switch" id="notifications" label="Notificaciones" checked={config.notifications} onChange={e => setConfig({...config, notifications: e.target.checked})}/></Col>
+                <Col md={6}><Form.Check type="switch" id="autoReading" label="Lectura automática" checked={config.autoReading} onChange={e => setConfig({ ...config, autoReading: e.target.checked })} /></Col>
+                <Col md={6}><Form.Check type="switch" id="notifications" label="Notificaciones" checked={config.notifications} onChange={e => setConfig({ ...config, notifications: e.target.checked })} /></Col>
               </Row>
             </Form>
           </Modal.Body>

@@ -2,7 +2,8 @@
 import { Chart, registerables } from 'chart.js';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 
-import Sidebar from '@/components/layout/Sidebar';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import { useAmenidades, useReservasAmenidades } from '@/hooks/useAmenidades';
 import { AmenidadStats } from '@/types/amenidades';
 
@@ -45,6 +46,10 @@ export default function AmenidadesPage(): JSX.Element {
     labels: [] as string[],
     data: [] as number[],
   });
+
+  // Estados de paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     if (amenityTypeRef.current && amenityTypeData.data.length > 0) {
@@ -210,28 +215,53 @@ export default function AmenidadesPage(): JSX.Element {
     calculateStats();
   }, [calculateStats]);
 
-  return (
-    <div className='d-flex'>
-      <Sidebar />
-      <div
-        className='main-content flex-grow-1 bg-light'
-        style={{ marginLeft: 280 }}
-      >
-        <header className='bg-white border-bottom shadow-sm p-3'>
-          <div className='container-fluid d-flex justify-content-between align-items-center'>
-            <h4 className='mb-0'>Lista de Amenidades</h4>
-            <div>
-              <button className='btn btn-primary me-2'>
-                <span className='material-icons me-1'>add</span>
-                Nueva Amenidad
-              </button>
-            </div>
-          </div>
-        </header>
+  // Lógica de paginación
+  const totalPages = Math.ceil(amenidades.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedAmenidades = amenidades.slice(startIndex, startIndex + itemsPerPage);
 
-        <main className='container-fluid p-4'>
-          <div className='row'>
-            <div className='col-12'>
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  return (
+    <>
+    <PageHeader
+      title="Lista de Amenidades"
+      subtitle="Gestión completa de amenidades y espacios comunes"
+      icon="pool"
+      primaryAction={{
+        href: '#',
+        label: 'Nueva Amenidad',
+        icon: 'add',
+      }}
+      stats={[
+        {
+          label: 'Total Amenidades',
+          value: stats.total_amenidades.toString(),
+          icon: 'pool',
+          color: 'primary',
+        },
+        {
+          label: 'Amenidades Activas',
+          value: stats.amenidades_activas.toString(),
+          icon: 'check_circle',
+          color: 'success',
+        },
+        {
+          label: 'Reservas del Mes',
+          value: stats.reservas_mes_actual.toString(),
+          icon: 'event_available',
+          color: 'info',
+        },
+      ]}
+    />
+
+    <main className='container-fluid p-4'>
+      <div className='row'>
+        <div className='col-12'>
               <div className='stats-grid'>
                 <div className='summary-card'>
                   <div className='summary-icon'>
@@ -301,7 +331,7 @@ export default function AmenidadesPage(): JSX.Element {
                         </tr>
                       </thead>
                       <tbody>
-                        {amenidades.map(amenidad => (
+                        {paginatedAmenidades.map(amenidad => (
                           <tr key={amenidad.id}>
                             <td>{amenidad.nombre}</td>
                             <td>{amenidad.comunidad || 'N/A'}</td>
@@ -334,39 +364,146 @@ export default function AmenidadesPage(): JSX.Element {
                     </table>
                   </div>
                 </div>
-                <div className='card-footer d-flex justify-content-between align-items-center'>
-                  <small className='text-muted'>
-                    Mostrando {amenidades.length} amenidades
-                  </small>
-                  <nav>
-                    <ul className='pagination mb-0'>
-                      <li className='page-item disabled'>
-                        <button className='page-link' disabled>
-                          «
-                        </button>
-                      </li>
-                      <li className='page-item active'>
-                        <button className='page-link' disabled>
-                          1
-                        </button>
-                      </li>
-                      <li className='page-item'>
-                        <button className='page-link'>2</button>
-                      </li>
-                      <li className='page-item'>
-                        <button className='page-link'>3</button>
-                      </li>
-                      <li className='page-item'>
-                        <button className='page-link'>»</button>
-                      </li>
-                    </ul>
-                  </nav>
+                <div className='card-footer d-flex justify-content-center'>
+                  {totalPages > 1 && (
+                    <ModernPagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      totalItems={amenidades.length}
+                      itemsPerPage={itemsPerPage}
+                      itemName="amenidades"
+                      onPageChange={goToPage}
+                    />
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </main>
-      </div>
-    </div>
+
+      <style jsx>{`
+        /* Mobile Styles */
+        @media (max-width: 991.98px) {
+          .container-fluid {
+            padding: 1rem !important;
+          }
+
+          .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+            gap: 1rem !important;
+          }
+
+          .amenity-card {
+            margin-bottom: 1rem;
+          }
+        }
+
+        @media (max-width: 767.98px) {
+          .container-fluid {
+            padding: 1rem !important;
+          }
+
+          .stats-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.75rem !important;
+          }
+
+          .amenity-card {
+            margin-bottom: 0.75rem;
+          }
+
+          .chart-container {
+            margin-bottom: 1.5rem;
+          }
+
+          .chart-container canvas {
+            max-height: 250px !important;
+          }
+        }
+
+        @media (max-width: 575.98px) {
+          .container-fluid {
+            padding: 0.75rem !important;
+          }
+
+          .stats-grid {
+            gap: 0.5rem !important;
+          }
+
+          .amenity-card {
+            padding: 1rem !important;
+          }
+
+          .chart-container canvas {
+            max-height: 200px !important;
+          }
+        }
+
+        /* Enhanced Styles */
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .stats-card {
+          background: white;
+          border-radius: 12px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          text-align: center;
+          transition: transform 0.2s ease;
+        }
+
+        .stats-card:hover {
+          transform: translateY(-2px);
+        }
+
+        .stats-card h3 {
+          color: #007bff;
+          margin-bottom: 0.5rem;
+          font-size: 1.5rem;
+        }
+
+        .stats-card p {
+          color: #6c757d;
+          margin: 0;
+          font-weight: 500;
+        }
+
+        .amenity-card {
+          background: white;
+          border-radius: 12px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          margin-bottom: 1rem;
+          transition: transform 0.2s ease;
+        }
+
+        .amenity-card:hover {
+          transform: translateY(-2px);
+        }
+
+        .chart-container {
+          background: white;
+          border-radius: 12px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          margin-bottom: 2rem;
+        }
+
+        .btn {
+          border-radius: 6px;
+          font-weight: 500;
+          transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+      `}</style>
+    </>
   );
 }

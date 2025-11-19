@@ -1,11 +1,30 @@
-// Tipos para el módulo de Cargos (Cuentas de Cobro)
+// =========================================
+// TIPOS PARA CARGOS (CUENTAS DE COBRO)
+// =========================================
+
+export type EstadoCargo = 'pendiente' | 'pagado' | 'vencido' | 'parcial';
+
+export const ESTADOS_CARGO = {
+  pendiente: { label: 'Pendiente', color: 'warning' },
+  pagado: { label: 'Pagado', color: 'success' },
+  vencido: { label: 'Vencido', color: 'danger' },
+  parcial: { label: 'Parcial', color: 'info' },
+} as const;
+
+export type EstadoPago = 'completed' | 'pending' | 'failed';
+
+export const ESTADOS_PAGO = {
+  completed: { label: 'Completado', color: 'success' },
+  pending: { label: 'Pendiente', color: 'warning' },
+  failed: { label: 'Fallido', color: 'danger' },
+} as const;
 
 export interface Cargo {
   id: number;
   concepto: string;
   descripcion?: string;
   tipo: string;
-  estado: 'pendiente' | 'pagado' | 'vencido' | 'parcial';
+  estado: EstadoCargo;
   monto: number;
   fechaVencimiento: Date;
   unidad: string;
@@ -32,7 +51,7 @@ export interface CargoFormData {
 export interface CargoFilters {
   comunidadId?: number;
   unidadId?: number;
-  estado?: 'pendiente' | 'pagado' | 'vencido' | 'parcial';
+  estado?: EstadoCargo;
   periodo?: string;
   page?: number;
   limit?: number;
@@ -54,7 +73,7 @@ export interface PaymentRecord {
   monto: number;
   metodo: string;
   referencia: string;
-  estado: 'completed' | 'pending' | 'failed';
+  estado: EstadoPago;
   observaciones?: string;
 }
 

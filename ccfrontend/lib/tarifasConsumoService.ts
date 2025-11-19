@@ -13,16 +13,20 @@ export interface TarifaConsumo {
   updated_at: string;
 }
 
-export async function listTarifasConsumo(filters?: any) {
-  return apiClient.get('/tarifas-consumo', { params: filters });
+export async function listTarifasConsumo(comunidadId: number, filters?: any) {
+  return apiClient.get(`/tarifas-consumo/comunidad/${comunidadId}`, { params: filters });
+}
+
+export async function listAllTarifasConsumo(filters?: any) {
+  return apiClient.get('/tarifas-consumo/todas/con-estructura', { params: filters });
 }
 
 export async function getTarifaConsumo(id: number) {
   return apiClient.get(`/tarifas-consumo/${id}`);
 }
 
-export async function createTarifaConsumo(payload: any) {
-  return apiClient.post('/tarifas-consumo', payload);
+export async function createTarifaConsumo(comunidadId: number, payload: any) { // Agrega comunidadId como parámetro
+  return apiClient.post(`/tarifas-consumo/comunidad/${comunidadId}`, payload); // Incluye comunidadId en la URL
 }
 
 export async function updateTarifaConsumo(id: number, payload: any) {

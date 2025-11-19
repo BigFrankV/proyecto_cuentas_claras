@@ -34,6 +34,20 @@ const nextConfig = {
       {
         protocol: 'http',
         hostname: 'localhost',
+        port: '3000',
+        pathname: '/api/files/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8081',
+        pathname: '/api/files/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'apicc.pquintanilla.cl',
+        port: '',
+        pathname: '/api/files/**',
       },
     ],
     formats: ['image/webp', 'image/avif'],

@@ -11,6 +11,7 @@ import {
   usePermissions,
   ProtectedPage,
   UserRole,
+  Permission,
 } from '@/lib/usePermissions';
 import { CategoriaGasto } from '@/types/categoriasGasto';
 
@@ -18,7 +19,7 @@ type ExpenseCategory = CategoriaGasto;
 
 export default function CategoriasGastoListado() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const { isSuperUser, currentRole } = usePermissions();
+  const { isSuperUser, currentRole, hasPermission } = usePermissions();
   const router = useRouter();
   const [categories, setCategories] = useState<CategoriaGasto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,6 +138,12 @@ export default function CategoriasGastoListado() {
     startIndex + itemsPerPage,
   );
 
+  const isNewCategory = (cat: CategoriaGasto) => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return new Date(cat.created_at) > weekAgo;
+  };
+
   const stats = {
     total: categories.length,
     active: categories.filter(cat => cat.status === 'active').length,
@@ -154,30 +161,178 @@ export default function CategoriasGastoListado() {
           <title>Categorías de Gasto — Cuentas Claras</title>
         </Head>
 
-        <Layout>
-        <div className='categories-container'>
-          {/* Header */}
-          <div className='categories-header'>
-            <div className='d-flex justify-content-between align-items-start mb-4'>
-              <div>
-                <h1 className='categories-title'>
-                  <span className='material-icons me-2'>category</span>
-                  Categorías de Gasto
-                </h1>
-                <p className='categories-subtitle'>
-                  Gestiona las categorías para clasificar los gastos de la
-                  comunidad
-                </p>
+        <Layout title='Categorías de Gasto'>
+        {/* Header Profesional */}
+        <div className='container-fluid p-0'>
+          <div
+            className='text-white'
+            style={{
+              background: 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div className='p-4'>
+            <div
+              style={{
+                position: 'absolute',
+                top: '-50%',
+                right: '-10%',
+                width: '200px',
+                height: '200px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '50%',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-10%',
+                left: '-5%',
+                width: '150px',
+                height: '150px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '50%',
+              }}
+            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <div className='d-flex align-items-center'>
+                <div
+                  className='me-4'
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <i
+                    className='material-icons'
+                    style={{ fontSize: '32px', color: 'white' }}
+                  >
+                    category
+                  </i>
+                </div>
+                <div>
+                  <h1 className='h2 mb-1 text-white'>Categorías de Gasto</h1>
+                  <p className='mb-0 opacity-75'>
+                    Gestión de categorías para gastos
+                  </p>
+                </div>
               </div>
-              <Button
-                variant='light'
-                onClick={() => router.push('/categorias-gasto/nueva')}
-              >
-                <span className='material-icons me-2'>add</span>
-                Nueva Categoría
-              </Button>
+              {hasPermission(Permission.CREATE_CATEGORIA_GASTO) && (
+                <div className='text-end'>
+                  <Button
+                    variant='light'
+                    onClick={() => router.push('/categorias-gasto/nueva')}
+                    className='btn-lg'
+                  >
+                    <i className='material-icons me-2'>add</i>
+                    Nueva Categoría
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Estadísticas */}
+            <div className='row mt-4'>
+              <div className='col-md-4 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>category</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>{categories.length}</div>
+                      <div className='text-white-50'>Total Categorías</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-4 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-success)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>check_circle</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>
+                        {categories.filter(c => c.status === 'active').length}
+                      </div>
+                      <div className='text-white-50'>Activas</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className='col-md-4 mb-3'>
+                <div
+                  className='p-3 rounded-3 text-white'
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-3'
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-info)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i className='material-icons'>schedule</i>
+                    </div>
+                    <div>
+                      <div className='h3 mb-0'>
+                        {categories.filter(c => isNewCategory(c)).length}
+                      </div>
+                      <div className='text-white-50'>Nuevas (7 días)</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             </div>
           </div>
+        </div>
+
+        <div className='categories-container'>
 
           {/* Filtros */}
           <div className='filters-panel'>
@@ -513,10 +668,9 @@ export default function CategoriasGastoListado() {
               </nav>
             </div>
           )}
-        </div>
 
-        {/* Modal de eliminación */}
-        <Modal
+          {/* Modal de eliminación */}
+          <Modal
           show={showDeleteModal}
           onHide={() => setShowDeleteModal(false)}
           centered
@@ -555,8 +709,9 @@ export default function CategoriasGastoListado() {
             </Button>
           </Modal.Footer>
         </Modal>
+        </div>
       </Layout>
-      </ProtectedPage>
-    </ProtectedRoute>
-  );
+    </ProtectedPage>
+  </ProtectedRoute>
+);
 }

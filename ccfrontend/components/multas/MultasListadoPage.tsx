@@ -3,10 +3,11 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import ModernPagination from '@/components/ui/ModernPagination';
 import multasService from '@/lib/multasService';
 import { useAuth } from '@/lib/useAuth';
 import { ProtectedRoute } from '@/lib/useAuth'; // Agrega si no está
-import { usePermissions } from '@/lib/usePermissions';
+import { usePermissions, Permission } from '@/lib/usePermissions';
 
 const MultasListadoPage: React.FC = () => {
   // eslint-disable-next-line no-console
@@ -14,7 +15,7 @@ const MultasListadoPage: React.FC = () => {
 
   const router = useRouter();
   const { user } = useAuth();
-  const { canManageFinances } = usePermissions();
+  const { canManageFinances, hasPermission } = usePermissions();
 
   // eslint-disable-next-line no-console
   console.log('👤 Usuario en MultasListadoPage:', user); // ✅ Agrega esto
@@ -28,14 +29,18 @@ const MultasListadoPage: React.FC = () => {
     busqueda: '',
   });
   const [selectedFines, setSelectedFines] = useState<string[]>([]);
-  const [pagina, setPagina] = useState(1);
-  const [totalPaginas, setTotalPaginas] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
 
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.log('🔄 useEffect ejecutado en MultasListadoPage'); // ✅ Agrega esto
     cargarMultas();
-  }, [filtros, pagina]);
+  }, [filtros, currentPage]);
 
   const cargarMultas = async () => {
     // eslint-disable-next-line no-console
@@ -43,10 +48,10 @@ const MultasListadoPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await multasService.getMultas({ ...filtros, pagina });
+      const response = await multasService.getMultas({ ...filtros, pagina: currentPage });
       // ✅ Asegúrate de que response tenga data y totalPaginas
       setMultas(response.data || []);
-      setTotalPaginas(response.totalPaginas || 1);
+      setTotalPages(response.totalPaginas || 1);
     } catch (err) {
       setError('Error al cargar multas');
       // eslint-disable-next-line no-console
@@ -58,7 +63,7 @@ const MultasListadoPage: React.FC = () => {
 
   const handleFiltroChange = (key: string, value: string) => {
     setFiltros({ ...filtros, [key]: value });
-    setPagina(1);
+    setCurrentPage(1);
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -209,14 +214,15 @@ const MultasListadoPage: React.FC = () => {
                 <button className='btn btn-outline-secondary me-2'>
                   <i className='material-icons'>notifications</i>
                 </button>
-                {canManageFinances && (
-                  <Link href='/multas/nueva' className='btn btn-primary'>
+                {(hasPermission(Permission.MANAGE_MULTAS) || hasPermission(Permission.VIEW_MULTA)) && (
+                  <Link href='/multas-nueva' className='btn btn-primary'>
                     <i className='material-icons me-2'>add</i>Nueva Multa
                   </Link>
                 )}
               </div>
             </div>
           </header>
+          
 
           {/* Filtros */}
           <div className='filters-panel mb-4'>
@@ -427,41 +433,16 @@ const MultasListadoPage: React.FC = () => {
           </div>
 
           {/* Paginación */}
-          <nav aria-label='Paginación' className='mt-4'>
-            <ul className='pagination justify-content-center'>
-              <li className={`page-item ${pagina === 1 ? 'disabled' : ''}`}>
-                <button
-                  className='page-link'
-                  onClick={() => setPagina(pagina - 1)}
-                >
-                  Anterior
-                </button>
-              </li>
-              {Array.from({ length: totalPaginas }, (_, i) => (
-                <li
-                  key={i}
-                  className={`page-item ${pagina === i + 1 ? 'active' : ''}`}
-                >
-                  <button
-                    className='page-link'
-                    onClick={() => setPagina(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                </li>
-              ))}
-              <li
-                className={`page-item ${pagina === totalPaginas ? 'disabled' : ''}`}
-              >
-                <button
-                  className='page-link'
-                  onClick={() => setPagina(pagina + 1)}
-                >
-                  Siguiente
-                </button>
-              </li>
-            </ul>
-          </nav>
+          {totalPages > 1 && (
+            <ModernPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={multas.length}
+              itemsPerPage={multas.length}
+              itemName="multas"
+              onPageChange={goToPage}
+            />
+          )}
 
           {/* Modal para registrar pago */}
           <div className='modal fade' id='paymentModal' tabIndex={-1}>

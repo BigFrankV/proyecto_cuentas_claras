@@ -16,16 +16,19 @@ import {
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
 import { usePermissions } from '@/lib/usePermissions';
+// Importar tipos
+import { Comunidad } from '@/types/comunidades';
+import { EstadoPago } from '@/types/pagos';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { isSuperUser } = usePermissions();
+  const { isSuperUser, getUserRoleName } = usePermissions();
 
   // Estados para datos dinámicos
   const [selectedComunidad, setSelectedComunidad] = useState<number | null>(
     null,
   );
-  const [comunidades, setComunidades] = useState<any[]>([]);
+  const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [searchComunidad, setSearchComunidad] = useState('');
   const [showComunidadDropdown, setShowComunidadDropdown] = useState(false);
   const [notificacionesCount] = useState(0);
@@ -149,95 +152,153 @@ export default function Dashboard() {
       </Head>
 
       <Layout title='Dashboard'>
-        {/* Header con búsqueda y filtros */}
-        <header className='bg-white border-bottom shadow-sm p-3 mb-4'>
-          <div className='container-fluid'>
+        {/* Header mejorado del dashboard */}
+        <div className='container-fluid p-0'>
+          <header className='text-white shadow-lg' style={{ background: 'var(--gradient-dashboard-header)' }}>
+            <div className='p-4'>
             <div className='row align-items-center'>
-              <div className='col-lg-4'>
-                <div className='input-group'>
-                  <span className='input-group-text bg-light border-0'>
-                    <span className='material-icons text-muted'>search</span>
-                  </span>
-                  <input
-                    type='text'
-                    className='form-control bg-light border-0'
-                    placeholder='Buscar...'
-                  />
+              {/* Información principal */}
+              <div className='col-lg-6'>
+                <div className='d-flex align-items-center mb-3'>
+                  <div className='icon-box bg-warning bg-opacity-20 rounded-circle p-3 me-3'>
+                    <span className='material-icons' style={{ fontSize: '32px' }}>
+                      dashboard
+                    </span>
+                  </div>
+                  <div>
+                    <h1 className='h2 mb-1 fw-bold'>
+                      Dashboard
+                      <span className={`badge ms-2 fs-6 ${isSuperUser() ? 'bg-warning text-dark' : 'bg-primary text-white'}`}>
+                        {getUserRoleName()}
+                      </span>
+                    </h1>
+                    <p className='mb-0 opacity-75'>
+                      Bienvenido de vuelta, {user?.username || 'Usuario'}
+                    </p>
+                  </div>
                 </div>
+
+                {/* Información de la comunidad seleccionada */}
+                {selectedComunidad && (
+                  <div className='bg-white bg-opacity-10 rounded p-3'>
+                    <div className='d-flex align-items-center'>
+                      <span className='material-icons me-2'>apartment</span>
+                      <div>
+                        <h6 className='mb-1 fw-semibold'>
+                          {comunidades.find(c => c.id === selectedComunidad)?.nombre || 'Comunidad'}
+                        </h6>
+                        <small className='opacity-75'>
+                          {comunidades.find(c => c.id === selectedComunidad)?.direccion || ''}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className='col-lg-8'>
-                <div className='d-flex justify-content-end align-items-center'>
+              {/* Panel de información y acciones */}
+              <div className='col-lg-6'>
+                <div className='row g-3'>
+                  {/* Fecha actual */}
+                  <div className='col-md-4'>
+                    <div className='bg-white bg-opacity-10 rounded p-3 text-center'>
+                      <span className='material-icons d-block mb-1'>calendar_today</span>
+                      <small className='d-block opacity-75'>Fecha</small>
+                      <strong>{new Date().toLocaleDateString('es-ES')}</strong>
+                    </div>
+                  </div>
+
+                  {/* Estado del sistema */}
+                  <div className='col-md-4'>
+                    <div className='bg-white bg-opacity-10 rounded p-3 text-center'>
+                      <span className='material-icons d-block mb-1 text-success'>check_circle</span>
+                      <small className='d-block opacity-75'>Estado</small>
+                      <strong>Activo</strong>
+                    </div>
+                  </div>
+
+                  {/* Acciones rápidas */}
+                  <div className='col-md-4'>
+                    <div className='d-flex flex-column gap-2'>
+                      <Link href='/pagos' className='btn btn-light btn-sm d-flex align-items-center justify-content-center'>
+                        <span className='material-icons me-1' style={{ fontSize: '16px' }}>add</span>
+                        Nuevo Pago
+                      </Link>
+                      <button className='btn btn-outline-light btn-sm d-flex align-items-center justify-content-center'>
+                        <span className='material-icons me-1' style={{ fontSize: '16px' }}>report</span>
+                        Reporte
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Barra de búsqueda y notificaciones */}
+                <div className='d-flex justify-content-end align-items-center mt-3'>
+                  {/* Búsqueda global */}
+                  <div className='input-group me-3' style={{ maxWidth: '300px' }}>
+                    <span className='input-group-text bg-white bg-opacity-20 border-0'>
+                      <span className='material-icons text-white' style={{ fontSize: '18px' }}>search</span>
+                    </span>
+                    <input
+                      type='text'
+                      className='form-control bg-white bg-opacity-20 border-0 text-white'
+                      placeholder='Buscar en el sistema...'
+                      style={{ '--placeholder-color': 'rgba(255,255,255,0.7)' } as any}
+                    />
+                  </div>
+
                   {/* Notificaciones */}
-                  <div className='me-3'>
+                  <div className='dropdown'>
                     <button
-                      className='btn position-relative p-0'
+                      className='btn btn-link text-white p-2 position-relative'
                       type='button'
                       data-bs-toggle='dropdown'
                     >
-                      <span className='material-icons'>notifications</span>
-                      <span className='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger'>
-                        {notificacionesCount > 0 ? notificacionesCount : ''}
-                      </span>
+                      <span className='material-icons' style={{ fontSize: '24px' }}>notifications</span>
+                      {notificacionesCount > 0 && (
+                        <span className='position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger'>
+                          {notificacionesCount}
+                        </span>
+                      )}
                     </button>
                     <div
-                      className='dropdown-menu dropdown-menu-end p-0'
-                      style={{ width: '320px' }}
+                      className='dropdown-menu dropdown-menu-end p-0 shadow-lg'
+                      style={{ width: '350px', border: 'none' }}
                     >
-                      <div className='p-3 border-bottom'>
-                        <h6 className='mb-0'>Notificaciones</h6>
+                      <div className='p-3 border-bottom bg-light'>
+                        <h6 className='mb-0 fw-semibold'>Notificaciones</h6>
                       </div>
-                      <div className='list-group list-group-flush'>
-                        <a
-                          href='#'
-                          className='list-group-item list-group-item-action'
-                        >
+                      <div className='list-group list-group-flush' style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        <a href='#' className='list-group-item list-group-item-action border-0'>
                           <div className='d-flex align-items-center'>
-                            <span className='material-icons text-warning me-3'>
-                              payment
-                            </span>
-                            <div>
-                              <p className='mb-0'>Nuevo pago registrado</p>
-                              <small className='text-muted'>
-                                Hace 10 minutos
-                              </small>
+                            <span className='material-icons text-warning me-3'>payment</span>
+                            <div className='flex-grow-1'>
+                              <p className='mb-0 fw-medium'>Nuevo pago registrado</p>
+                              <small className='text-muted'>Hace 10 minutos</small>
                             </div>
                           </div>
                         </a>
-                        <a
-                          href='#'
-                          className='list-group-item list-group-item-action'
-                        >
+                        <a href='#' className='list-group-item list-group-item-action border-0'>
                           <div className='d-flex align-items-center'>
-                            <span className='material-icons text-success me-3'>
-                              person_add
-                            </span>
-                            <div>
-                              <p className='mb-0'>Nuevo residente registrado</p>
+                            <span className='material-icons text-success me-3'>person_add</span>
+                            <div className='flex-grow-1'>
+                              <p className='mb-0 fw-medium'>Nuevo residente registrado</p>
                               <small className='text-muted'>Hace 1 hora</small>
                             </div>
                           </div>
                         </a>
-                        <a
-                          href='#'
-                          className='list-group-item list-group-item-action'
-                        >
+                        <a href='#' className='list-group-item list-group-item-action border-0'>
                           <div className='d-flex align-items-center'>
-                            <span className='material-icons text-danger me-3'>
-                              report_problem
-                            </span>
-                            <div>
-                              <p className='mb-0'>Alerta: 5 pagos vencidos</p>
+                            <span className='material-icons text-danger me-3'>report_problem</span>
+                            <div className='flex-grow-1'>
+                              <p className='mb-0 fw-medium'>Alerta: 5 pagos vencidos</p>
                               <small className='text-muted'>Hace 3 horas</small>
                             </div>
                           </div>
                         </a>
                       </div>
-                      <div className='p-2 border-top text-center'>
-                        <a
-                          href='#'
-                          className='text-decoration-none text-accent small'
-                        >
+                      <div className='p-2 border-top bg-light text-center'>
+                        <a href='#' className='text-decoration-none text-primary fw-medium small'>
                           Ver todas las notificaciones
                         </a>
                       </div>
@@ -246,37 +307,25 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </div>
-        </header>
+            </div>
+          </header>
+        </div>
 
         {/* Contenido del dashboard */}
         <main className='container-fluid py-4'>
+          {/* Barra de filtros y acciones */}
           <div className='d-flex justify-content-between align-items-center mb-4'>
-            <div>
-              <h1 className='h3 mb-0'>
-                Dashboard
-                {isSuperUser() && (
-                  <span className='badge bg-warning text-dark ms-2'>
-                    SUPERUSER
-                  </span>
-                )}
-              </h1>
-              <p className='text-muted mb-0'>
-                Bienvenido de vuelta, {user?.username || 'Usuario'}
-              </p>
-            </div>
-
-            {/* Filtros */}
-            <div className='d-flex gap-2'>
-              <div className='position-relative' style={{ minWidth: '280px' }}>
+            <div className='d-flex align-items-center gap-3'>
+              {/* Selector de comunidad */}
+              <div className='position-relative' style={{ minWidth: '300px' }}>
                 <div className='input-group'>
-                  <span className='input-group-text bg-white border-end-0'>
+                  <span className='input-group-text bg-primary text-white border-end-0'>
                     <span className='material-icons'>domain</span>
                   </span>
                   <input
                     type='text'
-                    className='form-control border-start-0'
-                    placeholder='Buscar comunidad...'
+                    className='form-control border-start-0 fw-semibold'
+                    placeholder='Seleccionar comunidad...'
                     value={
                       showComunidadDropdown
                         ? searchComunidad
@@ -292,12 +341,21 @@ export default function Dashboard() {
                       setTimeout(() => setShowComunidadDropdown(false), 200)
                     }
                   />
+                  <button
+                    className='btn btn-outline-secondary border-start-0'
+                    type='button'
+                    onClick={() => setShowComunidadDropdown(!showComunidadDropdown)}
+                  >
+                    <span className='material-icons'>
+                      {showComunidadDropdown ? 'expand_less' : 'expand_more'}
+                    </span>
+                  </button>
                 </div>
 
                 {/* Dropdown con resultados de búsqueda */}
                 {showComunidadDropdown && (
                   <div
-                    className='position-absolute w-100 mt-1 bg-white border rounded shadow-sm'
+                    className='position-absolute w-100 mt-1 bg-white border rounded shadow-lg'
                     style={{
                       zIndex: 1000,
                       maxHeight: '300px',
@@ -313,23 +371,14 @@ export default function Dashboard() {
                       .map(comunidad => (
                         <button
                           key={comunidad.id}
-                          className={`d-block w-100 text-start px-3 py-2 border-0 bg-white ${
-                            comunidad.id === selectedComunidad ? 'bg-light' : ''
+                          className={`d-block w-100 text-start px-3 py-2 border-0 bg-white hover-bg-light ${
+                            comunidad.id === selectedComunidad ? 'bg-primary bg-opacity-10 fw-semibold' : ''
                           }`}
                           style={{ cursor: 'pointer' }}
                           onMouseDown={() => {
                             handleComunidadChange(comunidad.id);
                             setSearchComunidad('');
                             setShowComunidadDropdown(false);
-                          }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.backgroundColor = '#f8f9fa';
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.backgroundColor =
-                              comunidad.id === selectedComunidad
-                                ? '#f8f9fa'
-                                : 'white';
                           }}
                         >
                           <div className='d-flex align-items-center'>
@@ -340,11 +389,16 @@ export default function Dashboard() {
                               apartment
                             </span>
                             <div>
-                              <div className='fw-500'>{comunidad.nombre}</div>
+                              <div className='fw-medium'>{comunidad.nombre}</div>
                               <small className='text-muted'>
                                 {comunidad.direccion}
                               </small>
                             </div>
+                            {comunidad.id === selectedComunidad && (
+                              <span className='material-icons ms-auto text-primary'>
+                                check
+                              </span>
+                            )}
                           </div>
                         </button>
                       ))}
@@ -361,16 +415,27 @@ export default function Dashboard() {
                 )}
               </div>
 
+              {/* Información de la comunidad seleccionada */}
+              {selectedComunidad && (
+                <div className='bg-light rounded p-2 border'>
+                  <small className='text-muted d-block'>Comunidad activa</small>
+                  <strong className='text-primary'>
+                    {comunidades.find(c => c.id === selectedComunidad)?.nombre}
+                  </strong>
+                </div>
+              )}
+            </div>
+
+            {/* Acciones rápidas */}
+            <div className='d-flex gap-2'>
               <div className='dropdown'>
                 <button
-                  className='btn btn-outline-secondary dropdown-toggle'
+                  className='btn btn-outline-primary dropdown-toggle d-flex align-items-center'
                   type='button'
                   id='periodoDropdown'
                   data-bs-toggle='dropdown'
                 >
-                  <span className='material-icons align-middle me-1'>
-                    calendar_today
-                  </span>
+                  <span className='material-icons me-1'>calendar_today</span>
                   <span>Septiembre 2025</span>
                 </button>
                 <ul
@@ -402,13 +467,57 @@ export default function Dashboard() {
                   </li>
                 </ul>
               </div>
+
+              <div className='dropdown'>
+                <button
+                  className='btn btn-primary dropdown-toggle d-flex align-items-center'
+                  type='button'
+                  id='accionesDropdown'
+                  data-bs-toggle='dropdown'
+                >
+                  <span className='material-icons me-1'>add</span>
+                  <span>Acciones</span>
+                </button>
+                <ul
+                  className='dropdown-menu dropdown-menu-end'
+                  aria-labelledby='accionesDropdown'
+                >
+                  <li>
+                    <Link href='/pagos' className='dropdown-item'>
+                      <span className='material-icons me-2'>payment</span>
+                      Nuevo Pago
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href='/gastos' className='dropdown-item'>
+                      <span className='material-icons me-2'>money_off</span>
+                      Nuevo Gasto
+                    </Link>
+                  </li>
+                  <li>
+                    <hr className='dropdown-divider' />
+                  </li>
+                  <li>
+                    <a className='dropdown-item' href='#'>
+                      <span className='material-icons me-2'>report</span>
+                      Generar Reporte
+                    </a>
+                  </li>
+                  <li>
+                    <a className='dropdown-item' href='#'>
+                      <span className='material-icons me-2'>download</span>
+                      Exportar Datos
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
 
           {/* Resumen de KPIs */}
           <div className='row g-4 mb-4'>
             {/* KPI - Saldo Total */}
-            <div className='col-md-6 col-xl-3'>
+            {/* <div className='col-md-6 col-xl-3'>
               <div className='card app-card shadow-sm h-100 data-card'>
                 <div className='card-body d-flex align-items-center'>
                   <div className='icon-box bg-primary-light me-3'>
@@ -451,10 +560,10 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* KPI - Ingresos */}
-            <div className='col-md-6 col-xl-3'>
+            {/* <div className='col-md-6 col-xl-3'>
               <div className='card app-card shadow-sm h-100 data-card'>
                 <div className='card-body d-flex align-items-center'>
                   <div className='icon-box bg-success-light me-3'>
@@ -498,10 +607,10 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* KPI - Gastos */}
-            <div className='col-md-6 col-xl-3'>
+            {/* <div className='col-md-6 col-xl-3'>
               <div className='card app-card shadow-sm h-100 data-card'>
                 <div className='card-body d-flex align-items-center'>
                   <div className='icon-box bg-danger-light me-3'>
@@ -540,10 +649,10 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* KPI - Morosidad */}
-            <div className='col-md-6 col-xl-3'>
+            {/* <div className='col-md-6 col-xl-3'>
               <div className='card app-card shadow-sm h-100 data-card'>
                 <div className='card-body d-flex align-items-center'>
                   <div className='icon-box bg-warning-light me-3'>
@@ -585,11 +694,11 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Gráficos implementados con Chart.js */}
-          <DashboardCharts comunidadId={selectedComunidad || 0} />
+          <DashboardCharts comunidadId={selectedComunidad || 0} dashboardData={dashboardData} />
 
           {/* Tablas de datos */}
           <div className='row g-4 mb-4'>

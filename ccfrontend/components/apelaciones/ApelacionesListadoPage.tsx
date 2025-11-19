@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import ModernPagination from '@/components/ui/ModernPagination';
+import PageHeader from '@/components/ui/PageHeader';
 import { usePermissions, Permission } from '@/lib/usePermissions'; // si existe, o importa permissionsUtils
 
 import { useAuth } from '../../lib/useAuth';
@@ -77,9 +79,18 @@ const ApelacionesListadoPage: React.FC = () => {
   const router = useRouter();
   const { hasPermission } = usePermissions(); // usar las funciones que exporta el hook
   const [appeals, setAppeals] = useState<any[]>([]);
+  const [filteredAppeals, setFilteredAppeals] = useState<any[]>([]);
+  const [totalFilteredItems, setTotalFilteredItems] = useState(0);
   const [selectedAppeals, setSelectedAppeals] = useState<string[]>([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
   const limit = 10; // o el valor que corresponda
 
   const load = async (p = 1) => {
@@ -172,12 +183,30 @@ const ApelacionesListadoPage: React.FC = () => {
     }
   };
 
-  const filteredAppeals = appeals.filter(appeal => {
-    if (filter === 'all') {
-      return true;
-    }
-    return appeal.status === filter;
-  });
+  useEffect(() => {
+    load();
+  }, []);
+
+  useEffect(() => {
+    const filtered = appeals.filter(appeal => {
+      if (filter === 'all') {
+        return true;
+      }
+      return appeal.status === filter;
+    });
+
+    // Calcular paginación
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    setTotalPages(totalPages);
+    setTotalFilteredItems(filtered.length);
+
+    // Aplicar paginación
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedAppeals = filtered.slice(startIndex, endIndex);
+
+    setFilteredAppeals(paginatedAppeals);
+  }, [appeals, filter, currentPage, itemsPerPage]);
 
   const handleCrear = () => {
     // lógica para crear nueva apelación
@@ -197,28 +226,27 @@ const ApelacionesListadoPage: React.FC = () => {
   return (
     <Layout title='Lista de Apelaciones'>
       <div className='container-fluid p-4'>
-        {/* Header con título y botón nueva apelación */}
-        <div className='d-flex justify-content-between align-items-center mb-4'>
-          <h1 className='h3'>Apelaciones</h1>
-          <div>
-            {canCreate && (
-              <button
-                className='btn btn-primary me-2'
-                onClick={() => {
-                  /* handleCrear */
-                }}
-              >
+        <PageHeader
+          title="Apelaciones"
+          subtitle="Gestión de apelaciones contra multas"
+          icon="gavel"
+        >
+          <div className="d-flex gap-2">
+            {(hasPermission(Permission.VIEW_APELACION) || hasPermission(Permission.CREATE_APELACION)) && (
+              <Link href="/apelaciones-nueva" className="btn btn-primary">
+                <i className="material-icons me-2">add</i>
                 Nueva Apelación
-              </button>
+              </Link>
             )}
             <button
               className='btn btn-outline-secondary'
               onClick={() => load()}
             >
+              <i className="material-icons me-2">refresh</i>
               {loading ? 'Cargando...' : 'Refrescar'}
             </button>
           </div>
-        </div>
+        </PageHeader>
 
         {/* Filtros */}
         <div className='filters-panel mb-4'>
@@ -440,35 +468,16 @@ const ApelacionesListadoPage: React.FC = () => {
         </div>
 
         {/* Pagination */}
-        <nav aria-label='Paginación de apelaciones' className='mt-4'>
-          <ul className='pagination justify-content-center'>
-            <li className='page-item disabled'>
-              <button type='button' className='page-link' disabled>
-                Anterior
-              </button>
-            </li>
-            <li className='page-item active'>
-              <button type='button' className='page-link'>
-                1
-              </button>
-            </li>
-            <li className='page-item'>
-              <button type='button' className='page-link'>
-                2
-              </button>
-            </li>
-            <li className='page-item'>
-              <button type='button' className='page-link'>
-                3
-              </button>
-            </li>
-            <li className='page-item'>
-              <button type='button' className='page-link'>
-                Siguiente
-              </button>
-            </li>
-          </ul>
-        </nav>
+        {totalPages > 1 && (
+          <ModernPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalFilteredItems}
+            itemsPerPage={itemsPerPage}
+            itemName="apelaciones"
+            onPageChange={goToPage}
+          />
+        )}
       </div>
 
       {/* Modal para revisar apelación */}

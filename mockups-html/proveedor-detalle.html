@@ -1,0 +1,1237 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Detalle de Proveedor - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      .provider-header {
+        border-radius: var(--radius);
+        background-color: #fff;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+      }
+      
+      .provider-info {
+        padding: 1.5rem;
+      }
+      
+      .provider-tabs {
+        background-color: #f9f9fa;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        padding: 0 1rem;
+      }
+      
+      .provider-tabs .nav-link {
+        color: var(--color-text);
+        padding: 1rem 1rem;
+        border: none;
+        border-bottom: 2px solid transparent;
+      }
+      
+      .provider-tabs .nav-link:hover {
+        color: var(--color-primary);
+      }
+      
+      .provider-tabs .nav-link.active {
+        color: var(--color-primary);
+        background-color: transparent;
+        border-bottom: 2px solid var(--color-primary);
+      }
+      
+      .provider-logo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        font-size: 1.5rem;
+        color: var(--color-primary);
+        overflow: hidden;
+      }
+      
+      .provider-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      @media (max-width: 767.98px) {
+        .provider-logo {
+          width: 60px;
+          height: 60px;
+          font-size: 1.25rem;
+        }
+      }
+      
+      .tab-content-container {
+        background-color: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .detail-item {
+        margin-bottom: 1rem;
+      }
+      
+      .detail-item .label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+      }
+      
+      .detail-item .value {
+        font-weight: 500;
+      }
+      
+      .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+      
+      .status-active {
+        background-color: #E8F5E9;
+        color: #2E7D32;
+      }
+      
+      .status-inactive {
+        background-color: #FFEBEE;
+        color: #C62828;
+      }
+      
+      .status-pending {
+        background-color: #FFF8E1;
+        color: #F57F17;
+      }
+      
+      .category-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        display: inline-block;
+        margin-bottom: 0.25rem;
+        margin-right: 0.25rem;
+      }
+      
+      .category-supplies {
+        background-color: #E8F5E9;
+        color: #2E7D32;
+      }
+      
+      .category-services {
+        background-color: #E3F2FD;
+        color: #1565C0;
+      }
+      
+      .category-construction {
+        background-color: #FFF3E0;
+        color: #E65100;
+      }
+      
+      .category-others {
+        background-color: #F3E5F5;
+        color: #7B1FA2;
+      }
+      
+      .rating {
+        display: inline-flex;
+        align-items: center;
+      }
+      
+      .rating .material-icons {
+        color: #FFB300;
+        font-size: 1rem;
+      }
+      
+      .contact-card {
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+      }
+      
+      .contact-card:hover {
+        box-shadow: var(--shadow-sm);
+        border-color: #ced4da;
+      }
+      
+      .history-item {
+        position: relative;
+        padding-left: 28px;
+        padding-bottom: 1.5rem;
+        position: relative;
+      }
+      
+      .history-item:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 9px;
+        height: 100%;
+        width: 2px;
+        background-color: #e9ecef;
+      }
+      
+      .history-item:last-child:before {
+        height: 20px;
+      }
+      
+      .history-item .history-dot {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #fff;
+        border: 2px solid var(--color-primary);
+        z-index: 1;
+      }
+      
+      .history-item .history-date {
+        font-size: 0.875rem;
+        color: #6c757d;
+      }
+      
+      .history-item .history-title {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+      }
+      
+      .file-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+      }
+      
+      .file-item:hover {
+        background-color: #f8f9fa;
+      }
+      
+      .file-icon {
+        font-size: 24px;
+        color: #6c757d;
+        margin-right: 0.75rem;
+      }
+      
+      .file-info {
+        flex-grow: 1;
+      }
+      
+      .file-info .file-name {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+      }
+      
+      .file-info .file-meta {
+        font-size: 0.75rem;
+        color: #6c757d;
+      }
+      
+      .evaluation-item {
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      
+      .evaluation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+      
+      .evaluation-date {
+        font-size: 0.875rem;
+        color: #6c757d;
+      }
+      
+      .evaluation-text {
+        margin-bottom: 0.5rem;
+      }
+      
+      .evaluation-author {
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+      
+      .summary-card {
+        background-color: #f9f9fa;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      
+      .summary-card h6 {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+      }
+      
+      .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+      }
+      
+      .summary-item:last-child {
+        margin-bottom: 0;
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <!-- Mobile Navigation Bar -->
+    <nav class="navbar navbar-dark bg-primary d-flex d-lg-none">
+      <div class="container-fluid">
+        <button class="navbar-toggler border-0" type="button" id="toggle-sidebar">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand me-auto" href="dashboard.html">
+          <span class="material-icons align-middle me-1">apartment</span>
+          Cuentas Claras
+        </a>
+        <div class="dropdown">
+          <button class="btn btn-link text-white p-0" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="avatar">PC</div>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    
+    <!-- Backdrop for mobile sidebar -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+    
+    <!-- Sidebar -->
+    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidebar" id="sidebar" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+      <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+        <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+        <span class="fs-4">Cuentas Claras</span>
+      </a>
+      
+      <div class="d-flex align-items-center mb-3 px-2">
+        <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+        <div>
+          <span class="d-block text-white">Patricia Contreras</span>
+          <span class="small text-white-50">Administradora</span>
+        </div>
+      </div>
+      
+      <hr>
+      
+      <ul class="nav nav-sidebar flex-column mb-auto">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">domain</span>
+            <span>Comunidades</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="edificios-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">business</span>
+            <span>Edificios</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">apartment</span>
+            <span>Unidades</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">people</span>
+            <span>Personas</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="membresias-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">card_membership</span>
+            <span>Membresías</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="categorias-gasto-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">category</span>
+            <span>Categorías</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="centros-costo-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">account_balance_wallet</span>
+            <span>Centros de Costo</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="proveedores-listado.html" class="nav-link active px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">inventory</span>
+            <span>Proveedores</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="documentos-compra-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">receipt_long</span>
+            <span>Compras</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">payments</span>
+            <span>Pagos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">shopping_cart</span>
+            <span>Gastos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">bar_chart</span>
+            <span>Reportes</span>
+          </a>
+        </li>
+      </ul>
+      
+      <hr>
+      
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <strong>Patricia</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+          <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+          <li><a class="dropdown-item" href="#">Configuración</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content px-3 py-4">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+          <a href="proveedores-listado.html" class="btn btn-link text-secondary p-0 me-3">
+            <span class="material-icons">arrow_back</span>
+          </a>
+          <h4 class="mb-0">Detalle de Proveedor</h4>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-primary d-none d-md-inline-flex">
+            <span class="material-icons align-middle me-1">phone</span>
+            Contactar
+          </button>
+          <button type="button" class="btn btn-outline-secondary d-none d-md-inline-flex">
+            <span class="material-icons align-middle me-1">receipt_long</span>
+            Nueva Compra
+          </button>
+          <a href="#" class="btn btn-primary">
+            <span class="material-icons align-middle me-1">edit</span>
+            Editar
+          </a>
+          <div class="dropdown d-md-none">
+            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="material-icons">more_vert</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">phone</span>Contactar</a></li>
+              <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">receipt_long</span>Nueva Compra</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Provider Header -->
+      <div class="provider-header">
+        <div class="provider-info">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <div class="provider-logo">
+                <img src="https://via.placeholder.com/80x80" alt="Logo de Constructora Edificar">
+              </div>
+            </div>
+            <div class="col">
+              <div class="d-flex flex-wrap align-items-center justify-content-between">
+                <div>
+                  <h5 class="mb-1">Constructora Edificar</h5>
+                  <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="category-badge category-construction">Construcción</span>
+                    <span class="status-badge status-active">Activo</span>
+                    <div class="rating me-2">
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star_half</span>
+                      <span class="ms-1 small">4.5</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2 mt-md-0">
+                  <span class="text-muted small">Cliente desde: 15/03/2022</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="provider-tabs">
+          <ul class="nav nav-tabs border-0" id="providerTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info-tab-pane" type="button" role="tab" aria-controls="info-tab-pane" aria-selected="true">Información</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts-tab-pane" type="button" role="tab" aria-controls="contacts-tab-pane" aria-selected="false">Contactos</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-tab-pane" type="button" role="tab" aria-controls="history-tab-pane" aria-selected="false">Historial</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents-tab-pane" type="button" role="tab" aria-controls="documents-tab-pane" aria-selected="false">Documentos</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="evaluations-tab" data-bs-toggle="tab" data-bs-target="#evaluations-tab-pane" type="button" role="tab" aria-controls="evaluations-tab-pane" aria-selected="false">Evaluaciones</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-12 col-lg-8">
+          <div class="tab-content" id="providerTabsContent">
+            <!-- Información General Tab -->
+            <div class="tab-pane fade show active" id="info-tab-pane" role="tabpanel" aria-labelledby="info-tab" tabindex="0">
+              <div class="tab-content-container">
+                <h5 class="mb-4">Información General</h5>
+                <div class="row g-4">
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Nombre / Razón Social</div>
+                      <div class="value">Constructora Edificar</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">RUT/ID Fiscal</div>
+                      <div class="value">76.456.789-0</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Categoría</div>
+                      <div class="value">
+                        <span class="category-badge category-construction">Construcción</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Tipo de Proveedor</div>
+                      <div class="value">Empresa</div>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="detail-item">
+                      <div class="label">Descripción</div>
+                      <div class="value">
+                        <p class="mb-0">Servicios de construcción, remodelación y mantenimiento para edificios residenciales y comerciales. Especialistas en proyectos de mediana y gran escala, con más de 15 años de experiencia en el mercado.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Sitio Web</div>
+                      <div class="value">
+                        <a href="https://www.constructoraedificar.com" target="_blank">www.constructoraedificar.com</a>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Estado</div>
+                      <div class="value">
+                        <span class="status-badge status-active">Activo</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <h5 class="mb-4">Dirección</h5>
+                <div class="row g-4">
+                  <div class="col-12">
+                    <div class="detail-item">
+                      <div class="label">Dirección</div>
+                      <div class="value">Av. Providencia 1234, Oficina 502</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <div class="detail-item">
+                      <div class="label">Ciudad</div>
+                      <div class="value">Santiago</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <div class="detail-item">
+                      <div class="label">Región/Estado</div>
+                      <div class="value">Región Metropolitana</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <div class="detail-item">
+                      <div class="label">País</div>
+                      <div class="value">Chile</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <h5 class="mb-4">Información Financiera</h5>
+                <div class="row g-4">
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Banco</div>
+                      <div class="value">Banco Estado</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Tipo de Cuenta</div>
+                      <div class="value">Cuenta Corriente</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Número de Cuenta</div>
+                      <div class="value">000-12345-67</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Titular de la Cuenta</div>
+                      <div class="value">Constructora Edificar SpA</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Condición de Pago</div>
+                      <div class="value">30 días</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Moneda de Pago</div>
+                      <div class="value">Peso Chileno (CLP)</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <h5 class="mb-4">Etiquetas</h5>
+                <div class="d-flex flex-wrap gap-2">
+                  <span class="category-badge">Confiable</span>
+                  <span class="category-badge">Construcción</span>
+                  <span class="category-badge">Preferente</span>
+                  <span class="category-badge">Remodelaciones</span>
+                  <span class="category-badge">Recomendado</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Contactos Tab -->
+            <div class="tab-pane fade" id="contacts-tab-pane" role="tabpanel" aria-labelledby="contacts-tab" tabindex="0">
+              <div class="tab-content-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h5 class="mb-0">Contactos</h5>
+                  <button type="button" class="btn btn-sm btn-outline-primary">
+                    <span class="material-icons align-middle small">add</span> Añadir Contacto
+                  </button>
+                </div>
+                
+                <div class="row g-3">
+                  <!-- Contacto 1 -->
+                  <div class="col-12 col-md-6">
+                    <div class="contact-card">
+                      <div class="d-flex justify-content-between">
+                        <h6 class="mb-1">Manuel Soto <span class="badge bg-primary ms-2">Principal</span></h6>
+                        <div class="dropdown">
+                          <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                            <span class="material-icons small">more_vert</span>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">edit</span>Editar</a></li>
+                            <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">delete</span>Eliminar</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div class="text-muted mb-3">Gerente General</div>
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="material-icons me-2 text-muted">phone</span>
+                        <span>+56 9 8765 4321</span>
+                      </div>
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="material-icons me-2 text-muted">email</span>
+                        <span>manuel.soto@edificar.com</span>
+                      </div>
+                      <div class="small text-muted mt-3">
+                        Contacto principal para cotizaciones y coordinación de proyectos.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Contacto 2 -->
+                  <div class="col-12 col-md-6">
+                    <div class="contact-card">
+                      <div class="d-flex justify-content-between">
+                        <h6 class="mb-1">Carolina Méndez</h6>
+                        <div class="dropdown">
+                          <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                            <span class="material-icons small">more_vert</span>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">edit</span>Editar</a></li>
+                            <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">delete</span>Eliminar</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div class="text-muted mb-3">Administradora</div>
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="material-icons me-2 text-muted">phone</span>
+                        <span>+56 9 5432 1098</span>
+                      </div>
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="material-icons me-2 text-muted">email</span>
+                        <span>carolina.mendez@edificar.com</span>
+                      </div>
+                      <div class="small text-muted mt-3">
+                        Responsable de facturación y temas administrativos.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Contacto 3 -->
+                  <div class="col-12 col-md-6">
+                    <div class="contact-card">
+                      <div class="d-flex justify-content-between">
+                        <h6 class="mb-1">Jorge Ramírez</h6>
+                        <div class="dropdown">
+                          <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                            <span class="material-icons small">more_vert</span>
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">edit</span>Editar</a></li>
+                            <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">delete</span>Eliminar</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div class="text-muted mb-3">Jefe de Obra</div>
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="material-icons me-2 text-muted">phone</span>
+                        <span>+56 9 7654 3210</span>
+                      </div>
+                      <div class="d-flex align-items-center mb-2">
+                        <span class="material-icons me-2 text-muted">email</span>
+                        <span>jorge.ramirez@edificar.com</span>
+                      </div>
+                      <div class="small text-muted mt-3">
+                        Supervisión técnica y coordinación de equipos en terreno.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Historial Tab -->
+            <div class="tab-pane fade" id="history-tab-pane" role="tabpanel" aria-labelledby="history-tab" tabindex="0">
+              <div class="tab-content-container">
+                <h5 class="mb-4">Historial de Actividad</h5>
+                
+                <div class="history-item">
+                  <div class="history-dot"></div>
+                  <div class="history-date">15 sept, 2025</div>
+                  <div class="history-title">Nueva compra creada</div>
+                  <div>Orden de compra #OC-2025-098 por $3.450.000 para "Reparación de techumbre"</div>
+                </div>
+                
+                <div class="history-item">
+                  <div class="history-dot"></div>
+                  <div class="history-date">10 sept, 2025</div>
+                  <div class="history-title">Evaluación actualizada</div>
+                  <div>Calificación actualizada a 4.5 estrellas por Juan Pérez</div>
+                </div>
+                
+                <div class="history-item">
+                  <div class="history-dot"></div>
+                  <div class="history-date">02 sept, 2025</div>
+                  <div class="history-title">Contacto añadido</div>
+                  <div>Se añadió a Jorge Ramírez como contacto</div>
+                </div>
+                
+                <div class="history-item">
+                  <div class="history-dot"></div>
+                  <div class="history-date">28 ago, 2025</div>
+                  <div class="history-title">Pago realizado</div>
+                  <div>Pago de $1.850.000 por la Orden de Compra #OC-2025-076</div>
+                </div>
+                
+                <div class="history-item">
+                  <div class="history-dot"></div>
+                  <div class="history-date">15 ago, 2025</div>
+                  <div class="history-title">Documento añadido</div>
+                  <div>Se añadió el documento "Contrato Mantenimiento Anual.pdf"</div>
+                </div>
+                
+                <div class="history-item">
+                  <div class="history-dot"></div>
+                  <div class="history-date">05 ago, 2025</div>
+                  <div class="history-title">Nueva compra creada</div>
+                  <div>Orden de compra #OC-2025-076 por $1.850.000 para "Reparación de cañerías"</div>
+                </div>
+                
+                <div class="history-item">
+                  <div class="history-dot"></div>
+                  <div class="history-date">15 mar, 2022</div>
+                  <div class="history-title">Proveedor creado</div>
+                  <div>Se registró a Constructora Edificar como proveedor</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Documentos Tab -->
+            <div class="tab-pane fade" id="documents-tab-pane" role="tabpanel" aria-labelledby="documents-tab" tabindex="0">
+              <div class="tab-content-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h5 class="mb-0">Documentos</h5>
+                  <button type="button" class="btn btn-sm btn-outline-primary">
+                    <span class="material-icons align-middle small">upload_file</span> Subir Documento
+                  </button>
+                </div>
+                
+                <div class="file-item">
+                  <span class="material-icons file-icon">picture_as_pdf</span>
+                  <div class="file-info">
+                    <div class="file-name">Contrato Mantenimiento Anual.pdf</div>
+                    <div class="file-meta">
+                      <span>1.2 MB</span> • <span>Subido el 15/08/2025</span> • <span>Por Patricia Contreras</span>
+                    </div>
+                  </div>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons small">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">visibility</span>Ver</a></li>
+                      <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">download</span>Descargar</a></li>
+                      <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">delete</span>Eliminar</a></li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div class="file-item">
+                  <span class="material-icons file-icon">article</span>
+                  <div class="file-info">
+                    <div class="file-name">Cotización Reparación Techumbre.docx</div>
+                    <div class="file-meta">
+                      <span>548 KB</span> • <span>Subido el 13/09/2025</span> • <span>Por Manuel Soto</span>
+                    </div>
+                  </div>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons small">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">visibility</span>Ver</a></li>
+                      <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">download</span>Descargar</a></li>
+                      <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">delete</span>Eliminar</a></li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div class="file-item">
+                  <span class="material-icons file-icon">description</span>
+                  <div class="file-info">
+                    <div class="file-name">Certificado de Vigencia.pdf</div>
+                    <div class="file-meta">
+                      <span>320 KB</span> • <span>Subido el 05/07/2025</span> • <span>Por Carolina Méndez</span>
+                    </div>
+                  </div>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons small">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">visibility</span>Ver</a></li>
+                      <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">download</span>Descargar</a></li>
+                      <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">delete</span>Eliminar</a></li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div class="file-item">
+                  <span class="material-icons file-icon">image</span>
+                  <div class="file-info">
+                    <div class="file-name">Fotos Trabajo Anterior.zip</div>
+                    <div class="file-meta">
+                      <span>5.7 MB</span> • <span>Subido el 22/06/2025</span> • <span>Por Jorge Ramírez</span>
+                    </div>
+                  </div>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-icon btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons small">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">visibility</span>Ver</a></li>
+                      <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">download</span>Descargar</a></li>
+                      <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">delete</span>Eliminar</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Evaluaciones Tab -->
+            <div class="tab-pane fade" id="evaluations-tab-pane" role="tabpanel" aria-labelledby="evaluations-tab" tabindex="0">
+              <div class="tab-content-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h5 class="mb-0">Evaluaciones</h5>
+                  <button type="button" class="btn btn-sm btn-outline-primary">
+                    <span class="material-icons align-middle small">rate_review</span> Añadir Evaluación
+                  </button>
+                </div>
+                
+                <div class="evaluation-item">
+                  <div class="evaluation-header">
+                    <div class="rating">
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star_half</span>
+                      <span class="ms-1">4.5</span>
+                    </div>
+                    <div class="evaluation-date">10 sept, 2025</div>
+                  </div>
+                  <div class="evaluation-text">
+                    <p>Excelente trabajo en la reparación de techumbre. El equipo fue profesional y terminaron el trabajo dentro del plazo estipulado. Los materiales utilizados fueron de buena calidad y el resultado final superó nuestras expectativas. Recomendaría sus servicios para futuros proyectos.</p>
+                  </div>
+                  <div class="evaluation-author">Juan Pérez - Administrador</div>
+                </div>
+                
+                <div class="evaluation-item">
+                  <div class="evaluation-header">
+                    <div class="rating">
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="ms-1">5.0</span>
+                    </div>
+                    <div class="evaluation-date">28 jul, 2025</div>
+                  </div>
+                  <div class="evaluation-text">
+                    <p>La respuesta a nuestra emergencia por filtración fue rápida y efectiva. El personal técnico identificó el problema de inmediato y procedió a solucionarlo sin inconvenientes. Además, dejaron todo limpio y ordenado al finalizar el trabajo.</p>
+                  </div>
+                  <div class="evaluation-author">María Gómez - Administradora</div>
+                </div>
+                
+                <div class="evaluation-item">
+                  <div class="evaluation-header">
+                    <div class="rating">
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star_border</span>
+                      <span class="material-icons">star_border</span>
+                      <span class="ms-1">3.0</span>
+                    </div>
+                    <div class="evaluation-date">15 may, 2025</div>
+                  </div>
+                  <div class="evaluation-text">
+                    <p>El trabajo realizado fue aceptable, pero hubo algunos retrasos en el cronograma que afectaron nuestra planificación. La comunicación podría mejorar, especialmente cuando surgen imprevistos. Los precios son un poco elevados para el servicio ofrecido.</p>
+                  </div>
+                  <div class="evaluation-author">Roberto Hernández - Conserje</div>
+                </div>
+                
+                <div class="evaluation-item">
+                  <div class="evaluation-header">
+                    <div class="rating">
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star</span>
+                      <span class="material-icons">star_border</span>
+                      <span class="ms-1">4.0</span>
+                    </div>
+                    <div class="evaluation-date">22 feb, 2025</div>
+                  </div>
+                  <div class="evaluation-text">
+                    <p>Contratamos sus servicios para una renovación completa de las áreas comunes. El resultado fue muy bueno y el equipo de trabajo mostró profesionalismo. Solo tuvimos un pequeño inconveniente con algunos acabados que tuvieron que ser corregidos, pero la empresa respondió adecuadamente.</p>
+                  </div>
+                  <div class="evaluation-author">Carolina Fuentes - Administradora</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12 col-lg-4">
+          <!-- Información de resumen -->
+          <div class="tab-content-container mb-4">
+            <h6 class="mb-3">Resumen de Actividad</h6>
+            <div class="summary-card">
+              <h6>Estadísticas</h6>
+              <div class="summary-item">
+                <div>Compras realizadas:</div>
+                <div><strong>12</strong></div>
+              </div>
+              <div class="summary-item">
+                <div>Monto total:</div>
+                <div><strong>$32.450.000</strong></div>
+              </div>
+              <div class="summary-item">
+                <div>Última compra:</div>
+                <div><strong>15/09/2025</strong></div>
+              </div>
+              <div class="summary-item">
+                <div>Evaluación promedio:</div>
+                <div>
+                  <div class="rating">
+                    <span class="material-icons">star</span>
+                    <span class="material-icons">star</span>
+                    <span class="material-icons">star</span>
+                    <span class="material-icons">star</span>
+                    <span class="material-icons">star_half</span>
+                    <span class="ms-1 small">4.5</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="summary-card">
+              <h6>Último Proyecto</h6>
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="fw-medium">Reparación de techumbre</div>
+                <span class="badge bg-success">Completado</span>
+              </div>
+              <div class="mb-2">
+                <small class="text-muted">Orden #OC-2025-098</small>
+              </div>
+              <div class="mb-2">
+                <strong>$3.450.000</strong>
+              </div>
+              <div class="d-flex justify-content-end">
+                <a href="#" class="btn btn-sm btn-link">Ver detalle</a>
+              </div>
+            </div>
+            
+            <div class="summary-card">
+              <h6>Contacto Principal</h6>
+              <div class="fw-medium mb-1">Manuel Soto</div>
+              <div class="small text-muted mb-2">Gerente General</div>
+              <div class="d-flex align-items-center mb-1">
+                <span class="material-icons me-2 small text-muted">phone</span>
+                <span>+56 9 8765 4321</span>
+              </div>
+              <div class="d-flex align-items-center">
+                <span class="material-icons me-2 small text-muted">email</span>
+                <span>manuel.soto@edificar.com</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Comunidades asociadas -->
+          <div class="tab-content-container mb-4">
+            <h6 class="mb-3">Comunidades Asociadas</h6>
+            <ul class="list-group">
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Comunidad Parque Real
+                <span class="badge bg-primary rounded-pill">8 compras</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Edificio Central
+                <span class="badge bg-primary rounded-pill">3 compras</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Torre Norte
+                <span class="badge bg-primary rounded-pill">1 compra</span>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- Notas internas -->
+          <div class="tab-content-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0">Notas Internas</h6>
+              <button type="button" class="btn btn-sm btn-outline-primary">
+                <span class="material-icons align-middle small">add</span> Añadir Nota
+              </button>
+            </div>
+            <div class="alert alert-light border mb-3">
+              <div class="d-flex justify-content-between">
+                <small class="text-muted">12/09/2025 - Patricia Contreras</small>
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-icon btn-link p-0" type="button" data-bs-toggle="dropdown">
+                    <span class="material-icons small">more_vert</span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#">Editar</a></li>
+                    <li><a class="dropdown-item" href="#">Eliminar</a></li>
+                  </ul>
+                </div>
+              </div>
+              <p class="mb-0 mt-2">Negociar descuento para próximo proyecto de mantenimiento anual. Proponer contrato por 3 años con revisión de precios anual.</p>
+            </div>
+            <div class="alert alert-light border mb-0">
+              <div class="d-flex justify-content-between">
+                <small class="text-muted">30/08/2025 - Juan Pérez</small>
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-icon btn-link p-0" type="button" data-bs-toggle="dropdown">
+                    <span class="material-icons small">more_vert</span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#">Editar</a></li>
+                    <li><a class="dropdown-item" href="#">Eliminar</a></li>
+                  </ul>
+                </div>
+              </div>
+              <p class="mb-0 mt-2">Excelente respuesta en emergencia del edificio Central. Considerar para futuros proyectos de renovación en Torre Norte.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/script.js"></script>
+    
+    <script>
+      // Toggle sidebar on mobile
+      document.addEventListener('DOMContentLoaded', function() {
+        const toggleSidebar = document.getElementById('toggle-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+        
+        if (toggleSidebar && sidebar && sidebarBackdrop) {
+          toggleSidebar.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+            sidebarBackdrop.classList.toggle('show');
+          });
+          
+          sidebarBackdrop.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            sidebarBackdrop.classList.remove('show');
+          });
+        }
+        
+        // Enable Bootstrap tabs
+        const triggerTabList = [].slice.call(document.querySelectorAll('#providerTabs button'));
+        triggerTabList.forEach(function (triggerEl) {
+          const tabTrigger = new bootstrap.Tab(triggerEl);
+          
+          triggerEl.addEventListener('click', function (event) {
+            event.preventDefault();
+            tabTrigger.show();
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

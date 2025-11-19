@@ -85,7 +85,7 @@ app.use('/webhooks', webhooksRoutes);
 app.use('/amenidades', amenidadesRoutes);
 app.use('/', soporteRoutes); // soporte exposes varios paths: tickets, notificaciones, documentos, bitacora, parametros
 app.use('/util', utilRoutes);
-app.use('/files', filesRoutes);
+app.use('/api/files', filesRoutes);
 app.use('/api/valor-utm', valorUtmRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/reportes', reportesRoutes);

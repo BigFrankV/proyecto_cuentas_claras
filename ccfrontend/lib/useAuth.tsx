@@ -224,6 +224,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
       }
       if (response.user) {
+        // eslint-disable-next-line no-console
+        console.log('Estableciendo usuario en contexto desde 2FA:', response.user);
         setUser(response.user);
         // eslint-disable-next-line no-console
         console.log('Usuario establecido en contexto:', response.user);

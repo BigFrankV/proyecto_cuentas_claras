@@ -1,0 +1,1572 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bitácora de Actividades - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      .avatar {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--color-primary);
+        color: #fff;
+        font-weight: bold;
+        border-radius: 50%;
+      }
+      
+      /* Stats cards */
+      .stats-card {
+        background-color: #fff;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        border-left: 4px solid var(--color-primary);
+        height: 100%;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      
+      .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+      
+      .stats-card.info {
+        border-left-color: #17a2b8;
+      }
+      
+      .stats-card.warning {
+        border-left-color: #ffc107;
+      }
+      
+      .stats-card.success {
+        border-left-color: #28a745;
+      }
+      
+      .stats-card.danger {
+        border-left-color: #dc3545;
+      }
+      
+      .stats-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        margin-bottom: 1rem;
+      }
+      
+      .stats-icon.info { background-color: #17a2b8; }
+      .stats-icon.warning { background-color: #ffc107; }
+      .stats-icon.success { background-color: #28a745; }
+      .stats-icon.danger { background-color: #dc3545; }
+      
+      .stats-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #212529;
+        margin-bottom: 0.5rem;
+      }
+      
+      .stats-label {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-bottom: 0;
+      }
+      
+      /* Filters */
+      .filters-card {
+        background-color: #fff;
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid #e9ecef;
+      }
+      
+      .filters-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: end;
+      }
+      
+      .filter-group {
+        flex: 1;
+        min-width: 200px;
+      }
+      
+      @media (max-width: 768px) {
+        .filter-group {
+          min-width: 100%;
+        }
+      }
+      
+      /* Activity log */
+      .activity-log {
+        background-color: #fff;
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid #e9ecef;
+      }
+      
+      .activity-header {
+        background-color: #f8f9fa;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      
+      .activity-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+      }
+      
+      .activity-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      
+      /* Timeline */
+      .timeline {
+        position: relative;
+        padding: 0;
+        margin: 0;
+      }
+      
+      .timeline::before {
+        content: '';
+        position: absolute;
+        left: 30px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: #e9ecef;
+      }
+      
+      .timeline-item {
+        position: relative;
+        padding: 1.5rem 1.5rem 1.5rem 4rem;
+        border-bottom: 1px solid #f8f9fa;
+      }
+      
+      .timeline-item:last-child {
+        border-bottom: none;
+      }
+      
+      .timeline-marker {
+        position: absolute;
+        left: 22px;
+        top: 1.5rem;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        background-color: var(--color-primary);
+        box-shadow: 0 0 0 3px #e9ecef;
+      }
+      
+      .timeline-marker.system {
+        background-color: #17a2b8;
+      }
+      
+      .timeline-marker.user {
+        background-color: #28a745;
+      }
+      
+      .timeline-marker.security {
+        background-color: #dc3545;
+      }
+      
+      .timeline-marker.maintenance {
+        background-color: #ffc107;
+      }
+      
+      .timeline-marker.admin {
+        background-color: #6f42c1;
+      }
+      
+      .timeline-content {
+        position: relative;
+      }
+      
+      .timeline-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      
+      .timeline-action {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 0.25rem;
+      }
+      
+      .timeline-description {
+        color: #6c757d;
+        margin-bottom: 0.75rem;
+        line-height: 1.5;
+      }
+      
+      .timeline-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: #6c757d;
+      }
+      
+      .timeline-meta-item {
+        display: flex;
+        align-items: center;
+      }
+      
+      .timeline-meta-item .material-icons {
+        font-size: 1rem;
+        margin-right: 0.25rem;
+      }
+      
+      .timeline-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+      }
+      
+      /* Activity type badges */
+      .activity-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: 1px solid transparent;
+      }
+      
+      .activity-badge.system {
+        background-color: #E3F2FD;
+        color: #1565C0;
+        border-color: #2196F3;
+      }
+      
+      .activity-badge.user {
+        background-color: #E8F5E9;
+        color: #2E7D32;
+        border-color: #4CAF50;
+      }
+      
+      .activity-badge.security {
+        background-color: #FFEBEE;
+        color: #C62828;
+        border-color: #F44336;
+      }
+      
+      .activity-badge.maintenance {
+        background-color: #FFF8E1;
+        color: #F57F17;
+        border-color: #FFEB3B;
+      }
+      
+      .activity-badge.admin {
+        background-color: #F3E5F5;
+        color: #7B1FA2;
+        border-color: #9C27B0;
+      }
+      
+      .activity-badge.financial {
+        background-color: #E0F2F1;
+        color: #00695C;
+        border-color: #009688;
+      }
+      
+      /* Priority badges */
+      .priority-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+      
+      .priority-badge.low {
+        background-color: #d1ecf1;
+        color: #0c5460;
+      }
+      
+      .priority-badge.normal {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      
+      .priority-badge.high {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      
+      .priority-badge.critical {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      
+      /* Mobile view */
+      .activity-mobile {
+        display: none;
+      }
+      
+      @media (max-width: 768px) {
+        .timeline {
+          display: none;
+        }
+        
+        .activity-mobile {
+          display: block;
+          padding: 1rem;
+        }
+        
+        .activity-card {
+          background-color: #fff;
+          border: 1px solid #e9ecef;
+          border-radius: var(--radius);
+          padding: 1rem;
+          margin-bottom: 1rem;
+          box-shadow: var(--shadow-sm);
+        }
+        
+        .activity-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: start;
+          margin-bottom: 0.75rem;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+        
+        .activity-card-content {
+          margin-bottom: 0.75rem;
+        }
+      }
+      
+      /* Search and pagination */
+      .search-box {
+        position: relative;
+      }
+      
+      .search-box .material-icons {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        pointer-events: none;
+      }
+      
+      .search-box input {
+        padding-left: 3rem;
+      }
+      
+      /* Action buttons */
+      .action-btn {
+        border: none;
+        border-radius: var(--radius);
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+      }
+      
+      .action-btn .material-icons {
+        margin-right: 0.25rem;
+        font-size: 1rem;
+      }
+      
+      .action-btn.primary {
+        background-color: var(--color-primary);
+        color: white;
+      }
+      
+      .action-btn.primary:hover {
+        background-color: #e85a14;
+        color: white;
+      }
+      
+      .action-btn.success {
+        background-color: #28a745;
+        color: white;
+      }
+      
+      .action-btn.success:hover {
+        background-color: #218838;
+        color: white;
+      }
+      
+      .action-btn.outline {
+        background-color: transparent;
+        color: var(--color-primary);
+        border: 1px solid var(--color-primary);
+      }
+      
+      .action-btn.outline:hover {
+        background-color: var(--color-primary);
+        color: white;
+      }
+      
+      .action-btn.secondary {
+        background-color: #6c757d;
+        color: white;
+      }
+      
+      .action-btn.secondary:hover {
+        background-color: #545b62;
+        color: white;
+      }
+      
+      /* Real-time indicator */
+      .real-time-indicator {
+        display: inline-flex;
+        align-items: center;
+        background-color: #28a745;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+      
+      .real-time-indicator .material-icons {
+        font-size: 0.875rem;
+        margin-right: 0.25rem;
+        animation: pulse 2s infinite;
+      }
+      
+      @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+      }
+      
+      /* Export options */
+      .export-card {
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #e9ecef;
+      }
+      
+      .export-options {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar -->
+      <section class="supermenu-cuentasclaras">
+             <!-- Sidebar -->
+      <div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" id="sidebar" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+        <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+          <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+          <span class="fs-4">Cuentas Claras</span>
+        </a>
+        
+        <div class="d-flex align-items-center mb-3 px-2">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <div>
+            <span class="d-block text-white">Patricia Contreras</span>
+            <span class="small text-white-50">Administradora</span>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <!-- Navegación principal -->
+        <div class="nav-sections" style="flex: 1; overflow-y: auto;">
+          
+          <!-- DASHBOARD -->
+          <div class="nav-section-header">Dashboard</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="dashboard.html" class="nav-link">
+                <span class="material-icons align-middle me-2">dashboard</span>
+                <span>Panel Principal</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="reportes-dashboard.html" class="nav-link">
+                <span class="material-icons align-middle me-2">bar_chart</span>
+                <span>Reportes</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- COMUNIDADES Y ESTRUCTURA -->
+          <div class="nav-section-header">Estructura</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="comunidades-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">domain</span>
+                <span>Comunidades</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="edificios-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">business</span>
+                <span>Edificios</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="torres-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">location_city</span>
+                <span>Torres</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="unidades-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">apartment</span>
+                <span>Unidades</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- PERSONAS Y MEMBRESÍAS -->
+          <div class="nav-section-header">Residentes</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="personas-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">people</span>
+                <span>Personas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="membresias-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">card_membership</span>
+                <span>Membresías</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- FINANZAS -->
+          <div class="nav-section-header">Finanzas</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="emisiones-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">receipt_long</span>
+                <span>Emisiones</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="cargos-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">assignment</span>
+                <span>Cargos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pagos-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">payments</span>
+                <span>Pagos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="conciliaciones-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">account_balance</span>
+                <span>Conciliaciones</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- GASTOS Y COMPRAS -->
+          <div class="nav-section-header">Gastos</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="gastos-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">shopping_cart</span>
+                <span>Gastos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="categorias-gasto-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">category</span>
+                <span>Categorías</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="centros-costo-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">account_balance_wallet</span>
+                <span>Centros de Costo</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="proveedores-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">store</span>
+                <span>Proveedores</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="documentos-compra-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">inventory</span>
+                <span>Compras</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- MEDIDORES Y SERVICIOS -->
+          <div class="nav-section-header">Servicios</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="medidores-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">speed</span>
+                <span>Medidores</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="lecturas-medidor.html" class="nav-link">
+                <span class="material-icons align-middle me-2">visibility</span>
+                <span>Lecturas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="consumos-medidor.html" class="nav-link">
+                <span class="material-icons align-middle me-2">water_drop</span>
+                <span>Consumos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="tarifas-consumo-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">price_change</span>
+                <span>Tarifas</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- AMENIDADES Y RESERVAS -->
+          <div class="nav-section-header">Amenidades</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="amenidades-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">pool</span>
+                <span>Amenidades</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="reservas-amenidad.html" class="nav-link">
+                <span class="material-icons align-middle me-2">event_available</span>
+                <span>Reservas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="calendario-reservas.html" class="nav-link">
+                <span class="material-icons align-middle me-2">calendar_month</span>
+                <span>Calendario</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- MULTAS Y SANCIONES -->
+          <div class="nav-section-header">Sanciones</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="multas-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">gavel</span>
+                <span>Multas</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- SOPORTE Y COMUNICACIÓN -->
+          <div class="nav-section-header">Comunicación</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="tickets-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">support_agent</span>
+                <span>Tickets</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="notificaciones-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">notifications</span>
+                <span>Notificaciones</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="documentos-listado.html" class="nav-link">
+                <span class="material-icons align-middle me-2">folder</span>
+                <span>Documentos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="bitacora-listado.html" class="nav-link active">
+                <span class="material-icons align-middle me-2">history</span>
+                <span>Bitácora</span>
+              </a>
+            </li>
+          </ul>
+
+          <!-- UTILIDADES -->
+          <div class="nav-section-header">Utilidades</div>
+          <ul class="nav nav-sidebar flex-column">
+            <li class="nav-item">
+              <a href="util-uf.html" class="nav-link">
+                <span class="material-icons align-middle me-2">trending_up</span>
+                <span>Valor UF</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="util-utm.html" class="nav-link">
+                <span class="material-icons align-middle me-2">calculate</span>
+                <span>Valor UTM</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="util-rut.html" class="nav-link">
+                <span class="material-icons align-middle me-2">verified_user</span>
+                <span>Validador RUT</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+        
+        <hr>
+        
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+            <span class="material-icons me-2">settings</span>
+            <span>Configuración</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="comunidad-parametros.html">Parámetros</a></li>
+            <li><a class="dropdown-item" href="#">Preferencias</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      </div>
+      </section>
+      
+      <!-- Sidebar backdrop for mobile -->
+      <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+      
+      <!-- Contenido principal -->
+      <div class="main-content flex-grow-1 bg-light">
+        <!-- Header con búsqueda y notificaciones -->
+        <header class="bg-white border-bottom shadow-sm p-3">
+          <div class="container-fluid">
+            <div class="row align-items-center">
+              <div class="col-lg-6">
+                <button class="btn toggle-sidebar d-lg-none me-2" onclick="toggleSidebar()">
+                  <span class="material-icons">menu</span>
+                </button>
+                <h5 class="mb-0 d-flex align-items-center">
+                  Bitácora de Actividades
+                  <span class="real-time-indicator ms-2">
+                    <span class="material-icons">fiber_manual_record</span>
+                    En vivo
+                  </span>
+                </h5>
+                <small class="text-muted">Registro cronológico de todas las actividades del sistema</small>
+              </div>
+              
+              <div class="col-lg-6">
+                <div class="d-flex justify-content-end align-items-center">
+                  <div class="search-box me-3">
+                    <span class="material-icons">search</span>
+                    <input type="text" class="form-control" placeholder="Buscar en bitácora..." id="searchInput">
+                  </div>
+                  
+                  <div class="me-3">
+                    <button class="btn position-relative p-0" type="button" data-bs-toggle="dropdown">
+                      <span class="material-icons">notifications</span>
+                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        3
+                      </span>
+                    </button>
+                  </div>
+                  
+                  <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                      <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+                      <div class="d-none d-sm-block">
+                        <div class="fw-bold">Patricia Contreras</div>
+                        <small class="text-muted">Administradora</small>
+                      </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                      <li><a class="dropdown-item" href="profile.html">Mi Perfil</a></li>
+                      <li><a class="dropdown-item" href="#">Configuración</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" href="login.html">Cerrar Sesión</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Contenido -->
+        <main class="container-fluid p-4">
+          <!-- Estadísticas -->
+          <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+              <div class="stats-card">
+                <div class="stats-icon info">
+                  <span class="material-icons">history</span>
+                </div>
+                <div class="stats-number">2,847</div>
+                <div class="stats-label">Total Actividades</div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+              <div class="stats-card success">
+                <div class="stats-icon success">
+                  <span class="material-icons">today</span>
+                </div>
+                <div class="stats-number">156</div>
+                <div class="stats-label">Actividades Hoy</div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+              <div class="stats-card warning">
+                <div class="stats-icon warning">
+                  <span class="material-icons">warning</span>
+                </div>
+                <div class="stats-number">23</div>
+                <div class="stats-label">Eventos Críticos</div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+              <div class="stats-card danger">
+                <div class="stats-icon danger">
+                  <span class="material-icons">person</span>
+                </div>
+                <div class="stats-number">45</div>
+                <div class="stats-label">Usuarios Activos</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtros -->
+          <div class="filters-card">
+            <h6 class="mb-3">
+              <span class="material-icons me-2">filter_alt</span>
+              Filtros de Búsqueda
+            </h6>
+            <div class="filters-row">
+              <div class="filter-group">
+                <label for="activityTypeFilter" class="form-label">Tipo de Actividad</label>
+                <select class="form-select" id="activityTypeFilter">
+                  <option value="">Todos los tipos</option>
+                  <option value="system">Sistema</option>
+                  <option value="user">Usuario</option>
+                  <option value="security">Seguridad</option>
+                  <option value="maintenance">Mantenimiento</option>
+                  <option value="admin">Administración</option>
+                  <option value="financial">Financiero</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="priorityFilter" class="form-label">Prioridad</label>
+                <select class="form-select" id="priorityFilter">
+                  <option value="">Todas las prioridades</option>
+                  <option value="low">Baja</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">Alta</option>
+                  <option value="critical">Crítica</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="userFilter" class="form-label">Usuario</label>
+                <select class="form-select" id="userFilter">
+                  <option value="">Todos los usuarios</option>
+                  <option value="patricia">Patricia Contreras</option>
+                  <option value="carlos">Carlos Mendoza</option>
+                  <option value="ana">Ana López</option>
+                  <option value="system">Sistema</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="moduleFilter" class="form-label">Módulo</label>
+                <select class="form-select" id="moduleFilter">
+                  <option value="">Todos los módulos</option>
+                  <option value="tickets">Tickets</option>
+                  <option value="notifications">Notificaciones</option>
+                  <option value="documents">Documentos</option>
+                  <option value="users">Usuarios</option>
+                  <option value="units">Unidades</option>
+                  <option value="payments">Pagos</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="dateRangeFilter" class="form-label">Período</label>
+                <select class="form-select" id="dateRangeFilter">
+                  <option value="today">Hoy</option>
+                  <option value="week" selected>Esta semana</option>
+                  <option value="month">Este mes</option>
+                  <option value="quarter">Este trimestre</option>
+                  <option value="year">Este año</option>
+                  <option value="custom">Rango personalizado</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>&nbsp;</label>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                    <span class="material-icons me-1">clear</span>
+                    Limpiar
+                  </button>
+                  <button class="btn btn-primary" onclick="applyFilters()">
+                    <span class="material-icons me-1">search</span>
+                    Buscar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exportación -->
+          <div class="export-card">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-1">Exportar Bitácora</h6>
+                <small class="text-muted">Descargar registro de actividades en diferentes formatos</small>
+              </div>
+              <div class="export-options">
+                <button class="action-btn outline" onclick="exportData('csv')">
+                  <span class="material-icons">table_chart</span>
+                  CSV
+                </button>
+                <button class="action-btn outline" onclick="exportData('excel')">
+                  <span class="material-icons">description</span>
+                  Excel
+                </button>
+                <button class="action-btn outline" onclick="exportData('pdf')">
+                  <span class="material-icons">picture_as_pdf</span>
+                  PDF
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bitácora de actividades -->
+          <div class="activity-log">
+            <div class="activity-header">
+              <div class="d-flex align-items-center">
+                <h6 class="activity-title mb-0">Registro de Actividades</h6>
+                <span class="badge bg-success ms-2">Actualización automática</span>
+              </div>
+              <div class="activity-actions">
+                <button class="action-btn outline" onclick="refreshLog()">
+                  <span class="material-icons">refresh</span>
+                  Actualizar
+                </button>
+                <button class="action-btn outline" onclick="toggleAutoRefresh()">
+                  <span class="material-icons">play_arrow</span>
+                  Auto-actualizar
+                </button>
+                <a href="bitacora-nueva.html" class="action-btn primary">
+                  <span class="material-icons">add</span>
+                  Nueva Entrada
+                </a>
+              </div>
+            </div>
+
+            <!-- Desktop Timeline -->
+            <div class="d-none d-md-block">
+              <div class="timeline" id="timelineContainer">
+                <div class="timeline-item">
+                  <div class="timeline-marker user"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-header">
+                      <div>
+                        <div class="timeline-action">Inicio de sesión exitoso</div>
+                        <div class="timeline-description">
+                          Usuario Patricia Contreras inició sesión desde dirección IP 192.168.1.105
+                        </div>
+                      </div>
+                      <small class="text-muted">Hace 2 minutos</small>
+                    </div>
+                    <div class="timeline-badges">
+                      <span class="activity-badge user">Usuario</span>
+                      <span class="priority-badge normal">Normal</span>
+                    </div>
+                    <div class="timeline-meta">
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">schedule</span>
+                        15/09/2024 14:35:42
+                      </div>
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">computer</span>
+                        IP: 192.168.1.105
+                      </div>
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">web</span>
+                        Chrome 117.0
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-marker financial"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-header">
+                      <div>
+                        <div class="timeline-action">Pago de gastos comunes procesado</div>
+                        <div class="timeline-description">
+                          Unidad 301 - Torre Norte realizó pago de $45.000 por gastos comunes de septiembre
+                        </div>
+                      </div>
+                      <small class="text-muted">Hace 15 minutos</small>
+                    </div>
+                    <div class="timeline-badges">
+                      <span class="activity-badge financial">Financiero</span>
+                      <span class="priority-badge normal">Normal</span>
+                    </div>
+                    <div class="timeline-meta">
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">schedule</span>
+                        15/09/2024 14:22:15
+                      </div>
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">payment</span>
+                        Transferencia bancaria
+                      </div>
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">account_balance_wallet</span>
+                        $45.000
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-marker security"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-header">
+                      <div>
+                        <div class="timeline-action">Alerta de seguridad activada</div>
+                        <div class="timeline-description">
+                          Detector de movimiento en estacionamiento activado fuera de horario normal
+                        </div>
+                      </div>
+                      <small class="text-muted">Hace 1 hora</small>
+                    </div>
+                    <div class="timeline-badges">
+                      <span class="activity-badge security">Seguridad</span>
+                      <span class="priority-badge high">Alta</span>
+                    </div>
+                    <div class="timeline-meta">
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">schedule</span>
+                        15/09/2024 13:45:03
+                      </div>
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">location_on</span>
+                        Estacionamiento - Sector B
+                      </div>
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">videocam</span>
+                        Cámara #15
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-marker system"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-header">
+                      <div>
+                        <div class="timeline-action">Notificación masiva enviada</div>
+                        <div class="timeline-description">
+                          Recordatorio de corte de agua programado enviado a 156 residentes
+                        </div>
+                      </div>
+                      <small class="text-muted">Hace 2 horas</small>
+                    </div>
+                    <div class="timeline-badges">
+                      <span class="activity-badge system">Sistema</span>
+                      <span class="priority-badge normal">Normal</span>
+                    </div>
+                    <div class="timeline-meta">
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">schedule</span>
+                        15/09/2024 12:30:00
+                      </div>
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">email</span>
+                        Email + App
+                      </div>
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">people</span>
+                        156 destinatarios
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-marker maintenance"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-header">
+                      <div>
+                        <div class="timeline-action">Orden de trabajo completada</div>
+                        <div class="timeline-description">
+                          Reparación de ascensor #2 completada exitosamente - Ticket #T-2024-045
+                        </div>
+                      </div>
+                      <small class="text-muted">Hace 3 horas</small>
+                    </div>
+                    <div class="timeline-badges">
+                      <span class="activity-badge maintenance">Mantenimiento</span>
+                      <span class="priority-badge high">Alta</span>
+                    </div>
+                    <div class="timeline-meta">
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">schedule</span>
+                        15/09/2024 11:45:30
+                      </div>
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">person</span>
+                        Carlos Mendoza
+                      </div>
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">build</span>
+                        Ascensores
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-marker admin"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-header">
+                      <div>
+                        <div class="timeline-action">Documento subido al sistema</div>
+                        <div class="timeline-description">
+                          Nuevo archivo "Presupuesto 2025.pdf" agregado a la categoría Financiero
+                        </div>
+                      </div>
+                      <small class="text-muted">Hace 4 horas</small>
+                    </div>
+                    <div class="timeline-badges">
+                      <span class="activity-badge admin">Administración</span>
+                      <span class="priority-badge normal">Normal</span>
+                    </div>
+                    <div class="timeline-meta">
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">schedule</span>
+                        15/09/2024 10:15:22
+                      </div>
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">folder</span>
+                        Financiero
+                      </div>
+                      <div class="timeline-meta-item">
+                        <span class="material-icons">storage</span>
+                        2.4 MB
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="activity-mobile">
+              <div class="activity-card">
+                <div class="activity-card-header">
+                  <div>
+                    <div class="fw-bold">Inicio de sesión exitoso</div>
+                    <small class="text-muted">Hace 2 minutos</small>
+                  </div>
+                  <span class="activity-badge user">Usuario</span>
+                </div>
+                <div class="activity-card-content">
+                  <p class="mb-2">Usuario Patricia Contreras inició sesión desde dirección IP 192.168.1.105</p>
+                  <div class="d-flex gap-2 mb-2">
+                    <span class="priority-badge normal">Normal</span>
+                  </div>
+                  <small class="text-muted">15/09/2024 14:35:42 • IP: 192.168.1.105</small>
+                </div>
+              </div>
+
+              <div class="activity-card">
+                <div class="activity-card-header">
+                  <div>
+                    <div class="fw-bold">Pago de gastos comunes procesado</div>
+                    <small class="text-muted">Hace 15 minutos</small>
+                  </div>
+                  <span class="activity-badge financial">Financiero</span>
+                </div>
+                <div class="activity-card-content">
+                  <p class="mb-2">Unidad 301 - Torre Norte realizó pago de $45.000 por gastos comunes de septiembre</p>
+                  <div class="d-flex gap-2 mb-2">
+                    <span class="priority-badge normal">Normal</span>
+                  </div>
+                  <small class="text-muted">15/09/2024 14:22:15 • $45.000</small>
+                </div>
+              </div>
+
+              <div class="activity-card">
+                <div class="activity-card-header">
+                  <div>
+                    <div class="fw-bold">Alerta de seguridad activada</div>
+                    <small class="text-muted">Hace 1 hora</small>
+                  </div>
+                  <span class="activity-badge security">Seguridad</span>
+                </div>
+                <div class="activity-card-content">
+                  <p class="mb-2">Detector de movimiento en estacionamiento activado fuera de horario normal</p>
+                  <div class="d-flex gap-2 mb-2">
+                    <span class="priority-badge high">Alta</span>
+                  </div>
+                  <small class="text-muted">15/09/2024 13:45:03 • Estacionamiento</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="d-flex justify-content-between align-items-center p-3 border-top">
+              <div class="text-muted">
+                Mostrando 1-10 de 2,847 actividades
+              </div>
+              <nav>
+                <ul class="pagination pagination-sm mb-0">
+                  <li class="page-item disabled">
+                    <span class="page-link">Anterior</span>
+                  </li>
+                  <li class="page-item active">
+                    <span class="page-link">1</span>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">3</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">Siguiente</a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script src="assets/js/script.js"></script>
+    <script>
+      function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.querySelector('.sidebar-backdrop');
+        
+        sidebar.classList.toggle('show');
+        backdrop.classList.toggle('show');
+      }
+
+      // Auto-refresh functionality
+      let autoRefreshInterval;
+      let isAutoRefreshEnabled = false;
+
+      // Search functionality
+      document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        filterActivities();
+      });
+
+      // Filter functions
+      function clearFilters() {
+        document.getElementById('activityTypeFilter').value = '';
+        document.getElementById('priorityFilter').value = '';
+        document.getElementById('userFilter').value = '';
+        document.getElementById('moduleFilter').value = '';
+        document.getElementById('dateRangeFilter').value = 'week';
+        document.getElementById('searchInput').value = '';
+        filterActivities();
+      }
+
+      function applyFilters() {
+        filterActivities();
+      }
+
+      function filterActivities() {
+        // In a real application, this would filter the activities based on the selected criteria
+        console.log('Filtering activities...');
+        
+        // Simulate filtering with a loading state
+        const timelineContainer = document.getElementById('timelineContainer');
+        timelineContainer.style.opacity = '0.5';
+        
+        setTimeout(() => {
+          timelineContainer.style.opacity = '1';
+        }, 500);
+      }
+
+      // Refresh functionality
+      function refreshLog() {
+        const refreshBtn = event.target.closest('.action-btn');
+        const originalContent = refreshBtn.innerHTML;
+        
+        refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Actualizando...';
+        refreshBtn.disabled = true;
+        
+        // Simulate refresh
+        setTimeout(() => {
+          refreshBtn.innerHTML = originalContent;
+          refreshBtn.disabled = false;
+          
+          // Add a new activity at the top to simulate real-time update
+          addNewActivity();
+        }, 1500);
+      }
+
+      // Toggle auto-refresh
+      function toggleAutoRefresh() {
+        const autoRefreshBtn = event.target.closest('.action-btn');
+        
+        if (isAutoRefreshEnabled) {
+          clearInterval(autoRefreshInterval);
+          isAutoRefreshEnabled = false;
+          autoRefreshBtn.innerHTML = '<span class="material-icons">play_arrow</span>Auto-actualizar';
+          autoRefreshBtn.classList.remove('success');
+          autoRefreshBtn.classList.add('outline');
+        } else {
+          autoRefreshInterval = setInterval(() => {
+            addNewActivity();
+          }, 30000); // Refresh every 30 seconds
+          
+          isAutoRefreshEnabled = true;
+          autoRefreshBtn.innerHTML = '<span class="material-icons">pause</span>Detener auto-actualizar';
+          autoRefreshBtn.classList.remove('outline');
+          autoRefreshBtn.classList.add('success');
+        }
+      }
+
+      // Add new activity (simulate real-time updates)
+      function addNewActivity() {
+        const timelineContainer = document.getElementById('timelineContainer');
+        const newActivity = document.createElement('div');
+        newActivity.className = 'timeline-item';
+        newActivity.style.opacity = '0';
+        newActivity.style.transform = 'translateY(-20px)';
+        
+        const activities = [
+          {
+            type: 'user',
+            action: 'Usuario conectado',
+            description: 'Nuevo usuario Juan Pérez se conectó al sistema',
+            badge: 'user',
+            priority: 'normal'
+          },
+          {
+            type: 'system',
+            action: 'Backup completado',
+            description: 'Respaldo automático de la base de datos completado exitosamente',
+            badge: 'system',
+            priority: 'normal'
+          },
+          {
+            type: 'security',
+            action: 'Acceso denegado',
+            description: 'Intento de acceso fallido desde IP desconocida',
+            badge: 'security',
+            priority: 'high'
+          }
+        ];
+        
+        const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+        const now = new Date();
+        const timeString = now.toLocaleString('es-CL');
+        
+        newActivity.innerHTML = `
+          <div class="timeline-marker ${randomActivity.type}"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <div>
+                <div class="timeline-action">${randomActivity.action}</div>
+                <div class="timeline-description">${randomActivity.description}</div>
+              </div>
+              <small class="text-muted">Ahora</small>
+            </div>
+            <div class="timeline-badges">
+              <span class="activity-badge ${randomActivity.badge}">${randomActivity.action.split(' ')[0]}</span>
+              <span class="priority-badge ${randomActivity.priority}">${randomActivity.priority === 'high' ? 'Alta' : 'Normal'}</span>
+            </div>
+            <div class="timeline-meta">
+              <div class="timeline-meta-item">
+                <span class="material-icons">schedule</span>
+                ${timeString}
+              </div>
+              <div class="timeline-meta-item">
+                <span class="material-icons">computer</span>
+                Sistema
+              </div>
+            </div>
+          </div>
+        `;
+        
+        timelineContainer.insertBefore(newActivity, timelineContainer.firstChild);
+        
+        // Animate the new activity
+        setTimeout(() => {
+          newActivity.style.transition = 'all 0.3s ease';
+          newActivity.style.opacity = '1';
+          newActivity.style.transform = 'translateY(0)';
+        }, 100);
+      }
+
+      // Export functionality
+      function exportData(format) {
+        const exportBtn = event.target.closest('.action-btn');
+        const originalContent = exportBtn.innerHTML;
+        
+        exportBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Exportando...';
+        exportBtn.disabled = true;
+        
+        setTimeout(() => {
+          exportBtn.innerHTML = originalContent;
+          exportBtn.disabled = false;
+          
+          // Simulate download
+          alert(`Bitácora exportada en formato ${format.toUpperCase()}`);
+        }, 2000);
+      }
+
+      // Real-time updates simulation
+      setTimeout(() => {
+        addNewActivity();
+      }, 10000); // Add first activity after 10 seconds
+
+      // Initialize date range picker for custom dates
+      document.getElementById('dateRangeFilter').addEventListener('change', function() {
+        if (this.value === 'custom') {
+          // In a real app, this would show a date range picker
+          const startDate = prompt('Fecha inicio (DD/MM/YYYY):');
+          const endDate = prompt('Fecha fin (DD/MM/YYYY):');
+          if (startDate && endDate) {
+            console.log(`Custom date range: ${startDate} - ${endDate}`);
+            filterActivities();
+          } else {
+            this.value = 'week'; // Reset to default
+          }
+        } else {
+          filterActivities();
+        }
+      });
+
+      // Add keyboard shortcuts
+      document.addEventListener('keydown', function(e) {
+        // F5 or Ctrl+R to refresh
+        if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+          e.preventDefault();
+          refreshLog();
+        }
+        
+        // Ctrl+F to focus search
+        if (e.ctrlKey && e.key === 'f') {
+          e.preventDefault();
+          document.getElementById('searchInput').focus();
+        }
+      });
+    </script>
+  </body>
+</html>

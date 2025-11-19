@@ -4,8 +4,11 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import ModernPagination from '@/components/ui/ModernPagination';
 import { useEdificios } from '@/hooks/useEdificios';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useAuth } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 import {
   Edificio,
   EdificioFilters,
@@ -16,7 +19,9 @@ import {
 } from '@/types/edificios';
 
 export default function EdificiosListado() {
+  const { user } = useAuth();
   const router = useRouter();
+  const { hasPermission } = usePermissions();
 
   // Hooks personalizados
   const {
@@ -133,6 +138,21 @@ export default function EdificiosListado() {
     return icons[tipo as keyof typeof icons] || 'business';
   };
 
+  // Funciones de paginación
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    goToPage(currentPage - 1);
+  };
+
+  const goToNextPage = () => {
+    goToPage(currentPage + 1);
+  };
+
   // Paginación
   const totalPages = Math.ceil(filteredEdificios.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -148,16 +168,79 @@ export default function EdificiosListado() {
       </Head>
 
       <Layout title='Edificios'>
+        {/* Header profesional */}
+        <div className='container-fluid p-0'>
+          <header className='text-white shadow-lg' style={{ background: 'var(--gradient-dashboard-header)' }}>
+            <div className='p-4'>
+              <div className='row align-items-center'>
+                {/* Información principal */}
+                <div className='col-lg-8'>
+                  <div className='d-flex align-items-center mb-3'>
+                    <div className='icon-box bg-info bg-opacity-20 rounded-circle p-3 me-3'>
+                      <span className='material-icons' style={{ fontSize: '32px', color: 'white' }}>
+                        business
+                      </span>
+                    </div>
+                    <div>
+                      <h1 className='h3 mb-1 fw-bold'>Edificios</h1>
+                      <p className='mb-0 opacity-75'>Gestión y administración de edificios</p>
+                    </div>
+                  </div>
+
+                  {/* Estadísticas rápidas */}
+                  <div className='bg-white bg-opacity-10 rounded p-3'>
+                    <div className='row g-3'>
+                      <div className='col-4'>
+                        <div className='text-center'>
+                          <div className='h5 mb-0 fw-bold'>{statsCalculadas.totalEdificios}</div>
+                          <small className='text-white-50'>Total</small>
+                        </div>
+                      </div>
+                      <div className='col-4'>
+                        <div className='text-center'>
+                          <div className='h5 mb-0 fw-bold'>{statsCalculadas.edificiosActivos}</div>
+                          <small className='text-white-50'>Activos</small>
+                        </div>
+                      </div>
+                      <div className='col-4'>
+                        <div className='text-center'>
+                          <div className='h5 mb-0 fw-bold'>{filteredEdificios.length}</div>
+                          <small className='text-white-50'>Filtrados</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Panel de acciones */}
+                <div className='col-lg-4'>
+                  <div className='d-flex justify-content-end align-items-center'>
+                    {/* Información del usuario */}
+                    <div className='bg-white bg-opacity-10 rounded p-3 me-3'>
+                      <div className='d-flex align-items-center'>
+                        <span className='material-icons me-2'>person</span>
+                        <div>
+                          <small className='text-white-50'>Usuario</small>
+                          <div className='fw-semibold'>{user?.username || 'Cargando...'}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Botón de nuevo edificio */}
+                    {hasPermission(Permission.CREATE_EDIFICIO) && (
+                      <Link href='/edificios/nuevo' className='btn btn-light d-flex align-items-center'>
+                        <span className='material-icons me-2'>add</span>
+                        Nuevo Edificio
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </header>
+        </div>
+
         <div className='container-fluid py-4'>
-          {/* Breadcrumb */}
-          <nav aria-label='breadcrumb' className='mb-4'>
-            <ol className='breadcrumb'>
-              <li className='breadcrumb-item'>
-                <Link href='/dashboard'>Dashboard</Link>
-              </li>
-              <li className='breadcrumb-item active'>Edificios</li>
-            </ol>
-          </nav>
 
           {/* Filtros y acciones */}
           <div className='row mb-4'>
@@ -220,10 +303,12 @@ export default function EdificiosListado() {
               </div>
             </div>
             <div className='col-lg-4 d-flex justify-content-end'>
-              <Link href='/edificios/nuevo' className='btn btn-primary'>
-                <i className='material-icons me-2'>add</i>
-                Nuevo Edificio
-              </Link>
+              {hasPermission(Permission.CREATE_EDIFICIO) && (
+                <Link href='/edificios/nuevo' className='btn btn-primary'>
+                  <i className='material-icons me-2'>add</i>
+                  Nuevo Edificio
+                </Link>
+              )}
             </div>
           </div>
 
@@ -492,29 +577,33 @@ export default function EdificiosListado() {
                               >
                                 <i className='material-icons'>visibility</i>
                               </Link>
-                              <button
-                                className='btn btn-sm btn-outline-secondary'
-                                title='Editar'
-                                onClick={() =>
-                                  router.push(
-                                    `/edificios/${edificio.id}/editar`,
-                                  )
-                                }
-                              >
-                                <i className='material-icons'>edit</i>
-                              </button>
-                              <button
-                                className='btn btn-sm btn-outline-danger'
-                                title='Eliminar'
-                                onClick={() =>
-                                  handleDeleteEdificio(
-                                    edificio.id,
-                                    edificio.nombre,
-                                  )
-                                }
-                              >
-                                <i className='material-icons'>delete</i>
-                              </button>
+                              {hasPermission(Permission.EDIT_EDIFICIO) && (
+                                <button
+                                  className='btn btn-sm btn-outline-secondary'
+                                  title='Editar'
+                                  onClick={() =>
+                                    router.push(
+                                      `/edificios/${edificio.id}/editar`,
+                                    )
+                                  }
+                                >
+                                  <i className='material-icons'>edit</i>
+                                </button>
+                              )}
+                              {hasPermission(Permission.DELETE_EDIFICIO) && (
+                                <button
+                                  className='btn btn-sm btn-outline-danger'
+                                  title='Eliminar'
+                                  onClick={() =>
+                                    handleDeleteEdificio(
+                                      edificio.id,
+                                      edificio.nombre,
+                                    )
+                                  }
+                                >
+                                  <i className='material-icons'>delete</i>
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -623,14 +712,16 @@ export default function EdificiosListado() {
                           >
                             <i className='material-icons'>visibility</i>
                           </Link>
-                          <button
-                            className='btn btn-sm btn-outline-secondary'
-                            onClick={() =>
-                              router.push(`/edificios/${edificio.id}/editar`)
-                            }
-                          >
-                            <i className='material-icons'>edit</i>
-                          </button>
+                          {hasPermission(Permission.EDIT_EDIFICIO) && (
+                            <button
+                              className='btn btn-sm btn-outline-secondary'
+                              onClick={() =>
+                                router.push(`/edificios/${edificio.id}/editar`)
+                              }
+                            >
+                              <i className='material-icons'>edit</i>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -640,59 +731,19 @@ export default function EdificiosListado() {
             </div>
           )}
 
-          {/* Paginación */}
+          {/* Paginación moderna */}
           {totalPages > 1 && (
-            <nav aria-label='Paginación de edificios'>
-              <ul className='pagination justify-content-center'>
-                <li
-                  className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}
-                >
-                  <button
-                    className='page-link'
-                    onClick={() =>
-                      setCurrentPage(prev => Math.max(1, prev - 1))
-                    }
-                    disabled={currentPage === 1}
-                  >
-                    Anterior
-                  </button>
-                </li>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  page => (
-                    <li
-                      key={page}
-                      className={`page-item ${currentPage === page ? 'active' : ''}`}
-                    >
-                      <button
-                        className='page-link'
-                        onClick={() => setCurrentPage(page)}
-                      >
-                        {page}
-                      </button>
-                    </li>
-                  ),
-                )}
-                <li
-                  className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}
-                >
-                  <button
-                    className='page-link'
-                    onClick={() =>
-                      setCurrentPage(prev => Math.min(totalPages, prev + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                  >
-                    Siguiente
-                  </button>
-                </li>
-              </ul>
-            </nav>
+            <ModernPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredEdificios.length}
+              itemsPerPage={itemsPerPage}
+              itemName="edificios"
+              onPageChange={goToPage}
+            />
           )}
 
-          {/* Botón flotante */}
-          <Link href='/edificios/nuevo' className='btn-floating'>
-            <i className='material-icons'>add</i>
-          </Link>
+
         </div>
 
         <style jsx>{`

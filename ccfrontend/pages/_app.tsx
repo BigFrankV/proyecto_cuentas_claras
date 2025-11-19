@@ -1,6 +1,7 @@
 import type { AppProps } from 'next/app';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@/styles/globals.css';
+import '@/styles/colors-pro.css';
 import '@/styles/components.css';
 import '@/styles/comunidades.css';
 import '@/styles/map-section.css';

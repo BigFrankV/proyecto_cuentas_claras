@@ -1,0 +1,1372 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Detalle de Documento de Compra - Cuentas Claras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tokens / overrides -->
+    <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+      /* Mobile-first Styles */
+      .nav-sidebar .nav-item .nav-link { color: rgba(255,255,255,0.8); }
+      .nav-sidebar .nav-item .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.1); }
+      .nav-sidebar .nav-item .nav-link.active { 
+        color: #fff; 
+        background: rgba(253,93,20,0.2);
+        border-left: 3px solid var(--color-accent);
+      }
+      .nav-sidebar .nav-item .nav-link.active .material-icons { color: var(--color-accent); }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 280px;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+      }
+      
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      
+      @media (min-width: 992px) {
+        .sidebar {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 280px;
+        }
+        
+        .toggle-sidebar {
+          display: none;
+        }
+      }
+      
+      /* Estilos del documento */
+      .document-header {
+        border-radius: var(--radius);
+        background-color: #fff;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+      }
+      
+      .document-info {
+        padding: 1.5rem;
+      }
+      
+      .document-tabs {
+        background-color: #f9f9fa;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        padding: 0 1rem;
+      }
+      
+      .document-tabs .nav-link {
+        color: var(--color-text);
+        padding: 1rem 1rem;
+        border: none;
+        border-bottom: 2px solid transparent;
+      }
+      
+      .document-tabs .nav-link:hover {
+        color: var(--color-primary);
+      }
+      
+      .document-tabs .nav-link.active {
+        color: var(--color-primary);
+        background-color: transparent;
+        border-bottom: 2px solid var(--color-primary);
+      }
+      
+      /* Estado del documento */
+      .document-status {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+      
+      .status-draft {
+        background-color: #FFF8E1;
+        color: #F57F17;
+      }
+      
+      .status-pending {
+        background-color: #E3F2FD;
+        color: #1565C0;
+      }
+      
+      .status-approved {
+        background-color: #E8F5E9;
+        color: #2E7D32;
+      }
+      
+      .status-rejected {
+        background-color: #FFEBEE;
+        color: #C62828;
+      }
+      
+      .status-paid {
+        background-color: #F3E5F5;
+        color: #7B1FA2;
+      }
+      
+      /* Badge de tipo de documento */
+      .doc-type-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+      
+      .doc-type-invoice {
+        background-color: #E3F2FD;
+        color: #0D47A1;
+      }
+      
+      .doc-type-receipt {
+        background-color: #FFF8E1;
+        color: #F57F17;
+      }
+      
+      .doc-type-quote {
+        background-color: #E8F5E9;
+        color: #2E7D32;
+      }
+      
+      .doc-type-order {
+        background-color: #F3E5F5;
+        color: #7B1FA2;
+      }
+      
+      /* Secciones de detalle */
+      .detail-section {
+        background-color: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+      }
+      
+      .detail-section-title {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 0.75rem;
+        margin-bottom: 1.25rem;
+        font-size: 1.125rem;
+      }
+      
+      .detail-item {
+        margin-bottom: 0.75rem;
+      }
+      
+      .detail-item .label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+      }
+      
+      .detail-item .value {
+        font-weight: 500;
+      }
+      
+      /* Tabla de ítems */
+      .items-table thead th {
+        background-color: #f8f9fa;
+        font-weight: 500;
+      }
+      
+      .items-table tbody td {
+        vertical-align: middle;
+      }
+      
+      .items-table .table-totals {
+        background-color: #f8f9fa;
+        font-weight: 500;
+      }
+      
+      /* Resumen de totales */
+      .totals-summary {
+        padding: 1.25rem;
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+      }
+      
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+      }
+      
+      .summary-row.total {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #dee2e6;
+        font-weight: 500;
+        font-size: 1.125rem;
+      }
+      
+      /* Historia y timeline */
+      .timeline-item {
+        position: relative;
+        padding-left: 28px;
+        padding-bottom: 1.5rem;
+        position: relative;
+      }
+      
+      .timeline-item:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 9px;
+        height: 100%;
+        width: 2px;
+        background-color: #e9ecef;
+      }
+      
+      .timeline-item:last-child:before {
+        height: 20px;
+      }
+      
+      .timeline-item .timeline-dot {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #fff;
+        border: 2px solid var(--color-primary);
+        z-index: 1;
+      }
+      
+      .timeline-item .timeline-date {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+      }
+      
+      .timeline-item .timeline-title {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+      }
+      
+      /* Archivos adjuntos */
+      .attachment-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+      }
+      
+      .attachment-item:hover {
+        background-color: #f8f9fa;
+      }
+      
+      .attachment-icon {
+        font-size: 24px;
+        color: #6c757d;
+        margin-right: 0.75rem;
+      }
+      
+      .attachment-info {
+        flex-grow: 1;
+      }
+      
+      .attachment-name {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+      }
+      
+      .attachment-meta {
+        font-size: 0.75rem;
+        color: #6c757d;
+      }
+      
+      .attachment-actions {
+        display: flex;
+      }
+      
+      .preview-button {
+        margin-right: 0.5rem;
+      }
+      
+      /* Aprobación */
+      .approval-section {
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      
+      .approval-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+      }
+      
+      .approval-title {
+        font-weight: 500;
+      }
+      
+      .approval-status {
+        font-weight: 500;
+      }
+      
+      .approval-status.approved {
+        color: var(--color-success);
+      }
+      
+      .approval-status.rejected {
+        color: var(--color-danger);
+      }
+      
+      .approval-status.pending {
+        color: var(--color-warning);
+      }
+      
+      .approval-body {
+        margin-bottom: 0.75rem;
+      }
+      
+      .approval-footer {
+        font-size: 0.875rem;
+        color: #6c757d;
+        display: flex;
+        justify-content: space-between;
+      }
+      
+      /* Botones de acción fijos en móvil */
+      @media (max-width: 991.98px) {
+        .action-buttons {
+          position: sticky;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background-color: #fff;
+          box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+          padding: 1rem;
+          margin-left: -0.75rem;
+          margin-right: -0.75rem;
+          z-index: 10;
+        }
+      }
+      
+      /* Comentarios */
+      .comment-item {
+        padding: 1rem;
+        border-radius: var(--radius);
+        background-color: #f8f9fa;
+        margin-bottom: 1rem;
+      }
+      
+      .comment-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+      }
+      
+      .comment-author {
+        font-weight: 500;
+      }
+      
+      .comment-date {
+        font-size: 0.875rem;
+        color: #6c757d;
+      }
+      
+      .comment-text {
+        margin-bottom: 0;
+      }
+      
+      /* Formulario de aprobación */
+      .approval-form {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: var(--radius);
+        padding: 1.25rem;
+        margin-top: 1rem;
+      }
+      
+      .approval-form .form-label {
+        font-weight: 500;
+      }
+      
+      .approval-options {
+        margin-bottom: 1rem;
+      }
+      
+      /* Información de proveedor */
+      .provider-info-box {
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .provider-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+      
+      .provider-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        font-size: 1rem;
+        color: var(--color-primary);
+        margin-right: 0.75rem;
+      }
+      
+      .provider-name {
+        font-weight: 500;
+      }
+      
+      .provider-details {
+        font-size: 0.875rem;
+      }
+      
+      .provider-contact {
+        display: flex;
+        align-items: center;
+        margin-top: 0.5rem;
+      }
+      
+      .provider-contact .material-icons {
+        font-size: 16px;
+        margin-right: 0.5rem;
+        color: #6c757d;
+      }
+      
+      /* Vista previa de archivo */
+      .preview-container {
+        background-color: #f8f9fa;
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-top: 1rem;
+        display: none;
+      }
+      
+      .preview-file {
+        text-align: center;
+      }
+      
+      .preview-file img {
+        max-width: 100%;
+        max-height: 300px;
+        object-fit: contain;
+      }
+      
+      .preview-file-icon {
+        font-size: 64px;
+        color: #6c757d;
+      }
+      
+      .preview-file-name {
+        margin-top: 1rem;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <!-- Mobile Navigation Bar -->
+    <nav class="navbar navbar-dark bg-primary d-flex d-lg-none">
+      <div class="container-fluid">
+        <button class="navbar-toggler border-0" type="button" id="toggle-sidebar">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand me-auto" href="dashboard.html">
+          <span class="material-icons align-middle me-1">apartment</span>
+          Cuentas Claras
+        </a>
+        <div class="dropdown">
+          <button class="btn btn-link text-white p-0" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="avatar">PC</div>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    
+    <!-- Backdrop for mobile sidebar -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+    
+    <!-- Sidebar -->
+    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidebar" id="sidebar" style="background: linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important;">
+      <a href="dashboard.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+        <span class="material-icons me-2" style="font-size: 32px;">apartment</span>
+        <span class="fs-4">Cuentas Claras</span>
+      </a>
+      
+      <div class="d-flex align-items-center mb-3 px-2">
+        <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+        <div>
+          <span class="d-block text-white">Patricia Contreras</span>
+          <span class="small text-white-50">Administradora</span>
+        </div>
+      </div>
+      
+      <hr>
+      
+      <ul class="nav nav-sidebar flex-column mb-auto">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="comunidades-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">domain</span>
+            <span>Comunidades</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="edificios-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">business</span>
+            <span>Edificios</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="unidades-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">apartment</span>
+            <span>Unidades</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="personas-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">people</span>
+            <span>Personas</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="membresias-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">card_membership</span>
+            <span>Membresías</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="categorias-gasto-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">category</span>
+            <span>Categorías</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="centros-costo-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">account_balance_wallet</span>
+            <span>Centros de Costo</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="proveedores-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">inventory</span>
+            <span>Proveedores</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="documentos-compra-listado.html" class="nav-link active px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">receipt_long</span>
+            <span>Compras</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="pagos-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">payments</span>
+            <span>Pagos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="gastos-listado.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">shopping_cart</span>
+            <span>Gastos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="reportes-dashboard.html" class="nav-link px-3 py-2 mb-1">
+            <span class="material-icons align-middle me-2">bar_chart</span>
+            <span>Reportes</span>
+          </a>
+        </li>
+      </ul>
+      
+      <hr>
+      
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="avatar me-2" style="background-color: var(--color-accent);">PC</div>
+          <strong>Patricia</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+          <li><a class="dropdown-item" href="profile.html">Perfil</a></li>
+          <li><a class="dropdown-item" href="#">Configuración</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="login.html">Cerrar sesión</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content px-3 py-4">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+          <a href="documentos-compra-listado.html" class="btn btn-link text-secondary p-0 me-3">
+            <span class="material-icons">arrow_back</span>
+          </a>
+          <h4 class="mb-0">Factura #F-2025-098</h4>
+        </div>
+        <div class="dropdown d-md-none">
+          <button class="btn btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="material-icons">more_vert</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">edit</span>Editar</a></li>
+            <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">download</span>Descargar PDF</a></li>
+            <li><a class="dropdown-item" href="#"><span class="material-icons align-middle me-2 small">print</span>Imprimir</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="#"><span class="material-icons align-middle me-2 small">delete</span>Eliminar</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Document Header -->
+      <div class="document-header">
+        <div class="document-info">
+          <div class="row align-items-center">
+            <div class="col">
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <span class="doc-type-badge doc-type-invoice">Factura</span>
+                <span class="document-status status-pending">Pendiente de aprobación</span>
+              </div>
+              <h5 class="mb-1">Reparación de techumbre</h5>
+              <div class="d-flex flex-wrap gap-3">
+                <div class="text-muted small">
+                  <span class="material-icons align-middle me-1 small">business</span>
+                  <span>Comunidad Parque Real</span>
+                </div>
+                <div class="text-muted small">
+                  <span class="material-icons align-middle me-1 small">today</span>
+                  <span>15/09/2025</span>
+                </div>
+                <div class="text-muted small">
+                  <span class="material-icons align-middle me-1 small">event</span>
+                  <span>Vence: 15/10/2025</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-auto d-none d-md-block">
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary">
+                  <span class="material-icons align-middle me-1">download</span>
+                  <span>Descargar PDF</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary">
+                  <span class="material-icons align-middle me-1">print</span>
+                  <span>Imprimir</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-primary">
+                  <span class="material-icons align-middle me-1">edit</span>
+                  <span>Editar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="document-tabs">
+          <ul class="nav nav-tabs border-0" id="documentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details-tab-pane" type="button" role="tab" aria-controls="details-tab-pane" aria-selected="true">Detalles</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="attachments-tab" data-bs-toggle="tab" data-bs-target="#attachments-tab-pane" type="button" role="tab" aria-controls="attachments-tab-pane" aria-selected="false">Archivos</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-tab-pane" type="button" role="tab" aria-controls="history-tab-pane" aria-selected="false">Historial</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments-tab-pane" type="button" role="tab" aria-controls="comments-tab-pane" aria-selected="false">Comentarios</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-12 col-lg-8">
+          <div class="tab-content" id="documentTabsContent">
+            <!-- Detalles Tab -->
+            <div class="tab-pane fade show active" id="details-tab-pane" role="tabpanel" aria-labelledby="details-tab" tabindex="0">
+              <!-- Aprobación -->
+              <div class="detail-section">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+                  <h6 class="mb-3 mb-md-0">Estado: Pendiente de aprobación</h6>
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-danger">
+                      <span class="material-icons align-middle me-1 small">close</span>
+                      Rechazar
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success">
+                      <span class="material-icons align-middle me-1 small">check</span>
+                      Aprobar
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="approval-form">
+                  <div class="mb-3">
+                    <label for="approval-comment" class="form-label">Comentario (opcional)</label>
+                    <textarea class="form-control" id="approval-comment" rows="2" placeholder="Ingresa un comentario sobre tu decisión..."></textarea>
+                  </div>
+                  <div class="approval-options d-flex gap-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="approval" id="approve-option" value="approve" checked>
+                      <label class="form-check-label" for="approve-option">
+                        Aprobar
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="approval" id="reject-option" value="reject">
+                      <label class="form-check-label" for="reject-option">
+                        Rechazar
+                      </label>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-primary">Enviar decisión</button>
+                </div>
+              </div>
+              
+              <!-- Información general -->
+              <div class="detail-section">
+                <h5 class="detail-section-title">Información General</h5>
+                
+                <div class="row">
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Número de Factura</div>
+                      <div class="value">F-2025-098</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Tipo de Documento</div>
+                      <div class="value">
+                        <span class="doc-type-badge doc-type-invoice">Factura</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Fecha del Documento</div>
+                      <div class="value">15/09/2025</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Fecha de Vencimiento</div>
+                      <div class="value">15/10/2025</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Comunidad</div>
+                      <div class="value">Comunidad Parque Real</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Centro de Costo</div>
+                      <div class="value">Mantenimiento</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Moneda</div>
+                      <div class="value">Peso Chileno (CLP)</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Descripción</div>
+                      <div class="value">Reparación de techumbre</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Información del proveedor -->
+              <div class="detail-section">
+                <h5 class="detail-section-title">Proveedor</h5>
+                
+                <div class="provider-info-box">
+                  <div class="provider-header">
+                    <div class="provider-logo">CE</div>
+                    <div>
+                      <div class="provider-name">Constructora Edificar</div>
+                      <div class="text-muted small">RUT: 76.456.789-0</div>
+                    </div>
+                  </div>
+                  <div class="provider-details">
+                    <div class="mb-1">
+                      <span class="text-muted me-2">Dirección:</span>
+                      <span>Av. Providencia 1234, Oficina 502, Santiago</span>
+                    </div>
+                    <div class="provider-contact">
+                      <span class="material-icons">phone</span>
+                      <span>+56 9 8765 4321</span>
+                    </div>
+                    <div class="provider-contact">
+                      <span class="material-icons">email</span>
+                      <span>contacto@edificar.com</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="d-flex justify-content-end">
+                  <a href="proveedor-detalle.html" class="btn btn-sm btn-outline-primary mt-2">
+                    <span class="material-icons align-middle me-1 small">visibility</span>
+                    Ver detalles del proveedor
+                  </a>
+                </div>
+              </div>
+              
+              <!-- Detalle de ítems -->
+              <div class="detail-section">
+                <h5 class="detail-section-title">Detalle de Ítems</h5>
+                
+                <div class="table-responsive">
+                  <table class="table items-table">
+                    <thead>
+                      <tr>
+                        <th>Descripción</th>
+                        <th class="text-center">Cantidad</th>
+                        <th class="text-end">Precio Unitario</th>
+                        <th class="text-end">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Servicio de reparación de techumbre sector norte</td>
+                        <td class="text-center">1</td>
+                        <td class="text-end">$1.200.000</td>
+                        <td class="text-end">$1.200.000</td>
+                      </tr>
+                      <tr>
+                        <td>Materiales para impermeabilización</td>
+                        <td class="text-center">5</td>
+                        <td class="text-end">$120.000</td>
+                        <td class="text-end">$600.000</td>
+                      </tr>
+                      <tr>
+                        <td>Mano de obra especializada (horas)</td>
+                        <td class="text-center">40</td>
+                        <td class="text-end">$15.000</td>
+                        <td class="text-end">$600.000</td>
+                      </tr>
+                      <tr>
+                        <td>Materiales adicionales y consumibles</td>
+                        <td class="text-center">1</td>
+                        <td class="text-end">$500.000</td>
+                        <td class="text-end">$500.000</td>
+                      </tr>
+                    </tbody>
+                    <tfoot class="table-totals">
+                      <tr>
+                        <td colspan="3" class="text-end">Subtotal:</td>
+                        <td class="text-end">$2.900.000</td>
+                      </tr>
+                      <tr>
+                        <td colspan="3" class="text-end">IVA (19%):</td>
+                        <td class="text-end">$550.000</td>
+                      </tr>
+                      <tr>
+                        <td colspan="3" class="text-end">Total:</td>
+                        <td class="text-end fw-bold">$3.450.000</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+              
+              <!-- Información de pago -->
+              <div class="detail-section">
+                <h5 class="detail-section-title">Información de Pago</h5>
+                
+                <div class="row">
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Estado de Pago</div>
+                      <div class="value">
+                        <span class="document-status status-pending">Pendiente</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Método de Pago</div>
+                      <div class="value">Transferencia bancaria</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Condiciones de Pago</div>
+                      <div class="value">30 días</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="detail-item">
+                      <div class="label">Fecha Límite de Pago</div>
+                      <div class="value">15/10/2025</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="d-flex justify-content-end mt-3">
+                  <button type="button" class="btn btn-primary">
+                    <span class="material-icons align-middle me-1">payments</span>
+                    Registrar Pago
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Notas -->
+              <div class="detail-section">
+                <h5 class="detail-section-title">Notas</h5>
+                
+                <div>
+                  <p>Trabajo realizado entre el 10 y 14 de septiembre de 2025. Incluye garantía de 6 meses por materiales y mano de obra. En caso de filtraciones posteriores, el proveedor realizará las reparaciones sin costo adicional.</p>
+                  <p class="mb-0">Se adjunta informe fotográfico del trabajo realizado y certificado de los materiales utilizados.</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Archivos Tab -->
+            <div class="tab-pane fade" id="attachments-tab-pane" role="tabpanel" aria-labelledby="attachments-tab" tabindex="0">
+              <div class="detail-section">
+                <h5 class="detail-section-title">Archivos Adjuntos</h5>
+                
+                <div class="attachment-item">
+                  <span class="material-icons attachment-icon">picture_as_pdf</span>
+                  <div class="attachment-info">
+                    <div class="attachment-name">Factura Original.pdf</div>
+                    <div class="attachment-meta">1.2 MB • Subido el 15/09/2025 • Por Patricia Contreras</div>
+                  </div>
+                  <div class="attachment-actions">
+                    <button type="button" class="btn btn-sm btn-outline-secondary preview-button" data-preview="pdf">
+                      <span class="material-icons align-middle small">visibility</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary">
+                      <span class="material-icons align-middle small">download</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="attachment-item">
+                  <span class="material-icons attachment-icon">image</span>
+                  <div class="attachment-info">
+                    <div class="attachment-name">Fotos Trabajo 1.jpg</div>
+                    <div class="attachment-meta">2.5 MB • Subido el 15/09/2025 • Por Patricia Contreras</div>
+                  </div>
+                  <div class="attachment-actions">
+                    <button type="button" class="btn btn-sm btn-outline-secondary preview-button" data-preview="image">
+                      <span class="material-icons align-middle small">visibility</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary">
+                      <span class="material-icons align-middle small">download</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="attachment-item">
+                  <span class="material-icons attachment-icon">image</span>
+                  <div class="attachment-info">
+                    <div class="attachment-name">Fotos Trabajo 2.jpg</div>
+                    <div class="attachment-meta">1.8 MB • Subido el 15/09/2025 • Por Patricia Contreras</div>
+                  </div>
+                  <div class="attachment-actions">
+                    <button type="button" class="btn btn-sm btn-outline-secondary preview-button" data-preview="image">
+                      <span class="material-icons align-middle small">visibility</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary">
+                      <span class="material-icons align-middle small">download</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="attachment-item">
+                  <span class="material-icons attachment-icon">description</span>
+                  <div class="attachment-info">
+                    <div class="attachment-name">Certificado Materiales.pdf</div>
+                    <div class="attachment-meta">540 KB • Subido el 15/09/2025 • Por Patricia Contreras</div>
+                  </div>
+                  <div class="attachment-actions">
+                    <button type="button" class="btn btn-sm btn-outline-secondary preview-button" data-preview="pdf">
+                      <span class="material-icons align-middle small">visibility</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary">
+                      <span class="material-icons align-middle small">download</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="preview-container" id="preview-container">
+                  <div class="preview-file">
+                    <img src="https://via.placeholder.com/800x600" alt="Vista previa" id="preview-image" style="display: none;">
+                    <div class="preview-file-icon" id="preview-icon" style="display: none;">
+                      <span class="material-icons" style="font-size: 64px;">description</span>
+                    </div>
+                    <div class="preview-file-name" id="preview-name">
+                      Fotos Trabajo 1.jpg
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="d-flex justify-content-center mt-4">
+                  <button type="button" class="btn btn-primary">
+                    <span class="material-icons align-middle me-1">upload_file</span>
+                    Subir Archivo
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Historial Tab -->
+            <div class="tab-pane fade" id="history-tab-pane" role="tabpanel" aria-labelledby="history-tab" tabindex="0">
+              <div class="detail-section">
+                <h5 class="detail-section-title">Historial del Documento</h5>
+                
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div class="timeline-date">15 sept, 2025 - 14:30</div>
+                  <div class="timeline-title">Documento creado</div>
+                  <div>Patricia Contreras creó el documento</div>
+                </div>
+                
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div class="timeline-date">15 sept, 2025 - 14:32</div>
+                  <div class="timeline-title">Archivos adjuntos añadidos</div>
+                  <div>Patricia Contreras adjuntó 4 archivos</div>
+                </div>
+                
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div class="timeline-date">15 sept, 2025 - 14:35</div>
+                  <div class="timeline-title">Enviado para aprobación</div>
+                  <div>Patricia Contreras envió el documento para aprobación</div>
+                </div>
+                
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div class="timeline-date">15 sept, 2025 - 15:10</div>
+                  <div class="timeline-title">Comentario añadido</div>
+                  <div>Juan Pérez agregó un comentario: "Por favor revisar los montos de materiales adicionales"</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Comentarios Tab -->
+            <div class="tab-pane fade" id="comments-tab-pane" role="tabpanel" aria-labelledby="comments-tab" tabindex="0">
+              <div class="detail-section">
+                <h5 class="detail-section-title">Comentarios</h5>
+                
+                <div class="comment-item">
+                  <div class="comment-header">
+                    <div class="comment-author">Juan Pérez</div>
+                    <div class="comment-date">15 sept, 2025 - 15:10</div>
+                  </div>
+                  <p class="comment-text">Por favor revisar los montos de materiales adicionales. Me parece que son un poco elevados en comparación con otros proveedores. También sería bueno verificar si la garantía cubre daños por lluvias.</p>
+                </div>
+                
+                <div class="comment-item">
+                  <div class="comment-header">
+                    <div class="comment-author">Patricia Contreras</div>
+                    <div class="comment-date">15 sept, 2025 - 15:45</div>
+                  </div>
+                  <p class="comment-text">Los precios están dentro del rango de mercado y son coherentes con la cotización aprobada. La garantía sí incluye daños por filtración de agua de lluvia durante los próximos 6 meses.</p>
+                </div>
+                
+                <div class="mt-4">
+                  <div class="mb-3">
+                    <label for="new-comment" class="form-label">Añadir comentario</label>
+                    <textarea class="form-control" id="new-comment" rows="3" placeholder="Escribe tu comentario aquí..."></textarea>
+                  </div>
+                  <div class="d-flex justify-content-end">
+                    <button type="button" class="btn btn-primary">
+                      <span class="material-icons align-middle me-1 small">send</span>
+                      Enviar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12 col-lg-4">
+          <!-- Resumen del documento -->
+          <div class="detail-section">
+            <h5 class="detail-section-title">Resumen</h5>
+            
+            <div class="detail-item">
+              <div class="label">Estado</div>
+              <div class="value">
+                <span class="document-status status-pending">Pendiente de aprobación</span>
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="label">Monto Total</div>
+              <div class="value fs-4 text-primary">$3.450.000</div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="label">Fecha de Emisión</div>
+              <div class="value">15/09/2025</div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="label">Fecha de Vencimiento</div>
+              <div class="value">15/10/2025</div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="label">Creado por</div>
+              <div class="value">Patricia Contreras</div>
+            </div>
+            
+            <div class="totals-summary mt-3">
+              <div class="summary-row">
+                <span>Subtotal:</span>
+                <span>$2.900.000</span>
+              </div>
+              <div class="summary-row">
+                <span>IVA (19%):</span>
+                <span>$550.000</span>
+              </div>
+              <div class="summary-row total">
+                <span>Total:</span>
+                <span>$3.450.000</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Documentos relacionados -->
+          <div class="detail-section">
+            <h5 class="detail-section-title">Documentos Relacionados</h5>
+            
+            <div class="list-group">
+              <a href="#" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1">Cotización #C-2025-087</h6>
+                  <small class="text-muted">10/09/2025</small>
+                </div>
+                <p class="mb-1 small">Cotización original para reparación de techumbre</p>
+                <small class="text-muted d-flex align-items-center">
+                  <span class="material-icons me-1 small">visibility</span>
+                  Ver documento
+                </small>
+              </a>
+              <a href="#" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1">Orden de Compra #OC-2025-092</h6>
+                  <small class="text-muted">12/09/2025</small>
+                </div>
+                <p class="mb-1 small">Orden de compra para reparación de techumbre</p>
+                <small class="text-muted d-flex align-items-center">
+                  <span class="material-icons me-1 small">visibility</span>
+                  Ver documento
+                </small>
+              </a>
+            </div>
+          </div>
+          
+          <!-- Acciones -->
+          <div class="detail-section">
+            <h5 class="detail-section-title">Acciones</h5>
+            
+            <div class="d-grid gap-2">
+              <button type="button" class="btn btn-outline-primary d-flex justify-content-center align-items-center">
+                <span class="material-icons align-middle me-2">email</span>
+                <span>Enviar por correo</span>
+              </button>
+              <button type="button" class="btn btn-outline-primary d-flex justify-content-center align-items-center">
+                <span class="material-icons align-middle me-2">content_copy</span>
+                <span>Duplicar documento</span>
+              </button>
+              <button type="button" class="btn btn-outline-danger d-flex justify-content-center align-items-center">
+                <span class="material-icons align-middle me-2">delete</span>
+                <span>Eliminar documento</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Notas -->
+          <div class="detail-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">Notas Internas</h5>
+              <button type="button" class="btn btn-sm btn-outline-primary">
+                <span class="material-icons align-middle small">add</span> Añadir Nota
+              </button>
+            </div>
+            
+            <div class="alert alert-light border mb-3">
+              <div class="d-flex justify-content-between">
+                <small class="text-muted">15/09/2025 - Patricia Contreras</small>
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-icon btn-link p-0" type="button" data-bs-toggle="dropdown">
+                    <span class="material-icons small">more_vert</span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#">Editar</a></li>
+                    <li><a class="dropdown-item" href="#">Eliminar</a></li>
+                  </ul>
+                </div>
+              </div>
+              <p class="mb-0 mt-2">Verificar con el proveedor la fecha exacta de finalización de los trabajos para actualizar el registro de mantenimiento.</p>
+            </div>
+            
+            <div class="alert alert-light border mb-0">
+              <div class="d-flex justify-content-between">
+                <small class="text-muted">15/09/2025 - Juan Pérez</small>
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-icon btn-link p-0" type="button" data-bs-toggle="dropdown">
+                    <span class="material-icons small">more_vert</span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#">Editar</a></li>
+                    <li><a class="dropdown-item" href="#">Eliminar</a></li>
+                  </ul>
+                </div>
+              </div>
+              <p class="mb-0 mt-2">Solicitar certificado de garantía por escrito para adjuntar al expediente del edificio.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Mobile Action Buttons -->
+      <div class="action-buttons d-flex justify-content-between d-lg-none">
+        <button type="button" class="btn btn-outline-secondary">
+          <span class="material-icons align-middle">arrow_back</span>
+        </button>
+        <div>
+          <button type="button" class="btn btn-primary">
+            <span class="material-icons align-middle">edit</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/script.js"></script>
+    
+    <script>
+      // Toggle sidebar on mobile
+      document.addEventListener('DOMContentLoaded', function() {
+        const toggleSidebar = document.getElementById('toggle-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+        
+        if (toggleSidebar && sidebar && sidebarBackdrop) {
+          toggleSidebar.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+            sidebarBackdrop.classList.toggle('show');
+          });
+          
+          sidebarBackdrop.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            sidebarBackdrop.classList.remove('show');
+          });
+        }
+        
+        // Enable Bootstrap tabs
+        const triggerTabList = [].slice.call(document.querySelectorAll('#documentTabs button'));
+        triggerTabList.forEach(function (triggerEl) {
+          const tabTrigger = new bootstrap.Tab(triggerEl);
+          
+          triggerEl.addEventListener('click', function (event) {
+            event.preventDefault();
+            tabTrigger.show();
+          });
+        });
+        
+        // Preview buttons for attachments
+        const previewButtons = document.querySelectorAll('.preview-button');
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
+        const previewIcon = document.getElementById('preview-icon');
+        const previewName = document.getElementById('preview-name');
+        
+        previewButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            // Get attachment info
+            const attachmentItem = this.closest('.attachment-item');
+            const attachmentName = attachmentItem.querySelector('.attachment-name').textContent;
+            const previewType = this.getAttribute('data-preview');
+            
+            // Show/hide preview elements based on type
+            if (previewType === 'image') {
+              previewImage.style.display = 'block';
+              previewIcon.style.display = 'none';
+              // In a real app, you'd set the image src to the actual file
+              previewImage.src = 'https://via.placeholder.com/800x600';
+            } else {
+              previewImage.style.display = 'none';
+              previewIcon.style.display = 'block';
+              // Set icon based on file type
+              const iconElement = previewIcon.querySelector('.material-icons');
+              iconElement.textContent = previewType === 'pdf' ? 'picture_as_pdf' : 'description';
+            }
+            
+            // Set name and show container
+            previewName.textContent = attachmentName;
+            previewContainer.style.display = 'block';
+            
+            // Scroll to preview
+            previewContainer.scrollIntoView({ behavior: 'smooth' });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

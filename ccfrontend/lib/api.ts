@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Configuración base de la API - usa la variable de entorno
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'|| 'http://localhost:8081';
 const API_FULL_URL = `${API_BASE_URL}`;
 
 // Crear instancia de axios
@@ -35,6 +35,11 @@ apiClient.interceptors.request.use(
 
       // eslint-disable-next-line no-console
       console.warn('[API Request] No hay token en localStorage');
+    }
+
+    // No sobrescribir Content-Type si es FormData
+    if (!(config.data instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
     }
 
     return config;

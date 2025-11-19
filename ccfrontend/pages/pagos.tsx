@@ -14,13 +14,15 @@ import {
 } from 'react-bootstrap';
 
 import { pagosApi } from '@/lib/api/pagos';
-import { ProtectedRoute } from '@/lib/useAuth';
-import { Pago, PaymentFilters, PaymentStats } from '@/types/pagos';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import type { Pago, PaymentFilters, PaymentStats, EstadisticaPorEstado, EstadisticaPorMetodo } from '@/types/pagos';
 
 import Layout from '../components/layout/Layout';
 import PaymentComponent from '../components/PaymentComponent';
 
 const Pagos: React.FC = () => {
+  const { user } = useAuth();
+  
   const [pagos, setPagos] = useState<Pago[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<PaymentFilters>({
@@ -38,20 +40,22 @@ const Pagos: React.FC = () => {
     totalAmount: 0,
     averageAmount: 0,
   });
+  const [statsPerEstado, setStatsPerEstado] = useState<EstadisticaPorEstado[]>([]);
+  const [statsPerMetodo, setStatsPerMetodo] = useState<EstadisticaPorMetodo[]>([]);
   const [pagination, setPagination] = useState({
     total: 0,
-    limit: 20, // Restored to 20 to match backend default
+    limit: 20,
     offset: 0,
     hasMore: false,
   });
+
+  // Get comunidad ID from user
+  const comunidadId = user?.comunidad_id || 1;
 
   // Load payments data
   const loadPayments = useCallback(async () => {
     try {
       setLoading(true);
-      // TODO: Get comunidadId from user context
-      const comunidadId = 1; // Default for now
-
       const response = await pagosApi.getByComunidad(comunidadId, {
         ...filters,
         limit: pagination.limit,
@@ -62,39 +66,35 @@ const Pagos: React.FC = () => {
       setPagination(response.pagination);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      // Error loading payments
       setPagos([]);
     } finally {
       setLoading(false);
     }
-  }, [filters, pagination.limit, pagination.offset]);
+  }, [filters, pagination.limit, pagination.offset, comunidadId]);
 
   // Load stats data
   const loadStats = useCallback(async () => {
     try {
-      // TODO: Get comunidadId from user context
-      const comunidadId = 1; // Default for now
+      const [statsData, statsEstado, statsMetodo] = await Promise.all([
+        pagosApi.getEstadisticas(comunidadId),
+        pagosApi.getEstadisticasPorEstado(comunidadId),
+        pagosApi.getEstadisticasPorMetodo(comunidadId),
+      ]);
 
-      const statsData = await pagosApi.getEstadisticas(comunidadId);
-      setStats({
-        totalPayments: statsData.totalPayments,
-        approvedPayments: statsData.approvedPayments,
-        pendingPayments: statsData.pendingPayments,
-        cancelledPayments: statsData.cancelledPayments,
-        totalAmount: statsData.totalAmount,
-        averageAmount: statsData.averageAmount,
-      });
+      setStats(statsData);
+      setStatsPerEstado(statsEstado);
+      setStatsPerMetodo(statsMetodo);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       // Error loading stats
     }
-  }, []);
+  }, [comunidadId]);
 
   useEffect(() => {
     loadPayments();
     loadStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run on mount
+  }, []);
 
   // Auto-apply search filter with debounce
   useEffect(() => {
@@ -103,7 +103,7 @@ const Pagos: React.FC = () => {
         setPagination(prev => ({ ...prev, offset: 0 }));
         loadPayments();
       }
-    }, 500); // 500ms delay
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [filters.search, loadPayments]);
@@ -113,7 +113,6 @@ const Pagos: React.FC = () => {
   };
 
   const handleSearch = () => {
-    // Reset pagination when applying filters
     setPagination(prev => ({ ...prev, offset: 0 }));
     loadPayments();
   };
@@ -146,6 +145,7 @@ const Pagos: React.FC = () => {
       },
       pendiente: { variant: 'warning', text: 'Pendiente', icon: 'schedule' },
       rechazado: { variant: 'danger', text: 'Rechazado', icon: 'cancel' },
+      cancelado: { variant: 'secondary', text: 'Cancelado', icon: 'block' },
     };
 
     const config =
@@ -163,13 +163,13 @@ const Pagos: React.FC = () => {
   };
 
   const getMethodIcon = (method: string) => {
-    const icons = {
+    const icons: Record<string, string> = {
       transferencia: 'account_balance',
       tarjeta_credito: 'credit_card',
       efectivo: 'payments',
       debito: 'payment',
     };
-    return icons[method as keyof typeof icons] || 'payment';
+    return icons[method] || 'payment';
   };
 
   if (loading) {
@@ -185,67 +185,193 @@ const Pagos: React.FC = () => {
   return (
     <ProtectedRoute>
       <Layout>
-        <Container fluid className='py-4'>
-          {/* Header con gradiente mejorado */}
-          <div className='payments-header mb-4'>
-            <Row className='align-items-center'>
-              <Col lg={8}>
-                <div className='d-flex align-items-center mb-3'>
-                  <span
-                    className='material-icons me-3'
-                    style={{ fontSize: '3rem' }}
-                  >
-                    payments
-                  </span>
-                  <div>
-                    <h1 className='payments-title mb-2'>Gestión de Pagos</h1>
-                    <p className='payments-subtitle mb-0'>
-                      Administra todos los pagos y transacciones de la comunidad
-                    </p>
+        <div className='container-fluid py-4'>
+          {/* Header Profesional */}
+          <div className='container-fluid p-0'>
+            <div
+              className='text-white'
+              style={{
+                background: 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <div className='p-4'>
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '-50%',
+                    right: '-10%',
+                    width: '200px',
+                    height: '200px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '50%',
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '-10%',
+                    left: '-5%',
+                    width: '150px',
+                    height: '150px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '50%',
+                  }}
+                />
+                <div className='d-flex align-items-center justify-content-between'>
+                  <div className='d-flex align-items-center'>
+                    <div
+                      className='me-4'
+                      style={{
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <i
+                        className='material-icons'
+                        style={{ fontSize: '32px', color: 'white' }}
+                      >
+                        payments
+                      </i>
+                    </div>
+                    <div>
+                      <h1 className='h2 mb-1 text-white'>Pagos</h1>
+                      <p className='mb-0 opacity-75'>
+                        Gestión de pagos y transacciones
+                      </p>
+                    </div>
+                  </div>
+                  <div className='text-end'>
+                    <Button variant='light' size='lg'>
+                      <span className='material-icons me-2'>add_circle</span>
+                      Nuevo Pago
+                    </Button>
                   </div>
                 </div>
 
-                {/* Stats compactos en el header */}
-                <div className='payments-stats'>
-                  <div className='stat-item'>
-                    <div className='stat-number'>{stats.totalPayments}</div>
-                    <div className='stat-label'>Total</div>
-                  </div>
-                  <div className='stat-item'>
-                    <div className='stat-number'>{stats.approvedPayments}</div>
-                    <div className='stat-label'>Confirmados</div>
-                  </div>
-                  <div className='stat-item'>
-                    <div className='stat-number'>{stats.pendingPayments}</div>
-                    <div className='stat-label'>Pendientes</div>
-                  </div>
-                  <div className='stat-item'>
-                    <div className='stat-number'>
-                      {formatCurrency(stats.totalAmount).slice(0, -3)}K
+                {/* Estadísticas */}
+                <div className='row mt-4'>
+                  <div className='col-md-3 mb-3'>
+                    <div
+                      className='p-3 rounded-3 text-white'
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    >
+                      <div className='d-flex align-items-center'>
+                        <div
+                          className='me-3'
+                          style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--color-primary)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <i className='material-icons'>payments</i>
+                        </div>
+                        <div>
+                          <div className='h3 mb-0'>{stats.totalPayments}</div>
+                          <div className='text-white-50'>Total Pagos</div>
+                        </div>
+                      </div>
                     </div>
-                    <div className='stat-label'>Recaudado</div>
+                  </div>
+                  <div className='col-md-3 mb-3'>
+                    <div
+                      className='p-3 rounded-3 text-white'
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    >
+                      <div className='d-flex align-items-center'>
+                        <div
+                          className='me-3'
+                          style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--color-success)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <i className='material-icons'>check_circle</i>
+                        </div>
+                        <div>
+                          <div className='h3 mb-0'>{stats.approvedPayments}</div>
+                          <div className='text-white-50'>Confirmados</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='col-md-3 mb-3'>
+                    <div
+                      className='p-3 rounded-3 text-white'
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    >
+                      <div className='d-flex align-items-center'>
+                        <div
+                          className='me-3'
+                          style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--color-warning)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <i className='material-icons'>schedule</i>
+                        </div>
+                        <div>
+                          <div className='h3 mb-0'>{stats.pendingPayments}</div>
+                          <div className='text-white-50'>Pendientes</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='col-md-3 mb-3'>
+                    <div
+                      className='p-3 rounded-3 text-white'
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    >
+                      <div className='d-flex align-items-center'>
+                        <div
+                          className='me-3'
+                          style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--color-danger)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <i className='material-icons'>cancel</i>
+                        </div>
+                        <div>
+                          <div className='h3 mb-0'>{stats.cancelledPayments}</div>
+                          <div className='text-white-50'>Cancelados</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </Col>
-              <Col lg={4} className='text-end'>
-                <div className='d-flex flex-column gap-2'>
-                  <div>
-                    <Button variant='light' size='sm' className='me-2'>
-                      <span className='material-icons me-1'>print</span>
-                      Imprimir
-                    </Button>
-                    <Button variant='light' size='sm' className='me-2'>
-                      <span className='material-icons me-1'>file_download</span>
-                      Exportar
-                    </Button>
-                  </div>
-                  <Button variant='warning' size='lg'>
-                    <span className='material-icons me-2'>add_circle</span>
-                    Registrar Nuevo Pago
-                  </Button>
-                </div>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
           {/* Tarjetas de estadísticas mejoradas */}
@@ -260,7 +386,7 @@ const Pagos: React.FC = () => {
                   <p className='stat-card-label mb-2'>Total de Pagos</p>
                   <small className='stat-card-change text-success'>
                     <span className='material-icons'>trending_up</span>
-                    +12% vs mes anterior
+                    {stats.cancelledPayments > 0 && `${stats.cancelledPayments} cancelados`}
                   </small>
                 </Card.Body>
               </Card>
@@ -276,7 +402,7 @@ const Pagos: React.FC = () => {
                   <p className='stat-card-label mb-2'>Confirmados</p>
                   <small className='stat-card-change text-success'>
                     <span className='material-icons'>trending_up</span>
-                    +8% vs mes anterior
+                    {stats.approvedAmount && formatCurrency(stats.approvedAmount)}
                   </small>
                 </Card.Body>
               </Card>
@@ -292,7 +418,7 @@ const Pagos: React.FC = () => {
                   <p className='stat-card-label mb-2'>Pendientes</p>
                   <small className='stat-card-change text-warning'>
                     <span className='material-icons'>trending_down</span>
-                    -5% vs mes anterior
+                    Por procesar
                   </small>
                 </Card.Body>
               </Card>
@@ -309,15 +435,108 @@ const Pagos: React.FC = () => {
                   </h3>
                   <p className='stat-card-label mb-2'>Total Recaudado</p>
                   <small className='stat-card-change text-success'>
-                    <span className='material-icons'>trending_up</span>
-                    +15% vs mes anterior
+                    Promedio: {formatCurrency(stats.averageAmount)}
                   </small>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
 
-          {/* Advanced Filters como en mockup */}
+          {/* Additional Stats - Por Estado y Por Método */}
+          <Row className='mb-4'>
+            <Col lg={6} md={12} className='mb-3'>
+              <Card>
+                <Card.Header className='bg-light'>
+                  <h6 className='mb-0'>
+                    <span className='material-icons me-2'>assessment</span>
+                    Pagos por Estado
+                  </h6>
+                </Card.Header>
+                <Card.Body>
+                  <div className='table-responsive'>
+                    <Table size='sm' className='mb-0'>
+                      <thead>
+                        <tr>
+                          <th>Estado</th>
+                          <th className='text-end'>Cantidad</th>
+                          <th className='text-end'>Monto Total</th>
+                          <th className='text-end'>Promedio</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statsPerEstado.map((stat) => (
+                          <tr key={stat.status}>
+                            <td>
+                              <Badge bg='secondary' className='text-capitalize'>
+                                {stat.status}
+                              </Badge>
+                            </td>
+                            <td className='text-end fw-bold'>{stat.count}</td>
+                            <td className='text-end text-success fw-bold'>
+                              {formatCurrency(stat.total_amount)}
+                            </td>
+                            <td className='text-end text-info'>
+                              {formatCurrency(stat.average_amount)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col lg={6} md={12} className='mb-3'>
+              <Card>
+                <Card.Header className='bg-light'>
+                  <h6 className='mb-0'>
+                    <span className='material-icons me-2'>payment</span>
+                    Pagos por Método
+                  </h6>
+                </Card.Header>
+                <Card.Body>
+                  <div className='table-responsive'>
+                    <Table size='sm' className='mb-0'>
+                      <thead>
+                        <tr>
+                          <th>Método</th>
+                          <th className='text-end'>Cantidad</th>
+                          <th className='text-end'>Monto Total</th>
+                          <th className='text-end'>Promedio</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statsPerMetodo.map((stat) => (
+                          <tr key={stat.payment_method}>
+                            <td>
+                              <div className='d-flex align-items-center'>
+                                <span className='material-icons me-2 small text-muted'>
+                                  {getMethodIcon(stat.payment_method)}
+                                </span>
+                                <span className='text-capitalize'>
+                                  {stat.payment_method.replace('_', ' ')}
+                                </span>
+                              </div>
+                            </td>
+                            <td className='text-end fw-bold'>{stat.count}</td>
+                            <td className='text-end text-success fw-bold'>
+                              {formatCurrency(stat.total_amount)}
+                            </td>
+                            <td className='text-end text-info'>
+                              {formatCurrency(stat.average_amount)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Advanced Filters */}
           <Card className='filter-card mb-4'>
             <Card.Header className='bg-light'>
               <Row className='align-items-center'>
@@ -341,7 +560,7 @@ const Pagos: React.FC = () => {
             </Card.Header>
             <Card.Body>
               <Row className='g-3 align-items-end'>
-                <Col md={5}>
+                <Col md={4}>
                   <Form.Label className='small fw-medium text-muted mb-1'>
                     Buscar pagos
                   </Form.Label>
@@ -389,10 +608,35 @@ const Pagos: React.FC = () => {
                     <option value='transferencia'>Transferencia</option>
                     <option value='tarjeta_credito'>Tarjeta</option>
                     <option value='efectivo'>Efectivo</option>
+                    <option value='debito'>Débito</option>
                   </Form.Select>
                 </Col>
 
-                <Col md={3}>
+                <Col md={2}>
+                  <Form.Label className='small fw-medium text-muted mb-1'>
+                    Desde
+                  </Form.Label>
+                  <Form.Control
+                    type='date'
+                    value={filters.dateFrom}
+                    onChange={e =>
+                      handleFilterChange('dateFrom', e.target.value)
+                    }
+                  />
+                </Col>
+
+                <Col md={2}>
+                  <Form.Label className='small fw-medium text-muted mb-1'>
+                    Hasta
+                  </Form.Label>
+                  <Form.Control
+                    type='date'
+                    value={filters.dateTo}
+                    onChange={e => handleFilterChange('dateTo', e.target.value)}
+                  />
+                </Col>
+
+                <Col md={12}>
                   <div className='d-flex gap-2'>
                     <Button variant='primary' size='sm' onClick={handleSearch}>
                       <span className='material-icons me-1'>search</span>
@@ -412,14 +656,14 @@ const Pagos: React.FC = () => {
             </Card.Body>
           </Card>
 
-          {/* Payments Table igual al mockup */}
+          {/* Payments Table */}
           <Card className='payments-table-card'>
             <Card.Header className='bg-white border-bottom'>
               <Row className='align-items-center'>
                 <Col>
                   <h6 className='mb-0 fw-bold'>
                     <span className='material-icons me-2'>view_list</span>
-                    Lista de Pagos ({pagos.length})
+                    Lista de Pagos ({pagos.length}/{pagination.total})
                   </h6>
                 </Col>
                 <Col xs='auto'>
@@ -499,103 +743,116 @@ const Pagos: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {pagos.map(pago => (
-                      <tr key={pago.id} className='align-middle'>
-                        <td className='text-center'>
-                          <Form.Check type='checkbox' />
-                        </td>
-                        <td>
-                          <div className='fw-bold text-primary'>
-                            PAG-{pago.id.toString().padStart(4, '0')}
-                          </div>
-                          <small className='text-muted d-block'>
-                            {pago.transactionId}
-                          </small>
-                        </td>
-                        <td>
-                          <div className='fw-medium'>{pago.concepto}</div>
-                          <small className='text-muted'>
-                            Comunidad Las Flores
-                          </small>
-                        </td>
-                        <td>
-                          <span className='fw-medium'>
-                            Dpto. {300 + pago.id}
-                          </span>
-                        </td>
-                        <td>
-                          <div className='fw-medium'>María González</div>
-                          <small className='text-muted'>
-                            maria.gonzalez@email.com
-                          </small>
-                        </td>
-                        <td className='text-end'>
-                          <span className='fw-bold text-success'>
-                            {formatCurrency(pago.monto)}
-                          </span>
-                        </td>
-                        <td>
-                          <div className='fw-medium'>
-                            {new Date(pago.fecha).toLocaleDateString('es-CL')}
-                          </div>
-                          <small className='text-muted'>
-                            {new Date(pago.fecha).toLocaleTimeString('es-CL', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </small>
-                        </td>
-                        <td className='text-center'>
-                          {getStatusBadge(pago.estado)}
-                        </td>
-                        <td>
-                          <div className='d-flex align-items-center'>
-                            <span className='material-icons me-2 text-muted small'>
-                              {getMethodIcon(pago.metodoPago)}
-                            </span>
-                            <div>
-                              <div className='fw-medium small'>
-                                {pago.metodoPago.replace('_', ' ')}
-                              </div>
-                              <small className='text-muted'>
-                                {pago.gateway?.toUpperCase()}
-                              </small>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div className='d-flex justify-content-center gap-1'>
-                            <Link href={`/pagos/${pago.id}`} passHref>
-                              <Button
-                                variant='outline-primary'
-                                size='sm'
-                                title='Ver detalle'
-                              >
-                                <span className='material-icons small'>
-                                  visibility
-                                </span>
-                              </Button>
-                            </Link>
-                            <Button
-                              variant='outline-secondary'
-                              size='sm'
-                              title='Editar'
-                            >
-                              <span className='material-icons small'>edit</span>
-                            </Button>
-                            <Button
-                              variant='outline-success'
-                              size='sm'
-                              title='Imprimir'
-                            >
-                              <span className='material-icons small'>
-                                print
-                              </span>
-                            </Button>
-                          </div>
+                    {pagos.length === 0 ? (
+                      <tr>
+                        <td colSpan={10} className='text-center py-4'>
+                          <i className='material-icons' style={{ fontSize: '3rem', color: '#ccc' }}>
+                            inbox
+                          </i>
+                          <p className='text-muted mt-2'>No hay pagos para mostrar</p>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      pagos.map(pago => (
+                        <tr key={pago.id} className='align-middle'>
+                          <td className='text-center'>
+                            <Form.Check type='checkbox' />
+                          </td>
+                          <td>
+                            <div className='fw-bold text-primary'>
+                              PAG-{pago.id.toString().padStart(4, '0')}
+                            </div>
+                            <small className='text-muted d-block'>
+                              {pago.transactionId || pago.orderId}
+                            </small>
+                          </td>
+                          <td>
+                            <div className='fw-medium'>{pago.concepto}</div>
+                            <small className='text-muted'>
+                              {pago.communityName || 'Comunidad'}
+                            </small>
+                          </td>
+                          <td>
+                            <span className='fw-medium'>
+                              {pago.unitNumber || `Dpto. ${300 + pago.id}`}
+                            </span>
+                          </td>
+                          <td>
+                            <div className='fw-medium'>
+                              {pago.residentName || 'Residente'}
+                            </div>
+                            <small className='text-muted'>
+                              {pago.residentEmail || 'N/A'}
+                            </small>
+                          </td>
+                          <td className='text-end'>
+                            <span className='fw-bold text-success'>
+                              {formatCurrency(pago.monto)}
+                            </span>
+                          </td>
+                          <td>
+                            <div className='fw-medium'>
+                              {new Date(pago.fecha).toLocaleDateString('es-CL')}
+                            </div>
+                            <small className='text-muted'>
+                              {new Date(pago.fecha).toLocaleTimeString('es-CL', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </small>
+                          </td>
+                          <td className='text-center'>
+                            {getStatusBadge(pago.estado)}
+                          </td>
+                          <td>
+                            <div className='d-flex align-items-center'>
+                              <span className='material-icons me-2 text-muted small'>
+                                {getMethodIcon(pago.metodoPago)}
+                              </span>
+                              <div>
+                                <div className='fw-medium small'>
+                                  {pago.metodoPago.replace('_', ' ')}
+                                </div>
+                                <small className='text-muted'>
+                                  {pago.gateway?.toUpperCase() || 'N/A'}
+                                </small>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className='d-flex justify-content-center gap-1'>
+                              <Link href={`/pagos/${pago.id}`} passHref>
+                                <Button
+                                  variant='outline-primary'
+                                  size='sm'
+                                  title='Ver detalle'
+                                >
+                                  <span className='material-icons small'>
+                                    visibility
+                                  </span>
+                                </Button>
+                              </Link>
+                              <Button
+                                variant='outline-secondary'
+                                size='sm'
+                                title='Editar'
+                              >
+                                <span className='material-icons small'>edit</span>
+                              </Button>
+                              <Button
+                                variant='outline-success'
+                                size='sm'
+                                title='Imprimir'
+                              >
+                                <span className='material-icons small'>
+                                  print
+                                </span>
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </Table>
               </div>
@@ -652,7 +909,7 @@ const Pagos: React.FC = () => {
             </Card.Body>
           </Card>
 
-          {/* Payment Component Integration - as required to maintain existing functionality */}
+          {/* Payment Component Integration */}
           <div className='mt-4'>
             <Card>
               <Card.Header>
@@ -663,11 +920,10 @@ const Pagos: React.FC = () => {
               </Card.Header>
               <Card.Body>
                 <PaymentComponent
-                  communityId={1}
+                  communityId={comunidadId}
                   amount={150000}
                   description='Pago de cuota mensual'
                   onSuccess={_transactionId => {
-                    // Payment successful
                     window.location.reload();
                   }}
                   onError={_error => {
@@ -677,7 +933,7 @@ const Pagos: React.FC = () => {
               </Card.Body>
             </Card>
           </div>
-        </Container>
+        </div>
       </Layout>
     </ProtectedRoute>
   );

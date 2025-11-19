@@ -1,3 +1,28 @@
+// =========================================
+// TIPOS PARA MULTAS
+// =========================================
+
+/* eslint-disable max-len */
+
+export type EstadoMulta = 'pendiente' | 'pagado' | 'vencido' | 'apelada' | 'anulada';
+
+export type PrioridadMulta = 'baja' | 'media' | 'alta' | 'critica';
+
+export const ESTADOS_MULTA = {
+  pendiente: { label: 'Pendiente', color: 'warning' },
+  pagado: { label: 'Pagado', color: 'success' },
+  vencido: { label: 'Vencido', color: 'danger' },
+  apelada: { label: 'Apelada', color: 'info' },
+  anulada: { label: 'Anulada', color: 'secondary' },
+} as const;
+
+export const PRIORIDADES_MULTA = {
+  baja: { label: 'Baja', color: 'secondary' },
+  media: { label: 'Media', color: 'warning' },
+  alta: { label: 'Alta', color: 'danger' },
+  critica: { label: 'Crítica', color: 'danger' },
+} as const;
+
 /* eslint-disable max-len */
 export interface Multa {
   id: number;
@@ -7,8 +32,8 @@ export interface Multa {
   monto: number;
   fecha_infraccion: string;
   fecha_vencimiento: string;
-  estado: 'pendiente' | 'pagado' | 'vencido' | 'apelada' | 'anulada'; // Cambiar 'pagada'/'vencida' por 'pagado'/'vencido'
-  prioridad: 'baja' | 'media' | 'alta' | 'critica';
+  estado: EstadoMulta;
+  prioridad: PrioridadMulta;
 
   // Relaciones
   unidad_id: number;

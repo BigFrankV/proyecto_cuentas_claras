@@ -1,13 +1,23 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Form, Button, Card, Badge, Alert } from 'react-bootstrap';
+import { toast } from 'react-hot-toast';
 
 import Layout from '@/components/layout/Layout';
+import { createCentro } from '@/lib/centrosCostoService';
+import comunidadesService from '@/lib/comunidadesService';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { usePermissions } from '@/lib/usePermissions';
+
+interface Comunidad {
+  id: number;
+  nombre: string;
+}
 
 interface CostCenterForm {
   name: string;
+  codigo: string;
   description: string;
   department: string;
   manager: string;
@@ -20,11 +30,17 @@ interface CostCenterForm {
 
 export default function CentroCostoNuevo() {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newResponsibility, setNewResponsibility] = useState('');
+  const { isSuperUser, getUserCommunities } = usePermissions();
+  const [comunidades, setComunidades] = useState<Comunidad[]>([]);
+  const [selectedComunidadId, setSelectedComunidadId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const loadedComunidadesRef = useRef(false);
+  const [newResponsibility, setNewResponsibility] = useState(''); // Agregado
 
   const [formData, setFormData] = useState<CostCenterForm>({
     name: '',
+    codigo: '',
     description: '',
     department: '',
     manager: '',
@@ -34,6 +50,18 @@ export default function CentroCostoNuevo() {
     icon: 'build',
     color: '#2196F3',
   });
+
+  useEffect(() => {
+    if (isSuperUser && !loadedComunidadesRef.current) {
+      loadedComunidadesRef.current = true;
+      comunidadesService.getComunidades()
+        .then(setComunidades)
+        .catch(() => toast.error('Error cargando comunidades'));
+    } else if (!isSuperUser) {
+      const userCommunities = getUserCommunities();
+      setSelectedComunidadId(userCommunities[0]?.comunidadId || null);
+    }
+  }, [isSuperUser, getUserCommunities]);
 
   const departmentOptions = [
     { value: 'operations', label: 'Operaciones', badge: 'success' },
@@ -94,7 +122,7 @@ export default function CentroCostoNuevo() {
     }));
   };
 
-  const addResponsibility = () => {
+  const addResponsibility = () => { // Agregado
     if (
       newResponsibility.trim() &&
       !formData.responsibilities.includes(newResponsibility.trim())
@@ -116,20 +144,33 @@ export default function CentroCostoNuevo() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setLoading(true);
+    setError('');
+
+    if (!selectedComunidadId) {
+      setError('Selecciona una comunidad');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.name.trim() || !formData.codigo.trim()) {
+      setError('Nombre y código son requeridos');
+      setLoading(false);
+      return;
+    }
 
     try {
-      // Simular API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await createCentro(selectedComunidadId, {
+        nombre: formData.name.trim(),
+        codigo: formData.codigo.trim(),
+      });
 
-      alert('Centro de costo creado exitosamente');
+      toast.success('Centro de costo creado exitosamente');
       router.push('/centros-costo');
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error creating cost center:', error);
-      alert('Error al crear el centro de costo');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al crear el centro de costo');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
@@ -162,8 +203,7 @@ export default function CentroCostoNuevo() {
                   Nuevo Centro de Costo
                 </h1>
                 <p className='cost-center-form-subtitle'>
-                  Crea un nuevo centro de costo para organizar y controlar el
-                  presupuesto
+                  Crea un nuevo centro de costo para organizar el presupuesto
                 </p>
               </div>
             </div>
@@ -183,6 +223,28 @@ export default function CentroCostoNuevo() {
                   </Card.Header>
                   <Card.Body className='form-section-body'>
                     <div className='row g-3'>
+                      {isSuperUser && (
+                        <div className='col-md-12'>
+                          <Form.Group>
+                            <Form.Label className='required'>
+                              Comunidad
+                            </Form.Label>
+                            <Form.Select
+                              value={selectedComunidadId || ''}
+                              onChange={e => setSelectedComunidadId(Number(e.target.value))}
+                              required
+                            >
+                              <option value=''>Seleccionar comunidad</option>
+                              {comunidades.map(com => (
+                                <option key={com.id} value={com.id}>
+                                  {com.nombre}
+                                </option>
+                              ))}
+                            </Form.Select>
+                          </Form.Group>
+                        </div>
+                      )}
+
                       <div className='col-md-6'>
                         <Form.Group>
                           <Form.Label className='required'>
@@ -192,13 +254,27 @@ export default function CentroCostoNuevo() {
                             type='text'
                             placeholder='Ej: Mantenimiento Edificio A'
                             value={formData.name}
-                            onChange={e =>
-                              handleInputChange('name', e.target.value)
-                            }
+                            onChange={e => handleInputChange('name', e.target.value)}
                             required
                           />
                         </Form.Group>
                       </div>
+
+                      <div className='col-md-6'>
+                        <Form.Group>
+                          <Form.Label className='required'>
+                            Código
+                          </Form.Label>
+                          <Form.Control
+                            type='text'
+                            placeholder='Ej: CC001'
+                            value={formData.codigo}
+                            onChange={e => handleInputChange('codigo', e.target.value)}
+                            required
+                          />
+                        </Form.Group>
+                      </div>
+
                       <div className='col-md-6'>
                         <Form.Group>
                           <Form.Label className='required'>
@@ -206,9 +282,7 @@ export default function CentroCostoNuevo() {
                           </Form.Label>
                           <Form.Select
                             value={formData.department}
-                            onChange={e =>
-                              handleInputChange('department', e.target.value)
-                            }
+                            onChange={e => handleInputChange('department', e.target.value)}
                             required
                           >
                             <option value=''>Seleccionar departamento</option>
@@ -220,20 +294,7 @@ export default function CentroCostoNuevo() {
                           </Form.Select>
                         </Form.Group>
                       </div>
-                      <div className='col-12'>
-                        <Form.Group>
-                          <Form.Label>Descripción</Form.Label>
-                          <Form.Control
-                            as='textarea'
-                            rows={3}
-                            placeholder='Describe las funciones y objetivos de este centro de costo...'
-                            value={formData.description}
-                            onChange={e =>
-                              handleInputChange('description', e.target.value)
-                            }
-                          />
-                        </Form.Group>
-                      </div>
+
                       <div className='col-md-6'>
                         <Form.Group>
                           <Form.Label className='required'>
@@ -243,34 +304,22 @@ export default function CentroCostoNuevo() {
                             type='text'
                             placeholder='Nombre del responsable'
                             value={formData.manager}
-                            onChange={e =>
-                              handleInputChange('manager', e.target.value)
-                            }
+                            onChange={e => handleInputChange('manager', e.target.value)}
                             required
                           />
                         </Form.Group>
                       </div>
-                      <div className='col-md-6'>
+
+                      <div className='col-12'>
                         <Form.Group>
-                          <Form.Label className='required'>
-                            Comunidad
-                          </Form.Label>
-                          <Form.Select
-                            value={formData.community}
-                            onChange={e =>
-                              handleInputChange('community', e.target.value)
-                            }
-                            required
-                          >
-                            <option value=''>Seleccionar comunidad</option>
-                            <option value='Todas'>Todas las comunidades</option>
-                            <option value='Comunidad Parque Real'>
-                              Comunidad Parque Real
-                            </option>
-                            <option value='Edificio Central'>
-                              Edificio Central
-                            </option>
-                          </Form.Select>
+                          <Form.Label>Descripción</Form.Label>
+                          <Form.Control
+                            as='textarea'
+                            rows={3}
+                            placeholder='Describe las funciones del centro de costo...'
+                            value={formData.description}
+                            onChange={e => handleInputChange('description', e.target.value)}
+                          />
                         </Form.Group>
                       </div>
                     </div>
@@ -371,35 +420,10 @@ export default function CentroCostoNuevo() {
                               }
                               required
                               min='0'
-                              step='1000'
+                              step='1'
                             />
                           </div>
-                          <Form.Text className='text-muted'>
-                            Presupuesto asignado para todo el año
-                          </Form.Text>
                         </Form.Group>
-                      </div>
-                      <div className='col-md-6'>
-                        <div className='budget-preview'>
-                          <h6 className='text-muted'>
-                            Vista previa del presupuesto
-                          </h6>
-                          <div className='budget-amount'>
-                            $
-                            {formData.budget
-                              ? parseInt(formData.budget).toLocaleString()
-                              : '0'}
-                          </div>
-                          <small className='text-muted'>
-                            Mensual: $
-                            {formData.budget
-                              ? (parseInt(formData.budget) / 12).toLocaleString(
-                                  undefined,
-                                  { maximumFractionDigits: 0 },
-                                )
-                              : '0'}
-                          </small>
-                        </div>
                       </div>
                     </div>
                   </Card.Body>
@@ -490,7 +514,7 @@ export default function CentroCostoNuevo() {
                             {formData.name || 'Nombre del Centro'}
                           </h6>
                           <small className='text-muted'>
-                            {formData.community || 'Comunidad'}
+                            Comunidad seleccionada
                           </small>
                         </div>
                       </div>
@@ -555,17 +579,24 @@ export default function CentroCostoNuevo() {
               </div>
             </div>
 
+            {error && (
+              <Alert variant='danger'>
+                <span className='material-icons me-2'>error</span>
+                {error}
+              </Alert>
+            )}
+
             {/* Botones de acción */}
             <div className='d-flex justify-content-end mt-4 gap-2'>
               <Button
                 variant='outline-secondary'
                 onClick={() => router.push('/centros-costo')}
-                disabled={isSubmitting}
+                disabled={loading}
               >
                 Cancelar
               </Button>
-              <Button type='submit' variant='primary' disabled={isSubmitting}>
-                {isSubmitting ? (
+              <Button type='submit' variant='primary' disabled={loading}>
+                {loading ? (
                   <>
                     <span className='spinner-border spinner-border-sm me-2' />
                     Creando...

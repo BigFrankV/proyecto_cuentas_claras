@@ -1,3 +1,7 @@
+// =========================================
+// TIPOS PARA MEDIDORES
+// =========================================
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface MedidorLocation {
   building?: string;
@@ -39,6 +43,7 @@ export interface Medidor {
   unidad_id?: number | null;
   unidad_codigo?: string | null;
   tipo?: 'agua' | 'gas' | 'electricidad' | string;
+  codigo: string;
   medidor_codigo?: string | null; // medidor.codigo en la vista
   serial_number?: string | null;
   numero_serie?: string | null; // Alias para serial_number

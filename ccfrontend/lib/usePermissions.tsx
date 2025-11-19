@@ -1,102 +1,499 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRouter } from 'next/router';
-import React from 'react'; // ✅ AGREGAR ESTA LÍNEA
+import React, { useCallback } from 'react';
 
 import { useAuth } from './useAuth';
 
-// Definición de roles del sistema
 export enum UserRole {
   SUPERUSER = 'superuser',
   ADMIN = 'admin',
-  CONCIERGE = 'concierge', // Nuevo para conserje
-  ACCOUNTANT = 'accountant', // Nuevo para contador
-  MANAGER = 'manager', // Para tesorero, presidente, proveedor
-  USER = 'user',
+  CONCIERGE = 'concierge',
+  ACCOUNTANT = 'accountant',
+  TESORERO = 'tesorero',
+  PRESIDENTE_COMITE = 'presidente_comite',
+  PROVIDER = 'proveedor_servicio',
+  RESIDENT = 'residente',
+  OWNER = 'propietario',
+  TENANT = 'inquilino',
+  GUEST = 'guest',
 }
 
-// Definición de permisos (añadidos nuevos)
+// ===========================
+// ✅ PERMISOS (MANTENIENDO LOS EXISTENTES + AGREGAR NUEVOS)
+// ===========================
 export enum Permission {
-  // Gestión de comunidades
+  // === PERMISOS EXISTENTES (NO TOCAR) ===
   MANAGE_COMMUNITIES = 'manage_communities',
   VIEW_COMMUNITIES = 'view_communities',
-
-  // Gestión financiera
   MANAGE_FINANCES = 'manage_finances',
   VIEW_FINANCES = 'view_finances',
   APPROVE_PAYMENTS = 'approve_payments',
-
-  // Gestión de usuarios
   MANAGE_USERS = 'manage_users',
   VIEW_USERS = 'view_users',
-
-  // Reportes
   VIEW_REPORTS = 'view_reports',
   EXPORT_REPORTS = 'export_reports',
-
-  // Configuración del sistema
   SYSTEM_CONFIG = 'system_config',
-
-  // Nuevos permisos específicos
   MANAGE_AMENITIES = 'manage_amenities',
   VIEW_TICKETS = 'view_tickets',
   CREATE_TICKETS = 'create_tickets',
   MANAGE_MULTAS = 'manage_multas',
   VIEW_OWN_MEMBERSHIP = 'view_own_membership',
+
+  // === ✅ PERMISOS GRANULARES NUEVOS (AGREGAR) ===
+  // Comunidades CRUD
+  CREATE_COMUNIDAD = 'create_comunidad',
+  EDIT_COMUNIDAD = 'edit_comunidad',
+  DELETE_COMUNIDAD = 'delete_comunidad',
+  VIEW_COMUNIDAD = 'view_comunidad',
+
+  // Estructura CRUD
+  CREATE_EDIFICIO = 'create_edificio',
+  EDIT_EDIFICIO = 'edit_edificio',
+  DELETE_EDIFICIO = 'delete_edificio',
+  VIEW_EDIFICIO = 'view_edificio',
+  CREATE_TORRE = 'create_torre',
+  EDIT_TORRE = 'edit_torre',
+  DELETE_TORRE = 'delete_torre',
+  VIEW_TORRE = 'view_torre',
+  CREATE_UNIDAD = 'create_unidad',
+  EDIT_UNIDAD = 'edit_unidad',
+  DELETE_UNIDAD = 'delete_unidad',
+  VIEW_UNIDAD = 'view_unidad',
+
+  // Personas y Membresías CRUD
+  CREATE_PERSONA = 'create_persona',
+  EDIT_PERSONA = 'edit_persona',
+  DELETE_PERSONA = 'delete_persona',
+  VIEW_PERSONA = 'view_persona',
+  CREATE_MEMBRESIA = 'create_membresia',
+  EDIT_MEMBRESIA = 'edit_membresia',
+  DELETE_MEMBRESIA = 'delete_membresia',
+  VIEW_MEMBRESIA = 'view_membresia',
+
+  // Finanzas CRUD
+  CREATE_GASTO = 'create_gasto',
+  EDIT_GASTO = 'edit_gasto',
+  DELETE_GASTO = 'delete_gasto',
+  VIEW_GASTO = 'view_gasto',
+  CREATE_COMPRA = 'create_compra',
+  EDIT_COMPRA = 'edit_compra',
+  DELETE_COMPRA = 'delete_compra',
+  VIEW_COMPRA = 'view_compra',
+  CREATE_CATEGORIA_GASTO = 'create_categoria_gasto',
+  EDIT_CATEGORIA_GASTO = 'edit_categoria_gasto',
+  DELETE_CATEGORIA_GASTO = 'delete_categoria_gasto',
+  VIEW_CATEGORIA_GASTO = 'view_categoria_gasto',
+  CREATE_CENTRO_COSTO = 'create_centro_costo',
+  EDIT_CENTRO_COSTO = 'edit_centro_costo',
+  DELETE_CENTRO_COSTO = 'delete_centro_costo',
+  VIEW_CENTRO_COSTO = 'view_centro_costo',
+  CREATE_PROVEEDOR = 'create_proveedor',
+  EDIT_PROVEEDOR = 'edit_proveedor',
+  DELETE_PROVEEDOR = 'delete_proveedor',
+  VIEW_PROVEEDOR = 'view_proveedor',
+
+  // Facturación CRUD
+  CREATE_EMISION = 'create_emision',
+  EDIT_EMISION = 'edit_emision',
+  DELETE_EMISION = 'delete_emision',
+  VIEW_EMISION = 'view_emision',
+  EXECUTE_PRORRATEO = 'execute_prorrateo',
+  CREATE_CARGO = 'create_cargo',
+  EDIT_CARGO = 'edit_cargo',
+  DELETE_CARGO = 'delete_cargo',
+  VIEW_CARGO = 'view_cargo',
+  VIEW_PAGO = 'view_pago',
+  VIEW_RECIBO = 'view_recibo',
+
+  // Medidores CRUD
+  CREATE_MEDIDOR = 'create_medidor',
+  EDIT_MEDIDOR = 'edit_medidor',
+  DELETE_MEDIDOR = 'delete_medidor',
+  VIEW_MEDIDOR = 'view_medidor',
+  CREATE_LECTURA = 'create_lectura',
+  EDIT_LECTURA = 'edit_lectura',
+  DELETE_LECTURA = 'delete_lectura',
+  VIEW_LECTURA = 'view_lectura',
+  IMPORT_LECTURAS = 'import_lecturas',
+
+  // Multas CRUD
+  CREATE_MULTA = 'create_multa',
+  EDIT_MULTA = 'edit_multa',
+  DELETE_MULTA = 'delete_multa',
+  VIEW_MULTA = 'view_multa',
+
+  // Apelaciones CRUD
+  CREATE_APELACION = 'create_apelacion',
+  EDIT_APELACION = 'edit_apelacion',
+  DELETE_APELACION = 'delete_apelacion',
+  RESOLVE_APELACION = 'resolve_apelacion',
+  VIEW_APELACION = 'view_apelacion',
+
+  // Tickets CRUD
+  CREATE_TICKET = 'create_ticket',
+  EDIT_TICKET = 'edit_ticket',
+  DELETE_TICKET = 'delete_ticket',
+  VIEW_TICKET = 'view_ticket',
+
+  // Reservas CRUD
+  CREATE_RESERVA = 'create_reserva',
+  EDIT_RESERVA = 'edit_reserva',
+  DELETE_RESERVA = 'delete_reserva',
+  VIEW_RESERVA = 'view_reserva',
+
+  // Amenidades CRUD
+  CREATE_AMENIDAD = 'create_amenidad',
+  EDIT_AMENIDAD = 'edit_amenidad',
+  DELETE_AMENIDAD = 'delete_amenidad',
+  VIEW_AMENIDAD = 'view_amenidad',
+
+  // Notificaciones
+  CREATE_NOTIFICACION = 'create_notificacion',
+  VIEW_NOTIFICACION = 'view_notificacion',
+
+  // Bitácora
+  CREATE_BITACORA = 'create_bitacora',
+  VIEW_BITACORA = 'view_bitacora',
+
+  // Documentos
+  VIEW_DOCUMENTO = 'view_documento',
+
+  // Parámetros
+  VIEW_PARAMETRO = 'view_parametro',
+  EDIT_PARAMETRO = 'edit_parametro',
+
+  // Dashboard
+  VIEW_DASHBOARD = 'view_dashboard',
 }
 
-// Mapa de roles y sus permisos (actualizado con ajustes)
+// ===========================
+// ✅ AGREGAR PERMISOS NUEVOS A LOS ROLES (SIN QUITAR LOS EXISTENTES)
+// ===========================
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  [UserRole.SUPERUSER]: [
-    // Superuser tiene todos los permisos
+  [UserRole.SUPERUSER]: Object.values(Permission), // ✅ SUPERUSER tiene TODOS
+
+  [UserRole.ADMIN]: [
+    // Permisos existentes (mantener)
     Permission.MANAGE_COMMUNITIES,
     Permission.VIEW_COMMUNITIES,
     Permission.MANAGE_FINANCES,
     Permission.VIEW_FINANCES,
     Permission.APPROVE_PAYMENTS,
-    Permission.MANAGE_USERS,
     Permission.VIEW_USERS,
     Permission.VIEW_REPORTS,
     Permission.EXPORT_REPORTS,
     Permission.SYSTEM_CONFIG,
-    Permission.MANAGE_AMENITIES,
-    Permission.VIEW_TICKETS,
-    Permission.CREATE_TICKETS,
-    Permission.MANAGE_MULTAS,
-    Permission.VIEW_OWN_MEMBERSHIP,
+    
+    // ✅ AGREGAR permisos granulares
+    Permission.EDIT_COMUNIDAD,
+    Permission.VIEW_COMUNIDAD,
+    Permission.CREATE_EDIFICIO,
+    Permission.EDIT_EDIFICIO,
+    Permission.DELETE_EDIFICIO,
+    Permission.VIEW_EDIFICIO,
+    Permission.CREATE_TORRE,
+    Permission.EDIT_TORRE,
+    Permission.DELETE_TORRE,
+    Permission.VIEW_TORRE,
+    Permission.CREATE_UNIDAD,
+    Permission.EDIT_UNIDAD,
+    Permission.DELETE_UNIDAD,
+    Permission.VIEW_UNIDAD,
+    Permission.CREATE_PERSONA,
+    Permission.EDIT_PERSONA,
+    Permission.DELETE_PERSONA,
+    Permission.VIEW_PERSONA,
+    Permission.CREATE_MEMBRESIA,
+    Permission.EDIT_MEMBRESIA,
+    Permission.DELETE_MEMBRESIA,
+    Permission.VIEW_MEMBRESIA,
+    Permission.CREATE_GASTO,
+    Permission.EDIT_GASTO,
+    Permission.DELETE_GASTO,
+    Permission.VIEW_GASTO,
+    Permission.CREATE_COMPRA,
+    Permission.EDIT_COMPRA,
+    Permission.DELETE_COMPRA,
+    Permission.VIEW_COMPRA,
+    Permission.CREATE_CATEGORIA_GASTO,
+    Permission.EDIT_CATEGORIA_GASTO,
+    Permission.DELETE_CATEGORIA_GASTO,
+    Permission.VIEW_CATEGORIA_GASTO,
+    Permission.CREATE_CENTRO_COSTO,
+    Permission.EDIT_CENTRO_COSTO,
+    Permission.DELETE_CENTRO_COSTO,
+    Permission.VIEW_CENTRO_COSTO,
+    Permission.CREATE_PROVEEDOR,
+    Permission.EDIT_PROVEEDOR,
+    Permission.DELETE_PROVEEDOR,
+    Permission.VIEW_PROVEEDOR,
+    Permission.CREATE_EMISION,
+    Permission.EDIT_EMISION,
+    Permission.DELETE_EMISION,
+    Permission.VIEW_EMISION,
+    Permission.EXECUTE_PRORRATEO,
+    Permission.CREATE_CARGO,
+    Permission.EDIT_CARGO,
+    Permission.DELETE_CARGO,
+    Permission.VIEW_CARGO,
+    Permission.VIEW_PAGO,
+    Permission.VIEW_RECIBO,
+    Permission.CREATE_MEDIDOR,
+    Permission.EDIT_MEDIDOR,
+    Permission.DELETE_MEDIDOR,
+    Permission.VIEW_MEDIDOR,
+    Permission.CREATE_LECTURA,
+    Permission.EDIT_LECTURA,
+    Permission.DELETE_LECTURA,
+    Permission.VIEW_LECTURA,
+    Permission.IMPORT_LECTURAS,
+    Permission.EDIT_MULTA,
+    Permission.DELETE_MULTA,
+    Permission.VIEW_MULTA,
+    Permission.EDIT_APELACION,
+    Permission.RESOLVE_APELACION,
+    Permission.VIEW_APELACION,
+    Permission.VIEW_RESERVA,
+    Permission.CREATE_AMENIDAD,
+    Permission.EDIT_AMENIDAD,
+    Permission.DELETE_AMENIDAD,
+    Permission.VIEW_AMENIDAD,
+    Permission.CREATE_NOTIFICACION,
+    Permission.VIEW_NOTIFICACION,
+    Permission.CREATE_BITACORA,
+    Permission.VIEW_BITACORA,
+    Permission.VIEW_DOCUMENTO,
+    Permission.EDIT_PARAMETRO,
+    Permission.VIEW_PARAMETRO,
+    Permission.VIEW_DASHBOARD,
+    Permission.EDIT_TICKET,
+    Permission.DELETE_TICKET,
+    Permission.VIEW_TICKET,
   ],
-  [UserRole.ADMIN]: [
-    Permission.MANAGE_COMMUNITIES,
-    Permission.VIEW_COMMUNITIES,
-    Permission.MANAGE_FINANCES,
-    Permission.VIEW_FINANCES,
-    Permission.APPROVE_PAYMENTS,
-    Permission.VIEW_USERS,
-    Permission.VIEW_REPORTS,
-    Permission.EXPORT_REPORTS,
-    Permission.SYSTEM_CONFIG, // Añadido para config básica
-  ],
+
   [UserRole.CONCIERGE]: [
     Permission.VIEW_COMMUNITIES,
-    Permission.MANAGE_AMENITIES, // Añadido
-    Permission.VIEW_TICKETS, // Añadido
+    Permission.MANAGE_AMENITIES,
+    Permission.VIEW_TICKETS,
+    Permission.VIEW_AMENIDAD,
+    Permission.VIEW_RESERVA,
+    Permission.VIEW_BITACORA,
+    Permission.EDIT_TICKET,
+    Permission.CREATE_BITACORA,
+    Permission.VIEW_TICKET,
+    Permission.VIEW_DASHBOARD,
   ],
+
   [UserRole.ACCOUNTANT]: [
     Permission.VIEW_COMMUNITIES,
     Permission.VIEW_FINANCES,
-    Permission.APPROVE_PAYMENTS, // Único para contador
+    Permission.APPROVE_PAYMENTS,
     Permission.VIEW_REPORTS,
     Permission.EXPORT_REPORTS,
+    Permission.VIEW_COMUNIDAD,
+    Permission.VIEW_EDIFICIO,
+    Permission.VIEW_UNIDAD,
+    Permission.VIEW_PERSONA,
+    Permission.CREATE_GASTO,
+    Permission.EDIT_GASTO,
+    Permission.DELETE_GASTO,
+    Permission.VIEW_GASTO,
+    Permission.CREATE_COMPRA,
+    Permission.EDIT_COMPRA,
+    Permission.DELETE_COMPRA,
+    Permission.VIEW_COMPRA,
+    Permission.CREATE_CATEGORIA_GASTO,
+    Permission.EDIT_CATEGORIA_GASTO,
+    Permission.DELETE_CATEGORIA_GASTO,
+    Permission.VIEW_CATEGORIA_GASTO,
+    Permission.CREATE_CENTRO_COSTO,
+    Permission.EDIT_CENTRO_COSTO,
+    Permission.DELETE_CENTRO_COSTO,
+    Permission.VIEW_CENTRO_COSTO,
+    Permission.CREATE_PROVEEDOR,
+    Permission.EDIT_PROVEEDOR,
+    Permission.DELETE_PROVEEDOR,
+    Permission.VIEW_PROVEEDOR,
+    Permission.CREATE_EMISION,
+    Permission.EDIT_EMISION,
+    Permission.VIEW_EMISION,
+    Permission.EXECUTE_PRORRATEO,
+    Permission.CREATE_CARGO,
+    Permission.EDIT_CARGO,
+    Permission.VIEW_CARGO,
+    Permission.VIEW_PAGO,
+    Permission.VIEW_RECIBO,
+    Permission.EDIT_MULTA,
+    Permission.VIEW_MULTA,
+    Permission.RESOLVE_APELACION,
+    Permission.VIEW_APELACION,
+    Permission.VIEW_DASHBOARD,
   ],
-  [UserRole.MANAGER]: [
+
+  [UserRole.TESORERO]: [
     Permission.VIEW_COMMUNITIES,
     Permission.VIEW_FINANCES,
-    Permission.VIEW_USERS,
+    Permission.APPROVE_PAYMENTS,
+    Permission.VIEW_COMUNIDAD,
+    Permission.VIEW_GASTO,
+    Permission.VIEW_COMPRA,
+    Permission.VIEW_CARGO,
+    Permission.VIEW_PAGO,
+    Permission.VIEW_RECIBO,
+    Permission.EDIT_MULTA,
+    Permission.DELETE_MULTA,
+    Permission.VIEW_MULTA,
+    Permission.RESOLVE_APELACION,
+    Permission.VIEW_APELACION,
+    Permission.VIEW_DASHBOARD,
+  ],
+
+  [UserRole.PRESIDENTE_COMITE]: [
+    Permission.VIEW_COMMUNITIES,
+    Permission.MANAGE_MULTAS,
+    Permission.VIEW_COMUNIDAD,
+    Permission.VIEW_GASTO,
+    Permission.EDIT_MULTA,
+    Permission.DELETE_MULTA,
+    Permission.VIEW_MULTA,
+    Permission.VIEW_APELACION,
+    Permission.VIEW_DASHBOARD,
+  ],
+
+  [UserRole.PROVIDER]: [
+    Permission.VIEW_COMMUNITIES,
+    Permission.VIEW_TICKETS,
+    Permission.VIEW_TICKET,
+  ],
+
+  [UserRole.RESIDENT]: [
+    Permission.VIEW_COMMUNITIES,
+    Permission.CREATE_TICKETS,
+    Permission.VIEW_COMUNIDAD,
+    Permission.VIEW_EDIFICIO,
+    Permission.VIEW_TORRE,
+    Permission.VIEW_UNIDAD,
+    Permission.VIEW_PERSONA,
+    Permission.VIEW_MEMBRESIA,
+    // ✅ AGREGAR permisos de finanzas (gastos comunes)
+    Permission.VIEW_FINANCES, // ✅ Ver finanzas generales
+    Permission.VIEW_EMISION,  // ✅ Ver emisiones de gastos comunes
+    Permission.VIEW_CARGO,    // ✅ Ver cargos
+    Permission.VIEW_PAGO,     // ✅ Ver pagos (los suyos)
+    Permission.VIEW_RECIBO,
+    Permission.VIEW_GASTO,
+    Permission.VIEW_COMPRA,
+    Permission.VIEW_CATEGORIA_GASTO,
+    Permission.VIEW_CENTRO_COSTO,
+    Permission.VIEW_PROVEEDOR,
+    Permission.VIEW_EMISION,
+    Permission.VIEW_CARGO,
+    Permission.VIEW_MEDIDOR,
+    Permission.VIEW_LECTURA,
+   
+    Permission.VIEW_MULTA,
+    Permission.VIEW_TICKETS,
+    
+    Permission.CREATE_RESERVA,
+    Permission.EDIT_RESERVA,
+    Permission.DELETE_RESERVA,
+    Permission.VIEW_RESERVA,
+    Permission.VIEW_AMENIDAD,
+    Permission.VIEW_NOTIFICACION,
+    Permission.VIEW_BITACORA,
+    Permission.VIEW_PARAMETRO,
+    Permission.CREATE_TICKET,
+    Permission.VIEW_TICKET,
+    Permission.VIEW_DASHBOARD,
     Permission.VIEW_REPORTS,
   ],
-  [UserRole.USER]: [
+
+  [UserRole.OWNER]: [
     Permission.VIEW_COMMUNITIES,
-    Permission.VIEW_FINANCES,
+    Permission.VIEW_OWN_MEMBERSHIP,
+    Permission.VIEW_COMUNIDAD,
+    Permission.VIEW_EDIFICIO,
+    Permission.VIEW_TORRE,
+    Permission.VIEW_UNIDAD,
+    Permission.VIEW_PERSONA,
+    Permission.VIEW_MEMBRESIA,
+    // ✅ AGREGAR permisos de finanzas (gastos comunes)
+    Permission.VIEW_FINANCES, // ✅ Ver finanzas generales
+    Permission.VIEW_EMISION,  // ✅ Ver emisiones de gastos comunes
+    Permission.VIEW_CARGO,    // ✅ Ver cargos
+    Permission.VIEW_PAGO,     // ✅ Ver pagos
+    Permission.VIEW_RECIBO,
+    Permission.VIEW_GASTO,
+    Permission.VIEW_COMPRA,
+    Permission.VIEW_CATEGORIA_GASTO,
+    Permission.VIEW_CENTRO_COSTO,
+    Permission.VIEW_PROVEEDOR,
+    Permission.VIEW_EMISION,
+    Permission.VIEW_CARGO,
+    Permission.VIEW_PAGO,
+    Permission.VIEW_RECIBO,
+    Permission.VIEW_MEDIDOR,
+    Permission.VIEW_LECTURA,
+    Permission.VIEW_MULTA,
+    Permission.CREATE_TICKETS,
+    Permission.VIEW_TICKETS,
+    Permission.CREATE_RESERVA,
+    Permission.EDIT_RESERVA,
+    Permission.DELETE_RESERVA,
+    Permission.VIEW_RESERVA,
+    Permission.VIEW_AMENIDAD,
+    Permission.VIEW_NOTIFICACION,
+    Permission.VIEW_BITACORA,
+    Permission.VIEW_DOCUMENTO,
+    Permission.VIEW_PARAMETRO,
+    Permission.CREATE_TICKET,
+    Permission.VIEW_TICKET,
+    Permission.VIEW_DASHBOARD,
+    Permission.VIEW_REPORTS,
   ],
+
+  [UserRole.TENANT]: [
+    Permission.VIEW_COMMUNITIES,
+    Permission.VIEW_COMUNIDAD,
+    Permission.VIEW_EDIFICIO,
+    Permission.VIEW_TORRE,
+    Permission.VIEW_UNIDAD,
+    Permission.VIEW_PERSONA,
+    Permission.VIEW_MEMBRESIA,
+    // ✅ AGREGAR permisos de finanzas (gastos comunes)
+    Permission.VIEW_FINANCES, // ✅ Ver finanzas generales
+    Permission.VIEW_EMISION,  // ✅ Ver emisiones de gastos comunes
+    Permission.VIEW_CARGO,    // ✅ Ver cargos
+    Permission.VIEW_PAGO,     // ✅ Ver pagos
+    Permission.VIEW_RECIBO,
+    Permission.VIEW_GASTO,
+    Permission.VIEW_COMPRA,
+    Permission.VIEW_CATEGORIA_GASTO,
+    Permission.VIEW_CENTRO_COSTO,
+    Permission.VIEW_PROVEEDOR,
+    Permission.VIEW_EMISION,
+    Permission.VIEW_CARGO,
+    Permission.VIEW_PAGO,
+    Permission.VIEW_MEDIDOR,
+    Permission.VIEW_LECTURA,
+    Permission.VIEW_MULTA,
+    Permission.CREATE_TICKETS,
+    Permission.VIEW_TICKETS,
+    Permission.CREATE_RESERVA,
+    Permission.EDIT_RESERVA,
+    Permission.DELETE_RESERVA,
+    Permission.VIEW_RESERVA,
+    Permission.VIEW_AMENIDAD,
+    Permission.VIEW_NOTIFICACION,
+    Permission.VIEW_BITACORA,
+    Permission.VIEW_PARAMETRO,
+    Permission.CREATE_TICKET,
+    Permission.VIEW_TICKET,
+    Permission.VIEW_DASHBOARD,
+    Permission.VIEW_REPORTS,
+  ],
+
+  [UserRole.GUEST]: [],
 };
 
 // Hook para manejo de roles y permisos (actualizado)
@@ -105,45 +502,25 @@ export function usePermissions() {
 
   // Determinar el rol del usuario (actualizado con agrupamiento completo)
   const getUserRole = (): UserRole => {
-    if (!user) {
-      return UserRole.USER;
-    }
+    if (!user) {return UserRole.GUEST;}
+    if (user.is_superadmin) {return UserRole.SUPERUSER;}
 
-    // Verificar si es superadmin desde el token
-    if (user.is_superadmin) {
-      return UserRole.SUPERUSER;
-    }
+    const roles = user.roles?.map((r: any) => typeof r === 'string' ? r.toLowerCase() : r.rol?.toLowerCase()).filter(Boolean) || [];
+    if (roles.includes('admin_comunidad')) {return UserRole.ADMIN;}
+    if (roles.includes('conserje')) {return UserRole.CONCIERGE;}
+    if (roles.includes('contador')) {return UserRole.ACCOUNTANT;}
+    if (roles.includes('tesorero')) {return UserRole.TESORERO;}
+    if (roles.includes('presidente_comite')) {return UserRole.PRESIDENTE_COMITE;}
+    if (roles.includes('proveedor_servicio')) {return UserRole.PROVIDER;}
+    if (roles.includes('residente')) {return UserRole.RESIDENT;}
+    if (roles.includes('propietario')) {return UserRole.OWNER;}
+    if (roles.includes('inquilino')) {return UserRole.TENANT;}
+    if (roles.includes('proveedor_servicio')) {return UserRole.PROVIDER;}
 
-    // Si tiene roles específicos, usar el más alto
-    if (user.roles && user.roles.length > 0) {
-      const roles = user.roles.map((r: any) => r.toLowerCase());
+    // Fallback para Patrick
+    if (user.username === 'patrick' || user.username === 'patricio.quintanilla') {return UserRole.SUPERUSER;}
 
-      if (roles.includes('admin_comunidad')) {
-        return UserRole.ADMIN;
-      }
-      // Agrupar MANAGER: tesorero, presidente_comite, proveedor_servicio
-      if (roles.includes('tesorero') || roles.includes('presidente_comite') || roles.includes('proveedor_servicio')) {
-        return UserRole.MANAGER;
-      }
-      // Agrupar USER: residente, propietario, inquilino
-      if (roles.includes('residente') || roles.includes('propietario') || roles.includes('inquilino')) {
-        return UserRole.USER;
-      }
-      if (roles.includes('conserje')) {return UserRole.CONCIERGE;}
-      if (roles.includes('contador')) {return UserRole.ACCOUNTANT;}
-    }
-
-    // Patrick es superuser por defecto (fallback para compatibilidad)
-    if (
-      user.username === 'patrick' ||
-      user.username === 'patricio.quintanilla'
-    ) {
-      return UserRole.SUPERUSER;
-    }
-
-    // En el futuro, esto vendría de la API
-    // Por ahora, defaultear a USER
-    return UserRole.USER;
+    return UserRole.GUEST;
   };
 
   const currentRole = getUserRole();
@@ -172,15 +549,12 @@ export function usePermissions() {
   };
 
   // ✅ NUEVO: Obtener comunidades del usuario
-  const getUserCommunities = (): Array<{
-    comunidadId: number;
-    rol: string;
-  }> => {
+  const getUserCommunities = useCallback(() => {
     if (user?.is_superadmin) {
       return [];
     } // Superadmin ve todas
     return user?.memberships || [];
-  };
+  }, []); // Dependencias vacías, ya que no depende de nada
 
   // ✅ NUEVO: Verificar si tiene un rol específico en una comunidad
   const hasRoleInCommunity = (
@@ -218,16 +592,6 @@ export function usePermissions() {
       return true;
     }
 
-    // Checks específicos dentro de grupos
-    if (currentRole === UserRole.MANAGER) {
-      if (permission === Permission.APPROVE_PAYMENTS && !user.roles.includes('tesorero')) {return false;}
-      if (permission === Permission.MANAGE_MULTAS && !user.roles.includes('presidente_comite')) {return false;}
-      if (permission === Permission.VIEW_TICKETS && !user.roles.includes('proveedor_servicio')) {return false;}
-    }
-    if (currentRole === UserRole.USER) {
-      if (permission === Permission.CREATE_TICKETS && !user.roles.includes('residente')) {return false;}
-      if (permission === Permission.VIEW_OWN_MEMBERSHIP && !user.roles.includes('propietario')) {return false;}
-    }
 
     // Para ADMIN, limitar MANAGE_COMMUNITIES a comunidades propias
     if (currentRole === UserRole.ADMIN && permission === Permission.MANAGE_COMMUNITIES) {
@@ -249,8 +613,14 @@ export function usePermissions() {
   // Verificar si el usuario tiene un rol específico o superior
   const hasRole = (role: UserRole): boolean => {
     const roleHierarchy = [
-      UserRole.USER,
-      UserRole.MANAGER,
+      UserRole.TENANT,
+      UserRole.RESIDENT,
+      UserRole.OWNER,
+      UserRole.PROVIDER,
+      UserRole.CONCIERGE,
+      UserRole.ACCOUNTANT,
+      UserRole.TESORERO,      // Agregar
+      UserRole.PRESIDENTE_COMITE, // Agregar
       UserRole.ADMIN,
       UserRole.SUPERUSER,
     ];
@@ -265,9 +635,22 @@ export function usePermissions() {
     return currentRole === UserRole.SUPERUSER;
   };
 
-  // Verificar si el usuario es admin o superior
-  const isAdmin = (): boolean => {
-    return hasRole(UserRole.ADMIN);
+  // Obtener el nombre legible del rol del usuario
+  const getUserRoleName = (): string => {
+    const roleNames: Record<UserRole, string> = {
+      [UserRole.SUPERUSER]: 'Superusuario',
+      [UserRole.ADMIN]: 'Administrador',
+      [UserRole.CONCIERGE]: 'Conserje',
+      [UserRole.ACCOUNTANT]: 'Contador',
+      [UserRole.TESORERO]: 'Tesorero',
+      [UserRole.PRESIDENTE_COMITE]: 'Presidente de Comité',
+      [UserRole.PROVIDER]: 'Proveedor de Servicio',
+      [UserRole.RESIDENT]: 'Residente',
+      [UserRole.OWNER]: 'Propietario',
+      [UserRole.TENANT]: 'Inquilino',
+      [UserRole.GUEST]: 'Invitado',
+    };
+    return roleNames[currentRole] || 'Usuario';
   };
 
   // Obtener todos los permisos del usuario actual
@@ -295,12 +678,11 @@ export function usePermissions() {
     hasPermission,
     hasRole,
     isSuperUser,
-    isAdmin,
+    getUserRoleName, // ✅ Incluir la nueva función aquí
     getUserPermissions,
-
     // ✅ NUEVAS FUNCIONES para multi-tenancy
     hasAccessToCommunity,
-    getUserCommunities,
+    getUserCommunities,  // Agrega esta línea
     hasRoleInCommunity,
     canManageCommunity,
     canViewCommunityFinances,
@@ -367,7 +749,7 @@ export function ProtectedPage({
   redirectTo = '/dashboard',
   showAccessDenied = true,
 }: ProtectedPageProps) {
-  const { hasPermission, hasRole, isSuperUser } = usePermissions();
+  const { hasPermission, hasRole, isSuperUser, currentRole } = usePermissions();  // ✅ Usar hook
   const { user } = useAuth();
   const router = useRouter();
 
@@ -384,12 +766,10 @@ export function ProtectedPage({
   } else if (role) {
     hasAccess = hasRole(role);
   } else if (allowedRoles && allowedRoles.length > 0) {
-    // Usar getUserRole del módulo roles
-    const { getUserRole } = require('./roles');
-    const currentUserRole = getUserRole(user);
-    hasAccess = allowedRoles.includes(currentUserRole);
+    hasAccess = allowedRoles.some(role => user?.roles?.some((r: any) =>
+      (typeof r === 'string' ? r : r.rol) === role,
+    ));
   } else {
-    // Si no se especifica ningún requisito, denegar por defecto
     hasAccess = false;
   }
 

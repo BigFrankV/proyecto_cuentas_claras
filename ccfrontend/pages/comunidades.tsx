@@ -9,7 +9,8 @@ import FilterContainer from '@/components/comunidades/FilterContainer';
 import ViewToggle from '@/components/comunidades/ViewToggle';
 import Layout from '@/components/layout/Layout';
 import comunidadesService from '@/lib/comunidadesService';
-import { ProtectedRoute, useAuth } from '@/lib/useAuth'; // ✅ AGREGAR useAuth
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 import {
   Comunidad,
   ComunidadFiltros,
@@ -18,7 +19,8 @@ import {
 
 export default function ComunidadesListado() {
   const router = useRouter();
-  const { user } = useAuth(); // ✅ AGREGAR hook de autenticación
+  const { user } = useAuth();
+  const { hasPermission } = usePermissions();
 
   // Estados principales
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
@@ -45,6 +47,10 @@ export default function ComunidadesListado() {
       ordenarPor: 'nombre',
       direccionOrden: 'asc',
     });
+
+  // Estados de paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(12);
 
   // Cargar comunidades
   useEffect(() => {
@@ -140,6 +146,32 @@ export default function ComunidadesListado() {
     setComunidadesFiltradas(resultado);
   }, [comunidades, filtros, configuracionVista]);
 
+  // Resetear página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filtros, configuracionVista]);
+
+  // Calcular comunidades paginadas
+  const totalPages = Math.ceil(comunidadesFiltradas.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const comunidadesPaginadas = comunidadesFiltradas.slice(startIndex, endIndex);
+
+  // Funciones de paginación
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    goToPage(currentPage - 1);
+  };
+
+  const goToNextPage = () => {
+    goToPage(currentPage + 1);
+  };
+
   // Manejadores de eventos
   const handleEdit = (id: number) => {
     router.push(`/comunidades/nueva?id=${id}&edit=true`);
@@ -165,25 +197,81 @@ export default function ComunidadesListado() {
       </Head>
 
       <Layout title='Comunidades'>
-        <div className='container-fluid py-4'>
-          {/* Header */}
-          <div className='d-flex justify-content-between align-items-center mb-4'>
-            <div>
-              <h1 className='h3 mb-0'>Comunidades</h1>
-              <p className='text-muted mb-0'>
-                Gestión y administración de comunidades
-              </p>
+        {/* Header profesional */}
+        <div className='container-fluid p-0'>
+          <header className='text-white shadow-lg' style={{ background: 'var(--gradient-dashboard-header)' }}>
+            <div className='p-4'>
+              <div className='row align-items-center'>
+                {/* Información principal */}
+                <div className='col-lg-8'>
+                  <div className='d-flex align-items-center mb-3'>
+                    <div className='icon-box bg-success bg-opacity-20 rounded-circle p-3 me-3'>
+                      <span className='material-icons' style={{ fontSize: '32px', color: 'white' }}>
+                        domain
+                      </span>
+                    </div>
+                    <div>
+                      <h1 className='h3 mb-1 fw-bold'>Comunidades</h1>
+                      <p className='mb-0 opacity-75'>Gestión y administración de comunidades</p>
+                    </div>
+                  </div>
+
+                  {/* Estadísticas rápidas */}
+                  <div className='bg-white bg-opacity-10 rounded p-3'>
+                    <div className='row g-3'>
+                      <div className='col-4'>
+                        <div className='text-center'>
+                          <div className='h5 mb-0 fw-bold'>{comunidades.length}</div>
+                          <small className='text-white-50'>Total</small>
+                        </div>
+                      </div>
+                      <div className='col-4'>
+                        <div className='text-center'>
+                          <div className='h5 mb-0 fw-bold'>
+                            {comunidades.filter(c => c.estado === 'Activa').length}
+                          </div>
+                          <small className='text-white-50'>Activas</small>
+                        </div>
+                      </div>
+                      <div className='col-4'>
+                        <div className='text-center'>
+                          <div className='h5 mb-0 fw-bold'>{comunidadesFiltradas.length}</div>
+                          <small className='text-white-50'>Filtradas</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Panel de acciones */}
+                <div className='col-lg-4'>
+                  <div className='d-flex justify-content-end align-items-center'>
+                    {/* Información del usuario */}
+                    <div className='bg-white bg-opacity-10 rounded p-3 me-3'>
+                      <div className='d-flex align-items-center'>
+                        <span className='material-icons me-2'>person</span>
+                        <div>
+                          <small className='text-white-50'>Usuario</small>
+                          <div className='fw-semibold'>{user?.username || 'Cargando...'}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Botón de nueva comunidad */}
+                    {hasPermission(Permission.CREATE_COMUNIDAD) && (
+                      <Link href='/comunidades/nueva' className='btn btn-light d-flex align-items-center'>
+                        <span className='material-icons me-2'>add</span>
+                        Nueva Comunidad
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
+          </header>
+        </div>
 
-            {/* ✅ CONDICIONAL: Solo superadmins pueden crear comunidades */}
-            {user?.is_superadmin && (
-              <Link href='/comunidades/nueva' className='btn btn-primary'>
-                <span className='material-icons me-2'>add</span>
-                Nueva Comunidad
-              </Link>
-            )}
-          </div>
-
+        <div className='container-fluid py-4'>
           {/* Filtros */}
           <FilterContainer
             filtros={filtros}
@@ -232,8 +320,8 @@ export default function ComunidadesListado() {
               {/* Vista de tarjetas */}
               {configuracionVista.tipoVista === 'cards' && (
                 <div className='row g-4 mb-4'>
-                  {comunidadesFiltradas.length > 0 ? (
-                    comunidadesFiltradas.map(comunidad => (
+                  {comunidadesPaginadas.length > 0 ? (
+                    comunidadesPaginadas.map(comunidad => (
                       <ComunidadCard
                         key={comunidad.id}
                         comunidad={comunidad}
@@ -273,39 +361,36 @@ export default function ComunidadesListado() {
               {/* Vista de tabla */}
               {configuracionVista.tipoVista === 'table' && (
                 <ComunidadTable
-                  comunidades={comunidadesFiltradas}
+                  comunidades={comunidadesPaginadas}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                 />
               )}
 
-              {/* Paginación (implementar si es necesario) */}
-              {comunidadesFiltradas.length >
-                configuracionVista.itemsPorPagina && (
-                <nav aria-label='Navegación de páginas' className='mt-4'>
-                  <ul className='pagination justify-content-center'>
-                    <li className='page-item disabled'>
-                      <span className='page-link'>Anterior</span>
-                    </li>
-                    <li className='page-item active'>
-                      <span className='page-link'>1</span>
-                    </li>
-                    <li className='page-item'>
-                      <button className='page-link' type='button'>
-                        2
-                      </button>
-                    </li>
-                    <li className='page-item'>
-                      <button className='page-link' type='button'>
-                        3
-                      </button>
-                    </li>
-                    <li className='page-item'>
-                      <button className='page-link' type='button'>
-                        Siguiente
-                      </button>
-                    </li>
-                  </ul>
+              {/* Paginación moderna */}
+              {totalPages > 1 && (
+                <nav aria-label='Navegación de páginas' className='pagination-modern'>
+                  <button
+                    className='btn'
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    aria-label='Página anterior'
+                  >
+                    <span className='material-icons'>chevron_left</span>
+                  </button>
+
+                  <div className='page-info'>
+                    Página {currentPage} de {totalPages} ({comunidadesFiltradas.length} comunidades)
+                  </div>
+
+                  <button
+                    className='btn'
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    aria-label='Página siguiente'
+                  >
+                    <span className='material-icons'>chevron_right</span>
+                  </button>
                 </nav>
               )}
             </>

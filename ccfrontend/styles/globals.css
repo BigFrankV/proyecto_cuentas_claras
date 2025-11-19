@@ -1,14 +1,82 @@
-/* Variables CSS personalizadas */
+/* Variables CSS personalizadas - Paleta Corporativa Profesional con Módulos */
 :root {
-  --color-primary: #0d47a1;
-  --color-secondary: #1976d2;
-  --color-accent: #fd5d14;
-  --color-success: #28a745;
-  --color-warning: #ffc107;
-  --color-danger: #dc3545;
-  --color-info: #17a2b8;
-  --color-light: #f8f9fa;
-  --color-dark: #343a40;
+  /* ============================================
+     PALETA PRINCIPAL (90% de la interfaz)
+     ============================================ */
+
+  /* Azul Primario - Marca Principal */
+  --color-primary: #004AAD;
+  --color-primary-light: #3673D8;
+  --color-primary-lighter: #E8F1FF;
+  --color-primary-dark: #003580;
+
+  /* Azul Oscuro - Texto Principal */
+  --color-text-primary: #0A2540;
+  --color-text-secondary: #6C757D;
+  --color-text-light: #F8F9FA;
+
+  /* Naranja Acento - Call to Action */
+  --color-accent: #FF7B00;
+  --color-accent-light: #FFB84D;
+  --color-accent-lighter: #FFE8D6;
+  --color-accent-dark: #E67200;
+
+  /* Grises - Neutrales */
+  --color-white: #FFFFFF;
+  --color-light: #F8F9FA;
+  --color-gray-100: #F1F3F5;
+  --color-gray-200: #E9ECEF;
+  --color-gray-300: #DEE2E6;
+  --color-gray-400: #ADB5BD;
+  --color-gray-500: #6C757D;
+  --color-gray-600: #495057;
+  --color-dark: #0A2540;
+
+  /* ============================================
+     PALETA DE MÓDULOS (Identidad de Secciones)
+     ============================================ */
+
+  /* Dashboard / Reportes - Global */
+  --color-module-dashboard: #004AAD;
+
+  /* Gradientes para headers */
+  --gradient-primary: linear-gradient(135deg, #004AAD 0%, #3673D8 100%);
+  --gradient-dashboard-header: linear-gradient(135deg, #004AAD 0%, #1e5f99 50%, #3673D8 100%);
+
+  /* Estructura / Residentes - Admin Central */
+  --color-module-admin: #4A55A2;
+
+  /* Finanzas / Gastos - Dinero */
+  --color-module-finance: #208C4E;
+
+  /* Servicios / Amenidades - Operaciones */
+  --color-module-services: #138A9E;
+
+  /* Sanciones / Comunicación - Interacción */
+  --color-module-communication: #5856D6;
+
+  /* Utilidades / Bitácora - Herramientas */
+  --color-module-tools: #5A6E8A;
+
+  /* ============================================
+     COLORES DE SISTEMA (Feedback)
+     ============================================ */
+
+  --color-success: #28A745;
+  --color-success-light: #D4EDDA;
+  --color-success-dark: #1E7E34;
+
+  --color-danger: #DC3545;
+  --color-danger-light: #F8D7DA;
+  --color-danger-dark: #BB2D3B;
+
+  --color-warning: #FFC107;
+  --color-warning-light: #FFF3CD;
+  --color-warning-dark: #997404;
+
+  --color-info: #0D6EFD;
+  --color-info-light: #CFF4FC;
+  --color-info-dark: #084298;
 
   --font-family-primary:
     "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
@@ -90,6 +158,7 @@ body {
   left: 0;
   z-index: 1000;
   transform: translateX(-100%);
+  background-color: #00295f !important;
   transition: transform 0.3s ease-in-out;
   width: 280px;
 }
@@ -278,6 +347,43 @@ body {
 
 .rounded-lg {
   border-radius: var(--border-radius-lg) !important;
+}
+
+/* ============================================
+   UTILIDADES PARA DASHBOARD
+   ============================================ */
+
+.hover-bg-light:hover {
+  background-color: #f8f9fa !important;
+}
+
+.icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+}
+
+.bg-primary-light {
+  background-color: rgba(0, 74, 173, 0.1) !important;
+}
+
+.bg-success-light {
+  background-color: rgba(32, 140, 78, 0.1) !important;
+}
+
+.bg-danger-light {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.bg-warning-light {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.bg-info-light {
+  background-color: rgba(19, 138, 158, 0.1) !important;
 }
 
 /* Responsive utilities */
@@ -761,6 +867,205 @@ body {
 
 .modal-header .modal-title .material-icons {
   font-size: 1.5rem;
+}
+
+/* ============================================
+   ESTILOS PARA CHARTS PROFESIONALES
+   ============================================ */
+
+.chart-wrapper {
+  background: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--color-gray-200);
+  overflow: hidden;
+  transition: var(--transition-base);
+  height: 100%;
+}
+
+.chart-wrapper:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.chart-header {
+  background: var(--gradient-primary);
+  color: var(--color-white);
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chart-title i {
+  font-size: 1.25rem;
+  opacity: 0.9;
+}
+
+.chart-header .badge {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+}
+
+.chart-container {
+  padding: 1.5rem;
+  min-height: 350px;
+  position: relative;
+}
+
+.chart-tabs {
+  background: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.chart-tabs .nav-tabs {
+  background: var(--color-gray-100);
+  border-bottom: 1px solid var(--color-gray-200);
+  padding: 0 1rem;
+}
+
+.chart-tabs .nav-tabs .nav-link {
+  border: none;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  padding: 1rem 1.5rem;
+  transition: var(--transition-base);
+  position: relative;
+}
+
+.chart-tabs .nav-tabs .nav-link:hover {
+  color: var(--color-primary);
+  background: rgba(0, 74, 173, 0.05);
+}
+
+.chart-tabs .nav-tabs .nav-link.active {
+  color: var(--color-primary);
+  background: var(--color-white);
+  border-bottom: 3px solid var(--color-primary);
+  font-weight: 600;
+}
+
+.chart-tabs .tab-content {
+  padding: 0;
+}
+
+.chart-tabs .tab-pane {
+  padding: 1.5rem;
+}
+
+.chart-metric-card {
+  background: var(--color-white);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  border: 1px solid var(--color-gray-200);
+  transition: var(--transition-base);
+  height: 100%;
+}
+
+.chart-metric-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.metric-change {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.metric-change.positive {
+  background: var(--color-success-light);
+  color: var(--color-success-dark);
+}
+
+.metric-change.negative {
+  background: var(--color-danger-light);
+  color: var(--color-danger-dark);
+}
+
+.metric-change.neutral {
+  background: var(--color-gray-200);
+  color: var(--color-text-secondary);
+}
+
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--color-text-secondary);
+}
+
+.chart-loading i {
+  font-size: 2rem;
+  margin-right: 0.5rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments for charts */
+@media (max-width: 768px) {
+  .chart-header {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .chart-title {
+    font-size: 1rem;
+  }
+
+  .chart-container {
+    padding: 1rem;
+    min-height: 280px;
+  }
+
+  .chart-tabs .nav-tabs {
+    padding: 0 0.5rem;
+  }
+
+  .chart-tabs .nav-tabs .nav-link {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
 }
 
 /* Responsivo */

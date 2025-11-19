@@ -12,7 +12,7 @@ export default function Login() {
   return (
     <div className='d-flex justify-content-center align-items-center min-vh-100'>
       <div className='spinner-border text-primary' role='status'>
-        <span className='visually-hidden'>Cargando...</span>
+        <span className='visually-hidden'>Hola!!!</span>
       </div>
     </div>
   );

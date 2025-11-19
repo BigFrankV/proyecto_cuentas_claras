@@ -1,7 +1,9 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
+import profileService from '@/lib/profileService';
 import { useAuth } from '@/lib/useAuth';
 import {
   usePermissions,
@@ -73,10 +75,10 @@ const menuSections = [
   {
     title: 'Sanciones',
     items: [
-      { href: '/multas', label: 'Multas', icon: 'gavel', permission: Permission.VIEW_FINANCES },
-      { href: '/multas-nueva', label: 'Nueva Multa', icon: 'add_circle', permission: Permission.MANAGE_MULTAS },
-      { href: '/apelaciones', label: 'Apelaciones', icon: 'gavel', permission: Permission.VIEW_FINANCES },
-      { href: '/apelaciones-nueva', label: 'Nueva Apelación', icon: 'add_circle_outline', permission: Permission.VIEW_FINANCES },
+      { href: '/multas', label: 'Multas', icon: 'gavel', permission: Permission.VIEW_MULTA },
+      { href: '/multas-nueva', label: 'Nueva Multa', icon: 'add_circle', permission: Permission.CREATE_MULTA },
+      { href: '/apelaciones', label: 'Apelaciones', icon: 'gavel', permission: Permission.VIEW_APELACION },
+      { href: '/apelaciones-nueva', label: 'Nueva Apelación', icon: 'add_circle_outline', permission: Permission.CREATE_APELACION },
     ],
   },
   {
@@ -98,21 +100,12 @@ const menuSections = [
   },
 ];
 
-// Mapeo de roles a español
-const roleTranslations: Record<string, string> = {
-  superuser: 'Superusuario',
-  admin: 'Administrador',
-  concierge: 'Conserje',
-  accountant: 'Contador',
-  manager: 'Gerente',
-  user: 'Usuario',
-};
-
 export default function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { hasPermission, currentRole } = usePermissions(); // Usar permisos dinámicos
+  const { hasPermission, currentRole, getUserRoleName } = usePermissions(); // Usar permisos dinámicos
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
   // Función para determinar si una sección debe mostrarse (usando permisos)
   const shouldShowSection = (sectionTitle: string) => {
@@ -130,7 +123,10 @@ export default function Sidebar() {
   };
 
   const isActive = (href: string) => {
-    return router.pathname === href;
+    // Comparar si la ruta actual comienza con el href del menú
+    // Esto permite que subsecciones también destaquen el menú principal
+    // Ejemplo: /centros-costo/nuevo coincide con /centros-costo
+    return router.pathname === href || router.pathname.startsWith(`${href}/`);
   };
 
   const handleLogout = async () => {
@@ -143,7 +139,25 @@ export default function Sidebar() {
   };
 
   // Traducción del rol actual a español
-  const currentRoleSpanish = roleTranslations[currentRole] || currentRole;
+  const currentRoleSpanish = getUserRoleName();
+
+  // Cargar foto de perfil cuando el usuario cambie
+  useEffect(() => {
+    if (user) {
+      const loadProfilePhoto = async () => {
+        try {
+          const photoUrl = await profileService.getProfilePhoto();
+          setProfilePhoto(photoUrl);
+        } catch (error) {
+          // Si hay error, dejar como null (mostrará iniciales)
+          setProfilePhoto(null);
+        }
+      };
+      loadProfilePhoto();
+    } else {
+      setProfilePhoto(null);
+    }
+  }, [user]);
 
   return (
     <>
@@ -151,8 +165,7 @@ export default function Sidebar() {
         className={`sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark ${isCollapsed ? 'collapsed' : ''}`}
         id='sidebar'
         style={{
-          background:
-            'linear-gradient(180deg, var(--color-primary) 0%, #071a38 100%) !important',
+          background: '#004AAD !important',
           width: '280px',
           position: 'fixed',
           top: 0,
@@ -176,46 +189,52 @@ export default function Sidebar() {
 
         {/* Información del usuario */}
         <div className='d-flex align-items-center mb-3 px-2'>
-          <div
-            className='avatar me-2'
-            style={{
-              width: '36px',
-              height: '36px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'var(--color-accent)',
-              color: '#fff',
-              fontWeight: 'bold',
-              borderRadius: '50%',
-            }}
-          >
-            {user?.persona?.nombres && user?.persona?.apellidos
-              ? `${user.persona.nombres.charAt(0)}${user.persona.apellidos.charAt(0)}`.toUpperCase()
-              : user?.username
-                ? user.username.substring(0, 2).toUpperCase()
-                : 'U'}
-          </div>
+          {profilePhoto ? (
+            <Image
+              src={profilePhoto}
+              alt="Foto de perfil"
+              className='avatar me-2'
+              width={36}
+              height={36}
+              style={{
+                borderRadius: '8px',
+                objectFit: 'cover',
+                border: '2px solid rgba(255, 255, 255, 0.2)',
+              }}
+            />
+          ) : (
+            <div
+              className='avatar me-2'
+              style={{
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'var(--color-accent)',
+                color: '#fff',
+                fontWeight: 'bold',
+                borderRadius: '8px',
+              }}
+            >
+              {user?.persona?.nombres && user?.persona?.apellidos
+                ? `${user.persona.nombres.charAt(0)}${user.persona.apellidos.charAt(0)}`.toUpperCase()
+                : user?.username
+                  ? user.username.substring(0, 2).toUpperCase()
+                  : 'U'}
+            </div>
+          )}
           <div>
             <span className='d-block text-white'>
               {user?.persona?.nombres && user?.persona?.apellidos
                 ? `${user.persona.nombres} ${user.persona.apellidos}`
                 : user?.username || 'Usuario'}
-              {user?.is_superadmin ? (
-                <span
-                  className='badge bg-warning text-dark ms-1'
-                  style={{ fontSize: '0.6rem' }}
-                >
-                  SUPERADMIN
-                </span>
-              ) : (
-                <span
-                  className='badge bg-secondary ms-1'
-                  style={{ fontSize: '0.6rem' }}
-                >
-                  {currentRoleSpanish?.toUpperCase()}
-                </span>
-              )}
+              <span
+                className={`badge ms-1 ${user?.is_superadmin ? 'bg-warning text-dark' : 'bg-primary text-white'}`}
+                style={{ fontSize: '0.6rem' }}
+              >
+                {getUserRoleName().toUpperCase()}
+              </span>
             </span>
             <span className='small text-white-50'>
               {user?.email || 'Sin email configurado'}
@@ -266,14 +285,7 @@ export default function Sidebar() {
                     }}
                   >
                     {section.title}
-                    {user?.is_superadmin && section.title === 'Dashboard' && (
-                      <span
-                        className='badge bg-warning text-dark ms-2'
-                        style={{ fontSize: '0.6rem' }}
-                      >
-                        ADMIN
-                      </span>
-                    )}
+  
                   </div>
 
                   {/* Items de navegación con PermissionGuard */}
@@ -337,7 +349,7 @@ export default function Sidebar() {
             aria-labelledby='userDropdown'
           >
             <li>
-              <Link className='dropdown-item' href='/profile'>
+              <Link className='dropdown-item' href='/mi-perfil'>
                 Mi Perfil
               </Link>
             </li>

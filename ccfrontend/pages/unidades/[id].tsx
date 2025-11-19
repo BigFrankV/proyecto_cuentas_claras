@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import apiClient from '@/lib/api';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface Unidad {
   id: string;
@@ -242,6 +243,7 @@ const mockHistorial: HistorialItem[] = [
 export default function UnidadDetalle() {
   const router = useRouter();
   const { id } = router.query;
+  const { hasPermission } = usePermissions();
   const [unidad, setUnidad] = useState<Unidad | null>(null);
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [pagos, setPagos] = useState<Pago[]>([]);
@@ -505,23 +507,27 @@ export default function UnidadDetalle() {
                   <li>
                     <hr className='dropdown-divider' />
                   </li>
-                  <li>
-                    <button className='dropdown-item text-danger'>
-                      <i className='material-icons align-middle me-1 small'>
-                        delete
-                      </i>
-                      Eliminar unidad
-                    </button>
-                  </li>
+                  {hasPermission(Permission.DELETE_UNIDAD) && (
+                    <li>
+                      <button className='dropdown-item text-danger'>
+                        <i className='material-icons align-middle me-1 small'>
+                          delete
+                        </i>
+                        Eliminar unidad
+                      </button>
+                    </li>
+                  )}
                 </ul>
               </div>
-              <button
-                className='btn btn-primary'
-                onClick={() => setShowEditModal(true)}
-              >
-                <i className='material-icons align-middle me-1'>edit</i>
-                Editar
-              </button>
+              {hasPermission(Permission.EDIT_UNIDAD) && (
+                <button
+                  className='btn btn-primary'
+                  onClick={() => setShowEditModal(true)}
+                >
+                  <i className='material-icons align-middle me-1'>edit</i>
+                  Editar
+                </button>
+              )}
             </div>
           </div>
 
