@@ -1,26 +1,37 @@
 <!doctype html>
 <html lang="es">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CUENTAS CLARAS · Portafolio de Título</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@500;600;700;800&display=swap"
+    rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
   <style>
     /* --- VARIABLES DE DISEÑO --- */
     :root {
-      --primary: #004AAD;       /* Azul Corporativo */
-      --primary-dark: #003380;  /* Azul Oscuro */
-      --accent: #3673D8;        /* Azul Brillante */
-      --text-main: #0A2540;     /* Texto Principal */
-      --text-light: #52606D;    /* Texto Secundario */
-      --bg-slide: #F8FAFC;      /* Fondo */
+      --primary: #004AAD;
+      /* Azul Corporativo */
+      --primary-dark: #003380;
+      /* Azul Oscuro */
+      --accent: #3673D8;
+      /* Azul Brillante */
+      --text-main: #0A2540;
+      /* Texto Principal */
+      --text-light: #52606D;
+      /* Texto Secundario */
+      --bg-slide: #F8FAFC;
+      /* Fondo */
       --card-shadow: 0 20px 40px -10px rgba(0, 74, 173, 0.15);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -32,216 +43,473 @@
       overflow: hidden;
     }
 
-    #presentation { position: relative; width: 100%; height: 100%; }
+    #presentation {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
 
     /* --- DIAPOSITIVAS --- */
     .slide {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       padding: 20px 60px;
-      display: flex; flex-direction: column; justify-content: center;
-      opacity: 0; z-index: 0; pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      z-index: 0;
+      pointer-events: none;
       transition: opacity 0.4s ease;
       background: white;
       background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0 L20 20 M20 0 L0 20' stroke='%23e2e8f0' stroke-width='0.5' opacity='0.1'/%3E%3C/svg%3E");
       overflow-y: auto;
     }
 
-    .slide.active { opacity: 1; z-index: 10; pointer-events: all; }
-
-    /* --- TIPOGRAFÍA --- */
-    h1, h2, h3 { font-family: 'Poppins', sans-serif; color: var(--primary); margin: 0; }
-    
-    h2 { 
-        font-size: 32px; margin-bottom: 20px; 
-        padding-bottom: 8px;
-        border-bottom: 3px solid var(--accent);
-        display: inline-block;
+    .slide.active {
+      opacity: 1;
+      z-index: 10;
+      pointer-events: all;
     }
 
-    p { font-size: 16px; line-height: 1.6; color: var(--text-light); max-width: 1100px; margin-bottom: 15px; }
-    .small { font-size: 14px; }
-    strong { color: var(--text-main); font-weight: 700; }
+    /* --- TIPOGRAFÍA --- */
+    h1,
+    h2,
+    h3 {
+      font-family: 'Poppins', sans-serif;
+      color: var(--primary);
+      margin: 0;
+    }
+
+    h2 {
+      font-size: 32px;
+      margin-bottom: 20px;
+      padding-bottom: 8px;
+      border-bottom: 3px solid var(--accent);
+      display: inline-block;
+    }
+
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text-light);
+      max-width: 1100px;
+      margin-bottom: 15px;
+    }
+
+    .small {
+      font-size: 14px;
+    }
+
+    strong {
+      color: var(--text-main);
+      font-weight: 700;
+    }
 
     /* --- PORTADA --- */
     #slide-0 {
       background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      color: white; text-align: center; align-items: center;
+      color: white;
+      text-align: center;
+      align-items: center;
     }
-    #slide-0 h1 { color: white; font-size: 56px; margin-bottom: 10px; letter-spacing: -1px; }
-    #slide-0 p { color: rgba(255,255,255,0.9); font-size: 22px; font-weight: 300; }
-    #slide-0 h2 { border: none; color: white; font-size: 18px; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; }
+
+    #slide-0 h1 {
+      color: white;
+      font-size: 56px;
+      margin-bottom: 10px;
+      letter-spacing: -1px;
+    }
+
+    #slide-0 p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 22px;
+      font-weight: 300;
+    }
+
+    #slide-0 h2 {
+      border: none;
+      color: white;
+      font-size: 18px;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
 
     /* --- CONTENEDORES DE DIAGRAMAS --- */
     .mermaid-container {
-      background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
-      padding: 10px; width: 100%; height: 65vh;
-      display: flex; justify-content: center; align-items: flex-start;
-      margin-top: 10px; box-shadow: inset 0 0 20px rgba(0,0,0,0.03);
-      overflow: auto; position: relative;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px;
+      width: 100%;
+      height: 65vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      margin-top: 10px;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.03);
+      overflow: auto;
+      position: relative;
     }
-    .mermaid { width: 100%; display: flex; justify-content: center; }
+
+    .mermaid {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
 
     /* --- BOTONES Y UTILIDADES --- */
     .zoom-btn {
-      position: absolute; top: 15px; right: 15px;
-      background: var(--primary); color: white; border: none;
-      padding: 8px 14px; border-radius: 6px; cursor: pointer;
-      font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 5;
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      z-index: 5;
       transition: transform 0.2s, background 0.2s;
     }
-    .zoom-btn:hover { transform: scale(1.05); background: var(--accent); }
+
+    .zoom-btn:hover {
+      transform: scale(1.05);
+      background: var(--accent);
+    }
 
     .insight-box {
-      background: #f0f9ff; border-left: 5px solid var(--accent);
-      padding: 12px 20px; margin-bottom: 15px; border-radius: 6px;
-      font-size: 15px; color: var(--text-main); display: flex; align-items: center; gap: 15px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      background: #f0f9ff;
+      border-left: 5px solid var(--accent);
+      padding: 12px 20px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      font-size: 15px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
-    .insight-icon { font-size: 24px; }
+
+    .insight-icon {
+      font-size: 24px;
+    }
 
     /* --- MODAL PANTALLA COMPLETA --- */
     #fullscreen-modal {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(248, 250, 252, 0.98); z-index: 9999;
-      display: none; flex-direction: column; align-items: center; justify-content: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(248, 250, 252, 0.98);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       overflow: hidden;
     }
-    
+
     #fullscreen-viewport {
-        width: 100vw; height: 100vh;
-        overflow: hidden;
-        display: flex; justify-content: center; align-items: center;
-        cursor: grab;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: grab;
     }
-    #fullscreen-viewport:active { cursor: grabbing; }
+
+    #fullscreen-viewport:active {
+      cursor: grabbing;
+    }
 
     #fullscreen-content {
-        transform-origin: center center;
-        transition: transform 0.1s ease-out;
-        display: flex; justify-content: center; align-items: center;
-        min-width: 50vw; min-height: 50vh;
+      transform-origin: center center;
+      transition: transform 0.1s ease-out;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 50vw;
+      min-height: 50vh;
     }
-    #fullscreen-content svg { max-width: none !important; height: auto; }
+
+    #fullscreen-content svg {
+      max-width: none !important;
+      height: auto;
+    }
 
     #fullscreen-controls {
-        position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-        display: flex; gap: 15px; background: white; padding: 12px 25px; border-radius: 50px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 10000; border: 1px solid #eee;
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+      background: white;
+      padding: 12px 25px;
+      border-radius: 50px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      z-index: 10000;
+      border: 1px solid #eee;
     }
-    
+
     .control-btn {
-        width: 45px; height: 45px; border-radius: 50%; border: none;
-        background: #f1f5f9; color: var(--text-main); font-size: 22px; font-weight: bold;
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: background 0.2s;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      border: none;
+      background: #f1f5f9;
+      color: var(--text-main);
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
     }
-    .control-btn:hover { background: var(--accent); color: white; }
+
+    .control-btn:hover {
+      background: var(--accent);
+      color: white;
+    }
 
     #close-modal {
-      position: absolute; top: 30px; right: 40px;
-      background: #ef4444; color: white; border: none;
-      padding: 12px 24px; border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 16px;
-      box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3); z-index: 10001;
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+      z-index: 10001;
       transition: transform 0.2s;
     }
-    #close-modal:hover { transform: scale(1.05); }
+
+    #close-modal:hover {
+      transform: scale(1.05);
+    }
 
     /* --- GRID Y TARJETAS --- */
-    .grid { display: flex; gap: 25px; width: 100%; margin-top: 20px; }
-    .col { flex: 1; }
-    .col-2 { flex: 1.5; }
-
-    .team-container { display: flex; gap: 25px; margin-top: 20px; width: 100%; }
-    .team-card { 
-        background: white; border: 1px solid #e2e8f0; padding: 25px; border-radius: 16px; 
-        flex: 1; text-align: center; box-shadow: var(--card-shadow); transition: transform 0.3s;
+    .grid {
+      display: flex;
+      gap: 25px;
+      width: 100%;
+      margin-top: 20px;
     }
-    .team-card:hover { transform: translateY(-5px); border-color: var(--accent); }
-    .avatar { width: 90px; height: 90px; border-radius: 50%; margin-bottom: 15px; border: 3px solid #e0f2fe; }
 
-    .dark-box { 
-        background: #1e293b; color: white; padding: 25px; border-radius: 12px; 
-        font-size: 15px; height: 100%; box-shadow: var(--card-shadow);
-        display: flex; flex-direction: column;
+    .col {
+      flex: 1;
     }
-    .dark-box strong { color: #60a5fa; font-size: 18px; display: block; margin-bottom: 10px; }
-    .dark-box ul { padding-left: 20px; margin: 0; }
-    .dark-box li { margin-bottom: 8px; }
+
+    .col-2 {
+      flex: 1.5;
+    }
+
+    .team-container {
+      display: flex;
+      gap: 25px;
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    .team-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      padding: 25px;
+      border-radius: 16px;
+      flex: 1;
+      text-align: center;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.3s;
+    }
+
+    .team-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--accent);
+    }
+
+    .avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      margin-bottom: 15px;
+      border: 3px solid #e0f2fe;
+    }
+
+    .dark-box {
+      background: #1e293b;
+      color: white;
+      padding: 25px;
+      border-radius: 12px;
+      font-size: 15px;
+      height: 100%;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dark-box strong {
+      color: #60a5fa;
+      font-size: 18px;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .dark-box ul {
+      padding-left: 20px;
+      margin: 0;
+    }
+
+    .dark-box li {
+      margin-bottom: 8px;
+    }
 
     /* --- CONTROLES DE NAVEGACIÓN --- */
-    .controls { position: fixed; bottom: 30px; right: 40px; display: flex; gap: 15px; z-index: 1000; }
-    .nav-btn { 
-        width: 55px; height: 55px; border-radius: 50%; border: none; 
-        background: white; color: var(--primary); font-size: 24px; 
-        cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        display: flex; align-items: center; justify-content: center;
-        transition: transform 0.2s, background 0.2s;
-    }
-    .nav-btn:hover { transform: scale(1.1); background: var(--primary); color: white; }
-    
-    .slide-indicator { 
-        position: fixed; bottom: 40px; left: 40px; 
-        font-family: 'Poppins'; font-weight: 700; color: var(--text-light); 
-        font-size: 16px; z-index: 1000; 
+    .controls {
+      position: fixed;
+      bottom: 30px;
+      right: 40px;
+      display: flex;
+      gap: 15px;
+      z-index: 1000;
     }
 
-    .tech-icons { display: flex; gap: 30px; justify-content: center; margin-top: 50px; }
-    .tech-icon { 
-        width: 100px; height: 100px; background: white; border-radius: 20px; 
-        padding: 20px; box-shadow: var(--card-shadow); 
-        display:flex; align-items:center; justify-content:center;
-        transition: transform 0.3s;
+    .nav-btn {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      border: none;
+      background: white;
+      color: var(--primary);
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, background 0.2s;
     }
-    .tech-icon:hover { transform: translateY(-10px); }
+
+    .nav-btn:hover {
+      transform: scale(1.1);
+      background: var(--primary);
+      color: white;
+    }
+
+    .slide-indicator {
+      position: fixed;
+      bottom: 40px;
+      left: 40px;
+      font-family: 'Poppins';
+      font-weight: 700;
+      color: var(--text-light);
+      font-size: 16px;
+      z-index: 1000;
+    }
+
+    .tech-icons {
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+      margin-top: 50px;
+    }
+
+    .tech-icon {
+      width: 100px;
+      height: 100px;
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s;
+    }
+
+    .tech-icon:hover {
+      transform: translateY(-10px);
+    }
   </style>
 </head>
+
 <body>
 
   <div id="fullscreen-modal">
     <button id="close-modal" onclick="closeFullscreen()">✖ CERRAR</button>
-    
-    <div id="fullscreen-viewport" onmousedown="startDrag(event)" onmousemove="drag(event)" onmouseup="endDrag()" onwheel="handleWheel(event)">
-        <div id="fullscreen-content"></div>
+
+    <div id="fullscreen-viewport" onmousedown="startDrag(event)" onmousemove="drag(event)" onmouseup="endDrag()"
+      onwheel="handleWheel(event)">
+      <div id="fullscreen-content"></div>
     </div>
 
     <div id="fullscreen-controls">
-        <button class="control-btn" onclick="zoom(-0.2)" title="Reducir">－</button>
-        <button class="control-btn" onclick="resetZoom()" title="Restaurar">⟲</button>
-        <button class="control-btn" onclick="zoom(0.2)" title="Aumentar">＋</button>
+      <button class="control-btn" onclick="zoom(-0.2)" title="Reducir">－</button>
+      <button class="control-btn" onclick="resetZoom()" title="Restaurar">⟲</button>
+      <button class="control-btn" onclick="zoom(0.2)" title="Aumentar">＋</button>
     </div>
   </div>
 
   <div id="presentation">
-<!-- DIAPO UNA -->
+    <!-- DIAPO UNA -->
     <section class="slide active" id="slide-0">
       <!-- Slide 1: Portada -->
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/2560px-Logo_DuocUC.svg.png" style="height: 80px; margin-bottom: 40px; filter: brightness(0) invert(1);" alt="Logo Duoc">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/2560px-Logo_DuocUC.svg.png"
+        style="height: 80px; margin-bottom: 40px; filter: brightness(0) invert(1);" alt="Logo Duoc">
       <h1>CUENTAS CLARAS</h1>
       <h2>PORTAFOLIO DE TÍTULO</h2>
       <p>Gestión de cobros, conciliaciones y administración para comunidades.</p>
-      <p style="font-size: 20px; font-weight: 600; margin-top: 30px;">Integrantes: Patricio Quintanilla, Frank Vogt, Matías Román</p>
+      <p style="font-size: 20px; font-weight: 600; margin-top: 30px;">Integrantes: Patricio Quintanilla, Frank Vogt,
+        Matías Román</p>
       <p style="font-size: 18px; opacity: 0.8; margin-top: 20px;">Diciembre 2025</p>
     </section>
-<!-- DIAPOSITIVAS 2 -->
+    <!-- DIAPOSITIVAS 2 -->
     <section class="slide">
       <!-- Slide 2: Integrantes del Proyecto -->
       <h2>👥 Integrantes del Proyecto</h2>
       <div class="team-container">
         <div class="team-card">
-          <img src="https://ui-avatars.com/api/?name=Patricio+Quintanilla&background=004AAD&color=fff&size=128" class="avatar" style="width: 120px; height: 120px;">
+          <img src="https://ui-avatars.com/api/?name=Patricio+Quintanilla&background=004AAD&color=fff&size=128"
+            class="avatar" style="width: 120px; height: 120px;">
           <h3 style="font-size: 24px;">Patricio Quintanilla</h3>
-          <p style="font-size: 18px; line-height: 1.4;"><strong>Frontend Developer</strong><br>Responsable del desarrollo de la interfaz, experiencia del usuario, diseño visual, integración de componentes, lógica de interacción y optimización general del frontend utilizando Next.js y React.</p>
+          <p style="font-size: 18px; line-height: 1.4;"><strong>Frontend Developer</strong><br>Responsable del
+            desarrollo de la interfaz, experiencia del usuario, diseño visual, integración de componentes, lógica de
+            interacción y optimización general del frontend utilizando Next.js y React.</p>
         </div>
         <div class="team-card">
-          <img src="https://ui-avatars.com/api/?name=Frank+Vogt&background=004AAD&color=fff&size=128" class="avatar" style="width: 120px; height: 120px;">
+          <img src="https://ui-avatars.com/api/?name=Frank+Vogt&background=004AAD&color=fff&size=128" class="avatar"
+            style="width: 120px; height: 120px;">
           <h3 style="font-size: 24px;">Frank Vogt</h3>
-          <p style="font-size: 18px; line-height: 1.4;"><strong>Backend Developer</strong><br>Encargado de la arquitectura del sistema, APIs, seguridad, autenticación, lógica de negocio, integración con bases de datos y desarrollo de servicios utilizando Node.js, Express y autenticación 2FA.</p>
+          <p style="font-size: 18px; line-height: 1.4;"><strong>Backend Developer</strong><br>Encargado de la
+            arquitectura del sistema, APIs, seguridad, autenticación, lógica de negocio, integración con bases de datos
+            y desarrollo de servicios utilizando Node.js, Express y autenticación 2FA.</p>
         </div>
         <div class="team-card">
-          <img src="https://ui-avatars.com/api/?name=Mat%C3%ADas+Rom%C3%A1n&background=004AAD&color=fff&size=128" class="avatar" style="width: 120px; height: 120px;">
+          <img src="https://ui-avatars.com/api/?name=Mat%C3%ADas+Rom%C3%A1n&background=004AAD&color=fff&size=128"
+            class="avatar" style="width: 120px; height: 120px;">
           <h3 style="font-size: 24px;">Matías Román</h3>
-          <p style="font-size: 18px; line-height: 1.4;"><strong>Documentación y QA</strong><br>Responsable de la documentación formal del proyecto, manuales y diagramación. Encargado del control de calidad mediante pruebas funcionales, validación de requerimientos y aseguramiento de estándares técnicos.</p>
+          <p style="font-size: 18px; line-height: 1.4;"><strong>Documentación y QA</strong><br>Responsable de la
+            documentación formal del proyecto, manuales y diagramación. Encargado del control de calidad mediante
+            pruebas funcionales, validación de requerimientos y aseguramiento de estándares técnicos.</p>
         </div>
       </div>
     </section>
@@ -251,40 +519,45 @@
       <h2>🧩 Introducción</h2>
       <div class="grid" style="align-items: center;">
         <div class="col-2">
-            <p style="font-size: 24px; font-weight: 600; color: var(--primary);">
-                Cuentas Claras: Plataforma integral para gestión de comunidades y condominios.
-            </p>
-            <p style="font-size: 20px;">
-                Automatiza procesos administrativos críticos como:
-            </p>
-            <ul style="font-size: 18px; line-height: 1.6;">
-                <li>Emisión mensual de gastos comunes</li>
-                <li>Registro y prorrateo de consumos (agua, gas, electricidad)</li>
-                <li>Gestión de unidades, propietarios y residentes</li>
-                <li>Control de pagos y conciliación</li>
-                <li>Reservas de áreas comunes</li>
-                <li>Gestión de bitácoras y auditorías</li>
-                <li>Administración de roles y permisos por comunidad</li>
-            </ul>
-            <p style="font-size: 18px;">
-                El sistema está desarrollado con tecnologías modernas de backend, frontend y contenedorización, permitiendo una arquitectura escalable, modular y mantenible.
-            </p>
+          <p style="font-size: 24px; font-weight: 600; color: var(--primary);">
+            Cuentas Claras: Plataforma integral para gestión de comunidades y condominios.
+          </p>
+          <p style="font-size: 20px;">
+            Automatiza procesos administrativos críticos como:
+          </p>
+          <ul style="font-size: 18px; line-height: 1.6;">
+            <li>Emisión mensual de gastos comunes</li>
+            <li>Registro y prorrateo de consumos (agua, gas, electricidad)</li>
+            <li>Gestión de unidades, propietarios y residentes</li>
+            <li>Control de pagos y conciliación</li>
+            <li>Reservas de áreas comunes</li>
+            <li>Gestión de bitácoras y auditorías</li>
+            <li>Administración de roles y permisos por comunidad</li>
+          </ul>
+          <p style="font-size: 18px;">
+            El sistema está desarrollado con tecnologías modernas de backend, frontend y contenedorización, permitiendo
+            una arquitectura escalable, modular y mantenible.
+          </p>
         </div>
         <div class="col">
-            <div style="background: white; border: 1px solid #eee; padding: 20px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
-                <div style="display:flex; gap:15px; margin-bottom:15px; align-items:center;">
-                    <i class="material-icons" style="font-size:28px;">diamond</i>
-                    <div><strong style="font-size: 20px;">Transparencia</strong><br><span style="font-size: 16px;">Trazabilidad total del dinero.</span></div>
-                </div>
-                <div style="display:flex; gap:15px; margin-bottom:15px; align-items:center;">
-                    <i class="material-icons" style="font-size:28px;">lock</i>
-                    <div><strong style="font-size: 20px;">Seguridad</strong><br><span style="font-size: 16px;">Datos aislados y encriptados.</span></div>
-                </div>
-                <div style="display:flex; gap:15px; align-items:center;">
-                    <i class="material-icons" style="font-size:28px;">flash_on</i>
-                    <div><strong style="font-size: 20px;">Automatización</strong><br><span style="font-size: 16px;">Adiós al cálculo manual.</span></div>
-                </div>
+          <div
+            style="background: white; border: 1px solid #eee; padding: 20px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+            <div style="display:flex; gap:15px; margin-bottom:15px; align-items:center;">
+              <i class="material-icons" style="font-size:28px;">diamond</i>
+              <div><strong style="font-size: 20px;">Transparencia</strong><br><span
+                  style="font-size: 16px;">Trazabilidad total del dinero.</span></div>
             </div>
+            <div style="display:flex; gap:15px; margin-bottom:15px; align-items:center;">
+              <i class="material-icons" style="font-size:28px;">lock</i>
+              <div><strong style="font-size: 20px;">Seguridad</strong><br><span style="font-size: 16px;">Datos aislados
+                  y encriptados.</span></div>
+            </div>
+            <div style="display:flex; gap:15px; align-items:center;">
+              <i class="material-icons" style="font-size:28px;">flash_on</i>
+              <div><strong style="font-size: 20px;">Automatización</strong><br><span style="font-size: 16px;">Adiós al
+                  cálculo manual.</span></div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -295,20 +568,34 @@
         <div class="col dark-box">
           <strong style="font-size: 22px;">⚠️ El Problema</strong>
           <ul style="font-size: 18px; line-height: 1.6;">
-            <li><i class="material-icons" style="font-size:20px; vertical-align: middle; margin-right: 8px;">error</i>Gestión manual de cobros y conciliaciones propensa a errores humanos.</li>
-            <li><i class="material-icons" style="font-size:20px; vertical-align: middle; margin-right: 8px;">link_off</i>Falta de trazabilidad y herramientas desconectadas (Excel, Email, Whatsapp).</li>
-            <li><i class="material-icons" style="font-size:20px; vertical-align: middle; margin-right: 8px;">sentiment_dissatisfied</i>Desconfianza de los residentes.</li>
+            <li><i class="material-icons"
+                style="font-size:20px; vertical-align: middle; margin-right: 8px;">error</i>Gestión manual de cobros y
+              conciliaciones propensa a errores humanos.</li>
+            <li><i class="material-icons"
+                style="font-size:20px; vertical-align: middle; margin-right: 8px;">link_off</i>Falta de trazabilidad y
+              herramientas desconectadas (Excel, Email, Whatsapp).</li>
+            <li><i class="material-icons"
+                style="font-size:20px; vertical-align: middle; margin-right: 8px;">sentiment_dissatisfied</i>Desconfianza
+              de los residentes.</li>
           </ul>
-          <div style="text-align: center; margin-top: 15px;"><i class="material-icons" style="font-size: 80px; color: #ff6b6b;">warning</i></div>
+          <div style="text-align: center; margin-top: 15px;"><i class="material-icons"
+              style="font-size: 80px; color: #ff6b6b;">warning</i></div>
         </div>
         <div class="col dark-box" style="background: var(--primary);">
           <strong style="font-size: 22px;">✅ Nuestra Solución</strong>
           <ul style="font-size: 18px; line-height: 1.6;">
-            <li><i class="material-icons" style="font-size:20px; vertical-align: middle; margin-right: 8px;">cloud</i>Plataforma web centralizada y 100% en la nube.</li>
-            <li><i class="material-icons" style="font-size:20px; vertical-align: middle; margin-right: 8px;">autorenew</i>Automatización del registro de cargos, pagos y conciliaciones bancarias.</li>
-            <li><i class="material-icons" style="font-size:20px; vertical-align: middle; margin-right: 8px;">security</i>Autenticación segura (JWT, 2FA) y entorno reproducible con Docker.</li>
+            <li><i class="material-icons"
+                style="font-size:20px; vertical-align: middle; margin-right: 8px;">cloud</i>Plataforma web centralizada
+              y 100% en la nube.</li>
+            <li><i class="material-icons"
+                style="font-size:20px; vertical-align: middle; margin-right: 8px;">autorenew</i>Automatización del
+              registro de cargos, pagos y conciliaciones bancarias.</li>
+            <li><i class="material-icons"
+                style="font-size:20px; vertical-align: middle; margin-right: 8px;">security</i>Autenticación segura
+              (JWT, 2FA) y entorno reproducible con Docker.</li>
           </ul>
-          <div style="text-align: center; margin-top: 15px;"><i class="material-icons" style="font-size: 80px; color: #fff;">check_circle</i></div>
+          <div style="text-align: center; margin-top: 15px;"><i class="material-icons"
+              style="font-size: 80px; color: #fff;">check_circle</i></div>
         </div>
       </div>
     </div>
@@ -318,75 +605,95 @@
       <h2 style="font-size: 36px;"><i class="material-icons">track_changes</i> Objetivo del Proyecto</h2>
       <p style="font-size: 22px;">Desarrollar una plataforma capaz de:</p>
       <ul style="font-size: 20px; line-height: 1.8;">
-        <li><i class="material-icons" style="font-size:24px; vertical-align: middle; margin-right: 8px;">group</i>Unificar todos los procesos administrativos de una comunidad.</li>
-        <li><i class="material-icons" style="font-size:24px; vertical-align: middle; margin-right: 8px;">visibility</i>Asegurar transparencia financiera.</li>
-        <li><i class="material-icons" style="font-size:24px; vertical-align: middle; margin-right: 8px;">timer</i>Reducir tiempos en la emisión, cálculo y cobranza.</li>
-        <li><i class="material-icons" style="font-size:24px; vertical-align: middle; margin-right: 8px;">folder</i>Centralizar la información y facilitar auditorías.</li>
-        <li><i class="material-icons" style="font-size:24px; vertical-align: middle; margin-right: 8px;">expand</i>Permitir escalabilidad y multicomunidad (multi-tenancy).</li>
-        <li><i class="material-icons" style="font-size:24px; vertical-align: middle; margin-right: 8px;">lock</i>Incorporar mecanismos modernos de autenticación (JWT + 2FA).</li>
+        <li><i class="material-icons"
+            style="font-size:24px; vertical-align: middle; margin-right: 8px;">group</i>Unificar todos los procesos
+          administrativos de una comunidad.</li>
+        <li><i class="material-icons"
+            style="font-size:24px; vertical-align: middle; margin-right: 8px;">visibility</i>Asegurar transparencia
+          financiera.</li>
+        <li><i class="material-icons"
+            style="font-size:24px; vertical-align: middle; margin-right: 8px;">timer</i>Reducir tiempos en la emisión,
+          cálculo y cobranza.</li>
+        <li><i class="material-icons"
+            style="font-size:24px; vertical-align: middle; margin-right: 8px;">folder</i>Centralizar la información y
+          facilitar auditorías.</li>
+        <li><i class="material-icons"
+            style="font-size:24px; vertical-align: middle; margin-right: 8px;">expand</i>Permitir escalabilidad y
+          multicomunidad (multi-tenancy).</li>
+        <li><i class="material-icons"
+            style="font-size:24px; vertical-align: middle; margin-right: 8px;">lock</i>Incorporar mecanismos modernos de
+          autenticación (JWT + 2FA).</li>
       </ul>
     </section>
 
     <div class="slide">
       <h2>Flujo Principal (Viaje del Usuario)</h2>
-      <p>El ciclo de vida de un gasto común: desde que se carga la factura hasta que el dinero se concilia en el banco.</p>
+      <p>El ciclo de vida de un gasto común: desde que se carga la factura hasta que el dinero se concilia en el banco.
+      </p>
       <div class="insight-box">
         <span class="insight-icon">🔄</span>
-        <strong>Automatización:</strong> El sistema conecta al Administrador, al Residente y al Banco en un flujo continuo sin intervención manual.
+        <strong>Automatización:</strong> El sistema conecta al Administrador, al Residente y al Banco en un flujo
+        continuo sin intervención manual.
       </div>
       <div class="mermaid-container">
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
-sequenceDiagram
-    participant Admin
-    participant Sistema
-    participant Residente
-    participant Pasarela de pago
+          sequenceDiagram
+          participant Admin
+          participant Sistema
+          participant Residente
+          participant Pasarela de pago
 
-    Admin->>Sistema: Carga Gasto (Factura Luz)
-    Sistema->>Sistema: Calcula Prorrateo (Alicuotas)
-    Sistema->>Residente: Notifica Cobro (Email)
-    Residente->>Sistema: Visualiza Deuda en App
-    Residente->>Pasarela de pago: Realiza Pago Web
-    Pasarela de pago->>Sistema: Webhook (Pago Exitoso)
-    Sistema->>Sistema: Conciliación Automática
-    Sistema->>Admin: Actualiza Dashboard Financiero
+          Admin->>Sistema: Carga Gasto (Factura Luz)
+          Sistema->>Sistema: Calcula Prorrateo (Alicuotas)
+          Sistema->>Residente: Notifica Cobro (Email)
+          Residente->>Sistema: Visualiza Deuda en App
+          Residente->>Pasarela de pago: Realiza Pago Web
+          Pasarela de pago->>Sistema: Webhook (Pago Exitoso)
+          Sistema->>Sistema: Conciliación Automática
+          Sistema->>Admin: Actualiza Dashboard Financiero
         </div>
       </div>
     </div>
 
     <div class="slide">
       <h2 style="font-size: 36px;">Metodología usada</h2>
-      
+
       <div style="display: flex; justify-content: center; margin-bottom: 20px;">
         <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 4V2C12 1.44772 11.5523 1 11 1H3C2.44772 1 2 1.44772 2 2V10C2 10.5523 2.44772 11 3 11H5" stroke="#004AAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M16.2426 7.75736L14.8284 9.17157C14.0783 9.9217 13.0609 10.3431 12 10.3431H9V2.34315H12C13.0609 2.34315 14.0783 2.76457 14.8284 3.51472L19.0711 7.75736C20.5716 9.25788 20.5716 11.6905 19.0711 13.1911L15.5355 16.7266" stroke="#004AAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M9 15.6569H12C13.0609 15.6569 14.0783 16.0783 14.8284 16.8284L16.2426 18.2426" stroke="#004AAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 20V22C12 22.5523 11.5523 23 11 23H3C2.44772 23 2 22.5523 2 22V14C2 13.4477 2.44772 13 3 13H5" stroke="#004AAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M17 13L21 9" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M7 5L11 9" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 4V2C12 1.44772 11.5523 1 11 1H3C2.44772 1 2 1.44772 2 2V10C2 10.5523 2.44772 11 3 11H5"
+            stroke="#004AAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path
+            d="M16.2426 7.75736L14.8284 9.17157C14.0783 9.9217 13.0609 10.3431 12 10.3431H9V2.34315H12C13.0609 2.34315 14.0783 2.76457 14.8284 3.51472L19.0711 7.75736C20.5716 9.25788 20.5716 11.6905 19.0711 13.1911L15.5355 16.7266"
+            stroke="#004AAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M9 15.6569H12C13.0609 15.6569 14.0783 16.0783 14.8284 16.8284L16.2426 18.2426" stroke="#004AAD"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M12 20V22C12 22.5523 11.5523 23 11 23H3C2.44772 23 2 22.5523 2 22V14C2 13.4477 2.44772 13 3 13H5"
+            stroke="#004AAD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M17 13L21 9" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M7 5L11 9" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </div>
 
       <p style="text-align: center; font-size: 22px; max-width: 100%; margin-bottom: 40px;">
-        Se utilizó la metodología <strong>Ágil</strong>, porque nos permite definir los requisitos durante el desarrollo y haciendo uso de la retroalimentación directa de usuarios y el cliente.
+        Se utilizó la metodología <strong>Ágil</strong>, porque nos permite definir los requisitos durante el desarrollo
+        y haciendo uso de la retroalimentación directa de usuarios y el cliente.
       </p>
 
       <div class="grid">
         <div class="col dark-box" style="background: white; border: 1px solid #eee; color: var(--text-main);">
-            <ul style="line-height: 2.5; list-style-type: disc; padding-left: 30px; font-size: 20px;">
-                <li>Adaptabilidad y Flexibilidad</li>
-                <li>Enfoque en el cliente</li>
-                <li>Entrega incremental</li>
-            </ul>
+          <ul style="line-height: 2.5; list-style-type: disc; padding-left: 30px; font-size: 20px;">
+            <li>Adaptabilidad y Flexibilidad</li>
+            <li>Enfoque en el cliente</li>
+            <li>Entrega incremental</li>
+          </ul>
         </div>
         <div class="col dark-box" style="background: white; border: 1px solid #eee; color: var(--text-main);">
-            <ul style="line-height: 2.5; list-style-type: disc; padding-left: 30px; font-size: 20px;">
-                <li>Mejora continua</li>
-                <li>Transparencia y visibilidad</li>
-                <li>Motivación y compromiso del equipo</li>
-            </ul>
+          <ul style="line-height: 2.5; list-style-type: disc; padding-left: 30px; font-size: 20px;">
+            <li>Mejora continua</li>
+            <li>Transparencia y visibilidad</li>
+            <li>Motivación y compromiso del equipo</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -395,108 +702,121 @@ sequenceDiagram
       <h2>Arquitectura del Sistema</h2>
       <div class="insight-box">
         <span class="insight-icon">☁️</span>
-        <strong>Dato Técnico:</strong> Separación total entre Frontend (Next.js) y Backend (Node.js). Los colores indican las capas lógicas.
+        <strong>Dato Técnico:</strong> Separación total entre Frontend (Next.js) y Backend (Node.js). Los colores
+        indican las capas lógicas.
       </div>
       <div class="mermaid-container">
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
-flowchart TB
-  classDef front fill:#dbeafe,stroke:#1e40af,stroke-width:2px,color:#1e3a8a
-  classDef back fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f
-  classDef data fill:#dcfce7,stroke:#166534,stroke-width:2px,color:#14532d
-  classDef ext fill:#f3f4f6,stroke:#4b5563,stroke-width:2px,stroke-dasharray: 5 5,color:#374151
+          flowchart TB
+          classDef front fill:#dbeafe,stroke:#1e40af,stroke-width:2px,color:#1e3a8a
+          classDef back fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f
+          classDef data fill:#dcfce7,stroke:#166534,stroke-width:2px,color:#14532d
+          classDef ext fill:#f3f4f6,stroke:#4b5563,stroke-width:2px,stroke-dasharray: 5 5,color:#374151
 
-  U[Usuario / Navegador]
-  
-  subgraph EXTERNAL["Servicios externos"]
-    direction TB
-    PAYMENT[Pasarela de pagos / Webhooks]:::ext
-    SMTP[Proveedor SMTP / Email]:::ext
-  end
+          U[Usuario / Navegador]
 
-  subgraph CLOUD["Nube"]
-    direction TB
-    subgraph EDGE["Edge / Gateway"]
-      direction LR
-      NGINX[Nginx - reverse proxy / CDN]:::front
-      FE[Frontend - Next.js / React]:::front
-    end
-    subgraph BACKEND["Backend / API"]
-      direction LR
-      API["API - Node.js / Express\n(Sequelize)"]:::back
-      WORKERS[Workers / Background Jobs]:::back
-    end
-    subgraph INFRA["Infra: DB / Cache / Storage"]
-      direction LR
-      REDIS[(Redis)]:::data
-      STORAGE[(Uploads / Object Storage)]:::data
-      A1([ ])
-      A2([ ])
-      MYSQL[(MySQL 8.0\nInnoDB)]:::data
-      PHPMY[phpMyAdmin]:::data
-    end
-  end
-  
-  U --> NGINX
-  NGINX --> FE
-  FE --> API
-  PAYMENT --> API
-  SMTP --> API
-  API --> WORKERS
-  API --> REDIS
-  WORKERS --> REDIS
-  API --> STORAGE
-  WORKERS --> STORAGE
-  API --> A1 --> A2 --> MYSQL
-  PHPMY --> MYSQL
-  WORKERS -.-> MYSQL
+          subgraph EXTERNAL["Servicios externos"]
+          direction TB
+          PAYMENT[Pasarela de pagos / Webhooks]:::ext
+          SMTP[Proveedor SMTP / Email]:::ext
+          end
+
+          subgraph CLOUD["Nube"]
+          direction TB
+          subgraph EDGE["Edge / Gateway"]
+          direction LR
+          NGINX[Nginx - reverse proxy / CDN]:::front
+          FE[Frontend - Next.js / React]:::front
+          end
+          subgraph BACKEND["Backend / API"]
+          direction LR
+          API["API - Node.js / Express\n(Sequelize)"]:::back
+          WORKERS[Workers / Background Jobs]:::back
+          end
+          subgraph INFRA["Infra: DB / Cache / Storage"]
+          direction LR
+          REDIS[(Redis)]:::data
+          STORAGE[(Uploads / Object Storage)]:::data
+          A1([ ])
+          A2([ ])
+          MYSQL[(MySQL 8.0\nInnoDB)]:::data
+          PHPMY[phpMyAdmin]:::data
+          end
+          end
+
+          U --> NGINX
+          NGINX --> FE
+          FE --> API
+          PAYMENT --> API
+          SMTP --> API
+          API --> WORKERS
+          API --> REDIS
+          WORKERS --> REDIS
+          API --> STORAGE
+          WORKERS --> STORAGE
+          API --> A1 --> A2 --> MYSQL
+          PHPMY --> MYSQL
+          WORKERS -.-> MYSQL
         </div>
       </div>
     </div>
 
     <div class="slide">
       <h2>Core de Datos (MySQL 8.0)</h2>
-      <h3>Arquitectura Relacional Normalizada (3NF): Priorizamos la integridad financiera y la "Fuente Única de Verdad" sobre la redundancia de datos.</h3>
+      <h3>Arquitectura Relacional Normalizada (3NF): Priorizamos la integridad financiera y la "Fuente Única de Verdad"
+        sobre la redundancia de datos.</h3>
 
       <div style="margin-top: 30px;">
         <h4>1. ¿Por qué elegimos la 3ra Forma Normal (3NF)?</h4>
-        <p>En sistemas de administración de propiedades, el error de datos es inadmisible. Aplicamos 3NF para garantizar que cada dato exista en un solo lugar.</p>
+        <p>En sistemas de administración de propiedades, el error de datos es inadmisible. Aplicamos 3NF para garantizar
+          que cada dato exista en un solo lugar.</p>
         <div class="insight-box">
           <span class="insight-icon">⚠️</span>
-          <strong>El Problema que evitamos:</strong> En una base de datos tradicional (tipo Excel), si corriges el nombre de una "Amenidad", tendrías que editarlo en miles de reservas históricas, arriesgando errores.
+          <strong>El Problema que evitamos:</strong> En una base de datos tradicional (tipo Excel), si corriges el
+          nombre de una "Amenidad", tendrías que editarlo en miles de reservas históricas, arriesgando errores.
         </div>
         <div class="insight-box">
           <span class="insight-icon">✅</span>
-          <strong>Nuestra Solución:</strong> Separamos las entidades. Si actualizamos un dato maestro (ej. una tarifa o una dirección), el cambio se refleja instantáneamente en todo el sistema sin romper la integridad histórica.
+          <strong>Nuestra Solución:</strong> Separamos las entidades. Si actualizamos un dato maestro (ej. una tarifa o
+          una dirección), el cambio se refleja instantáneamente en todo el sistema sin romper la integridad histórica.
         </div>
       </div>
 
       <div style="margin-top: 40px;">
         <h4>2. Estructura del Negocio (Los 4 Pilares)</h4>
         <div class="grid" style="margin-top: 20px;">
-          <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center; padding: 20px;">
+          <div class="col dark-box"
+            style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center; padding: 20px;">
             <div style="font-size: 40px; margin-bottom: 10px;">🏢</div>
             <strong>Comunidad</strong>
             <p><em>Función:</em> Entidad raíz y Aislamiento (Tenant).</p>
-            <p><em>Beneficio:</em> Seguridad por Diseño. Datos de Edificio A invisibles para Edificio B. No mezclamos finanzas.</p>
+            <p><em>Beneficio:</em> Seguridad por Diseño. Datos de Edificio A invisibles para Edificio B. No mezclamos
+              finanzas.</p>
           </div>
-          <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center; padding: 20px;">
+          <div class="col dark-box"
+            style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center; padding: 20px;">
             <div style="font-size: 40px; margin-bottom: 10px;">🏠</div>
             <strong>Unidad</strong>
             <p><em>Función:</em> Activo físico desacoplado del propietario.</p>
-            <p><em>Beneficio:</em> Historial Perpetuo. Mantiene deuda intacta, independiente de propietarios (tabla titulares_unidad).</p>
+            <p><em>Beneficio:</em> Historial Perpetuo. Mantiene deuda intacta, independiente de propietarios (tabla
+              titulares_unidad).</p>
           </div>
-          <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center; padding: 20px;">
+          <div class="col dark-box"
+            style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center; padding: 20px;">
             <div style="font-size: 40px; margin-bottom: 10px;">🧾</div>
             <strong>Emisión</strong>
             <p><em>Función:</em> Generador de deuda inmutable.</p>
-            <p><em>Beneficio:</em> Auditoría Financiera. Cobros históricos auditables al centavo, separando gasto de cobro.</p>
+            <p><em>Beneficio:</em> Auditoría Financiera. Cobros históricos auditables al centavo, separando gasto de
+              cobro.</p>
           </div>
-          <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center; padding: 20px;">
+          <div class="col dark-box"
+            style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center; padding: 20px;">
             <div style="font-size: 40px; margin-bottom: 10px;">💸</div>
             <strong>Pago</strong>
             <p><em>Función:</em> Cierre del ciclo con asignación flexible.</p>
-            <p><em>Beneficio:</em> Conciliación Inteligente. Un abono distribuye pagos a multa, reserva y gasto común (tabla pago_aplicacion).</p>
+            <p><em>Beneficio:</em> Conciliación Inteligente. Un abono distribuye pagos a multa, reserva y gasto común
+              (tabla pago_aplicacion).</p>
           </div>
         </div>
       </div>
@@ -511,46 +831,47 @@ flowchart TB
       <div class="mermaid-container">
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
-erDiagram
-  PERSONA { int id string rut string nombres string apellidos string email }
-  USUARIO { int id int persona_id string username string password boolean activo }
-  ROL { int id string codigo string nombre int nivel_acceso }
-  USUARIO_COMUNIDAD_ROL { int id int usuario_id int comunidad_id int rol_id string desde string hasta boolean activo }
-  COMUNIDAD { int id string razon_social string email_contacto }
-  EDIFICIO { int id int comunidad_id string nombre }
-  UNIDAD { int id int edificio_id string codigo }
-  TITULARES_UNIDAD { int id int unidad_id int persona_id string tipo }
-  EMISION_GASTOS_COMUNES { int id int comunidad_id string periodo string fecha_vencimiento }
-  DETALLE_EMISION_GASTOS { int id int emision_id int gasto_id number monto }
-  CUENTA_COBRO_UNIDAD { int id int emision_id int unidad_id number monto_total string estado }
-  DETALLE_CUENTA_UNIDAD { int id int cuenta_cobro_unidad_id int categoria_id number monto }
-  GASTO { int id int comunidad_id number monto }
-  DOCUMENTO_COMPRA { int id int gasto_id number total }
-  PAGO { int id int cuenta_cobro_unidad_id number monto string medio }
-  MULTA { int id int unidad_id int persona_id number monto }
-  AMENIDAD { int id int comunidad_id string nombre }
-  RESERVA_AMENIDAD { int id int amenidad_id int unidad_id string estado }
-  MEDIDOR { int id int unidad_id string tipo }
-  LECTURA_MEDIDOR { int id int medidor_id string fecha number lectura }
-  ARCHIVO { int id string entity_type int entity_id string file_path }
-  PERSONA ||--o{ USUARIO : "crea/tiene"
-  USUARIO ||--o{ USUARIO_COMUNIDAD_ROL : "asignaciones"
-  ROL ||--o{ USUARIO_COMUNIDAD_ROL : "rol_asignado"
-  COMUNIDAD ||--o{ EDIFICIO : "contiene"
-  EDIFICIO ||--o{ UNIDAD : "contiene"
-  UNIDAD ||--o{ TITULARES_UNIDAD : "titulares"
-  EMISION_GASTOS_COMUNES ||--o{ DETALLE_EMISION_GASTOS : "incluye"
-  GASTO ||--o{ DETALLE_EMISION_GASTOS : "desglosa"
-  EMISION_GASTOS_COMUNES ||--o{ CUENTA_COBRO_UNIDAD : "genera"
-  CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA_UNIDAD : "items"
-  CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"
-  UNIDAD ||--o{ CUENTA_COBRO_UNIDAD : "tiene"
-  UNIDAD ||--o{ MEDIDOR : "tiene"
-  MEDIDOR ||--o{ LECTURA_MEDIDOR : "registra"
-  AMENIDAD ||--o{ RESERVA_AMENIDAD : "reserva"
-  UNIDAD ||--o{ RESERVA_AMENIDAD : "reserva_por"
-  UNIDAD ||--o{ MULTA : "puede_tener"
-  PERSONA ||--o{ MULTA : "sujeto"
+          erDiagram
+          PERSONA { int id string rut string nombres string apellidos string email }
+          USUARIO { int id int persona_id string username string password boolean activo }
+          ROL { int id string codigo string nombre int nivel_acceso }
+          USUARIO_COMUNIDAD_ROL { int id int usuario_id int comunidad_id int rol_id string desde string hasta boolean
+          activo }
+          COMUNIDAD { int id string razon_social string email_contacto }
+          EDIFICIO { int id int comunidad_id string nombre }
+          UNIDAD { int id int edificio_id string codigo }
+          TITULARES_UNIDAD { int id int unidad_id int persona_id string tipo }
+          EMISION_GASTOS_COMUNES { int id int comunidad_id string periodo string fecha_vencimiento }
+          DETALLE_EMISION_GASTOS { int id int emision_id int gasto_id number monto }
+          CUENTA_COBRO_UNIDAD { int id int emision_id int unidad_id number monto_total string estado }
+          DETALLE_CUENTA_UNIDAD { int id int cuenta_cobro_unidad_id int categoria_id number monto }
+          GASTO { int id int comunidad_id number monto }
+          DOCUMENTO_COMPRA { int id int gasto_id number total }
+          PAGO { int id int cuenta_cobro_unidad_id number monto string medio }
+          MULTA { int id int unidad_id int persona_id number monto }
+          AMENIDAD { int id int comunidad_id string nombre }
+          RESERVA_AMENIDAD { int id int amenidad_id int unidad_id string estado }
+          MEDIDOR { int id int unidad_id string tipo }
+          LECTURA_MEDIDOR { int id int medidor_id string fecha number lectura }
+          ARCHIVO { int id string entity_type int entity_id string file_path }
+          PERSONA ||--o{ USUARIO : "crea/tiene"
+          USUARIO ||--o{ USUARIO_COMUNIDAD_ROL : "asignaciones"
+          ROL ||--o{ USUARIO_COMUNIDAD_ROL : "rol_asignado"
+          COMUNIDAD ||--o{ EDIFICIO : "contiene"
+          EDIFICIO ||--o{ UNIDAD : "contiene"
+          UNIDAD ||--o{ TITULARES_UNIDAD : "titulares"
+          EMISION_GASTOS_COMUNES ||--o{ DETALLE_EMISION_GASTOS : "incluye"
+          GASTO ||--o{ DETALLE_EMISION_GASTOS : "desglosa"
+          EMISION_GASTOS_COMUNES ||--o{ CUENTA_COBRO_UNIDAD : "genera"
+          CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA_UNIDAD : "items"
+          CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"
+          UNIDAD ||--o{ CUENTA_COBRO_UNIDAD : "tiene"
+          UNIDAD ||--o{ MEDIDOR : "tiene"
+          MEDIDOR ||--o{ LECTURA_MEDIDOR : "registra"
+          AMENIDAD ||--o{ RESERVA_AMENIDAD : "reserva"
+          UNIDAD ||--o{ RESERVA_AMENIDAD : "reserva_por"
+          UNIDAD ||--o{ MULTA : "puede_tener"
+          PERSONA ||--o{ MULTA : "sujeto"
         </div>
       </div>
     </div>
@@ -560,40 +881,52 @@ erDiagram
       <h3>Un sistema diseñado por capas para garantizar seguridad, consistencia y automatización.</h3>
 
       <div class="grid" style="margin-top: 30px;">
-        <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 20px;">
+        <div class="col dark-box"
+          style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 20px;">
           <div style="font-size: 30px; margin-bottom: 10px;">🧱</div>
           <strong>Grado 1: Fundamentales (Seguridad y Aislamiento)</strong>
           <p>Las reglas que protegen la integridad del sistema.</p>
           <ul style="text-align: left; font-size: 14px;">
-            <li><strong>Multitenancy Estricto:</strong> Aislamiento lógico total. Los datos de la "Comunidad A" son invisibles para la "Comunidad B".</li>
-            <li><strong>Seguridad RBAC:</strong> Permisos granulares. Un conserje no puede ver lo mismo que el administrador; un copropietario solo ve su propia deuda.</li>
+            <li><strong>Multitenancy Estricto:</strong> Aislamiento lógico total. Los datos de la "Comunidad A" son
+              invisibles para la "Comunidad B".</li>
+            <li><strong>Seguridad RBAC:</strong> Permisos granulares. Un conserje no puede ver lo mismo que el
+              administrador; un copropietario solo ve su propia deuda.</li>
           </ul>
         </div>
-        <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 20px;">
+        <div class="col dark-box"
+          style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 20px;">
           <div style="font-size: 30px; margin-bottom: 10px;">📐</div>
           <strong>Grado 2: Estructurales (Consistencia de Datos)</strong>
           <p>El esqueleto que sostiene la realidad física en el sistema.</p>
           <ul style="text-align: left; font-size: 14px;">
-            <li><strong>Jerarquía Fiel:</strong> Modelado relacional exacto (Comunidad → Edificio → Unidad → Medidor). Si no existe la unidad, no puede existir la deuda.</li>
-            <li><strong>Integridad Referencial:</strong> Validaciones a nivel de base de datos que impiden errores humanos (ej. no se puede borrar un gasto si ya fue prorrateado).</li>
+            <li><strong>Jerarquía Fiel:</strong> Modelado relacional exacto (Comunidad → Edificio → Unidad → Medidor).
+              Si no existe la unidad, no puede existir la deuda.</li>
+            <li><strong>Integridad Referencial:</strong> Validaciones a nivel de base de datos que impiden errores
+              humanos (ej. no se puede borrar un gasto si ya fue prorrateado).</li>
           </ul>
         </div>
-        <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 20px;">
+        <div class="col dark-box"
+          style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 20px;">
           <div style="font-size: 30px; margin-bottom: 10px;">⚙️</div>
           <strong>Grado 3: Operativas (El Motor del Negocio)</strong>
           <p>Automatización de procesos complejos.</p>
           <ul style="text-align: left; font-size: 14px;">
-            <li><strong>Algoritmo de Prorrateo:</strong> Cálculo automático de alícuotas con precisión decimal, eliminando el error de la planilla Excel.</li>
-            <li><strong>Lógica de Sanciones:</strong> Aplicación automática de multas e intereses basada en reglas parametrizables (ej. mora tras el día 5).</li>
+            <li><strong>Algoritmo de Prorrateo:</strong> Cálculo automático de alícuotas con precisión decimal,
+              eliminando el error de la planilla Excel.</li>
+            <li><strong>Lógica de Sanciones:</strong> Aplicación automática de multas e intereses basada en reglas
+              parametrizables (ej. mora tras el día 5).</li>
           </ul>
         </div>
-        <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 20px;">
+        <div class="col dark-box"
+          style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 20px;">
           <div style="font-size: 30px; margin-bottom: 10px;">🛡️</div>
           <strong>Grado 4: Administrativas (Control y Auditoría)</strong>
           <p>Flujos de trabajo para la transparencia financiera.</p>
           <ul style="text-align: left; font-size: 14px;">
-            <li><strong>Flujo de Aprobación:</strong> Ningún gasto sensible se paga sin una aprobación digital previa (Admin + Comité).</li>
-            <li><strong>Trazabilidad Financiera:</strong> Conciliación bancaria inteligente que vincula cada peso recibido a una deuda específica, cerrando el ciclo contable.</li>
+            <li><strong>Flujo de Aprobación:</strong> Ningún gasto sensible se paga sin una aprobación digital previa
+              (Admin + Comité).</li>
+            <li><strong>Trazabilidad Financiera:</strong> Conciliación bancaria inteligente que vincula cada peso
+              recibido a una deuda específica, cerrando el ciclo contable.</li>
           </ul>
         </div>
       </div>
@@ -608,17 +941,17 @@ erDiagram
       <div class="mermaid-container">
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
-erDiagram
-  COMUNIDAD { bigint id PK varchar codigo UK varchar nombre varchar razon_social varchar email_contacto }
-  PARAMETRO { bigint id PK bigint comunidad_id FK varchar clave varchar valor }
-  CENTRO_COSTO { bigint id PK bigint comunidad_id FK varchar codigo UK varchar nombre }
-  CATEGORIA { bigint id PK bigint comunidad_id FK varchar codigo varchar nombre }
-  ALIQUOTA { bigint id PK bigint comunidad_id FK decimal porcentaje varchar descripcion }
-  COMUNIDAD ||--o{ PARAMETRO : "tiene"
-  COMUNIDAD ||--o{ CENTRO_COSTO : "contiene"
-  COMUNIDAD ||--o{ CATEGORIA : "contiene"
-  COMUNIDAD ||--o{ ALIQUOTA : "define"
-  CENTRO_COSTO ||--o{ CATEGORIA : "clasifica"
+          erDiagram
+          COMUNIDAD { bigint id PK varchar codigo UK varchar nombre varchar razon_social varchar email_contacto }
+          PARAMETRO { bigint id PK bigint comunidad_id FK varchar clave varchar valor }
+          CENTRO_COSTO { bigint id PK bigint comunidad_id FK varchar codigo UK varchar nombre }
+          CATEGORIA { bigint id PK bigint comunidad_id FK varchar codigo varchar nombre }
+          ALIQUOTA { bigint id PK bigint comunidad_id FK decimal porcentaje varchar descripcion }
+          COMUNIDAD ||--o{ PARAMETRO : "tiene"
+          COMUNIDAD ||--o{ CENTRO_COSTO : "contiene"
+          COMUNIDAD ||--o{ CATEGORIA : "contiene"
+          COMUNIDAD ||--o{ ALIQUOTA : "define"
+          CENTRO_COSTO ||--o{ CATEGORIA : "clasifica"
         </div>
       </div>
     </div>
@@ -627,25 +960,30 @@ erDiagram
       <h2>Módulo 02 · Usuarios y Seguridad</h2>
       <div class="insight-box">
         <i class="material-icons insight-icon">security</i>
-        <strong>Seguridad:</strong> La tabla USUARIO_COMUNIDAD_ROL es crítica para permitir que un usuario pertenezca a múltiples comunidades con distintos permisos.
+        <strong>Seguridad:</strong> La tabla USUARIO_COMUNIDAD_ROL es crítica para permitir que un usuario pertenezca a
+        múltiples comunidades con distintos permisos.
       </div>
       <div class="mermaid-container">
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
-erDiagram
-  PERSONA { bigint id PK varchar rut UK char dv varchar nombres varchar apellidos varchar email varchar telefono }
-  USUARIO { bigint id PK bigint persona_id FK varchar username UK varchar hash_password tinyint totp_enabled datetime created_at datetime last_login }
-  ROL { int id PK varchar codigo UK varchar nombre int nivel_acceso tinyint es_sistema }
-  COMUNIDAD { int id PK varchar nombre varchar razon_social }
-  USUARIO_COMUNIDAD_ROL { bigint id PK bigint usuario_id FK bigint comunidad_id FK int rol_id FK tinyint activo date desde date hasta }
-  AUDITORIA { bigint id PK bigint usuario_id FK varchar accion datetime fecha text detalle }
-  SESION_USUARIO { bigint id PK bigint usuario_id FK varchar token datetime created_at datetime expires_at varchar ip varchar user_agent }
-  PERSONA ||--o{ USUARIO : "crea/tiene"
-  USUARIO ||--o{ USUARIO_COMUNIDAD_ROL : "asignaciones"
-  ROL ||--o{ USUARIO_COMUNIDAD_ROL : "rol_asignado"
-  COMUNIDAD ||--o{ USUARIO_COMUNIDAD_ROL : "pertenece"
-  USUARIO ||--o{ AUDITORIA : "registra"
-  USUARIO ||--o{ SESION_USUARIO : "sesiones"
+          erDiagram
+          PERSONA { bigint id PK varchar rut UK char dv varchar nombres varchar apellidos varchar email varchar telefono
+          }
+          USUARIO { bigint id PK bigint persona_id FK varchar username UK varchar hash_password tinyint totp_enabled
+          datetime created_at datetime last_login }
+          ROL { int id PK varchar codigo UK varchar nombre int nivel_acceso tinyint es_sistema }
+          COMUNIDAD { int id PK varchar nombre varchar razon_social }
+          USUARIO_COMUNIDAD_ROL { bigint id PK bigint usuario_id FK bigint comunidad_id FK int rol_id FK tinyint activo
+          date desde date hasta }
+          AUDITORIA { bigint id PK bigint usuario_id FK varchar accion datetime fecha text detalle }
+          SESION_USUARIO { bigint id PK bigint usuario_id FK varchar token datetime created_at datetime expires_at
+          varchar ip varchar user_agent }
+          PERSONA ||--o{ USUARIO : "crea/tiene"
+          USUARIO ||--o{ USUARIO_COMUNIDAD_ROL : "asignaciones"
+          ROL ||--o{ USUARIO_COMUNIDAD_ROL : "rol_asignado"
+          COMUNIDAD ||--o{ USUARIO_COMUNIDAD_ROL : "pertenece"
+          USUARIO ||--o{ AUDITORIA : "registra"
+          USUARIO ||--o{ SESION_USUARIO : "sesiones"
         </div>
       </div>
     </div>
@@ -654,23 +992,24 @@ erDiagram
       <h2>Módulo 03 · Estructura</h2>
       <div class="insight-box">
         <span class="insight-icon">🏢</span>
-        <strong>Jerarquía:</strong> La relación Edificio -> Torre -> Unidad garantiza que los gastos se puedan asignar a la ubicación correcta.
+        <strong>Jerarquía:</strong> La relación Edificio -> Torre -> Unidad garantiza que los gastos se puedan asignar a
+        la ubicación correcta.
       </div>
       <div class="mermaid-container">
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
-erDiagram
-  EDIFICIO { bigint id PK bigint comunidad_id FK varchar nombre varchar direccion }
-  TORRE { bigint id PK bigint edificio_id FK varchar nombre }
-  UNIDAD { bigint id PK bigint edificio_id FK bigint torre_id FK varchar codigo UK decimal alicuota }
-  TITULAR { bigint id PK bigint unidad_id FK bigint persona_id FK varchar tipo }
-  COMUNIDAD ||--o{ EDIFICIO : "contiene"
-  EDIFICIO ||--o{ TORRE : "contiene"
-  EDIFICIO ||--o{ UNIDAD : "contiene"
-  TORRE ||--o{ UNIDAD : "tiene"
-  UNIDAD ||--o{ TITULAR : "titulares"
-  COMUNIDAD ||--o{ UNIDAD : "condominio"
-        
+          erDiagram
+          EDIFICIO { bigint id PK bigint comunidad_id FK varchar nombre varchar direccion }
+          TORRE { bigint id PK bigint edificio_id FK varchar nombre }
+          UNIDAD { bigint id PK bigint edificio_id FK bigint torre_id FK varchar codigo UK decimal alicuota }
+          TITULAR { bigint id PK bigint unidad_id FK bigint persona_id FK varchar tipo }
+          COMUNIDAD ||--o{ EDIFICIO : "contiene"
+          EDIFICIO ||--o{ TORRE : "contiene"
+          EDIFICIO ||--o{ UNIDAD : "contiene"
+          TORRE ||--o{ UNIDAD : "tiene"
+          UNIDAD ||--o{ TITULAR : "titulares"
+          COMUNIDAD ||--o{ UNIDAD : "condominio"
+
         </div>
       </div>
     </div>
@@ -684,16 +1023,16 @@ erDiagram
       <div class="mermaid-container">
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
-erDiagram
-  PROVEEDOR { bigint id PK varchar rut UK varchar nombre varchar email }
-  DOCUMENTO_COMPRA { bigint id PK bigint proveedor_id FK varchar tipo varchar numero decimal total date fecha }
-  GASTO { bigint id PK bigint documento_compra_id FK bigint comunidad_id FK decimal monto int categoria_id FK }
-  CATEGORIA_CONTABLE { int id PK varchar codigo varchar nombre }
-  ASIENTO { bigint id PK bigint gasto_id FK date fecha text detalle }
-  PROVEEDOR ||--o{ DOCUMENTO_COMPRA : "emite"
-  DOCUMENTO_COMPRA ||--o{ GASTO : "origina"
-  GASTO ||--o{ ASIENTO : "genera"
-  CATEGORIA_CONTABLE ||--o{ GASTO : "clasifica"
+          erDiagram
+          PROVEEDOR { bigint id PK varchar rut UK varchar nombre varchar email }
+          DOCUMENTO_COMPRA { bigint id PK bigint proveedor_id FK varchar tipo varchar numero decimal total date fecha }
+          GASTO { bigint id PK bigint documento_compra_id FK bigint comunidad_id FK decimal monto int categoria_id FK }
+          CATEGORIA_CONTABLE { int id PK varchar codigo varchar nombre }
+          ASIENTO { bigint id PK bigint gasto_id FK date fecha text detalle }
+          PROVEEDOR ||--o{ DOCUMENTO_COMPRA : "emite"
+          DOCUMENTO_COMPRA ||--o{ GASTO : "origina"
+          GASTO ||--o{ ASIENTO : "genera"
+          CATEGORIA_CONTABLE ||--o{ GASTO : "clasifica"
         </div>
       </div>
     </div>
@@ -702,27 +1041,61 @@ erDiagram
       <h2>Módulo 05 · Cobros y Pagos</h2>
       <div class="insight-box">
         <span class="insight-icon">⚠️</span>
-        <strong>Core del Negocio:</strong> Aquí ocurre la "Emisión Masiva" (generar deudas) y la "Conciliación" (confirmar pagos).
+        <strong>Core del Negocio:</strong> Aquí ocurre la "Emisión Masiva" (generar deudas) y la "Conciliación"
+        (confirmar pagos).
       </div>
       <div class="mermaid-container">
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
-erDiagram
-  EMISION_GASTOS_COMUNES { bigint id PK bigint comunidad_id FK varchar periodo date fecha_vencimiento }
-  DETALLE_EMISION { bigint id PK bigint emision_id FK int categoria_id FK decimal monto }
-  CUENTA_COBRO_UNIDAD { bigint id PK bigint emision_id FK bigint unidad_id FK decimal monto_total varchar estado }
-  DETALLE_CUENTA { bigint id PK bigint cuenta_cobro_unidad_id FK int categoria_id FK decimal monto }
-  PAGO { bigint id PK bigint cuenta_cobro_unidad_id FK decimal monto varchar medio date fecha }
-  CONCILIACION { bigint id PK bigint pago_id FK varchar banco date fecha varchar estado }
-  EMISION_GASTOS_COMUNES ||--o{ DETALLE_EMISION : "incluye"
-  EMISION_GASTOS_COMUNES ||--o{ CUENTA_COBRO_UNIDAD : "genera"
-  CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA : "items"
-  CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"
-  PAGO ||--o{ CONCILIACION : "conciliacion"
+          erDiagram
+          EMISION_GASTOS_COMUNES { bigint id PK bigint comunidad_id FK varchar periodo date fecha_vencimiento }
+          DETALLE_EMISION { bigint id PK bigint emision_id FK int categoria_id FK decimal monto }
+          CUENTA_COBRO_UNIDAD { bigint id PK bigint emision_id FK bigint unidad_id FK decimal monto_total varchar estado
+          }
+          DETALLE_CUENTA { bigint id PK bigint cuenta_cobro_unidad_id FK int categoria_id FK decimal monto }
+          PAGO { bigint id PK bigint cuenta_cobro_unidad_id FK decimal monto varchar medio date fecha }
+          CONCILIACION { bigint id PK bigint pago_id FK varchar banco date fecha varchar estado }
+          EMISION_GASTOS_COMUNES ||--o{ DETALLE_EMISION : "incluye"
+          EMISION_GASTOS_COMUNES ||--o{ CUENTA_COBRO_UNIDAD : "genera"
+          CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA : "items"
+          CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"
+          PAGO ||--o{ CONCILIACION : "conciliacion"
         </div>
       </div>
     </div>
+    <div class="slide">
+      <h2>Módulo 05.1 · Multas</h2>
+      <div class="insight-box">
+        <span class="insight-icon">⚖️</span>
+        <strong>Multas:</strong> Gestión de infracciones, evidencias, apelaciones y su aplicación en la cuenta de cobro.
+      </div>
+      <div class="mermaid-container">
+        <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
+        <div class="mermaid">
+          erDiagram
+          MULTA { bigint id PK bigint comunidad_id FK bigint unidad_id FK bigint persona_id FK varchar motivo decimal
+          monto enum estado datetime fecha datetime fecha_pago }
+          DOCUMENTO_MULTA { bigint id PK bigint multa_id FK varchar nombre varchar ruta varchar tipo }
+          APELACION { bigint id PK bigint multa_id FK bigint persona_id FK varchar estado text detalle datetime
+          creado_en }
+          UNIDAD { bigint id PK int edificio_id int torre_id varchar codigo decimal alicuota }
+          PERSONA { bigint id PK varchar rut varchar nombres varchar apellidos varchar email }
+          CUENTA_COBRO_UNIDAD { bigint id PK bigint emision_id FK bigint unidad_id FK decimal monto_total varchar estado
+          }
+          DETALLE_CUENTA_UNIDAD { bigint id PK bigint cuenta_cobro_unidad_id FK int categoria_id FK decimal monto enum
+          origen bigint origen_id }
+          PAGO { bigint id PK bigint cuenta_cobro_unidad_id FK decimal monto varchar medio date fecha }
 
+          MULTA ||--o{ DOCUMENTO_MULTA : "evidencias"
+          MULTA ||--o{ APELACION : "apelaciones"
+          UNIDAD ||--o{ MULTA : "genera"
+          PERSONA ||--o{ MULTA : "sujeto"
+          MULTA ||--o{ DETALLE_CUENTA_UNIDAD : "se_refleja_en"
+          CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA_UNIDAD : "items"
+          CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"
+        </div>
+      </div>
+    </div>
     <div class="slide">
       <h2>Módulo 06 · Amenidades</h2>
       <div class="insight-box">
@@ -732,15 +1105,16 @@ erDiagram
       <div class="mermaid-container">
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
-erDiagram
-  AMENIDAD { bigint id PK bigint comunidad_id FK varchar nombre text descripcion }
-  TARIFA_AMENIDAD { bigint id PK bigint amenidad_id FK decimal precio varchar periodo }
-  RESERVA_AMENIDAD { bigint id PK bigint amenidad_id FK bigint unidad_id FK date fecha_inicio date fecha_fin varchar estado }
-  BLOQUEO { bigint id PK bigint amenidad_id FK date desde date hasta varchar motivo }
-  AMENIDAD ||--o{ TARIFA_AMENIDAD : "tiene"
-  AMENIDAD ||--o{ RESERVA_AMENIDAD : "recibe"
-  AMENIDAD ||--o{ BLOQUEO : "bloquea"
-  UNIDAD ||--o{ RESERVA_AMENIDAD : "reserva_por"
+          erDiagram
+          AMENIDAD { bigint id PK bigint comunidad_id FK varchar nombre text descripcion }
+          TARIFA_AMENIDAD { bigint id PK bigint amenidad_id FK decimal precio varchar periodo }
+          RESERVA_AMENIDAD { bigint id PK bigint amenidad_id FK bigint unidad_id FK date fecha_inicio date fecha_fin
+          varchar estado }
+          BLOQUEO { bigint id PK bigint amenidad_id FK date desde date hasta varchar motivo }
+          AMENIDAD ||--o{ TARIFA_AMENIDAD : "tiene"
+          AMENIDAD ||--o{ RESERVA_AMENIDAD : "recibe"
+          AMENIDAD ||--o{ BLOQUEO : "bloquea"
+          UNIDAD ||--o{ RESERVA_AMENIDAD : "reserva_por"
         </div>
       </div>
     </div>
@@ -749,20 +1123,22 @@ erDiagram
       <h2>Módulo 07 · Soporte</h2>
       <div class="insight-box">
         <span class="insight-icon">🔧</span>
-        <strong>SLA:</strong> Los tickets están asociados a un SLA (Acuerdo de Nivel de Servicio) para medir tiempos de respuesta.
+        <strong>SLA:</strong> Los tickets están asociados a un SLA (Acuerdo de Nivel de Servicio) para medir tiempos de
+        respuesta.
       </div>
       <div class="mermaid-container">
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
-erDiagram
-  TICKET { bigint id PK bigint unidad_id FK bigint usuario_reporta_id FK varchar asunto text descripcion varchar estado datetime creado_en }
-  TICKET_COMENTARIO { bigint id PK bigint ticket_id FK bigint usuario_id FK text comentario datetime creado_en }
-  MANTENCION { bigint id PK bigint ticket_id FK date fecha_programada varchar responsable varchar estado }
-  SLA { int id PK varchar nombre int horas_respuesta }
-  UNIDAD ||--o{ TICKET : "genera"
-  TICKET ||--o{ TICKET_COMENTARIO : "tiene"
-  TICKET ||--o{ MANTENCION : "asocia"
-  SLA ||--o{ TICKET : "aplica"
+          erDiagram
+          TICKET { bigint id PK bigint unidad_id FK bigint usuario_reporta_id FK varchar asunto text descripcion varchar
+          estado datetime creado_en }
+          TICKET_COMENTARIO { bigint id PK bigint ticket_id FK bigint usuario_id FK text comentario datetime creado_en }
+          MANTENCION { bigint id PK bigint ticket_id FK date fecha_programada varchar responsable varchar estado }
+          SLA { int id PK varchar nombre int horas_respuesta }
+          UNIDAD ||--o{ TICKET : "genera"
+          TICKET ||--o{ TICKET_COMENTARIO : "tiene"
+          TICKET ||--o{ MANTENCION : "asocia"
+          SLA ||--o{ TICKET : "aplica"
         </div>
       </div>
     </div>
@@ -776,14 +1152,14 @@ erDiagram
       <div class="mermaid-container">
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
-erDiagram
-  DASHBOARD { bigint id PK bigint comunidad_id FK varchar nombre text configuracion }
-  KPI { bigint id PK bigint dashboard_id FK varchar codigo varchar descripcion decimal valor }
-  REPORTE_PROGRAMADO { bigint id PK bigint comunidad_id FK varchar tipo varchar schedule varchar formato }
-  EXPORTACION { bigint id PK bigint reporte_programado_id FK datetime generado_en varchar ruta_archivo }
-  DASHBOARD ||--o{ KPI : "muestra"
-  COMUNIDAD ||--o{ REPORTE_PROGRAMADO : "programa"
-  REPORTE_PROGRAMADO ||--o{ EXPORTACION : "genera"
+          erDiagram
+          DASHBOARD { bigint id PK bigint comunidad_id FK varchar nombre text configuracion }
+          KPI { bigint id PK bigint dashboard_id FK varchar codigo varchar descripcion decimal valor }
+          REPORTE_PROGRAMADO { bigint id PK bigint comunidad_id FK varchar tipo varchar schedule varchar formato }
+          EXPORTACION { bigint id PK bigint reporte_programado_id FK datetime generado_en varchar ruta_archivo }
+          DASHBOARD ||--o{ KPI : "muestra"
+          COMUNIDAD ||--o{ REPORTE_PROGRAMADO : "programa"
+          REPORTE_PROGRAMADO ||--o{ EXPORTACION : "genera"
         </div>
       </div>
     </div>
@@ -794,45 +1170,60 @@ erDiagram
 
       <div class="grid" style="margin-top: 30px; gap: 20px;">
         <!-- Frontend Card -->
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); flex: 1;">
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); flex: 1;">
           <div style="text-align: center; margin-bottom: 20px;">
             <div style="font-size: 50px; margin-bottom: 10px;">🌐</div>
             <h3 style="color: #0f172a; margin: 0;">Frontend (ccfrontend)</h3>
           </div>
           <ul style="list-style: none; padding: 0; margin: 0;">
-            <li style="margin-bottom: 10px;"><span class="insight-icon">⚛️</span> <strong>Framework:</strong> Next.js (React-based para SSR/SSG)</li>
-            <li style="margin-bottom: 10px;"><span class="insight-icon">📘</span> <strong>Lenguaje:</strong> TypeScript (type-checking)</li>
-            <li style="margin-bottom: 10px;"><span class="insight-icon">🎨</span> <strong>UI:</strong> React, Material-UI, Emotion, FullCalendar</li>
-            <li style="margin-bottom: 10px;"><span class="insight-icon">🔄</span> <strong>Estado:</strong> Axios, hooks personalizados</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">⚛️</span> <strong>Framework:</strong> Next.js
+              (React-based para SSR/SSG)</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">📘</span> <strong>Lenguaje:</strong> TypeScript
+              (type-checking)</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🎨</span> <strong>UI:</strong> React,
+              Material-UI, Emotion, FullCalendar</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🔄</span> <strong>Estado:</strong> Axios, hooks
+              personalizados</li>
             <li><span class="insight-icon">⚙️</span> <strong>Otros:</strong> Babel, SWC</li>
           </ul>
         </div>
 
         <!-- Backend Card -->
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); flex: 1;">
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); flex: 1;">
           <div style="text-align: center; margin-bottom: 20px;">
             <div style="font-size: 50px; margin-bottom: 10px;">🔧</div>
             <h3 style="color: #0f172a; margin: 0;">Backend (ccbackend)</h3>
           </div>
           <ul style="list-style: none; padding: 0; margin: 0;">
-            <li style="margin-bottom: 10px;"><span class="insight-icon">🟢</span> <strong>Runtime:</strong> Node.js (>=18)</li>
-            <li style="margin-bottom: 10px;"><span class="insight-icon">🚀</span> <strong>Framework:</strong> Express.js</li>
-            <li style="margin-bottom: 10px;"><span class="insight-icon">🗄️</span> <strong>Base de Datos:</strong> MySQL, Sequelize ORM</li>
-            <li style="margin-bottom: 10px;"><span class="insight-icon">🔐</span> <strong>Seguridad:</strong> JWT, bcryptjs, Helmet, CORS</li>
-            <li style="margin-bottom: 10px;"><span class="insight-icon">✅</span> <strong>Validación:</strong> Joi, express-validator</li>
-            <li><span class="insight-icon">📧</span> <strong>Otros:</strong> Axios, Nodemailer, Multer, QRCode, Speakeasy, Swagger</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🟢</span> <strong>Runtime:</strong> Node.js
+              (>=18)</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🚀</span> <strong>Framework:</strong> Express.js
+            </li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🗄️</span> <strong>Base de Datos:</strong>
+              MySQL, Sequelize ORM</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🔐</span> <strong>Seguridad:</strong> JWT,
+              bcryptjs, Helmet, CORS</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">✅</span> <strong>Validación:</strong> Joi,
+              express-validator</li>
+            <li><span class="insight-icon">📧</span> <strong>Otros:</strong> Axios, Nodemailer, Multer, QRCode,
+              Speakeasy, Swagger</li>
           </ul>
         </div>
 
         <!-- Docker Card -->
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); flex: 1;">
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); flex: 1;">
           <div style="text-align: center; margin-bottom: 20px;">
             <div style="font-size: 50px; margin-bottom: 10px;">🐳</div>
             <h3 style="color: #0f172a; margin: 0;">Docker</h3>
           </div>
           <ul style="list-style: none; padding: 0; margin: 0;">
-            <li style="margin-bottom: 10px;"><span class="insight-icon">📦</span> <strong>Contenedorización:</strong> Docker (Dockerfiles, compose)</li>
-            <li style="margin-bottom: 10px;"><span class="insight-icon">🎼</span> <strong>Orquestación:</strong> Docker Compose (dev/prod)</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">📦</span> <strong>Contenedorización:</strong>
+              Docker (Dockerfiles, compose)</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🎼</span> <strong>Orquestación:</strong> Docker
+              Compose (dev/prod)</li>
             <li><span class="insight-icon">⚡</span> <strong>Scripts:</strong> Build, run, gestión (package.json)</li>
           </ul>
         </div>
@@ -875,10 +1266,11 @@ erDiagram
       <p style="font-size: 24px;">Este informe proporciona material suficiente para:</p>
     </section>
 
-    <section class="slide" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-      
+    <section class="slide"
+      style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+
       <!-- Slide 31: Demostración -->
-      
+
       <div style="
           width: 120px; height: 120px; 
           background: var(--primary); 
@@ -887,11 +1279,11 @@ erDiagram
           margin-bottom: 40px;
           box-shadow: 0 20px 40px rgba(0, 74, 173, 0.25);
       ">
-          <span style="color: white; font-size: 50px; margin-left: 10px;">▶</span>
+        <span style="color: white; font-size: 50px; margin-left: 10px;">▶</span>
       </div>
 
       <h2 style="font-size: 54px; margin-bottom: 20px; border: none; color: var(--text-main);">Demostración</h2>
-      
+
       <p style="font-size: 26px; color: var(--text-light); font-weight: 300;">
         A continuación mostraremos nuestro servicio.
       </p>
@@ -957,26 +1349,26 @@ erDiagram
     }
 
     document.addEventListener('keydown', (e) => {
-      if(e.key === 'ArrowRight' || e.key === 'Space') changeSlide(1);
-      if(e.key === 'ArrowLeft') changeSlide(-1);
+      if (e.key === 'ArrowRight' || e.key === 'Space') changeSlide(1);
+      if (e.key === 'ArrowLeft') changeSlide(-1);
     });
 
     // --- LÓGICA DE ZOOM Y PAN EN FULLSCREEN ---
     const modal = document.getElementById('fullscreen-modal');
     const modalContent = document.getElementById('fullscreen-content');
     const viewport = document.getElementById('fullscreen-viewport');
-    
+
     let scale = 1;
     let isDragging = false;
     let startX, startY, translateX = 0, translateY = 0;
 
-    window.openFullscreen = function(btn) {
+    window.openFullscreen = function (btn) {
       const container = btn.parentElement;
       const originalSvg = container.querySelector('svg');
-      
-      if(originalSvg) {
+
+      if (originalSvg) {
         modalContent.innerHTML = '';
-        
+
         // CLONAR Y LIMPIAR ESTILOS QUE CAUSAN COLAPSO
         const clone = originalSvg.cloneNode(true);
         clone.removeAttribute('height');
@@ -985,77 +1377,78 @@ erDiagram
         clone.style.height = 'auto';
         clone.style.maxWidth = 'none';
         clone.style.maxHeight = 'none';
-        
+
         modalContent.appendChild(clone);
-        
+
         // Resetear variables
         scale = 1;
         translateX = 0;
         translateY = 0;
         updateTransform();
-        
+
         modal.style.display = 'flex';
       } else {
         alert('Diagrama cargando...');
       }
     }
 
-    window.closeFullscreen = function() {
+    window.closeFullscreen = function () {
       modal.style.display = 'none';
     }
 
     // Zoom controls
-    window.zoom = function(delta) {
-        scale += delta;
-        if(scale < 0.1) scale = 0.1;
-        updateTransform();
+    window.zoom = function (delta) {
+      scale += delta;
+      if (scale < 0.1) scale = 0.1;
+      updateTransform();
     }
 
-    window.resetZoom = function() {
-        scale = 1;
-        translateX = 0;
-        translateY = 0;
-        updateTransform();
+    window.resetZoom = function () {
+      scale = 1;
+      translateX = 0;
+      translateY = 0;
+      updateTransform();
     }
 
-    window.handleWheel = function(e) {
-        if (e.ctrlKey || e.metaKey || true) { 
-            e.preventDefault();
-            const delta = e.deltaY * -0.001;
-            const newScale = scale + delta;
-            if (newScale > 0.1 && newScale < 5) {
-                scale = newScale;
-                updateTransform();
-            }
+    window.handleWheel = function (e) {
+      if (e.ctrlKey || e.metaKey || true) {
+        e.preventDefault();
+        const delta = e.deltaY * -0.001;
+        const newScale = scale + delta;
+        if (newScale > 0.1 && newScale < 5) {
+          scale = newScale;
+          updateTransform();
         }
+      }
     }
 
     // Pan controls (Drag)
-    window.startDrag = function(e) {
-        if(e.target.tagName === 'BUTTON') return; 
-        isDragging = true;
-        startX = e.clientX - translateX;
-        startY = e.clientY - translateY;
-        viewport.style.cursor = 'grabbing';
+    window.startDrag = function (e) {
+      if (e.target.tagName === 'BUTTON') return;
+      isDragging = true;
+      startX = e.clientX - translateX;
+      startY = e.clientY - translateY;
+      viewport.style.cursor = 'grabbing';
     }
 
-    window.drag = function(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-        translateX = e.clientX - startX;
-        translateY = e.clientY - startY;
-        updateTransform();
+    window.drag = function (e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      translateX = e.clientX - startX;
+      translateY = e.clientY - startY;
+      updateTransform();
     }
 
-    window.endDrag = function() {
-        isDragging = false;
-        viewport.style.cursor = 'grab';
+    window.endDrag = function () {
+      isDragging = false;
+      viewport.style.cursor = 'grab';
     }
 
     function updateTransform() {
-        modalContent.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+      modalContent.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
     }
   </script>
 
 </body>
+
 </html>
