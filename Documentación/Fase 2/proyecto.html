@@ -1,0 +1,1006 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CUENTAS CLARAS · Portafolio</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --color-primary: #004AAD;
+      --color-primary-light: #3673D8;
+      --color-primary-lighter: #E8F1FF;
+      --color-text-primary: #0A2540;
+      --color-text-secondary: #6C757D;
+      --color-gray-100: #F1F3F5;
+      --color-gray-200: #E9ECEF;
+      --page-bg: #F6FAFF;
+    }
+
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;color:var(--color-text-primary);background:var(--page-bg);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+    h1,h2,h3{font-family:Poppins,Inter,Arial;margin:0;color:var(--color-primary)}
+
+    .container{max-width:1200px;margin:28px auto;padding:28px;box-sizing:border-box;position:relative}
+
+    /* Mostrar todas las tarjetas en una sola página */
+    .card{background:#fff;border-radius:12px;padding:22px;margin-bottom:18px;box-shadow:0 10px 30px rgba(10,37,64,0.06);border:1px solid var(--color-gray-100);display:block;max-height:none;overflow:visible}
+    .card.active{display:block}
+
+    .card.hero{display:block}
+    .card.hero.active{display:block}
+
+    .hero{display:flex;align-items:center;gap:12px}
+    .logo{height:64px;width:auto}
+    .logo-inline{height:42px;width:auto;margin-right:12px;display:inline-block;vertical-align:middle}
+    .title-block h1{font-size:28px;letter-spacing:0.2px}
+    .title-block p{margin:6px 0 0;color:var(--color-text-secondary)}
+
+    #slide-0.card.hero{padding:64px;background: linear-gradient(180deg, var(--color-primary-lighter) 0%, #ffffff 60%);box-shadow: 0 30px 60px rgba(4,57,130,0.12)}
+
+    .grid{display:flex;gap:18px;flex-wrap:wrap}
+    .col{flex:1}
+    .col-2{flex:1.2}
+    .small{font-size:14px;color:var(--color-text-secondary);line-height:1.5}
+
+    .team-list{list-style:none;padding:0;margin:10px 0 0}
+    .team-list li{padding:10px 0;border-bottom:1px dashed var(--color-gray-100)}
+    /* Avatares y layout para integrantes */
+    .team-list .member{display:flex;align-items:center;gap:12px}
+    .member-avatar{width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0}
+    .member-info{flex:1}
+    .member-info strong{display:block}
+    .role{display:block;color:var(--color-text-secondary);font-size:13px;margin-top:6px}
+
+    .dark-box{background:#0b1220;color:#fff;padding:18px;border-radius:8px;border:1px solid rgba(0,0,0,0.45);box-shadow:0 10px 30px rgba(2,6,12,0.45)}
+    .mermaid-wrapper{background:linear-gradient(180deg,#071124 0%, #091426 100%);padding:12px;border-radius:8px;border:1px solid rgba(0,0,0,0.6);position:relative}
+    .mermaid svg{width:100%!important;height:auto!important}
+    .mermaid{white-space:pre-wrap;font-family:monospace;font-size:13px;display:block}
+
+    .icons{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .icon{width:84px;height:84px;border-radius:8px;background:#fff;border:1px solid var(--color-gray-200);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(10,37,64,0.06)}
+    .icon img{max-width:64%;max-height:64%}
+
+    .section-title{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .section-title h2{font-size:20px}
+    .notes{font-size:13px;color:var(--color-text-secondary);margin-top:10px}
+
+    .diagram-fullscreen {background: rgba(0,74,173,0.95);color: #fff;border: 0;padding: 8px 12px;border-radius: 8px;cursor: pointer;font-weight:600;box-shadow:0 6px 18px rgba(4,57,130,0.12);position: absolute;right: 14px;top: 14px;z-index: 2}
+    .diagram-overlay {position: fixed;inset: 0;background: rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;z-index: 120000;padding: 20px}
+    .diagram-overlay .dialog{width: 100%;max-width: 1200px;max-height: 92vh;overflow:auto;background: #fff;border-radius: 10px;padding: 18px;box-shadow: 0 30px 60px rgba(2,6,12,0.6)}
+    .diagram-overlay .close-btn{background:#004AAD;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;margin-bottom:12px}
+
+    .btn{background:var(--color-primary);color:#fff;padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:600;box-shadow:0 6px 18px rgba(4,57,130,0.12)}
+    .btn.secondary{background:#fff;color:var(--color-primary);border:1px solid var(--color-primary-light)}
+    .slide-counter{background:#fff;padding:8px 10px;border-radius:8px;border:1px solid var(--color-gray-200);font-weight:600;color:var(--color-text-primary);min-width:64px;text-align:center}
+
+    /* Ajustes para slide-9: columnas simétricas */
+    #slide-9 .grid{display:flex;flex-wrap:wrap;gap:18px;align-items:stretch}
+    #slide-9 .col{flex:1 1 calc(25% - 18px);min-width:240px;display:flex}
+    #slide-9 .col > .dark-box{flex:1;display:flex;flex-direction:column;justify-content:flex-start;box-sizing:border-box;padding:18px;min-height:220px}
+    #slide-9 .dark-box h3{margin-bottom:8px}
+    @media(max-width:900px){
+      #slide-9 .col{flex-basis:100%;min-width:0}
+      #slide-9 .col > .dark-box{min-height:0}
+    }
+
+    @media(max-width:900px){
+      #slide-0.card.hero{padding:28px;flex-direction:column;align-items:flex-start}
+      .grid{flex-direction:column}
+      .hero{flex-direction:column;align-items:flex-start}
+      .logo{height:54px}
+      .logo-inline{height:34px}
+      .diagram-fullscreen{right:12px;top:12px}
+    }
+
+    /* ocultar botón "Ver presentación" (ya no hace nada) */
+    #startBtn{display:none !important}
+  </style>
+
+  <style media="print">
+    .card{display:block !important; page-break-after: always; max-height:none !important; overflow:visible !important;}
+    .diagram-fullscreen, .diagram-overlay { display:none !important; }
+    body{background:white !important; color: #000 !important;}
+    /* Asegurar que los fondos oscuros se impriman */
+    .dark-box{
+      background: #0b1220 !important;
+      color: #fff !important;
+      print-color-adjust: exact;           /* estándar */
+      -webkit-print-color-adjust: exact;   /* fallback para WebKit */
+    }
+    .mermaid-wrapper{background:transparent !important}
+    img{max-width:100%;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card hero active" data-slide-index="0" id="slide-0">
+      <div class="hero">
+        <img src="assets/duoc-uc-logo.png" class="logo-inline" alt="DUOC UC"
+             onerror="this.onerror=null;this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/2560px-Logo_DuocUC.svg.png'">
+        <div class="title-block">
+          <h1>CUENTAS CLARAS · PORTAFOLIO DE TÍTULO</h1>
+          <p class="small">Gestión de cobros, conciliaciones y administración para comunidades.</p>
+        </div>
+      </div>
+    </div>
+
+    <section class="card" id="slide-1" data-slide-index="1">
+      <div class="section-title"><h2>Integrantes</h2></div>
+      <ul class="team-list small">
+        <li>
+          <div class="member">
+            <img class="member-avatar" src="https://ui-avatars.com/api/?name=Mat%C3%ADas+Rom%C3%A1n&background=004AAD&color=fff&size=128" alt="Matías Román">
+            <div class="member-info">
+              <strong>Matías Román</strong>
+              <span class="role">QA & Coordinador — Pruebas funcionales y automatizadas. Tecnologías: Postman, GitHub Actions.</span>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="member">
+            <img class="member-avatar" src="https://ui-avatars.com/api/?name=Patricio+Quintanilla&background=004AAD&color=fff&size=128" alt="Patricio Quintanilla">
+            <div class="member-info">
+              <strong>Patricio Quintanilla</strong>
+              <span class="role">Desarrollador Frontend — Interfaz e integración. Tecnologías: React, TypeScript, Next.js.</span>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="member">
+            <img class="member-avatar" src="https://ui-avatars.com/api/?name=Frank+Vogt&background=004AAD&color=fff&size=128" alt="Frank Vogt">
+            <div class="member-info">
+              <strong>Frank Vogt</strong>
+              <span class="role">Desarrollador Backend — API y base de datos. Tecnologías: Node.js, MySQL, Redis.</span>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="card" id="slide-2" data-slide-index="2">
+      <div class="section-title"><h2>Introducción</h2></div>
+      <p class="small">En esta presentación veremos los aspectos esenciales de Cuentas Claras: una aplicación web para gestionar cobros, cargos y conciliaciones en comunidades. Revisaremos arquitectura (frontend, backend y seguridad), autenticación segura, bases de datos relacionales y uso de Docker para entornos reproducibles.</p>
+    </section>
+
+    <section class="card" id="slide-3" data-slide-index="3">
+      <div class="section-title"><h2>Descripción del proyecto</h2></div>
+      <div class="grid">
+        <div class="col dark-box small">
+          <strong>Propuesta de solución</strong>
+          <ul style="margin:10px 0 0;padding-left:18px">
+            <li>Plataforma web centralizada y segura para gestión de comunidades.</li>
+            <li>Automatiza registro de cargos, pagos y conciliaciones.</li>
+            <li>Autenticación segura (JWT, bcrypt, 2FA) y separación por comunidad.</li>
+            <li>Entorno reproducible con Docker e integración de pasarelas de pago.</li>
+          </ul>
+        </div>
+        <div class="col dark-box small">
+          <strong>Problema</strong>
+          <ul style="margin:10px 0 0;padding-left:18px">
+            <li>Gestión manual de cobros y conciliaciones propensa a errores.</li>
+            <li>Falta de trazabilidad y herramientas no integradas.</li>
+            <li>Necesidad de un sistema centralizado que garantice seguridad y transparencia.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="slide-4" data-slide-index="4">
+      <div class="section-title"><h2>Objetivo del proyecto</h2></div>
+      <p class="small"><strong>General:</strong> Desarrollar una plataforma web segura y eficiente para emitir cargos, registrar pagos y realizar conciliaciones automáticas, optimizando procesos administrativos y garantizando transparencia financiera.</p>
+      <p class="small" style="margin-top:8px"><strong>Específico:</strong> Implementar autenticación y control de acceso (JWT, bcrypt, 2FA) para proteger la información y mantener separación de datos entre comunidades.</p>
+    </section>
+
+    <section class="card" id="slide-5" data-slide-index="5">
+      <div class="section-title"><h2>Metodología usada</h2></div>
+      <p class="small">Utilizamos metodología ágil Scrum: trabajo por sprints, tareas con objetivos claros y revisiones periódicas. Esto permitió organizar el equipo, adaptarse a cambios y mejorar continuamente mediante feedback.</p>
+    </section>
+
+    <section class="card" id="slide-6" data-slide-index="6">
+      <div class="section-title"><h2>Arquitectura</h2></div>
+      <div class="mermaid-wrapper">
+        <button class="diagram-fullscreen" aria-label="Abrir arquitectura en pantalla completa">Pantalla completa</button>
+        <script type="text/plain" class="mermaid-source" data-diagram="arquitectura">
+flowchart TB
+  U[Usuario / Navegador]
+  subgraph EXTERNAL["Servicios externos"]
+    direction TB
+    PAYMENT[Pasarela de pagos / Webhooks]
+    SMTP[Proveedor SMTP / Email]
+  end
+  subgraph CLOUD["Nube"]
+    direction TB
+    subgraph EDGE["Edge / Gateway"]
+      direction LR
+      NGINX[Nginx - reverse proxy / CDN]
+      FE[Frontend - Next.js / React]
+    end
+    subgraph BACKEND["Backend / API"]
+      direction LR
+      API["API - Node.js / Express\n(Sequelize)"]
+      WORKERS[Workers / Background Jobs]
+    end
+    subgraph INFRA["Infra: DB / Cache / Storage"]
+      direction LR
+      REDIS[(Redis)]
+      STORAGE[(Uploads / Object Storage)]
+      A1([ ])
+      A2([ ])
+      MYSQL[(MySQL 8.0\nInnoDB)]
+      PHPMY[phpMyAdmin]
+    end
+  end
+  U --> NGINX
+  NGINX --> FE
+  FE --> API
+  PAYMENT --> API
+  SMTP --> API
+  API --> WORKERS
+  API --> REDIS
+  WORKERS --> REDIS
+  API --> STORAGE
+  WORKERS --> STORAGE
+  API --> A1 --> A2 --> MYSQL
+  PHPMY --> MYSQL
+  WORKERS -.-> MYSQL
+        </script>
+        <div class="mermaid" data-mermaid data-name="arquitectura"></div>
+      </div>
+      <div class="notes small">Si el diagrama no se renderiza: abre el archivo en un navegador moderno con internet y recarga. Guarda el archivo en UTF-8 si ves caracteres raros.</div>
+    </section>
+
+    <section class="card" id="slide-7" data-slide-index="7">
+      <div class="section-title"><h2>Modelo de datos (resumen)</h2></div>
+      <p class="small">MySQL en 3NF con desnormalizaciones puntuales para rendimiento. Tablas clave: comunidad, unidad, emision_gasto_comun, pago_aplicacion.</p>
+    </section>
+
+    <section class="card" id="slide-8" data-slide-index="8">
+      <div class="section-title"><h2>DIAGRAMA PRINCIPAL · Entidades y relaciones</h2></div>
+      <div class="mermaid-wrapper" style="background:linear-gradient(180deg,#ffffff 0%, #f6fbff 100%);">
+        <button class="diagram-fullscreen" aria-label="Abrir diagrama entidades en pantalla completa">Pantalla completa</button>
+        <script type="text/plain" class="mermaid-source" data-diagram="entidades">
+erDiagram
+  PERSONA { int id string rut string nombres string apellidos string email }
+  USUARIO { int id int persona_id string username string password boolean activo }
+  ROL { int id string codigo string nombre int nivel_acceso }
+  USUARIO_COMUNIDAD_ROL { int id int usuario_id int comunidad_id int rol_id string desde string hasta boolean activo }
+  COMUNIDAD { int id string razon_social string email_contacto }
+  EDIFICIO { int id int comunidad_id string nombre }
+  UNIDAD { int id int edificio_id string codigo }
+  TITULARES_UNIDAD { int id int unidad_id int persona_id string tipo }
+  EMISION_GASTOS_COMUNES { int id int comunidad_id string periodo string fecha_vencimiento }
+  DETALLE_EMISION_GASTOS { int id int emision_id int gasto_id number monto }
+  CUENTA_COBRO_UNIDAD { int id int emision_id int unidad_id number monto_total string estado }
+  DETALLE_CUENTA_UNIDAD { int id int cuenta_cobro_unidad_id int categoria_id number monto }
+  GASTO { int id int comunidad_id number monto }
+  DOCUMENTO_COMPRA { int id int gasto_id number total }
+  PAGO { int id int cuenta_cobro_unidad_id number monto string medio }
+  MULTA { int id int unidad_id int persona_id number monto }
+  AMENIDAD { int id int comunidad_id string nombre }
+  RESERVA_AMENIDAD { int id int amenidad_id int unidad_id string estado }
+  MEDIDOR { int id int unidad_id string tipo }
+  LECTURA_MEDIDOR { int id int medidor_id string fecha number lectura }
+  ARCHIVO { int id string entity_type int entity_id string file_path }
+  PERSONA ||--o{ USUARIO : "crea/tiene"
+  USUARIO ||--o{ USUARIO_COMUNIDAD_ROL : "asignaciones"
+  ROL ||--o{ USUARIO_COMUNIDAD_ROL : "rol_asignado"
+  COMUNIDAD ||--o{ EDIFICIO : "contiene"
+  EDIFICIO ||--o{ UNIDAD : "contiene"
+  UNIDAD ||--o{ TITULARES_UNIDAD : "titulares"
+  EMISION_GASTOS_COMUNES ||--o{ DETALLE_EMISION_GASTOS : "incluye"
+  GASTO ||--o{ DETALLE_EMISION_GASTOS : "desglosa"
+  EMISION_GASTOS_COMUNES ||--o{ CUENTA_COBRO_UNIDAD : "genera"
+  CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA_UNIDAD : "items"
+  CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"
+  UNIDAD ||--o{ CUENTA_COBRO_UNIDAD : "tiene"
+  UNIDAD ||--o{ MEDIDOR : "tiene"
+  MEDIDOR ||--o{ LECTURA_MEDIDOR : "registra"
+  AMENIDAD ||--o{ RESERVA_AMENIDAD : "reserva"
+  UNIDAD ||--o{ RESERVA_AMENIDAD : "reserva_por"
+  UNIDAD ||--o{ MULTA : "puede_tener"
+  PERSONA ||--o{ MULTA : "sujeto"
+        </script>
+        <div class="mermaid" data-mermaid data-name="entidades"></div>
+      </div>
+      <div class="notes small" style="margin-top:12px">Diagrama principal extraído del modelo y la base de datos SQL.</div>
+    </section>
+
+    <section class="card" id="slide-9" data-slide-index="9">
+      <div class="section-title"><h2>Resumen de Reglas de Negocio · Cuentas Claras</h2></div>
+
+      <p class="small"><strong>Flujo lógico:</strong> Usuario → Comunidad → Estructura → Operaciones → Administración</p>
+
+      <div class="grid" style="gap:16px;flex-wrap:wrap">
+        <div class="col" style="min-width:260px">
+          <div class="dark-box small" style="background:linear-gradient(180deg,#071124 0%, #0b1624 100%);">
+            <h3 style="margin:0 0 8px;color:#fff;font-size:16px">Grado 1 · Fundamentales</h3>
+            <strong>Multitenancy por Comunidad</strong><br/>
+            Cada registro se asocia a comunidad_id; middleware filtra queries para evitar accesos cruzados.<br/>
+            <em>Ej:</em> SELECT * FROM gasto WHERE comunidad_id = ?<br/><br/>
+            <strong>Roles y Permisos</strong><br/>
+            Roles definidos en frontend; backend valida con JWT y checks de permiso.<br/>
+            <em>Ej:</em> if (!hasPermission('VIEW_FINANCES')) return 403;
+          </div>
+        </div>
+
+        <div class="col" style="min-width:260px">
+          <div class="dark-box small" style="background:linear-gradient(180deg,#071124 0%, #0b1624 100%);">
+            <h3 style="margin:0 0 8px;color:#fff;font-size:16px">Grado 2 · Estructurales</h3>
+            <strong>Estructura Jerárquica</strong><br/>
+            Comunidades → edificios → torres → unidades; relaciones y FK en la BD.<br/><br/>
+            <strong>Validaciones de Datos</strong><br/>
+            Validaciones en frontend (regex) y backend (Joi) para formatos y seguridad.<br/>
+            <em>Ej:</em> validateRUT(rut) en validators.ts
+          </div>
+        </div>
+
+        <div class="col" style="min-width:260px">
+          <div class="dark-box small" style="background:linear-gradient(180deg,#071124 0%, #0b1624 100%);">
+            <h3 style="margin:0 0 8px;color:#fff;font-size:16px">Grado 3 · Operativas</h3>
+            <strong>Prorrateo Automático</strong><br/>
+            Vistas o servicios calculan alícuotas y distribuciones; visibilidad por rol.<br/><em>Ej:</em> vista_prorrateo en SQL.<br/><br/>
+            <strong>Aplicación de Multas</strong><br/>
+            Solo perfiles autorizados (p. ej. presidente); registra en auditoría.<br/><em>Ej:</em> if (user.roles.includes('presidente')) createMulta();
+          </div>
+        </div>
+
+        <div class="col" style="min-width:260px">
+          <div class="dark-box small" style="background:linear-gradient(180deg,#071124 0%, #0b1624 100%);">
+            <h3 style="margin:0 0 8px;color:#fff;font-size:16px">Grado 4 · Administrativas</h3>
+            <strong>Aprobación de Gastos</strong><br/>
+            Estados y workflow en BD/services hasta aprobación final.<br/><em>Ej:</em> UPDATE gasto SET estado = 'aprobado';<br/><br/>
+            <strong>Conciliaciones y Reportes</strong><br/>
+            Conciliación con bancos (aprobada por contador) y exportación segura filtrada por comunidad.
+          </div>
+        </div>
+      </div>
+
+      <div class="small" style="margin-top:12px">
+        <p>Estas reglas cubren ~80–90% de la lógica de negocio. Complementos técnicos (APIs, integraciones WebPay/email, middleware, migraciones, Docker) soportan la implementación pero no son reglas de negocio.</p>
+        <p class="notes small">Sugerencia: mover este contenido a docs/reglas_negocio.md y enlazar desde la presentación.</p>
+      </div>
+    </section>
+
+    <!-- Restaurado: diagramas detallados por módulo (slides 10..17) -->
+    <section class="card" id="slide-mod-1" data-slide-index="10">
+      <div class="section-title"><h2>Módulo 01 · Comunidades y parámetros</h2></div>
+
+      <div class="mermaid-wrapper" style="background:linear-gradient(180deg,#ffffff 0%, #f6fbff 100%); padding:12px; border-radius:8px; position:relative;">
+        <button class="diagram-fullscreen" aria-label="Abrir comunidad en pantalla completa">Pantalla completa</button>
+
+        <script type="text/plain" class="mermaid-source" data-diagram="mod_01_comunidades">
+erDiagram
+  COMUNIDAD {
+    bigint id PK
+    varchar codigo UK
+    varchar nombre
+    varchar razon_social
+    varchar email_contacto
+  }
+  PARAMETRO {
+    bigint id PK
+    bigint comunidad_id FK
+    varchar clave
+    varchar valor
+  }
+  CENTRO_COSTO {
+    bigint id PK
+    bigint comunidad_id FK
+    varchar codigo UK
+    varchar nombre
+  }
+  CATEGORIA {
+    bigint id PK
+    bigint comunidad_id FK
+    varchar codigo
+    varchar nombre
+  }
+  ALIQUOTA {
+    bigint id PK
+    bigint comunidad_id FK
+    decimal porcentaje
+    varchar descripcion
+  }
+
+  COMUNIDAD ||--o{ PARAMETRO : "tiene"
+  COMUNIDAD ||--o{ CENTRO_COSTO : "contiene"
+  COMUNIDAD ||--o{ CATEGORIA : "contiene"
+  COMUNIDAD ||--o{ ALIQUOTA : "define"
+  CENTRO_COSTO ||--o{ CATEGORIA : "clasifica"
+        </script>
+
+        <div class="mermaid" data-mermaid data-name="mod_01_comunidades"></div>
+      </div>
+
+      <p class="small" style="margin-top:10px">Gestión de comunidades, parámetros de cobranza, centros de costo y categorías. Reglas: unicidad de códigos y validación de alícuotas.</p>
+      <div class="notes small">Detalle: ccbackend/base/DIAGRAMAS/SECCION_01_COMUNIDADES.md</div>
+    </section>
+
+    <section class="card" id="slide-mod-2" data-slide-index="11">
+      <div class="section-title"><h2>Módulo 02 · Usuarios, roles y autenticación</h2></div>
+
+      <div class="mermaid-wrapper" style="background:linear-gradient(180deg,#ffffff 0%, #f6fbff 100%); padding:12px; border-radius:8px; position:relative;">
+        <button class="diagram-fullscreen" aria-label="Abrir identidad en pantalla completa">Pantalla completa</button>
+
+        <script type="text/plain" class="mermaid-source" data-diagram="identidad_autenticacion">
+erDiagram
+  PERSONA {
+    bigint id PK
+    varchar rut UK
+    char dv
+    varchar nombres
+    varchar apellidos
+    varchar email
+    varchar telefono
+  }
+  USUARIO {
+    bigint id PK
+    bigint persona_id FK
+    varchar username UK
+    varchar hash_password
+    tinyint totp_enabled
+    datetime created_at
+    datetime last_login
+  }
+  ROL {
+    int id PK
+    varchar codigo UK
+    varchar nombre
+    int nivel_acceso
+    tinyint es_sistema
+  }
+  COMUNIDAD {
+    int id PK
+    varchar nombre
+    varchar razon_social
+  }
+  USUARIO_COMUNIDAD_ROL {
+    bigint id PK
+    bigint usuario_id FK
+    bigint comunidad_id FK
+    int rol_id FK
+    tinyint activo
+    date desde
+    date hasta
+  }
+  AUDITORIA {
+    bigint id PK
+    bigint usuario_id FK
+    varchar accion
+    datetime fecha
+    text detalle
+  }
+  SESION_USUARIO {
+    bigint id PK
+    bigint usuario_id FK
+    varchar token
+    datetime created_at
+    datetime expires_at
+    varchar ip
+    varchar user_agent
+  }
+
+  PERSONA ||--o{ USUARIO : "crea/tiene"
+  USUARIO ||--o{ USUARIO_COMUNIDAD_ROL : "asignaciones"
+  ROL ||--o{ USUARIO_COMUNIDAD_ROL : "rol_asignado"
+  COMUNIDAD ||--o{ USUARIO_COMUNIDAD_ROL : "pertenece"
+  USUARIO ||--o{ AUDITORIA : "registra"
+  USUARIO ||--o{ SESION_USUARIO : "sesiones"
+        </script>
+
+        <div class="mermaid" data-mermaid data-name="identidad_autenticacion"></div>
+      </div>
+
+      <p class="small" style="margin-top:10px">Gestión de personas, usuarios, roles por comunidad, sesiones, 2FA (TOTP) y auditoría. Reglas: unicidad de username/RUT.</p>
+      <div class="notes small">Detalle: ccbackend/base/DIAGRAMAS/SECCION_02_USUARIOS.md</div>
+    </section>
+
+    <section class="card" id="slide-mod-3" data-slide-index="12">
+      <div class="section-title"><h2>Módulo 03 · Estructura organizacional</h2></div>
+
+      <div class="mermaid-wrapper" style="background:linear-gradient(180deg,#ffffff 0%, #f6fbff 100%); padding:12px; border-radius:8px; position:relative;">
+        <button class="diagram-fullscreen" aria-label="Abrir estructura en pantalla completa">Pantalla completa</button>
+
+        <script type="text/plain" class="mermaid-source" data-diagram="mod_03_estructura">
+erDiagram
+  EDIFICIO {
+    bigint id PK
+    bigint comunidad_id FK
+    varchar nombre
+    varchar direccion
+  }
+  TORRE {
+    bigint id PK
+    bigint edificio_id FK
+    varchar nombre
+  }
+  UNIDAD {
+    bigint id PK
+    bigint edificio_id FK
+    bigint torre_id FK
+    varchar codigo UK
+    decimal alicuota
+  }
+  TITULAR {
+    bigint id PK
+    bigint unidad_id FK
+    bigint persona_id FK
+    varchar tipo
+  }
+
+  COMUNIDAD ||--o{ EDIFICIO : "contiene"
+  EDIFICIO ||--o{ TORRE : "contiene"
+  EDIFICIO ||--o{ UNIDAD : "contiene"
+  TORRE ||--o{ UNIDAD : "tiene"
+  UNIDAD ||--o{ TITULAR : "titulares"
+        </script>
+
+        <div class="mermaid" data-mermaid data-name="mod_03_estructura"></div>
+      </div>
+
+      <p class="small" style="margin-top:10px">Edificios, torres, unidades y titulares. Reglas: jerarquía flexible y validaciones de tenencia y alícuotas.</p>
+      <div class="notes small">Detalle: ccbackend/base/DIAGRAMAS/SECCION_03_ESTRUCTURA.md</div>
+    </section>
+
+    <section class="card" id="slide-mod-4" data-slide-index="13">
+      <div class="section-title"><h2>Módulo 04 · Gestión financiera</h2></div>
+
+      <div class="mermaid-wrapper" style="background:linear-gradient(180deg,#ffffff 0%, #f6fbff 100%); padding:12px; border-radius:8px; position:relative;">
+        <button class="diagram-fullscreen" aria-label="Abrir financiera en pantalla completa">Pantalla completa</button>
+
+        <script type="text/plain" class="mermaid-source" data-diagram="mod_04_financiera">
+erDiagram
+  PROVEEDOR {
+    bigint id PK
+    varchar rut UK
+    varchar nombre
+    varchar email
+  }
+  DOCUMENTO_COMPRA {
+    bigint id PK
+    bigint proveedor_id FK
+    varchar tipo
+    varchar numero
+    decimal total
+    date fecha
+  }
+  GASTO {
+    bigint id PK
+    bigint documento_compra_id FK
+    bigint comunidad_id FK
+    decimal monto
+    int categoria_id FK
+  }
+  CATEGORIA_CONTABLE {
+    int id PK
+    varchar codigo
+    varchar nombre
+  }
+  ASIENTO {
+    bigint id PK
+    bigint gasto_id FK
+    date fecha
+    text detalle
+  }
+
+  PROVEEDOR ||--o{ DOCUMENTO_COMPRA : "emite"
+  DOCUMENTO_COMPRA ||--o{ GASTO : "origina"
+  GASTO ||--o{ ASIENTO : "genera"
+  CATEGORIA_CONTABLE ||--o{ GASTO : "clasifica"
+        </script>
+
+        <div class="mermaid" data-mermaid data-name="mod_04_financiera"></div>
+      </div>
+
+      <p class="small" style="margin-top:10px">Proveedores, documentos de compra, categorización contable y triggers de integridad para gastos y documentos.</p>
+      <div class="notes small">Detalle: ccbackend/base/DIAGRAMAS/SECCION_04_FINACIERA.md</div>
+    </section>
+
+    <section class="card" id="slide-mod-5" data-slide-index="14">
+      <div class="section-title"><h2>Módulo 05 · Cobros y pagos</h2></div>
+
+      <div class="mermaid-wrapper" style="background:linear-gradient(180deg,#ffffff 0%, #f6fbff 100%); padding:12px; border-radius:8px; position:relative;">
+        <button class="diagram-fullscreen" aria-label="Abrir cobros en pantalla completa">Pantalla completa</button>
+
+        <script type="text/plain" class="mermaid-source" data-diagram="mod_05_cobros">
+erDiagram
+  EMISION_GASTOS_COMUNES {
+    bigint id PK
+    bigint comunidad_id FK
+    varchar periodo
+    date fecha_vencimiento
+  }
+  DETALLE_EMISION {
+    bigint id PK
+    bigint emision_id FK
+    int categoria_id FK
+    decimal monto
+  }
+  CUENTA_COBRO_UNIDAD {
+    bigint id PK
+    bigint emision_id FK
+    bigint unidad_id FK
+    decimal monto_total
+    varchar estado
+  }
+  DETALLE_CUENTA {
+    bigint id PK
+    bigint cuenta_cobro_unidad_id FK
+    int categoria_id FK
+    decimal monto
+  }
+  PAGO {
+    bigint id PK
+    bigint cuenta_cobro_unidad_id FK
+    decimal monto
+    varchar medio
+    date fecha
+  }
+  CONCILIACION {
+    bigint id PK
+    bigint pago_id FK
+    varchar banco
+    date fecha
+    varchar estado
+  }
+
+  EMISION_GASTOS_COMUNES ||--o{ DETALLE_EMISION : "incluye"
+  EMISION_GASTOS_COMUNES ||--o{ CUENTA_COBRO_UNIDAD : "genera"
+  CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA : "items"
+  CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"
+  PAGO ||--o{ CONCILIACION : "conciliacion"
+        </script>
+
+        <div class="mermaid" data-mermaid data-name="mod_05_cobros"></div>
+      </div>
+
+      <p class="small" style="margin-top:10px">Emisión, distribución (prorrateo), cuentas de cobro por unidad, medios de pago y conciliación bancaria.</p>
+      <div class="notes small">Detalle: ccbackend/base/DIAGRAMAS/SECCION_05_COBROS.MD</div>
+    </section>
+
+    <section class="card" id="slide-mod-6" data-slide-index="15">
+      <div class="section-title"><h2>Módulo 06 · Amenidades y reservas</h2></div>
+
+      <div class="mermaid-wrapper" style="background:linear-gradient(180deg,#ffffff 0%, #f6fbff 100%); padding:12px; border-radius:8px; position:relative;">
+        <button class="diagram-fullscreen" aria-label="Abrir amenidades en pantalla completa">Pantalla completa</button>
+
+        <script type="text/plain" class="mermaid-source" data-diagram="mod_06_amenidades">
+erDiagram
+  AMENIDAD {
+    bigint id PK
+    bigint comunidad_id FK
+    varchar nombre
+    text descripcion
+  }
+  TARIFA_AMENIDAD {
+    bigint id PK
+    bigint amenidad_id FK
+    decimal precio
+    varchar periodo
+  }
+  RESERVA_AMENIDAD {
+    bigint id PK
+    bigint amenidad_id FK
+    bigint unidad_id FK
+    date fecha_inicio
+    date fecha_fin
+    varchar estado
+  }
+  BLOQUEO {
+    bigint id PK
+    bigint amenidad_id FK
+    date desde
+    date hasta
+    varchar motivo
+  }
+
+  AMENIDAD ||--o{ TARIFA_AMENIDAD : "tiene"
+  AMENIDAD ||--o{ RESERVA_AMENIDAD : "recibe"
+  AMENIDAD ||--o{ BLOQUEO : "bloquea"
+  UNIDAD ||--o{ RESERVA_AMENIDAD : "reserva_por"
+        </script>
+
+        <div class="mermaid" data-mermaid data-name="mod_06_amenidades"></div>
+      </div>
+
+      <p class="small" style="margin-top:10px">Gestión de amenidades, políticas de reserva, tarifas y detección de solapamientos.</p>
+      <div class="notes small">Detalle: ccbackend/base/DIAGRAMAS/SECCION_06_AMENIDADES.MD</div>
+    </section>
+
+    <section class="card" id="slide-mod-7" data-slide-index="16">
+      <div class="section-title"><h2>Módulo 07 · Soporte y mantención</h2></div>
+
+      <div class="mermaid-wrapper" style="background:linear-gradient(180deg,#ffffff 0%, #f6fbff 100%); padding:12px; border-radius:8px; position:relative;">
+        <button class="diagram-fullscreen" aria-label="Abrir soporte en pantalla completa">Pantalla completa</button>
+
+        <script type="text/plain" class="mermaid-source" data-diagram="mod_07_soporte">
+erDiagram
+  TICKET {
+    bigint id PK
+    bigint unidad_id FK
+    bigint usuario_reporta_id FK
+    varchar asunto
+    text descripcion
+    varchar estado
+    datetime creado_en
+  }
+  TICKET_COMENTARIO {
+    bigint id PK
+    bigint ticket_id FK
+    bigint usuario_id FK
+    text comentario
+    datetime creado_en
+  }
+  MANTENCION {
+    bigint id PK
+    bigint ticket_id FK
+    date fecha_programada
+    varchar responsable
+    varchar estado
+  }
+  SLA {
+    int id PK
+    varchar nombre
+    int horas_respuesta
+  }
+
+  UNIDAD ||--o{ TICKET : "genera"
+  TICKET ||--o{ TICKET_COMENTARIO : "tiene"
+  TICKET ||--o{ MANTENCION : "asocia"
+  SLA ||--o{ TICKET : "aplica"
+        </script>
+
+        <div class="mermaid" data-mermaid data-name="mod_07_soporte"></div>
+      </div>
+
+      <p class="small" style="margin-top:10px">Tickets, historial, comentarios, mantenciones programadas y SLA. Flujos: ciclo de vida de ticket y automatizaciones.</p>
+      <div class="notes small">Detalle: ccbackend/base/DIAGRAMAS/SECCION_07_SOPORTE.MD</div>
+    </section>
+
+    <section class="card" id="slide-mod-8" data-slide-index="17">
+      <div class="section-title"><h2>Módulo 08 · Reportes y analytics</h2></div>
+
+      <div class="mermaid-wrapper" style="background:linear-gradient(180deg,#ffffff 0%, #f6fbff 100%); padding:12px; border-radius:8px; position:relative;">
+        <button class="diagram-fullscreen" aria-label="Abrir reportes en pantalla completa">Pantalla completa</button>
+
+        <script type="text/plain" class="mermaid-source" data-diagram="mod_08_reportes">
+erDiagram
+  DASHBOARD {
+    bigint id PK
+    bigint comunidad_id FK
+    varchar nombre
+    text configuracion
+  }
+  KPI {
+    bigint id PK
+    bigint dashboard_id FK
+    varchar codigo
+    varchar descripcion
+    decimal valor
+  }
+  REPORTE_PROGRAMADO {
+    bigint id PK
+    bigint comunidad_id FK
+    varchar tipo
+    varchar schedule
+    varchar formato
+  }
+  EXPORTACION {
+    bigint id PK
+    bigint reporte_programado_id FK
+    datetime generado_en
+    varchar ruta_archivo
+  }
+
+  DASHBOARD ||--o{ KPI : "muestra"
+  COMUNIDAD ||--o{ REPORTE_PROGRAMADO : "programa"
+  REPORTE_PROGRAMADO ||--o{ EXPORTACION : "genera"
+        </script>
+        <div class="mermaid" data-mermaid data-name="mod_08_reportes"></div>
+      </div>
+      <p class="small" style="margin-top:10px">Dashboards, KPIs, reportes programados y exportación (PDF/Excel/CSV).</p>
+      <div class="notes small">Detalle: ccbackend/base/DIAGRAMAS/SECCION_08_REPORTES.MD</div>
+    </section>
+
+    <section class="card" id="slide-18" data-slide-index="18">
+      <div class="section-title"><h2>Tecnologías usadas</h2></div>
+      <div class="icons" style="margin-top:12px;gap:18px">
+        <div class="icon" title="React"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original.svg" alt="React"></div>
+        <div class="icon" title="Node.js"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nodejs/nodejs-original.svg" alt="Node.js"></div>
+        <div class="icon" title="MySQL"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mysql/mysql-original.svg" alt="MySQL"></div>
+        <div class="icon" title="Docker"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original.svg" alt="Docker"></div>
+        <div class="icon" title="GitHub"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/github/github-original.svg" alt="GitHub"></div>
+      </div>
+    </section>
+
+    <section class="card" id="slide-19" data-slide-index="19">
+      <div class="section-title"><h2>Demostración y próximos pasos</h2></div>
+      <p class="small">Preparar endpoints demo, credenciales y walkthrough. Siguientes pasos: pruebas, despliegue y documentación final.</p>
+    </section>
+
+    <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--color-text-secondary)">Archivo: proyecto.html — guarda el archivo en UTF-8 y coloca logos e iconos en assets/ si prefieres versiones locales.</div>
+  </div>
+
+  <!-- Pager y navegación eliminados: todo visible en una sola página -->
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    // Inicializar Mermaid manualmente y renderizar todos los diagramas
+    mermaid.initialize({ startOnLoad: false, theme: 'default', flowchart: { curve: 'basis' } });
+
+    (function(){
+      function getSourceForMermaid(wrapper){
+        if(!wrapper) return '';
+        const script = wrapper.querySelector('script.mermaid-source');
+        if(script && script.textContent) return script.textContent.replace(/\r\n/g,'\n').trim();
+        return '';
+      }
+
+      function prepareMermaidBlocks(root){
+        const blocks = (root || document).querySelectorAll('.mermaid');
+        blocks.forEach(m => {
+          if(m.dataset.source && m.dataset.source.length) return;
+          const wrapper = m.closest('.mermaid-wrapper');
+          const src = getSourceForMermaid(wrapper) || (m.textContent || '').trim();
+          if(src && src.length){
+            m.dataset.source = src;
+            m.textContent = src;
+          }
+        });
+      }
+
+      function renderAllMermaid(){
+        const all = Array.from(document.querySelectorAll('.mermaid')).filter(e => e.dataset.source && e.dataset.source.length);
+        if(all.length === 0) return;
+        try { mermaid.init(undefined, all); } catch(e){ console.warn('Mermaid render error', e); }
+      }
+
+      function openDiagramFullscreen(sourceText){
+        if(!sourceText) return;
+        const overlay = document.createElement('div');
+        overlay.className = 'diagram-overlay';
+        const dialog = document.createElement('div');
+        dialog.className = 'dialog';
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'close-btn';
+        closeBtn.textContent = 'Cerrar';
+        dialog.appendChild(closeBtn);
+        const mermaidDiv = document.createElement('div');
+        mermaidDiv.className = 'mermaid';
+        mermaidDiv.textContent = sourceText;
+        dialog.appendChild(mermaidDiv);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        try { mermaid.init(undefined, [mermaidDiv]); } catch(e){ console.warn('Mermaid render error', e); }
+        closeBtn.addEventListener('click', ()=> overlay.remove());
+        overlay.addEventListener('click', (ev)=> { if(ev.target === overlay) overlay.remove(); });
+      }
+
+      function bindFullscreenButtons(){
+        document.querySelectorAll('.diagram-fullscreen').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            const wrapper = btn.closest('.mermaid-wrapper');
+            const source = getSourceForMermaid(wrapper) || (wrapper.querySelector('.mermaid') || {}).dataset?.source || '';
+            if(!source) return;
+            openDiagramFullscreen(source);
+          });
+        });
+      }
+
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        prepareMermaidBlocks(document);
+        renderAllMermaid();
+        bindFullscreenButtons();
+      } else {
+        document.addEventListener('DOMContentLoaded', ()=>{
+          prepareMermaidBlocks(document);
+          renderAllMermaid();
+          bindFullscreenButtons();
+        });
+      }
+    })();
+  </script>
+    <script>
+  (function(){
+    function svgToDataUrl(svg){
+      var s = new XMLSerializer().serializeToString(svg);
+      if(!s.includes('xmlns="http://www.w3.org/2000/svg"')) s = s.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+    }
+
+    function downloadFile(filename, url){
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function downloadSVG(svg, name){
+      var svgStr = new XMLSerializer().serializeToString(svg);
+      if(!svgStr.includes('xmlns')) svgStr = svgStr.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+      var blob = new Blob([svgStr], {type: 'image/svg+xml;charset=utf-8'});
+      var url = URL.createObjectURL(blob);
+      downloadFile(name + '.svg', url);
+      setTimeout(()=> URL.revokeObjectURL(url), 2000);
+    }
+
+    function downloadPNG(svg, name){
+      function getBBoxSafe(el){
+        try { return el.getBBox(); } catch(e){ return {width: el.clientWidth || 800, height: el.clientHeight || 600}; }
+      }
+      var bbox = getBBoxSafe(svg);
+      var width = Math.max(1, Math.ceil(bbox.width || svg.clientWidth || 800));
+      var height = Math.max(1, Math.ceil(bbox.height || svg.clientHeight || 600));
+      var img = new Image();
+      img.onload = function(){
+        var canvas = document.createElement('canvas');
+        var scale = 2;
+        canvas.width = width * scale;
+        canvas.height = height * scale;
+        var ctx = canvas.getContext('2d');
+        ctx.scale(scale, scale);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0,0,width,height);
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(function(blob){
+          var url = URL.createObjectURL(blob);
+          downloadFile(name + '.png', url);
+          setTimeout(()=> URL.revokeObjectURL(url), 2000);
+        }, 'image/png', 0.92);
+      };
+      img.onerror = function(){ alert('Error al convertir SVG a PNG. Prueba descargar el SVG.'); };
+      img.src = svgToDataUrl(svg);
+    }
+
+    function addDownloadButtons(){
+      document.querySelectorAll('.mermaid-wrapper').forEach((wrapper, idx)=>{
+        if(wrapper.querySelector('.download-group')) return;
+
+        var diagName = (wrapper.querySelector('script.mermaid-source')?.dataset?.diagram) || ('diagram-' + (idx+1));
+        var group = document.createElement('div');
+        group.className = 'download-group';
+        group.style.marginTop = '8px';
+
+        var btnSvg = document.createElement('button');
+        btnSvg.type = 'button';
+        btnSvg.textContent = 'Descargar SVG';
+        btnSvg.className = 'btn secondary';
+        btnSvg.style.marginRight = '8px';
+        btnSvg.onclick = function(){
+          var svg = wrapper.querySelector('.mermaid svg'); // buscar al hacer click
+          if(!svg){ alert('Diagrama no disponible todavía. Espera unos segundos y vuelve a intentar.'); return; }
+          downloadSVG(svg, diagName);
+        };
+
+        var btnPng = document.createElement('button');
+        btnPng.type = 'button';
+        btnPng.textContent = 'Descargar PNG';
+        btnPng.className = 'btn secondary';
+        btnPng.onclick = function(){
+          var svg = wrapper.querySelector('.mermaid svg'); // buscar al hacer click
+          if(!svg){ alert('Diagrama no disponible todavía. Espera unos segundos y vuelve a intentar.'); return; }
+          downloadPNG(svg, diagName);
+        };
+
+        group.appendChild(btnSvg);
+        group.appendChild(btnPng);
+        wrapper.appendChild(group);
+      });
+    }
+
+    // Intenta agregar botones después de carga y también ante cambios en el DOM.
+    window.addEventListener('load', function(){ setTimeout(addDownloadButtons, 600); });
+    // Por si mermaid renderiza más tarde
+    var mo = new MutationObserver(function(){ addDownloadButtons(); });
+    mo.observe(document.body, { childList: true, subtree: true });
+  })();
+  </script>
+</body>
+</html>
+
+
