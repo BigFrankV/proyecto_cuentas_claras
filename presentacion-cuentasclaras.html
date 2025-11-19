@@ -456,27 +456,48 @@ flowchart TB
 
     <div class="slide">
       <h2>Core de Datos (MySQL 8.0)</h2>
-      <p>Diseñamos un modelo relacional en <strong>3ra Forma Normal (3NF)</strong> para priorizar la integridad transaccional sobre la velocidad de lectura.</p>
-      <div class="grid" style="margin-top: 30px;">
-        <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center;">
+      <h3>Arquitectura Relacional Normalizada (3NF): Priorizamos la integridad financiera y la "Fuente Única de Verdad" sobre la redundancia de datos.</h3>
+
+      <div style="margin-top: 30px;">
+        <h4>1. ¿Por qué elegimos la 3ra Forma Normal (3NF)?</h4>
+        <p>En sistemas de administración de propiedades, el error de datos es inadmisible. Aplicamos 3NF para garantizar que cada dato exista en un solo lugar.</p>
+        <div class="insight-box">
+          <span class="insight-icon">⚠️</span>
+          <strong>El Problema que evitamos:</strong> En una base de datos tradicional (tipo Excel), si corriges el nombre de una "Amenidad", tendrías que editarlo en miles de reservas históricas, arriesgando errores.
+        </div>
+        <div class="insight-box">
+          <span class="insight-icon">✅</span>
+          <strong>Nuestra Solución:</strong> Separamos las entidades. Si actualizamos un dato maestro (ej. una tarifa o una dirección), el cambio se refleja instantáneamente en todo el sistema sin romper la integridad histórica.
+        </div>
+      </div>
+
+      <div style="margin-top: 40px;">
+        <h4>2. Estructura del Negocio (Los 4 Pilares)</h4>
+        <div class="grid" style="margin-top: 20px;">
+          <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center; padding: 20px;">
             <div style="font-size: 40px; margin-bottom: 10px;">🏢</div>
             <strong>Comunidad</strong>
-            <p class="small">Entidad raíz. Aísla los datos (Tenant).</p>
-        </div>
-        <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center;">
+            <p><em>Función:</em> Entidad raíz y Aislamiento (Tenant).</p>
+            <p><em>Beneficio:</em> Seguridad por Diseño. Datos de Edificio A invisibles para Edificio B. No mezclamos finanzas.</p>
+          </div>
+          <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center; padding: 20px;">
             <div style="font-size: 40px; margin-bottom: 10px;">🏠</div>
             <strong>Unidad</strong>
-            <p class="small">Activo físico. Define la alícuota de cobro.</p>
-        </div>
-        <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center;">
+            <p><em>Función:</em> Activo físico desacoplado del propietario.</p>
+            <p><em>Beneficio:</em> Historial Perpetuo. Mantiene deuda intacta, independiente de propietarios (tabla titulares_unidad).</p>
+          </div>
+          <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center; padding: 20px;">
             <div style="font-size: 40px; margin-bottom: 10px;">🧾</div>
             <strong>Emisión</strong>
-            <p class="small">Generador de deuda mensual masiva.</p>
-        </div>
-        <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center;">
+            <p><em>Función:</em> Generador de deuda inmutable.</p>
+            <p><em>Beneficio:</em> Auditoría Financiera. Cobros históricos auditables al centavo, separando gasto de cobro.</p>
+          </div>
+          <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); text-align: center; padding: 20px;">
             <div style="font-size: 40px; margin-bottom: 10px;">💸</div>
             <strong>Pago</strong>
-            <p class="small">Cierre del ciclo financiero.</p>
+            <p><em>Función:</em> Cierre del ciclo con asignación flexible.</p>
+            <p><em>Beneficio:</em> Conciliación Inteligente. Un abono distribuye pagos a multa, reserva y gasto común (tabla pago_aplicacion).</p>
+          </div>
         </div>
       </div>
     </div>
@@ -535,23 +556,45 @@ erDiagram
     </div>
 
     <div class="slide">
-      <h2>Resumen de Reglas de Negocio</h2>
-      <div class="grid" style="font-size: 12px;">
-        <div class="col dark-box">
-            <strong>Grado 1 · Fundamentales</strong>
-            <p style="color:#ccc">Multitenancy por Comunidad. Roles y Permisos.</p>
+      <h2>Arquitectura de Reglas de Negocio</h2>
+      <h3>Un sistema diseñado por capas para garantizar seguridad, consistencia y automatización.</h3>
+
+      <div class="grid" style="margin-top: 30px;">
+        <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 20px;">
+          <div style="font-size: 30px; margin-bottom: 10px;">🧱</div>
+          <strong>Grado 1: Fundamentales (Seguridad y Aislamiento)</strong>
+          <p>Las reglas que protegen la integridad del sistema.</p>
+          <ul style="text-align: left; font-size: 14px;">
+            <li><strong>Multitenancy Estricto:</strong> Aislamiento lógico total. Los datos de la "Comunidad A" son invisibles para la "Comunidad B".</li>
+            <li><strong>Seguridad RBAC:</strong> Permisos granulares. Un conserje no puede ver lo mismo que el administrador; un copropietario solo ve su propia deuda.</li>
+          </ul>
         </div>
-        <div class="col dark-box">
-            <strong>Grado 2 · Estructurales</strong>
-            <p style="color:#ccc">Estructura Jerárquica. Validaciones de Datos.</p>
+        <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 20px;">
+          <div style="font-size: 30px; margin-bottom: 10px;">📐</div>
+          <strong>Grado 2: Estructurales (Consistencia de Datos)</strong>
+          <p>El esqueleto que sostiene la realidad física en el sistema.</p>
+          <ul style="text-align: left; font-size: 14px;">
+            <li><strong>Jerarquía Fiel:</strong> Modelado relacional exacto (Comunidad → Edificio → Unidad → Medidor). Si no existe la unidad, no puede existir la deuda.</li>
+            <li><strong>Integridad Referencial:</strong> Validaciones a nivel de base de datos que impiden errores humanos (ej. no se puede borrar un gasto si ya fue prorrateado).</li>
+          </ul>
         </div>
-        <div class="col dark-box">
-            <strong>Grado 3 · Operativas</strong>
-            <p style="color:#ccc">Prorrateo Automático. Aplicación de Multas.</p>
+        <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 20px;">
+          <div style="font-size: 30px; margin-bottom: 10px;">⚙️</div>
+          <strong>Grado 3: Operativas (El Motor del Negocio)</strong>
+          <p>Automatización de procesos complejos.</p>
+          <ul style="text-align: left; font-size: 14px;">
+            <li><strong>Algoritmo de Prorrateo:</strong> Cálculo automático de alícuotas con precisión decimal, eliminando el error de la planilla Excel.</li>
+            <li><strong>Lógica de Sanciones:</strong> Aplicación automática de multas e intereses basada en reglas parametrizables (ej. mora tras el día 5).</li>
+          </ul>
         </div>
-        <div class="col dark-box">
-            <strong>Grado 4 · Administrativas</strong>
-            <p style="color:#ccc">Aprobación de Gastos. Conciliaciones y Reportes.</p>
+        <div class="col dark-box" style="background: white; border: 1px solid #cbd5e1; color: var(--text-main); padding: 20px;">
+          <div style="font-size: 30px; margin-bottom: 10px;">🛡️</div>
+          <strong>Grado 4: Administrativas (Control y Auditoría)</strong>
+          <p>Flujos de trabajo para la transparencia financiera.</p>
+          <ul style="text-align: left; font-size: 14px;">
+            <li><strong>Flujo de Aprobación:</strong> Ningún gasto sensible se paga sin una aprobación digital previa (Admin + Comité).</li>
+            <li><strong>Trazabilidad Financiera:</strong> Conciliación bancaria inteligente que vincula cada peso recibido a una deuda específica, cerrando el ciclo contable.</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -744,233 +787,55 @@ erDiagram
     </div>
 
     <div class="slide">
-      <h2>Tecnologías usadas</h2>
-      <div class="tech-icons">
-        <div class="tech-icon" title="React"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original.svg"></div>
-        <div class="tech-icon" title="Node"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nodejs/nodejs-original.svg"></div>
-        <div class="tech-icon" title="MySQL"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mysql/mysql-original.svg"></div>
-        <div class="tech-icon" title="Docker"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original.svg"></div>
-        <div class="tech-icon" title="GitHub"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/github/github-original.svg"></div>
-      </div>
-    </div>
+      <h2>Tecnologías Utilizadas</h2>
+      <p>Stack tecnológico principal del proyecto Cuentas Claras.</p>
 
-    <div class="slide">
-      <h2>Desafíos de Ingeniería y Soluciones</h2>
-      <p>Principales obstáculos técnicos a nivel de código y cómo los resolvimos arquitectónicamente.</p>
-      
-      <div class="grid" style="margin-top: 20px; gap: 30px;">
-        
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.06); overflow: hidden;">
-            <div style="background: #f8fafc; padding: 15px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                <strong style="color: #0f172a; font-size: 16px;">🛑 Backend: Race Conditions</strong>
-                <span style="background: #dcfce7; color: #166534; font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 700;">SOLUCIONADO</span>
-            </div>
-            <div style="padding: 25px;">
-                <p style="font-size: 14px; color: #64748b; margin-bottom: 15px;">
-                    <strong>Problema:</strong> Al procesar pagos concurrentes, existía riesgo de inconsistencia entre el registro del pago y la actualización del saldo de la unidad.
-                </p>
-                <div style="background: #1e293b; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 13px; color: #e2e8f0; line-height: 1.5;">
-                    <span style="color: #f472b6;">await</span> sequelize.<span style="color: #60a5fa;">transaction</span>(async (t) => {<br>
-                    &nbsp;&nbsp;<span style="color: #94a3b8;">// Operaciones Atómicas ACID</span><br>
-                    &nbsp;&nbsp;await Pago.create(..., { transaction: t });<br>
-                    &nbsp;&nbsp;await Saldo.update(..., { transaction: t });<br>
-                    });
-                </div>
-                <p style="font-size: 14px; margin-top: 15px; color: var(--text-main);">
-                    <strong>Solución:</strong> Implementación de <strong>Transacciones ACID</strong> gestionadas. Si una operación falla, el sistema realiza un <em>Rollback</em> automático.
-                </p>
-            </div>
-        </div>
-
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.06); overflow: hidden;">
-            <div style="background: #f8fafc; padding: 15px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                <strong style="color: #0f172a; font-size: 16px;">⚛️ Frontend: Type Safety</strong>
-                <span style="background: #dcfce7; color: #166534; font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 700;">SOLUCIONADO</span>
-            </div>
-            <div style="padding: 25px;">
-                <p style="font-size: 14px; color: #64748b; margin-bottom: 15px;">
-                    <strong>Problema:</strong> Errores en tiempo de ejecución (Runtime) al manipular objetos complejos de la API sin validación de estructura.
-                </p>
-                <div style="background: #1e293b; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 13px; color: #e2e8f0; line-height: 1.5;">
-                    <span style="color: #f472b6;">interface</span> <span style="color: #fbbf24;">IGasto</span> {<br>
-                    &nbsp;&nbsp;monto: <span style="color: #60a5fa;">number</span>;<br>
-                    &nbsp;&nbsp;proveedor: <span style="color: #60a5fa;">string</span>;<br>
-                    &nbsp;&nbsp;estado: <span style="color: #a3e635;">'PENDIENTE'</span> | <span style="color: #a3e635;">'PAGADO'</span>;<br>
-                    }
-                </div>
-                <p style="font-size: 14px; margin-top: 15px; color: var(--text-main);">
-                    <strong>Solución:</strong> Migración a <strong>TypeScript</strong> con interfaces estrictas y uso de <em>Custom Hooks</em> para separar la lógica de negocio de la UI.
-                </p>
-            </div>
-        </div>
-
-      </div>
-    </div>
-
-    <div class="slide">
-      <h2>Métricas de Calidad y Sinergia DevSecOps</h2>
-      <p>Cómo el trabajo en equipo y la automatización elevaron el estándar del proyecto.</p>
-      
-      <div style="display: flex; gap: 20px; margin-top: 30px; justify-content: center;">
-        
-        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: var(--card-shadow); width: 30%; text-align: center; border-top: 4px solid #3b82f6;">
-            <div style="font-size: 36px; font-weight: 800; color: #1e293b; margin-bottom: 5px;">50+</div>
-            <div style="font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Unit Tests</div>
-            <p style="font-size: 13px; color: #94a3b8; margin-top: 8px;">Cobertura crítica en motor de cálculo.</p>
-        </div>
-
-        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: var(--card-shadow); width: 30%; text-align: center; border-top: 4px solid #8b5cf6;">
-            <div style="font-size: 36px; font-weight: 800; color: #1e293b; margin-bottom: 5px;">100%</div>
-            <div style="font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Dockerizado</div>
-            <p style="font-size: 13px; color: #94a3b8; margin-top: 8px;">Paridad dev/prod sin "works on my machine".</p>
-        </div>
-
-        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: var(--card-shadow); width: 30%; text-align: center; border-top: 4px solid #10b981;">
-            <div style="font-size: 36px; font-weight: 800; color: #1e293b; margin-bottom: 5px;">CI/CD</div>
-            <div style="font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">GitHub Actions</div>
-            <p style="font-size: 13px; color: #94a3b8; margin-top: 8px;">Despliegues automáticos tras pasar pruebas.</p>
-        </div>
-
-      </div>
-
-      <div style="margin-top: 30px; background: linear-gradient(to right, #f8fafc, #ffffff); border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 20px;">
-          <div style="background: #004AAD; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0;">
-              🤝
+      <div class="grid" style="margin-top: 30px; gap: 20px;">
+        <!-- Frontend Card -->
+        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); flex: 1;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 50px; margin-bottom: 10px;">🌐</div>
+            <h3 style="color: #0f172a; margin: 0;">Frontend (ccfrontend)</h3>
           </div>
-          <div>
-              <strong style="color: var(--primary); font-size: 18px;">Ciclo de Retroalimentación QA ↔ Dev</strong>
-              <p style="margin-top: 5px; font-size: 15px; color: #475569; line-height: 1.5;">
-                  Implementamos una cultura donde <strong>QA no es la fase final</strong>, sino parte del desarrollo. 
-                  Se definieron los <em>Test Cases</em> en Postman antes de escribir el código backend (TDD), lo que redujo los bugs de integración en un <strong>40%</strong>.
-              </p>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="margin-bottom: 10px;"><span class="insight-icon">⚛️</span> <strong>Framework:</strong> Next.js (React-based para SSR/SSG)</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">📘</span> <strong>Lenguaje:</strong> TypeScript (type-checking)</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🎨</span> <strong>UI:</strong> React, Material-UI, Emotion, FullCalendar</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🔄</span> <strong>Estado:</strong> Axios, hooks personalizados</li>
+            <li><span class="insight-icon">⚙️</span> <strong>Otros:</strong> Babel, SWC</li>
+          </ul>
+        </div>
+
+        <!-- Backend Card -->
+        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); flex: 1;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 50px; margin-bottom: 10px;">🔧</div>
+            <h3 style="color: #0f172a; margin: 0;">Backend (ccbackend)</h3>
           </div>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🟢</span> <strong>Runtime:</strong> Node.js (>=18)</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🚀</span> <strong>Framework:</strong> Express.js</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🗄️</span> <strong>Base de Datos:</strong> MySQL, Sequelize ORM</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🔐</span> <strong>Seguridad:</strong> JWT, bcryptjs, Helmet, CORS</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">✅</span> <strong>Validación:</strong> Joi, express-validator</li>
+            <li><span class="insight-icon">📧</span> <strong>Otros:</strong> Axios, Nodemailer, Multer, QRCode, Speakeasy, Swagger</li>
+          </ul>
+        </div>
+
+        <!-- Docker Card -->
+        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); flex: 1;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 50px; margin-bottom: 10px;">🐳</div>
+            <h3 style="color: #0f172a; margin: 0;">Docker</h3>
+          </div>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="margin-bottom: 10px;"><span class="insight-icon">📦</span> <strong>Contenedorización:</strong> Docker (Dockerfiles, compose)</li>
+            <li style="margin-bottom: 10px;"><span class="insight-icon">🎼</span> <strong>Orquestación:</strong> Docker Compose (dev/prod)</li>
+            <li><span class="insight-icon">⚡</span> <strong>Scripts:</strong> Build, run, gestión (package.json)</li>
+          </ul>
+        </div>
       </div>
     </div>
-
-    <section class="slide">
-      <!-- Slide 24: Arquitectura General del Sistema -->
-      <h2><i class="material-icons">build</i> Arquitectura General del Sistema</h2>
-      <p>El proyecto utiliza una arquitectura multicapa, distribuida en tres componentes principales:</p>
-      <pre style="background: #1e293b; color: #e2e8f0; padding: 20px; border-radius: 12px; font-family: monospace; font-size: 14px; line-height: 1.5;">
-┌─────────────────────────┐
-│        Frontend         │  Next.js + React + TS
-└───────────────┬─────────┘
-                │  HTTPS / REST
-┌───────────────▼─────────┐
-│         Backend          │ Node.js + Express
-│  Controladores / Servicios
-│  Reglas de negocio / ORM
-└───────────────┬─────────┘
-                │ Sequelize ORM
-┌───────────────▼─────────┐
-│        MySQL DB          │
-│  Modelo relacional        │
-└──────────────────────────┘
-      </pre>
-    </section>
-
-    <section class="slide">
-      <!-- Slide 25: Detalle Frontend -->
-      <h2><i class="material-icons">science</i> Detalle Completo de la Arquitectura</h2>
-      <h3>🟦 5.1 Frontend (Next.js + React)</h3>
-      <p><strong>Principales responsabilidades</strong></p>
-      <ul>
-        <li>Renderizar UI dinámica y responsiva</li>
-        <li>Consumir API REST del backend</li>
-        <li>Manejar sesión con JWT + refresh</li>
-        <li>Gestionar autenticación y 2FA</li>
-        <li>Validar formularios</li>
-        <li>Mostrar dashboards administrativos</li>
-      </ul>
-      <p><strong>Estructura base</strong></p>
-      <ul>
-        <li>pages/ login.tsx, dashboard.tsx, comunidades/, unidades/, emisiones/, pagos/, reservas/</li>
-        <li>components/ Layout, Forms, Tables, Modals</li>
-        <li>lib/ api.ts (Axios instance), auth.ts (JWT/2FA logic), hooks/ useAuth.ts, useApi.ts</li>
-      </ul>
-      <p><strong>Características técnicas</strong></p>
-      <ul>
-        <li>React Hooks</li>
-        <li>Server Side Rendering (SSR)</li>
-        <li>Axios interceptors con JWT</li>
-        <li>Context API para global auth state</li>
-        <li>TailwindCSS</li>
-      </ul>
-    </section>
-
-    <section class="slide">
-      <!-- Slide 26: Detalle Backend -->
-      <h3>🟩 5.2 Backend (Node.js + Express)</h3>
-      <p><strong>Estructura modular</strong></p>
-      <ul>
-        <li>src/routes/ auth.routes.js, comunidades.routes.js, unidades.routes.js, emisiones.routes.js, pagos.routes.js</li>
-        <li>src/controllers/ auth.controller.js, unidades.controller.js, pagos.controller.js, reservas.controller.js</li>
-        <li>src/services/ auth.service.js, emisiones.service.js, prorrateo.service.js</li>
-        <li>src/middleware/ auth.js, roles.js, tenancy.js, logger.js</li>
-        <li>src/models/ (Sequelize)</li>
-        <li>src/utils/</li>
-        <li>src/app.js</li>
-      </ul>
-      <p><strong>Principales responsabilidades</strong></p>
-      <ul>
-        <li>Administración de autenticación (JWT + 2FA)</li>
-        <li>Validación de roles y permisos</li>
-        <li>Control del multi-tenancy</li>
-        <li>Aplicación de reglas de negocio</li>
-        <li>Gestión de cargas de archivos (multer)</li>
-        <li>Validación de datos</li>
-        <li>Seguridad y sanitización</li>
-      </ul>
-    </section>
-
-    <section class="slide">
-      <!-- Slide 27: Detalle Base de Datos -->
-      <h3>🟥 5.3 Base de Datos (MySQL)</h3>
-      <p>Modelo relacional altamente normalizado (3FN).</p>
-      <p><strong>Incluye:</strong></p>
-      <p><strong>Tablas principales</strong></p>
-      <ul>
-        <li>comunidades</li>
-        <li>unidades</li>
-        <li>propietarios</li>
-        <li>usuarios</li>
-        <li>roles, permisos, usuarios_roles</li>
-        <li>emisiones</li>
-        <li>cargos</li>
-        <li>pagos</li>
-        <li>medidores</li>
-        <li>consumos</li>
-        <li>amenidades</li>
-        <li>reservas</li>
-        <li>bitacora_acciones</li>
-      </ul>
-    </section>
-
-    <section class="slide">
-      <!-- Slide 28: Modelo de Datos -->
-      <h2><i class="material-icons">search</i> Modelo de Datos – Explicación Detallada</h2>
-      <h3>6.1 Diagrama Conceptual (Texto)</h3>
-      <pre style="background: #1e293b; color: #e2e8f0; padding: 20px; border-radius: 12px; font-family: monospace; font-size: 14px; line-height: 1.5;">
-COMUNIDAD
-  ├─ UNIDADES
-  │     ├─ PROPIETARIOS
-  │     ├─ MEDIDORES → CONSUMOS
-  │     └─ PAGOS
-  │
-  ├─ EMISIONES → CARGOS
-  │
-  └─ AMENIDADES → RESERVAS
-      </pre>
-      <h3>6.2 Relaciones clave</h3>
-      <ul>
-        <li>1 comunidad → N unidades</li>
-        <li>1 emisión → N cargos</li>
-        <li>1 unidad → N pagos</li>
-        <li>1 unidad → N medidores → N consumos</li>
-        <li>1 amenidad → N reservas</li>
-        <li>1 usuario → N comunidades (multi-tenant)</li>
-      </ul>
-    </section>
 
     <section class="slide">
       <!-- Slide 29: Autenticación y Seguridad -->
