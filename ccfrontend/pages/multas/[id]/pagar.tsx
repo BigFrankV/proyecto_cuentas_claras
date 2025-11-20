@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
@@ -55,7 +54,7 @@ const PagarMultaPage: React.FC = () => {
   }, [id]);
 
   const handlePagarConWebpay = async () => {
-    if (!multa) {
+    if (!multa || processing) {
       return;
     }
 
@@ -87,7 +86,17 @@ const PagarMultaPage: React.FC = () => {
         throw new Error('No se recibió URL de pago o token');
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Error al iniciar el pago');
+      const errorMsg = err.response?.data?.error || 'Error al iniciar el pago';
+      
+      // Detectar error de transacción duplicada
+      if (errorMsg.includes('Duplicate entry') || errorMsg.includes('uk_order_id')) {
+        setError(
+          'Ya existe un pago en progreso para esta multa. Por favor, espera o contacta al soporte.',
+        );
+      } else {
+        setError(errorMsg);
+      }
+      
       setProcessing(false);
     }
   };
@@ -105,198 +114,231 @@ const PagarMultaPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout title="Cargando...">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="animate-pulse">
-                <div className="h-8 bg-gray-200 rounded w-1/2 mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+      <ProtectedRoute>
+        <Layout title="Cargando...">
+          <div className="container-fluid p-4">
+            <div className="text-center">
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Cargando...</span>
               </div>
+              <p className="mt-2">Cargando multa...</p>
             </div>
           </div>
-        </div>
-      </Layout>
+        </Layout>
+      </ProtectedRoute>
     );
   }
 
   if (!multa || error) {
     return (
-      <Layout title="Error">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h2 className="text-xl font-semibold text-red-800 mb-2">
-                Error
-              </h2>
-              <p className="text-red-700 mb-4">
-                {error || 'No se pudo cargar la multa'}
-              </p>
+      <ProtectedRoute>
+        <Layout title="Error">
+          <div className="container-fluid p-4">
+            <div className="max-width-container">
+              <div className="alert alert-danger" role="alert">
+                <h5 className="alert-heading">Error</h5>
+                <p className="mb-0">
+                  {error || 'No se pudo cargar la multa'}
+                </p>
+              </div>
               <button
                 onClick={() => router.back()}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                className="btn btn-outline-secondary"
               >
+                <i className="material-icons me-2">arrow_back</i>
                 Volver
               </button>
             </div>
           </div>
-        </div>
-      </Layout>
+        </Layout>
+      </ProtectedRoute>
     );
   }
 
   return (
     <ProtectedRoute>
       <Layout title={`Pagar Multa #${multa.numero}`}>
-        <div className="container mx-auto px-4 py-6">
-          <div className="max-w-3xl mx-auto">
+        <div className="container-fluid p-4">
+          <div className="max-width-container">
             {/* Encabezado */}
-            <div className="mb-6">
+            <div className="d-flex align-items-center mb-4">
               <button
                 onClick={handleCancelar}
-                className="text-gray-600 hover:text-gray-900 mb-3 flex items-center text-sm"
+                className="btn btn-link text-decoration-none me-3"
               >
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Volver
+                <i className="material-icons">arrow_back</i>
               </button>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                Pagar Multa #{multa.numero}
-              </h1>
-              <p className="text-sm text-gray-600">
-                Complete el pago de forma segura con Webpay
-              </p>
+              <div>
+                <h1 className="h4 mb-1">Pagar Multa #{multa.numero}</h1>
+                <p className="text-muted small mb-0">
+                  Complete el pago de forma segura con Webpay
+                </p>
+              </div>
             </div>
 
             {/* Resumen de la multa */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
-                Resumen de la Multa
-              </h2>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between py-2">
-                  <span className="text-sm text-gray-600">Número:</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {multa.numero}
-                  </span>
-                </div>
+            <div className="card shadow-sm mb-4">
+              <div className="card-header bg-white border-bottom">
+                <h5 className="card-title mb-0">Resumen de la Multa</h5>
+              </div>
+              <div className="card-body">
+                <dl className="row">
+                  <dt className="col-sm-3">Número:</dt>
+                  <dd className="col-sm-9 fw-bold">{multa.numero}</dd>
 
-                <div className="flex justify-between py-2 border-t">
-                  <span className="text-sm text-gray-600">Motivo:</span>
-                  <span className="text-sm font-medium text-gray-900 text-right max-w-xs">
-                    {multa.motivo}
-                  </span>
-                </div>
+                  <dt className="col-sm-3 border-top pt-2">Motivo:</dt>
+                  <dd className="col-sm-9 border-top pt-2">{multa.motivo}</dd>
 
-                {multa.descripcion && (
-                  <div className="py-2 border-t">
-                    <span className="text-sm text-gray-600 block mb-1">Descripción:</span>
-                    <p className="text-sm text-gray-900">{multa.descripcion}</p>
+                  {multa.descripcion && (
+                    <>
+                      <dt className="col-sm-3 border-top pt-2">Descripción:</dt>
+                      <dd className="col-sm-9 border-top pt-2">
+                        {multa.descripcion}
+                      </dd>
+                    </>
+                  )}
+
+                  {multa.comunidad_nombre && (
+                    <>
+                      <dt className="col-sm-3 border-top pt-2">Comunidad:</dt>
+                      <dd className="col-sm-9 border-top pt-2">
+                        {multa.comunidad_nombre}
+                      </dd>
+                    </>
+                  )}
+
+                  {multa.unidad_nombre && (
+                    <>
+                      <dt className="col-sm-3 border-top pt-2">Unidad:</dt>
+                      <dd className="col-sm-9 border-top pt-2">
+                        {multa.unidad_nombre}
+                      </dd>
+                    </>
+                  )}
+                </dl>
+
+                <div className="border-top pt-3 mt-3">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className="fw-bold">Total a Pagar:</span>
+                    <span className="h4 text-primary mb-0">
+                      {formatMonto(multa.monto)}
+                    </span>
                   </div>
-                )}
-
-                {multa.comunidad_nombre && (
-                  <div className="flex justify-between py-2 border-t">
-                    <span className="text-sm text-gray-600">Comunidad:</span>
-                    <span className="text-sm text-gray-900">{multa.comunidad_nombre}</span>
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center pt-3 mt-2 border-t-2 border-gray-300">
-                  <span className="text-base font-semibold text-gray-900">
-                    Total a Pagar:
-                  </span>
-                  <span className="text-2xl font-bold text-blue-600">
-                    {formatMonto(multa.monto)}
-                  </span>
                 </div>
               </div>
             </div>
 
             {/* Formulario de pago */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">
-                Método de Pago
-              </h2>
-
-              {/* Email opcional */}
-              <div className="mb-4">
-                <label htmlFor="payerEmail" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email para confirmación (opcional)
-                </label>
-                <input
-                  type="email"
-                  id="payerEmail"
-                  value={payerEmail}
-                  onChange={(e) => setPayerEmail(e.target.value)}
-                  placeholder="tu@email.com"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  disabled={processing}
-                />
+            <div className="card shadow-sm mb-4">
+              <div className="card-header bg-white border-bottom">
+                <h5 className="card-title mb-0">Método de Pago</h5>
               </div>
+              <div className="card-body">
+                {/* Email opcional */}
+                <div className="mb-3">
+                  <label htmlFor="payerEmail" className="form-label">
+                    Email para confirmación (opcional)
+                  </label>
+                  <input
+                    type="email"
+                    id="payerEmail"
+                    value={payerEmail}
+                    onChange={(e) => setPayerEmail(e.target.value)}
+                    placeholder="tu@email.com"
+                    className="form-control"
+                    disabled={processing}
+                  />
+                  <small className="text-muted">
+                    Te enviaremos un comprobante del pago a este correo
+                  </small>
+                </div>
 
-              {/* Botón de pago Webpay */}
-              <div className="border border-blue-200 rounded-lg p-4 bg-gradient-to-br from-blue-50 to-white">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 text-sm mb-1">Webpay Plus</h3>
-                    <p className="text-xs text-gray-600">
-                      Tarjetas de débito y crédito
-                    </p>
+                {/* Opción de pago Webpay */}
+                <div className="border rounded-3 p-3 bg-light">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h6 className="mb-1">Webpay Plus</h6>
+                      <small className="text-muted">
+                        Tarjetas de débito y crédito
+                      </small>
+                    </div>
+                    <span className="badge bg-info">WEBPAY</span>
                   </div>
-                  <div className="ml-4">
-                    <div className="h-8 w-20 relative flex items-center justify-end">
-                      <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-1 rounded">
-                        WEBPAY
-                      </span>
+                  <button
+                    onClick={handlePagarConWebpay}
+                    disabled={processing}
+                    className="btn btn-primary w-100"
+                  >
+                    {processing ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
+                        Redirigiendo a Webpay...
+                      </>
+                    ) : (
+                      <>
+                        <i className="material-icons me-2">payment</i>
+                        Pagar {formatMonto(multa.monto)}
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Info de seguridad */}
+                <div className="alert alert-info mt-3 mb-0" role="alert">
+                  <div className="d-flex">
+                    <i className="material-icons me-2 flex-shrink-0">
+                      security
+                    </i>
+                    <div className="small">
+                      Pago 100% seguro. Serás redirigido a la plataforma de
+                      Webpay de Transbank para completar tu transacción de forma
+                      segura.
                     </div>
                   </div>
-                </div>
-                <button
-                  onClick={handlePagarConWebpay}
-                  disabled={processing}
-                  className="w-full py-3 px-4 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm"
-                >
-                  {processing ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Redirigiendo a Webpay...
-                    </span>
-                  ) : (
-                    `Pagar ${formatMonto(multa.monto)}`
-                  )}
-                </button>
-              </div>
-
-              {/* Info de seguridad */}
-              <div className="mt-4 text-xs text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-200">
-                <div className="flex items-start">
-                  
-                  <span className="leading-relaxed">
-                    Pago 100% seguro. Serás redirigido a la plataforma de Webpay de Transbank para completar tu transacción de forma segura.
-                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Botón cancelar */}
-            <div className="flex justify-center">
+            {/* Botones de acción */}
+            <div className="d-flex gap-2 justify-content-center">
               <button
                 onClick={handleCancelar}
                 disabled={processing}
-                className="px-6 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="btn btn-outline-secondary"
               >
+                <i className="material-icons me-2">close</i>
                 Cancelar
               </button>
             </div>
           </div>
         </div>
+
+        <style jsx>{`
+          .max-width-container {
+            max-width: 800px;
+            margin: 0 auto;
+          }
+
+          .card {
+            border: 1px solid #e0e0e0;
+          }
+
+          .card-header {
+            background-color: #f8f9fa !important;
+          }
+
+          dl {
+            margin-bottom: 0;
+          }
+
+          dd {
+            margin-bottom: 0;
+          }
+        `}</style>
       </Layout>
     </ProtectedRoute>
   );

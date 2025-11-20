@@ -1614,9 +1614,9 @@ router.post(
       // 5. Crear transacción en payment_transaction
       const [result] = await db.query(
         `INSERT INTO payment_transaction 
-         (order_id, comunidad_id, multa_id, amount, gateway, status, payer_email)
-         VALUES (?, ?, ?, ?, ?, 'pending', ?)`,
-        [orderId, multa.comunidad_id, multaId, multa.monto, gateway, payerEmail || null]
+         (order_id, comunidad_id, multa_id, amount, gateway, status, payer_email, usuario_id)
+         VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)`,
+        [orderId, multa.comunidad_id, multaId, multa.monto, gateway, payerEmail || null, usuarioId]
       );
 
       const transactionId = result.insertId;
@@ -1639,9 +1639,9 @@ router.post(
       // 7. Actualizar transaction_token en la BD
       await db.query(
         `UPDATE payment_transaction 
-         SET transaction_token = ?, gateway_transaction_id = ?
+         SET transaction_token = ?, gateway_transaction_id = ?, gateway_response = ?
          WHERE id = ?`,
-        [webpayResult.transactionId, webpayResult.transactionId, transactionId]
+        [webpayResult.transactionId, webpayResult.transactionId, JSON.stringify(webpayResult.gatewayResponse), transactionId]
       );
 
       // 8. Responder con URL de pago
@@ -1750,9 +1750,9 @@ router.post(
         // Actualizar estado de la multa a 'pagado'
         await db.query(
           `UPDATE multa 
-           SET estado = 'pagado', fecha_pago = NOW(), updated_at = NOW()
+           SET estado = 'pagado', fecha_pago = NOW(), updated_at = NOW(), pagado_por = ?
            WHERE id = ?`,
-          [multaId]
+          [transaction.usuario_id, multaId]
         );
 
         // Crear registro en la tabla pago
@@ -1773,8 +1773,8 @@ router.post(
         await db.query(
           `INSERT INTO multa_historial 
            (multa_id, accion, descripcion, usuario_id, created_at)
-           VALUES (?, 'pago_webpay', ?, NULL, NOW())`,
-          [multaId, `Pago confirmado con Webpay. Auth: ${webpayResponse.response.authorization_code}`]
+           VALUES (?, 'pago_webpay', ?, ?, NOW())`,
+          [multaId, `Pago confirmado con Webpay. Auth: ${webpayResponse.response.authorization_code}`, transaction.usuario_id]
         );
 
         res.json({

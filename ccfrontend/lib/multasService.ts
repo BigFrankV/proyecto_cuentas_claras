@@ -440,7 +440,7 @@ class MultasService {
   async iniciarPago(
     multaId: number,
     payload: {
-      gateway: 'webpay' | 'khipu' | 'mercadopago',
+      gateway: string,
       payerEmail?: string,
     },
   ): Promise<{
@@ -461,6 +461,29 @@ class MultasService {
     data?: any;
   }> {
     const response = await api.post('/multas/pago/confirmar', { token_ws });
+    return response.data;
+  }
+
+  async getPagoStatus(multaId: number): Promise<{
+    success: boolean;
+    data?: {
+      estado: string;
+      fecha_pago: string | null;
+      pagado_por: number | null;
+      updated_at: string;
+    };
+    error?: string;
+  }> {
+    const response = await api.get(`/multas/${multaId}/pago/status`);
+    return response.data;
+  }
+
+  async getHistorial(multaId: number): Promise<{
+    success: boolean;
+    data?: any[];
+    error?: string;
+  }> {
+    const response = await api.get(`/multas/${multaId}/historial`);
     return response.data;
   }
 }
