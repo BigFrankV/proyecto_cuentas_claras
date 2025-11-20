@@ -51,8 +51,7 @@ class PaymentGatewayService {
    */
   async createWebpayTransaction(orderData) {
     try {
-      const { amount, orderId, sessionId, communityId, unitId, multaId, description } =
-        orderData;
+      const { amount, orderId, sessionId } = orderData;
 
       // Configurar Webpay
       const tx = new WebpayPlus.Transaction(
@@ -256,13 +255,11 @@ class PaymentGatewayService {
     const {
       orderId,
       communityId,
-      unitId,
       multaId,
       amount,
       gateway,
       gatewayTransactionId,
       status,
-      description,
       gatewayResponse,
     } = transactionData;
 

@@ -15,7 +15,14 @@ const { authorize } = require('../middleware/authorize');
  */
 router.get('/', authenticate, async (req, res) => {
   try {
-    const { comunidad_id, estado, fecha_desde, fecha_hasta, limit = 50, offset = 0 } = req.query;
+    const {
+      comunidad_id,
+      estado,
+      fecha_desde,
+      fecha_hasta,
+      limit = 50,
+      offset = 0,
+    } = req.query;
 
     let query = `
       SELECT 
@@ -64,11 +71,11 @@ router.get('/', authenticate, async (req, res) => {
     params.push(parseInt(limit), parseInt(offset));
 
     const [recibos] = await db.query(query, params);
-    
+
     res.json({
       success: true,
       data: recibos,
-      count: recibos.length
+      count: recibos.length,
     });
   } catch (error) {
     console.error('Error al obtener recibos:', error);
@@ -100,9 +107,11 @@ router.get('/:id', authenticate, async (req, res) => {
     `;
 
     const [recibos] = await db.query(query, [id]);
-    
+
     if (recibos.length === 0) {
-      return res.status(404).json({ success: false, error: 'Recibo no encontrado' });
+      return res
+        .status(404)
+        .json({ success: false, error: 'Recibo no encontrado' });
     }
 
     res.json({ success: true, data: recibos[0] });
@@ -121,14 +130,26 @@ router.post(
   authenticate,
   authorize(['superadmin', 'admin_comunidad', 'administrador', 'tesorero']),
   [
-    body('numero_recibo').trim().notEmpty().withMessage('Número de recibo requerido'),
+    body('numero_recibo')
+      .trim()
+      .notEmpty()
+      .withMessage('Número de recibo requerido'),
     body('comunidad_id').isInt().withMessage('ID de comunidad inválido'),
     body('pago_id').isInt().withMessage('ID de pago inválido'),
-    body('monto_recibido').isDecimal().custom(v => v > 0).withMessage('Monto debe ser mayor a 0'),
-    body('metodo_pago').trim().notEmpty().isIn(['efectivo', 'transferencia', 'cheque', 'deposito', 'otro']).withMessage('Método de pago inválido'),
-    body('fecha_recepcion').isISO8601().withMessage('Fecha de recepción inválida'),
+    body('monto_recibido')
+      .isDecimal()
+      .custom((v) => v > 0)
+      .withMessage('Monto debe ser mayor a 0'),
+    body('metodo_pago')
+      .trim()
+      .notEmpty()
+      .isIn(['efectivo', 'transferencia', 'cheque', 'deposito', 'otro'])
+      .withMessage('Método de pago inválido'),
+    body('fecha_recepcion')
+      .isISO8601()
+      .withMessage('Fecha de recepción inválida'),
     body('referencia').optional().trim().escape(),
-    body('observaciones').optional().trim().escape()
+    body('observaciones').optional().trim().escape(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -145,13 +166,18 @@ router.post(
         metodo_pago,
         fecha_recepcion,
         referencia,
-        observaciones
+        observaciones,
       } = req.body;
 
       // Verificar que la comunidad existe
-      const [comunidades] = await db.query('SELECT id FROM comunidad WHERE id = ?', [comunidad_id]);
+      const [comunidades] = await db.query(
+        'SELECT id FROM comunidad WHERE id = ?',
+        [comunidad_id]
+      );
       if (comunidades.length === 0) {
-        return res.status(404).json({ success: false, error: 'Comunidad no encontrada' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Comunidad no encontrada' });
       }
 
       // Verificar que el pago existe y pertenece a la comunidad
@@ -160,7 +186,9 @@ router.post(
         [pago_id, comunidad_id]
       );
       if (pagos.length === 0) {
-        return res.status(404).json({ success: false, error: 'Pago no encontrado' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Pago no encontrado' });
       }
 
       // Verificar que el número de recibo es único
@@ -169,14 +197,16 @@ router.post(
         [numero_recibo, comunidad_id]
       );
       if (recibosExistentes.length > 0) {
-        return res.status(409).json({ success: false, error: 'Número de recibo ya existe' });
+        return res
+          .status(409)
+          .json({ success: false, error: 'Número de recibo ya existe' });
       }
 
       // Validar que el monto no supere el del pago
       if (monto_recibido > pagos[0].monto) {
-        return res.status(400).json({ 
-          success: false, 
-          error: `Monto recibido no puede superar ${pagos[0].monto}` 
+        return res.status(400).json({
+          success: false,
+          error: `Monto recibido no puede superar ${pagos[0].monto}`,
         });
       }
 
@@ -208,7 +238,7 @@ router.post(
         fecha_recepcion,
         referencia || null,
         observaciones || null,
-        req.user.id
+        req.user.id,
       ]);
 
       // Registrar en auditoría
@@ -226,16 +256,16 @@ router.post(
             pago_id,
             monto_recibido,
             metodo_pago,
-            fecha_recepcion
+            fecha_recepcion,
           }),
-          req.ip
+          req.ip,
         ]
       );
 
       res.status(201).json({
         success: true,
         message: 'Recibo creado exitosamente',
-        data: { id: result.insertId, ...req.body }
+        data: { id: result.insertId, ...req.body },
       });
     } catch (error) {
       console.error('Error al crear recibo:', error);
@@ -253,10 +283,16 @@ router.put(
   authenticate,
   authorize(['superadmin', 'admin_comunidad', 'administrador', 'tesorero']),
   [
-    body('estado').optional().isIn(['pendiente_validacion', 'validado', 'rechazado']).withMessage('Estado inválido'),
+    body('estado')
+      .optional()
+      .isIn(['pendiente_validacion', 'validado', 'rechazado'])
+      .withMessage('Estado inválido'),
     body('referencia').optional().trim().escape(),
     body('observaciones').optional().trim().escape(),
-    body('metodo_pago').optional().isIn(['efectivo', 'transferencia', 'cheque', 'deposito', 'otro']).withMessage('Método de pago inválido')
+    body('metodo_pago')
+      .optional()
+      .isIn(['efectivo', 'transferencia', 'cheque', 'deposito', 'otro'])
+      .withMessage('Método de pago inválido'),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -269,9 +305,13 @@ router.put(
       const { estado, referencia, observaciones, metodo_pago } = req.body;
 
       // Obtener recibo actual
-      const [recibos] = await db.query('SELECT * FROM recibos WHERE id = ?', [id]);
+      const [recibos] = await db.query('SELECT * FROM recibos WHERE id = ?', [
+        id,
+      ]);
       if (recibos.length === 0) {
-        return res.status(404).json({ success: false, error: 'Recibo no encontrado' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Recibo no encontrado' });
       }
 
       const recibo = recibos[0];
@@ -299,7 +339,9 @@ router.put(
       }
 
       if (updateFields.length === 0) {
-        return res.status(400).json({ success: false, error: 'No hay campos para actualizar' });
+        return res
+          .status(400)
+          .json({ success: false, error: 'No hay campos para actualizar' });
       }
 
       updateFields.push('updated_at = NOW()');
@@ -309,7 +351,10 @@ router.put(
       await db.query(updateQuery, updateValues);
 
       // Obtener recibo actualizado
-      const [recibosActualizados] = await db.query('SELECT * FROM recibos WHERE id = ?', [id]);
+      const [recibosActualizados] = await db.query(
+        'SELECT * FROM recibos WHERE id = ?',
+        [id]
+      );
 
       // Registrar en auditoría
       await db.query(
@@ -322,14 +367,14 @@ router.put(
           id,
           JSON.stringify(valores_anteriores),
           JSON.stringify(recibosActualizados[0]),
-          req.ip
+          req.ip,
         ]
       );
 
       res.json({
         success: true,
         message: 'Recibo actualizado exitosamente',
-        data: recibosActualizados[0]
+        data: recibosActualizados[0],
       });
     } catch (error) {
       console.error('Error al actualizar recibo:', error);
@@ -351,46 +396,48 @@ router.delete(
       const { id } = req.params;
 
       // Obtener recibo
-      const [recibos] = await db.query('SELECT * FROM recibos WHERE id = ?', [id]);
+      const [recibos] = await db.query('SELECT * FROM recibos WHERE id = ?', [
+        id,
+      ]);
       if (recibos.length === 0) {
-        return res.status(404).json({ success: false, error: 'Recibo no encontrado' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Recibo no encontrado' });
       }
 
       const recibo = recibos[0];
 
       // Validar que no esté ya eliminado
       if (recibo.activo === 0) {
-        return res.status(409).json({ success: false, error: 'Recibo ya fue eliminado' });
+        return res
+          .status(409)
+          .json({ success: false, error: 'Recibo ya fue eliminado' });
       }
 
       // Validar que sea elimnable (solo pendiente_validacion o rechazado)
       if (!['pendiente_validacion', 'rechazado'].includes(recibo.estado)) {
-        return res.status(409).json({ 
-          success: false, 
-          error: 'Solo se pueden eliminar recibos pendientes o rechazados' 
+        return res.status(409).json({
+          success: false,
+          error: 'Solo se pueden eliminar recibos pendientes o rechazados',
         });
       }
 
       // Soft delete
-      await db.query('UPDATE recibos SET activo = 0, updated_at = NOW() WHERE id = ?', [id]);
+      await db.query(
+        'UPDATE recibos SET activo = 0, updated_at = NOW() WHERE id = ?',
+        [id]
+      );
 
       // Registrar en auditoría
       await db.query(
         `INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, valores_anteriores, ip_address, created_at)
          VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-        [
-          req.user.id,
-          'DELETE',
-          'recibos',
-          id,
-          JSON.stringify(recibo),
-          req.ip
-        ]
+        [req.user.id, 'DELETE', 'recibos', id, JSON.stringify(recibo), req.ip]
       );
 
       res.json({
         success: true,
-        message: 'Recibo eliminado exitosamente'
+        message: 'Recibo eliminado exitosamente',
       });
     } catch (error) {
       console.error('Error al eliminar recibo:', error);

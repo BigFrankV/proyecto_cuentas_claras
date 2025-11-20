@@ -326,7 +326,7 @@ export default function ReportesDashboard() {
       }
       // Additional cross-tab endpoints (financiero, morosidad, gastos) — non-blocking:
       try {
-        const flujoUrl = `/comunidades/${selectedCommunity}/flujo-caja`;
+        const flujoUrl = `/api/reportes/comunidad/${selectedCommunity}/flujo-caja`;
         const flujoRes = await apiClient.get(flujoUrl);
         // eslint-disable-next-line no-console
         console.log('Flujo caja response:', flujoRes.data);

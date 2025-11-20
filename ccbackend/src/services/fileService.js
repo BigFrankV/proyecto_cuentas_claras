@@ -47,7 +47,9 @@ class FileService {
       );
 
       if (tables.length === 0) {
-        console.log('Tabla archivos no existe, se creará durante inicialización');
+        console.log(
+          'Tabla archivos no existe, se creará durante inicialización'
+        );
         return;
       }
 
@@ -59,7 +61,7 @@ class FileService {
 
       if (columns.length > 0 && columns[0].IS_NULLABLE === 'NO') {
         console.log('Migrando comunidad_id a nullable...');
-        
+
         // Drop foreign key first
         const [constraints] = await db.query(
           `SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
@@ -69,7 +71,9 @@ class FileService {
 
         if (constraints.length > 0) {
           const constraintName = constraints[0].CONSTRAINT_NAME;
-          await db.query(`ALTER TABLE archivos DROP FOREIGN KEY ${constraintName}`);
+          await db.query(
+            `ALTER TABLE archivos DROP FOREIGN KEY ${constraintName}`
+          );
           console.log(`Foreign key ${constraintName} eliminada`);
         }
 
@@ -88,7 +92,10 @@ class FileService {
       }
     } catch (error) {
       // Silently handle migration errors - table might not exist or already be correct
-      console.log('Nota: No se requiere migración de tabla archivos:', error.message);
+      console.log(
+        'Nota: No se requiere migración de tabla archivos:',
+        error.message
+      );
     }
   }
 

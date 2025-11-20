@@ -517,10 +517,7 @@ router.post(
     body('tipo')
       .isIn(['agua', 'gas', 'electricidad', 'otro'])
       .withMessage('tipo inválido'),
-    body('codigo')
-      .notEmpty()
-      .withMessage('codigo requerido')
-      .trim(),
+    body('codigo').notEmpty().withMessage('codigo requerido').trim(),
     body('serial_number').optional().trim(),
     body('marca').optional().trim(),
     body('modelo').optional().trim(),
@@ -544,9 +541,10 @@ router.post(
       } = req.body;
 
       // Verificar que la unidad existe
-      const [unidad] = await db.query('SELECT id, comunidad_id FROM unidad WHERE id = ?', [
-        unidad_id,
-      ]);
+      const [unidad] = await db.query(
+        'SELECT id, comunidad_id FROM unidad WHERE id = ?',
+        [unidad_id]
+      );
       if (!unidad.length) {
         return res.status(404).json({ error: 'Unidad no encontrada' });
       }
@@ -557,9 +555,9 @@ router.post(
         [codigo, unidad_id]
       );
       if (duplicate.length) {
-        return res
-          .status(409)
-          .json({ error: 'Ya existe un medidor con ese número en esta unidad' });
+        return res.status(409).json({
+          error: 'Ya existe un medidor con ese número en esta unidad',
+        });
       }
 
       // En POST /, después de verificar la unidad:
@@ -569,7 +567,16 @@ router.post(
       const [result] = await db.query(
         `INSERT INTO medidor (comunidad_id, unidad_id, tipo, codigo, serial_number, marca, modelo, ubicacion, activo)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-        [comunidad_id, unidad_id, tipo, codigo, serial_number || null, marca || null, modelo || null, ubicacion ? JSON.stringify(ubicacion) : null]
+        [
+          comunidad_id,
+          unidad_id,
+          tipo,
+          codigo,
+          serial_number || null,
+          marca || null,
+          modelo || null,
+          ubicacion ? JSON.stringify(ubicacion) : null,
+        ]
       );
 
       // Obtener el medidor creado
@@ -657,9 +664,10 @@ router.put(
       const medidorId = Number(req.params.id);
 
       // Obtener medidor anterior
-      const [medidorAnterior] = await db.query('SELECT * FROM medidor WHERE id = ?', [
-        medidorId,
-      ]);
+      const [medidorAnterior] = await db.query(
+        'SELECT * FROM medidor WHERE id = ?',
+        [medidorId]
+      );
       if (!medidorAnterior.length) {
         return res.status(404).json({ error: 'Medidor no encontrado' });
       }
@@ -682,7 +690,9 @@ router.put(
       }
       if (req.body.ubicacion !== undefined) {
         campos.push('ubicacion = ?');
-        valores.push(req.body.ubicacion ? JSON.stringify(req.body.ubicacion) : null);
+        valores.push(
+          req.body.ubicacion ? JSON.stringify(req.body.ubicacion) : null
+        );
       }
       if (req.body.codigo !== undefined) {
         campos.push('codigo = ?');
@@ -702,9 +712,10 @@ router.put(
       );
 
       // Obtener medidor actualizado
-      const [medidorActualizado] = await db.query('SELECT * FROM medidor WHERE id = ?', [
-        medidorId,
-      ]);
+      const [medidorActualizado] = await db.query(
+        'SELECT * FROM medidor WHERE id = ?',
+        [medidorId]
+      );
 
       // Registrar en auditoría
       await db.query(

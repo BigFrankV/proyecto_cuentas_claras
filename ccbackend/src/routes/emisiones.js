@@ -1244,12 +1244,10 @@ router.post(
         const rule = d.regla_prorrateo || 'partes_iguales';
         if (rule === 'consumo') {
           await conn.rollback();
-          return res
-            .status(400)
-            .json({
-              error:
-                'consumo-based prorrateo requires medidor data; not supported in generate',
-            });
+          return res.status(400).json({
+            error:
+              'consumo-based prorrateo requires medidor data; not supported in generate',
+          });
         }
         if (rule === 'coeficiente') {
           for (const p of distrib) {

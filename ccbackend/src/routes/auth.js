@@ -17,7 +17,12 @@ const fs = require('fs').promises;
 
 // Configure profile photo upload middleware
 const createProfilePhotoUpload = () => {
-  const uploadDir = path.join(__dirname, '..', process.env.UPLOAD_DIR || 'uploads', 'profile-photos');
+  const uploadDir = path.join(
+    __dirname,
+    '..',
+    process.env.UPLOAD_DIR || 'uploads',
+    'profile-photos'
+  );
   console.log('Profile photo upload dir:', uploadDir);
   console.log('Current working directory:', process.cwd());
   console.log('__dirname:', __dirname);
@@ -911,11 +916,9 @@ router.patch(
 
     // Check if at least one field is provided
     if (!username && !email) {
-      return res
-        .status(400)
-        .json({
-          error: 'At least one field (username or email) must be provided',
-        });
+      return res.status(400).json({
+        error: 'At least one field (username or email) must be provided',
+      });
     }
 
     try {
@@ -1448,7 +1451,7 @@ router.post(
     try {
       console.log('Profile photo upload - req.file:', req.file);
       console.log('Profile photo upload - req.user:', req.user);
-      
+
       if (!req.file) {
         return res.status(400).json({
           success: false,

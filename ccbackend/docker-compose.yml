@@ -30,6 +30,11 @@ services:
       DB_NAME: ${DB_NAME:-cuentasclaras}
       JWT_SECRET: ${JWT_SECRET:-change_me}
       PORT: ${PORT:-3000}
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_SECURE: 'false'
+      SMTP_USER: ''
+      SMTP_PASS: ''
     ports:
       - '3000:3000'
     volumes:
@@ -48,6 +53,13 @@ services:
       PMA_PASSWORD: ${DB_PASSWORD:-apipassword}
     ports:
       - '8080:80'
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: cuentasclaras_mailhog
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web UI
 
 volumes:
   db_data:

@@ -287,7 +287,7 @@ router.post(
   '/comunidad/:comunidadId',
   [
     authenticate,
-    requireCommunity('comunidadId', ['admin','admin_comunidad','superadmin']),
+    requireCommunity('comunidadId', ['admin', 'admin_comunidad', 'superadmin']),
     body('nombre').notEmpty().withMessage('Nombre es requerido'),
     body('codigo').optional(),
   ],
@@ -315,11 +315,9 @@ router.post(
     } catch (err) {
       console.error(err);
       if (err.code === 'ER_DUP_ENTRY') {
-        return res
-          .status(409)
-          .json({
-            error: 'Ya existe un centro de costo con ese nombre o código',
-          });
+        return res.status(409).json({
+          error: 'Ya existe un centro de costo con ese nombre o código',
+        });
       }
       res.status(500).json({ error: 'Error al crear centro de costo' });
     }
@@ -1486,9 +1484,10 @@ router.post(
       const { nombre, codigo, descripcion, presupuesto } = req.body;
 
       // Verificar que la comunidad existe
-      const [comunidad] = await db.query('SELECT id FROM comunidad WHERE id = ?', [
-        comunidadId,
-      ]);
+      const [comunidad] = await db.query(
+        'SELECT id FROM comunidad WHERE id = ?',
+        [comunidadId]
+      );
       if (!comunidad.length) {
         return res.status(404).json({ error: 'Comunidad no encontrada' });
       }

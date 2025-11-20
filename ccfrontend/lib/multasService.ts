@@ -477,15 +477,6 @@ class MultasService {
     const response = await api.get(`/multas/${multaId}/pago/status`);
     return response.data;
   }
-
-  async getHistorial(multaId: number): Promise<{
-    success: boolean;
-    data?: any[];
-    error?: string;
-  }> {
-    const response = await api.get(`/multas/${multaId}/historial`);
-    return response.data;
-  }
 }
 
 //  CREAR LA INSTANCIA Y EXPORTARLA

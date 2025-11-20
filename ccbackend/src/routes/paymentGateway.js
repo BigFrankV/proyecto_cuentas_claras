@@ -149,17 +149,15 @@ router.post(
       // Crear transacción según la pasarela
       switch (gateway) {
         case 'webpay':
-          result = await paymentGatewayService.createWebpayTransaction(
-            orderData
-          );
+          result =
+            await paymentGatewayService.createWebpayTransaction(orderData);
           break;
         case 'khipu':
           result = await paymentGatewayService.createKhipuPayment(orderData);
           break;
         case 'mercadopago':
-          result = await paymentGatewayService.createMercadoPagoPreference(
-            orderData
-          );
+          result =
+            await paymentGatewayService.createMercadoPagoPreference(orderData);
           break;
         default:
           return res.status(400).json({
@@ -242,9 +240,8 @@ router.post('/confirm-payment', async (req, res) => {
       result = await paymentGatewayService.confirmWebpayTransaction(token_ws);
     } else {
       // Obtener transacción por order ID para otros gateways
-      const transaction = await paymentGatewayService.getTransactionByOrderId(
-        orderId
-      );
+      const transaction =
+        await paymentGatewayService.getTransactionByOrderId(orderId);
       if (!transaction) {
         return res.status(404).json({
           success: false,
@@ -309,9 +306,8 @@ router.get('/transaction/:orderId', authenticate, async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    const transaction = await paymentGatewayService.getTransactionByOrderId(
-      orderId
-    );
+    const transaction =
+      await paymentGatewayService.getTransactionByOrderId(orderId);
 
     if (!transaction) {
       return res.status(404).json({

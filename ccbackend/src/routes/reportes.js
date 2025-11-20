@@ -41,7 +41,7 @@ router.get(
       SELECT
         c.id as comunidad_id,
         c.razon_social as comunidad,
-        DATE_FORMAT(mov.fecha, '%Y-%m') as periodo,
+        DATE_FORMAT(mov.fecha, '%Y-%m') as month,
         YEAR(mov.fecha) as anio,
         MONTH(mov.fecha) as mes,
         SUM(CASE WHEN mov.tipo = 'ingreso' THEN mov.monto ELSE 0 END) as ingresos,
@@ -58,7 +58,7 @@ router.get(
         AND mov.comunidad_id = c.id
         AND mov.fecha BETWEEN DATE_SUB(CURRENT_DATE, INTERVAL ? MONTH) AND CURRENT_DATE
       GROUP BY c.id, c.razon_social, DATE_FORMAT(mov.fecha, '%Y-%m'), YEAR(mov.fecha), MONTH(mov.fecha)
-      ORDER BY periodo DESC
+      ORDER BY month DESC
     `;
 
       const [rows] = await db.query(query, [comunidadId, Number(meses)]);
@@ -93,20 +93,24 @@ router.get(
         
         (SELECT COALESCE(SUM(monto), 0) FROM pago
          WHERE comunidad_id = c.id AND estado = 'aplicado'
-         AND YEAR(fecha) = YEAR(CURRENT_DATE) AND MONTH(fecha) = MONTH(CURRENT_DATE)) as ingresos_mes_actual,
+         AND YEAR(fecha) = YEAR(CURRENT_DATE) AND MONTH(fecha) = MONTH(CURRENT_DATE)) as ingresos_mes,
         
         (SELECT COALESCE(SUM(monto), 0) FROM gasto
          WHERE comunidad_id = c.id AND estado = 'aprobado'
-         AND YEAR(fecha) = YEAR(CURRENT_DATE) AND MONTH(fecha) = MONTH(CURRENT_DATE)) as gastos_mes_actual,
+         AND YEAR(fecha) = YEAR(CURRENT_DATE) AND MONTH(fecha) = MONTH(CURRENT_DATE)) as gastos_mes,
+        
+        (SELECT COALESCE(SUM(monto), 0) FROM pago WHERE comunidad_id = c.id AND estado = 'aplicado') as ingresos_total,
+        
+        (SELECT COALESCE(SUM(monto), 0) FROM gasto WHERE comunidad_id = c.id AND estado = 'aprobado') as gastos_total,
         
         ((SELECT COALESCE(SUM(monto), 0) FROM pago WHERE comunidad_id = c.id AND estado = 'aplicado') -
          (SELECT COALESCE(SUM(monto), 0) FROM gasto WHERE comunidad_id = c.id AND estado = 'aprobado')) as saldo_actual,
         
-        (SELECT ROUND(
+        (SELECT COALESCE(ROUND(
             (COUNT(CASE WHEN ccu.saldo > 0 THEN 1 END) * 100.0) / NULLIF(COUNT(*), 0), 2
-         ) FROM cuenta_cobro_unidad ccu
+         ), 0) FROM cuenta_cobro_unidad ccu
          JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
-         WHERE ccu.comunidad_id = c.id AND egc.estado = 'emitido') as porcentaje_morosidad,
+         WHERE ccu.comunidad_id = c.id AND egc.estado = 'emitido') as morosidad,
         
         (SELECT COUNT(*) FROM unidad WHERE comunidad_id = c.id AND activa = 1) as total_unidades,
         
@@ -288,12 +292,13 @@ router.get(
     try {
       const comunidadId = Number(req.params.comunidadId);
 
+      // Primero obtener el detalle por rangos
       const query = `
       SELECT
         CASE
           WHEN ccu.saldo = 0 THEN 'Al día'
-          WHEN DATEDIFF(CURRENT_DATE, egc.fecha_vencimiento) <= 30 THEN 'Moroso reciente'
-          WHEN DATEDIFF(CURRENT_DATE, egc.fecha_vencimiento) <= 90 THEN 'Moroso medio'
+          WHEN DATEDIFF(CURRENT_DATE, egc.fecha_vencimiento) BETWEEN 1 AND 30 THEN 'Moroso reciente'
+          WHEN DATEDIFF(CURRENT_DATE, egc.fecha_vencimiento) BETWEEN 31 AND 90 THEN 'Moroso medio'
           ELSE 'Moroso crónico'
         END as categoria_morosidad,
         COUNT(DISTINCT u.id) as cantidad_unidades,
@@ -301,7 +306,7 @@ router.get(
         AVG(ccu.saldo) as promedio_deuda,
         MAX(ccu.saldo) as deuda_maxima,
         MIN(ccu.saldo) as deuda_minima,
-        ROUND((COUNT(DISTINCT u.id) * 100.0) / (SELECT COUNT(*) FROM unidad WHERE comunidad_id = ?), 2) as porcentaje
+        ROUND((COUNT(DISTINCT u.id) * 100.0) / NULLIF((SELECT COUNT(*) FROM unidad WHERE comunidad_id = ?), 0), 2) as porcentaje
       FROM cuenta_cobro_unidad ccu
       JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
       JOIN unidad u ON ccu.unidad_id = u.id
@@ -319,7 +324,28 @@ router.get(
 
       const [rows] = await db.query(query, [comunidadId, comunidadId]);
 
-      res.json(rows);
+      // Mapear a formato que el frontend espera
+      const estadisticas = {
+        'Al día': 0,
+        '0-30': 0,
+        '31-60': 0,
+        '61-90': 0,
+        '90+': 0,
+      };
+
+      (rows || []).forEach((row) => {
+        if (row.categoria_morosidad === 'Al día') {
+          estadisticas['Al día'] = row.saldo_total_pendiente || 0;
+        } else if (row.categoria_morosidad === 'Moroso reciente') {
+          estadisticas['0-30'] = row.saldo_total_pendiente || 0;
+        } else if (row.categoria_morosidad === 'Moroso medio') {
+          estadisticas['31-90'] = row.saldo_total_pendiente || 0;
+        } else if (row.categoria_morosidad === 'Moroso crónico') {
+          estadisticas['90+'] = row.saldo_total_pendiente || 0;
+        }
+      });
+
+      res.json(estadisticas);
     } catch (error) {
       console.error('Error al obtener estadísticas de morosidad:', error);
       res
@@ -1154,6 +1180,225 @@ router.get(
     } catch (error) {
       console.error('Error al generar reporte completo:', error);
       res.status(500).json({ error: 'Error al generar reporte completo' });
+    }
+  }
+);
+
+// =========================================
+// 10. REPORTES DE INGRESOS DETALLADOS
+// =========================================
+
+/**
+ * @swagger
+ * /api/reportes/comunidad/{comunidadId}/ingresos-detallados:
+ *   get:
+ *     tags: [Reportes]
+ *     summary: Reporte detallado de ingresos por pago
+ *     parameters:
+ *       - name: desde
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - name: hasta
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ */
+router.get(
+  '/comunidad/:comunidadId/ingresos-detallados',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { desde, hasta } = req.query;
+
+      let query = `
+      SELECT
+        p.id,
+        p.comunidad_id,
+        c.razon_social as comunidad,
+        DATE_FORMAT(p.fecha, '%d/%m/%Y') as fecha_pago,
+        p.monto,
+        p.medio,
+        p.referencia,
+        u.codigo as unidad,
+        egc.periodo as periodo_emision,
+        egc.concepto as concepto,
+        p.estado,
+        p.comprobante_num
+      FROM pago p
+      JOIN comunidad c ON p.comunidad_id = c.id
+      LEFT JOIN unidad u ON p.unidad_id = u.id
+      LEFT JOIN emision_gastos_comunes egc ON p.emision_id = egc.id
+      WHERE p.comunidad_id = ? AND p.estado = 'aplicado'
+    `;
+
+      const params = [comunidadId];
+
+      if (desde) {
+        query += ` AND DATE(p.fecha) >= ?`;
+        params.push(desde);
+      }
+
+      if (hasta) {
+        query += ` AND DATE(p.fecha) <= ?`;
+        params.push(hasta);
+      }
+
+      query += ` ORDER BY p.fecha DESC`;
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener ingresos detallados:', error);
+      res.status(500).json({ error: 'Error al obtener ingresos detallados' });
+    }
+  }
+);
+
+// =========================================
+// 11. REPORTES DE ACCESOS Y VISITAS
+// =========================================
+
+/**
+ * @swagger
+ * /api/reportes/comunidad/{comunidadId}/accesos-visitas:
+ *   get:
+ *     tags: [Reportes]
+ *     summary: Reporte de accesos y visitas registrados
+ *     parameters:
+ *       - name: desde
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - name: hasta
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - name: tipo_evento
+ *         in: query
+ *         schema:
+ *           type: string
+ */
+router.get(
+  '/comunidad/:comunidadId/accesos-visitas',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { desde, hasta, tipo_evento } = req.query;
+
+      let query = `
+      SELECT
+        rc.id,
+        rc.comunidad_id,
+        c.razon_social as comunidad,
+        DATE_FORMAT(rc.fecha_hora, '%d/%m/%Y %H:%i') as fecha_hora,
+        rc.evento as evento,
+        CASE
+          WHEN rc.evento LIKE '%entrega%' THEN 'Entrega'
+          WHEN rc.evento LIKE '%visita%' THEN 'Visita'
+          WHEN rc.evento LIKE '%reporte%' THEN 'Reporte'
+          WHEN rc.evento LIKE '%retiro%' THEN 'Retiro'
+          ELSE 'Otro'
+        END as tipo_evento,
+        rc.detalles,
+        u.codigo as unidad,
+        CONCAT(p.nombres, ' ', p.apellidos) as persona
+      FROM registro_conserjeria rc
+      JOIN comunidad c ON rc.comunidad_id = c.id
+      LEFT JOIN unidad u ON rc.unidad_id = u.id
+      LEFT JOIN persona p ON rc.persona_id = p.id
+      WHERE rc.comunidad_id = ?
+    `;
+
+      const params = [comunidadId];
+
+      if (desde) {
+        query += ` AND DATE(rc.fecha_hora) >= ?`;
+        params.push(desde);
+      }
+
+      if (hasta) {
+        query += ` AND DATE(rc.fecha_hora) <= ?`;
+        params.push(hasta);
+      }
+
+      if (tipo_evento) {
+        query += ` AND CASE
+          WHEN rc.evento LIKE '%entrega%' THEN 'Entrega'
+          WHEN rc.evento LIKE '%visita%' THEN 'Visita'
+          WHEN rc.evento LIKE '%reporte%' THEN 'Reporte'
+          WHEN rc.evento LIKE '%retiro%' THEN 'Retiro'
+          ELSE 'Otro'
+        END = ?`;
+        params.push(tipo_evento);
+      }
+
+      query += ` ORDER BY rc.fecha_hora DESC LIMIT 500`;
+
+      const [rows] = await db.query(query, params);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener accesos y visitas:', error);
+      res.status(500).json({ error: 'Error al obtener accesos y visitas' });
+    }
+  }
+);
+
+// =========================================
+// 12. FLUJO DE CAJA MEJORADO PARA REPORTES
+// =========================================
+
+/**
+ * @swagger
+ * /api/reportes/comunidad/{comunidadId}/flujo-caja:
+ *   get:
+ *     tags: [Reportes]
+ *     summary: Flujo de caja mejorado para reportes
+ */
+router.get(
+  '/comunidad/:comunidadId/flujo-caja',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+
+      const query = `
+      SELECT
+        DATE_FORMAT(mov.fecha, '%Y-%m') as mes,
+        SUM(CASE WHEN mov.tipo = 'ingreso' THEN mov.monto ELSE 0 END) as entradas,
+        SUM(CASE WHEN mov.tipo = 'ingreso' THEN mov.monto ELSE 0 END) as ingresos,
+        SUM(CASE WHEN mov.tipo = 'gasto' THEN mov.monto ELSE 0 END) as salidas,
+        SUM(CASE WHEN mov.tipo = 'gasto' THEN mov.monto ELSE 0 END) as gastos,
+        (SUM(CASE WHEN mov.tipo = 'ingreso' THEN mov.monto ELSE 0 END) -
+         SUM(CASE WHEN mov.tipo = 'gasto' THEN mov.monto ELSE 0 END)) as saldo
+      FROM (
+        SELECT fecha, monto, 'ingreso' as tipo, comunidad_id FROM pago WHERE estado = 'aplicado'
+        UNION ALL
+        SELECT fecha, monto, 'gasto' as tipo, comunidad_id FROM gasto WHERE estado = 'aprobado'
+      ) mov
+      WHERE mov.comunidad_id = ?
+      GROUP BY DATE_FORMAT(mov.fecha, '%Y-%m')
+      ORDER BY mes DESC
+      LIMIT 12
+    `;
+
+      const [rows] = await db.query(query, [comunidadId]);
+
+      res.json(rows || []);
+    } catch (error) {
+      console.error('Error al obtener flujo de caja para reportes:', error);
+      res.status(500).json({ error: 'Error al obtener flujo de caja' });
     }
   }
 );

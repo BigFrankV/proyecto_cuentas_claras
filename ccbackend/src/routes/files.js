@@ -141,8 +141,8 @@ router.get('/:id', async (req, res) => {
 
     // Verificar que el archivo existe físicamente
     try {
-      const fullPath = path.isAbsolute(file.file_path) 
-        ? file.file_path 
+      const fullPath = path.isAbsolute(file.file_path)
+        ? file.file_path
         : path.resolve(process.cwd(), file.file_path);
       await fs.access(fullPath);
     } catch (error) {
@@ -154,7 +154,8 @@ router.get('/:id', async (req, res) => {
 
     // Determinar si mostrar en línea o descargar
     // Mostrar imágenes de perfil en línea, descargar otros archivos
-    const isProfilePhoto = file.category === 'perfil' && file.entity_type === 'usuario';
+    const isProfilePhoto =
+      file.category === 'perfil' && file.entity_type === 'usuario';
     const isImage = file.mimetype.startsWith('image/');
 
     if (isProfilePhoto || (isImage && req.query.inline === 'true')) {
@@ -175,8 +176,8 @@ router.get('/:id', async (req, res) => {
     }
 
     // Enviar archivo
-    const fullPath = path.isAbsolute(file.file_path) 
-      ? file.file_path 
+    const fullPath = path.isAbsolute(file.file_path)
+      ? file.file_path
       : path.resolve(process.cwd(), file.file_path);
     res.sendFile(fullPath);
   } catch (error) {
@@ -405,7 +406,7 @@ router.put('/:id', async (req, res) => {
 
     // Obtener archivo actual
     const fileInfo = await FileService.getFileInfo(id);
-    
+
     if (!fileInfo) {
       return res.status(404).json({
         success: false,
@@ -414,7 +415,10 @@ router.put('/:id', async (req, res) => {
     }
 
     // Validar permisos
-    if (fileInfo.comunidad_id !== req.user.comunidadId && !req.user.is_superadmin) {
+    if (
+      fileInfo.comunidad_id !== req.user.comunidadId &&
+      !req.user.is_superadmin
+    ) {
       return res.status(403).json({
         success: false,
         message: 'No tienes permisos para actualizar este archivo',

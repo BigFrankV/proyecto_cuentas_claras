@@ -1908,11 +1908,9 @@ router.post(
 
         if (monto > cargoSaldo) {
           await conn.rollback();
-          return res
-            .status(400)
-            .json({
-              error: `El monto excede el saldo de la cuenta ${cuentaId}`,
-            });
+          return res.status(400).json({
+            error: `El monto excede el saldo de la cuenta ${cuentaId}`,
+          });
         }
 
         await conn.query(
@@ -2170,10 +2168,9 @@ router.put(
       const pagoId = Number(req.params.id);
 
       // Obtener pago anterior
-      const [pagoAnterior] = await db.query(
-        'SELECT * FROM pago WHERE id = ?',
-        [pagoId]
-      );
+      const [pagoAnterior] = await db.query('SELECT * FROM pago WHERE id = ?', [
+        pagoId,
+      ]);
       if (!pagoAnterior.length) {
         return res.status(404).json({ error: 'Pago no encontrado' });
       }
@@ -2225,9 +2222,10 @@ router.put(
       );
 
       // Obtener pago actualizado
-      const [pagoActualizado] = await db.query('SELECT * FROM pago WHERE id = ?', [
-        pagoId,
-      ]);
+      const [pagoActualizado] = await db.query(
+        'SELECT * FROM pago WHERE id = ?',
+        [pagoId]
+      );
 
       // Registrar en auditoría
       await db.query(
@@ -2286,7 +2284,9 @@ router.delete(
       const pagoId = Number(req.params.id);
 
       // Obtener pago a eliminar
-      const [pago] = await db.query('SELECT * FROM pago WHERE id = ?', [pagoId]);
+      const [pago] = await db.query('SELECT * FROM pago WHERE id = ?', [
+        pagoId,
+      ]);
       if (!pago.length) {
         return res.status(404).json({ error: 'Pago no encontrado' });
       }

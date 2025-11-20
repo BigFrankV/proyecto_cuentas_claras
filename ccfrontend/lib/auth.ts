@@ -16,6 +16,7 @@ export interface RegisterData {
   password: string;
   email?: string;
   persona_id?: number;
+  roles?: string[]; // Added roles
 }
 
 export interface Persona {
@@ -285,6 +286,18 @@ class AuthService {
         throw new Error('Error de conexión. Por favor intenta nuevamente.');
       }
     }
+  }
+
+  // Crear usuario (Admin/Superadmin) - No inicia sesión automáticamente
+  async createUser(data: RegisterData): Promise<User> {
+    const response = await apiClient.post('/auth/register', {
+      username: data.username,
+      password: data.password,
+      email: data.email,
+      persona_id: data.persona_id,
+      roles: data.roles,
+    });
+    return response.data.user;
   }
 
   // Registro de usuario

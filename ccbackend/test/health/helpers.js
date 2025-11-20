@@ -89,12 +89,12 @@ function categorizeResponse(
     statusCode === 200 || statusCode === 201
       ? '✅'
       : statusCode === 401 || statusCode === 403
-      ? '🔒'
-      : statusCode === 404
-      ? '🔍'
-      : statusCode >= 500
-      ? '❌'
-      : '⚠️';
+        ? '🔒'
+        : statusCode === 404
+          ? '🔍'
+          : statusCode >= 500
+            ? '❌'
+            : '⚠️';
 
   console.log(`${statusEmoji} ${method} ${endpoint} → ${statusCode}`);
 }
