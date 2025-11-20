@@ -380,423 +380,926 @@ const MultaNuevaPage: React.FC = () => {
 
   return (
     <Layout title='Nueva Multa'>
-      <div className='container-fluid p-4'>
+      <div className='multa-nueva-page'>
         <PageHeader
           title="Nueva Multa"
           subtitle="Crear una nueva multa paso a paso"
           icon="add_circle"
         >
           <button
-            className="btn btn-secondary"
+            className="btn-secondary-action"
             onClick={() => window.history.back()}
           >
-            <i className="material-icons me-2">arrow_back</i>
+            <span className="material-icons">arrow_back</span>
             Cancelar
           </button>
         </PageHeader>
 
-        {/* Wizard steps */}
-        <div className='wizard-steps mb-4 d-flex gap-3'>
-          <div
-            className={`wizard-step ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}
-          >
-            <div className='wizard-step-number'>1</div>
-            <div className='wizard-step-title'>Tipo de infracción</div>
-          </div>
-          <div
-            className={`wizard-step ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}
-          >
-            <div className='wizard-step-number'>2</div>
-            <div className='wizard-step-title'>Buscar unidad</div>
-          </div>
-          <div
-            className={`wizard-step ${currentStep >= 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}
-          >
-            <div className='wizard-step-number'>3</div>
-            <div className='wizard-step-title'>Detalles</div>
-          </div>
-          <div className={`wizard-step ${currentStep >= 4 ? 'active' : ''}`}>
-            <div className='wizard-step-number'>4</div>
-            <div className='wizard-step-title'>Revisión</div>
-          </div>
-        </div>
-
-        {/* Step 1 */}
-        <div className={`wizard-section ${currentStep === 1 ? 'active' : ''}`}>
-          <h4 className='mb-4'>Seleccione el tipo de infracción</h4>
-          <div className='row'>
-            {violationTypes.map(v => (
-              <div key={v.id} className='col-md-6 col-lg-3 mb-4'>
-                <div
-                  className={`violation-type-card card p-2 ${selectedViolationType === v.id ? 'selected border-primary shadow-sm' : ''}`}
-                  style={{ cursor: 'pointer', minHeight: 120 }}
-                  onClick={() => {
-                    setSelectedViolationType(v.id);
-                    setMonto(v.amount);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setSelectedViolationType(v.id);
-                      setMonto(v.amount);
-                    }
-                  }}
-                  role='button'
-                  tabIndex={0}
-                >
-                  <div className='d-flex align-items-center'>
-                    <div
-                      className='me-3 d-flex align-items-center'
-                      style={{ minWidth: 48 }}
-                    >
-                      <span
-                        className='material-icons'
-                        style={{
-                          background: v.color,
-                          color: '#fff',
-                          borderRadius: 8,
-                          padding: 8,
-                          fontSize: 24,
-                          lineHeight: '24px',
-                        }}
-                        aria-hidden
-                      >
-                        {v.icon}
-                      </span>
-                    </div>
-                    <div className='flex-grow-1'>
-                      <h5 className='mb-1' style={{ color: v.color }}>
-                        {v.title}
-                      </h5>
-                      <p className='small mb-1'>{v.description}</p>
-                      <p className='mb-0'>
-                        <strong>{v.amount.toLocaleString('es-CL')} CLP</strong>
-                      </p>
-                    </div>
-                  </div>
-                </div>
+        <div className="content-card">
+          {/* Wizard steps */}
+          <div className='wizard-steps'>
+            <div className={`wizard-step ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
+              <div className='step-indicator'>
+                {currentStep > 1 ? <span className="material-icons">check</span> : '1'}
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Step 2 */}
-        <div className={`wizard-section ${currentStep === 2 ? 'active' : ''}`}>
-          <h4 className='mb-4'>Buscar unidad infractora</h4>
-          {renderComunidadSelector()}
-          <div className='mb-4'>
-            <input
-              type='text'
-              className='form-control'
-              placeholder={
-                comunidades &&
-                comunidades.length > 1 &&
-                !selectedComunidadGlobal
-                  ? 'Seleccione comunidad primero...'
-                  : 'Buscar por número de unidad o nombre del propietario...'
-              }
-              value={unitSearch}
-              onChange={e => setUnitSearch(e.target.value)}
-              disabled={
-                comunidades &&
-                comunidades.length > 1 &&
-                !selectedComunidadGlobal
-              }
-            />
-          </div>
-
-          <div>
-            <div className='list-group'>
-              {filteredUnits.map(u => (
-                <button
-                  key={u.id}
-                  type='button'
-                  className={`list-group-item list-group-item-action ${selectedUnitId === u.id ? 'active' : ''}`}
-                  onClick={() => handleSelectUnit(u)}
-                >
-                  <div className='d-flex w-100 justify-content-between'>
-                    <div>
-                      <h5 className='mb-1'>{u.codigo}</h5>
-                      <small className='text-muted'>
-                        {u.owner || u.propietario || '-'}
-                      </small>
-                    </div>
-                    <div>
-                      <small className='text-muted'>{u.details || ''}</small>
-                    </div>
-                  </div>
-                </button>
-              ))}
+              <div className='step-label'>Tipo de Infracción</div>
+            </div>
+            <div className="step-connector"></div>
+            <div className={`wizard-step ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
+              <div className='step-indicator'>
+                {currentStep > 2 ? <span className="material-icons">check</span> : '2'}
+              </div>
+              <div className='step-label'>Unidad</div>
+            </div>
+            <div className="step-connector"></div>
+            <div className={`wizard-step ${currentStep >= 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
+              <div className='step-indicator'>
+                {currentStep > 3 ? <span className="material-icons">check</span> : '3'}
+              </div>
+              <div className='step-label'>Detalles</div>
+            </div>
+            <div className="step-connector"></div>
+            <div className={`wizard-step ${currentStep >= 4 ? 'active' : ''}`}>
+              <div className='step-indicator'>4</div>
+              <div className='step-label'>Revisión</div>
             </div>
           </div>
-        </div>
 
-        {/* Step 3 */}
-        <div className={`wizard-section ${currentStep === 3 ? 'active' : ''}`}>
-          <h4 className='mb-4'>Detalles de la multa</h4>
-          <div className='row'>
-            <div className='col-md-8'>
-              <div className='form-section mb-3'>
-                <h5 className='form-section-title'>
-                  <i className='material-icons me-2'>description</i>
-                  Información básica
-                </h5>
-                <div className='mb-3'>
-                  <label className='form-label'>Descripción detallada</label>
-                  <textarea
-                    className='form-control'
-                    rows={4}
-                    placeholder='Describa la infracción cometida...'
-                    value={descripcion}
-                    onChange={e => setDescripcion(e.target.value)}
-                  ></textarea>
-                </div>
-                <div className='row'>
-                  <div className='col-md-6 mb-3'>
-                    <label className='form-label'>Fecha de la infracción</label>
-                    <input
-                      type='date'
-                      className='form-control'
-                      value={fechaInfraccion}
-                      onChange={e => setFechaInfraccion(e.target.value)}
-                    />
-                  </div>
-                  <div className='col-md-6 mb-3'>
-                    <label className='form-label'>
-                      Fecha de vencimiento (opcional)
-                    </label>
-                    <input
-                      type='date'
-                      className='form-control'
-                      value={fechaVencimiento}
-                      onChange={e => setFechaVencimiento(e.target.value)}
-                    />
-                  </div>
-                  <div className='col-md-6 mb-3'>
-                    <label className='form-label'>Monto (CLP)</label>
-                    <input
-                      type='number'
-                      className='form-control'
-                      value={monto}
-                      onChange={e =>
-                        setMonto(
-                          e.target.value === '' ? '' : Number(e.target.value),
-                        )
-                      }
-                      min={0}
-                    />
-                  </div>
-                  <div className='col-md-6 mb-3'>
-                    <label className='form-label'>Prioridad</label>
-                    <select
-                      className='form-select'
-                      value={prioridad}
-                      onChange={e =>
-                        setPrioridad(mapPriority(e.target.value) as any)
-                      }
-                    >
-                      <option value='media'>Media</option>
-                      <option value='baja'>Baja</option>
-                      <option value='alta'>Alta</option>
-                      <option value='critica'>Crítica</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className='form-section'>
-                <h5 className='form-section-title'>
-                  <i className='material-icons me-2'>attach_file</i>
-                  Evidencia
-                </h5>
-                <div
-                  className='evidence-upload-zone border rounded p-4 text-center'
-                  onClick={() => fileInputRef.current?.click()}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      fileInputRef.current?.click();
-                    }
-                  }}
-                  role='button'
-                  tabIndex={0}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <i className='material-icons mb-2' style={{ fontSize: 36 }}>
-                    cloud_upload
-                  </i>
-                  <div>Haga clic para subir archivos o arrastre y suelte</div>
-                  <small className='text-muted'>PNG, JPG, PDF hasta 10MB</small>
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type='file'
-                  id='evidenceFiles'
-                  multiple
-                  style={{ display: 'none' }}
-                  onChange={e => handleFileUpload(e.target.files)}
-                />
-                <div id='uploadedFiles' className='mt-3'>
-                  {uploadedFiles.map((file, index) => (
+          <div className="wizard-content">
+            {/* Step 1 */}
+            {currentStep === 1 && (
+              <div className="fade-in">
+                <h3 className='section-title'>Seleccione el tipo de infracción</h3>
+                <div className='violation-grid'>
+                  {violationTypes.map(v => (
                     <div
-                      key={index}
-                      className='uploaded-file d-flex align-items-center justify-content-between border rounded p-2 mb-2'
+                      key={v.id}
+                      className={`violation-card ${selectedViolationType === v.id ? 'selected' : ''}`}
+                      onClick={() => {
+                        setSelectedViolationType(v.id);
+                        setMonto(v.amount);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedViolationType(v.id);
+                          setMonto(v.amount);
+                        }
+                      }}
+                      role='button'
+                      tabIndex={0}
                     >
-                      <div className='d-flex align-items-center'>
-                        <div className='file-icon me-3'>
-                          <i className='material-icons'>insert_drive_file</i>
-                        </div>
-                        <div>
-                          <div className='file-name'>{file.name}</div>
-                          <div className='file-size text-muted'>
-                            {(file.size / 1024 / 1024).toFixed(2)} MB
-                          </div>
+                      <div className="violation-icon" style={{ backgroundColor: `${v.color}15`, color: v.color }}>
+                        <span className="material-icons">{v.icon}</span>
+                      </div>
+                      <div className="violation-info">
+                        <h4 style={{ color: selectedViolationType === v.id ? v.color : 'inherit' }}>{v.title}</h4>
+                        <p>{v.description}</p>
+                        <div className="violation-amount">
+                          ${v.amount.toLocaleString('es-CL')}
                         </div>
                       </div>
-                      <button
-                        className='btn btn-sm btn-outline-danger'
-                        onClick={() => removeFile(index)}
-                      >
-                        <i className='material-icons'>close</i>
-                      </button>
+                      {selectedViolationType === v.id && (
+                        <div className="selection-check">
+                          <span className="material-icons">check_circle</span>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className='col-md-4'>
-              <div className='form-section'>
-                <h5 className='form-section-title'>
-                  <i className='material-icons me-2'>info</i>
-                  Resumen
-                </h5>
-                <div className='summary-item mb-2'>
-                  <div className='summary-label text-muted'>
-                    Tipo de infracción
+            {/* Step 2 */}
+            {currentStep === 2 && (
+              <div className="fade-in">
+                <h3 className='section-title'>Buscar unidad infractora</h3>
+                <div className="search-section">
+                  {renderComunidadSelector()}
+                  <div className="search-box">
+                    <span className="material-icons search-icon">search</span>
+                    <input
+                      type='text'
+                      className='search-input'
+                      placeholder={
+                        comunidades && comunidades.length > 1 && !selectedComunidadGlobal
+                          ? 'Seleccione comunidad primero...'
+                          : 'Buscar por número de unidad o nombre del propietario...'
+                      }
+                      value={unitSearch}
+                      onChange={e => setUnitSearch(e.target.value)}
+                      disabled={comunidades && comunidades.length > 1 && !selectedComunidadGlobal}
+                      autoFocus
+                    />
                   </div>
-                  <div className='summary-value'>
-                    {selectedViolation?.title || '-'}
-                  </div>
-                </div>
-                <div className='summary-item mb-2'>
-                  <div className='summary-label text-muted'>Unidad</div>
-                  <div className='summary-value'>{selectedUnitCode || '-'}</div>
-                </div>
-                <div className='summary-item mb-2'>
-                  <div className='summary-label text-muted'>Monto</div>
-                  <div className='summary-value'>
-                    {monto
-                      ? `${Number(monto).toLocaleString('es-CL')} CLP`
-                      : '-'}
-                  </div>
-                </div>
-                <div className='summary-item mb-2'>
-                  <div className='summary-label text-muted'>Archivos</div>
-                  <div className='summary-value'>
-                    {uploadedFiles.length} adjuntos
+
+                  <div className='units-list'>
+                    {filteredUnits.length > 0 ? (
+                      filteredUnits.map(u => (
+                        <button
+                          key={u.id}
+                          type='button'
+                          className={`unit-item ${selectedUnitId === u.id ? 'selected' : ''}`}
+                          onClick={() => handleSelectUnit(u)}
+                        >
+                          <div className="unit-icon">
+                            <span className="material-icons">apartment</span>
+                          </div>
+                          <div className='unit-details'>
+                            <div className="unit-code">{u.codigo}</div>
+                            <div className="unit-owner">{u.owner || u.propietario || 'Sin propietario'}</div>
+                          </div>
+                          {selectedUnitId === u.id && (
+                            <span className="material-icons text-primary">check_circle</span>
+                          )}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="empty-search">
+                        <span className="material-icons">search_off</span>
+                        <p>No se encontraron unidades</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Step 3 */}
+            {currentStep === 3 && (
+              <div className="fade-in">
+                <h3 className='section-title'>Detalles de la multa</h3>
+                <div className='details-grid'>
+                  <div className='main-form'>
+                    <div className='form-group mb-4'>
+                      <label className='form-label'>Descripción detallada</label>
+                      <textarea
+                        className='form-control'
+                        rows={4}
+                        placeholder='Describa la infracción cometida...'
+                        value={descripcion}
+                        onChange={e => setDescripcion(e.target.value)}
+                      ></textarea>
+                    </div>
+                    
+                    <div className='row g-3'>
+                      <div className='col-md-6'>
+                        <label className='form-label'>Fecha de la infracción</label>
+                        <input
+                          type='date'
+                          className='form-control'
+                          value={fechaInfraccion}
+                          onChange={e => setFechaInfraccion(e.target.value)}
+                        />
+                      </div>
+                      <div className='col-md-6'>
+                        <label className='form-label'>Fecha de vencimiento (opcional)</label>
+                        <input
+                          type='date'
+                          className='form-control'
+                          value={fechaVencimiento}
+                          onChange={e => setFechaVencimiento(e.target.value)}
+                        />
+                      </div>
+                      <div className='col-md-6'>
+                        <label className='form-label'>Monto (CLP)</label>
+                        <div className="input-group">
+                          <span className="input-group-text">$</span>
+                          <input
+                            type='number'
+                            className='form-control'
+                            value={monto}
+                            onChange={e => setMonto(e.target.value === '' ? '' : Number(e.target.value))}
+                            min={0}
+                          />
+                        </div>
+                      </div>
+                      <div className='col-md-6'>
+                        <label className='form-label'>Prioridad</label>
+                        <select
+                          className='form-select'
+                          value={prioridad}
+                          onChange={e => setPrioridad(mapPriority(e.target.value) as any)}
+                        >
+                          <option value='baja'>Baja</option>
+                          <option value='media'>Media</option>
+                          <option value='alta'>Alta</option>
+                          <option value='critica'>Crítica</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className='evidence-section mt-4'>
+                      <label className='form-label mb-2'>Evidencia</label>
+                      <div
+                        className='upload-zone'
+                        onClick={() => fileInputRef.current?.click()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            fileInputRef.current?.click();
+                          }
+                        }}
+                        role='button'
+                        tabIndex={0}
+                      >
+                        <span className='material-icons upload-icon'>cloud_upload</span>
+                        <div className="upload-text">
+                          <strong>Haga clic para subir archivos</strong> o arrastre y suelte
+                        </div>
+                        <small className='text-muted'>PNG, JPG, PDF hasta 10MB</small>
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type='file'
+                        id='evidenceFiles'
+                        multiple
+                        style={{ display: 'none' }}
+                        onChange={e => handleFileUpload(e.target.files)}
+                      />
+                      
+                      {uploadedFiles.length > 0 && (
+                        <div className='uploaded-files-list'>
+                          {uploadedFiles.map((file, index) => (
+                            <div key={index} className='file-item'>
+                              <div className="file-info">
+                                <span className='material-icons file-icon'>description</span>
+                                <div>
+                                  <div className='file-name'>{file.name}</div>
+                                  <div className='file-size'>{(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                                </div>
+                              </div>
+                              <button className='btn-icon-danger' onClick={() => removeFile(index)}>
+                                <span className='material-icons'>close</span>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className='summary-sidebar'>
+                    <div className='summary-card'>
+                      <h4 className='summary-title'>Resumen Actual</h4>
+                      <div className='summary-row'>
+                        <span className='label'>Tipo</span>
+                        <span className='value'>{selectedViolation?.title || '-'}</span>
+                      </div>
+                      <div className='summary-row'>
+                        <span className='label'>Unidad</span>
+                        <span className='value'>{selectedUnitCode || '-'}</span>
+                      </div>
+                      <div className='summary-row'>
+                        <span className='label'>Monto</span>
+                        <span className='value highlight'>
+                          {monto ? `$${Number(monto).toLocaleString('es-CL')}` : '-'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4 */}
+            {currentStep === 4 && (
+              <div className="fade-in">
+                <h3 className='section-title'>Revisar y Confirmar</h3>
+                <div className='review-container'>
+                  <div className='review-card'>
+                    <div className="review-header">
+                      <div className="review-icon">
+                        <span className="material-icons">assignment</span>
+                      </div>
+                      <div>
+                        <h4>Resumen de la Multa</h4>
+                        <p>Por favor verifique que toda la información sea correcta</p>
+                      </div>
+                    </div>
+                    
+                    <div className="review-grid">
+                      <div className="review-item">
+                        <label>Tipo de Infracción</label>
+                        <div className="value">{selectedViolation?.title}</div>
+                      </div>
+                      <div className="review-item">
+                        <label>Unidad</label>
+                        <div className="value">{selectedUnitCode}</div>
+                      </div>
+                      <div className="review-item">
+                        <label>Monto</label>
+                        <div className="value highlight">
+                          {monto ? `$${Number(monto).toLocaleString('es-CL')}` : '-'}
+                        </div>
+                      </div>
+                      <div className="review-item">
+                        <label>Prioridad</label>
+                        <div className="value">
+                          <span className={`priority-badge priority-${prioridad}`}>
+                            {prioridad}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="review-item">
+                        <label>Fecha Infracción</label>
+                        <div className="value">{fechaInfraccion || '-'}</div>
+                      </div>
+                      <div className="review-item full-width">
+                        <label>Descripción</label>
+                        <div className="value">{descripcion || '-'}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="confirmation-actions">
+                    <p className="confirmation-text">
+                      Al confirmar, se generará la multa y se notificará al residente correspondiente.
+                    </p>
+                    <button className='btn-primary-lg' onClick={handleSubmit}>
+                      <span className='material-icons'>check_circle</span>
+                      Confirmar y Crear Multa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* Step 4 */}
-        <div className={`wizard-section ${currentStep === 4 ? 'active' : ''}`}>
-          <h4 className='mb-4'>Revisar y crear multa</h4>
-          <div className='row'>
-            <div className='col-md-8'>
-              <div id='reviewContent'>
-                <div className='alert alert-info'>
-                  <i className='material-icons me-2'>info</i>
-                  Revise la información antes de crear la multa.
-                </div>
-                <dl>
-                  <dt>Tipo</dt>
-                  <dd>{selectedViolation?.title}</dd>
-                  <dt>Unidad</dt>
-                  <dd>{selectedUnitCode}</dd>
-                  <dt>Monto</dt>
-                  <dd>
-                    {monto
-                      ? `${Number(monto).toLocaleString('es-CL')} CLP`
-                      : '-'}
-                  </dd>
-                  <dt>Fecha</dt>
-                  <dd>{fechaInfraccion || '-'}</dd>
-                  <dt>Prioridad</dt>
-                  <dd>{prioridad}</dd>
-                  <dt>Descripción</dt>
-                  <dd>{descripcion || '-'}</dd>
-                </dl>
-              </div>
-            </div>
-            <div className='col-md-4'>
-              <div className='form-section'>
-                <h5 className='form-section-title'>
-                  <i className='material-icons me-2'>check_circle</i>
-                  Confirmación
-                </h5>
-                <p>¿Está seguro de que desea crear esta multa?</p>
-                <div className='d-grid'>
-                  <button className='btn btn-success' onClick={handleSubmit}>
-                    <i className='material-icons me-2'>check</i>
-                    Crear Multa
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation buttons */}
-        <div className='navigation-buttons mt-4 d-flex justify-content-between'>
-          <div>
+          {/* Navigation buttons */}
+          <div className='wizard-footer'>
             <button
-              className='btn btn-outline-secondary me-2'
+              className='btn-secondary-action'
               onClick={() => changeStep(-1)}
               disabled={currentStep === 1}
             >
-              <i className='material-icons me-2'>arrow_back</i>
+              <span className='material-icons'>arrow_back</span>
               Anterior
             </button>
+
             {currentStep < 4 && (
               <button
-                className='btn btn-primary'
+                className='btn-primary-action'
                 onClick={() => {
                   if (validateStep(currentStep)) {
                     changeStep(1);
                   } else {
-                    window.alert(
-                      'Completa los campos obligatorios en este paso.',
-                    );
+                    window.alert('Por favor complete los campos requeridos para continuar.');
                   }
                 }}
               >
                 Siguiente
-                <i className='material-icons ms-2'>arrow_forward</i>
-              </button>
-            )}
-          </div>
-
-          <div>
-            {currentStep === 4 ? (
-              <button className='btn btn-success' onClick={handleSubmit}>
-                <i className='material-icons me-2'>check</i>
-                Crear Multa
-              </button>
-            ) : (
-              <button
-                className='btn btn-secondary'
-                onClick={() => setCurrentStep(4)}
-              >
-                Revisar
+                <span className='material-icons'>arrow_forward</span>
               </button>
             )}
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .multa-nueva-page {
+          padding: 1.5rem;
+          background-color: #f8f9fa;
+          min-height: 100vh;
+        }
+
+        .content-card {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          border: 1px solid #e9ecef;
+          margin-top: 2rem;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          min-height: 600px;
+        }
+
+        /* Wizard Steps */
+        .wizard-steps {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 2rem 4rem;
+          background: #fff;
+          border-bottom: 1px solid #e9ecef;
+        }
+
+        .wizard-step {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.5rem;
+          position: relative;
+          z-index: 1;
+          opacity: 0.5;
+          transition: all 0.3s;
+        }
+
+        .wizard-step.active {
+          opacity: 1;
+        }
+
+        .step-indicator {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: #e9ecef;
+          color: #6c757d;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 600;
+          font-size: 0.9rem;
+          transition: all 0.3s;
+          line-height: 1;
+        }
+
+        .wizard-step.active .step-indicator {
+          background: #2a5298;
+          color: white;
+          box-shadow: 0 0 0 4px rgba(42, 82, 152, 0.1);
+        }
+
+        .wizard-step.completed .step-indicator {
+          background: #4caf50;
+          color: white;
+        }
+
+        .step-label {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #495057;
+        }
+
+        .step-connector {
+          flex: 1;
+          height: 2px;
+          background: #e9ecef;
+          margin: 0 1rem;
+          margin-bottom: 1.5rem;
+        }
+
+        /* Wizard Content */
+        .wizard-content {
+          flex: 1;
+          padding: 2rem 4rem;
+        }
+
+        .section-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #212529;
+          margin-bottom: 2rem;
+          text-align: center;
+        }
+
+        /* Violation Grid */
+        .violation-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 1.5rem;
+        }
+
+        .violation-card {
+          border: 1px solid #e9ecef;
+          border-radius: 12px;
+          padding: 1.5rem;
+          cursor: pointer;
+          transition: all 0.2s;
+          position: relative;
+          display: flex;
+          align-items: flex-start;
+          gap: 1rem;
+        }
+
+        .violation-card:hover {
+          border-color: #2a5298;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .violation-card.selected {
+          border-color: #2a5298;
+          background: #f8f9fa;
+          box-shadow: 0 0 0 2px rgba(42, 82, 152, 0.1);
+        }
+
+        .violation-icon {
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          line-height: 1;
+        }
+
+        .violation-info h4 {
+          font-size: 1rem;
+          font-weight: 600;
+          margin: 0 0 0.5rem 0;
+        }
+
+        .violation-info p {
+          font-size: 0.85rem;
+          color: #6c757d;
+          margin: 0 0 0.5rem 0;
+          line-height: 1.4;
+        }
+
+        .violation-amount {
+          font-weight: 700;
+          color: #212529;
+        }
+
+        .selection-check {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          color: #2a5298;
+        }
+
+        /* Search Section */
+        .search-section {
+          max-width: 600px;
+          margin: 0 auto;
+        }
+
+        .search-box {
+          position: relative;
+          margin-bottom: 1.5rem;
+        }
+
+        .search-icon {
+          position: absolute;
+          left: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #adb5bd;
+        }
+
+        .search-input {
+          width: 100%;
+          padding: 1rem 1rem 1rem 3rem;
+          border: 1px solid #dee2e6;
+          border-radius: 12px;
+          font-size: 1rem;
+          transition: all 0.2s;
+        }
+
+        .search-input:focus {
+          outline: none;
+          border-color: #2a5298;
+          box-shadow: 0 0 0 4px rgba(42, 82, 152, 0.1);
+        }
+
+        .units-list {
+          border: 1px solid #e9ecef;
+          border-radius: 12px;
+          overflow: hidden;
+          max-height: 400px;
+          overflow-y: auto;
+        }
+
+        .unit-item {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          padding: 1rem;
+          border: none;
+          background: white;
+          border-bottom: 1px solid #e9ecef;
+          cursor: pointer;
+          transition: all 0.2s;
+          text-align: left;
+        }
+
+        .unit-item:last-child {
+          border-bottom: none;
+        }
+
+        .unit-item:hover {
+          background: #f8f9fa;
+        }
+
+        .unit-item.selected {
+          background: #e3f2fd;
+        }
+
+        .unit-icon {
+          width: 40px;
+          height: 40px;
+          background: #f8f9fa;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #6c757d;
+          margin-right: 1rem;
+          line-height: 1;
+        }
+
+        .unit-details {
+          flex: 1;
+        }
+
+        .unit-code {
+          font-weight: 600;
+          color: #212529;
+        }
+
+        .unit-owner {
+          font-size: 0.85rem;
+          color: #6c757d;
+        }
+
+        .empty-search {
+          padding: 3rem;
+          text-align: center;
+          color: #adb5bd;
+        }
+
+        .empty-search .material-icons {
+          font-size: 3rem;
+          margin-bottom: 1rem;
+        }
+
+        /* Details Grid */
+        .details-grid {
+          display: grid;
+          grid-template-columns: 1fr 300px;
+          gap: 2rem;
+        }
+
+        .upload-zone {
+          border: 2px dashed #dee2e6;
+          border-radius: 12px;
+          padding: 2rem;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.2s;
+          background: #f8f9fa;
+        }
+
+        .upload-zone:hover {
+          border-color: #2a5298;
+          background: #e3f2fd;
+        }
+
+        .upload-icon {
+          font-size: 3rem;
+          color: #adb5bd;
+          margin-bottom: 1rem;
+        }
+
+        .uploaded-files-list {
+          margin-top: 1rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .file-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.75rem;
+          background: white;
+          border: 1px solid #e9ecef;
+          border-radius: 8px;
+        }
+
+        .file-info {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .file-icon {
+          color: #2a5298;
+        }
+
+        .file-name {
+          font-size: 0.9rem;
+          font-weight: 500;
+        }
+
+        .file-size {
+          font-size: 0.75rem;
+          color: #6c757d;
+        }
+
+        .btn-icon-danger {
+          background: none;
+          border: none;
+          color: #dc3545;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 4px;
+        }
+
+        .btn-icon-danger:hover {
+          background: #fee2e2;
+        }
+
+        .summary-card {
+          background: #f8f9fa;
+          padding: 1.5rem;
+          border-radius: 12px;
+          border: 1px solid #e9ecef;
+        }
+
+        .summary-title {
+          font-size: 1.1rem;
+          font-weight: 700;
+          margin-bottom: 1.5rem;
+        }
+
+        .summary-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 1rem;
+          font-size: 0.9rem;
+        }
+
+        .summary-row .label {
+          color: #6c757d;
+        }
+
+        .summary-row .value {
+          font-weight: 600;
+          color: #212529;
+          text-align: right;
+        }
+
+        .summary-row .value.highlight {
+          color: #2a5298;
+          font-size: 1.1rem;
+        }
+
+        /* Review Section */
+        .review-container {
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .review-card {
+          background: white;
+          border: 1px solid #e9ecef;
+          border-radius: 12px;
+          padding: 2rem;
+          margin-bottom: 2rem;
+        }
+
+        .review-header {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          margin-bottom: 2rem;
+          padding-bottom: 1.5rem;
+          border-bottom: 1px solid #e9ecef;
+        }
+
+        .review-icon {
+          width: 48px;
+          height: 48px;
+          background: #e3f2fd;
+          color: #2a5298;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
+        }
+
+        .review-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 2rem;
+        }
+
+        .review-item label {
+          display: block;
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          color: #6c757d;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+        }
+
+        .review-item .value {
+          font-size: 1.1rem;
+          font-weight: 500;
+          color: #212529;
+        }
+
+        .review-item .value.highlight {
+          color: #2a5298;
+          font-weight: 700;
+          font-size: 1.25rem;
+        }
+
+        .review-item.full-width {
+          grid-column: 1 / -1;
+        }
+
+        .confirmation-actions {
+          text-align: center;
+        }
+
+        .confirmation-text {
+          color: #6c757d;
+          margin-bottom: 1.5rem;
+        }
+
+        /* Footer */
+        .wizard-footer {
+          padding: 1.5rem 4rem;
+          background: #fff;
+          border-top: 1px solid #e9ecef;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        /* Buttons */
+        .btn-primary-action, .btn-primary-lg {
+          background: #2a5298;
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          transition: all 0.2s;
+        }
+
+        .btn-primary-lg {
+          padding: 1rem 2rem;
+          font-size: 1.1rem;
+          margin: 0 auto;
+        }
+
+        .btn-primary-action:hover, .btn-primary-lg:hover {
+          background: #1e3c72;
+          transform: translateY(-1px);
+        }
+
+        .btn-secondary-action {
+          background: white;
+          color: #495057;
+          border: 1px solid #dee2e6;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          transition: all 0.2s;
+        }
+
+        .btn-secondary-action:hover {
+          background: #f8f9fa;
+          color: #212529;
+          border-color: #adb5bd;
+        }
+
+        .priority-badge {
+          padding: 0.25rem 0.75rem;
+          border-radius: 4px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+        .priority-baja { background-color: #f1f8e9; color: #33691e; }
+        .priority-media { background-color: #fffde7; color: #f57f17; }
+        .priority-alta { background-color: #ffebee; color: #c62828; }
+        .priority-critica { background-color: #ffebee; color: #b71c1c; border: 1px solid #ffcdd2; }
+
+        @media (max-width: 768px) {
+          .wizard-steps, .wizard-content, .wizard-footer {
+            padding: 1.5rem;
+          }
+          
+          .step-label {
+            display: none;
+          }
+          
+          .details-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .review-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </Layout>
   );
 };

@@ -42,6 +42,10 @@ const { setupSwagger } = require('./swagger');
 const apelacionesRouter = require('./routes/apelaciones');
 const comprasRouter = require('./routes/compras');
 const bitacoraRoutes = require('./routes/bitacora');
+const recibosRoutes = require('./routes/recibos');
+const reservasRoutes = require('./routes/reservas');
+const notificacionesPlantillasRoutes = require('./routes/notificacionesPlantillas');
+const auditoriaRoutes = require('./routes/bitacoraAuditoria');
 
 const app = express();
 
@@ -95,6 +99,10 @@ app.use('/gateway', paymentGatewayRoutes);
 app.use('/apelaciones', apelacionesRouter);
 app.use('/compras', comprasRouter);
 app.use('/bitacora', bitacoraRoutes);
+app.use('/recibos', recibosRoutes);
+app.use('/reservas', reservasRoutes);
+app.use('/notificaciones-plantillas', notificacionesPlantillasRoutes);
+app.use('/auditoria', auditoriaRoutes);
 
 app.get('/healthz', (_, res) => res.json({ status: 'ok' }));
 
