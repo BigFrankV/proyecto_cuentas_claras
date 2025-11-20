@@ -511,9 +511,7 @@
   </div>
 
   <div id="presentation">
-    <!-- DIAPO UNA -->
     <section class="slide active" id="slide-0">
-      <!-- Slide 1: Portada -->
       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/2560px-Logo_DuocUC.svg.png"
         style="height: 80px; margin-bottom: 40px; filter: brightness(0) invert(1);" alt="Logo Duoc">
       <h1>CUENTAS CLARAS</h1>
@@ -523,9 +521,7 @@
         Matías Román</p>
       <p style="font-size: 18px; opacity: 0.8; margin-top: 20px;">Diciembre 2025</p>
     </section>
-    <!-- DIAPOSITIVAS 2 -->
     <section class="slide">
-      <!-- Slide 2: Integrantes del Proyecto -->
       <h2>👥 Integrantes del Proyecto</h2>
       <div class="team-container">
         <div class="team-card">
@@ -556,7 +552,6 @@
     </section>
 
     <section class="slide">
-      <!-- Slide 3: Introducción -->
       <h2>🧩 Introducción</h2>
       <div class="grid" style="align-items: center;">
         <div class="col-2">
@@ -642,7 +637,6 @@
     </div>
 
     <section class="slide">
-      <!-- Slide 5: Objetivo del Proyecto -->
       <h2 style="font-size: 36px;"><i class="material-icons">track_changes</i> Objetivo del Proyecto</h2>
       <p style="font-size: 22px;">Desarrollar una plataforma capaz de:</p>
       <ul style="font-size: 20px; line-height: 1.8;">
@@ -873,46 +867,46 @@
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
           erDiagram
-          PERSONA { int id string rut string nombres string apellidos string email }
-          USUARIO { int id int persona_id string username string password boolean activo }
-          ROL { int id string codigo string nombre int nivel_acceso }
-          USUARIO_COMUNIDAD_ROL { int id int usuario_id int comunidad_id int rol_id string desde string hasta boolean
+          persona { int id string rut string nombres string apellidos string email }
+          usuario { int id int persona_id string username string password boolean activo }
+          rol { int id string codigo string nombre int nivel_acceso }
+          usuario_comunidad_rol { int id int usuario_id int comunidad_id int rol_id string desde string hasta boolean
           activo }
-          COMUNIDAD { int id string razon_social string email_contacto }
-          EDIFICIO { int id int comunidad_id string nombre }
-          UNIDAD { int id int edificio_id string codigo }
-          TITULARES_UNIDAD { int id int unidad_id int persona_id string tipo }
-          EMISION_GASTOS_COMUNES { int id int comunidad_id string periodo string fecha_vencimiento }
-          DETALLE_EMISION_GASTOS { int id int emision_id int gasto_id number monto }
-          CUENTA_COBRO_UNIDAD { int id int emision_id int unidad_id number monto_total string estado }
-          DETALLE_CUENTA_UNIDAD { int id int cuenta_cobro_unidad_id int categoria_id number monto }
-          GASTO { int id int comunidad_id number monto }
-          DOCUMENTO_COMPRA { int id int gasto_id number total }
-          PAGO { int id int cuenta_cobro_unidad_id number monto string medio }
-          MULTA { int id int unidad_id int persona_id number monto }
-          AMENIDAD { int id int comunidad_id string nombre }
-          RESERVA_AMENIDAD { int id int amenidad_id int unidad_id string estado }
-          MEDIDOR { int id int unidad_id string tipo }
-          LECTURA_MEDIDOR { int id int medidor_id string fecha number lectura }
-          ARCHIVO { int id string entity_type int entity_id string file_path }
-          PERSONA ||--o{ USUARIO : "crea/tiene"
-          USUARIO ||--o{ USUARIO_COMUNIDAD_ROL : "asignaciones"
-          ROL ||--o{ USUARIO_COMUNIDAD_ROL : "rol_asignado"
-          COMUNIDAD ||--o{ EDIFICIO : "contiene"
-          EDIFICIO ||--o{ UNIDAD : "contiene"
-          UNIDAD ||--o{ TITULARES_UNIDAD : "titulares"
-          EMISION_GASTOS_COMUNES ||--o{ DETALLE_EMISION_GASTOS : "incluye"
-          GASTO ||--o{ DETALLE_EMISION_GASTOS : "desglosa"
-          EMISION_GASTOS_COMUNES ||--o{ CUENTA_COBRO_UNIDAD : "genera"
-          CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA_UNIDAD : "items"
-          CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"
-          UNIDAD ||--o{ CUENTA_COBRO_UNIDAD : "tiene"
-          UNIDAD ||--o{ MEDIDOR : "tiene"
-          MEDIDOR ||--o{ LECTURA_MEDIDOR : "registra"
-          AMENIDAD ||--o{ RESERVA_AMENIDAD : "reserva"
-          UNIDAD ||--o{ RESERVA_AMENIDAD : "reserva_por"
-          UNIDAD ||--o{ MULTA : "puede_tener"
-          PERSONA ||--o{ MULTA : "sujeto"
+          comunidad { int id string razon_social string email_contacto }
+          edificio { int id int comunidad_id string nombre }
+          unidad { int id int edificio_id string codigo }
+          titulares_unidad { int id int unidad_id int persona_id string tipo }
+          emision { int id int comunidad_id string periodo string fecha_vencimiento }
+          detalle_emision { int id int emision_id int gasto_id number monto }
+          cuenta_cobro_unidad { int id int emision_id int unidad_id number monto_total string estado }
+          detalle_cuenta_cobro { int id int cuenta_cobro_unidad_id int categoria_id number monto }
+          gasto { int id int comunidad_id number monto }
+          documento_compra { int id int gasto_id number total }
+          pago { int id int cuenta_cobro_unidad_id number monto string medio }
+          multa { int id int unidad_id int persona_id number monto }
+          amenidad { int id int comunidad_id string nombre }
+          reserva { int id int amenidad_id int unidad_id string estado }
+          medidor { int id int unidad_id string tipo }
+          lectura_medidor { int id int medidor_id string fecha number lectura }
+          archivos { int id string entity_type int entity_id string file_path }
+          persona ||--o{ usuario : "crea/tiene"
+          usuario ||--o{ usuario_comunidad_rol : "asignaciones"
+          rol ||--o{ usuario_comunidad_rol : "rol_asignado"
+          comunidad ||--o{ edificio : "contiene"
+          edificio ||--o{ unidad : "contiene"
+          unidad ||--o{ titulares_unidad : "titulares"
+          emision ||--o{ detalle_emision : "incluye"
+          gasto ||--o{ detalle_emision : "desglosa"
+          emision ||--o{ cuenta_cobro_unidad : "genera"
+          cuenta_cobro_unidad ||--o{ detalle_cuenta_cobro : "items"
+          cuenta_cobro_unidad ||--o{ pago : "recibe"
+          unidad ||--o{ cuenta_cobro_unidad : "tiene"
+          unidad ||--o{ medidor : "tiene"
+          medidor ||--o{ lectura_medidor : "registra"
+          amenidad ||--o{ reserva : "reserva"
+          unidad ||--o{ reserva : "reserva_por"
+          unidad ||--o{ multa : "puede_tener"
+          persona ||--o{ multa : "sujeto"
         </div>
       </div>
     </div>
@@ -972,7 +966,7 @@
         </div>
       </div>
     </div>
-
+    
     <div class="slide">
       <h2>Módulo 01 · Comunidades</h2>
       <div class="insight-box">
@@ -983,16 +977,15 @@
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
           erDiagram
-          COMUNIDAD { bigint id PK varchar codigo UK varchar nombre varchar razon_social varchar email_contacto }
-          PARAMETRO { bigint id PK bigint comunidad_id FK varchar clave varchar valor }
-          CENTRO_COSTO { bigint id PK bigint comunidad_id FK varchar codigo UK varchar nombre }
-          CATEGORIA { bigint id PK bigint comunidad_id FK varchar codigo varchar nombre }
-          ALIQUOTA { bigint id PK bigint comunidad_id FK decimal porcentaje varchar descripcion }
-          COMUNIDAD ||--o{ PARAMETRO : "tiene"
-          COMUNIDAD ||--o{ CENTRO_COSTO : "contiene"
-          COMUNIDAD ||--o{ CATEGORIA : "contiene"
-          COMUNIDAD ||--o{ ALIQUOTA : "define"
-          CENTRO_COSTO ||--o{ CATEGORIA : "clasifica"
+          comunidad { bigint id PK varchar codigo UK varchar nombre varchar razon_social varchar email_contacto }
+          parametros_cobranza { bigint id PK bigint comunidad_id FK varchar clave varchar valor }
+          centro_costo { bigint id PK bigint comunidad_id FK varchar codigo UK varchar nombre }
+          categoria_gasto { bigint id PK bigint comunidad_id FK varchar codigo varchar nombre }
+          comunidad ||--o{ parametros_cobranza : "tiene"
+          comunidad ||--o{ centro_costo : "contiene"
+          comunidad ||--o{ categoria_gasto : "contiene"
+          centro_costo ||--o{ categoria_gasto : "clasifica"
+        
         </div>
       </div>
     </div>
@@ -1008,23 +1001,23 @@
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
           erDiagram
-          PERSONA { bigint id PK varchar rut UK char dv varchar nombres varchar apellidos varchar email varchar telefono
+          persona { bigint id PK varchar rut UK char dv varchar nombres varchar apellidos varchar email varchar telefono
           }
-          USUARIO { bigint id PK bigint persona_id FK varchar username UK varchar hash_password tinyint totp_enabled
+          usuario { bigint id PK bigint persona_id FK varchar username UK varchar hash_password tinyint totp_enabled
           datetime created_at datetime last_login }
-          ROL { int id PK varchar codigo UK varchar nombre int nivel_acceso tinyint es_sistema }
-          COMUNIDAD { int id PK varchar nombre varchar razon_social }
-          USUARIO_COMUNIDAD_ROL { bigint id PK bigint usuario_id FK bigint comunidad_id FK int rol_id FK tinyint activo
+          rol { int id PK varchar codigo UK varchar nombre int nivel_acceso tinyint es_sistema }
+          comunidad { int id PK varchar nombre varchar razon_social }
+          usuario_comunidad_rol { bigint id PK bigint usuario_id FK bigint comunidad_id FK int rol_id FK tinyint activo
           date desde date hasta }
-          AUDITORIA { bigint id PK bigint usuario_id FK varchar accion datetime fecha text detalle }
-          SESION_USUARIO { bigint id PK bigint usuario_id FK varchar token datetime created_at datetime expires_at
+          auditoria { bigint id PK bigint usuario_id FK varchar accion datetime fecha text detalle }
+          sesion_usuario { bigint id PK bigint usuario_id FK varchar token datetime created_at datetime expires_at
           varchar ip varchar user_agent }
-          PERSONA ||--o{ USUARIO : "crea/tiene"
-          USUARIO ||--o{ USUARIO_COMUNIDAD_ROL : "asignaciones"
-          ROL ||--o{ USUARIO_COMUNIDAD_ROL : "rol_asignado"
-          COMUNIDAD ||--o{ USUARIO_COMUNIDAD_ROL : "pertenece"
-          USUARIO ||--o{ AUDITORIA : "registra"
-          USUARIO ||--o{ SESION_USUARIO : "sesiones"
+          persona ||--o{ usuario : "crea/tiene"
+          usuario ||--o{ usuario_comunidad_rol : "asignaciones"
+          rol ||--o{ usuario_comunidad_rol : "rol_asignado"
+          comunidad ||--o{ usuario_comunidad_rol : "pertenece"
+          usuario ||--o{ auditoria : "registra"
+          usuario ||--o{ sesion_usuario : "sesiones"
         </div>
       </div>
     </div>
@@ -1040,16 +1033,16 @@
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
           erDiagram
-          EDIFICIO { bigint id PK bigint comunidad_id FK varchar nombre varchar direccion }
-          TORRE { bigint id PK bigint edificio_id FK varchar nombre }
-          UNIDAD { bigint id PK bigint edificio_id FK bigint torre_id FK varchar codigo UK decimal alicuota }
-          TITULAR { bigint id PK bigint unidad_id FK bigint persona_id FK varchar tipo }
-          COMUNIDAD ||--o{ EDIFICIO : "contiene"
-          EDIFICIO ||--o{ TORRE : "contiene"
-          EDIFICIO ||--o{ UNIDAD : "contiene"
-          TORRE ||--o{ UNIDAD : "tiene"
-          UNIDAD ||--o{ TITULAR : "titulares"
-          COMUNIDAD ||--o{ UNIDAD : "condominio"
+          edificio { bigint id PK bigint comunidad_id FK varchar nombre varchar direccion }
+          torre { bigint id PK bigint edificio_id FK varchar nombre }
+          unidad { bigint id PK bigint edificio_id FK bigint torre_id FK varchar codigo UK decimal alicuota }
+          titulares_unidad { bigint id PK bigint unidad_id FK bigint persona_id FK varchar tipo }
+          comunidad ||--o{ edificio : "contiene"
+          edificio ||--o{ torre : "contiene"
+          edificio ||--o{ unidad : "contiene"
+          torre ||--o{ unidad : "tiene"
+          unidad ||--o{ titulares_unidad : "titulares"
+          comunidad ||--o{ unidad : "condominio"
 
         </div>
       </div>
@@ -1065,15 +1058,15 @@
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
           erDiagram
-          PROVEEDOR { bigint id PK varchar rut UK varchar nombre varchar email }
-          DOCUMENTO_COMPRA { bigint id PK bigint proveedor_id FK varchar tipo varchar numero decimal total date fecha }
-          GASTO { bigint id PK bigint documento_compra_id FK bigint comunidad_id FK decimal monto int categoria_id FK }
-          CATEGORIA_CONTABLE { int id PK varchar codigo varchar nombre }
-          ASIENTO { bigint id PK bigint gasto_id FK date fecha text detalle }
-          PROVEEDOR ||--o{ DOCUMENTO_COMPRA : "emite"
-          DOCUMENTO_COMPRA ||--o{ GASTO : "origina"
-          GASTO ||--o{ ASIENTO : "genera"
-          CATEGORIA_CONTABLE ||--o{ GASTO : "clasifica"
+          proveedor { bigint id PK varchar rut UK varchar nombre varchar email }
+          documento_compra { bigint id PK bigint proveedor_id FK varchar tipo varchar numero decimal total date fecha }
+          gasto { bigint id PK bigint documento_compra_id FK bigint comunidad_id FK decimal monto int categoria_id FK }
+          categoria_gasto { int id PK varchar codigo varchar nombre }
+          centro_costo { bigint id PK bigint gasto_id FK date fecha text detalle }
+          proveedor ||--o{ documento_compra : "emite"
+          documento_compra ||--o{ gasto : "origina"
+          gasto ||--o{ centro_costo : "genera"
+          categoria_gasto ||--o{ gasto : "clasifica"
         </div>
       </div>
     </div>
@@ -1089,18 +1082,18 @@
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
           erDiagram
-          EMISION_GASTOS_COMUNES { bigint id PK bigint comunidad_id FK varchar periodo date fecha_vencimiento }
-          DETALLE_EMISION { bigint id PK bigint emision_id FK int categoria_id FK decimal monto }
-          CUENTA_COBRO_UNIDAD { bigint id PK bigint emision_id FK bigint unidad_id FK decimal monto_total varchar estado
+          emision { bigint id PK bigint comunidad_id FK varchar periodo date fecha_vencimiento }
+          detalle_emision { bigint id PK bigint emision_id FK int categoria_id FK decimal monto }
+          cuenta_cobro_unidad { bigint id PK bigint emision_id FK bigint unidad_id FK decimal monto_total varchar estado
           }
-          DETALLE_CUENTA { bigint id PK bigint cuenta_cobro_unidad_id FK int categoria_id FK decimal monto }
-          PAGO { bigint id PK bigint cuenta_cobro_unidad_id FK decimal monto varchar medio date fecha }
-          CONCILIACION { bigint id PK bigint pago_id FK varchar banco date fecha varchar estado }
-          EMISION_GASTOS_COMUNES ||--o{ DETALLE_EMISION : "incluye"
-          EMISION_GASTOS_COMUNES ||--o{ CUENTA_COBRO_UNIDAD : "genera"
-          CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA : "items"
-          CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"
-          PAGO ||--o{ CONCILIACION : "conciliacion"
+          detalle_cuenta_cobro { bigint id PK bigint cuenta_cobro_unidad_id FK int categoria_id FK decimal monto }
+          pago { bigint id PK bigint cuenta_cobro_unidad_id FK decimal monto varchar medio date fecha }
+          conciliacion_bancaria { bigint id PK bigint pago_id FK varchar banco date fecha varchar estado }
+          emision ||--o{ detalle_emision : "incluye"
+          emision ||--o{ cuenta_cobro_unidad : "genera"
+          cuenta_cobro_unidad ||--o{ detalle_cuenta_cobro : "items"
+          cuenta_cobro_unidad ||--o{ pago : "recibe"
+          pago ||--o{ conciliacion_bancaria : "conciliacion"
         </div>
       </div>
     </div>
@@ -1114,26 +1107,26 @@
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
           erDiagram
-          MULTA { bigint id PK bigint comunidad_id FK bigint unidad_id FK bigint persona_id FK varchar motivo decimal
+          multa { bigint id PK bigint comunidad_id FK bigint unidad_id FK bigint persona_id FK varchar motivo decimal
           monto enum estado datetime fecha datetime fecha_pago }
-          DOCUMENTO_MULTA { bigint id PK bigint multa_id FK varchar nombre varchar ruta varchar tipo }
-          APELACION { bigint id PK bigint multa_id FK bigint persona_id FK varchar estado text detalle datetime
+          documento_multa { bigint id PK bigint multa_id FK varchar nombre varchar ruta varchar tipo }
+          multa_apelacion { bigint id PK bigint multa_id FK bigint persona_id FK varchar estado text detalle datetime
           creado_en }
-          UNIDAD { bigint id PK int edificio_id int torre_id varchar codigo decimal alicuota }
-          PERSONA { bigint id PK varchar rut varchar nombres varchar apellidos varchar email }
-          CUENTA_COBRO_UNIDAD { bigint id PK bigint emision_id FK bigint unidad_id FK decimal monto_total varchar estado
+          unidad { bigint id PK int edificio_id int torre_id varchar codigo decimal alicuota }
+          persona { bigint id PK varchar rut varchar nombres varchar apellidos varchar email }
+          cuenta_cobro_unidad { bigint id PK bigint emision_id FK bigint unidad_id FK decimal monto_total varchar estado
           }
-          DETALLE_CUENTA_UNIDAD { bigint id PK bigint cuenta_cobro_unidad_id FK int categoria_id FK decimal monto enum
+          detalle_cuenta_cobro { bigint id PK bigint cuenta_cobro_unidad_id FK int categoria_id FK decimal monto enum
           origen bigint origen_id }
-          PAGO { bigint id PK bigint cuenta_cobro_unidad_id FK decimal monto varchar medio date fecha }
+          pago { bigint id PK bigint cuenta_cobro_unidad_id FK decimal monto varchar medio date fecha }
 
-          MULTA ||--o{ DOCUMENTO_MULTA : "evidencias"
-          MULTA ||--o{ APELACION : "apelaciones"
-          UNIDAD ||--o{ MULTA : "genera"
-          PERSONA ||--o{ MULTA : "sujeto"
-          MULTA ||--o{ DETALLE_CUENTA_UNIDAD : "se_refleja_en"
-          CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA_UNIDAD : "items"
-          CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"
+          multa ||--o{ documento_multa : "evidencias"
+          multa ||--o{ multa_apelacion : "apelaciones"
+          unidad ||--o{ multa : "genera"
+          persona ||--o{ multa : "sujeto"
+          multa ||--o{ detalle_cuenta_cobro : "se_refleja_en"
+          cuenta_cobro_unidad ||--o{ detalle_cuenta_cobro : "items"
+          cuenta_cobro_unidad ||--o{ pago : "recibe"
         </div>
       </div>
     </div>
@@ -1147,15 +1140,15 @@
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
           erDiagram
-          AMENIDAD { bigint id PK bigint comunidad_id FK varchar nombre text descripcion }
-          TARIFA_AMENIDAD { bigint id PK bigint amenidad_id FK decimal precio varchar periodo }
-          RESERVA_AMENIDAD { bigint id PK bigint amenidad_id FK bigint unidad_id FK date fecha_inicio date fecha_fin
+          amenidad { bigint id PK bigint comunidad_id FK varchar nombre text descripcion }
+          tarifa_amenidad { bigint id PK bigint amenidad_id FK decimal precio varchar periodo }
+          reserva { bigint id PK bigint amenidad_id FK bigint unidad_id FK date fecha_inicio date fecha_fin
           varchar estado }
-          BLOQUEO { bigint id PK bigint amenidad_id FK date desde date hasta varchar motivo }
-          AMENIDAD ||--o{ TARIFA_AMENIDAD : "tiene"
-          AMENIDAD ||--o{ RESERVA_AMENIDAD : "recibe"
-          AMENIDAD ||--o{ BLOQUEO : "bloquea"
-          UNIDAD ||--o{ RESERVA_AMENIDAD : "reserva_por"
+          bloqueo_amenidad { bigint id PK bigint amenidad_id FK date desde date hasta varchar motivo }
+          amenidad ||--o{ tarifa_amenidad : "tiene"
+          amenidad ||--o{ reserva : "recibe"
+          amenidad ||--o{ bloqueo_amenidad : "bloquea"
+          unidad ||--o{ reserva : "reserva_por"
         </div>
       </div>
     </div>
@@ -1171,15 +1164,15 @@
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
           erDiagram
-          TICKET { bigint id PK bigint unidad_id FK bigint usuario_reporta_id FK varchar asunto text descripcion varchar
+          ticket { bigint id PK bigint unidad_id FK bigint usuario_reporta_id FK varchar asunto text descripcion varchar
           estado datetime creado_en }
-          TICKET_COMENTARIO { bigint id PK bigint ticket_id FK bigint usuario_id FK text comentario datetime creado_en }
-          MANTENCION { bigint id PK bigint ticket_id FK date fecha_programada varchar responsable varchar estado }
-          SLA { int id PK varchar nombre int horas_respuesta }
-          UNIDAD ||--o{ TICKET : "genera"
-          TICKET ||--o{ TICKET_COMENTARIO : "tiene"
-          TICKET ||--o{ MANTENCION : "asocia"
-          SLA ||--o{ TICKET : "aplica"
+          comentario_ticket { bigint id PK bigint ticket_id FK bigint usuario_id FK text comentario datetime creado_en }
+          mantencion_programada { bigint id PK bigint ticket_id FK date fecha_programada varchar responsable varchar estado }
+          categoria_ticket { int id PK varchar nombre int horas_respuesta }
+          unidad ||--o{ ticket : "genera"
+          ticket ||--o{ comentario_ticket : "tiene"
+          ticket ||--o{ mantencion_programada : "asocia"
+          categoria_ticket ||--o{ ticket : "aplica"
         </div>
       </div>
     </div>
@@ -1194,13 +1187,13 @@
         <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
         <div class="mermaid">
           erDiagram
-          DASHBOARD { bigint id PK bigint comunidad_id FK varchar nombre text configuracion }
-          KPI { bigint id PK bigint dashboard_id FK varchar codigo varchar descripcion decimal valor }
-          REPORTE_PROGRAMADO { bigint id PK bigint comunidad_id FK varchar tipo varchar schedule varchar formato }
-          EXPORTACION { bigint id PK bigint reporte_programado_id FK datetime generado_en varchar ruta_archivo }
-          DASHBOARD ||--o{ KPI : "muestra"
-          COMUNIDAD ||--o{ REPORTE_PROGRAMADO : "programa"
-          REPORTE_PROGRAMADO ||--o{ EXPORTACION : "genera"
+          dashboard { bigint id PK bigint comunidad_id FK varchar nombre text configuracion }
+          kpi { bigint id PK bigint dashboard_id FK varchar codigo varchar descripcion decimal valor }
+          reporte_programado { bigint id PK bigint comunidad_id FK varchar tipo varchar schedule varchar formato }
+          exportacion { bigint id PK bigint reporte_programado_id FK datetime generado_en varchar ruta_archivo }
+          dashboard ||--o{ kpi : "muestra"
+          comunidad ||--o{ reporte_programado : "programa"
+          reporte_programado ||--o{ exportacion : "genera"
         </div>
       </div>
     </div>
@@ -1210,7 +1203,6 @@
       <p>Stack tecnológico principal del proyecto Cuentas Claras.</p>
 
       <div class="grid" style="margin-top: 30px; gap: 20px;">
-        <!-- Frontend Card -->
         <div class="col"
           style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); flex: 1;">
           <div style="text-align: center; margin-bottom: 20px;">
@@ -1230,7 +1222,6 @@
           </ul>
         </div>
 
-        <!-- Backend Card -->
         <div class="col"
           style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); flex: 1;">
           <div style="text-align: center; margin-bottom: 20px;">
@@ -1253,7 +1244,6 @@
           </ul>
         </div>
 
-        <!-- Docker Card -->
         <div class="col"
           style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); flex: 1;">
           <div style="text-align: center; margin-bottom: 20px;">
@@ -1272,7 +1262,6 @@
     </div>
 
     <section class="slide">
-      <!-- Slide 29: Autenticación y Seguridad -->
       <h2><i class="material-icons">security</i> Autenticación y Seguridad</h2>
       <h3>8.1 Autenticación JWT</h3>
       <p><strong>Flujo básico:</strong></p>
@@ -1293,7 +1282,6 @@
     </section>
 
     <section class="slide">
-      <!-- Slide 30: Conclusión -->
       <h2 style="font-size: 48px;"><i class="material-icons">lightbulb</i> Conclusión</h2>
       <p style="font-size: 24px;">Cuentas Claras es una solución tecnológica robusta, que cumple con:</p>
       <ul style="font-size: 22px;">
@@ -1308,8 +1296,6 @@
 
     <section class="slide"
       style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-
-      <!-- Slide 31: Demostración -->
 
       <h2 style="font-size: 54px; margin-bottom: 20px; border: none; color: var(--text-main);">Demostración</h2>
 
@@ -1336,7 +1322,6 @@
     </section>
 
     <section class="slide">
-      <!-- Slide Final: Contraportada -->
       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/2560px-Logo_DuocUC.svg.png" style="height: 80px; margin-bottom: 40px; filter: brightness(0) invert(1);" alt="Logo Duoc">
       <h1>¡GRACIAS!</h1>
       <h2>FIN DE LA PRESENTACIÓN</h2>
