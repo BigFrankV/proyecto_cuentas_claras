@@ -71,25 +71,13 @@ class PaymentGatewayService {
         `${this.baseUrl}/multas/pago/resultado`
       );
 
-      // Guardar transacción en BD
-      await this.saveTransaction({
-        orderId,
-        communityId,
-        unitId,
-        multaId,
-        amount,
-        gateway: 'webpay',
-        gatewayTransactionId: response.token,
-        status: 'pending',
-        description,
-        gatewayResponse: JSON.stringify(response),
-      });
-
+      // Para Webpay, la transacción ya está guardada en multas.js, solo devolver respuesta
       return {
         success: true,
         transactionId: response.token,
         paymentUrl: response.url,
         gateway: 'webpay',
+        gatewayResponse: response, // Devolver para guardar en multas.js
       };
     } catch (error) {
       logger.error('Error creating Webpay transaction:', error);

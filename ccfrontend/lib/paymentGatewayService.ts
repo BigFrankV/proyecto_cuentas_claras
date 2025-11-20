@@ -29,6 +29,10 @@ export async function verificarEstadoPago(transactionId: string) {
   return apiClient.get(`/payment-gateway/status/${transactionId}`);
 }
 
+export async function getAvailableGateways() {
+  return apiClient.get('/gateway/available');
+}
+
 export async function reembolsarPago(transactionId: string, payload: any) {
   return apiClient.post(`/payment-gateway/refund/${transactionId}`, payload);
 }
