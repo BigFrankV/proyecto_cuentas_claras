@@ -1192,9 +1192,10 @@ router.post(
         req.body;
 
       // Verificar que la comunidad existe
-      const [comunidad] = await db.query('SELECT id FROM comunidad WHERE id = ?', [
-        comunidadId,
-      ]);
+      const [comunidad] = await db.query(
+        'SELECT id FROM comunidad WHERE id = ?',
+        [comunidadId]
+      );
       if (!comunidad.length) {
         return res.status(404).json({ error: 'Comunidad no encontrada' });
       }

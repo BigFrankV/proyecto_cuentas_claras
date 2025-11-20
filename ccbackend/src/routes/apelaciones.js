@@ -223,13 +223,11 @@ router.get(
       });
     } catch (err) {
       console.error('Error GET /apelaciones:', err);
-      res
-        .status(500)
-        .json({
-          success: false,
-          error: 'Error del servidor',
-          message: err.message,
-        });
+      res.status(500).json({
+        success: false,
+        error: 'Error del servidor',
+        message: err.message,
+      });
     }
   }
 );
@@ -434,13 +432,11 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty())
-      return res
-        .status(400)
-        .json({
-          success: false,
-          error: 'Validación fallida',
-          details: errors.array(),
-        });
+      return res.status(400).json({
+        success: false,
+        error: 'Validación fallida',
+        details: errors.array(),
+      });
 
     try {
       const { multa_id, motivo, documentos_json } = req.body;
@@ -490,13 +486,11 @@ router.post(
         multa.id,
       ]);
 
-      res
-        .status(201)
-        .json({
-          success: true,
-          data: { id: result.insertId },
-          message: 'Apelación creada',
-        });
+      res.status(201).json({
+        success: true,
+        data: { id: result.insertId },
+        message: 'Apelación creada',
+      });
     } catch (err) {
       console.error('Error POST /apelaciones', err);
       res.status(500).json({ success: false, error: 'Error del servidor' });
@@ -595,17 +589,15 @@ router.patch(
 
       // Si es rechazada, volver multa a estado anterior
       if (estado === 'rechazada') {
-        await db.query(
-          "UPDATE multa SET estado = 'vigente' WHERE id = ?",
-          [apelacion_anterior[0].multa_id]
-        );
+        await db.query("UPDATE multa SET estado = 'vigente' WHERE id = ?", [
+          apelacion_anterior[0].multa_id,
+        ]);
       }
       // Si es resuelta, anular la multa
       else if (estado === 'resuelta') {
-        await db.query(
-          "UPDATE multa SET estado = 'anulada' WHERE id = ?",
-          [apelacion_anterior[0].multa_id]
-        );
+        await db.query("UPDATE multa SET estado = 'anulada' WHERE id = ?", [
+          apelacion_anterior[0].multa_id,
+        ]);
       }
 
       // Obtener apelación actualizada
@@ -714,4 +706,3 @@ router.delete('/:id', authenticate, async (req, res) => {
 });
 
 module.exports = router;
-

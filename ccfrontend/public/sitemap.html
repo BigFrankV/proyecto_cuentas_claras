@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa del Sitio - Cuentas Claras</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; max-width: 1200px; margin: 0 auto; padding: 40px 20px; color: #333; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #34495e; margin-top: 30px; font-size: 1.2rem; border-left: 4px solid #3498db; padding-left: 10px; }
+        ul { list-style-type: none; padding-left: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+        li { margin: 0; }
+        a { text-decoration: none; color: #2980b9; display: block; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; transition: all 0.2s; border: 1px solid #eee; }
+        a:hover { background: #e3f2fd; color: #1565c0; transform: translateX(5px); border-color: #bbdefb; }
+        .badge { display: inline-block; background: #e0e0e0; color: #555; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle; }
+        .dynamic { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+        .section-group { margin-bottom: 40px; }
+    </style>
+</head>
+<body>
+    <h1>Mapa del Sitio - Cuentas Claras</h1>
+    <p>Estructura completa de navegación y rutas disponibles en la aplicación.</p>
+
+    <div class="section-group">
+        <h2>General y Acceso</h2>
+        <ul>
+            <li><a href="http://localhost:5173/">Inicio / Landing Page</a></li>
+            <li><a href="http://localhost:5173/login">Iniciar Sesión</a></li>
+            <li><a href="http://localhost:5173/register">Registro</a></li>
+            <li><a href="http://localhost:5173/forgot-password">Recuperar Contraseña</a></li>
+            <li><a href="http://localhost:5173/reset-password">Restablecer Contraseña</a></li>
+            <li><a href="http://localhost:5173/dashboard">Dashboard Principal</a></li>
+            <li><a href="http://localhost:5137/mi-perfil">Mi Perfil</a></li>
+        </ul>
+    </div>
+
+    <div class="section-group">
+        <h2>Gestión Financiera</h2>
+        <ul>
+            <li><a href="http://localhost:5173/gastos">Gastos Comunes</a></li>
+            <li><a href="http://localhost:5173/gastos/nuevo">Registrar Nuevo Gasto</a></li>
+            <li><a href="http://localhost:5173/gastos/[id]" class="dynamic">Detalle de Gasto <span class="badge">Dinámico</span></a></li>
+            <li><a href="http://localhost:5173/cargos">Cargos</a></li>
+            <li><a href="http://localhost:5173/cargos-simple">Cargos (Vista Simple)</a></li>
+            <li><a href="http://localhost:5173/cargos/nuevo">Nuevo Cargo</a></li>
+            <li><a href="http://localhost:5173/pagos">Pagos</a></li>
+            <li><a href="http://localhost:5173/pagos/[id]" class="dynamic">Detalle de Pago <span class="badge">Dinámico</span></a></li>
+            <li><a href="http://localhost:5173/conciliaciones">Conciliaciones Bancarias</a></li>
+            <li><a href="http://localhost:5173/conciliaciones/nueva">Nueva Conciliación</a></li>
+            <li><a href="http://localhost:5173/emisiones">Emisiones</a></li>
+            <li><a href="http://localhost:5173/emisiones/nueva">Nueva Emisión</a></li>
+            <li><a href="http://localhost:5173/recibos">Recibos</a></li>
+            <li><a href="http://localhost:5173/compras">Compras</a></li>
+            <li><a href="http://localhost:5173/compras/nuevo">Nueva Compra</a></li>
+        </ul>
+    </div>
+
+    <div class="section-group">
+        <h2>Comunidad y Residentes</h2>
+        <ul>
+            <li><a href="http://localhost:5173/comunidades">Comunidades</a></li>
+            <li><a href="http://localhost:5173/comunidades/nueva">Nueva Comunidad</a></li>
+            <li><a href="http://localhost:5173/unidades">Unidades</a></li>
+            <li><a href="http://localhost:5173/unidades/nueva">Nueva Unidad</a></li>
+            <li><a href="http://localhost:5173/personas">Personas</a></li>
+            <li><a href="http://localhost:5173/personas/nueva">Nueva Persona</a></li>
+            <li><a href="http://localhost:5173/membresias">Membresías</a></li>
+            <li><a href="http://localhost:5173/membresias/nueva">Nueva Membresía</a></li>
+            <li><a href="http://localhost:5173/torres">Torres</a></li>
+            <li><a href="http://localhost:5173/edificios">Edificios</a></li>
+        </ul>
+    </div>
+
+    <div class="section-group">
+        <h2>Servicios y Operaciones</h2>
+        <ul>
+            <li><a href="http://localhost:5173/amenidades">Amenidades</a></li>
+            <li><a href="http://localhost:5173/amenidades-calendario">Calendario de Amenidades</a></li>
+            <li><a href="http://localhost:5173/amenidades-reservas">Reservas</a></li>
+            <li><a href="http://localhost:5173/reservas">Gestión de Reservas</a></li>
+            <li><a href="http://localhost:5173/multas">Multas</a></li>
+            <li><a href="http://localhost:5173/multas-nueva">Nueva Multa</a></li>
+            <li><a href="http://localhost:5173/apelaciones">Apelaciones</a></li>
+            <li><a href="http://localhost:5173/apelaciones-nueva">Nueva Apelación</a></li>
+            <li><a href="http://localhost:5173/tickets">Tickets de Soporte</a></li>
+            <li><a href="http://localhost:5173/tickets/nuevo">Nuevo Ticket</a></li>
+            <li><a href="http://localhost:5173/consumos">Consumos</a></li>
+            <li><a href="http://localhost:5173/lecturas">Lecturas de Medidores</a></li>
+            <li><a href="http://localhost:5173/medidores">Medidores</a></li>
+        </ul>
+    </div>
+
+    <div class="section-group">
+        <h2>Configuración y Parámetros</h2>
+        <ul>
+            <li><a href="http://localhost:5173/parametros">Parámetros del Sistema</a></li>
+            <li><a href="http://localhost:5173/categorias-gasto">Categorías de Gasto</a></li>
+            <li><a href="http://localhost:5173/centros-costo">Centros de Costo</a></li>
+            <li><a href="http://localhost:5173/proveedores">Proveedores</a></li>
+            <li><a href="http://localhost:5173/tarifas">Tarifas</a></li>
+            <li><a href="http://localhost:5173/notificaciones">Notificaciones</a></li>
+            <li><a href="http://localhost:5173/notificaciones-plantillas">Plantillas de Notificación</a></li>
+            <li><a href="http://localhost:5173/bitacora">Bitácora de Actividad</a></li>
+            <li><a href="http://localhost:5173/bitacora-auditoria">Auditoría</a></li>
+            <li><a href="http://localhost:5173/documentos">Gestión Documental</a></li>
+        </ul>
+    </div>
+
+    <div class="section-group">
+        <h2>Utilidades y Herramientas</h2>
+        <ul>
+            <li><a href="http://localhost:5173/reportes">Reportes</a></li>
+            <li><a href="http://localhost:5173/util-rut">Validador RUT</a></li>
+            <li><a href="http://localhost:5173/util-uf">Calculadora UF</a></li>
+            <li><a href="http://localhost:5173/util-utm">Calculadora UTM</a></li>
+            <li><a href="http://localhost:5173/diseno-atomico">Guía de Estilos (Diseño Atómico)</a></li>
+            <li><a href="http://localhost:5173/demo">Página Demo</a></li>
+        </ul>
+    </div>
+
+    <div class="section-group">
+        <h2>Rutas Dinámicas (Detalles y Edición)</h2>
+        <ul>
+            <li><a href="#" class="dynamic">/apelaciones/[id]</a></li>
+            <li><a href="#" class="dynamic">/cargos/[id]</a></li>
+            <li><a href="#" class="dynamic">/comunidades/[id]</a></li>
+            <li><a href="#" class="dynamic">/documentos/[id]</a></li>
+            <li><a href="#" class="dynamic">/gastos/[id]</a></li>
+            <li><a href="#" class="dynamic">/multas/[id]</a></li>
+            <li><a href="#" class="dynamic">/proveedores/[id]</a></li>
+            <li><a href="#" class="dynamic">/tickets/[id]</a></li>
+            <li><a href="#" class="dynamic">/unidades/[id]</a></li>
+        </ul>
+    </div>
+
+    <footer style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #7f8c8d; font-size: 0.9em;">
+        <p>Generado automáticamente para Cuentas Claras Frontend</p>
+    </footer>
+</body>
+</html>

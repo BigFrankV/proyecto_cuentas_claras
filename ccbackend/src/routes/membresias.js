@@ -698,7 +698,9 @@ router.post(
     authenticate,
     authorize('superadmin', 'admin_comunidad', 'administrador'),
     body('usuario_id').isInt({ min: 1 }).withMessage('usuario_id requerido'),
-    body('comunidad_id').isInt({ min: 1 }).withMessage('comunidad_id requerido'),
+    body('comunidad_id')
+      .isInt({ min: 1 })
+      .withMessage('comunidad_id requerido'),
     body('rol_id').isInt({ min: 1 }).withMessage('rol_id requerido'),
     body('desde')
       .isISO8601()
@@ -728,9 +730,10 @@ router.post(
       }
 
       // Verificar que la comunidad existe
-      const [comunidad] = await db.query('SELECT id FROM comunidad WHERE id = ?', [
-        comunidad_id,
-      ]);
+      const [comunidad] = await db.query(
+        'SELECT id FROM comunidad WHERE id = ?',
+        [comunidad_id]
+      );
       if (!comunidad.length) {
         return res.status(404).json({ error: 'Comunidad no encontrada' });
       }
@@ -747,9 +750,9 @@ router.post(
         [usuario_id, comunidad_id]
       );
       if (duplicate.length) {
-        return res
-          .status(409)
-          .json({ error: 'El usuario ya tiene membresía activa en esta comunidad' });
+        return res.status(409).json({
+          error: 'El usuario ya tiene membresía activa en esta comunidad',
+        });
       }
 
       // Insertar membresía
@@ -838,7 +841,10 @@ router.patch(
       .isISO8601()
       .withMessage('hasta debe ser fecha válida')
       .toDate(),
-    body('activo').optional().isBoolean().withMessage('activo debe ser booleano'),
+    body('activo')
+      .optional()
+      .isBoolean()
+      .withMessage('activo debe ser booleano'),
   ],
   async (req, res) => {
     const errors = validationResult(req);

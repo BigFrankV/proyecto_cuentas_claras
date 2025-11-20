@@ -15,7 +15,16 @@ const { authorize } = require('../middleware/authorize');
  */
 router.get('/', authenticate, async (req, res) => {
   try {
-    const { comunidad_id, estado, amenidad_id, usuario_id, fecha_desde, fecha_hasta, limit = 50, offset = 0 } = req.query;
+    const {
+      comunidad_id,
+      estado,
+      amenidad_id,
+      usuario_id,
+      fecha_desde,
+      fecha_hasta,
+      limit = 50,
+      offset = 0,
+    } = req.query;
 
     let query = `
       SELECT 
@@ -79,11 +88,11 @@ router.get('/', authenticate, async (req, res) => {
     params.push(parseInt(limit), parseInt(offset));
 
     const [reservas] = await db.query(query, params);
-    
+
     res.json({
       success: true,
       data: reservas,
-      count: reservas.length
+      count: reservas.length,
     });
   } catch (error) {
     console.error('Error al obtener reservas:', error);
@@ -127,9 +136,11 @@ router.get('/:id', authenticate, async (req, res) => {
     `;
 
     const [reservas] = await db.query(query, [id]);
-    
+
     if (reservas.length === 0) {
-      return res.status(404).json({ success: false, error: 'Reserva no encontrada' });
+      return res
+        .status(404)
+        .json({ success: false, error: 'Reserva no encontrada' });
     }
 
     res.json({ success: true, data: reservas[0] });
@@ -148,14 +159,19 @@ router.post(
   authenticate,
   authorize(['superadmin', 'admin_comunidad', 'administrador', 'residente']),
   [
-    body('numero_reserva').trim().notEmpty().withMessage('Número de reserva requerido'),
+    body('numero_reserva')
+      .trim()
+      .notEmpty()
+      .withMessage('Número de reserva requerido'),
     body('comunidad_id').isInt().withMessage('ID de comunidad inválido'),
     body('amenidad_id').isInt().withMessage('ID de amenidad inválido'),
     body('unidad_id').isInt().withMessage('ID de unidad inválido'),
     body('fecha_inicio').isISO8601().withMessage('Fecha inicio inválida'),
     body('fecha_fin').isISO8601().withMessage('Fecha fin inválida'),
-    body('cantidad_personas').isInt({ min: 1 }).withMessage('Cantidad de personas inválida'),
-    body('observaciones').optional().trim().escape()
+    body('cantidad_personas')
+      .isInt({ min: 1 })
+      .withMessage('Cantidad de personas inválida'),
+    body('observaciones').optional().trim().escape(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -172,13 +188,18 @@ router.post(
         fecha_inicio,
         fecha_fin,
         cantidad_personas,
-        observaciones
+        observaciones,
       } = req.body;
 
       // Verificaciones de existencia
-      const [comunidades] = await db.query('SELECT id FROM comunidad WHERE id = ?', [comunidad_id]);
+      const [comunidades] = await db.query(
+        'SELECT id FROM comunidad WHERE id = ?',
+        [comunidad_id]
+      );
       if (comunidades.length === 0) {
-        return res.status(404).json({ success: false, error: 'Comunidad no encontrada' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Comunidad no encontrada' });
       }
 
       const [amenidades] = await db.query(
@@ -186,7 +207,9 @@ router.post(
         [amenidad_id, comunidad_id]
       );
       if (amenidades.length === 0) {
-        return res.status(404).json({ success: false, error: 'Amenidad no encontrada' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Amenidad no encontrada' });
       }
 
       const [unidades] = await db.query(
@@ -194,7 +217,9 @@ router.post(
         [unidad_id, comunidad_id]
       );
       if (unidades.length === 0) {
-        return res.status(404).json({ success: false, error: 'Unidad no encontrada' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Unidad no encontrada' });
       }
 
       // Validar que el número de reserva sea único
@@ -203,19 +228,25 @@ router.post(
         [numero_reserva, comunidad_id]
       );
       if (reservasExistentes.length > 0) {
-        return res.status(409).json({ success: false, error: 'Número de reserva ya existe' });
+        return res
+          .status(409)
+          .json({ success: false, error: 'Número de reserva ya existe' });
       }
 
       // Validar que cantidad de personas no supere capacidad
-      if (cantidad_personas > amenidades[0].capacidad && amenidades[0].capacidad > 0) {
-        return res.status(400).json({ 
-          success: false, 
-          error: `Cantidad de personas no puede superar capacidad de ${amenidades[0].capacidad}` 
+      if (
+        cantidad_personas > amenidades[0].capacidad &&
+        amenidades[0].capacidad > 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: `Cantidad de personas no puede superar capacidad de ${amenidades[0].capacidad}`,
         });
       }
 
       // Validar que no haya conflicto de fechas
-      const [conflictos] = await db.query(`
+      const [conflictos] = await db.query(
+        `
         SELECT id FROM reserva_amenidad 
         WHERE amenidad_id = ? 
         AND estado IN ('solicitada', 'aprobada', 'cumplida')
@@ -224,22 +255,28 @@ router.post(
           OR (DATE(fecha_inicio) >= ? AND DATE(fecha_inicio) <= ?)
           OR (DATE(fecha_fin) >= ? AND DATE(fecha_fin) <= ?)
         )
-      `, [
-        amenidad_id,
-        fecha_fin, fecha_inicio,
-        fecha_inicio, fecha_fin,
-        fecha_inicio, fecha_fin
-      ]);
+      `,
+        [
+          amenidad_id,
+          fecha_fin,
+          fecha_inicio,
+          fecha_inicio,
+          fecha_fin,
+          fecha_inicio,
+          fecha_fin,
+        ]
+      );
 
       if (conflictos.length > 0) {
-        return res.status(409).json({ 
-          success: false, 
-          error: 'Hay conflicto con otras reservas en esas fechas' 
+        return res.status(409).json({
+          success: false,
+          error: 'Hay conflicto con otras reservas en esas fechas',
         });
       }
 
       // Crear la reserva
-      const estado = amenidades[0].requiere_aprobacion === 1 ? 'solicitada' : 'aprobada';
+      const estado =
+        amenidades[0].requiere_aprobacion === 1 ? 'solicitada' : 'aprobada';
 
       const insertQuery = `
         INSERT INTO reserva_amenidad (
@@ -268,7 +305,7 @@ router.post(
         fecha_fin,
         cantidad_personas,
         estado,
-        observaciones || null
+        observaciones || null,
       ]);
 
       // Registrar en auditoría
@@ -285,16 +322,16 @@ router.post(
             amenidad_id,
             fecha_inicio,
             fecha_fin,
-            cantidad_personas
+            cantidad_personas,
           }),
-          req.ip
+          req.ip,
         ]
       );
 
       res.status(201).json({
         success: true,
         message: `Reserva ${estado === 'aprobada' ? 'confirmada' : 'solicitada'} exitosamente`,
-        data: { id: result.insertId, estado, ...req.body }
+        data: { id: result.insertId, estado, ...req.body },
       });
     } catch (error) {
       console.error('Error al crear reserva:', error);
@@ -312,12 +349,21 @@ router.put(
   authenticate,
   authorize(['superadmin', 'admin_comunidad', 'administrador', 'residente']),
   [
-    body('fecha_inicio').optional().isISO8601().withMessage('Fecha inicio inválida'),
+    body('fecha_inicio')
+      .optional()
+      .isISO8601()
+      .withMessage('Fecha inicio inválida'),
     body('fecha_fin').optional().isISO8601().withMessage('Fecha fin inválida'),
-    body('cantidad_personas').optional().isInt({ min: 1 }).withMessage('Cantidad de personas inválida'),
-    body('estado').optional().isIn(['solicitada', 'aprobada', 'rechazada', 'cumplida', 'cancelada']).withMessage('Estado inválido'),
+    body('cantidad_personas')
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage('Cantidad de personas inválida'),
+    body('estado')
+      .optional()
+      .isIn(['solicitada', 'aprobada', 'rechazada', 'cumplida', 'cancelada'])
+      .withMessage('Estado inválido'),
     body('motivo_rechazo').optional().trim().escape(),
-    body('observaciones').optional().trim().escape()
+    body('observaciones').optional().trim().escape(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -327,33 +373,60 @@ router.put(
 
     try {
       const { id } = req.params;
-      const { fecha_inicio, fecha_fin, cantidad_personas, estado, motivo_rechazo, observaciones } = req.body;
+      const {
+        fecha_inicio,
+        fecha_fin,
+        cantidad_personas,
+        estado,
+        motivo_rechazo,
+        observaciones,
+      } = req.body;
 
       // Obtener reserva actual
-      const [reservas] = await db.query('SELECT * FROM reserva_amenidad WHERE id = ?', [id]);
+      const [reservas] = await db.query(
+        'SELECT * FROM reserva_amenidad WHERE id = ?',
+        [id]
+      );
       if (reservas.length === 0) {
-        return res.status(404).json({ success: false, error: 'Reserva no encontrada' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Reserva no encontrada' });
       }
 
       const reserva = reservas[0];
       const valores_anteriores = { ...reserva };
 
       // Validar permisos de actualización
-      const esAdmin = ['superadmin', 'admin_comunidad', 'administrador'].includes(req.user.rol);
+      const esAdmin = [
+        'superadmin',
+        'admin_comunidad',
+        'administrador',
+      ].includes(req.user.rol);
       const esOwner = reserva.usuario_id === req.user.id;
 
       if (!esAdmin && !esOwner) {
-        return res.status(403).json({ success: false, error: 'No tienes permiso para actualizar esta reserva' });
+        return res.status(403).json({
+          success: false,
+          error: 'No tienes permiso para actualizar esta reserva',
+        });
       }
 
       // Si el residente intenta cambiar el estado, solo puede a 'cancelada'
       if (!esAdmin && estado && estado !== 'cancelada') {
-        return res.status(403).json({ success: false, error: 'Solo puedes cancelar tu reserva' });
+        return res
+          .status(403)
+          .json({ success: false, error: 'Solo puedes cancelar tu reserva' });
       }
 
       // Validar que no esté ya cumplida o cancelada
-      if (['cumplida', 'cancelada'].includes(reserva.estado) && (fecha_inicio || fecha_fin || estado)) {
-        return res.status(409).json({ success: false, error: 'No se puede modificar una reserva completada o cancelada' });
+      if (
+        ['cumplida', 'cancelada'].includes(reserva.estado) &&
+        (fecha_inicio || fecha_fin || estado)
+      ) {
+        return res.status(409).json({
+          success: false,
+          error: 'No se puede modificar una reserva completada o cancelada',
+        });
       }
 
       let updateFields = [];
@@ -391,7 +464,9 @@ router.put(
       }
 
       if (updateFields.length === 0) {
-        return res.status(400).json({ success: false, error: 'No hay campos para actualizar' });
+        return res
+          .status(400)
+          .json({ success: false, error: 'No hay campos para actualizar' });
       }
 
       updateFields.push('updated_at = NOW()');
@@ -401,7 +476,10 @@ router.put(
       await db.query(updateQuery, updateValues);
 
       // Obtener reserva actualizada
-      const [reservasActualizadas] = await db.query('SELECT * FROM reserva_amenidad WHERE id = ?', [id]);
+      const [reservasActualizadas] = await db.query(
+        'SELECT * FROM reserva_amenidad WHERE id = ?',
+        [id]
+      );
 
       // Registrar en auditoría
       await db.query(
@@ -414,14 +492,14 @@ router.put(
           id,
           JSON.stringify(valores_anteriores),
           JSON.stringify(reservasActualizadas[0]),
-          req.ip
+          req.ip,
         ]
       );
 
       res.json({
         success: true,
         message: 'Reserva actualizada exitosamente',
-        data: reservasActualizadas[0]
+        data: reservasActualizadas[0],
       });
     } catch (error) {
       console.error('Error al actualizar reserva:', error);
@@ -443,31 +521,46 @@ router.delete(
       const { id } = req.params;
 
       // Obtener reserva
-      const [reservas] = await db.query('SELECT * FROM reserva_amenidad WHERE id = ?', [id]);
+      const [reservas] = await db.query(
+        'SELECT * FROM reserva_amenidad WHERE id = ?',
+        [id]
+      );
       if (reservas.length === 0) {
-        return res.status(404).json({ success: false, error: 'Reserva no encontrada' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Reserva no encontrada' });
       }
 
       const reserva = reservas[0];
 
       // Validar permisos
-      const esAdmin = ['superadmin', 'admin_comunidad', 'administrador'].includes(req.user.rol);
+      const esAdmin = [
+        'superadmin',
+        'admin_comunidad',
+        'administrador',
+      ].includes(req.user.rol);
       const esOwner = reserva.usuario_id === req.user.id;
 
       if (!esAdmin && !esOwner) {
-        return res.status(403).json({ success: false, error: 'No tienes permiso para cancelar esta reserva' });
+        return res.status(403).json({
+          success: false,
+          error: 'No tienes permiso para cancelar esta reserva',
+        });
       }
 
       // Validar que sea cancelable (no cumplida, no rechazada)
       if (['cumplida', 'rechazada'].includes(reserva.estado)) {
-        return res.status(409).json({ 
-          success: false, 
-          error: `No se puede cancelar una reserva ${reserva.estado}` 
+        return res.status(409).json({
+          success: false,
+          error: `No se puede cancelar una reserva ${reserva.estado}`,
         });
       }
 
       // Soft delete - cambiar estado a cancelada
-      await db.query('UPDATE reserva_amenidad SET estado = ?, activo = 0, updated_at = NOW() WHERE id = ?', ['cancelada', id]);
+      await db.query(
+        'UPDATE reserva_amenidad SET estado = ?, activo = 0, updated_at = NOW() WHERE id = ?',
+        ['cancelada', id]
+      );
 
       // Registrar en auditoría
       await db.query(
@@ -479,13 +572,13 @@ router.delete(
           'reserva_amenidad',
           id,
           JSON.stringify(reserva),
-          req.ip
+          req.ip,
         ]
       );
 
       res.json({
         success: true,
-        message: 'Reserva cancelada exitosamente'
+        message: 'Reserva cancelada exitosamente',
       });
     } catch (error) {
       console.error('Error al cancelar reserva:', error);

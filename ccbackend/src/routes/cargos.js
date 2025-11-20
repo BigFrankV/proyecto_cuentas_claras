@@ -1966,9 +1966,10 @@ router.delete(
       const cargoId = Number(req.params.id);
 
       // Obtener cargo a eliminar
-      const [cargo] = await db.query('SELECT * FROM cargo_unidad WHERE id = ?', [
-        cargoId,
-      ]);
+      const [cargo] = await db.query(
+        'SELECT * FROM cargo_unidad WHERE id = ?',
+        [cargoId]
+      );
       if (!cargo.length) {
         return res.status(404).json({ error: 'Cargo no encontrado' });
       }

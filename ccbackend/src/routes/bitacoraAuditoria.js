@@ -15,7 +15,16 @@ const { authorize } = require('../middleware/authorize');
  */
 router.get('/', authenticate, async (req, res) => {
   try {
-    const { comunidad_id, tipo, prioridad, usuario_id, fecha_desde, fecha_hasta, limit = 50, offset = 0 } = req.query;
+    const {
+      comunidad_id,
+      tipo,
+      prioridad,
+      usuario_id,
+      fecha_desde,
+      fecha_hasta,
+      limit = 50,
+      offset = 0,
+    } = req.query;
 
     let query = `
       SELECT 
@@ -73,11 +82,11 @@ router.get('/', authenticate, async (req, res) => {
     params.push(parseInt(limit), parseInt(offset));
 
     const [registros] = await db.query(query, params);
-    
+
     res.json({
       success: true,
       data: registros,
-      count: registros.length
+      count: registros.length,
     });
   } catch (error) {
     console.error('Error al obtener registros de bitácora:', error);
@@ -106,9 +115,11 @@ router.get('/:id', authenticate, async (req, res) => {
     `;
 
     const [registros] = await db.query(query, [id]);
-    
+
     if (registros.length === 0) {
-      return res.status(404).json({ success: false, error: 'Registro no encontrado' });
+      return res
+        .status(404)
+        .json({ success: false, error: 'Registro no encontrado' });
     }
 
     res.json({ success: true, data: registros[0] });
@@ -127,16 +138,33 @@ router.post(
   authenticate,
   authorize(['superadmin', 'admin_comunidad', 'administrador']),
   [
-    body('numero_registro').trim().notEmpty().withMessage('Número de registro requerido'),
+    body('numero_registro')
+      .trim()
+      .notEmpty()
+      .withMessage('Número de registro requerido'),
     body('comunidad_id').isInt().withMessage('ID de comunidad inválido'),
-    body('tipo').trim().notEmpty().isIn(['acceso', 'cambio_datos', 'accion_importante', 'evento_seguridad', 'otro']).withMessage('Tipo inválido'),
-    body('prioridad').trim().notEmpty().isIn(['baja', 'media', 'alta', 'crítica']).withMessage('Prioridad inválida'),
+    body('tipo')
+      .trim()
+      .notEmpty()
+      .isIn([
+        'acceso',
+        'cambio_datos',
+        'accion_importante',
+        'evento_seguridad',
+        'otro',
+      ])
+      .withMessage('Tipo inválido'),
+    body('prioridad')
+      .trim()
+      .notEmpty()
+      .isIn(['baja', 'media', 'alta', 'crítica'])
+      .withMessage('Prioridad inválida'),
     body('titulo').trim().notEmpty().withMessage('Título requerido'),
     body('descripcion').trim().notEmpty().withMessage('Descripción requerida'),
     body('fecha').isISO8601().withMessage('Fecha inválida'),
     body('tags').optional().trim().escape(),
     body('adjuntos').optional().trim().escape(),
-    body('ubicacion').optional().trim().escape()
+    body('ubicacion').optional().trim().escape(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -155,13 +183,18 @@ router.post(
         fecha,
         tags,
         adjuntos,
-        ubicacion
+        ubicacion,
       } = req.body;
 
       // Verificar que la comunidad existe
-      const [comunidades] = await db.query('SELECT id FROM comunidad WHERE id = ?', [comunidad_id]);
+      const [comunidades] = await db.query(
+        'SELECT id FROM comunidad WHERE id = ?',
+        [comunidad_id]
+      );
       if (comunidades.length === 0) {
-        return res.status(404).json({ success: false, error: 'Comunidad no encontrada' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Comunidad no encontrada' });
       }
 
       // Verificar que el número de registro sea único
@@ -170,7 +203,9 @@ router.post(
         [numero_registro, comunidad_id]
       );
       if (registrosExistentes.length > 0) {
-        return res.status(409).json({ success: false, error: 'Número de registro ya existe' });
+        return res
+          .status(409)
+          .json({ success: false, error: 'Número de registro ya existe' });
       }
 
       // Crear el registro
@@ -205,7 +240,7 @@ router.post(
         tags || null,
         adjuntos || null,
         req.ip,
-        ubicacion || null
+        ubicacion || null,
       ]);
 
       // Registrar en auditoría del sistema
@@ -221,16 +256,16 @@ router.post(
             numero_registro,
             tipo,
             prioridad,
-            titulo
+            titulo,
           }),
-          req.ip
+          req.ip,
         ]
       );
 
       res.status(201).json({
         success: true,
         message: 'Registro de bitácora creado exitosamente',
-        data: { id: result.insertId, ...req.body }
+        data: { id: result.insertId, ...req.body },
       });
     } catch (error) {
       console.error('Error al crear registro:', error);
@@ -248,13 +283,33 @@ router.put(
   authenticate,
   authorize(['superadmin', 'admin_comunidad', 'administrador']),
   [
-    body('tipo').optional().isIn(['acceso', 'cambio_datos', 'accion_importante', 'evento_seguridad', 'otro']).withMessage('Tipo inválido'),
-    body('prioridad').optional().isIn(['baja', 'media', 'alta', 'crítica']).withMessage('Prioridad inválida'),
-    body('titulo').optional().trim().notEmpty().withMessage('Título no puede estar vacío'),
-    body('descripcion').optional().trim().notEmpty().withMessage('Descripción no puede estar vacía'),
+    body('tipo')
+      .optional()
+      .isIn([
+        'acceso',
+        'cambio_datos',
+        'accion_importante',
+        'evento_seguridad',
+        'otro',
+      ])
+      .withMessage('Tipo inválido'),
+    body('prioridad')
+      .optional()
+      .isIn(['baja', 'media', 'alta', 'crítica'])
+      .withMessage('Prioridad inválida'),
+    body('titulo')
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage('Título no puede estar vacío'),
+    body('descripcion')
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage('Descripción no puede estar vacía'),
     body('tags').optional().trim().escape(),
     body('adjuntos').optional().trim().escape(),
-    body('ubicacion').optional().trim().escape()
+    body('ubicacion').optional().trim().escape(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -264,12 +319,25 @@ router.put(
 
     try {
       const { id } = req.params;
-      const { tipo, prioridad, titulo, descripcion, tags, adjuntos, ubicacion } = req.body;
+      const {
+        tipo,
+        prioridad,
+        titulo,
+        descripcion,
+        tags,
+        adjuntos,
+        ubicacion,
+      } = req.body;
 
       // Obtener registro actual
-      const [registros] = await db.query('SELECT * FROM bitacora_auditoria WHERE id = ?', [id]);
+      const [registros] = await db.query(
+        'SELECT * FROM bitacora_auditoria WHERE id = ?',
+        [id]
+      );
       if (registros.length === 0) {
-        return res.status(404).json({ success: false, error: 'Registro no encontrado' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Registro no encontrado' });
       }
 
       const registro = registros[0];
@@ -308,7 +376,9 @@ router.put(
       }
 
       if (updateFields.length === 0) {
-        return res.status(400).json({ success: false, error: 'No hay campos para actualizar' });
+        return res
+          .status(400)
+          .json({ success: false, error: 'No hay campos para actualizar' });
       }
 
       updateFields.push('updated_at = NOW()');
@@ -318,7 +388,10 @@ router.put(
       await db.query(updateQuery, updateValues);
 
       // Obtener registro actualizado
-      const [registrosActualizados] = await db.query('SELECT * FROM bitacora_auditoria WHERE id = ?', [id]);
+      const [registrosActualizados] = await db.query(
+        'SELECT * FROM bitacora_auditoria WHERE id = ?',
+        [id]
+      );
 
       // Registrar en auditoría
       await db.query(
@@ -331,14 +404,14 @@ router.put(
           id,
           JSON.stringify(valores_anteriores),
           JSON.stringify(registrosActualizados[0]),
-          req.ip
+          req.ip,
         ]
       );
 
       res.json({
         success: true,
         message: 'Registro actualizado exitosamente',
-        data: registrosActualizados[0]
+        data: registrosActualizados[0],
       });
     } catch (error) {
       console.error('Error al actualizar registro:', error);
@@ -360,20 +433,30 @@ router.delete(
       const { id } = req.params;
 
       // Obtener registro
-      const [registros] = await db.query('SELECT * FROM bitacora_auditoria WHERE id = ?', [id]);
+      const [registros] = await db.query(
+        'SELECT * FROM bitacora_auditoria WHERE id = ?',
+        [id]
+      );
       if (registros.length === 0) {
-        return res.status(404).json({ success: false, error: 'Registro no encontrado' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Registro no encontrado' });
       }
 
       const registro = registros[0];
 
       // Validar que no esté ya eliminado
       if (registro.activo === 0) {
-        return res.status(409).json({ success: false, error: 'Registro ya fue eliminado' });
+        return res
+          .status(409)
+          .json({ success: false, error: 'Registro ya fue eliminado' });
       }
 
       // Soft delete
-      await db.query('UPDATE bitacora_auditoria SET activo = 0, updated_at = NOW() WHERE id = ?', [id]);
+      await db.query(
+        'UPDATE bitacora_auditoria SET activo = 0, updated_at = NOW() WHERE id = ?',
+        [id]
+      );
 
       // Registrar en auditoría
       await db.query(
@@ -385,13 +468,13 @@ router.delete(
           'bitacora_auditoria',
           id,
           JSON.stringify(registro),
-          req.ip
+          req.ip,
         ]
       );
 
       res.json({
         success: true,
-        message: 'Registro eliminado exitosamente'
+        message: 'Registro eliminado exitosamente',
       });
     } catch (error) {
       console.error('Error al eliminar registro:', error);

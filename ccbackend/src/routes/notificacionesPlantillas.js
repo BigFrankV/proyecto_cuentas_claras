@@ -54,11 +54,11 @@ router.get('/', authenticate, async (req, res) => {
     params.push(parseInt(limit), parseInt(offset));
 
     const [plantillas] = await db.query(query, params);
-    
+
     res.json({
       success: true,
       data: plantillas,
-      count: plantillas.length
+      count: plantillas.length,
     });
   } catch (error) {
     console.error('Error al obtener plantillas:', error);
@@ -84,9 +84,11 @@ router.get('/:id', authenticate, async (req, res) => {
     `;
 
     const [plantillas] = await db.query(query, [id]);
-    
+
     if (plantillas.length === 0) {
-      return res.status(404).json({ success: false, error: 'Plantilla no encontrada' });
+      return res
+        .status(404)
+        .json({ success: false, error: 'Plantilla no encontrada' });
     }
 
     res.json({ success: true, data: plantillas[0] });
@@ -106,12 +108,19 @@ router.post(
   authorize(['superadmin', 'admin_comunidad', 'administrador']),
   [
     body('nombre').trim().notEmpty().withMessage('Nombre requerido'),
-    body('tipo').trim().notEmpty().isIn(['email', 'sms', 'push', 'ambos']).withMessage('Tipo inválido'),
+    body('tipo')
+      .trim()
+      .notEmpty()
+      .isIn(['email', 'sms', 'push', 'ambos'])
+      .withMessage('Tipo inválido'),
     body('asunto').trim().notEmpty().withMessage('Asunto requerido'),
     body('contenido').trim().notEmpty().withMessage('Contenido requerido'),
     body('comunidad_id').isInt().withMessage('ID de comunidad inválido'),
     body('variables').optional().trim().escape(),
-    body('estado').optional().isIn(['activa', 'inactiva', 'prueba']).withMessage('Estado inválido')
+    body('estado')
+      .optional()
+      .isIn(['activa', 'inactiva', 'prueba'])
+      .withMessage('Estado inválido'),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -127,13 +136,18 @@ router.post(
         contenido,
         comunidad_id,
         variables,
-        estado = 'activa'
+        estado = 'activa',
       } = req.body;
 
       // Verificar que la comunidad existe
-      const [comunidades] = await db.query('SELECT id FROM comunidad WHERE id = ?', [comunidad_id]);
+      const [comunidades] = await db.query(
+        'SELECT id FROM comunidad WHERE id = ?',
+        [comunidad_id]
+      );
       if (comunidades.length === 0) {
-        return res.status(404).json({ success: false, error: 'Comunidad no encontrada' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Comunidad no encontrada' });
       }
 
       // Verificar que el nombre sea único en la comunidad
@@ -142,7 +156,10 @@ router.post(
         [nombre, comunidad_id]
       );
       if (plantillasExistentes.length > 0) {
-        return res.status(409).json({ success: false, error: 'Ya existe una plantilla con ese nombre' });
+        return res.status(409).json({
+          success: false,
+          error: 'Ya existe una plantilla con ese nombre',
+        });
       }
 
       // Crear la plantilla
@@ -167,7 +184,7 @@ router.post(
         contenido,
         comunidad_id,
         variables || null,
-        estado
+        estado,
       ]);
 
       // Registrar en auditoría
@@ -183,16 +200,16 @@ router.post(
             nombre,
             tipo,
             asunto,
-            comunidad_id
+            comunidad_id,
           }),
-          req.ip
+          req.ip,
         ]
       );
 
       res.status(201).json({
         success: true,
         message: 'Plantilla creada exitosamente',
-        data: { id: result.insertId, ...req.body }
+        data: { id: result.insertId, ...req.body },
       });
     } catch (error) {
       console.error('Error al crear plantilla:', error);
@@ -210,12 +227,30 @@ router.put(
   authenticate,
   authorize(['superadmin', 'admin_comunidad', 'administrador']),
   [
-    body('nombre').optional().trim().notEmpty().withMessage('Nombre no puede estar vacío'),
-    body('tipo').optional().isIn(['email', 'sms', 'push', 'ambos']).withMessage('Tipo inválido'),
-    body('asunto').optional().trim().notEmpty().withMessage('Asunto no puede estar vacío'),
-    body('contenido').optional().trim().notEmpty().withMessage('Contenido no puede estar vacío'),
+    body('nombre')
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage('Nombre no puede estar vacío'),
+    body('tipo')
+      .optional()
+      .isIn(['email', 'sms', 'push', 'ambos'])
+      .withMessage('Tipo inválido'),
+    body('asunto')
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage('Asunto no puede estar vacío'),
+    body('contenido')
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage('Contenido no puede estar vacío'),
     body('variables').optional().trim().escape(),
-    body('estado').optional().isIn(['activa', 'inactiva', 'prueba']).withMessage('Estado inválido')
+    body('estado')
+      .optional()
+      .isIn(['activa', 'inactiva', 'prueba'])
+      .withMessage('Estado inválido'),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -228,9 +263,14 @@ router.put(
       const { nombre, tipo, asunto, contenido, variables, estado } = req.body;
 
       // Obtener plantilla actual
-      const [plantillas] = await db.query('SELECT * FROM notificacion_plantilla WHERE id = ?', [id]);
+      const [plantillas] = await db.query(
+        'SELECT * FROM notificacion_plantilla WHERE id = ?',
+        [id]
+      );
       if (plantillas.length === 0) {
-        return res.status(404).json({ success: false, error: 'Plantilla no encontrada' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Plantilla no encontrada' });
       }
 
       const plantilla = plantillas[0];
@@ -243,7 +283,10 @@ router.put(
           [nombre, plantilla.comunidad_id, id]
         );
         if (duplicados.length > 0) {
-          return res.status(409).json({ success: false, error: 'Ya existe una plantilla con ese nombre' });
+          return res.status(409).json({
+            success: false,
+            error: 'Ya existe una plantilla con ese nombre',
+          });
         }
       }
 
@@ -276,7 +319,9 @@ router.put(
       }
 
       if (updateFields.length === 0) {
-        return res.status(400).json({ success: false, error: 'No hay campos para actualizar' });
+        return res
+          .status(400)
+          .json({ success: false, error: 'No hay campos para actualizar' });
       }
 
       updateFields.push('updated_at = NOW()');
@@ -286,7 +331,10 @@ router.put(
       await db.query(updateQuery, updateValues);
 
       // Obtener plantilla actualizada
-      const [plantillasActualizadas] = await db.query('SELECT * FROM notificacion_plantilla WHERE id = ?', [id]);
+      const [plantillasActualizadas] = await db.query(
+        'SELECT * FROM notificacion_plantilla WHERE id = ?',
+        [id]
+      );
 
       // Registrar en auditoría
       await db.query(
@@ -299,14 +347,14 @@ router.put(
           id,
           JSON.stringify(valores_anteriores),
           JSON.stringify(plantillasActualizadas[0]),
-          req.ip
+          req.ip,
         ]
       );
 
       res.json({
         success: true,
         message: 'Plantilla actualizada exitosamente',
-        data: plantillasActualizadas[0]
+        data: plantillasActualizadas[0],
       });
     } catch (error) {
       console.error('Error al actualizar plantilla:', error);
@@ -328,20 +376,30 @@ router.delete(
       const { id } = req.params;
 
       // Obtener plantilla
-      const [plantillas] = await db.query('SELECT * FROM notificacion_plantilla WHERE id = ?', [id]);
+      const [plantillas] = await db.query(
+        'SELECT * FROM notificacion_plantilla WHERE id = ?',
+        [id]
+      );
       if (plantillas.length === 0) {
-        return res.status(404).json({ success: false, error: 'Plantilla no encontrada' });
+        return res
+          .status(404)
+          .json({ success: false, error: 'Plantilla no encontrada' });
       }
 
       const plantilla = plantillas[0];
 
       // Validar que no esté ya eliminada
       if (plantilla.activo === 0) {
-        return res.status(409).json({ success: false, error: 'Plantilla ya fue eliminada' });
+        return res
+          .status(409)
+          .json({ success: false, error: 'Plantilla ya fue eliminada' });
       }
 
       // Soft delete
-      await db.query('UPDATE notificacion_plantilla SET activo = 0, updated_at = NOW() WHERE id = ?', [id]);
+      await db.query(
+        'UPDATE notificacion_plantilla SET activo = 0, updated_at = NOW() WHERE id = ?',
+        [id]
+      );
 
       // Registrar en auditoría
       await db.query(
@@ -353,13 +411,13 @@ router.delete(
           'notificacion_plantilla',
           id,
           JSON.stringify(plantilla),
-          req.ip
+          req.ip,
         ]
       );
 
       res.json({
         success: true,
-        message: 'Plantilla eliminada exitosamente'
+        message: 'Plantilla eliminada exitosamente',
       });
     } catch (error) {
       console.error('Error al eliminar plantilla:', error);

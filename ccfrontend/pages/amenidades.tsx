@@ -2,6 +2,7 @@
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 
+import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 
 const AmenidadesPage = dynamic(
@@ -16,7 +17,9 @@ export default function AmenidadesListado() {
         <title>Amenidades — Cuentas Claras</title>
       </Head>
 
-      <AmenidadesPage />
+      <Layout>
+        <AmenidadesPage />
+      </Layout>
     </ProtectedRoute>
   );
 }

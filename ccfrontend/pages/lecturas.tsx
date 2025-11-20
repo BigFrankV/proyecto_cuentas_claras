@@ -1,6 +1,8 @@
 import dynamic from 'next/dynamic';
+import Head from 'next/head';
 import React from 'react';
 
+import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { ProtectedPage } from '@/lib/usePermissions';
 
@@ -23,7 +25,14 @@ export default function LecturasRoute() {
         'propietario',
         'inquilino',
         'usuario',
-      ]}>        <LecturasPage />
+      ]}>
+        <Head>
+          <title>Lecturas — Cuentas Claras</title>
+        </Head>
+
+        <Layout>
+          <LecturasPage />
+        </Layout>
       </ProtectedPage>
     </ProtectedRoute>
   );

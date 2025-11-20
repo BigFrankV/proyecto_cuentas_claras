@@ -85,7 +85,7 @@ const { requireCommunity } = require('../middleware/tenancy');
 router.get(
   '/comunidad/:comunidadId',
   authenticate,
-  requireCommunity('comunidadId' ),
+  requireCommunity('comunidadId'),
   async (req, res) => {
     const comunidadId = Number(req.params.comunidadId);
     const {

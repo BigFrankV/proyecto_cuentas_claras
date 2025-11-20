@@ -44,7 +44,6 @@ export default function GastosListado() {
   const [selectedExpenses, setSelectedExpenses] = useState<number[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const isFetchingRef = useRef(false); // evita reentradas
-  const hasLoadedRef = useRef(false); // <-- añadir para controlar carga inicial
 
   // Filtros
   const [filters, setFilters] = useState({
@@ -64,9 +63,13 @@ export default function GastosListado() {
 
   // Memoizar comunidadId para evitar re-ejecuciones del useEffect
   const resolvedComunidadId = useMemo(() => {
-    // Siempre usar endpoint global /gastos - el backend filtra por comunidades asignadas
-    return undefined;
-  }, []); // <-- simplificar, siempre undefined
+    // Si es superusuario, no filtramos por comunidad (undefined = endpoint global)
+    if (isSuperUser) {
+      return undefined;
+    }
+    // Si es usuario normal, usamos su comunidad_id
+    return user?.comunidad_id ?? undefined;
+  }, [isSuperUser, user?.comunidad_id]);
 
   const loadExpenses = useCallback(async () => {
     if (isFetchingRef.current) {
@@ -105,14 +108,8 @@ export default function GastosListado() {
       return;
     }
 
-    // Evitar carga inicial duplicada
-    if (hasLoadedRef.current) {
-      return;
-    }
-    hasLoadedRef.current = true;
-
     loadExpenses();
-  }, [authLoading, isAuthenticated, isSuperUser, resolvedComunidadId]); // <-- quitar loadExpenses
+  }, [authLoading, isAuthenticated, loadExpenses]);
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('es-CL', {

@@ -1,5 +1,7 @@
 import dynamic from 'next/dynamic';
+import Head from 'next/head';
 
+import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
 
 const AmenidadesCalendarioPage = dynamic(
@@ -10,7 +12,13 @@ const AmenidadesCalendarioPage = dynamic(
 export default function AmenidadesCalendario() {
   return (
     <ProtectedRoute>
-      <AmenidadesCalendarioPage />
+      <Head>
+        <title>Amenidades - Calendario — Cuentas Claras</title>
+      </Head>
+
+      <Layout>
+        <AmenidadesCalendarioPage />
+      </Layout>
     </ProtectedRoute>
   );
 }

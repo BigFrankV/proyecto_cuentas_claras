@@ -1,190 +1,491 @@
+import mermaid from 'mermaid';
 import Head from 'next/head';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import Script from 'next/script';
 import { useState, useEffect } from 'react';
+import { Modal, Button } from 'react-bootstrap';
 
 import { useAuth } from '@/lib/useAuth';
 import { validateIdentifier, formatIdentifier } from '@/lib/validators';
 
+const diagrams = [
+	{
+		title: 'Flujo Principal (Viaje del Usuario)',
+		code: `sequenceDiagram
+          participant Admin
+          participant Sistema
+          participant Residente
+          participant Pasarela de pago
+
+          Admin->>Sistema: Carga Gasto (Factura Luz)
+          Sistema->>Sistema: Calcula Prorrateo (Alicuotas)
+          Sistema->>Residente: Notifica Cobro (Email)
+          Residente->>Sistema: Visualiza Deuda en App
+          Residente->>Pasarela de pago: Realiza Pago Web
+          Pasarela de pago->>Sistema: Webhook (Pago Exitoso)
+          Sistema->>Sistema: Conciliación Automática
+          Sistema->>Admin: Actualiza Dashboard Financiero`,
+	},
+	{
+		title: 'Arquitectura del Sistema',
+		code: `flowchart TB
+          classDef front fill:#dbeafe,stroke:#1e40af,stroke-width:2px,color:#1e3a8a
+          classDef back fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f
+          classDef data fill:#dcfce7,stroke:#166534,stroke-width:2px,color:#14532d
+          classDef ext fill:#f3f4f6,stroke:#4b5563,stroke-width:2px,stroke-dasharray: 5 5,color:#374151
+
+          U[Usuario / Navegador]
+
+          subgraph EXTERNAL["Servicios externos"]
+          direction TB
+          PAYMENT[Pasarela de pagos / Webhooks]:::ext
+          SMTP[Proveedor SMTP / Email]:::ext
+          end
+
+          subgraph CLOUD["Nube"]
+          direction TB
+          subgraph EDGE["Edge / Gateway"]
+          direction LR
+          NGINX[Nginx - reverse proxy / CDN]:::front
+          FE[Frontend - Next.js / React]:::front
+          end
+          subgraph BACKEND["Backend / API"]
+          direction LR
+          API["API - Node.js / Express\n(Sequelize)"]:::back
+          WORKERS[Workers / Background Jobs]:::back
+          end
+          subgraph INFRA["Infra: DB / Cache / Storage"]
+          direction LR
+          REDIS[(Redis)]:::data
+          STORAGE[(Uploads / Object Storage)]:::data
+          A1([ ])
+          A2([ ])
+          MYSQL[(MySQL 8.0\nInnoDB)]:::data
+          PHPMY[phpMyAdmin]:::data
+          end
+          end
+
+          U --> NGINX
+          NGINX --> FE
+          FE --> API
+          PAYMENT --> API
+          SMTP --> API
+          API --> WORKERS
+          API --> REDIS
+          WORKERS --> REDIS
+          API --> STORAGE
+          WORKERS --> STORAGE
+          API --> A1 --> A2 --> MYSQL
+          PHPMY --> MYSQL
+          WORKERS -.-> MYSQL`,
+	},
+	{
+		title: 'Diagrama Principal (ER)',
+		code: `erDiagram
+          PERSONA { int id string rut string nombres string apellidos string email }
+          USUARIO { int id int persona_id string username string password boolean activo }
+          ROL { int id string codigo string nombre int nivel_acceso }
+          USUARIO_COMUNIDAD_ROL { int id int usuario_id int comunidad_id int rol_id string desde string hasta boolean
+          activo }
+          COMUNIDAD { int id string razon_social string email_contacto }
+          EDIFICIO { int id int comunidad_id string nombre }
+          UNIDAD { int id int edificio_id string codigo }
+          TITULARES_UNIDAD { int id int unidad_id int persona_id string tipo }
+          EMISION_GASTOS_COMUNES { int id int comunidad_id string periodo string fecha_vencimiento }
+          DETALLE_EMISION_GASTOS { int id int emision_id int gasto_id number monto }
+          CUENTA_COBRO_UNIDAD { int id int emision_id int unidad_id number monto_total string estado }
+          DETALLE_CUENTA_UNIDAD { int id int cuenta_cobro_unidad_id int categoria_id number monto }
+          GASTO { int id int comunidad_id number monto }
+          DOCUMENTO_COMPRA { int id int gasto_id number total }
+          PAGO { int id int cuenta_cobro_unidad_id number monto string medio }
+          MULTA { int id int unidad_id int persona_id number monto }
+          AMENIDAD { int id int comunidad_id string nombre }
+          RESERVA_AMENIDAD { int id int amenidad_id int unidad_id string estado }
+          MEDIDOR { int id int unidad_id string tipo }
+          LECTURA_MEDIDOR { int id int medidor_id string fecha number lectura }
+          ARCHIVO { int id string entity_type int entity_id string file_path }
+          PERSONA ||--o{ USUARIO : "crea/tiene"
+          USUARIO ||--o{ USUARIO_COMUNIDAD_ROL : "asignaciones"
+          ROL ||--o{ USUARIO_COMUNIDAD_ROL : "rol_asignado"
+          COMUNIDAD ||--o{ EDIFICIO : "contiene"
+          EDIFICIO ||--o{ UNIDAD : "contiene"
+          UNIDAD ||--o{ TITULARES_UNIDAD : "titulares"
+          EMISION_GASTOS_COMUNES ||--o{ DETALLE_EMISION_GASTOS : "incluye"
+          GASTO ||--o{ DETALLE_EMISION_GASTOS : "desglosa"
+          EMISION_GASTOS_COMUNES ||--o{ CUENTA_COBRO_UNIDAD : "genera"
+          CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA_UNIDAD : "items"
+          CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"
+          UNIDAD ||--o{ CUENTA_COBRO_UNIDAD : "tiene"
+          UNIDAD ||--o{ MEDIDOR : "tiene"
+          MEDIDOR ||--o{ LECTURA_MEDIDOR : "registra"
+          AMENIDAD ||--o{ RESERVA_AMENIDAD : "reserva"
+          UNIDAD ||--o{ RESERVA_AMENIDAD : "reserva_por"
+          UNIDAD ||--o{ MULTA : "puede_tener"
+          PERSONA ||--o{ MULTA : "sujeto"`,
+	},
+	{
+		title: 'Módulo 01 · Comunidades',
+		code: `erDiagram
+          COMUNIDAD { bigint id PK varchar codigo UK varchar nombre varchar razon_social varchar email_contacto }
+          PARAMETRO { bigint id PK bigint comunidad_id FK varchar clave varchar valor }
+          CENTRO_COSTO { bigint id PK bigint comunidad_id FK varchar codigo UK varchar nombre }
+          CATEGORIA { bigint id PK bigint comunidad_id FK varchar codigo varchar nombre }
+          ALIQUOTA { bigint id PK bigint comunidad_id FK decimal porcentaje varchar descripcion }
+          COMUNIDAD ||--o{ PARAMETRO : "tiene"
+          COMUNIDAD ||--o{ CENTRO_COSTO : "contiene"
+          COMUNIDAD ||--o{ CATEGORIA : "contiene"
+          COMUNIDAD ||--o{ ALIQUOTA : "define"
+          CENTRO_COSTO ||--o{ CATEGORIA : "clasifica"`,
+	},
+	{
+		title: 'Módulo 02 · Usuarios y Seguridad',
+		code: `erDiagram
+          PERSONA { bigint id PK varchar rut UK char dv varchar nombres varchar apellidos varchar email varchar telefono
+          }
+          USUARIO { bigint id PK bigint persona_id FK varchar username UK varchar hash_password tinyint totp_enabled
+          datetime created_at datetime last_login }
+          ROL { int id PK varchar codigo UK varchar nombre int nivel_acceso tinyint es_sistema }
+          COMUNIDAD { int id PK varchar nombre varchar razon_social }
+          USUARIO_COMUNIDAD_ROL { bigint id PK bigint usuario_id FK bigint comunidad_id FK int rol_id FK tinyint activo
+          date desde date hasta }
+          AUDITORIA { bigint id PK bigint usuario_id FK varchar accion datetime fecha text detalle }
+          SESION_USUARIO { bigint id PK bigint usuario_id FK varchar token datetime created_at datetime expires_at
+          varchar ip varchar user_agent }
+          PERSONA ||--o{ USUARIO : "crea/tiene"
+          USUARIO ||--o{ USUARIO_COMUNIDAD_ROL : "asignaciones"
+          ROL ||--o{ USUARIO_COMUNIDAD_ROL : "rol_asignado"
+          COMUNIDAD ||--o{ USUARIO_COMUNIDAD_ROL : "pertenece"
+          USUARIO ||--o{ AUDITORIA : "registra"
+          USUARIO ||--o{ SESION_USUARIO : "sesiones"`,
+	},
+	{
+		title: 'Módulo 03 · Estructura',
+		code: `erDiagram
+          EDIFICIO { bigint id PK bigint comunidad_id FK varchar nombre varchar direccion }
+          TORRE { bigint id PK bigint edificio_id FK varchar nombre }
+          UNIDAD { bigint id PK bigint edificio_id FK bigint torre_id FK varchar codigo UK decimal alicuota }
+          TITULAR { bigint id PK bigint unidad_id FK bigint persona_id FK varchar tipo }
+          COMUNIDAD ||--o{ EDIFICIO : "contiene"
+          EDIFICIO ||--o{ TORRE : "contiene"
+          EDIFICIO ||--o{ UNIDAD : "contiene"
+          TORRE ||--o{ UNIDAD : "tiene"
+          UNIDAD ||--o{ TITULAR : "titulares"
+          COMUNIDAD ||--o{ UNIDAD : "condominio"`,
+	},
+	{
+		title: 'Módulo 04 · Gestión Financiera',
+		code: `erDiagram
+          PROVEEDOR { bigint id PK varchar rut UK varchar nombre varchar email }
+          DOCUMENTO_COMPRA { bigint id PK bigint proveedor_id FK varchar tipo varchar numero decimal total date fecha }
+          GASTO { bigint id PK bigint documento_compra_id FK bigint comunidad_id FK decimal monto int categoria_id FK }
+          CATEGORIA_CONTABLE { int id PK varchar codigo varchar nombre }
+          ASIENTO { bigint id PK bigint gasto_id FK date fecha text detalle }
+          PROVEEDOR ||--o{ DOCUMENTO_COMPRA : "emite"
+          DOCUMENTO_COMPRA ||--o{ GASTO : "origina"
+          GASTO ||--o{ ASIENTO : "genera"
+          CATEGORIA_CONTABLE ||--o{ GASTO : "clasifica"`,
+	},
+	{
+		title: 'Módulo 05 · Cobros y Pagos',
+		code: `erDiagram
+          EMISION_GASTOS_COMUNES { bigint id PK bigint comunidad_id FK varchar periodo date fecha_vencimiento }
+          DETALLE_EMISION { bigint id PK bigint emision_id FK int categoria_id FK decimal monto }
+          CUENTA_COBRO_UNIDAD { bigint id PK bigint emision_id FK bigint unidad_id FK decimal monto_total varchar estado
+          }
+          DETALLE_CUENTA { bigint id PK bigint cuenta_cobro_unidad_id FK int categoria_id FK decimal monto }
+          PAGO { bigint id PK bigint cuenta_cobro_unidad_id FK decimal monto varchar medio date fecha }
+          CONCILIACION { bigint id PK bigint pago_id FK varchar banco date fecha varchar estado }
+          EMISION_GASTOS_COMUNES ||--o{ DETALLE_EMISION : "incluye"
+          EMISION_GASTOS_COMUNES ||--o{ CUENTA_COBRO_UNIDAD : "genera"
+          CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA : "items"
+          CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"
+          PAGO ||--o{ CONCILIACION : "conciliacion"`,
+	},
+	{
+		title: 'Módulo 05.1 · Multas',
+		code: `erDiagram
+          MULTA { bigint id PK bigint comunidad_id FK bigint unidad_id FK bigint persona_id FK varchar motivo decimal
+          monto enum estado datetime fecha datetime fecha_pago }
+          DOCUMENTO_MULTA { bigint id PK bigint multa_id FK varchar nombre varchar ruta varchar tipo }
+          APELACION { bigint id PK bigint multa_id FK bigint persona_id FK varchar estado text detalle datetime
+          creado_en }
+          UNIDAD { bigint id PK int edificio_id int torre_id varchar codigo decimal alicuota }
+          PERSONA { bigint id PK varchar rut varchar nombres varchar apellidos varchar email }
+          CUENTA_COBRO_UNIDAD { bigint id PK bigint emision_id FK bigint unidad_id FK decimal monto_total varchar estado
+          }
+          DETALLE_CUENTA_UNIDAD { bigint id PK bigint cuenta_cobro_unidad_id FK int categoria_id FK decimal monto enum
+          origen bigint origen_id }
+          PAGO { bigint id PK bigint cuenta_cobro_unidad_id FK decimal monto varchar medio date fecha }
+
+          MULTA ||--o{ DOCUMENTO_MULTA : "evidencias"
+          MULTA ||--o{ APELACION : "apelaciones"
+          UNIDAD ||--o{ MULTA : "genera"
+          PERSONA ||--o{ MULTA : "sujeto"
+          MULTA ||--o{ DETALLE_CUENTA_UNIDAD : "se_refleja_en"
+          CUENTA_COBRO_UNIDAD ||--o{ DETALLE_CUENTA_UNIDAD : "items"
+          CUENTA_COBRO_UNIDAD ||--o{ PAGO : "recibe"`,
+	},
+	{
+		title: 'Módulo 06 · Amenidades',
+		code: `erDiagram
+          AMENIDAD { bigint id PK bigint comunidad_id FK varchar nombre text descripcion }
+          TARIFA_AMENIDAD { bigint id PK bigint amenidad_id FK decimal precio varchar periodo }
+          RESERVA_AMENIDAD { bigint id PK bigint amenidad_id FK bigint unidad_id FK date fecha_inicio date fecha_fin
+          varchar estado }
+          BLOQUEO { bigint id PK bigint amenidad_id FK date desde date hasta varchar motivo }
+          AMENIDAD ||--o{ TARIFA_AMENIDAD : "tiene"
+          AMENIDAD ||--o{ RESERVA_AMENIDAD : "recibe"
+          AMENIDAD ||--o{ BLOQUEO : "bloquea"
+          UNIDAD ||--o{ RESERVA_AMENIDAD : "reserva_por"`,
+	},
+	{
+		title: 'Módulo 07 · Soporte',
+		code: `erDiagram
+          TICKET { bigint id PK bigint unidad_id FK bigint usuario_reporta_id FK varchar asunto text descripcion varchar
+          estado datetime creado_en }
+          TICKET_COMENTARIO { bigint id PK bigint ticket_id FK bigint usuario_id FK text comentario datetime creado_en }
+          MANTENCION { bigint id PK bigint ticket_id FK date fecha_programada varchar responsable varchar estado }
+          SLA { int id PK varchar nombre int horas_respuesta }
+          UNIDAD ||--o{ TICKET : "genera"
+          TICKET ||--o{ TICKET_COMENTARIO : "tiene"
+          TICKET ||--o{ MANTENCION : "asocia"
+          SLA ||--o{ TICKET : "aplica"`,
+	},
+	{
+		title: 'Módulo 08 · Reportes',
+		code: `erDiagram
+          DASHBOARD { bigint id PK bigint comunidad_id FK varchar nombre text configuracion }
+          KPI { bigint id PK bigint dashboard_id FK varchar codigo varchar descripcion decimal valor }
+          REPORTE_PROGRAMADO { bigint id PK bigint comunidad_id FK varchar tipo varchar schedule varchar formato }
+          EXPORTACION { bigint id PK bigint reporte_programado_id FK datetime generado_en varchar ruta_archivo }
+          DASHBOARD ||--o{ KPI : "muestra"
+          COMUNIDAD ||--o{ REPORTE_PROGRAMADO : "programa"
+          REPORTE_PROGRAMADO ||--o{ EXPORTACION : "genera"`,
+	},
+];
+
 export default function Home() {
-  const router = useRouter();
-  const {
-    login: authLogin,
-    complete2FALogin,
-    isAuthenticated,
-    isLoading: authLoading,
-  } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+	const router = useRouter();
+	const {
+		login: authLogin,
+		complete2FALogin,
+		isAuthenticated,
+		isLoading: authLoading,
+	} = useAuth();
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState('');
 
-  // Estados para 2FA
-  const [requires2FA, setRequires2FA] = useState(false);
-  const [tempToken, setTempToken] = useState('');
-  const [twoFactorCode, setTwoFactorCode] = useState('');
-  const [username, setUsername] = useState('');
+	// Estados para 2FA
+	const [requires2FA, setRequires2FA] = useState(false);
+	const [tempToken, setTempToken] = useState('');
+	const [twoFactorCode, setTwoFactorCode] = useState('');
+	const [username, setUsername] = useState('');
 
-  // Estado para validación de identificador
-  const [identifierValue, setIdentifierValue] = useState('');
-  const [identifierValidation, setIdentifierValidation] = useState<{
-    isValid: boolean;
-    type: string;
-    message?: string | undefined;
-  } | null>(null);
+	// Estado para validación de identificador
+	const [identifierValue, setIdentifierValue] = useState('');
+	const [identifierValidation, setIdentifierValidation] = useState<{
+		isValid: boolean;
+		type: string;
+		message?: string | undefined;
+	} | null>(null);
 
-  // Redirigir si ya está autenticado
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log(
-      '🏠 Estado auth en login page - autenticado:',
-      isAuthenticated,
-      'cargando:',
-      authLoading,
-    );
-    if (isAuthenticated && !authLoading) {
-      // eslint-disable-next-line no-console
-      console.log('✅ Usuario autenticado, redirigiendo al dashboard...');
-      router.push('/dashboard');
-    }
-  }, [isAuthenticated, authLoading, router]);
+	// Estado para diagramas
+	const [showModal, setShowModal] = useState(false);
+	const [selectedDiagram, setSelectedDiagram] = useState<{ title: string; code: string } | null>(null);
 
-  // Validar identificador en tiempo real
-  useEffect(() => {
-    if (identifierValue.trim()) {
-      const validation = validateIdentifier(identifierValue);
-      setIdentifierValidation(validation);
-    } else {
-      setIdentifierValidation(null);
-    }
-  }, [identifierValue]);
+	// Redirigir si ya está autenticado
+	useEffect(() => {
+		// eslint-disable-next-line no-console
+		console.log(
+			'🏠 Estado auth en login page - autenticado:',
+			isAuthenticated,
+			'cargando:',
+			authLoading,
+		);
+		if (isAuthenticated && !authLoading) {
+			// eslint-disable-next-line no-console
+			console.log('✅ Usuario autenticado, redirigiendo al dashboard...');
+			router.push('/dashboard');
+		}
+	}, [isAuthenticated, authLoading, router]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError('');
+	// Validar identificador en tiempo real
+	useEffect(() => {
+		if (identifierValue.trim()) {
+			const validation = validateIdentifier(identifierValue);
+			setIdentifierValidation(validation);
+		} else {
+			setIdentifierValidation(null);
+		}
+	}, [identifierValue]);
 
-    const formData = new FormData(e.currentTarget);
-    const password = formData.get('password') as string;
+	useEffect(() => {
+		mermaid.initialize({
+			startOnLoad: false,
+			theme: 'base',
+			themeVariables: {
+				primaryColor: '#004AAD',
+				primaryTextColor: '#0A2540',
+				primaryBorderColor: '#3673D8',
+				lineColor: '#004AAD',
+				secondaryColor: '#3673D8',
+				tertiaryColor: '#60a5fa',
+			},
+			securityLevel: 'loose',
+		});
+	}, []);
 
-    // Validación básica
-    if (!identifierValue || !password) {
-      setError('Por favor completa todos los campos');
-      return;
-    }
+	useEffect(() => {
+		if (showModal && selectedDiagram) {
+			// Pequeño delay para asegurar que el modal esté renderizado
+			setTimeout(() => {
+				mermaid.run({
+					querySelector: '.mermaid',
+				});
+			}, 100);
+		}
+	}, [showModal, selectedDiagram]);
 
-    // Validar formato del identificador
-    if (identifierValidation && !identifierValidation.isValid) {
-      setError(
-        identifierValidation.message || 'Formato de identificador inválido',
-      );
-      return;
-    }
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		setError('');
 
-    setIsLoading(true);
-    setUsername(identifierValue); // Guardar identifier para 2FA
+		const formData = new FormData(e.currentTarget);
+		const password = formData.get('password') as string;
 
-    try {
-      // Formatear el identificador antes de enviarlo
-      const formattedIdentifier = formatIdentifier(identifierValue);
+		// Validación básica
+		if (!identifierValue || !password) {
+			setError('Por favor completa todos los campos');
+			return;
+		}
 
-      // Usar el login del contexto de autenticación
-      const response = await authLogin(formattedIdentifier, password);
+		// Validar formato del identificador
+		if (identifierValidation && !identifierValidation.isValid) {
+			setError(
+				identifierValidation.message || 'Formato de identificador inválido',
+			);
+			return;
+		}
 
-      // Verificar si se requiere 2FA
-      if (response.twoFactorRequired && response.tempToken) {
-        setRequires2FA(true);
-        setTempToken(response.tempToken);
-        setIsLoading(false);
-        return;
-      }
+		setIsLoading(true);
+		setUsername(identifierValue); // Guardar identifier para 2FA
 
-      // Si no requiere 2FA, la redirección se maneja en el useEffect cuando isAuthenticated cambie
-    } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+		try {
+			// Formatear el identificador antes de enviarlo
+			const formattedIdentifier = formatIdentifier(identifierValue);
 
-  // Manejar envío de código 2FA
-  const handle2FASubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError('');
+			// Usar el login del contexto de autenticación
+			const response = await authLogin(formattedIdentifier, password);
 
-    if (!twoFactorCode || twoFactorCode.length !== 6) {
-      setError('Por favor ingresa un código de 6 dígitos');
-      return;
-    }
+			// Verificar si se requiere 2FA
+			if (response.twoFactorRequired && response.tempToken) {
+				setRequires2FA(true);
+				setTempToken(response.tempToken);
+				setIsLoading(false);
+				return;
+			}
 
-    if (!tempToken) {
-      setError('Token temporal expirado. Por favor inicia sesión nuevamente.');
-      setRequires2FA(false);
-      return;
-    }
+			// Si no requiere 2FA, la redirección se maneja en el useEffect cuando isAuthenticated cambie
+		} catch (err: any) {
+			setError(err.message || 'Error al iniciar sesión');
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
-    setIsLoading(true);
+	// Manejar envío de código 2FA
+	const handle2FASubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		setError('');
 
-    try {
-      // eslint-disable-next-line no-console
-      console.log('📱 Enviando código 2FA...');
-      await complete2FALogin(tempToken, twoFactorCode);
-      // eslint-disable-next-line no-console
-      console.log('✅ Código 2FA verificado, esperando redirección...');
-      // La redirección se maneja en el useEffect cuando isAuthenticated cambie
-    } catch (err: any) {
-      // eslint-disable-next-line no-console
-      console.error('❌ Error en 2FA:', err);
-      setError(err.message || 'Código de verificación inválido');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+		if (!twoFactorCode || twoFactorCode.length !== 6) {
+			setError('Por favor ingresa un código de 6 dígitos');
+			return;
+		}
 
-  // Cancelar 2FA y volver al login normal
-  const cancel2FA = () => {
-    setRequires2FA(false);
-    setTempToken('');
-    setTwoFactorCode('');
-    setUsername('');
-    setError('');
-  };
+		if (!tempToken) {
+			setError('Token temporal expirado. Por favor inicia sesión nuevamente.');
+			setRequires2FA(false);
+			return;
+		}
 
-  // Pre-llenar los campos con las credenciales por defecto
-  const fillDefaultCredentials = () => {
-    const usernameInput = document.querySelector(
-      'input[name="username"]',
-    ) as HTMLInputElement;
-    const passwordInput = document.querySelector(
-      'input[name="password"]',
-    ) as HTMLInputElement;
+		setIsLoading(true);
 
-    if (usernameInput) {
-      usernameInput.value = 'patrick';
-    }
-    if (passwordInput) {
-      passwordInput.value = 'patrick';
-    }
-  };
+		try {
+			// eslint-disable-next-line no-console
+			console.log('📱 Enviando código 2FA...');
+			await complete2FALogin(tempToken, twoFactorCode);
+			// eslint-disable-next-line no-console
+			console.log('✅ Código 2FA verificado, esperando redirección...');
+			// La redirección se maneja en el useEffect cuando isAuthenticated cambie
+		} catch (err: any) {
+			// eslint-disable-next-line no-console
+			console.error('❌ Error en 2FA:', err);
+			setError(err.message || 'Código de verificación inválido');
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
-  return (
-    <>
-      <Head>
-        <title>Entrar — Cuentas Claras</title>
-      </Head>
+	// Cancelar 2FA y volver al login normal
+	const cancel2FA = () => {
+		setRequires2FA(false);
+		setTempToken('');
+		setTwoFactorCode('');
+		setUsername('');
+		setError('');
+	};
 
-      <div
-        style={{
-          background:
-            'linear-gradient(180deg, var(--color-primary) 0%, #07244a 100%)',
-          minHeight: '100vh',
-          color: 'var(--bs-body-color)',
-        }}
-      >
-        <div className='container'>
-          <div className='row align-items-center' style={{ minHeight: '80vh' }}>
-            {/* Hero Left Section */}
-            <div className='col-lg-6 d-none d-lg-flex hero-left flex-column justify-content-center'>
-              {/* Illustrative SVG (buildings) */}
-              <div className='mb-4'>
-                {/* <svg
+	// Pre-llenar los campos con las credenciales por defecto
+	const fillDefaultCredentials = () => {
+		const usernameInput = document.querySelector(
+			'input[name="username"]',
+		) as HTMLInputElement;
+		const passwordInput = document.querySelector(
+			'input[name="password"]',
+		) as HTMLInputElement;
+
+		if (usernameInput) {
+			usernameInput.value = 'patrick';
+		}
+		if (passwordInput) {
+			passwordInput.value = 'patrick';
+		}
+	};
+
+	const handleShowDiagram = (diagram: { title: string; code: string }) => {
+		setSelectedDiagram(diagram);
+		setShowModal(true);
+	};
+
+	const handleCloseModal = () => {
+		setShowModal(false);
+		setSelectedDiagram(null);
+	};
+
+	return (
+		<>
+			<Head>
+				<title>Entrar — Cuentas Claras</title>
+			</Head>
+
+			<div
+				style={{
+					background:
+						'linear-gradient(180deg, var(--color-primary) 0%, #07244a 100%)',
+					minHeight: '100vh',
+					color: 'var(--bs-body-color)',
+				}}
+			>
+				<div className='container'>
+					<div className='row align-items-center' style={{ minHeight: '80vh' }}>
+						{/* Hero Left Section */}
+						<div className='col-lg-6 d-none d-lg-flex hero-left flex-column justify-content-center'>
+							{/* Illustrative SVG (buildings) */}
+							<div className='mb-4'>
+								{/* <svg
                   width='160'
                   height='96'
                   viewBox='0 0 160 96'
@@ -233,1409 +534,720 @@ export default function Home() {
                     fill='rgba(255,255,255,0.045)'
                   />
                 </svg> */}
-              </div>
-              <h1 className='mb-3'>Bienvenido a Cuentas Claras</h1>
-              <p className='lead'>
-                Cuentas Claras es una plataforma integral diseñada para optimizar la administración de comunidades y condominios mediante herramientas profesionales, análisis avanzado y procesos automatizados.
-              </p>
-
-
-              <ul className='list-unstyled mt-4 feature-list'>
-                <li className='mb-2'>
-                  <span
-                    className='material-icons align-middle me-2'
-                    style={{ color: 'var(--color-accent)' }}
-                  >
-                    dashboard
-                  </span>
-                  Panel ejecutivo con indicadores en tiempo real, facilitando decisiones rápidas y basadas en datos.
-                </li>
-                <li className='mb-2'>
-                  <span
-                    className='material-icons align-middle me-2'
-                    style={{ color: 'var(--color-accent)' }}
-                  >
-                    business
-                  </span>
-                  Gestión centralizada de comunidades y edificios, con soporte para múltiples configuraciones.
-                </li>
-                <li className='mb-2'>
-                  <span
-                    className='material-icons align-middle me-2'
-                    style={{ color: 'var(--color-accent)' }}
-                  >
-                    apartment
-                  </span>
-                  Control detallado de unidades, propietarios, arrendatarios y ocupación.
-                </li>
-                <li className='mb-2'>
-                  <span
-                    className='material-icons align-middle me-2'
-                    style={{ color: 'var(--color-accent)' }}
-                  >
-                    payments
-                  </span>
-                  Sistema financiero robusto, con pagos online, conciliación automática y trazabilidad completa.
-                </li>
-                <li className='mb-2'>
-                  <span
-                    className='material-icons align-middle me-2'
-                    style={{ color: 'var(--color-accent)' }}
-                  >
-                    receipt_long
-                  </span>
-                  Generación automática de documentos contables y administrativos.
-                </li>
-
-
-                <li className='mb-2'>
-                  <span
-                    className='material-icons align-middle me-2'
-                    style={{ color: 'var(--color-accent)' }}
-                  >
-                    bar_chart
-                  </span>
-                  Reportes avanzados para análisis financiero, operativo y de cumplimiento.
-                </li>
-                <li className='mb-2'>
-                  <span
-                    className='material-icons align-middle me-2'
-                    style={{ color: 'var(--color-accent)' }}
-                  >
-                    support_agent
-                  </span>
-                  Plataforma de soporte y atención mediante tickets.
-                </li>
-
-              </ul>
-
-
-            </div>
-
-            {/* Login Form Section */}
-            <div className='col-lg-6'>
-              <div className='login-wrap'>
-                <div
-                  className='login-card card p-4 shadow-lg w-100 align-self-center'
-                  style={{ maxWidth: '520px' }}
-                >
-                  <div className='d-flex align-items-center mb-3'>
-                    <div className='me-3 login-illustration'>
-                      <span
-                        className='material-icons'
-                        style={{
-                          fontSize: '48px',
-                          color: 'var(--color-accent)',
-                        }}
-                      >
-                        lock
-                      </span>
-                    </div>
-                    <div>
-                      <div className='brand-lg h4 mb-0'>Cuentas Claras</div>
-                      <small className='muted'>Gestión condominial</small>
-                    </div>
-                  </div>
-
-                  {/* Título dinámico */}
-                  <p className='text-muted'>
-                    {requires2FA
-                      ? 'Introduce el código de 6 dígitos de tu aplicación de autenticación.'
-                      : 'Ingresa con tu correo, RUT, DNI o usuario para acceder al panel.'}
-                  </p>
-
-                  {error && (
-                    <div
-                      className='alert alert-danger alert-dismissible fade show'
-                      role='alert'
-                    >
-                      <i
-                        className='material-icons me-2'
-                        style={{ fontSize: '1.2rem', verticalAlign: 'middle' }}
-                      >
-                        error
-                      </i>
-                      {error}
-                      <button
-                        type='button'
-                        className='btn-close'
-                        onClick={() => setError('')}
-                        aria-label='Close'
-                      ></button>
-                    </div>
-                  )}
-
-                  {/* Formulario normal de login */}
-                  {!requires2FA && (
-                    <form onSubmit={handleSubmit}>
-                      <div className='mb-3'>
-                        <label className='form-label'>
-                          Correo, RUT, DNI o Usuario
-                        </label>
-                        <input
-                          name='identifier'
-                          type='text'
-                          className={`form-control ${
-                            identifierValidation
-                              ? identifierValidation.isValid
-                                ? 'is-valid'
-                                : 'is-invalid'
-                              : ''
-                          }`}
-                          placeholder='ejemplo@correo.com, 12345678-9, 12345678 o usuario'
-                          value={identifierValue}
-                          onChange={e => setIdentifierValue(e.target.value)}
-                          required
-                        />
-                        {identifierValidation && (
-                          <div
-                            className={`${
-                              identifierValidation.isValid
-                                ? 'valid-feedback'
-                                : 'invalid-feedback'
-                            }`}
-                          >
-                            {identifierValidation.isValid
-                              ? `Tipo detectado: ${
-                                  identifierValidation.type === 'email'
-                                    ? 'Correo electrónico'
-                                    : identifierValidation.type === 'rut'
-                                      ? 'RUT chileno'
-                                      : identifierValidation.type === 'dni'
-                                        ? 'DNI'
-                                        : 'Nombre de usuario'
-                                }`
-                              : identifierValidation.message ||
-                                'Formato inválido'}
-                          </div>
-                        )}
-                        {!identifierValidation && (
-                          <div className='form-text'>
-                            Puedes usar tu correo electrónico, RUT (Chile), DNI
-                            o nombre de usuario
-                          </div>
-                        )}
-                      </div>
-                      <div className='mb-3'>
-                        <label className='form-label'>Contraseña</label>
-                        <input
-                          name='password'
-                          type='password'
-                          className='form-control'
-                          placeholder='********'
-                          required
-                        />
-                      </div>
-
-                      <div className='d-flex justify-content-between align-items-center mb-3'>
-                        <div className='form-check'>
-                          <input
-                            className='form-check-input'
-                            type='checkbox'
-                            id='remember'
-                          />
-                          <label
-                            className='form-check-label'
-                            htmlFor='remember'
-                          >
-                            Recordarme
-                          </label>
-                        </div>
-                        <Link
-                          href='/forgot-password'
-                          className='small text-decoration-none'
-                        >
-                          ¿Olvidaste tu contraseña?
-                        </Link>
-                      </div>
-
-                      <div className='d-grid'>
-                        <button
-                          className='btn btn-primary'
-                          type='submit'
-                          disabled={isLoading}
-                        >
-                          {isLoading ? 'Entrando...' : 'Entrar'}
-                        </button>
-                      </div>
-                    </form>
-                  )}
-
-                  {/* Formulario de verificación 2FA */}
-                  {requires2FA && (
-                    <form onSubmit={handle2FASubmit}>
-                      <div className='text-center mb-4'>
-                        <div
-                          className='d-inline-flex align-items-center justify-content-center bg-light rounded-circle'
-                          style={{ width: '80px', height: '80px' }}
-                        >
-                          <span
-                            className='material-icons'
-                            style={{
-                              fontSize: '40px',
-                              color: 'var(--color-primary)',
-                            }}
-                          >
-                            verified_user
-                          </span>
-                        </div>
-                        <h5 className='mt-3 mb-1'>
-                          Verificación de Dos Factores
-                        </h5>
-                        <p className='text-muted small mb-0'>
-                          Usuario: <strong>{username}</strong>
-                        </p>
-                      </div>
-
-                      <div className='mb-4'>
-                        <label className='form-label text-center d-block'>
-                          Código de Verificación
-                        </label>
-                        <input
-                          type='text'
-                          className='form-control text-center'
-                          style={{
-                            fontSize: '1.5rem',
-                            letterSpacing: '0.5rem',
-                            height: '60px',
-                          }}
-                          placeholder='000000'
-                          value={twoFactorCode}
-                          onChange={e =>
-                            setTwoFactorCode(
-                              e.target.value.replace(/\D/g, '').slice(0, 6),
-                            )
-                          }
-                          maxLength={6}
-                          required
-                          autoFocus
-                        />
-                        <div className='form-text text-center'>
-                          Ingresa el código de 6 dígitos de tu aplicación de
-                          autenticación
-                        </div>
-                      </div>
-
-                      <div className='d-grid gap-2'>
-                        <button
-                          className='btn btn-primary'
-                          type='submit'
-                          disabled={isLoading || twoFactorCode.length !== 6}
-                        >
-                          {isLoading ? (
-                            <>
-                              <span
-                                className='spinner-border spinner-border-sm me-2'
-                                role='status'
-                              ></span>
-                              Verificando...
-                            </>
-                          ) : (
-                            'Verificar Código'
-                          )}
-                        </button>
-                        <button
-                          type='button'
-                          className='btn btn-outline-secondary'
-                          onClick={cancel2FA}
-                          disabled={isLoading}
-                        >
-                          <span
-                            className='material-icons me-2'
-                            style={{ fontSize: '18px' }}
-                          >
-                            arrow_back
-                          </span>
-                          Volver al Login
-                        </button>
-                      </div>
-                    </form>
-                  )}
-
-                  {/* Credenciales de desarrollo - solo mostrar en login normal */}
-                  {!requires2FA && (
-                    <div className='text-center mt-3 small text-muted'>
-                      Credenciales de desarrollo:{' '}
-                      <button
-                        type='button'
-                        className='btn btn-link btn-sm p-0 text-decoration-none'
-                        onClick={fillDefaultCredentials}
-                        style={{ fontSize: 'inherit' }}
-                      >
-                        <strong>pat.quintanilla@duocuc.cl</strong> / <strong>123456</strong>
-                      </button>
-                      <br />
-                      <small className='text-muted'>
-                        Haz click para completar automáticamente
-                      </small>
-                    </div>
-                  )}
-
-                  {/* Información adicional para 2FA */}
-                  {requires2FA && (
-                    <div className='text-center mt-3'>
-                      <div className='alert alert-info border-0 bg-light'>
-                        <div className='d-flex align-items-start'>
-                          <span
-                            className='material-icons me-2 text-primary'
-                            style={{ fontSize: '20px' }}
-                          >
-                            info
-                          </span>
-                          <div className='text-start small'>
-                            <strong>
-                              ¿No tienes acceso a tu aplicación de
-                              autenticación?
-                            </strong>
-                            <br />
-                            Contacta al administrador del sistema para
-                            desactivar temporalmente 2FA en tu cuenta.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Modern Section Separator */}
-      <div className='section-separator'>
-        <svg viewBox='0 0 1200 120' preserveAspectRatio='none' className='separator-wave'>
-          <path d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' opacity='.25'></path>
-          <path d='M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z' opacity='.5'></path>
-          <path d='M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z'></path>
-        </svg>
-      </div>
-
-      {/* Secciones con fondo claro */}
-      <div style={{ backgroundColor: '#f8f9fa', padding: '80px 0', position: 'relative', overflow: 'hidden' }}>
-        {/* Floating Particles */}
-        <div className='particle'></div>
-        <div className='particle'></div>
-        <div className='particle'></div>
-        <div className='particle'></div>
-        <div className='particle'></div>
-        <div className='particle'></div>
-        <div className='particle'></div>
-        <div className='particle'></div>
-        <div className='container'>
-          {/* Features Section */}
-          <div className='row mb-5'>
-            <div className='col-12 text-center mb-5 fade-in'>
-              <h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Módulos Principales</h2>
-              <p className='lead text-muted'>
-                Soluciones diseñadas para una administración eficiente y profesional
-              </p>
-            </div>
-          </div>
-
-          <div className='row g-4 mb-5'>
-            <div className='col-lg-3 col-md-6 fade-in'>
-              <div className='stats-card h-100 text-center'>
-                <div className='stats-icon bg-primary mb-4'>
-                  <i className='material-icons'>business</i>
-                </div>
-                <h5 className='fw-bold mb-3'>Comunidades</h5>
-                <p className='text-muted mb-0'>
-                  Administración completa de comunidades, estructuras organizativas, reglamentos, políticas internas y roles de usuario. Permite gestionar múltiples edificios bajo una misma plataforma con visión centralizada.
-                </p>
-              </div>
-            </div>
-
-            <div className='col-lg-3 col-md-6 fade-in' style={{ animationDelay: '0.1s' }}>
-              <div className='stats-card h-100 text-center'>
-                <div className='stats-icon bg-success mb-4'>
-                  <i className='material-icons'>apartment</i>
-                </div>
-                <h5 className='fw-bold mb-3'>Unidades</h5>
-                <p className='text-muted mb-0'>
-                  Control exhaustivo de unidades, residentes, propietarios y ocupación. Incluye historial de movimientos, documentación asociada y trazabilidad de cada registro.
-                </p>
-              </div>
-            </div>
-
-            <div className='col-lg-3 col-md-6 fade-in' style={{ animationDelay: '0.2s' }}>
-              <div className='stats-card h-100 text-center'>
-                <div className='stats-icon bg-info mb-4'>
-                  <i className='material-icons'>payments</i>
-                </div>
-                <h5 className='fw-bold mb-3'>Finanzas</h5>
-                <p className='text-muted mb-0'>
-                  Herramienta financiera corporativa con módulos de cobranza, gastos comunes, presupuestos, morosidad, conciliación bancaria automática y reportes orientados a auditoría.
-                </p>
-              </div>
-            </div>
-
-            <div className='col-lg-3 col-md-6 fade-in' style={{ animationDelay: '0.3s' }}>
-              <div className='stats-card h-100 text-center'>
-                <div className='stats-icon bg-warning mb-4'>
-                  <i className='material-icons'>support_agent</i>
-                </div>
-                <h5 className='fw-bold mb-3'>Soporte y Comunicación</h5>
-                <p className='text-muted mb-0'>
-                  Sistema de tickets para gestión de solicitudes, incidencias y requerimientos internos. Incluye notificaciones automatizadas, tableros de seguimiento y mensajería interna.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Section Separator */}
-          <div className='section-divider'>
-            <div className='divider-line'></div>
-            <div className='divider-dot'></div>
-            <div className='divider-line'></div>
-          </div>
-
-          {/* Testimonials Section */}
-          <div className='row mt-5 mb-5'>
-            <div className='col-12 text-center mb-5 fade-in'>
-              <h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Lo que dicen nuestros clientes</h2>
-              <p className='lead text-muted'>
-                Historias reales de comunidades que transformaron su administración
-              </p>
-            </div>
-          </div>
-
-          <div className='row g-4 mb-5'>
-            <div className='col-lg-4 fade-in'>
-              <div className='card h-100 border-0 shadow-sm morph-card' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4'>
-                  <div className='d-flex align-items-center mb-3'>
-                    <div className='me-3'>
-                      <div className='rounded-circle bg-primary d-flex align-items-center justify-content-center' style={{ width: '50px', height: '50px' }}>
-                        <span className='material-icons text-white' style={{ fontSize: '24px' }}>
-                          format_quote
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className='fw-bold text-dark'>María González</div>
-                      <small className='text-muted'>Administradora - Edificio Los Álamos</small>
-                    </div>
-                  </div>
-                  <p className='text-muted mb-0'>
-                    &ldquo;Cuentas Claras revolucionó nuestra administración. Ahora todo está automatizado y los residentes están mucho más satisfechos con la transparencia.&rdquo;
-                  </p>
-                  <div className='mt-3'>
-                    <div className='d-flex text-warning'>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className='col-lg-4 fade-in' style={{ animationDelay: '0.1s' }}>
-              <div className='card h-100 border-0 shadow-sm morph-card' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4'>
-                  <div className='d-flex align-items-center mb-3'>
-                    <div className='me-3'>
-                      <div className='rounded-circle bg-success d-flex align-items-center justify-content-center' style={{ width: '50px', height: '50px' }}>
-                        <span className='material-icons text-white' style={{ fontSize: '24px' }}>
-                          format_quote
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className='fw-bold text-dark'>Carlos Rodríguez</div>
-                      <small className='text-muted'>Presidente - Condominio San Pablo</small>
-                    </div>
-                  </div>
-                  <p className='text-muted mb-0'>
-                    &ldquo;La plataforma es intuitiva y completa. Desde pagos hasta reportes, todo lo tenemos centralizado. Ha reducido nuestro trabajo administrativo en un 70%.&rdquo;
-                  </p>
-                  <div className='mt-3'>
-                    <div className='d-flex text-warning'>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className='col-lg-4 fade-in' style={{ animationDelay: '0.2s' }}>
-              <div className='card h-100 border-0 shadow-sm morph-card' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4'>
-                  <div className='d-flex align-items-center mb-3'>
-                    <div className='me-3'>
-                      <div className='rounded-circle bg-info d-flex align-items-center justify-content-center' style={{ width: '50px', height: '50px' }}>
-                        <span className='material-icons text-white' style={{ fontSize: '24px' }}>
-                          format_quote
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className='fw-bold text-dark'>Ana López</div>
-                      <small className='text-muted'>Residente - Torre del Valle</small>
-                    </div>
-                  </div>
-                  <p className='text-muted mb-0'>
-                    &ldquo;Como residente, ahora es muy fácil pagar mis gastos comunes y hacer reservas. La app es moderna y confiable.&rdquo;
-                  </p>
-                  <div className='mt-3'>
-                    <div className='d-flex text-warning'>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                      <i className='material-icons' style={{ fontSize: '16px' }}>star</i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section Separator */}
-          <div className='section-divider'>
-            <div className='divider-line'></div>
-            <div className='divider-icon'>
-              <span className='material-icons'>groups</span>
-            </div>
-            <div className='divider-line'></div>
-          </div>
-
-          {/* Team Section */}
-          <div className='row mt-5 mb-5'>
-            <div className='col-12 text-center mb-5 fade-in'>
-              <h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Equipo del Proyecto</h2>
-              <p className='lead text-muted'>
-                <strong>Proyecto de Título DUOC UC — Ingeniería en Informática</strong>
-              </p>
-              <p className='text-muted'>
-                Cuentas Claras es un proyecto desarrollado en el marco del Trabajo de Título de Ingeniería en Informática de DUOC UC, adoptando estándares de la industria, metodologías ágiles y buenas prácticas de arquitectura de software.
-              </p>
-              <p className='text-muted small'>
-                <span className='material-icons me-1' style={{ fontSize: '16px', verticalAlign: 'middle' }}>public</span>
-                Proyecto open source disponible en{' '}
-                <a
-                  href='https://github.com/BigFrankV/proyecto_cuentas_claras'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='text-primary text-decoration-none fw-bold'
-                >
-                  GitHub
-                </a>
-              </p>
-            </div>
-          </div>
-
-          <div className='row g-4 mb-5'>
-            <div className='col-lg-4 fade-in'>
-              <div className='card h-100 border-0 shadow-sm' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4 text-center'>
-                  <div className='mb-3'>
-                    <div className='rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto' style={{ width: '80px', height: '80px' }}>
-                      <span className='material-icons text-white' style={{ fontSize: '32px' }}>
-                        code
-                      </span>
-                    </div>
-                  </div>
-                  <h5 className='fw-bold mb-3'>Patricio Quintanilla</h5>
-                  <p className='text-muted mb-3'>Frontend Developer</p>
-                  <p className='text-muted small mb-0'>
-                    Responsable del desarrollo de la interfaz, experiencia del usuario, diseño visual, integración de componentes, lógica de interacción y optimización general del frontend utilizando Next.js y React.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className='col-lg-4 fade-in' style={{ animationDelay: '0.1s' }}>
-              <div className='card h-100 border-0 shadow-sm' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4 text-center'>
-                  <div className='mb-3'>
-                    <div className='rounded-circle bg-success d-flex align-items-center justify-content-center mx-auto' style={{ width: '80px', height: '80px' }}>
-                      <span className='material-icons text-white' style={{ fontSize: '32px' }}>
-                        storage
-                      </span>
-                    </div>
-                  </div>
-                  <h5 className='fw-bold mb-3'>Frank Vogt</h5>
-                  <p className='text-muted mb-3'>Backend Developer</p>
-                  <p className='text-muted small mb-0'>
-                    Encargado de la arquitectura del sistema, APIs, seguridad, autenticación, lógica de negocio, integración con bases de datos y desarrollo de servicios utilizando Node.js, Express y autenticación 2FA.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className='col-lg-4 fade-in' style={{ animationDelay: '0.2s' }}>
-              <div className='card h-100 border-0 shadow-sm' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4 text-center'>
-                  <div className='mb-3'>
-                    <div className='rounded-circle bg-info d-flex align-items-center justify-content-center mx-auto' style={{ width: '80px', height: '80px' }}>
-                      <span className='material-icons text-white' style={{ fontSize: '32px' }}>
-                        description
-                      </span>
-                    </div>
-                  </div>
-                  <h5 className='fw-bold mb-3'>Matías Román</h5>
-                  <p className='text-muted mb-3'>Documentación y QA</p>
-                  <p className='text-muted small mb-0'>
-                    Responsable de la documentación formal del proyecto, manuales y diagramación. Encargado del control de calidad mediante pruebas funcionales, validación de requerimientos y aseguramiento de estándares técnicos.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section Separator */}
-          <div className='section-divider'>
-            <div className='divider-line'></div>
-            <div className='divider-icon'>
-              <span className='material-icons'>security</span>
-            </div>
-            <div className='divider-line'></div>
-          </div>
-
-          {/* Security Section */}
-          <div className='row mt-5 mb-5'>
-            <div className='col-12 text-center mb-5 fade-in'>
-              <h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Seguridad de Nivel Empresarial</h2>
-              <p className='lead text-muted'>
-                Protección avanzada de datos personales y financieros
-              </p>
-            </div>
-          </div>
-
-          <div className='row g-4 mb-5'>
-            <div className='col-lg-6 fade-in'>
-              <div className='card h-100 border-0 shadow-sm' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4'>
-                  <div className='d-flex align-items-center mb-3'>
-                    <div className='me-3'>
-                      <div className='rounded-circle bg-primary d-flex align-items-center justify-content-center' style={{ width: '50px', height: '50px' }}>
-                        <span className='material-icons text-white' style={{ fontSize: '24px' }}>
-                          security
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <h5 className='fw-bold mb-2'>Cifrado Avanzado</h5>
-                      <p className='text-muted small mb-0'>Todas las comunicaciones protegidas con cifrado de nivel empresarial</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className='col-lg-6 fade-in' style={{ animationDelay: '0.1s' }}>
-              <div className='card h-100 border-0 shadow-sm' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4'>
-                  <div className='d-flex align-items-center mb-3'>
-                    <div className='me-3'>
-                      <div className='rounded-circle bg-success d-flex align-items-center justify-content-center' style={{ width: '50px', height: '50px' }}>
-                        <span className='material-icons text-white' style={{ fontSize: '24px' }}>
-                          verified_user
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <h5 className='fw-bold mb-2'>Autenticación 2FA</h5>
-                      <p className='text-muted small mb-0'>Verificación en dos pasos para acceso seguro a la plataforma</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className='col-lg-6 fade-in' style={{ animationDelay: '0.2s' }}>
-              <div className='card h-100 border-0 shadow-sm' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4'>
-                  <div className='d-flex align-items-center mb-3'>
-                    <div className='me-3'>
-                      <div className='rounded-circle bg-info d-flex align-items-center justify-content-center' style={{ width: '50px', height: '50px' }}>
-                        <span className='material-icons text-white' style={{ fontSize: '24px' }}>
-                          admin_panel_settings
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <h5 className='fw-bold mb-2'>Control de Acceso</h5>
-                      <p className='text-muted small mb-0'>Roles y permisos granulares para cada tipo de usuario</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className='col-lg-6 fade-in' style={{ animationDelay: '0.3s' }}>
-              <div className='card h-100 border-0 shadow-sm' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4'>
-                  <div className='d-flex align-items-center mb-3'>
-                    <div className='me-3'>
-                      <div className='rounded-circle bg-warning d-flex align-items-center justify-content-center' style={{ width: '50px', height: '50px' }}>
-                        <span className='material-icons text-white' style={{ fontSize: '24px' }}>
-                          monitoring
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <h5 className='fw-bold mb-2'>Auditoría Completa</h5>
-                      <p className='text-muted small mb-0'>Monitoreo y registro de todas las actividades del sistema</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section Separator */}
-          <div className='section-divider'>
-            <div className='divider-line'></div>
-            <div className='divider-icon'>
-              <span className='material-icons'>smart_toy</span>
-            </div>
-            <div className='divider-line'></div>
-          </div>
-
-          {/* Automation Section */}
-          <div className='row mt-5 mb-5'>
-            <div className='col-12 text-center mb-5 fade-in'>
-              <h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Automatización Inteligente</h2>
-              <p className='lead text-muted'>
-                Reduce cargas operativas mediante procesos automatizados
-              </p>
-            </div>
-          </div>
-
-          <div className='row g-4 mb-5'>
-            <div className='col-lg-4 fade-in'>
-              <div className='card h-100 border-0 shadow-sm' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4 text-center'>
-                  <div className='mb-3'>
-                    <div className='rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto' style={{ width: '60px', height: '60px' }}>
-                      <span className='material-icons text-white' style={{ fontSize: '28px' }}>
-                        receipt_long
-                      </span>
-                    </div>
-                  </div>
-                  <h5 className='fw-bold mb-3'>Emisión Automática</h5>
-                  <p className='text-muted small mb-0'>
-                    Recibos, boletas y avisos generados automáticamente según cronogramas definidos
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className='col-lg-4 fade-in' style={{ animationDelay: '0.1s' }}>
-              <div className='card h-100 border-0 shadow-sm' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4 text-center'>
-                  <div className='mb-3'>
-                    <div className='rounded-circle bg-success d-flex align-items-center justify-content-center mx-auto' style={{ width: '60px', height: '60px' }}>
-                      <span className='material-icons text-white' style={{ fontSize: '28px' }}>
-                        account_balance
-                      </span>
-                    </div>
-                  </div>
-                  <h5 className='fw-bold mb-3'>Conciliación Bancaria</h5>
-                  <p className='text-muted small mb-0'>
-                    Proceso inteligente de reconciliación automática de movimientos bancarios
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className='col-lg-4 fade-in' style={{ animationDelay: '0.2s' }}>
-              <div className='card h-100 border-0 shadow-sm' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4 text-center'>
-                  <div className='mb-3'>
-                    <div className='rounded-circle bg-info d-flex align-items-center justify-content-center mx-auto' style={{ width: '60px', height: '60px' }}>
-                      <span className='material-icons text-white' style={{ fontSize: '28px' }}>
-                        notifications
-                      </span>
-                    </div>
-                  </div>
-                  <h5 className='fw-bold mb-3'>Comunicaciones</h5>
-                  <p className='text-muted small mb-0'>
-                    Envío masivo automatizado de comunicaciones oficiales y recordatorios
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section Separator */}
-          <div className='section-divider'>
-            <div className='divider-line'></div>
-            <div className='divider-icon'>
-              <span className='material-icons'>phone_android</span>
-            </div>
-            <div className='divider-line'></div>
-          </div>
-
-          {/* Resident App Section */}
-          <div className='row mt-5 mb-5'>
-            <div className='col-12 text-center mb-5 fade-in'>
-              <h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Aplicación para Residentes</h2>
-              <p className='lead text-muted'>
-                Una experiencia diseñada para la comunidad
-              </p>
-            </div>
-          </div>
-
-          <div className='row g-4 mb-5'>
-            <div className='col-lg-3 col-md-6 fade-in'>
-              <div className='card h-100 border-0 shadow-sm text-center' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4'>
-                  <div className='mb-3'>
-                    <div className='rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto' style={{ width: '50px', height: '50px' }}>
-                      <span className='material-icons text-white' style={{ fontSize: '24px' }}>
-                        payment
-                      </span>
-                    </div>
-                  </div>
-                  <h6 className='fw-bold mb-2'>Pagos Fáciles</h6>
-                  <p className='text-muted small mb-0'>Pagos seguros y convenientes desde cualquier dispositivo</p>
-                </div>
-              </div>
-            </div>
-
-            <div className='col-lg-3 col-md-6 fade-in' style={{ animationDelay: '0.1s' }}>
-              <div className='card h-100 border-0 shadow-sm text-center' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4'>
-                  <div className='mb-3'>
-                    <div className='rounded-circle bg-success d-flex align-items-center justify-content-center mx-auto' style={{ width: '50px', height: '50px' }}>
-                      <span className='material-icons text-white' style={{ fontSize: '24px' }}>
-                        event_available
-                      </span>
-                    </div>
-                  </div>
-                  <h6 className='fw-bold mb-2'>Reservas</h6>
-                  <p className='text-muted small mb-0'>Sistema de reservas para espacios y amenidades compartidas</p>
-                </div>
-              </div>
-            </div>
-
-            <div className='col-lg-3 col-md-6 fade-in' style={{ animationDelay: '0.2s' }}>
-              <div className='card h-100 border-0 shadow-sm text-center' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4'>
-                  <div className='mb-3'>
-                    <div className='rounded-circle bg-info d-flex align-items-center justify-content-center mx-auto' style={{ width: '50px', height: '50px' }}>
-                      <span className='material-icons text-white' style={{ fontSize: '24px' }}>
-                        description
-                      </span>
-                    </div>
-                  </div>
-                  <h6 className='fw-bold mb-2'>Documentación</h6>
-                  <p className='text-muted small mb-0'>Acceso a documentación personal y comunitaria</p>
-                </div>
-              </div>
-            </div>
-
-            <div className='col-lg-3 col-md-6 fade-in' style={{ animationDelay: '0.3s' }}>
-              <div className='card h-100 border-0 shadow-sm text-center' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-4'>
-                  <div className='mb-3'>
-                    <div className='rounded-circle bg-warning d-flex align-items-center justify-content-center mx-auto' style={{ width: '50px', height: '50px' }}>
-                      <span className='material-icons text-white' style={{ fontSize: '24px' }}>
-                        notifications_active
-                      </span>
-                    </div>
-                  </div>
-                  <h6 className='fw-bold mb-2'>Notificaciones</h6>
-                  <p className='text-muted small mb-0'>Alertas en tiempo real sobre actividades importantes</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section Separator */}
-          <div className='section-divider'>
-            <div className='divider-line'></div>
-            <div className='divider-icon'>
-              <span className='material-icons'>link</span>
-            </div>
-            <div className='divider-line'></div>
-          </div>
-
-          {/* Integrations Section */}
-          <div className='row mt-5 mb-5'>
-            <div className='col-12 text-center mb-5 fade-in'>
-              <h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Integraciones Corporativas</h2>
-              <p className='lead text-muted'>
-                Conectividad nativa con sistemas externos para una experiencia fluida
-              </p>
-            </div>
-          </div>
-
-          <div className='row g-4 mb-5'>
-            {/* Payment Gateways */}
-            <div className='col-lg-6 col-xl-3 fade-in'>
-              <div className='integration-card h-100 position-relative overflow-hidden rounded-4 shadow-lg' style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                minHeight: '280px',
-              }}>
-                <div className='card-body d-flex flex-column justify-content-between h-100 p-4 text-white'>
-                  <div>
-                    <div className='d-flex align-items-center mb-3'>
-                      <div className='integration-icon me-3'>
-                        <span className='material-icons' style={{ fontSize: '32px' }}>
-                          credit_card
-                        </span>
-                      </div>
-                      <div>
-                        <h5 className='fw-bold mb-1'>Pasarelas de Pago</h5>
-                        <small className='opacity-75'>Pagos electrónicos seguros</small>
-                      </div>
-                    </div>
-                    <p className='mb-3 opacity-90 small'>
-                      Integración completa con WebPay, Khipu, MercadoPago y PayPal para transacciones seguras.
-                    </p>
-                  </div>
-                  <div className='integration-features'>
-                    <div className='d-flex flex-wrap gap-2'>
-                      <span className='badge bg-white bg-opacity-20 text-white px-2 py-1 small'>WebPay</span>
-                      <span className='badge bg-white bg-opacity-20 text-white px-2 py-1 small'>Khipu</span>
-                      <span className='badge bg-white bg-opacity-20 text-white px-2 py-1 small'>PayPal</span>
-                    </div>
-                  </div>
-                </div>
-                <div className='integration-overlay'></div>
-              </div>
-            </div>
-
-            {/* Banking */}
-            <div className='col-lg-6 col-xl-3 fade-in' style={{ animationDelay: '0.1s' }}>
-              <div className='integration-card h-100 position-relative overflow-hidden rounded-4 shadow-lg' style={{
-                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                minHeight: '280px',
-              }}>
-                <div className='card-body d-flex flex-column justify-content-between h-100 p-4 text-white'>
-                  <div>
-                    <div className='d-flex align-items-center mb-3'>
-                      <div className='integration-icon me-3'>
-                        <span className='material-icons' style={{ fontSize: '32px' }}>
-                          account_balance
-                        </span>
-                      </div>
-                      <div>
-                        <h5 className='fw-bold mb-1'>Instituciones Bancarias</h5>
-                        <small className='opacity-75'>Conciliación automática</small>
-                      </div>
-                    </div>
-                    <p className='mb-3 opacity-90 small'>
-                      Conexión directa con bancos chilenos para transferencias y conciliación automática.
-                    </p>
-                  </div>
-                  <div className='integration-features'>
-                    <div className='d-flex flex-wrap gap-2'>
-                      <span className='badge bg-white bg-opacity-20 text-white px-2 py-1 small'>Banco Estado</span>
-                      <span className='badge bg-white bg-opacity-20 text-white px-2 py-1 small'>Banco Chile</span>
-                      <span className='badge bg-white bg-opacity-20 text-white px-2 py-1 small'>BCI</span>
-                    </div>
-                  </div>
-                </div>
-                <div className='integration-overlay'></div>
-              </div>
-            </div>
-
-            {/* Accounting Systems */}
-            <div className='col-lg-6 col-xl-3 fade-in' style={{ animationDelay: '0.2s' }}>
-              <div className='integration-card h-100 position-relative overflow-hidden rounded-4 shadow-lg' style={{
-                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                minHeight: '280px',
-              }}>
-                <div className='card-body d-flex flex-column justify-content-between h-100 p-4 text-white'>
-                  <div>
-                    <div className='d-flex align-items-center mb-3'>
-                      <div className='integration-icon me-3'>
-                        <span className='material-icons' style={{ fontSize: '32px' }}>
-                          calculate
-                        </span>
-                      </div>
-                      <div>
-                        <h5 className='fw-bold mb-1'>Sistemas Contables</h5>
-                        <small className='opacity-75'>Sincronización financiera</small>
-                      </div>
-                    </div>
-                    <p className='mb-3 opacity-90 small'>
-                      Integración perfecta con SAP, Oracle, QuickBooks y otros sistemas contables.
-                    </p>
-                  </div>
-                  <div className='integration-features'>
-                    <div className='d-flex flex-wrap gap-2'>
-                      <span className='badge bg-white bg-opacity-20 text-white px-2 py-1 small'>SAP</span>
-                      <span className='badge bg-white bg-opacity-20 text-white px-2 py-1 small'>Oracle</span>
-                      <span className='badge bg-white bg-opacity-20 text-white px-2 py-1 small'>QuickBooks</span>
-                    </div>
-                  </div>
-                </div>
-                <div className='integration-overlay'></div>
-              </div>
-            </div>
-
-            {/* Communication */}
-            <div className='col-lg-6 col-xl-3 fade-in' style={{ animationDelay: '0.3s' }}>
-              <div className='integration-card h-100 position-relative overflow-hidden rounded-4 shadow-lg' style={{
-                background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-                minHeight: '280px',
-              }}>
-                <div className='card-body d-flex flex-column justify-content-between h-100 p-4 text-white'>
-                  <div>
-                    <div className='d-flex align-items-center mb-3'>
-                      <div className='integration-icon me-3'>
-                        <span className='material-icons' style={{ fontSize: '32px' }}>
-                          email
-                        </span>
-                      </div>
-                      <div>
-                        <h5 className='fw-bold mb-1'>Comunicación</h5>
-                        <small className='opacity-75'>Envío masivo inteligente</small>
-                      </div>
-                    </div>
-                    <p className='mb-3 opacity-90 small'>
-                      Plataformas de email marketing y mensajería para comunicaciones efectivas.
-                    </p>
-                  </div>
-                  <div className='integration-features'>
-                    <div className='d-flex flex-wrap gap-2'>
-                      <span className='badge bg-white bg-opacity-20 text-white px-2 py-1 small'>SendGrid</span>
-                      <span className='badge bg-white bg-opacity-20 text-white px-2 py-1 small'>Twilio</span>
-                      <span className='badge bg-white bg-opacity-20 text-white px-2 py-1 small'>WhatsApp</span>
-                    </div>
-                  </div>
-                </div>
-                <div className='integration-overlay'></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Integration Architecture Showcase */}
-          <div className='row mt-5 mb-5'>
-            <div className='col-12 fade-in' style={{ animationDelay: '0.4s' }}>
-              <div className='card border-0 shadow-lg rounded-4 overflow-hidden' style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              }}>
-                <div className='card-body p-5 text-center text-white'>
-                  <div className='row align-items-center'>
-                    <div className='col-lg-6 mb-4 mb-lg-0'>
-                      <h3 className='fw-bold mb-4'>Arquitectura de Integración Avanzada</h3>
-                      <p className='lead mb-4 opacity-90'>
-                        APIs RESTful, webhooks bidireccionales y autenticación OAuth 2.0 garantizan
-                        una comunicación segura y en tiempo real con todos tus sistemas externos.
-                      </p>
-                      <div className='row g-3'>
-                        <div className='col-6'>
-                          <div className='p-3 bg-white bg-opacity-10 rounded-3'>
-                            <span className='material-icons mb-2' style={{ fontSize: '36px' }}>security</span>
-                            <h6 className='fw-bold mb-1'>OAuth 2.0</h6>
-                            <small className='opacity-75'>Autenticación segura</small>
-                          </div>
-                        </div>
-                        <div className='col-6'>
-                          <div className='p-3 bg-white bg-opacity-10 rounded-3'>
-                            <span className='material-icons mb-2' style={{ fontSize: '36px' }}>sync</span>
-                            <h6 className='fw-bold mb-1'>Sincronización</h6>
-                            <small className='opacity-75'>Datos en tiempo real</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className='col-lg-6'>
-                      <div className='position-relative'>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src='https://via.placeholder.com/500x350/ffffff/667eea?text=Arquitectura+de+Integración'
-                          alt='Arquitectura de Integración'
-                          className='img-fluid rounded-3 shadow-lg'
-                          style={{ width: '100%', height: 'auto' }}
-                        />
-                        <div className='position-absolute top-0 start-0 w-100 h-100 bg-gradient-to-br from-transparent to-black opacity-20 rounded-3'></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section Separator */}
-          <div className='section-divider'>
-            <div className='divider-line'></div>
-            <div className='divider-icon'>
-              <span className='material-icons'>analytics</span>
-            </div>
-            <div className='divider-line'></div>
-          </div>
-
-          {/* Reports Section */}
-          <div className='row mt-5 mb-5'>
-            <div className='col-12 text-center mb-5 fade-in'>
-              <h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Reportes Avanzados</h2>
-              <p className='lead text-muted'>
-                Análisis ejecutivo y auditoría con información precisa
-              </p>
-            </div>
-          </div>
-
-          <div className='row g-4 mb-5'>
-            <div className='col-12 fade-in'>
-              <div className='card border-0 shadow-sm' style={{ backgroundColor: 'white' }}>
-                <div className='card-body p-0'>
-                  {/* Nav tabs */}
-                  <ul className='nav nav-tabs nav-fill border-bottom-0' id='reportsTab' role='tablist'>
-                    <li className='nav-item' role='presentation'>
-                      <button
-                        className='nav-link active fw-bold'
-                        id='indicadores-tab'
-                        data-bs-toggle='tab'
-                        data-bs-target='#indicadores'
-                        type='button'
-                        role='tab'
-                        aria-controls='indicadores'
-                        aria-selected='true'
-                      >
-                        <span className='material-icons me-2' style={{ fontSize: '20px' }}>
-                          analytics
-                        </span>
-                        Indicadores Financieros
-                      </button>
-                    </li>
-                    <li className='nav-item' role='presentation'>
-                      <button
-                        className='nav-link fw-bold'
-                        id='analisis-tab'
-                        data-bs-toggle='tab'
-                        data-bs-target='#analisis'
-                        type='button'
-                        role='tab'
-                        aria-controls='analisis'
-                        aria-selected='false'
-                      >
-                        <span className='material-icons me-2' style={{ fontSize: '20px' }}>
-                          compare_arrows
-                        </span>
-                        Análisis Comparativo
-                      </button>
-                    </li>
-                    <li className='nav-item' role='presentation'>
-                      <button
-                        className='nav-link fw-bold'
-                        id='descargables-tab'
-                        data-bs-toggle='tab'
-                        data-bs-target='#descargables'
-                        type='button'
-                        role='tab'
-                        aria-controls='descargables'
-                        aria-selected='false'
-                      >
-                        <span className='material-icons me-2' style={{ fontSize: '20px' }}>
-                          download
-                        </span>
-                        Reportes Descargables
-                      </button>
-                    </li>
-                  </ul>
-
-                  {/* Tab content */}
-                  <div className='tab-content p-4' id='reportsTabContent'>
-                    <div
-                      className='tab-pane fade show active'
-                      id='indicadores'
-                      role='tabpanel'
-                      aria-labelledby='indicadores-tab'
-                    >
-                      <div className='text-center mb-4'>
-                        <div className='rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3' style={{ width: '80px', height: '80px' }}>
-                          <span className='material-icons text-white' style={{ fontSize: '36px' }}>
-                            analytics
-                          </span>
-                        </div>
-                        <h4 className='fw-bold mb-3'>Indicadores Financieros</h4>
-                      </div>
-                      <p className='text-muted mb-4'>
-                        KPIs financieros, morosidad, recaudación y análisis de tendencias con gráficos interactivos y métricas en tiempo real para toma de decisiones ejecutivas.
-                      </p>
-                      <div className='row g-3'>
-                        <div className='col-md-4'>
-                          <div className='text-center p-3 border rounded'>
-                            <div className='text-primary mb-2'>
-                              <span className='material-icons' style={{ fontSize: '32px' }}>trending_up</span>
-                            </div>
-                            <h6 className='fw-bold'>KPIs Financieros</h6>
-                            <small className='text-muted'>Métricas clave del rendimiento</small>
-                          </div>
-                        </div>
-                        <div className='col-md-4'>
-                          <div className='text-center p-3 border rounded'>
-                            <div className='text-success mb-2'>
-                              <span className='material-icons' style={{ fontSize: '32px' }}>account_balance_wallet</span>
-                            </div>
-                            <h6 className='fw-bold'>Morosidad</h6>
-                            <small className='text-muted'>Análisis de pagos pendientes</small>
-                          </div>
-                        </div>
-                        <div className='col-md-4'>
-                          <div className='text-center p-3 border rounded'>
-                            <div className='text-info mb-2'>
-                              <span className='material-icons' style={{ fontSize: '32px' }}>insights</span>
-                            </div>
-                            <h6 className='fw-bold'>Tendencias</h6>
-                            <small className='text-muted'>Proyecciones y análisis predictivo</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      className='tab-pane fade'
-                      id='analisis'
-                      role='tabpanel'
-                      aria-labelledby='analisis-tab'
-                    >
-                      <div className='text-center mb-4'>
-                        <div className='rounded-circle bg-success d-flex align-items-center justify-content-center mx-auto mb-3' style={{ width: '80px', height: '80px' }}>
-                          <span className='material-icons text-white' style={{ fontSize: '36px' }}>
-                            compare_arrows
-                          </span>
-                        </div>
-                        <h4 className='fw-bold mb-3'>Análisis Comparativo</h4>
-                      </div>
-                      <p className='text-muted mb-4'>
-                        Comparaciones históricas, benchmarking sectorial y proyecciones financieras con datos normalizados y visualizaciones comparativas avanzadas.
-                      </p>
-                      <div className='row g-3'>
-                        <div className='col-md-4'>
-                          <div className='text-center p-3 border rounded'>
-                            <div className='text-warning mb-2'>
-                              <span className='material-icons' style={{ fontSize: '32px' }}>history</span>
-                            </div>
-                            <h6 className='fw-bold'>Histórico</h6>
-                            <small className='text-muted'>Comparaciones año a año</small>
-                          </div>
-                        </div>
-                        <div className='col-md-4'>
-                          <div className='text-center p-3 border rounded'>
-                            <div className='text-primary mb-2'>
-                              <span className='material-icons' style={{ fontSize: '32px' }}>assessment</span>
-                            </div>
-                            <h6 className='fw-bold'>Benchmarking</h6>
-                            <small className='text-muted'>Estándares del sector</small>
-                          </div>
-                        </div>
-                        <div className='col-md-4'>
-                          <div className='text-center p-3 border rounded'>
-                            <div className='text-info mb-2'>
-                              <span className='material-icons' style={{ fontSize: '32px' }}>timeline</span>
-                            </div>
-                            <h6 className='fw-bold'>Proyecciones</h6>
-                            <small className='text-muted'>Modelos predictivos</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      className='tab-pane fade'
-                      id='descargables'
-                      role='tabpanel'
-                      aria-labelledby='descargables-tab'
-                    >
-                      <div className='text-center mb-4'>
-                        <div className='rounded-circle bg-info d-flex align-items-center justify-content-center mx-auto mb-3' style={{ width: '80px', height: '80px' }}>
-                          <span className='material-icons text-white' style={{ fontSize: '36px' }}>
-                            download
-                          </span>
-                        </div>
-                        <h4 className='fw-bold mb-3'>Reportes Descargables</h4>
-                      </div>
-                      <p className='text-muted mb-4'>
-                        Exportación automática en múltiples formatos (PDF, Excel, CSV) optimizados para auditoría externa y presentaciones ejecutivas.
-                      </p>
-                      <div className='row g-3'>
-                        <div className='col-md-4'>
-                          <div className='text-center p-3 border rounded'>
-                            <div className='text-danger mb-2'>
-                              <span className='material-icons' style={{ fontSize: '32px' }}>picture_as_pdf</span>
-                            </div>
-                            <h6 className='fw-bold'>PDF Ejecutivo</h6>
-                            <small className='text-muted'>Formatos profesionales</small>
-                          </div>
-                        </div>
-                        <div className='col-md-4'>
-                          <div className='text-center p-3 border rounded'>
-                            <div className='text-success mb-2'>
-                              <span className='material-icons' style={{ fontSize: '32px' }}>table_chart</span>
-                            </div>
-                            <h6 className='fw-bold'>Excel Analítico</h6>
-                            <small className='text-muted'>Datos estructurados</small>
-                          </div>
-                        </div>
-                        <div className='col-md-4'>
-                          <div className='text-center p-3 border rounded'>
-                            <div className='text-warning mb-2'>
-                              <span className='material-icons' style={{ fontSize: '32px' }}>file_download</span>
-                            </div>
-                            <h6 className='fw-bold'>CSV Raw</h6>
-                            <small className='text-muted'>Datos sin procesar</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className='row mt-5 pt-5 border-top border-secondary border-opacity-25'>
-            <div className='col-12 text-center'>
-              <div className='mb-4'>
-                <h3 className='fw-bold text-dark mb-3'>¿Listo para modernizar la administración de tu comunidad?</h3>
-                <p className='text-muted mb-4'>
-                  Más de 500 condominios y comunidades ya confían en Cuentas Claras para una gestión eficiente, segura y transparente.
-                </p>
-                <button className='btn btn-primary btn-lg px-4 py-2' style={{ borderRadius: '25px' }}>
-                  <span className='material-icons me-2' style={{ fontSize: '20px' }}>login</span>
-                  Comenzar Ahora
-                </button>
-              </div>
-
-              <div className='mt-5 pt-4 border-top border-secondary border-opacity-25'>
-                <p className='text-muted mb-3'>
-                  © 2025 Cuentas Claras. Todos los derechos reservados.
-                </p>
-                <div className='d-flex justify-content-center gap-4'>
-                  <button className='btn btn-link text-muted text-decoration-none small p-0'>
-                    Términos de Servicio
-                  </button>
-                  <button className='btn btn-link text-muted text-decoration-none small p-0'>
-                    Política de Privacidad
-                  </button>
-                  <button className='btn btn-link text-muted text-decoration-none small p-0'>
-                    Contacto
-                  </button>
-                  <a
-                    href='https://github.com/BigFrankV/proyecto_cuentas_claras'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='btn btn-link text-muted text-decoration-none small p-0 d-flex align-items-center'
-                  >
-                    <span className='material-icons me-1' style={{ fontSize: '16px' }}>code</span>
-                    Repositorio
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <style jsx>{`
+							</div>
+							<h1 className='mb-3'>Bienvenido a Cuentas Claras</h1>
+							<p className='lead'>
+								Cuentas Claras es una plataforma integral diseñada para optimizar
+								la administración de comunidades y condominios mediante herramientas
+								profesionales, análisis avanzado y procesos automatizados.
+							</p>
+
+							<ul className='list-unstyled mt-4 feature-list'>
+								<li className='mb-2'>
+									<span
+										className='material-icons align-middle me-2'
+										style={{ color: 'var(--color-accent)' }}
+									>
+										dashboard
+									</span>
+									Panel ejecutivo con indicadores en tiempo real, facilitando
+									decisiones rápidas y basadas en datos.
+								</li>
+								<li className='mb-2'>
+									<span
+										className='material-icons align-middle me-2'
+										style={{ color: 'var(--color-accent)' }}
+									>
+										business
+									</span>
+									Gestión centralizada de comunidades y edificios, con soporte para
+									múltiples configuraciones.
+								</li>
+								<li className='mb-2'>
+									<span
+										className='material-icons align-middle me-2'
+										style={{ color: 'var(--color-accent)' }}
+									>
+										apartment
+									</span>
+									Control detallado de unidades, propietarios, arrendatarios y
+									ocupación.
+								</li>
+								<li className='mb-2'>
+									<span
+										className='material-icons align-middle me-2'
+										style={{ color: 'var(--color-accent)' }}
+									>
+										payments
+									</span>
+									Sistema financiero robusto, con pagos online, conciliación
+									automática y trazabilidad completa.
+								</li>
+								<li className='mb-2'>
+									<span
+										className='material-icons align-middle me-2'
+										style={{ color: 'var(--color-accent)' }}
+									>
+										receipt_long
+									</span>
+									Generación automática de documentos contables y administrativos.
+								</li>
+
+								<li className='mb-2'>
+									<span
+										className='material-icons align-middle me-2'
+										style={{ color: 'var(--color-accent)' }}
+									>
+										bar_chart
+									</span>
+									Reportes avanzados para análisis financiero, operativo y de
+									cumplimiento.
+								</li>
+								<li className='mb-2'>
+									<span
+										className='material-icons align-middle me-2'
+										style={{ color: 'var(--color-accent)' }}
+									>
+										support_agent
+									</span>
+									Plataforma de soporte y atención mediante tickets.
+								</li>
+							</ul>
+						</div>
+
+						{/* Login Form Section */}
+						<div className='col-lg-6'>
+							<div className='login-wrap'>
+								<div
+									className='login-card card p-4 shadow-lg w-100 align-self-center'
+									style={{ maxWidth: '520px' }}
+								>
+									<div className='d-flex align-items-center mb-3'>
+										<div className='me-3 login-illustration'>
+											<span
+												className='material-icons'
+												style={{
+													fontSize: '48px',
+													color: 'var(--color-accent)',
+												}}
+											>
+												lock
+											</span>
+										</div>
+										<div>
+											<div className='brand-lg h4 mb-0'>Cuentas Claras</div>
+											<small className='muted'>Gestión condominial</small>
+										</div>
+									</div>
+
+									{/* Título dinámico */}
+									<p className='text-muted'>
+										{requires2FA
+											? 'Introduce el código de 6 dígitos de tu aplicación de autenticación.'
+											: 'Ingresa con tu correo, RUT, DNI o usuario para acceder al panel.'}
+									</p>
+
+									{error && (
+										<div
+											className='alert alert-danger alert-dismissible fade show'
+											role='alert'
+										>
+											<i
+												className='material-icons me-2'
+												style={{ fontSize: '1.2rem', verticalAlign: 'middle' }}
+											>
+												error
+											</i>
+											{error}
+											<button
+												type='button'
+												className='btn-close'
+												onClick={() => setError('')}
+												aria-label='Close'
+											></button>
+										</div>
+									)}
+
+									{/* Formulario normal de login */}
+									{!requires2FA && (
+										<form onSubmit={handleSubmit}>
+											<div className='mb-3'>
+												<label className='form-label'>
+													Correo, RUT, DNI o Usuario
+												</label>
+												<input
+													name='identifier'
+													type='text'
+													className={`form-control ${
+														identifierValidation
+															? identifierValidation.isValid
+																? 'is-valid'
+																: 'is-invalid'
+															: ''
+													}`}
+													placeholder='ejemplo@correo.com, 12345678-9, 12345678 o usuario'
+													value={identifierValue}
+													onChange={e => setIdentifierValue(e.target.value)}
+													required
+												/>
+												{identifierValidation && (
+													<div
+														className={`${
+															identifierValidation.isValid
+																? 'valid-feedback'
+																: 'invalid-feedback'
+														}`}
+													>
+														{identifierValidation.isValid
+															? `Tipo detectado: ${
+																	identifierValidation.type === 'email'
+																		? 'Correo electrónico'
+																		: identifierValidation.type === 'rut'
+																			? 'RUT chileno'
+																			: identifierValidation.type === 'dni'
+																				? 'DNI'
+																				: 'Nombre de usuario'
+																}`
+															: identifierValidation.message ||
+																'Formato inválido'}
+													</div>
+												)}
+												{!identifierValidation && (
+													<div className='form-text'>
+														Puedes usar tu correo electrónico, RUT (Chile), DNI
+														o nombre de usuario
+													</div>
+												)}
+											</div>
+											<div className='mb-3'>
+												<label className='form-label'>Contraseña</label>
+												<input
+													name='password'
+													type='password'
+													className='form-control'
+													placeholder='********'
+													required
+												/>
+											</div>
+
+											<div className='d-flex justify-content-between align-items-center mb-3'>
+												<div className='form-check'>
+													<input
+														className='form-check-input'
+														type='checkbox'
+														id='remember'
+													/>
+													<label
+														className='form-check-label'
+														htmlFor='remember'
+													>
+														Recordarme
+													</label>
+												</div>
+												<Link
+													href='/forgot-password'
+													className='small text-decoration-none'
+												>
+													¿Olvidaste tu contraseña?
+												</Link>
+											</div>
+
+											<div className='d-grid'>
+												<button
+													className='btn btn-primary'
+													type='submit'
+													disabled={isLoading}
+												>
+													{isLoading ? 'Entrando...' : 'Entrar'}
+												</button>
+											</div>
+										</form>
+									)}
+
+									{/* Formulario de verificación 2FA */}
+									{requires2FA && (
+										<form onSubmit={handle2FASubmit}>
+											<div className='text-center mb-4'>
+												<div
+													className='d-inline-flex align-items-center justify-content-center bg-light rounded-circle'
+													style={{ width: '80px', height: '80px' }}
+												>
+													<span
+														className='material-icons'
+														style={{
+															fontSize: '40px',
+															color: 'var(--color-primary)',
+														}}
+													>
+														verified_user
+													</span>
+												</div>
+												<h5 className='mt-3 mb-1'>
+													Verificación de Dos Factores
+												</h5>
+												<p className='text-muted small mb-0'>
+													Usuario: <strong>{username}</strong>
+												</p>
+											</div>
+
+											<div className='mb-4'>
+												<label className='form-label text-center d-block'>
+													Código de Verificación
+												</label>
+												<input
+													type='text'
+													className='form-control text-center'
+													style={{
+														fontSize: '1.5rem',
+														letterSpacing: '0.5rem',
+														height: '60px',
+													}}
+													placeholder='000000'
+													value={twoFactorCode}
+													onChange={e =>
+														setTwoFactorCode(
+															e.target.value.replace(/\D/g, '').slice(0, 6),
+														)
+													}
+													maxLength={6}
+													required
+													autoFocus
+												/>
+												<div className='form-text text-center'>
+													Ingresa el código de 6 dígitos de tu aplicación de
+													autenticación
+												</div>
+											</div>
+
+											<div className='d-grid gap-2'>
+												<button
+													className='btn btn-primary'
+													type='submit'
+													disabled={isLoading || twoFactorCode.length !== 6}
+												>
+													{isLoading ? (
+														<>
+															<span
+																className='spinner-border spinner-border-sm me-2'
+																role='status'
+															></span>
+															Verificando...
+														</>
+													) : (
+														'Verificar Código'
+													)}
+												</button>
+												<button
+													type='button'
+													className='btn btn-outline-secondary'
+													onClick={cancel2FA}
+													disabled={isLoading}
+												>
+													<span
+														className='material-icons me-2'
+														style={{ fontSize: '18px' }}
+													>
+														arrow_back
+													</span>
+													Volver al Login
+												</button>
+											</div>
+										</form>
+									)}
+
+									{/* Credenciales de desarrollo - solo mostrar en login normal */}
+									{!requires2FA && (
+										<div className='text-center mt-3 small text-muted'>
+											Credenciales de desarrollo:{' '}
+											<button
+												type='button'
+												className='btn btn-link btn-sm p-0 text-decoration-none'
+												onClick={fillDefaultCredentials}
+												style={{ fontSize: 'inherit' }}
+											>
+												<strong>pat.quintanilla@duocuc.cl</strong> / <strong>123456</strong>
+											</button>
+											<br />
+											<small className='text-muted'>
+												Haz click para completar automáticamente
+											</small>
+										</div>
+									)}
+
+									{/* Información adicional para 2FA */}
+									{requires2FA && (
+										<div className='text-center mt-3'>
+											<div className='alert alert-info border-0 bg-light'>
+												<div className='d-flex align-items-start'>
+													<span
+														className='material-icons me-2 text-primary'
+														style={{ fontSize: '20px' }}
+													>
+														info
+													</span>
+													<div className='text-start small'>
+														<strong>
+															¿No tienes acceso a tu aplicación de
+															autenticación?
+														</strong>
+														<br />
+														Contacta al administrador del sistema para
+														desactivar temporalmente 2FA en tu cuenta.
+													</div>
+												</div>
+											</div>
+										</div>
+									)}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* Secciones con fondo claro */}
+			<div style={{ backgroundColor: '#f8f9fa', padding: '80px 0', position: 'relative', overflow: 'hidden' }}>
+				{/* Floating Particles */}
+				<div className='particle'></div>
+				<div className='particle'></div>
+				<div className='particle'></div>
+				<div className='particle'></div>
+				<div className='particle'></div>
+				<div className='particle'></div>
+				<div className='particle'></div>
+				<div className='particle'></div>
+				<div className='container'>
+					{/* Problem & Solution Section */}
+					<div className='row mb-5 pb-5 border-bottom'>
+						<div className='col-12 text-center mb-5 fade-in'>
+							<h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Descripción del Proyecto</h2>
+							<p className='lead text-muted'>
+								Identificamos los desafíos actuales y creamos una solución integral
+							</p>
+						</div>
+						<div className='col-md-6 mb-4 fade-in'>
+							<div className='dark-box'>
+								<strong style={{ fontSize: '22px', display: 'block', marginBottom: '15px' }}>⚠️ El Problema</strong>
+								<ul>
+									<li>Gestión manual de cobros y conciliaciones propensa a errores humanos.</li>
+									<li>Falta de trazabilidad y herramientas desconectadas (Excel, Email, Whatsapp).</li>
+									<li>Desconfianza de los residentes.</li>
+								</ul>
+								<div className='text-center mt-4'>
+									<i className='material-icons' style={{ fontSize: '80px', color: '#ff6b6b' }}>warning</i>
+								</div>
+							</div>
+						</div>
+						<div className='col-md-6 mb-4 fade-in'>
+							<div className='dark-box primary'>
+								<strong style={{ fontSize: '22px', display: 'block', marginBottom: '15px' }}>✅ Nuestra Solución</strong>
+								<ul>
+									<li>Plataforma web centralizada y 100% en la nube.</li>
+									<li>Automatización del registro de cargos, pagos y conciliaciones bancarias.</li>
+									<li>Autenticación segura (JWT, 2FA) y entorno reproducible con Docker.</li>
+								</ul>
+								<div className='text-center mt-4'>
+									<i className='material-icons' style={{ fontSize: '80px', color: '#fff' }}>check_circle</i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* Features Section */}
+					<div className='row mb-5'>
+						<div className='col-12 text-center mb-5 fade-in'>
+							<h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Módulos Principales</h2>
+							<p className='lead text-muted'>
+								Soluciones diseñadas para una administración eficiente y profesional
+							</p>
+						</div>
+					</div>
+
+					<div className='row g-4 mb-5 pb-5 border-bottom'>
+						<div className='col-lg-3 col-md-6 fade-in'>
+							<div className='stats-card h-100 text-center'>
+								<div className='stats-icon bg-primary mb-4'>
+									<i className='material-icons'>business</i>
+								</div>
+								<h5 className='fw-bold mb-3'>Comunidades</h5>
+								<p className='text-muted small'>
+									Configuración global, alícuotas, centros de costo y parámetros personalizados por comunidad.
+								</p>
+							</div>
+						</div>
+
+						<div className='col-lg-3 col-md-6 fade-in' style={{ animationDelay: '0.1s' }}>
+							<div className='stats-card h-100 text-center'>
+								<div className='stats-icon bg-success mb-4'>
+									<i className='material-icons'>payments</i>
+								</div>
+								<h5 className='fw-bold mb-3'>Gestión Financiera</h5>
+								<p className='text-muted small'>
+									Control de gastos, proveedores, documentos de compra y generación automática de asientos.
+								</p>
+							</div>
+						</div>
+
+						<div className='col-lg-3 col-md-6 fade-in' style={{ animationDelay: '0.2s' }}>
+							<div className='stats-card h-100 text-center'>
+								<div className='stats-icon bg-info mb-4'>
+									<i className='material-icons'>receipt_long</i>
+								</div>
+								<h5 className='fw-bold mb-3'>Cobros y Pagos</h5>
+								<p className='text-muted small'>
+									Emisión masiva de gastos comunes, registro de pagos y conciliación bancaria inteligente.
+								</p>
+							</div>
+						</div>
+
+						<div className='col-lg-3 col-md-6 fade-in' style={{ animationDelay: '0.3s' }}>
+							<div className='stats-card h-100 text-center'>
+								<div className='stats-icon bg-warning mb-4'>
+									<i className='material-icons'>security</i>
+								</div>
+								<h5 className='fw-bold mb-3'>Seguridad</h5>
+								<p className='text-muted small'>
+									Roles y permisos granulares (RBAC), autenticación 2FA y aislamiento de datos (Multitenancy).
+								</p>
+							</div>
+						</div>
+					</div>
+
+					{/* Technologies Section */}
+					<div className='row mb-5 pb-5 border-bottom'>
+						<div className='col-12 text-center mb-5 fade-in'>
+							<h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Tecnologías Utilizadas</h2>
+							<p className='lead text-muted'>Stack tecnológico moderno y robusto</p>
+						</div>
+
+						<div className='col-lg-4 mb-4 fade-in'>
+							<div className='tech-card'>
+								<div className='text-center mb-3'>
+									<span style={{ fontSize: '50px' }}>🌐</span>
+									<h3 className='h4 mt-2'>Frontend</h3>
+								</div>
+								<ul className='list-unstyled'>
+									<li className='mb-2'><strong>Framework:</strong> Next.js</li>
+									<li className='mb-2'><strong>Lenguaje:</strong> TypeScript</li>
+									<li className='mb-2'><strong>UI:</strong> React, Bootstrap</li>
+									<li><strong>Estado:</strong> Hooks, Context</li>
+								</ul>
+							</div>
+						</div>
+
+						<div className='col-lg-4 mb-4 fade-in' style={{ animationDelay: '0.1s' }}>
+							<div className='tech-card'>
+								<div className='text-center mb-3'>
+									<span style={{ fontSize: '50px' }}>🔧</span>
+									<h3 className='h4 mt-2'>Backend</h3>
+								</div>
+								<ul className='list-unstyled'>
+									<li className='mb-2'><strong>Runtime:</strong> Node.js</li>
+									<li className='mb-2'><strong>Framework:</strong> Express.js</li>
+									<li className='mb-2'><strong>DB:</strong> MySQL, Sequelize</li>
+									<li><strong>Seguridad:</strong> JWT, 2FA</li>
+								</ul>
+							</div>
+						</div>
+
+						<div className='col-lg-4 mb-4 fade-in' style={{ animationDelay: '0.2s' }}>
+							<div className='tech-card'>
+								<div className='text-center mb-3'>
+									<span style={{ fontSize: '50px' }}>🐳</span>
+									<h3 className='h4 mt-2'>Infraestructura</h3>
+								</div>
+								<ul className='list-unstyled'>
+									<li className='mb-2'><strong>Container:</strong> Docker</li>
+									<li className='mb-2'><strong>Orquestación:</strong> Docker Compose</li>
+									<li className='mb-2'><strong>Proxy:</strong> Nginx</li>
+									<li><strong>Cloud:</strong> DigitalOcean</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					{/* Diagrams Section */}
+					<div className='row mb-5 pb-5 border-bottom'>
+						<div className='col-12 text-center mb-5 fade-in'>
+							<h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Diagramas del Sistema</h2>
+							<p className='lead text-muted'>Arquitectura y diseño detallado</p>
+						</div>
+
+						<div className='row g-4'>
+							{diagrams.map((diagram, index) => (
+								<div key={index} className='col-lg-4 col-md-6 fade-in' style={{ animationDelay: `${index * 0.1}s` }}>
+									<div
+										className='card h-100 shadow-sm hover-card'
+										style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
+										onClick={() => handleShowDiagram(diagram)}
+										role="button"
+										tabIndex={0}
+										onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { handleShowDiagram(diagram); } }}
+									>
+										<div className='card-body d-flex flex-column align-items-center justify-content-center p-4'>
+											<div className='mb-3 text-primary'>
+												<i className='material-icons' style={{ fontSize: '48px' }}>schema</i>
+											</div>
+											<h5 className='card-title text-center fw-bold mb-0'>{diagram.title}</h5>
+											<p className='text-muted small mt-2 mb-0'>Click para ver detalle</p>
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+
+					{/* Team Section */}
+					<div className='row mb-5'>
+						<div className='col-12 text-center mb-5 fade-in'>
+							<h2 className='display-4 fw-bold text-dark mb-3 gradient-text'>Equipo de Desarrollo</h2>
+							<p className='lead text-muted'>Integrantes del proyecto de título</p>
+						</div>
+
+						<div className='col-lg-4 mb-4 fade-in'>
+							<div className='team-card'>
+								<Image src="https://ui-avatars.com/api/?name=Patricio+Quintanilla&background=004AAD&color=fff&size=128" className="avatar" alt="Patricio" width={128} height={128} unoptimized />
+								<h3 className='h4'>Patricio Quintanilla</h3>
+								<p className='text-primary fw-bold'>Frontend Developer</p>
+								<p className='small text-muted'>
+									Responsable del desarrollo de la interfaz, experiencia del usuario y optimización general del frontend.
+								</p>
+							</div>
+						</div>
+
+						<div className='col-lg-4 mb-4 fade-in' style={{ animationDelay: '0.1s' }}>
+							<div className='team-card'>
+								<Image src="https://ui-avatars.com/api/?name=Frank+Vogt&background=004AAD&color=fff&size=128" className="avatar" alt="Frank" width={128} height={128} unoptimized />
+								<h3 className='h4'>Frank Vogt</h3>
+								<p className='text-primary fw-bold'>Backend Developer</p>
+								<p className='small text-muted'>
+									Encargado de la arquitectura del sistema, APIs, seguridad, autenticación y lógica de negocio.
+								</p>
+							</div>
+						</div>
+
+						<div className='col-lg-4 mb-4 fade-in' style={{ animationDelay: '0.2s' }}>
+							<div className='team-card'>
+								<Image src="https://ui-avatars.com/api/?name=Mat%C3%ADas+Rom%C3%A1n&background=004AAD&color=fff&size=128" className="avatar" alt="Matías" width={128} height={128} unoptimized />
+								<h3 className='h4'>Matías Román</h3>
+								<p className='text-primary fw-bold'>Documentación y QA</p>
+								<p className='small text-muted'>
+									Responsable de la documentación formal, manuales, diagramación y control de calidad (QA).
+								</p>
+							</div>
+						</div>
+					</div>
+
+					{/* Footer */}
+					<div className='row mt-5 pt-5 border-top border-secondary border-opacity-25'>
+						<div className='col-12 text-center'>
+							<div className='mb-4'>
+								<h3 className='fw-bold text-dark mb-3'>¿Listo para modernizar la administración de tu comunidad?</h3>
+								<p className='text-muted mb-4'>
+									Más de 500 condominios y comunidades ya confían en Cuentas Claras para una gestión eficiente, segura y transparente.
+								</p>
+								<button className='btn btn-primary btn-lg px-4 py-2' style={{ borderRadius: '25px' }}>
+									<span className='material-icons me-2' style={{ fontSize: '20px' }}>login</span>
+									Comenzar Ahora
+								</button>
+							</div>
+
+							<div className='mt-5 pt-4 border-top border-secondary border-opacity-25'>
+								<p className='text-muted mb-3'>
+									© 2025 Cuentas Claras. Todos los derechos reservados.
+								</p>
+								<div className='d-flex justify-content-center gap-4'>
+									<button className='btn btn-link text-muted text-decoration-none small p-0'>
+										Términos de Servicio
+									</button>
+									<button className='btn btn-link text-muted text-decoration-none small p-0'>
+										Política de Privacidad
+									</button>
+									<button className='btn btn-link text-muted text-decoration-none small p-0'>
+										Contacto
+									</button>
+									<a
+										href='https://github.com/BigFrankV/proyecto_cuentas_claras'
+										target='_blank'
+										rel='noopener noreferrer'
+										className='btn btn-link text-muted text-decoration-none small p-0 d-flex align-items-center'
+									>
+										<span className='material-icons me-1' style={{ fontSize: '16px' }}>code</span>
+										Repositorio
+									</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* Modal para diagramas */}
+			<Modal
+				show={showModal}
+				onHide={handleCloseModal}
+				size="lg"
+				aria-labelledby="modal-diagram-title"
+			>
+				<Modal.Header closeButton>
+					<Modal.Title id="modal-diagram-title">
+						{selectedDiagram?.title}
+					</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					{selectedDiagram && (
+						<div className="mermaid">
+							{selectedDiagram.code}
+						</div>
+					)}
+				</Modal.Body>
+				<Modal.Footer>
+					<Button variant="secondary" onClick={handleCloseModal}>
+						Cerrar
+					</Button>
+				</Modal.Footer>
+			</Modal>
+
+			<Script
+				src="https://cdn.jsdelivr.net/npm/mermaid@9.4.3/dist/mermaid.min.js"
+				strategy="afterInteractive"
+				onLoad={() => {
+					(window as any).mermaid.initialize({
+						startOnLoad: false,
+						theme: 'base',
+						themeVariables: {
+							primaryColor: '#004AAD',
+							primaryTextColor: '#0A2540',
+							primaryBorderColor: '#3673D8',
+							lineColor: '#004AAD',
+							secondaryColor: '#3673D8',
+							tertiaryColor: '#60a5fa',
+						},
+						securityLevel: 'loose',
+					});
+				}}
+			/>
+
+			{/* Diagram Modal */}
+			<Modal show={showModal} onHide={handleCloseModal} size="xl" centered>
+				<Modal.Header closeButton>
+					<Modal.Title>{selectedDiagram?.title}</Modal.Title>
+				</Modal.Header>
+				<Modal.Body style={{ overflow: 'auto', minHeight: '400px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+					{selectedDiagram && (
+						<div className="mermaid" key={selectedDiagram.title}>
+							{selectedDiagram.code}
+						</div>
+					)}
+				</Modal.Body>
+				<Modal.Footer>
+					<Button variant="secondary" onClick={handleCloseModal}>
+						Cerrar
+					</Button>
+				</Modal.Footer>
+			</Modal>
+
+			<style jsx>{`
         .brand-lg {
           color: var(--color-accent);
           font-weight: 700;
@@ -2060,7 +1672,66 @@ export default function Home() {
           animation: float 8s ease-in-out infinite;
           animation-delay: 3s;
         }
+
+        /* New Styles from Presentation */
+        .team-card {
+          background: white;
+          border: 1px solid #e2e8f0;
+          padding: 25px;
+          border-radius: 16px;
+          text-align: center;
+          box-shadow: 0 20px 40px -10px rgba(0, 74, 173, 0.15);
+          transition: transform 0.3s;
+          height: 100%;
+        }
+        .team-card:hover {
+          transform: translateY(-5px);
+          border-color: var(--color-accent);
+        }
+        .avatar {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          margin-bottom: 15px;
+          border: 3px solid #e0f2fe;
+        }
+        .dark-box {
+          background: #1e293b;
+          color: white;
+          padding: 30px;
+          border-radius: 12px;
+          height: 100%;
+          box-shadow: 0 20px 40px -10px rgba(0, 74, 173, 0.15);
+        }
+        .dark-box.primary {
+          background: var(--color-primary);
+        }
+        .dark-box ul {
+          padding-left: 20px;
+          margin-top: 15px;
+        }
+        .dark-box li {
+          margin-bottom: 12px;
+          font-size: 1.1rem;
+        }
+        .tech-card {
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 25px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+          height: 100%;
+          transition: transform 0.3s;
+        }
+        .tech-card:hover {
+          transform: translateY(-5px);
+        }
+        .section-title {
+          font-weight: 700;
+          margin-bottom: 1rem;
+          color: var(--color-primary);
+        }
       `}</style>
-    </>
-  );
+		</>
+	);
 }

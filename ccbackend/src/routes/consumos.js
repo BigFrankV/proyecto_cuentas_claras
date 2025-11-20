@@ -449,7 +449,10 @@ router.get('/', authenticate, async (req, res) => {
         [req.user.persona_id]
       );
       if (userCommunities.length === 0) {
-        return res.json({ data: [], pagination: { total: 0, limit, offset, pages: 0 } });
+        return res.json({
+          data: [],
+          pagination: { total: 0, limit, offset, pages: 0 },
+        });
       }
       const communityIds = userCommunities.map((c) => c.comunidad_id); // Removido : any
       where += ` AND m.comunidad_id IN (${communityIds.map(() => '?').join(',')})`;
@@ -501,5 +504,145 @@ router.get('/', authenticate, async (req, res) => {
     res.status(500).json({ error: 'Error al listar consumos' });
   }
 });
+
+// =========================================
+// ENDPOINTS PARA REPORTES POR COMUNIDAD
+// =========================================
+
+/**
+ * @swagger
+ * /api/consumos/comunidad/{comunidadId}/resumen:
+ *   get:
+ *     tags: [Consumos]
+ *     summary: Resumen de consumos de la comunidad
+ *     parameters:
+ *       - name: desde
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - name: hasta
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ */
+router.get(
+  '/comunidad/:comunidadId/resumen',
+  authenticate,
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { desde, hasta } = req.query;
+
+      let query = `
+    SELECT
+      m.tipo as servicio,
+      COUNT(DISTINCT m.id) as cantidad_medidores,
+      COUNT(DISTINCT m.unidad_id) as unidades,
+      COALESCE(SUM(lm.lectura), 0) as consumo_total,
+      COALESCE(AVG(lm.lectura), 0) as consumo_promedio,
+      COUNT(lm.id) as lecturas_registradas
+    FROM medidor m
+    LEFT JOIN lectura_medidor lm ON m.id = lm.medidor_id
+    WHERE m.comunidad_id = ?
+    `;
+
+      const params = [comunidadId];
+
+      if (desde) {
+        query += ` AND DATE(lm.fecha) >= ?`;
+        params.push(desde);
+      }
+
+      if (hasta) {
+        query += ` AND DATE(lm.fecha) <= ?`;
+        params.push(hasta);
+      }
+
+      query += ` GROUP BY m.tipo ORDER BY m.tipo`;
+
+      const [rows] = await pool.query(query, params);
+
+      res.json(rows || []);
+    } catch (error) {
+      console.error('Error al obtener resumen de consumos:', error);
+      res.status(500).json({ error: 'Error al obtener resumen de consumos' });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /api/consumos/comunidad/{comunidadId}/lecturas-recientes:
+ *   get:
+ *     tags: [Consumos]
+ *     summary: Últimas lecturas registradas en la comunidad
+ *     parameters:
+ *       - name: desde
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - name: hasta
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - name: limit
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           default: 50
+ */
+router.get(
+  '/comunidad/:comunidadId/lecturas-recientes',
+  authenticate,
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { desde, hasta, limit = 50 } = req.query;
+
+      let query = `
+    SELECT
+      lm.id,
+      m.id as medidor_id,
+      m.tipo as servicio,
+      m.codigo as medidor,
+      u.codigo as unidad,
+      lm.lectura,
+      lm.periodo,
+      DATE_FORMAT(lm.fecha, '%d/%m/%Y %H:%i') as fecha_lectura,
+      (lm.lectura - COALESCE(LAG(lm.lectura) OVER (PARTITION BY lm.medidor_id ORDER BY lm.fecha), lm.lectura)) as consumo
+    FROM lectura_medidor lm
+    JOIN medidor m ON lm.medidor_id = m.id
+    LEFT JOIN unidad u ON m.unidad_id = u.id
+    WHERE m.comunidad_id = ?
+    `;
+
+      const params = [comunidadId];
+
+      if (desde) {
+        query += ` AND DATE(lm.fecha) >= ?`;
+        params.push(desde);
+      }
+
+      if (hasta) {
+        query += ` AND DATE(lm.fecha) <= ?`;
+        params.push(hasta);
+      }
+
+      query += ` ORDER BY lm.fecha DESC LIMIT ?`;
+      params.push(Number(limit));
+
+      const [rows] = await pool.query(query, params);
+
+      res.json(rows || []);
+    } catch (error) {
+      console.error('Error al obtener lecturas recientes:', error);
+      res.status(500).json({ error: 'Error al obtener lecturas recientes' });
+    }
+  }
+);
 
 module.exports = router;
