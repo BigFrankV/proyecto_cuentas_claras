@@ -169,7 +169,7 @@ const MembresiasListado = () => {
           <div
             className='text-white'
             style={{
-              background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+              background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
               position: 'relative',
               overflow: 'hidden',
             }}
@@ -1025,50 +1025,74 @@ const MembresiasListado = () => {
               )}
 
               {/* Paginación */}
-              <nav className='mt-4'>
-                <ul className='pagination justify-content-center'>
-                  <li className='page-item disabled'>
-                    <button
-                      type='button'
-                      className='page-link'
-                      tabIndex={-1}
-                      aria-disabled='true'
+              {total > itemsPerPage && (
+                <nav className='mt-4'>
+                  <ul className='pagination justify-content-center'>
+                    <li
+                      className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}
                     >
-                      <i
-                        className='material-icons'
-                        style={{ fontSize: '16px' }}
+                      <button
+                        type='button'
+                        className='page-link'
+                        onClick={() =>
+                          setCurrentPage(prev => Math.max(prev - 1, 1))
+                        }
+                        disabled={currentPage === 1}
                       >
-                        chevron_left
-                      </i>
-                    </button>
-                  </li>
-                  <li className='page-item active'>
-                    <button type='button' className='page-link'>
-                      1
-                    </button>
-                  </li>
-                  <li className='page-item'>
-                    <button type='button' className='page-link'>
-                      2
-                    </button>
-                  </li>
-                  <li className='page-item'>
-                    <button type='button' className='page-link'>
-                      3
-                    </button>
-                  </li>
-                  <li className='page-item'>
-                    <button type='button' className='page-link'>
-                      <i
-                        className='material-icons'
-                        style={{ fontSize: '16px' }}
+                        <i
+                          className='material-icons'
+                          style={{ fontSize: '16px' }}
+                        >
+                          chevron_left
+                        </i>
+                      </button>
+                    </li>
+                    {Array.from(
+                      { length: Math.ceil(total / itemsPerPage) },
+                      (_, i) => i + 1,
+                    ).map(page => (
+                      <li
+                        key={page}
+                        className={`page-item ${currentPage === page ? 'active' : ''}`}
                       >
-                        chevron_right
-                      </i>
-                    </button>
-                  </li>
-                </ul>
-              </nav>
+                        <button
+                          type='button'
+                          className='page-link'
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </button>
+                      </li>
+                    ))}
+                    <li
+                      className={`page-item ${currentPage === Math.ceil(total / itemsPerPage) ? 'disabled' : ''}`}
+                    >
+                      <button
+                        type='button'
+                        className='page-link'
+                        onClick={() =>
+                          setCurrentPage(prev =>
+                            Math.min(
+                              prev + 1,
+                              Math.ceil(total / itemsPerPage),
+                            ),
+                          )
+                        }
+                        disabled={
+                          currentPage === Math.ceil(total / itemsPerPage)
+                        }
+                      >
+                        <i
+                          className='material-icons'
+                          style={{ fontSize: '16px' }}
+                        >
+                          chevron_right
+                        </i>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              )}
             </div>
           </div>
         </div>

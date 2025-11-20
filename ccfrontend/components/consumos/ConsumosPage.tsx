@@ -91,6 +91,23 @@ export default function ConsumosPage(): JSX.Element {
   // Nuevo estado para lista de medidores
   const [medidores, setMedidores] = useState<any[]>([]);
   const [loadingMedidores, setLoadingMedidores] = useState(false);
+  const [selectedType, setSelectedType] = useState<string>('all');
+
+  const filteredMedidores = medidores.filter(m => {
+    if (selectedType === 'all') {
+      return true;
+    }
+    return m.tipo?.toLowerCase() === selectedType.toLowerCase();
+  });
+
+  useEffect(() => {
+    if (filteredMedidores.length > 0) {
+      const currentExists = filteredMedidores.find(m => m.id === medidorId);
+      if (!currentExists) {
+        setMedidorId(filteredMedidores[0].id);
+      }
+    }
+  }, [selectedType, medidores]);
 
   // Cargar comunidades para selector (superadmin)
   useEffect(() => {
@@ -543,13 +560,28 @@ export default function ConsumosPage(): JSX.Element {
             <div className="col-12 col-lg-3">
               <div className="filter-panel">
                 <h5 className="mb-3"><span className="material-icons me-2">filter_list</span>Filtros</h5>
+                
+                <div className="mb-3">
+                  <label className="form-label">Tipo de Servicio</label>
+                  <select 
+                    className="form-select" 
+                    value={selectedType} 
+                    onChange={(e) => setSelectedType(e.target.value)}
+                  >
+                    <option value="all">Todos</option>
+                    <option value="agua">Agua</option>
+                    <option value="electricidad">Electricidad</option>
+                    <option value="gas">Gas</option>
+                  </select>
+                </div>
+
                 <div className="mb-3">
                   <label className="form-label">Medidor</label>
                   <select id="meterSelect" className="form-select" value={medidorId} onChange={(e) => setMedidorId(parseInt(e.target.value, 10))} disabled={loadingMedidores}>
                     {loadingMedidores ? (
                       <option>Cargando...</option>
                     ) : (
-                      medidores.map(m => (
+                      filteredMedidores.map(m => (
                         <option key={m.id} value={m.id}>{m.medidor_codigo || m.codigo || `Medidor ${m.id}`}</option>
                       ))
                     )}

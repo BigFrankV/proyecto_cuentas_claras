@@ -1,13 +1,32 @@
+import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
+import profileService from '@/lib/profileService';
 import { useAuth } from '@/lib/useAuth';
 import { usePermissions } from '@/lib/usePermissions';
 
 export default function MobileNavbar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const { user } = useAuth();
   const { getUserRoleName } = usePermissions();
+
+  useEffect(() => {
+    if (user) {
+      const loadProfilePhoto = async () => {
+        try {
+          const photoUrl = await profileService.getProfilePhoto();
+          setProfilePhoto(photoUrl);
+        } catch (error) {
+          setProfilePhoto(null);
+        }
+      };
+      loadProfilePhoto();
+    } else {
+      setProfilePhoto(null);
+    }
+  }, [user]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -47,26 +66,40 @@ export default function MobileNavbar() {
               data-bs-toggle='dropdown'
               aria-expanded='false'
             >
-              <div
-                className='avatar me-2'
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: 'var(--color-accent)',
-                  color: '#fff',
-                  fontWeight: 'bold',
-                  borderRadius: '50%',
-                }}
-              >
-                {user?.persona?.nombres && user?.persona?.apellidos
-                  ? `${user.persona.nombres.charAt(0)}${user.persona.apellidos.charAt(0)}`.toUpperCase()
-                  : user?.username
-                    ? user.username.substring(0, 2).toUpperCase()
-                    : 'U'}
-              </div>
+              {profilePhoto ? (
+                <Image
+                  src={profilePhoto}
+                  alt='Foto de perfil'
+                  className='avatar me-2'
+                  width={36}
+                  height={36}
+                  style={{
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                  }}
+                />
+              ) : (
+                <div
+                  className='avatar me-2'
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: 'var(--color-accent)',
+                    color: '#fff',
+                    fontWeight: 'bold',
+                    borderRadius: '50%',
+                  }}
+                >
+                  {user?.persona?.nombres && user?.persona?.apellidos
+                    ? `${user.persona.nombres.charAt(0)}${user.persona.apellidos.charAt(0)}`.toUpperCase()
+                    : user?.username
+                      ? user.username.substring(0, 2).toUpperCase()
+                      : 'U'}
+                </div>
+              )}
               <div className='d-flex flex-column align-items-start d-none d-sm-block'>
                 <span className='small fw-semibold'>
                   {user?.persona?.nombres && user?.persona?.apellidos

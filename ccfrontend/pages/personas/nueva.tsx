@@ -387,11 +387,7 @@ export default function PersonaNueva() {
                       {tiposPersona.map(tipo => (
                         <div key={tipo.key} className='col-12 col-md-4'>
                           <div
-                            className={`card h-100 cursor-pointer ${
-                              formData.tipo === tipo.key
-                                ? 'border-primary bg-primary bg-opacity-10'
-                                : ''
-                            }`}
+                            className={'card h-100 cursor-pointer'}
                             onClick={() => handleInputChange('tipo', tipo.key)}
                             onKeyDown={e => {
                               if (e.key === 'Enter' || e.key === ' ') {
@@ -405,9 +401,13 @@ export default function PersonaNueva() {
                             style={{
                               cursor: 'pointer',
                               transition: 'all 0.2s ease',
+                              backgroundColor:
+                                formData.tipo === tipo.key
+                                  ? '#e1f5fe' // Light Blue 50
+                                  : 'white',
                               border:
                                 formData.tipo === tipo.key
-                                  ? '2px solid var(--color-primary)'
+                                  ? '2px solid #4fc3f7' // Light Blue 300
                                   : '1px solid var(--color-border)',
                             }}
                           >
@@ -419,7 +419,7 @@ export default function PersonaNueva() {
                                     fontSize: '48px',
                                     color:
                                       formData.tipo === tipo.key
-                                        ? 'var(--color-primary)'
+                                        ? '#039be5' // Light Blue 600
                                         : 'var(--color-muted)',
                                   }}
                                 >

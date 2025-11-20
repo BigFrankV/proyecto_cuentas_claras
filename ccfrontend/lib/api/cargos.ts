@@ -38,6 +38,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 // Helper para manejar errores de API
 const handleApiError = (error: unknown) => {
+  if (error instanceof Error) {
+    throw error;
+  }
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as { response?: { data?: { error?: string } } };
     throw new Error(
@@ -89,9 +92,19 @@ export const cargosApi = {
   // Crear un nuevo cargo
   create: async (cargoData: CargoFormData): Promise<Cargo> => {
     try {
+      // Map frontend data (Spanish) to backend expected format (English)
+      const payload = {
+        concept: cargoData.concepto,
+        type: cargoData.tipo,
+        amount: cargoData.monto,
+        dueDate: cargoData.fecha_vencimiento,
+        unit: cargoData.unidad,
+        description: cargoData.descripcion,
+      };
+
       const data = await apiRequest('/cargos', {
         method: 'POST',
-        body: JSON.stringify(cargoData),
+        body: JSON.stringify(payload),
       });
 
       // Mapear la respuesta del backend al formato del frontend

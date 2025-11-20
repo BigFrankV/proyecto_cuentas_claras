@@ -46,12 +46,6 @@ const AmenidadesReservasPage: React.FC = () => {
     attendanceRate: 0,
   });
 
-  // Cargar datos iniciales
-  useEffect(() => {
-    fetchAmenidades();
-    fetchReservas();
-  }, [fetchAmenidades, fetchReservas]);
-
   const generateTimeSlots = useCallback(() => {
     const timeSlots = [
       '08:00',
@@ -351,16 +345,22 @@ const AmenidadesReservasPage: React.FC = () => {
                 color: 'primary',
               },
               {
-                label: 'Pendientes',
-                value: summaryData.pendingConfirmations.toString(),
-                icon: 'schedule',
-                color: 'warning',
-              },
-              {
                 label: 'Próximas Horas',
                 value: summaryData.nextHours.toString(),
-                icon: 'access_time',
+                icon: 'schedule',
                 color: 'info',
+              },
+              {
+                label: 'Cancelaciones',
+                value: summaryData.cancellations.toString(),
+                icon: 'cancel',
+                color: 'danger',
+              },
+              {
+                label: 'Asistencia',
+                value: `${summaryData.attendanceRate}%`,
+                icon: 'check_circle',
+                color: 'success',
               },
             ]}
           >
@@ -372,53 +372,6 @@ const AmenidadesReservasPage: React.FC = () => {
               Nueva Reserva
             </button>
           </PageHeader>
-
-          {/* Summary Cards */}
-          <div className='summary-cards'>
-            <div className='summary-card'>
-              <div className='summary-icon'>
-                <span className='material-icons'>event_available</span>
-              </div>
-              <div className='summary-number'>
-                {summaryData.todayReservations}
-              </div>
-              <div className='summary-label'>Reservas Hoy</div>
-              <div className='summary-detail'>
-                {summaryData.pendingConfirmations} pendientes de confirmación
-              </div>
-            </div>
-
-            <div className='summary-card'>
-              <div className='summary-icon'>
-                <span className='material-icons'>schedule</span>
-              </div>
-              <div className='summary-number'>{summaryData.nextHours}</div>
-              <div className='summary-label'>Próximas Horas</div>
-              <div className='summary-detail'>
-                Reservas en las próximas 2 horas
-              </div>
-            </div>
-
-            <div className='summary-card'>
-              <div className='summary-icon'>
-                <span className='material-icons'>cancel</span>
-              </div>
-              <div className='summary-number'>{summaryData.cancellations}</div>
-              <div className='summary-label'>Cancelaciones</div>
-              <div className='summary-detail'>Esta semana</div>
-            </div>
-
-            <div className='summary-card'>
-              <div className='summary-icon'>
-                <span className='material-icons'>check_circle</span>
-              </div>
-              <div className='summary-number'>
-                {summaryData.attendanceRate}%
-              </div>
-              <div className='summary-label'>Tasa de Asistencia</div>
-              <div className='summary-detail'>Promedio mensual</div>
-            </div>
-          </div>
 
           {/* Filters Section */}
           <div className='filters-section'>
@@ -772,54 +725,6 @@ const AmenidadesReservasPage: React.FC = () => {
           margin-bottom: 2rem;
         }
 
-        .summary-cards {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 1rem;
-          margin-bottom: 2rem;
-        }
-
-        .summary-card {
-          background: white;
-          border-radius: 12px;
-          padding: 1.5rem;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .summary-icon {
-          width: 50px;
-          height: 50px;
-          border-radius: 10px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 24px;
-        }
-
-        .summary-number {
-          font-size: 2rem;
-          font-weight: bold;
-          color: #333;
-          margin: 0;
-        }
-
-        .summary-label {
-          font-weight: 600;
-          color: #666;
-          margin: 0.25rem 0;
-        }
-
-        .summary-detail {
-          font-size: 0.875rem;
-          color: #999;
-          margin: 0;
-        }
-
         .filters-section {
           background: white;
           border-radius: 12px;
@@ -894,14 +799,19 @@ const AmenidadesReservasPage: React.FC = () => {
         }
 
         .reservation-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 8px;
-          background: #f8f9fa;
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          background: #f0f4ff;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #666;
+          color: #2a5298;
+          flex-shrink: 0;
+        }
+
+        .reservation-icon .material-icons {
+          font-size: 24px;
         }
 
         .reservation-date,

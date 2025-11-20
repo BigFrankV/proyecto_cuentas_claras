@@ -349,499 +349,366 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
     }
   };
 
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'pendiente': return 'status-pending';
+      case 'pagado': return 'status-paid';
+      case 'vencido': return 'status-overdue';
+      case 'apelada': return 'status-appealed';
+      case 'anulada': return 'status-cancelled';
+      default: return 'status-pending';
+    }
+  };
+
   // Evitar render si no hay multa (la página Next debe manejar loading/no encontrado)
   if (!multa) {
     return null;
   }
 
   return (
-    <div className='multadetalle-root'>
-      <div className='container px-0 py-3'>
-        <header className='bg-white border-bottom shadow-sm p-3 mb-3'>
-          <div className='d-flex justify-content-between align-items-center'>
+    <div className='multa-detalle-page'>
+      <div className='page-header'>
+        <div className='header-content'>
+          <div className='d-flex align-items-center gap-2 mb-2'>
+            <button className="btn-back" onClick={() => router.back()}>
+              <span className="material-icons">arrow_back</span>
+            </button>
+            <span className={`status-badge ${getStatusBadgeClass(multa.estado)}`}>
+              {multasService.getEstadoLabel?.(multa.estado) ?? multa.estado ?? 'Pendiente'}
+            </span>
+            <span className="text-muted mx-2">|</span>
+            <span className="text-muted">Multa #{multa.numero}</span>
+          </div>
+          
+          <div className="d-flex justify-content-between align-items-end flex-wrap gap-3">
             <div>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  marginBottom: 6,
-                }}
-              >
-                <i className='material-icons'>schedule</i>
-                <small className='fw-medium'>
-                  {multasService.getEstadoLabel?.(multa.estado) ??
-                    multa.estado ??
-                    'Pendiente'}
-                </small>
+              <h1 className="page-title">{multa.tipo_infraccion ?? 'Infracción sin especificar'}</h1>
+              <div className="d-flex gap-4 text-muted mt-2">
+                <div className="d-flex align-items-center gap-1">
+                  <span className="material-icons fs-5">event</span>
+                  Emitida: {formatDate(fechaCreada)}
+                </div>
+                <div className="d-flex align-items-center gap-1">
+                  <span className="material-icons fs-5">event_busy</span>
+                  Vence: {formatDate(fechaVencimiento)}
+                </div>
               </div>
-              <h2 className='h5 mb-0'>
-                Multa {multa.numero} —{' '}
-                {multa.tipo_infraccion ?? 'Sin especificar'}
-              </h2>
-              <small className='text-muted'>
-                Emitida {formatDate(fechaCreada)} • Vence{' '}
-                {formatDate(fechaVencimiento)}
-              </small>
             </div>
-            <div className='text-end'>
-              <div className='h4 mb-0 text-primary'>
+
+            <div className="amount-card">
+              <div className="amount-label">Monto a Pagar</div>
+              <div className="amount-value">
                 ${(multa.monto ?? 0).toLocaleString?.() ?? multa.monto}
               </div>
-              <small className='text-muted'>Monto a pagar</small>
             </div>
           </div>
-        </header>
+        </div>
 
-        {/* Botones de acción */}
-        <div className='d-flex flex-wrap align-items-center gap-3 mb-3'>
-          {/* Botón Pagar con Webpay - Solo para multas pendientes */}
+        <div className="header-actions">
           {multa.estado === 'pendiente' && (
             <button
-              className='btn btn-primary btn-lg d-flex align-items-center'
+              className='btn-primary-action'
               onClick={() => router.push(`/multas/${multa.id}/pagar`)}
             >
-              <i className='material-icons me-2'>credit_card</i>Pagar con Webpay
+              <span className='material-icons'>credit_card</span>
+              Pagar Online
             </button>
           )}
 
-          {/* Badge de pagado */}
-          {multa.estado === 'pagado' && (
-            <span className='badge bg-success fs-6 px-3 py-2'>
-              <i className='material-icons me-1' style={{ fontSize: 18 }}>check_circle</i>
-              Pagado
-            </span>
-          )}
-
           <button
-            className='btn btn-success btn-lg d-flex align-items-center'
+            className='btn-secondary-action'
             data-bs-toggle='modal'
             data-bs-target='#paymentModal'
           >
-            <i className='material-icons me-2'>payment</i>Registrar Pago
+            <span className='material-icons'>payments</span>
+            Registrar Pago
           </button>
 
           <button
-            className='btn btn-outline-primary btn-lg d-flex align-items-center'
-            onClick={() => alert('Recordatorio enviado')}
-          >
-            <i className='material-icons me-2'>mail</i>Enviar Recordatorio
-          </button>
-
-          <button
-            className='btn btn-info btn-lg d-flex align-items-center text-white'
+            className='btn-secondary-action'
             data-bs-toggle='modal'
             data-bs-target='#editModal'
           >
-            <i className='material-icons me-2'>edit</i>Editar Multa
+            <span className='material-icons'>edit</span>
+            Editar
           </button>
 
-          <button
-            className='btn btn-danger btn-lg d-flex align-items-center'
-            onClick={() => alert('¿Anular multa?')}
-          >
-            <i className='material-icons me-2'>cancel</i>Anular Multa
-          </button>
+          <div className="dropdown">
+            <button className="btn-icon-action" data-bs-toggle="dropdown">
+              <span className="material-icons">more_vert</span>
+            </button>
+            <ul className="dropdown-menu dropdown-menu-end">
+              <li>
+                <button className="dropdown-item" onClick={() => alert('Recordatorio enviado')}>
+                  <span className="material-icons fs-6 me-2">mail</span> Enviar Recordatorio
+                </button>
+              </li>
+              <li><hr className="dropdown-divider" /></li>
+              <li>
+                <button className="dropdown-item text-danger" onClick={() => alert('¿Anular multa?')}>
+                  <span className="material-icons fs-6 me-2">block</span> Anular Multa
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
-      <div className='row'>
-        <div className='col-lg-8'>
-          <ul className='nav nav-tabs' id='fineDetailTabs' role='tablist'>
-            <li className='nav-item'>
+      <div className='content-grid'>
+        <div className='main-column'>
+          <div className="tabs-container">
+            <div className="tabs-header">
               <button
-                className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
+                className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
                 onClick={() => setActiveTab('overview')}
               >
-                <span className='material-icons me-2'>info</span>Información
-                General
+                Información
               </button>
-            </li>
-            <li className='nav-item'>
               <button
-                className={`nav-link ${activeTab === 'evidence' ? 'active' : ''}`}
+                className={`tab-btn ${activeTab === 'evidence' ? 'active' : ''}`}
                 onClick={() => setActiveTab('evidence')}
               >
-                <span className='material-icons me-2'>attach_file</span>
                 Evidencia
               </button>
-            </li>
-            <li className='nav-item'>
               <button
-                className={`nav-link ${activeTab === 'payments' ? 'active' : ''}`}
+                className={`tab-btn ${activeTab === 'payments' ? 'active' : ''}`}
                 onClick={() => setActiveTab('payments')}
               >
-                <span className='material-icons me-2'>payment</span>Pagos
+                Pagos
               </button>
-            </li>
-            <li className='nav-item'>
               <button
-                className={`nav-link ${activeTab === 'appeals' ? 'active' : ''}`}
+                className={`tab-btn ${activeTab === 'appeals' ? 'active' : ''}`}
                 onClick={() => setActiveTab('appeals')}
               >
-                <span className='material-icons me-2'>gavel</span>Apelaciones
+                Apelaciones
               </button>
-            </li>
-            <li className='nav-item'>
               <button
-                className={`nav-link ${activeTab === 'communications' ? 'active' : ''}`}
+                className={`tab-btn ${activeTab === 'communications' ? 'active' : ''}`}
                 onClick={() => setActiveTab('communications')}
               >
-                <span className='material-icons me-2'>message</span>
-                Comunicaciones
+                Historial
               </button>
-            </li>
-          </ul>
-
-          <div className='tab-content mt-0' style={{ marginTop: 0 }}>
-            <div
-              className={`tab-pane fade ${activeTab === 'overview' ? 'show active' : ''}`}
-            >
-              {/* ...mantener el contenido existente (ya usa formatDate) */}
-              <div className='row'>
-                <div className='col-md-6'>
-                  <h6 className='mb-3'>Detalles de la Infracción</h6>
-                  <div className='info-item'>
-                    <span className='info-label'>Fecha y Hora:</span>
-                    <span className='info-value'>
-                      {formatDate(fechaCreada)}
-                    </span>
-                  </div>
-                  <div className='info-item'>
-                    <span className='info-label'>Ubicación:</span>
-                    <span className='info-value'>
-                      {multa.torre_nombre} - {multa.unidad_numero}
-                    </span>
-                  </div>
-                  <div className='info-item'>
-                    <span className='info-label'>Tipo de Infracción:</span>
-                    <span className='info-value'>
-                      {multa.tipo_infraccion ?? 'Sin especificar'}
-                    </span>
-                  </div>
-                </div>
-                <div className='col-md-6'>
-                  <h6 className='mb-3'>Información del Pago</h6>
-                  <div className='info-item'>
-                    <span className='info-label'>Monto Base:</span>
-                    <span className='info-value'>
-                      ${(multa.monto ?? 0).toLocaleString?.() ?? multa.monto}
-                    </span>
-                  </div>
-                  <div className='info-item'>
-                    <span className='info-label'>Fecha de Vencimiento:</span>
-                    <span className='info-value'>
-                      {formatDate(fechaVencimiento)}
-                    </span>
-                  </div>
-                </div>
-              </div>
             </div>
 
-            <div
-              className={`tab-pane fade ${activeTab === 'evidence' ? 'show active' : ''}`}
-            >
-              <h6 className='mb-3'>Evidencia Adjunta</h6>
-              {loadingTab ? (
-                <div>Cargando evidencia...</div>
-              ) : documents && documents.length === 0 ? (
-                <div className='alert alert-secondary'>
-                  Sin evidencia.{' '}
-                  <button
-                    className='btn btn-sm btn-outline-primary ms-2'
-                    onClick={() => alert('Subir evidencia')}
-                  >
-                    Subir evidencia
-                  </button>
+            <div className="tab-content-area">
+              {activeTab === 'overview' && (
+                <div className="fade-in">
+                  <h3 className="section-title">Detalles de la Infracción</h3>
+                  <div className="info-grid">
+                    <div className="info-group">
+                      <label>Descripción</label>
+                      <p>{multa.descripcion || 'Sin descripción disponible.'}</p>
+                    </div>
+                    <div className="info-group">
+                      <label>Ubicación</label>
+                      <p>{multa.torre_nombre} - {multa.unidad_numero}</p>
+                    </div>
+                    <div className="info-group">
+                      <label>Prioridad</label>
+                      <span className={`priority-badge priority-${multa.prioridad || 'media'}`}>
+                        {multa.prioridad || 'Media'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <ul className='list-group'>
-                  {documents?.map((d: any, i: number) => (
-                    <li
-                      key={d.id ?? i}
-                      className='list-group-item d-flex justify-content-between align-items-center'
-                    >
-                      <div>
-                        <strong>{d.nombre_archivo ?? d.file_name}</strong>
-                        <div className='small text-muted'>
-                          {d.descripcion ?? ''}
-                        </div>
-                      </div>
-                      <a
-                        href={d.ruta_archivo ?? d.url}
-                        target='_blank'
-                        rel='noreferrer'
-                        className='btn btn-sm btn-outline-secondary'
-                      >
-                        Ver
-                      </a>
-                    </li>
-                  ))}
-                </ul>
               )}
-            </div>
 
-            <div
-              className={`tab-pane fade ${activeTab === 'payments' ? 'show active' : ''}`}
-            >
-              <div className='d-flex justify-content-between align-items-center mb-3'>
-                <h6 className='mb-0'>Historial de Pagos</h6>
-                <button
-                  className='btn btn-primary btn-sm'
-                  data-bs-toggle='modal'
-                  data-bs-target='#paymentModal'
-                >
-                  Registrar Pago
-                </button>
-              </div>
-              {loadingTab ? (
-                <div>Cargando pagos...</div>
-              ) : payments && payments.length === 0 ? (
-                <div className='alert alert-info'>
-                  Sin pagos registrados.{' '}
-                  <button
-                    className='btn btn-sm btn-primary ms-2'
-                    onClick={() => alert('Registrar pago')}
-                  >
-                    Registrar Pago
-                  </button>
-                </div>
-              ) : (
-                <div className='table-responsive'>
-                  <table className='table'>
-                    <thead>
-                      <tr>
-                        <th>Fecha</th>
-                        <th>Monto</th>
-                        <th>Método</th>
-                        <th>Referencia</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {payments?.map((p: any, idx: number) => (
-                        <tr key={p.id ?? idx}>
-                          <td>{formatDate(p.created_at ?? p.fecha)}</td>
-                          <td>${p.monto ?? p.monto_pagado}</td>
-                          <td>{p.metodo_pago ?? '-'}</td>
-                          <td>{p.referencia_pago ?? p.referencia ?? '-'}</td>
-                        </tr>
+              {activeTab === 'evidence' && (
+                <div className="fade-in">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h3 className="section-title mb-0">Evidencia Adjunta</h3>
+                    <button className="btn-sm btn-outline" onClick={() => alert('Subir evidencia')}>
+                      <span className="material-icons fs-6 me-1">upload</span> Subir
+                    </button>
+                  </div>
+                  
+                  {loadingTab ? (
+                    <div className="text-center py-4 text-muted">Cargando evidencia...</div>
+                  ) : documents && documents.length === 0 ? (
+                    <div className="empty-state">
+                      <span className="material-icons">folder_open</span>
+                      <p>No hay evidencia adjunta</p>
+                    </div>
+                  ) : (
+                    <div className="files-grid">
+                      {documents?.map((d: any, i: number) => (
+                        <div key={d.id ?? i} className="file-card">
+                          <div className="file-icon">
+                            <span className="material-icons">description</span>
+                          </div>
+                          <div className="file-info">
+                            <div className="file-name">{d.nombre_archivo ?? d.file_name}</div>
+                            <div className="file-desc">{d.descripcion}</div>
+                          </div>
+                          <a href={d.ruta_archivo ?? d.url} target="_blank" rel="noreferrer" className="btn-icon-sm">
+                            <span className="material-icons">visibility</span>
+                          </a>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
 
-            <div
-              className={`tab-pane fade ${activeTab === 'appeals' ? 'show active' : ''}`}
-            >
-              <h6>Apelaciones</h6>
-              {loadingTab ? (
-                <div>Cargando apelaciones...</div>
-              ) : appeals && appeals.length === 0 ? (
-                <div className='alert alert-secondary'>
-                  Sin apelaciones.{' '}
-                  <button
-                    className='btn btn-sm btn-outline-primary ms-2'
-                    data-bs-toggle='modal'
-                    data-bs-target='#appealModal'
-                  >
-                    Crear Apelación
-                  </button>
+              {activeTab === 'payments' && (
+                <div className="fade-in">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h3 className="section-title mb-0">Historial de Pagos</h3>
+                  </div>
+                  
+                  {loadingTab ? (
+                    <div className="text-center py-4">Cargando...</div>
+                  ) : payments && payments.length === 0 ? (
+                    <div className="empty-state">
+                      <span className="material-icons">payments</span>
+                      <p>No hay pagos registrados</p>
+                    </div>
+                  ) : (
+                    <div className="table-responsive">
+                      <table className="custom-table">
+                        <thead>
+                          <tr>
+                            <th>Fecha</th>
+                            <th>Monto</th>
+                            <th>Método</th>
+                            <th>Referencia</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payments?.map((p: any, idx: number) => (
+                            <tr key={p.id ?? idx}>
+                              <td>{formatDate(p.created_at ?? p.fecha)}</td>
+                              <td className="fw-bold text-success">${p.monto ?? p.monto_pagado}</td>
+                              <td>{p.metodo_pago ?? '-'}</td>
+                              <td>{p.referencia_pago ?? p.referencia ?? '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <ul className='list-group'>
-                  {appeals?.map((a: any, i: number) => (
-                    <li key={a.id ?? i} className='list-group-item'>
-                      <div className='d-flex justify-content-between'>
-                        <div>
-                          <strong>{a.motivo_apelacion ?? a.motivo}</strong>
-                          <div className='small text-muted'>
-                            {a.resolucion ?? ''}
+              )}
+
+              {activeTab === 'appeals' && (
+                <div className="fade-in">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h3 className="section-title mb-0">Apelaciones</h3>
+                    <button 
+                      className="btn-sm btn-outline"
+                      data-bs-toggle='modal'
+                      data-bs-target='#appealModal'
+                    >
+                      <span className="material-icons fs-6 me-1">add</span> Nueva Apelación
+                    </button>
+                  </div>
+
+                  {loadingTab ? (
+                    <div className="text-center py-4">Cargando...</div>
+                  ) : appeals && appeals.length === 0 ? (
+                    <div className="empty-state">
+                      <span className="material-icons">gavel</span>
+                      <p>No hay apelaciones registradas</p>
+                    </div>
+                  ) : (
+                    <div className="appeals-list">
+                      {appeals?.map((a: any, i: number) => (
+                        <div key={a.id ?? i} className="appeal-card">
+                          <div className="appeal-header">
+                            <span className="appeal-date">{formatDate(a.created_at)}</span>
+                            <span className="badge bg-light text-dark">Pendiente</span>
+                          </div>
+                          <div className="appeal-body">
+                            <p>{a.motivo_apelacion ?? a.motivo}</p>
+                            {a.resolucion && (
+                              <div className="appeal-resolution">
+                                <strong>Resolución:</strong> {a.resolucion}
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <small className='text-muted'>
-                          {formatDate(a.created_at)}
-                        </small>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
-            </div>
 
-            {/* Modal para crear apelación */}
-            <div className='modal fade' id='appealModal' tabIndex={-1}>
-              <div className='modal-dialog'>
-                <div className='modal-content'>
-                  <div className='modal-header'>
-                    <h5 className='modal-title'>
-                      Crear Apelación - Multa #{multa.numero}
-                    </h5>
-                    <button
-                      type='button'
-                      className='btn-close'
-                      data-bs-dismiss='modal'
-                    ></button>
-                  </div>
-                  <div className='modal-body'>
-                    <form ref={appealFormRef} id='appealForm'>
-                      <div className='mb-3'>
-                        <label className='form-label'>Motivo *</label>
-                        <textarea
-                          name='motivo'
-                          className='form-control'
-                          rows={4}
-                          required
-                          minLength={20}
-                        />
-                        {appealError && (
-                          <div className='text-danger small mt-1'>
-                            {appealError}
+              {activeTab === 'communications' && (
+                <div className="fade-in">
+                  <h3 className="section-title mb-4">Historial de Actividad</h3>
+                  <div className="timeline-feed">
+                    {comms?.map((c: any, i: number) => (
+                      <div key={c.id ?? i} className="feed-item">
+                        <div className="feed-icon">
+                          <span className="material-icons">history</span>
+                        </div>
+                        <div className="feed-content">
+                          <div className="feed-header">
+                            <span className="feed-action">{c.accion}</span>
+                            <span className="feed-date">{formatDate(c.created_at)}</span>
                           </div>
-                        )}
+                          <p className="feed-desc">{c.observaciones ?? c.descripcion}</p>
+                        </div>
                       </div>
-                      {/* Si subirás archivos, cambiar a multipart/form-data y adaptar backend */}
-                    </form>
-                  </div>
-                  <div className='modal-footer'>
-                    <button
-                      type='button'
-                      className='btn btn-secondary'
-                      data-bs-dismiss='modal'
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type='button'
-                      className='btn btn-primary'
-                      onClick={handleCrearApelacion}
-                    >
-                      Enviar Apelación
-                    </button>
+                    ))}
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div
-              className={`tab-pane fade ${activeTab === 'communications' ? 'show active' : ''}`}
-            >
-              <h6>Comunicaciones / Historial</h6>
-              {loadingTab ? (
-                <div>Cargando historial...</div>
-              ) : comms && comms.length === 0 ? (
-                <div className='alert alert-secondary'>
-                  Sin comunicaciones registradas.
-                </div>
-              ) : (
-                comms?.map((c: any, i: number) => (
-                  <div key={c.id ?? i} className='mb-3'>
-                    <div className='d-flex justify-content-between'>
-                      <div>
-                        <strong>{c.accion}</strong>
-                      </div>
-                      <small className='text-muted'>
-                        {formatDate(c.created_at)}
-                      </small>
-                    </div>
-                    <div className='text-muted small'>
-                      {c.observaciones ?? c.descripcion}
-                    </div>
-                  </div>
-                ))
               )}
             </div>
           </div>
         </div>
 
-        {/* Columna lateral */}
-        <div className='col-lg-4'>
-          <div className='info-sidebar'>
-            <div className='info-card'>
-              <div className='info-card-title'>
-                <span className='material-icons'>apartment</span> Información de
-                la Unidad
+        <div className='sidebar-column'>
+          <div className="sidebar-card">
+            <h4 className="sidebar-title">
+              <span className="material-icons">apartment</span>
+              Unidad
+            </h4>
+            <div className="sidebar-content">
+              <div className="unit-display">
+                <div className="unit-number">{multa.unidad_numero}</div>
+                <div className="unit-tower">{multa.torre_nombre}</div>
               </div>
-              <div className='info-item'>
-                <span className='info-label'>Unidad:</span>
-                <span className='info-value'>
-                  {multa.torre_nombre} - {multa.unidad_numero}
-                </span>
+              <div className="info-row">
+                <span className="label">Propietario</span>
+                <span className="value">{multa.propietario_nombre ?? '—'}</span>
               </div>
-              <div className='info-item'>
-                <span className='info-label'>Propietario:</span>
-                <span className='info-value'>
-                  {multa.propietario_nombre ?? '—'}
-                </span>
+              <div className="info-row">
+                <span className="label">Email</span>
+                <span className="value text-truncate" title={multa.propietario_email}>{multa.propietario_email ?? '—'}</span>
               </div>
-              <div className='info-item'>
-                <span className='info-label'>Email:</span>
-                <span className='info-value'>
-                  {multa.propietario_email ?? '—'}
-                </span>
-              </div>
-              <div className='mt-3'>
-                <button
-                  className='btn btn-outline-primary btn-sm w-100'
-                  onClick={() => alert('Ver detalle unidad')}
-                >
-                  Ver Detalle de Unidad
-                </button>
-              </div>
+              <button className="btn-link-action mt-2" onClick={() => alert('Ver detalle unidad')}>
+                Ver perfil de unidad
+              </button>
             </div>
+          </div>
 
-            <div className='info-card'>
-              <div className='info-card-title'>
-                <span className='material-icons'>analytics</span> Historial de
-                Multas
+          <div className="sidebar-card">
+            <h4 className="sidebar-title">
+              <span className="material-icons">info</span>
+              Información Adicional
+            </h4>
+            <div className="sidebar-content">
+              <div className="info-row">
+                <span className="label">Creado por</span>
+                <span className="value">Administración</span>
               </div>
-              <div className='info-item'>
-                <span className='info-label'>Última Multa:</span>
-                <span className='info-value'>
-                  {formatDate(multa.fecha_infraccion)}
-                </span>
-              </div>
-            </div>
-
-            <div className='info-card'>
-              <div className='info-card-title'>
-                <span className='material-icons'>timeline</span> Actividades
-                Recientes
-              </div>
-              <div className='timeline'>
-                {(comms || historial || []).slice(0, 3).map((item, index) => (
-                  <div key={index} className='timeline-item'>
-                    <div className='timeline-content'>
-                      <div className='timeline-date'>
-                        {formatDate(item.created_at)}
-                      </div>
-                      <div className='timeline-title'>{item.accion}</div>
-                      <div className='timeline-description'>
-                        {item.descripcion || 'Acción realizada'}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="info-row">
+                <span className="label">ID Interno</span>
+                <span className="value">#{multa.id}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal para registrar pago */}
+      {/* Modals (Keeping structure but cleaning up classes if needed) */}
       <div className='modal fade' id='paymentModal' tabIndex={-1}>
         <div className='modal-dialog'>
           <div className='modal-content'>
             <div className='modal-header'>
-              <h5 className='modal-title'>
-                Registrar Pago - Multa #{multa.numero}
-              </h5>
-              <button
-                type='button'
-                className='btn-close'
-                data-bs-dismiss='modal'
-              ></button>
+              <h5 className='modal-title'>Registrar Pago</h5>
+              <button type='button' className='btn-close' data-bs-dismiss='modal'></button>
             </div>
             <div className='modal-body'>
               <form ref={paymentFormRef} id='paymentForm'>
@@ -849,24 +716,12 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
                   <label className='form-label'>Monto Pagado *</label>
                   <div className='input-group'>
                     <span className='input-group-text'>$</span>
-                    <input
-                      name='monto'
-                      type='number'
-                      className='form-control'
-                      defaultValue={multa.monto}
-                      required
-                    />
+                    <input name='monto' type='number' className='form-control' defaultValue={multa.monto} required />
                   </div>
                 </div>
                 <div className='mb-3'>
                   <label className='form-label'>Fecha de Pago *</label>
-                  <input
-                    name='fecha_pago'
-                    type='date'
-                    className='form-control'
-                    required
-                    defaultValue={formatDateInput(new Date())}
-                  />
+                  <input name='fecha_pago' type='date' className='form-control' required defaultValue={formatDateInput(new Date())} />
                 </div>
                 <div className='mb-3'>
                   <label className='form-label'>Método de Pago *</label>
@@ -880,154 +735,620 @@ const MultaDetallePage: React.FC<MultaDetallePageProps> = ({
                 </div>
                 <div className='mb-3'>
                   <label className='form-label'>Número de Comprobante</label>
-                  <input
-                    name='referencia'
-                    type='text'
-                    className='form-control'
-                    placeholder='Número de transacción'
-                  />
+                  <input name='referencia' type='text' className='form-control' placeholder='Número de transacción' />
                 </div>
                 <div className='mb-3'>
                   <label className='form-label'>Observaciones</label>
-                  <textarea
-                    name='observaciones'
-                    className='form-control'
-                    rows={3}
-                    placeholder='Observaciones...'
-                  ></textarea>
-                </div>
-                <div className='mb-3'>
-                  <div className='form-check'>
-                    <input
-                      className='form-check-input'
-                      name='enviar_confirmacion'
-                      type='checkbox'
-                      defaultChecked
-                    />
-                    <label className='form-check-label'>
-                      Enviar confirmación de pago al residente
-                    </label>
-                  </div>
+                  <textarea name='observaciones' className='form-control' rows={3} placeholder='Observaciones...'></textarea>
                 </div>
               </form>
             </div>
             <div className='modal-footer'>
-              <button
-                type='button'
-                className='btn btn-secondary'
-                data-bs-dismiss='modal'
-              >
-                Cancelar
-              </button>
-              <button
-                type='button'
-                className='btn btn-success'
-                onClick={handleRegistrarPago}
-              >
-                <span className='material-icons me-1'>payment</span>
-                Registrar Pago
-              </button>
+              <button type='button' className='btn btn-secondary' data-bs-dismiss='modal'>Cancelar</button>
+              <button type='button' className='btn btn-success' onClick={handleRegistrarPago}>Registrar Pago</button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal para editar multa */}
+      <div className='modal fade' id='appealModal' tabIndex={-1}>
+        <div className='modal-dialog'>
+          <div className='modal-content'>
+            <div className='modal-header'>
+              <h5 className='modal-title'>Crear Apelación</h5>
+              <button type='button' className='btn-close' data-bs-dismiss='modal'></button>
+            </div>
+            <div className='modal-body'>
+              <form ref={appealFormRef} id='appealForm'>
+                <div className='mb-3'>
+                  <label className='form-label'>Motivo de la apelación *</label>
+                  <textarea name='motivo' className='form-control' rows={4} required minLength={20} placeholder="Describa detalladamente el motivo..." />
+                  {appealError && <div className='text-danger small mt-1'>{appealError}</div>}
+                </div>
+              </form>
+            </div>
+            <div className='modal-footer'>
+              <button type='button' className='btn btn-secondary' data-bs-dismiss='modal'>Cancelar</button>
+              <button type='button' className='btn btn-primary' onClick={handleCrearApelacion}>Enviar Apelación</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className='modal fade' id='editModal' tabIndex={-1}>
         <div className='modal-dialog modal-lg'>
           <div className='modal-content'>
             <div className='modal-header'>
-              <h5 className='modal-title'>Editar Multa #{multa.numero}</h5>
-              <button
-                type='button'
-                className='btn-close'
-                data-bs-dismiss='modal'
-              ></button>
+              <h5 className='modal-title'>Editar Multa</h5>
+              <button type='button' className='btn-close' data-bs-dismiss='modal'></button>
             </div>
             <div className='modal-body'>
               <form>
                 <div className='row'>
                   <div className='col-md-6 mb-3'>
                     <label className='form-label'>Fecha de Infracción</label>
-                    <input
-                      type='date'
-                      className='form-control'
-                      defaultValue={formatDateInput(multa.fecha_infraccion)}
-                    />
+                    <input type='date' className='form-control' defaultValue={formatDateInput(multa.fecha_infraccion)} />
                   </div>
                   <div className='col-md-6 mb-3'>
-                    <label className='form-label'>Monto de la Multa</label>
+                    <label className='form-label'>Monto</label>
                     <div className='input-group'>
                       <span className='input-group-text'>$</span>
-                      <input
-                        type='number'
-                        className='form-control'
-                        defaultValue={multa.monto}
-                      />
+                      <input type='number' className='form-control' defaultValue={multa.monto} />
                     </div>
                   </div>
                 </div>
                 <div className='mb-3'>
                   <label className='form-label'>Descripción</label>
-                  <textarea
-                    className='form-control'
-                    rows={4}
-                    defaultValue={multa.descripcion}
-                  ></textarea>
+                  <textarea className='form-control' rows={4} defaultValue={multa.descripcion}></textarea>
                 </div>
                 <div className='row'>
                   <div className='col-md-6 mb-3'>
-                    <label className='form-label'>Fecha de Vencimiento</label>
-                    <input
-                      type='date'
-                      className='form-control'
-                      defaultValue={formatDateInput(fechaVencimiento)}
-                    />
+                    <label className='form-label'>Vencimiento</label>
+                    <input type='date' className='form-control' defaultValue={formatDateInput(fechaVencimiento)} />
                   </div>
                   <div className='col-md-6 mb-3'>
                     <label className='form-label'>Prioridad</label>
-                    <select
-                      className='form-select'
-                      defaultValue={multa.prioridad}
-                    >
+                    <select className='form-select' defaultValue={multa.prioridad}>
                       <option value='baja'>Baja</option>
                       <option value='media'>Media</option>
                       <option value='alta'>Alta</option>
                     </select>
                   </div>
                 </div>
-                <div className='mb-3'>
-                  <label className='form-label'>Notas Internas</label>
-                  <textarea
-                    className='form-control'
-                    rows={3}
-                    defaultValue='Segunda infracción...'
-                  ></textarea>{' '}
-                  {/* Estático */}
-                </div>
               </form>
             </div>
             <div className='modal-footer'>
-              <button
-                type='button'
-                className='btn btn-secondary'
-                data-bs-dismiss='modal'
-              >
-                Cancelar
-              </button>
-              <button
-                type='button'
-                className='btn btn-primary'
-                onClick={() => alert('Multa actualizada')}
-              >
-                <span className='material-icons me-1'>save</span>
-                Guardar Cambios
-              </button>{' '}
-              {/* Estático */}
+              <button type='button' className='btn btn-secondary' data-bs-dismiss='modal'>Cancelar</button>
+              <button type='button' className='btn btn-primary' onClick={() => alert('Multa actualizada')}>Guardar Cambios</button>
             </div>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .multa-detalle-page {
+          background-color: #f8f9fa;
+          min-height: 100vh;
+          padding-bottom: 2rem;
+        }
+
+        .page-header {
+          background: white;
+          padding: 1.5rem 2rem;
+          border-bottom: 1px solid #e9ecef;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 2rem;
+          flex-wrap: wrap;
+        }
+
+        .header-content {
+          flex: 1;
+        }
+
+        .btn-back {
+          background: none;
+          border: none;
+          color: #6c757d;
+          padding: 0;
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          transition: color 0.2s;
+        }
+
+        .btn-back:hover {
+          color: #212529;
+        }
+
+        .page-title {
+          font-size: 1.75rem;
+          font-weight: 700;
+          color: #212529;
+          margin: 0;
+        }
+
+        .amount-card {
+          background: #f8f9fa;
+          padding: 0.75rem 1.25rem;
+          border-radius: 8px;
+          text-align: right;
+          border: 1px solid #e9ecef;
+        }
+
+        .amount-label {
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          color: #6c757d;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+        }
+
+        .amount-value {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #2a5298;
+        }
+
+        .header-actions {
+          display: flex;
+          gap: 0.75rem;
+          align-items: center;
+        }
+
+        .btn-primary-action {
+          background: #2a5298;
+          color: white;
+          border: none;
+          padding: 0.6rem 1.2rem;
+          border-radius: 8px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition: all 0.2s;
+        }
+
+        .btn-primary-action:hover {
+          background: #1e3c72;
+          transform: translateY(-1px);
+        }
+
+        .btn-secondary-action {
+          background: white;
+          color: #495057;
+          border: 1px solid #dee2e6;
+          padding: 0.6rem 1.2rem;
+          border-radius: 8px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition: all 0.2s;
+        }
+
+        .btn-secondary-action:hover {
+          background: #f8f9fa;
+          border-color: #adb5bd;
+          color: #212529;
+        }
+
+        .btn-icon-action {
+          background: white;
+          border: 1px solid #dee2e6;
+          width: 40px;
+          height: 40px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #495057;
+          transition: all 0.2s;
+        }
+
+        .btn-icon-action:hover {
+          background: #f8f9fa;
+          color: #212529;
+        }
+
+        .content-grid {
+          display: grid;
+          grid-template-columns: 1fr 320px;
+          gap: 1.5rem;
+          padding: 2rem;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+
+        @media (max-width: 992px) {
+          .content-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .main-column {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          border: 1px solid #e9ecef;
+          overflow: hidden;
+        }
+
+        .tabs-container {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .tabs-header {
+          display: flex;
+          border-bottom: 1px solid #e9ecef;
+          padding: 0 1.5rem;
+          background: #fff;
+        }
+
+        .tab-btn {
+          background: none;
+          border: none;
+          padding: 1rem 1.5rem;
+          font-weight: 600;
+          color: #6c757d;
+          border-bottom: 2px solid transparent;
+          transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+          color: #2a5298;
+        }
+
+        .tab-btn.active {
+          color: #2a5298;
+          border-bottom-color: #2a5298;
+        }
+
+        .tab-content-area {
+          padding: 2rem;
+        }
+
+        .section-title {
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: #212529;
+          margin-bottom: 1.5rem;
+        }
+
+        .info-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          gap: 1.5rem;
+        }
+
+        .info-group label {
+          display: block;
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          color: #6c757d;
+          font-weight: 600;
+          margin-bottom: 0.4rem;
+          letter-spacing: 0.5px;
+        }
+
+        .info-group p {
+          margin: 0;
+          color: #212529;
+          font-size: 0.95rem;
+        }
+
+        .sidebar-card {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          border: 1px solid #e9ecef;
+          padding: 1.5rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .sidebar-title {
+          font-size: 1rem;
+          font-weight: 700;
+          color: #212529;
+          margin-bottom: 1.25rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .sidebar-title .material-icons {
+          color: #6c757d;
+          font-size: 1.2rem;
+        }
+
+        .unit-display {
+          text-align: center;
+          background: #f8f9fa;
+          padding: 1rem;
+          border-radius: 8px;
+          margin-bottom: 1.25rem;
+        }
+
+        .unit-number {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #2a5298;
+        }
+
+        .unit-tower {
+          color: #6c757d;
+          font-size: 0.9rem;
+        }
+
+        .info-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 0.75rem;
+          font-size: 0.9rem;
+        }
+
+        .info-row .label {
+          color: #6c757d;
+        }
+
+        .info-row .value {
+          font-weight: 500;
+          color: #212529;
+        }
+
+        .btn-link-action {
+          background: none;
+          border: none;
+          color: #2a5298;
+          font-weight: 600;
+          font-size: 0.9rem;
+          padding: 0;
+          cursor: pointer;
+        }
+
+        .btn-link-action:hover {
+          text-decoration: underline;
+        }
+
+        /* Status Badges */
+        .status-badge {
+          padding: 0.35rem 0.75rem;
+          border-radius: 50px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: capitalize;
+        }
+
+        .status-pending { background-color: #fffde7; color: #b78103; }
+        .status-paid { background-color: #4caf50; color: white; }
+        .status-overdue { background-color: #ffebee; color: #b71c1c; }
+        .status-appealed { background-color: #e3f2fd; color: #0d47a1; }
+        .status-cancelled { background-color: #fafafa; color: #616161; }
+
+        .priority-badge {
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+        .priority-baja { background-color: #f1f8e9; color: #33691e; }
+        .priority-media { background-color: #fffde7; color: #f57f17; }
+        .priority-alta { background-color: #ffebee; color: #c62828; }
+
+        /* Empty State */
+        .empty-state {
+          text-align: center;
+          padding: 3rem 1rem;
+          color: #adb5bd;
+        }
+
+        .empty-state .material-icons {
+          font-size: 3rem;
+          margin-bottom: 1rem;
+          opacity: 0.5;
+        }
+
+        /* Files Grid */
+        .files-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 1rem;
+        }
+
+        .file-card {
+          border: 1px solid #e9ecef;
+          border-radius: 8px;
+          padding: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          transition: all 0.2s;
+        }
+
+        .file-card:hover {
+          border-color: #2a5298;
+          box-shadow: 0 2px 8px rgba(42, 82, 152, 0.1);
+        }
+
+        .file-icon {
+          color: #2a5298;
+          background: #e3f2fd;
+          width: 40px;
+          height: 40px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .file-info {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .file-name {
+          font-weight: 600;
+          font-size: 0.9rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .file-desc {
+          font-size: 0.75rem;
+          color: #6c757d;
+        }
+
+        /* Custom Table */
+        .custom-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        .custom-table th {
+          text-align: left;
+          padding: 1rem;
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          color: #6c757d;
+          font-weight: 600;
+          border-bottom: 2px solid #e9ecef;
+        }
+
+        .custom-table td {
+          padding: 1rem;
+          border-bottom: 1px solid #e9ecef;
+          color: #212529;
+        }
+
+        /* Timeline Feed */
+        .timeline-feed {
+          position: relative;
+          padding-left: 1rem;
+        }
+
+        .timeline-feed::before {
+          content: '';
+          position: absolute;
+          left: 24px;
+          top: 0;
+          bottom: 0;
+          width: 2px;
+          background: #e9ecef;
+        }
+
+        .feed-item {
+          display: flex;
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+          position: relative;
+        }
+
+        .feed-icon {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: white;
+          border: 2px solid #e9ecef;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #6c757d;
+          z-index: 1;
+        }
+
+        .feed-content {
+          flex: 1;
+          background: #f8f9fa;
+          padding: 1rem;
+          border-radius: 8px;
+        }
+
+        .feed-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 0.5rem;
+        }
+
+        .feed-action {
+          font-weight: 600;
+          color: #212529;
+        }
+
+        .feed-date {
+          font-size: 0.8rem;
+          color: #6c757d;
+        }
+
+        .feed-desc {
+          margin: 0;
+          font-size: 0.9rem;
+          color: #495057;
+        }
+
+        .btn-sm.btn-outline {
+          border: 1px solid #dee2e6;
+          background: white;
+          color: #495057;
+          padding: 0.25rem 0.75rem;
+          border-radius: 6px;
+          font-size: 0.85rem;
+          display: flex;
+          align-items: center;
+        }
+        
+        .btn-sm.btn-outline:hover {
+          background: #f8f9fa;
+          color: #2a5298;
+          border-color: #2a5298;
+        }
+        
+        .btn-icon-sm {
+          color: #6c757d;
+          padding: 4px;
+          border-radius: 4px;
+          transition: all 0.2s;
+        }
+        
+        .btn-icon-sm:hover {
+          background: #e9ecef;
+          color: #2a5298;
+        }
+        
+        .appeal-card {
+          border: 1px solid #e9ecef;
+          border-radius: 8px;
+          padding: 1rem;
+          margin-bottom: 1rem;
+        }
+        
+        .appeal-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 0.5rem;
+        }
+        
+        .appeal-date {
+          font-size: 0.85rem;
+          color: #6c757d;
+        }
+        
+        .appeal-body p {
+          margin: 0;
+          color: #212529;
+        }
+        
+        .appeal-resolution {
+          margin-top: 0.75rem;
+          padding-top: 0.75rem;
+          border-top: 1px solid #e9ecef;
+          font-size: 0.9rem;
+          color: #495057;
+        }
+      `}</style>
     </div>
   );
 };
