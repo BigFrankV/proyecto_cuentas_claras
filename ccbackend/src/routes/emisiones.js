@@ -82,11 +82,34 @@ router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
   const comunidadId = req.params.comunidadId;
   const { page = 1, limit = 100 } = req.query;
   const offset = (page - 1) * limit;
-  const [rows] = await db.query(
-    'SELECT id, periodo, estado, fecha_vencimiento FROM emision_gastos_comunes WHERE comunidad_id = ? ORDER BY periodo DESC LIMIT ? OFFSET ?',
-    [comunidadId, Number(limit), Number(offset)]
-  );
-  res.json(rows);
+  
+  try {
+    const [rows] = await db.query(
+      `SELECT 
+        e.id, 
+        e.periodo, 
+        e.estado, 
+        e.fecha_vencimiento,
+        e.created_at,
+        e.observaciones,
+        c.razon_social AS nombre_comunidad,
+        COUNT(ccu.unidad_id) AS total_unidades,
+        COALESCE(SUM(ccu.monto_total), 0) AS monto_total,
+        COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) AS monto_pagado
+      FROM emision_gastos_comunes e
+      INNER JOIN comunidad c ON e.comunidad_id = c.id
+      LEFT JOIN cuenta_cobro_unidad ccu ON e.id = ccu.emision_id
+      WHERE e.comunidad_id = ? 
+      GROUP BY e.id, e.periodo, e.estado, e.fecha_vencimiento, e.created_at, e.observaciones, c.razon_social
+      ORDER BY e.periodo DESC 
+      LIMIT ? OFFSET ?`,
+      [comunidadId, Number(limit), Number(offset)]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'server error' });
+  }
 });
 /**
  * @swagger

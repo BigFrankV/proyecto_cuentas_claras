@@ -429,6 +429,9 @@ const MultasListadoPage: React.FC = () => {
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={page => setCurrentPage(page)}
+              totalItems={totalItems}
+              itemsPerPage={10}
+              itemName="multas"
             />
           </div>
         </div>

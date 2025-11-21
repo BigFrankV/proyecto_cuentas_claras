@@ -5,12 +5,17 @@ import apiClient from './api';
 export interface Emision {
   id: number;
   periodo: string;
-  fecha_emision: string;
+  fecha_emision?: string;
+  fecha_vencimiento?: string;
   monto_total: number;
+  monto_pagado?: number;
+  total_unidades?: number;
   estado: 'borrador' | 'emitida' | 'cerrada';
-  comunidad_id: number;
+  comunidad_id?: number;
+  nombre_comunidad?: string;
+  observaciones?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface EmisionDetalle {
@@ -31,6 +36,10 @@ export interface EmisionDetalle {
   porcentaje_cobranza?: number;
   intereses_acumulados?: number;
   dias_mora_promedio?: number;
+  nombre_comunidad?: string;
+  tiene_interes?: boolean;
+  tasa_interes?: number;
+  dias_gracia?: number;
 }
 
 export interface EmisionResumen {
