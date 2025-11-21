@@ -253,6 +253,9 @@ const ReservasPage: React.FC = () => {
               currentPage={pagination.page}
               totalPages={pagination.totalPages}
               onPageChange={(page) => loadReservas(page, searchTerm)}
+              totalItems={pagination.total}
+              itemsPerPage={pagination.limit}
+              itemName="reservas"
             />
           </div>
         </div>

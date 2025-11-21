@@ -137,10 +137,10 @@ export default function EmisionDetalle() {
           paidAmount: 0, // Se calculará de los pagos
           unitCount: 0, // Se obtendrá de unidades
           description: emision.observaciones || '',
-          communityName: emision.comunidad_razon_social || 'Comunidad',
-          hasInterest: false, // Por ahora
-          interestRate: 0,
-          gracePeriod: 0,
+          communityName: emision.nombre_comunidad || emision.comunidad_razon_social || 'Comunidad',
+          hasInterest: Boolean(emision.tiene_interes),
+          interestRate: Number(emision.tasa_interes) || 0,
+          gracePeriod: Number(emision.dias_gracia) || 0,
         };
       }
 

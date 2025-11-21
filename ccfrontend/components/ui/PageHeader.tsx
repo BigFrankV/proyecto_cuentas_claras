@@ -13,9 +13,10 @@ interface PageHeaderProps {
   subtitle: string;
   icon: string;
   primaryAction?: {
-    href: string;
+    href?: string;
     label: string;
     icon: string;
+    onClick?: () => void;
   };
   stats?: StatCard[];
   gradient?: string;
@@ -95,13 +96,24 @@ export default function PageHeader({
             </div>
             {primaryAction && (
               <div className='text-end'>
-                <Link
-                  href={primaryAction.href}
-                  className='btn btn-light btn-lg'
-                >
-                  <i className='material-icons me-2'>{primaryAction.icon}</i>
-                  {primaryAction.label}
-                </Link>
+                {primaryAction.href ? (
+                  <Link
+                    href={primaryAction.href}
+                    className='btn btn-light btn-lg'
+                  >
+                    <i className='material-icons me-2'>{primaryAction.icon}</i>
+                    {primaryAction.label}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={primaryAction.onClick}
+                    className='btn btn-light btn-lg'
+                  >
+                    <i className='material-icons me-2'>{primaryAction.icon}</i>
+                    {primaryAction.label}
+                  </button>
+                )}
               </div>
             )}
           </div>

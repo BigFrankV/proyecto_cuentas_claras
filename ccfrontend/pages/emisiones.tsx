@@ -45,15 +45,15 @@ export default function EmisionesListado() {
         (emision: any) => ({
           id: emision.id.toString(),
           period: emision.periodo,
-          type: 'gastos_comunes', // Por ahora hardcodeado, se puede inferir del backend
+          type: 'gastos_comunes',
           status: mapEstadoToStatus(emision.estado),
-          issueDate: emision.fecha_emision,
+          issueDate: emision.created_at || emision.fecha_emision,
           dueDate: emision.fecha_vencimiento,
-          totalAmount: emision.monto_total,
-          paidAmount: 0, // Se calculará después con datos de pagos
-          unitCount: 0, // Se obtendrá después
+          totalAmount: Number(emision.monto_total) || 0,
+          paidAmount: Number(emision.monto_pagado) || 0,
+          unitCount: Number(emision.total_unidades) || 0,
           description: emision.observaciones || '',
-          communityName: 'Comunidad Actual', // Se obtendrá del contexto
+          communityName: emision.nombre_comunidad || 'Comunidad Actual',
         }),
       );
 
