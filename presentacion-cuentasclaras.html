@@ -975,6 +975,84 @@
       </div>
     </div>
 
+    <div class="slide">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="font-size: 44px; margin-bottom: 15px; color: var(--primary);">Arquitectura de Reglas de Negocio</h2>
+        <h3 style="font-size: 24px; color: var(--text-light); font-weight: 400; margin: 0;">
+          Un sistema diseñado por capas para garantizar seguridad, consistencia y automatización.
+        </h3>
+      </div>
+
+      <div class="grid" style="gap: 20px; align-items: stretch;">
+        
+        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
+          <div style="text-align: center; margin-bottom: 15px;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🧱</div>
+            <strong style="font-size: 18px; color: var(--primary); display: block;">Grado 1: Fundamentales</strong>
+            <span style="font-size: 14px; color: var(--text-light);">(Seguridad y Aislamiento)</span>
+          </div>
+          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
+            <li style="margin-bottom: 10px;">
+              <strong>Multitenancy Estricto:</strong> <span style="font-weight: 600; color: var(--text-main);">Aislamiento lógico total</span>. Datos entre comunidades son invisibles entre sí.
+            </li>
+            <li>
+              <strong>Seguridad RBAC:</strong> <span style="font-weight: 600; color: var(--text-main);">Permisos granulares</span>. Diferenciación total entre roles (ej. Conserje vs Admin).
+            </li>
+          </ul>
+        </div>
+
+        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
+          <div style="text-align: center; margin-bottom: 15px;">
+            <div style="font-size: 40px; margin-bottom: 10px;">📐</div>
+            <strong style="font-size: 18px; color: var(--primary); display: block;">Grado 2: Estructurales</strong>
+            <span style="font-size: 14px; color: var(--text-light);">(Consistencia de Datos)</span>
+          </div>
+          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
+            <li style="margin-bottom: 10px;">
+              <strong>Jerarquía Fiel:</strong> <span style="font-weight: 600; color: var(--text-main);">Modelado relacional exacto</span>. Sin unidad física, no existe deuda asociada.
+            </li>
+            <li>
+              <strong>Integridad Referencial:</strong> <span style="font-weight: 600; color: var(--text-main);">Validaciones de base de datos</span> que impiden borrar datos vinculados.
+            </li>
+          </ul>
+        </div>
+
+        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
+          <div style="text-align: center; margin-bottom: 15px;">
+            <div style="font-size: 40px; margin-bottom: 10px;">⚙️</div>
+            <strong style="font-size: 18px; color: var(--primary); display: block;">Grado 3: Operativas</strong>
+            <span style="font-size: 14px; color: var(--text-light);">(Motor del Negocio)</span>
+          </div>
+          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
+            <li style="margin-bottom: 10px;">
+              <strong>Algoritmo de Prorrateo:</strong> <span style="font-weight: 600; color: var(--text-main);">Cálculo automático</span> con precisión decimal, eliminando el error humano.
+            </li>
+            <li>
+              <strong>Lógica de Sanciones:</strong> <span style="font-weight: 600; color: var(--text-main);">Aplicación automática</span> de multas e intereses según reglas.
+            </li>
+          </ul>
+        </div>
+
+        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
+          <div style="text-align: center; margin-bottom: 15px;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🛡️</div>
+            <strong style="font-size: 18px; color: var(--primary); display: block;">Grado 4: Administrativas</strong>
+            <span style="font-size: 14px; color: var(--text-light);">(Control y Auditoría)</span>
+          </div>
+          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
+            <li style="margin-bottom: 10px;">
+              <strong>Flujo de Aprobación:</strong> Gastos sensibles requieren <span style="font-weight: 600; color: var(--text-main);">aprobación digital previa</span>.
+            </li>
+            <li>
+              <strong>Trazabilidad:</strong> <span style="font-weight: 600; color: var(--text-main);">Conciliación bancaria inteligente</span> que cierra el ciclo contable.
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+
 <div class="slide">
       <h2>DIAGRAMA PRINCIPAL</h2>
       
@@ -1053,82 +1131,6 @@
       </div>
     </div>
 
-    <div class="slide">
-      <div style="text-align: center; margin-bottom: 30px;">
-        <h2 style="font-size: 44px; margin-bottom: 15px; color: var(--primary);">Arquitectura de Reglas de Negocio</h2>
-        <h3 style="font-size: 24px; color: var(--text-light); font-weight: 400; margin: 0;">
-          Un sistema diseñado por capas para garantizar seguridad, consistencia y automatización.
-        </h3>
-      </div>
-
-      <div class="grid" style="gap: 20px; align-items: stretch;">
-        
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-size: 40px; margin-bottom: 10px;">🧱</div>
-            <strong style="font-size: 18px; color: var(--primary); display: block;">Grado 1: Fundamentales</strong>
-            <span style="font-size: 14px; color: var(--text-light);">(Seguridad y Aislamiento)</span>
-          </div>
-          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
-            <li style="margin-bottom: 10px;">
-              <strong>Multitenancy Estricto:</strong> <span style="font-weight: 600; color: var(--text-main);">Aislamiento lógico total</span>. Datos entre comunidades son invisibles entre sí.
-            </li>
-            <li>
-              <strong>Seguridad RBAC:</strong> <span style="font-weight: 600; color: var(--text-main);">Permisos granulares</span>. Diferenciación total entre roles (ej. Conserje vs Admin).
-            </li>
-          </ul>
-        </div>
-
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-size: 40px; margin-bottom: 10px;">📐</div>
-            <strong style="font-size: 18px; color: var(--primary); display: block;">Grado 2: Estructurales</strong>
-            <span style="font-size: 14px; color: var(--text-light);">(Consistencia de Datos)</span>
-          </div>
-          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
-            <li style="margin-bottom: 10px;">
-              <strong>Jerarquía Fiel:</strong> <span style="font-weight: 600; color: var(--text-main);">Modelado relacional exacto</span>. Sin unidad física, no existe deuda asociada.
-            </li>
-            <li>
-              <strong>Integridad Referencial:</strong> <span style="font-weight: 600; color: var(--text-main);">Validaciones de base de datos</span> que impiden borrar datos vinculados.
-            </li>
-          </ul>
-        </div>
-
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-size: 40px; margin-bottom: 10px;">⚙️</div>
-            <strong style="font-size: 18px; color: var(--primary); display: block;">Grado 3: Operativas</strong>
-            <span style="font-size: 14px; color: var(--text-light);">(Motor del Negocio)</span>
-          </div>
-          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
-            <li style="margin-bottom: 10px;">
-              <strong>Algoritmo de Prorrateo:</strong> <span style="font-weight: 600; color: var(--text-main);">Cálculo automático</span> con precisión decimal, eliminando el error humano.
-            </li>
-            <li>
-              <strong>Lógica de Sanciones:</strong> <span style="font-weight: 600; color: var(--text-main);">Aplicación automática</span> de multas e intereses según reglas.
-            </li>
-          </ul>
-        </div>
-
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-size: 40px; margin-bottom: 10px;">🛡️</div>
-            <strong style="font-size: 18px; color: var(--primary); display: block;">Grado 4: Administrativas</strong>
-            <span style="font-size: 14px; color: var(--text-light);">(Control y Auditoría)</span>
-          </div>
-          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
-            <li style="margin-bottom: 10px;">
-              <strong>Flujo de Aprobación:</strong> Gastos sensibles requieren <span style="font-weight: 600; color: var(--text-main);">aprobación digital previa</span>.
-            </li>
-            <li>
-              <strong>Trazabilidad:</strong> <span style="font-weight: 600; color: var(--text-main);">Conciliación bancaria inteligente</span> que cierra el ciclo contable.
-            </li>
-          </ul>
-        </div>
-
-      </div>
-    </div>
     
    <div class="slide">
       <h2>Módulo 01 · Comunidades</h2>
@@ -1363,34 +1365,7 @@
       </div>
     </div>
 
-    <div class="slide">
-      <h2>Módulo 08 · Reportes y Analytics</h2>
-      <div class="insight-box">
-        <span class="insight-icon">📊</span>
-        <strong>Business Intelligence:</strong> KPIs calculados mediante Vistas SQL y generación de reportes automáticos.
-      </div>
-      <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe;">
-        <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
-        <div class="mermaid">
-          erDiagram
-          %% Entidad Principal
-          comunidad { int id string nombre }
-          
-          %% Entidades Lógicas (Definidas en SECCION_08_REPORTE.MD)
-          vista_sql_kpi { view vw_dashboard_financiero decimal ingresos_mes decimal morosidad_total }
-          reporte_programado { int id string tipo enum frecuencia time hora_envio json destinatarios }
-          archivo_generado { int id string nombre_archivo varchar ruta_s3 datetime fecha_creacion }
-
-          %% Relaciones
-          comunidad ||--o{ vista_sql_kpi : "calcula_estado"
-          comunidad ||--o{ reporte_programado : "configura"
-          
-          reporte_programado ||--o{ archivo_generado : "produce_pdf_xls"
-        </div>
-      </div>
-    </div>
-
-
+   
     <div class="slide">
       <div style="text-align: center; margin-bottom: 30px;">
         <h2 style="font-size: 44px; margin-bottom: 15px; color: var(--primary);">Tecnologías Utilizadas</h2>
