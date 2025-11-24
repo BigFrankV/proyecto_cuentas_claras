@@ -2,10 +2,12 @@ import Link from 'next/link';
 import React, { useState, useEffect, useMemo } from 'react';
 
 import { useCargos } from '@/hooks/useCargos';
+import { useAuth } from '@/lib/useAuth';
 import { Permission, usePermissions } from '@/lib/usePermissions';
 import { Cargo } from '@/types/cargos';
 
 const CargosListadoSimple: React.FC = () => {
+  const { user } = useAuth();
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('todos');
@@ -13,15 +15,25 @@ const CargosListadoSimple: React.FC = () => {
 
   const { listarCargos, loading, error } = useCargos();
 
+  // Determinar si el usuario es admin
+  const isAdmin = useMemo(() => {
+    if (user?.is_superadmin) {
+      return true;
+    }
+    return hasPermission(Permission.VIEW_CARGO);
+  }, [user, hasPermission]);
+
   // Cargar cargos al montar el componente
   useEffect(() => {
     cargarCargos();
-  }, []);
+  }, [user]);
 
   // Cargar cargos con filtro de estado
   useEffect(() => {
-    cargarCargos();
-  }, [selectedStatus]);
+    if (user) {
+      cargarCargos();
+    }
+  }, [selectedStatus, user]);
 
   const cargarCargos = async () => {
     try {
@@ -196,9 +208,13 @@ const CargosListadoSimple: React.FC = () => {
                 </i>
               </div>
               <div>
-                <h1 className='h2 mb-1 text-white'>Cargos</h1>
+                <h1 className='h2 mb-1 text-white'>
+                  Cargos
+                </h1>
                 <p className='mb-0 opacity-75'>
-                  Gestión y seguimiento de cargos
+                  {hasPermission(Permission.CREATE_CARGO) 
+                    ? 'Gestión y seguimiento de cargos de la comunidad'
+                    : 'Consulta tus cargos pendientes y pagados'}
                 </p>
               </div>
             </div>
@@ -334,7 +350,26 @@ const CargosListadoSimple: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Mensaje informativo según el rol */}
+      {!isAdmin && cargos.length > 0 && (
+        <div className='alert alert-info d-flex align-items-center' role='alert'>
+          <i className='material-icons me-2'>info</i>
+          <div>
+            Estás viendo únicamente los cargos de las unidades donde estás registrado como propietario, inquilino o residente.
+          </div>
+        </div>
+      )}
+
+      {user?.is_superadmin && (
+        <div className='alert alert-primary d-flex align-items-center' role='alert'>
+          <i className='material-icons me-2'>admin_panel_settings</i>
+          <div>
+            <strong>Modo Superadmin:</strong> Estás viendo todos los cargos de todas las comunidades ({cargos.length} registros).
+          </div>
+        </div>
+      )}
+
+      {/* Filters and Search */}
       <div className='card mb-4'>
         <div className='card-body'>
           <div className='row g-3'>

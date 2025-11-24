@@ -335,6 +335,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_FINANCES,
     Permission.APPROVE_PAYMENTS,
     Permission.VIEW_COMUNIDAD,
+    Permission.VIEW_EMISION,
     Permission.VIEW_GASTO,
     Permission.VIEW_COMPRA,
     Permission.VIEW_CARGO,
@@ -352,6 +353,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_COMMUNITIES,
     Permission.MANAGE_MULTAS,
     Permission.VIEW_COMUNIDAD,
+    Permission.VIEW_EMISION,
     Permission.VIEW_GASTO,
     Permission.EDIT_MULTA,
     Permission.DELETE_MULTA,
@@ -377,7 +379,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_MEMBRESIA,
     // ✅ AGREGAR permisos de finanzas (gastos comunes)
     Permission.VIEW_FINANCES, // ✅ Ver finanzas generales
-    Permission.VIEW_EMISION,  // ✅ Ver emisiones de gastos comunes
+    // Permission.VIEW_EMISION solo para admins (backend restringe)
     Permission.VIEW_CARGO,    // ✅ Ver cargos
     Permission.VIEW_PAGO,     // ✅ Ver pagos (los suyos)
     Permission.VIEW_RECIBO,
@@ -386,8 +388,6 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_CATEGORIA_GASTO,
     Permission.VIEW_CENTRO_COSTO,
     Permission.VIEW_PROVEEDOR,
-    Permission.VIEW_EMISION,
-    Permission.VIEW_CARGO,
     Permission.VIEW_MEDIDOR,
     Permission.VIEW_LECTURA,
    
@@ -419,7 +419,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_MEMBRESIA,
     // ✅ AGREGAR permisos de finanzas (gastos comunes)
     Permission.VIEW_FINANCES, // ✅ Ver finanzas generales
-    Permission.VIEW_EMISION,  // ✅ Ver emisiones de gastos comunes
+    // Permission.VIEW_EMISION solo para admins (backend restringe)
     Permission.VIEW_CARGO,    // ✅ Ver cargos
     Permission.VIEW_PAGO,     // ✅ Ver pagos
     Permission.VIEW_RECIBO,
@@ -428,10 +428,6 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_CATEGORIA_GASTO,
     Permission.VIEW_CENTRO_COSTO,
     Permission.VIEW_PROVEEDOR,
-    Permission.VIEW_EMISION,
-    Permission.VIEW_CARGO,
-    Permission.VIEW_PAGO,
-    Permission.VIEW_RECIBO,
     Permission.VIEW_MEDIDOR,
     Permission.VIEW_LECTURA,
     Permission.VIEW_MULTA,
@@ -462,7 +458,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_MEMBRESIA,
     // ✅ AGREGAR permisos de finanzas (gastos comunes)
     Permission.VIEW_FINANCES, // ✅ Ver finanzas generales
-    Permission.VIEW_EMISION,  // ✅ Ver emisiones de gastos comunes
+    // Permission.VIEW_EMISION solo para admins (backend restringe)
     Permission.VIEW_CARGO,    // ✅ Ver cargos
     Permission.VIEW_PAGO,     // ✅ Ver pagos
     Permission.VIEW_RECIBO,
@@ -471,9 +467,11 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_CATEGORIA_GASTO,
     Permission.VIEW_CENTRO_COSTO,
     Permission.VIEW_PROVEEDOR,
-    Permission.VIEW_EMISION,
-    Permission.VIEW_CARGO,
-    Permission.VIEW_PAGO,
+    Permission.VIEW_MEDIDOR,
+    Permission.VIEW_LECTURA,
+    Permission.VIEW_MULTA,
+    Permission.CREATE_TICKETS,
+    Permission.VIEW_TICKETS,
     Permission.VIEW_MEDIDOR,
     Permission.VIEW_LECTURA,
     Permission.VIEW_MULTA,

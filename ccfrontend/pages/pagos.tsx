@@ -52,6 +52,11 @@ const Pagos: React.FC = () => {
   // Get comunidad ID from user
   const comunidadId = user?.comunidad_id || 1;
 
+  const isAdmin = user?.is_superadmin || 
+                  user?.roles?.includes('admin_comunidad') || 
+                  user?.roles?.includes('tesorero') ||
+                  user?.roles?.includes('presidente_comite');
+
   // Load payments data
   const loadPayments = useCallback(async () => {
     try {
@@ -241,9 +246,13 @@ const Pagos: React.FC = () => {
                       </i>
                     </div>
                     <div>
-                      <h1 className='h2 mb-1 text-white'>Pagos</h1>
+                      <h1 className='h2 mb-1 text-white'>
+                        Pagos
+                      </h1>
                       <p className='mb-0 opacity-75'>
-                        Gestión de pagos y transacciones
+                        {isAdmin 
+                          ? 'Gestión completa de pagos de la comunidad'
+                          : 'Consulta tu historial de pagos'}
                       </p>
                     </div>
                   </div>

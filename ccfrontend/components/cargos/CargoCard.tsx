@@ -7,26 +7,30 @@ import StatusBadge from './StatusBadge';
 import TypeBadge from './TypeBadge';
 
 export interface Cargo {
-  id: string;
+  id: string | number;
   concepto: string;
   descripcion?: string;
-  tipo: 'administration' | 'maintenance' | 'service' | 'insurance' | 'other';
-  estado: 'pending' | 'approved' | 'rejected' | 'paid' | 'partial';
+  tipo: 'administration' | 'maintenance' | 'service' | 'insurance' | 'other' | string;
+  estado: 'pending' | 'pendiente' | 'approved' | 'rejected' | 'paid' | 'pagado' | 'partial' | 'parcial' | 'vencido';
   monto: number;
-  montoAplicado: number;
+  montoAplicado?: number;
+  saldo: number;
   unidad: string;
   periodo: string;
   fechaVencimiento: Date;
   fechaCreacion: Date;
-  cuentaCosto: string;
+  cuentaCosto?: string;
   observaciones?: string;
+  interesAcumulado?: number;
+  nombreComunidad?: string;
+  propietario?: string;
 }
 
 export interface CargoCardProps {
   cargo: Cargo;
-  onView: (id: string) => void;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  onView: (id: string | number) => void;
+  onEdit: (id: string | number) => void;
+  onDelete: (id: string | number) => void;
   className?: string;
 }
 

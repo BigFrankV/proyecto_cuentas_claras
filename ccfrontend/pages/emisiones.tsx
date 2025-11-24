@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
 import {
@@ -12,46 +13,102 @@ import {
 } from '@/components/emisiones';
 import Layout from '@/components/layout/Layout';
 import emisionesService from '@/lib/emisionesService';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { Permission, usePermissions } from '@/lib/usePermissions';
 
 export default function EmisionesListado() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { hasPermission } = usePermissions();
   const [emissions, setEmissions] = useState<Emission[]>([]);
   const [filteredEmissions, setFilteredEmissions] = useState<Emission[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'table' | 'cards'>('table');
   const [selectedEmissions, setSelectedEmissions] = useState<string[]>([]);
-  const { hasPermission } = usePermissions();
+  const [accessDenied, setAccessDenied] = useState(false);
 
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Estado para comunidad (por ahora hardcodeado, después se obtendrá del contexto)
-  const [comunidadId, setComunidadId] = useState<number>(1);
+  // Estado para comunidad (obtenido del usuario autenticado)
+  const [comunidadId, setComunidadId] = useState<number | null>(null);
+
+  // Verificar permisos de acceso
+  useEffect(() => {
+    if (user) {
+      // Verificar si el usuario tiene permisos para ver emisiones
+      const canViewEmissions = hasPermission(Permission.VIEW_EMISION) || 
+                               hasPermission(Permission.CREATE_EMISION) ||
+                               hasPermission(Permission.EDIT_EMISION);
+      
+      if (!canViewEmissions) {
+        setAccessDenied(true);
+        return;
+      }
+
+      // Obtener comunidad ID del usuario
+      // Superadmin puede no tener comunidad_id (ve todas)
+      if (user.is_superadmin) {
+        // Superadmin: obtener primera comunidad disponible o usar selección
+        // Por ahora, usar comunidad_id si existe, si no usar 1 por defecto
+        const defaultComunidadId = user.comunidad_id || 
+                                    (user.memberships?.[0]?.comunidadId) || 
+                                    1; // Comunidad por defecto para testing
+        setComunidadId(defaultComunidadId);
+      } else {
+        const userComunidadId = user.comunidad_id || 
+                                 (user.memberships?.[0]?.comunidadId);
+        
+        if (userComunidadId) {
+          setComunidadId(userComunidadId);
+        } else {
+          setAccessDenied(true);
+        }
+      }
+    }
+  }, [user, hasPermission]);
 
   // Cargar datos reales de la API
   const loadEmissions = async () => {
+    if (accessDenied) {
+      setLoading(false);
+      return;
+    }
+
+    // Si no hay comunidadId y no es superadmin, no cargar
+    if (!comunidadId && !user?.is_superadmin) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const result = await emisionesService.getEmisionesComunidad(
-        comunidadId,
-        currentPage,
-        itemsPerPage,
-      );
+      
+      let result;
+      // Si es superadmin, obtener TODAS las emisiones
+      if (user?.is_superadmin) {
+        result = await emisionesService.getTodasEmisionesResumen();
+        // Convertir el formato de respuesta
+        result = { emisiones: result };
+      } else {
+        // Si no es superadmin, obtener resumen de su comunidad
+        const emisiones = await emisionesService.getEmisionesComunidadResumen(comunidadId!);
+        result = { emisiones };
+      }
 
       // Mapear los datos de la API al formato del frontend
       const mappedEmissions: Emission[] = result.emisiones.map(
         (emision: any) => ({
-          id: emision.id.toString(),
+          id: emision.id?.toString() || emision.emision_id?.toString(),
           period: emision.periodo,
           type: 'gastos_comunes',
           status: mapEstadoToStatus(emision.estado),
           issueDate: emision.created_at || emision.fecha_emision,
           dueDate: emision.fecha_vencimiento,
-          totalAmount: Number(emision.monto_total) || 0,
-          paidAmount: Number(emision.monto_pagado) || 0,
-          unitCount: Number(emision.total_unidades) || 0,
+          totalAmount: Number(emision.monto_total || emision.monto_total_liquidado) || 0,
+          paidAmount: Number(emision.monto_pagado || emision.monto_pagado_aplicado) || 0,
+          unitCount: Number(emision.total_unidades || emision.total_unidades_impactadas) || 0,
           description: emision.observaciones || '',
           communityName: emision.nombre_comunidad || 'Comunidad Actual',
         }),
@@ -72,21 +129,84 @@ export default function EmisionesListado() {
 
   // Función auxiliar para mapear estados del backend al frontend
   const mapEstadoToStatus = (estado: string): Emission['status'] => {
-    switch (estado) {
+    // Limpiar espacios y convertir a minúsculas
+    const estadoLimpio = estado?.trim().toLowerCase();
+    
+    // eslint-disable-next-line no-console
+    console.log('Estado recibido:', estado, '-> limpio:', estadoLimpio);
+    
+    switch (estadoLimpio) {
       case 'borrador':
         return 'draft';
       case 'emitida':
         return 'sent';
       case 'cerrada':
         return 'paid';
+      case 'anulado':
+        return 'cancelled';
       default:
+        // eslint-disable-next-line no-console
+        console.warn('Estado desconocido:', estadoLimpio, 'usando draft por defecto');
         return 'draft';
     }
   };
 
   useEffect(() => {
-    loadEmissions();
-  }, [comunidadId, currentPage]);
+    // Cargar emisiones si no está denegado el acceso
+    // Y si es superadmin O tiene comunidadId
+    if (!accessDenied && (user?.is_superadmin || comunidadId)) {
+      loadEmissions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comunidadId, currentPage, accessDenied, user?.is_superadmin]);
+
+  // Renderizar mensaje de acceso denegado
+  if (accessDenied) {
+    return (
+      <ProtectedRoute>
+        <Head>
+          <title>Emisiones — Cuentas Claras</title>
+        </Head>
+
+        <Layout title='Emisiones de Gastos Comunes'>
+          <div className='container-fluid py-5'>
+            <div className='row justify-content-center'>
+              <div className='col-md-8 col-lg-6'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center py-5'>
+                    <div className='mb-4'>
+                      <i 
+                        className='material-icons text-warning' 
+                        style={{ fontSize: '64px' }}
+                      >
+                        lock
+                      </i>
+                    </div>
+                    <h3 className='mb-3'>Acceso Restringido</h3>
+                    <p className='text-muted mb-4'>
+                      Esta sección está disponible solo para administradores, tesoreros 
+                      y miembros del comité. Si necesitas información sobre tus gastos comunes, 
+                      puedes consultar la sección de <strong>Cargos</strong>.
+                    </p>
+                    <div className='d-flex gap-3 justify-content-center'>
+                      <Link href='/cargos' className='btn btn-primary'>
+                        <i className='material-icons me-2'>receipt</i>
+                        Ver Mis Cargos
+                      </Link>
+                      <Link href='/dashboard' className='btn btn-outline-secondary'>
+                        <i className='material-icons me-2'>dashboard</i>
+                        Ir al Dashboard
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   // Manejar filtros
   const handleFilterChange = (filters: EmissionFiltersType) => {
@@ -388,9 +508,11 @@ export default function EmisionesListado() {
                   </i>
                 </div>
                 <div>
-                  <h1 className='h2 mb-1 text-white'>Emisiones</h1>
+                  <h1 className='h2 mb-1 text-white'>
+                    Emisiones
+                  </h1>
                   <p className='mb-0 opacity-75'>
-                    Gestión de emisiones de gastos comunes
+                    Gestión de emisiones de gastos comunes de la comunidad
                   </p>
                 </div>
               </div>

@@ -1,10 +1,52 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
+
+// ============================================
+// HELPER: Obtener comunidades del usuario
+// ============================================
+// eslint-disable-next-line no-unused-vars
+async function obtenerComunidadesUsuario(
+  usuarioId,
+  personaId,
+  isSuperAdmin = false
+) {
+  if (isSuperAdmin) {
+    const [all] = await db.query(`SELECT id FROM comunidad`);
+    return Array.isArray(all) ? all.map((r) => Number(r.id)) : [];
+  }
+
+  // por rol en usuario_rol_comunidad
+  const [porRol] = await db.query(
+    `SELECT DISTINCT comunidad_id
+     FROM usuario_rol_comunidad
+     WHERE usuario_id = ?
+       AND activo = 1
+       AND (desde <= CURDATE())
+       AND (hasta IS NULL OR hasta >= CURDATE())`,
+    [usuarioId]
+  );
+
+  // por pertenencia como miembro
+  const [porMiembro] = await db.query(
+    `SELECT DISTINCT comunidad_id
+     FROM usuario_miembro_comunidad
+     WHERE persona_id = ?
+       AND activo = 1
+       AND (desde <= CURDATE())
+       AND (hasta IS NULL OR hasta >= CURDATE())`,
+    [personaId]
+  );
+
+  const ids = new Set();
+  porRol.forEach((r) => ids.add(Number(r.comunidad_id)));
+  porMiembro.forEach((r) => ids.add(Number(r.comunidad_id)));
+  return Array.from(ids);
+}
 
 /**
  * @swagger
@@ -16,6 +58,317 @@ const { requireCommunity } = require('../middleware/tenancy');
  *       **Cambio de nomenclatura**: La tabla `cargo_unidad` ahora se llama `cuenta_cobro_unidad`.
  *       Representa los montos totales a cobrar a cada unidad por período (gastos comunes, multas, consumos, etc.).
  */
+
+/**
+ * @swagger
+ * /cargos/mis-unidades:
+ *   get:
+ *     tags: [Cargos]
+ *     summary: Obtener unidades del usuario actual
+ *     description: |
+ *       Retorna las unidades asociadas al usuario actual a través de la tabla titulares_unidad.
+ *       Útil para saber qué unidades puede ver el usuario (propietario, inquilino, residente).
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de unidades del usuario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   unidad_id:
+ *                     type: integer
+ *                   codigo:
+ *                     type: string
+ *                   comunidad_id:
+ *                     type: integer
+ *                   nombre_comunidad:
+ *                     type: string
+ *                   tipo:
+ *                     type: string
+ *                     enum: [propietario, inquilino, residente]
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ */
+router.get('/mis-unidades', authenticate, async (req, res) => {
+  try {
+    if (!req.user || !req.user.sub) {
+      return res.status(401).json({ error: 'unauthorized' });
+    }
+
+    const usuarioId = req.user.sub;
+
+    // Buscar persona_id asociada al usuario
+    const [usuarioRows] = await db.query(
+      'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
+      [usuarioId]
+    );
+
+    if (!usuarioRows || !usuarioRows.length) {
+      return res.json([]);
+    }
+
+    const personaId = usuarioRows[0].persona_id;
+
+    // Buscar unidades donde esta persona es titular activo
+    const [unidades] = await db.query(
+      `SELECT DISTINCT
+        tu.unidad_id,
+        u.codigo,
+        u.comunidad_id,
+        c.razon_social as nombre_comunidad,
+        tu.tipo
+      FROM titulares_unidad tu
+      JOIN unidad u ON tu.unidad_id = u.id
+      JOIN comunidad c ON u.comunidad_id = c.id
+      WHERE tu.persona_id = ?
+        AND tu.hasta IS NULL
+        AND u.activa = 1
+      ORDER BY c.razon_social, u.codigo`,
+      [personaId]
+    );
+
+    res.json(unidades);
+  } catch (err) {
+    console.error('Error en /mis-unidades:', err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /cargos/todas/resumen:
+ *   get:
+ *     tags: [Cargos]
+ *     summary: Obtener resumen de TODOS los cargos (solo superadmin)
+ *     description: |
+ *       Retorna un resumen de todas las cuentas de cobro de todas las comunidades.
+ *       Solo accesible para superadmin.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Resumen de todos los cargos
+ *       403:
+ *         description: No tiene permisos de superadmin
+ */
+router.get('/todas/resumen', authenticate, async (req, res) => {
+  try {
+    // eslint-disable-next-line no-unused-vars
+    const usuarioId = req.user.sub;
+    const isSuper = Boolean(req.user.is_superadmin === true);
+
+    // Solo superadmin puede ver todos los cargos
+    if (!isSuper) {
+      return res.status(403).json({ error: 'forbidden - superadmin only' });
+    }
+
+    const [rows] = await db.query(
+      `
+      SELECT
+        ccu.id,
+        CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
+        CASE
+          WHEN egc.periodo LIKE '%Extraordinaria%' THEN 'extraordinaria'
+          WHEN egc.periodo LIKE '%Multa%' THEN 'multa'
+          WHEN egc.periodo LIKE '%Interes%' THEN 'interes'
+          ELSE 'Administración'
+        END as tipo,
+        ccu.monto_total as monto,
+        DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fecha_vencimiento,
+        CASE
+          WHEN ccu.estado = 'pendiente' THEN 'pendiente'
+          WHEN ccu.estado = 'pagado' THEN 'pagado'
+          WHEN ccu.estado = 'vencido' THEN 'vencido'
+          WHEN ccu.estado = 'parcial' THEN 'parcial'
+          ELSE 'pendiente'
+        END as estado,
+        u.codigo as unidad,
+        c.razon_social as nombre_comunidad,
+        egc.periodo as periodo,
+        MAX(CONCAT(p.nombres, ' ', p.apellidos)) as propietario,
+        ccu.saldo as saldo,
+        ccu.interes_acumulado as interes_acumulado,
+        DATE_FORMAT(ccu.created_at, '%Y-%m-%d') as fecha_creacion,
+        ccu.updated_at
+      FROM cuenta_cobro_unidad ccu
+      JOIN comunidad c ON ccu.comunidad_id = c.id
+      JOIN unidad u ON ccu.unidad_id = u.id
+      LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
+      LEFT JOIN (
+          SELECT tu1.*
+          FROM titulares_unidad tu1
+          WHERE tu1.tipo = 'propietario'
+            AND tu1.hasta IS NULL
+            AND NOT EXISTS (
+                SELECT 1 FROM titulares_unidad tu2
+                WHERE tu2.unidad_id = tu1.unidad_id
+                  AND tu2.tipo = 'propietario'
+                  AND tu2.hasta IS NULL
+                  AND tu2.created_at > tu1.created_at
+            )
+      ) tu ON u.id = tu.unidad_id
+      LEFT JOIN persona p ON tu.persona_id = p.id
+      GROUP BY ccu.id, ccu.monto_total, ccu.saldo, ccu.interes_acumulado, ccu.estado, ccu.created_at, ccu.updated_at, u.codigo, c.razon_social, egc.periodo, egc.fecha_vencimiento
+      ORDER BY ccu.created_at DESC
+    `
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error('Error en /cargos/todas/resumen:', err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /cargos/comunidad/{comunidadId}/resumen:
+ *   get:
+ *     tags: [Cargos]
+ *     summary: Obtener resumen de cargos de una comunidad
+ *     description: |
+ *       Retorna un resumen de las cuentas de cobro de una comunidad específica.
+ *       - Superadmin: ve todos los cargos de la comunidad
+ *       - Admin/Tesorero/Presidente: ve todos los cargos de su comunidad
+ *       - Propietario/Inquilino/Residente: ve solo los cargos de sus unidades
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Resumen de cargos de la comunidad
+ *       403:
+ *         description: No tiene acceso a esta comunidad
+ */
+router.get(
+  '/comunidad/:comunidadId/resumen',
+  authenticate,
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const usuarioId = req.user.sub;
+      const isSuper = Boolean(req.user.is_superadmin === true);
+
+      // Verificar si es admin de la comunidad
+      let isAdmin = false;
+      if (!isSuper && usuarioId) {
+        const [adminCheck] = await db.query(
+          `SELECT 1 FROM usuario_rol_comunidad urc
+           JOIN rol_sistema rs ON urc.rol_id = rs.id
+           WHERE urc.usuario_id = ?
+             AND urc.comunidad_id = ?
+             AND urc.activo = 1
+             AND rs.codigo IN ('admin_comunidad', 'tesorero', 'presidente_comite')
+           LIMIT 1`,
+          [usuarioId, comunidadId]
+        );
+        isAdmin = adminCheck && adminCheck.length > 0;
+      }
+
+      let conditions = [];
+      let params = [];
+
+      // Si es superadmin o admin, filtrar por comunidad
+      if (isSuper || isAdmin) {
+        conditions.push('ccu.comunidad_id = ?');
+        params.push(comunidadId);
+      }
+
+      // Si NO es superadmin NI admin, filtrar SOLO por sus unidades (sin importar la comunidad)
+      if (!isSuper && !isAdmin && usuarioId) {
+        // Buscar persona_id del usuario
+        const [usuarioRows] = await db.query(
+          'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
+          [usuarioId]
+        );
+
+        if (usuarioRows && usuarioRows.length > 0) {
+          const personaId = usuarioRows[0].persona_id;
+          // Filtrar solo sus unidades (de todas las comunidades)
+          conditions.push(`u.id IN (
+            SELECT unidad_id FROM titulares_unidad
+            WHERE persona_id = ? AND hasta IS NULL
+          )`);
+          params.push(personaId);
+        } else {
+          // Si no tiene persona asociada, no puede ver nada
+          return res.json([]);
+        }
+      }
+
+      // Si no hay condiciones, algo salió mal
+      if (conditions.length === 0) {
+        return res.json([]);
+      }
+
+      const sql = `
+      SELECT
+        ccu.id,
+        CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
+        CASE
+          WHEN egc.periodo LIKE '%Extraordinaria%' THEN 'extraordinaria'
+          WHEN egc.periodo LIKE '%Multa%' THEN 'multa'
+          WHEN egc.periodo LIKE '%Interes%' THEN 'interes'
+          ELSE 'Administración'
+        END as tipo,
+        ccu.monto_total as monto,
+        DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fecha_vencimiento,
+        CASE
+          WHEN ccu.estado = 'pendiente' THEN 'pendiente'
+          WHEN ccu.estado = 'pagado' THEN 'pagado'
+          WHEN ccu.estado = 'vencido' THEN 'vencido'
+          WHEN ccu.estado = 'parcial' THEN 'parcial'
+          ELSE 'pendiente'
+        END as estado,
+        u.codigo as unidad,
+        c.razon_social as nombre_comunidad,
+        egc.periodo as periodo,
+        MAX(CONCAT(p.nombres, ' ', p.apellidos)) as propietario,
+        ccu.saldo as saldo,
+        ccu.interes_acumulado as interes_acumulado,
+        DATE_FORMAT(ccu.created_at, '%Y-%m-%d') as fecha_creacion,
+        ccu.updated_at
+      FROM cuenta_cobro_unidad ccu
+      JOIN comunidad c ON ccu.comunidad_id = c.id
+      JOIN unidad u ON ccu.unidad_id = u.id
+      LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
+      LEFT JOIN (
+          SELECT tu1.*
+          FROM titulares_unidad tu1
+          WHERE tu1.tipo = 'propietario'
+            AND tu1.hasta IS NULL
+            AND NOT EXISTS (
+                SELECT 1 FROM titulares_unidad tu2
+                WHERE tu2.unidad_id = tu1.unidad_id
+                  AND tu2.tipo = 'propietario'
+                  AND tu2.hasta IS NULL
+                  AND tu2.created_at > tu1.created_at
+            )
+      ) tu ON u.id = tu.unidad_id
+      LEFT JOIN persona p ON tu.persona_id = p.id
+      WHERE ${conditions.join(' AND ')}
+      GROUP BY ccu.id, ccu.monto_total, ccu.saldo, ccu.interes_acumulado, ccu.estado, ccu.created_at, ccu.updated_at, u.codigo, c.razon_social, egc.periodo, egc.fecha_vencimiento
+      ORDER BY ccu.created_at DESC
+    `;
+
+      const [rows] = await db.query(sql, params);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error en /cargos/comunidad/resumen:', err);
+      res.status(500).json({ error: 'server error' });
+    }
+  }
+);
 
 /**
  * @swagger
@@ -125,25 +478,69 @@ router.get(
   authenticate,
   requireCommunity('comunidadId'),
   async (req, res) => {
-    const comunidadId = Number(req.params.comunidadId);
-    const { estado, unidad, periodo, page = 1, limit = 100 } = req.query;
-    const offset = (page - 1) * limit;
-    const conditions = ['ccu.comunidad_id = ?'];
-    const params = [comunidadId];
-    if (estado) {
-      conditions.push('ccu.estado = ?');
-      params.push(estado);
-    }
-    if (unidad) {
-      conditions.push('u.id = ?');
-      params.push(unidad);
-    }
-    if (periodo) {
-      conditions.push('egc.periodo = ?');
-      params.push(periodo);
-    }
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { estado, unidad, periodo, page = 1, limit = 100 } = req.query;
+      const offset = (page - 1) * limit;
+      const conditions = ['ccu.comunidad_id = ?'];
+      const params = [comunidadId];
 
-    const sql = `
+      // Verificar si es superadmin (de tabla usuario)
+      const usuarioId = req.user.sub;
+      const isSuper = Boolean(req.user.is_superadmin === true);
+
+      // Verificar si es admin de la comunidad
+      let isAdmin = false;
+      if (!isSuper && usuarioId) {
+        const [adminCheck] = await db.query(
+          `SELECT 1 FROM usuario_rol_comunidad urc
+           JOIN rol_sistema rs ON urc.rol_id = rs.id
+           WHERE urc.usuario_id = ?
+             AND urc.comunidad_id = ?
+             AND urc.activo = 1
+             AND rs.codigo IN ('admin_comunidad', 'tesorero', 'presidente_comite')
+           LIMIT 1`,
+          [usuarioId, comunidadId]
+        );
+        isAdmin = adminCheck && adminCheck.length > 0;
+      }
+
+      // Si NO es superadmin NI admin, filtrar por sus unidades
+      if (!isSuper && !isAdmin && usuarioId) {
+        // Buscar persona_id del usuario
+        const [usuarioRows] = await db.query(
+          'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
+          [usuarioId]
+        );
+
+        if (usuarioRows && usuarioRows.length > 0) {
+          const personaId = usuarioRows[0].persona_id;
+          // Agregar condición para filtrar solo sus unidades
+          conditions.push(`u.id IN (
+            SELECT unidad_id FROM titulares_unidad
+            WHERE persona_id = ? AND hasta IS NULL
+          )`);
+          params.push(personaId);
+        } else {
+          // Si no tiene persona asociada, no puede ver nada
+          return res.json([]);
+        }
+      }
+
+      if (estado) {
+        conditions.push('ccu.estado = ?');
+        params.push(estado);
+      }
+      if (unidad) {
+        conditions.push('u.id = ?');
+        params.push(unidad);
+      }
+      if (periodo) {
+        conditions.push('egc.periodo = ?');
+        params.push(periodo);
+      }
+
+      const sql = `
     SELECT
       ccu.id,
       CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
@@ -193,9 +590,13 @@ router.get(
     ORDER BY ccu.created_at DESC
     LIMIT ? OFFSET ?
   `;
-    params.push(Number(limit), Number(offset));
-    const [rows] = await db.query(sql, params);
-    res.json(rows);
+      params.push(Number(limit), Number(offset));
+      const [rows] = await db.query(sql, params);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error en /cargos/comunidad:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
 );
 
@@ -400,8 +801,70 @@ router.get('/:id', authenticate, async (req, res) => {
  */
 
 router.get('/unidad/:id', authenticate, async (req, res) => {
-  const unidadId = req.params.id;
-  const sql = `
+  try {
+    const unidadId = req.params.id;
+    const usuarioId = req.user.sub;
+
+    // Verificar si es superadmin (de tabla usuario)
+    const isSuper = Boolean(req.user.is_superadmin === true);
+
+    // Si NO es superadmin, verificar que la unidad pertenezca al usuario
+    if (!isSuper && usuarioId) {
+      // Buscar persona_id del usuario
+      const [usuarioRows] = await db.query(
+        'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
+        [usuarioId]
+      );
+
+      if (!usuarioRows || !usuarioRows.length) {
+        return res.status(403).json({ error: 'forbidden' });
+      }
+
+      const personaId = usuarioRows[0].persona_id;
+
+      // Verificar si es admin de la comunidad de esta unidad
+      const [unidadInfo] = await db.query(
+        'SELECT comunidad_id FROM unidad WHERE id = ? LIMIT 1',
+        [unidadId]
+      );
+
+      if (!unidadInfo || !unidadInfo.length) {
+        return res.status(404).json({ error: 'unidad not found' });
+      }
+
+      const comunidadId = unidadInfo[0].comunidad_id;
+
+      const [adminCheck] = await db.query(
+        `SELECT 1 FROM usuario_rol_comunidad urc
+         JOIN rol_sistema rs ON urc.rol_id = rs.id
+         WHERE urc.usuario_id = ?
+           AND urc.comunidad_id = ?
+           AND urc.activo = 1
+           AND rs.codigo IN ('admin_comunidad', 'tesorero', 'presidente_comite')
+         LIMIT 1`,
+        [usuarioId, comunidadId]
+      );
+
+      const isAdmin = adminCheck && adminCheck.length > 0;
+
+      // Si NO es admin, verificar que sea titular de la unidad
+      if (!isAdmin) {
+        const [titularCheck] = await db.query(
+          `SELECT 1 FROM titulares_unidad
+           WHERE unidad_id = ? AND persona_id = ? AND hasta IS NULL
+           LIMIT 1`,
+          [unidadId, personaId]
+        );
+
+        if (!titularCheck || !titularCheck.length) {
+          return res
+            .status(403)
+            .json({ error: 'forbidden - no access to this unit' });
+        }
+      }
+    }
+
+    const sql = `
     SELECT
       ccu.id,
       CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
@@ -434,8 +897,12 @@ router.get('/unidad/:id', authenticate, async (req, res) => {
     WHERE ccu.unidad_id = ?
     ORDER BY ccu.created_at DESC
   `;
-  const [rows] = await db.query(sql, [unidadId]);
-  res.json(rows);
+    const [rows] = await db.query(sql, [unidadId]);
+    res.json(rows);
+  } catch (err) {
+    console.error('Error en /cargos/unidad:', err);
+    res.status(500).json({ error: 'server error' });
+  }
 });
 
 /**
@@ -2001,6 +2468,441 @@ router.delete(
     } catch (err) {
       console.error('Error al eliminar cargo:', err);
       res.status(500).json({ error: 'Error al eliminar cargo' });
+    }
+  }
+);
+
+// ============================================
+// ENDPOINT: Iniciar pago de cargo con Webpay
+// ============================================
+/**
+ * @swagger
+ * /cargos/{id}/iniciar-pago:
+ *   post:
+ *     summary: Iniciar pago de un cargo con Webpay
+ *     tags: [Cargos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del cargo (cuenta_cobro_unidad)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - gateway
+ *             properties:
+ *               gateway:
+ *                 type: string
+ *                 enum: [webpay]
+ *                 description: Pasarela de pago (solo webpay por ahora)
+ *               payerEmail:
+ *                 type: string
+ *                 format: email
+ *                 description: Email del pagador
+ *     responses:
+ *       200:
+ *         description: Transacción iniciada exitosamente
+ *       400:
+ *         description: Error de validación
+ *       403:
+ *         description: No tiene permisos
+ *       404:
+ *         description: Cargo no encontrado
+ *       500:
+ *         description: Error del servidor
+ */
+router.post(
+  '/:id/iniciar-pago',
+  authenticate,
+  [
+    param('id').isInt({ min: 1 }).withMessage('ID de cargo inválido'),
+    body('gateway').isIn(['webpay']).withMessage('Gateway debe ser webpay'),
+    body('payerEmail').optional().isEmail().withMessage('Email inválido'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const cargoId = parseInt(req.params.id, 10);
+    const { gateway, payerEmail } = req.body;
+    const usuarioId = req.user.sub;
+    const isSuper = Boolean(req.user.is_superadmin === true);
+
+    try {
+      // 1. Obtener el cargo
+      const [cargos] = await db.query(
+        `SELECT ccu.*, c.razon_social as comunidad_nombre, u.codigo as unidad_codigo,
+                egc.periodo
+         FROM cuenta_cobro_unidad ccu
+         INNER JOIN comunidad c ON ccu.comunidad_id = c.id
+         INNER JOIN unidad u ON ccu.unidad_id = u.id
+         LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
+         WHERE ccu.id = ?`,
+        [cargoId]
+      );
+
+      if (!cargos || cargos.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Cargo no encontrado',
+        });
+      }
+
+      const cargo = cargos[0];
+
+      // 2. Validar que el cargo no esté pagado
+      if (cargo.estado === 'pagado') {
+        return res.status(400).json({
+          success: false,
+          error: 'Este cargo ya está pagado',
+        });
+      }
+
+      // 3. Validar permisos del usuario
+      if (!isSuper) {
+        // Buscar persona_id del usuario
+        const [usuarioRows] = await db.query(
+          'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
+          [usuarioId]
+        );
+
+        if (!usuarioRows || usuarioRows.length === 0) {
+          return res.status(403).json({
+            success: false,
+            error: 'Usuario no encontrado',
+          });
+        }
+
+        const personaId = usuarioRows[0].persona_id;
+
+        // Verificar si el usuario es titular de la unidad
+        const [titularCheck] = await db.query(
+          `SELECT 1 FROM titulares_unidad
+           WHERE unidad_id = ? AND persona_id = ? AND hasta IS NULL
+           LIMIT 1`,
+          [cargo.unidad_id, personaId]
+        );
+
+        if (!titularCheck || titularCheck.length === 0) {
+          return res.status(403).json({
+            success: false,
+            error: 'No tiene permisos para pagar este cargo',
+          });
+        }
+      }
+
+      // 4. Generar order_id único
+      const timestamp = Date.now();
+      const orderId = `CARGO-${cargo.comunidad_id}-${cargoId}-${timestamp}`;
+
+      // 5. Calcular monto a pagar (usar saldo pendiente)
+      const montoPagar = parseFloat(cargo.saldo);
+
+      if (montoPagar <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'No hay saldo pendiente para este cargo',
+        });
+      }
+
+      // 6. Crear transacción en payment_transaction
+      const [result] = await db.query(
+        `INSERT INTO payment_transaction 
+         (order_id, comunidad_id, cargo_id, amount, gateway, status, payer_email, usuario_id)
+         VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)`,
+        [
+          orderId,
+          cargo.comunidad_id,
+          cargoId,
+          montoPagar,
+          gateway,
+          payerEmail || null,
+          usuarioId,
+        ]
+      );
+
+      const transactionId = result.insertId;
+
+      // 7. Iniciar transacción con Webpay
+      const paymentGatewayService = require('../services/paymentGatewayService');
+
+      const descripcion = `Pago cargo #${cargoId} - ${cargo.unidad_codigo} - ${cargo.periodo || 'Periodo'}`;
+
+      const paymentData = {
+        orderId,
+        sessionId: `session-${usuarioId}-${cargoId}-${timestamp}`,
+        communityId: cargo.comunidad_id,
+        unitId: cargo.unidad_id,
+        cargoId: cargoId,
+        amount: montoPagar,
+        description: descripcion,
+      };
+
+      const webpayResult =
+        await paymentGatewayService.createWebpayTransaction(paymentData);
+
+      // 8. Actualizar transaction_token en la BD
+      await db.query(
+        `UPDATE payment_transaction 
+         SET transaction_token = ?, gateway_transaction_id = ?, gateway_response = ?
+         WHERE id = ?`,
+        [
+          webpayResult.transactionId,
+          webpayResult.transactionId,
+          JSON.stringify(webpayResult.gatewayResponse),
+          transactionId,
+        ]
+      );
+
+      // 9. Responder con URL de pago
+      res.json({
+        success: true,
+        data: {
+          orderId,
+          transactionId,
+          paymentUrl: webpayResult.paymentUrl,
+          token: webpayResult.transactionId,
+          gateway: 'webpay',
+          amount: montoPagar,
+          description: descripcion,
+        },
+      });
+    } catch (err) {
+      console.error('Error al iniciar pago de cargo:', err);
+      res.status(500).json({
+        success: false,
+        error: 'Error al iniciar pago',
+        details:
+          process.env.NODE_ENV === 'development' ? err.message : undefined,
+      });
+    }
+  }
+);
+
+// ============================================
+// ENDPOINT: Confirmar pago de cargo con Webpay
+// ============================================
+/**
+ * @swagger
+ * /cargos/pago/confirmar:
+ *   post:
+ *     summary: Confirmar pago de cargo después de Webpay
+ *     tags: [Cargos]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token_ws
+ *             properties:
+ *               token_ws:
+ *                 type: string
+ *                 description: Token de respuesta de Webpay
+ *     responses:
+ *       200:
+ *         description: Pago confirmado exitosamente
+ *       400:
+ *         description: Error en la confirmación
+ *       500:
+ *         description: Error del servidor
+ */
+router.post(
+  '/pago/confirmar',
+  [body('token_ws').notEmpty().withMessage('Token de Webpay requerido')],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { token_ws } = req.body;
+
+    try {
+      const paymentGatewayService = require('../services/paymentGatewayService');
+
+      // 1. Confirmar transacción con Webpay
+      const webpayResponse =
+        await paymentGatewayService.confirmWebpayTransaction(token_ws);
+
+      // DEBUG: Ver respuesta de Webpay
+      console.log(
+        '🔍 Webpay Response (Cargo):',
+        JSON.stringify(webpayResponse, null, 2)
+      );
+
+      // 2. Buscar la transacción en payment_transaction
+      const [transactions] = await db.query(
+        `SELECT * FROM payment_transaction WHERE transaction_token = ?`,
+        [token_ws]
+      );
+
+      if (!transactions || transactions.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Transacción no encontrada',
+        });
+      }
+
+      const transaction = transactions[0];
+
+      // 3. Actualizar estado de la transacción
+      const transactionStatus =
+        webpayResponse.success && webpayResponse.response.response_code === 0
+          ? 'completed'
+          : 'failed';
+
+      await db.query(
+        `UPDATE payment_transaction 
+         SET status = ?, gateway_response = ?, gateway_transaction_id = ?, updated_at = NOW()
+         WHERE id = ?`,
+        [
+          transactionStatus,
+          JSON.stringify(webpayResponse.response),
+          webpayResponse.response.authorization_code,
+          transaction.id,
+        ]
+      );
+
+      // 4. Si el pago fue exitoso y hay cargo_id, actualizar el cargo
+      if (transactionStatus === 'completed' && transaction.cargo_id) {
+        const cargoId = transaction.cargo_id;
+        const montoPagado = parseFloat(transaction.amount);
+
+        console.log('💰 Procesando pago de cargo:', {
+          cargoId,
+          montoPagado,
+          transactionId: transaction.id
+        });
+
+        // Obtener cargo actual
+        const [cargos] = await db.query(
+          'SELECT * FROM cuenta_cobro_unidad WHERE id = ?',
+          [cargoId]
+        );
+
+        if (cargos && cargos.length > 0) {
+          const cargo = cargos[0];
+          const nuevoSaldo = parseFloat(cargo.saldo) - montoPagado;
+
+          console.log('📊 Estado actual del cargo:', {
+            saldoAntes: cargo.saldo,
+            estadoAntes: cargo.estado,
+            nuevoSaldo: Math.max(0, nuevoSaldo)
+          });
+
+          // Determinar nuevo estado
+          let nuevoEstado = 'pendiente';
+          if (nuevoSaldo <= 0) {
+            nuevoEstado = 'pagado';
+          } else if (nuevoSaldo < parseFloat(cargo.monto_total)) {
+            nuevoEstado = 'parcial';
+          }
+
+          console.log('🔄 Actualizando cargo a:', {
+            nuevoSaldo: Math.max(0, nuevoSaldo),
+            nuevoEstado
+          });
+
+          // Actualizar cargo
+          const [updateResult] = await db.query(
+            `UPDATE cuenta_cobro_unidad 
+             SET saldo = ?, estado = ?, updated_at = NOW()
+             WHERE id = ?`,
+            [Math.max(0, nuevoSaldo), nuevoEstado, cargoId]
+          );
+
+          console.log('✅ Cargo actualizado, filas afectadas:', updateResult.affectedRows);
+
+          // Obtener persona_id del titular de la unidad
+          const [titulares] = await db.query(
+            `SELECT persona_id FROM titulares_unidad 
+             WHERE unidad_id = ? AND tipo = 'propietario' AND hasta IS NULL
+             ORDER BY created_at DESC LIMIT 1`,
+            [cargo.unidad_id]
+          );
+
+          const personaId = titulares && titulares.length > 0 ? titulares[0].persona_id : null;
+
+          console.log('👤 Persona ID del titular:', personaId);
+
+          // Crear registro en la tabla pago
+          const [pagoResult] = await db.query(
+            `INSERT INTO pago 
+             (comunidad_id, unidad_id, persona_id, fecha, monto, medio, referencia, estado, comprobante_num)
+             VALUES (?, ?, ?, CURDATE(), ?, 'webpay', ?, 'aplicado', ?)`,
+            [
+              transaction.comunidad_id,
+              cargo.unidad_id,
+              personaId,
+              montoPagado,
+              transaction.order_id,
+              webpayResponse.response.authorization_code,
+            ]
+          );
+
+          console.log('✅ Registro de pago creado, ID:', pagoResult.insertId);
+
+          res.json({
+            success: true,
+            message: 'Pago confirmado exitosamente',
+            data: {
+              transactionId: transaction.id,
+              orderId: transaction.order_id,
+              cargoId,
+              amount: montoPagado,
+              nuevoSaldo: Math.max(0, nuevoSaldo),
+              authorizationCode: webpayResponse.response.authorization_code,
+              status: 'completed',
+              estadoCargo: nuevoEstado,
+            },
+          });
+        } else {
+          res.status(404).json({
+            success: false,
+            error: 'Cargo no encontrado',
+          });
+        }
+      } else if (transactionStatus === 'failed') {
+        res.status(400).json({
+          success: false,
+          error: 'El pago fue rechazado',
+          data: {
+            transactionId: transaction.id,
+            orderId: transaction.order_id,
+            responseCode: webpayResponse.response.response_code,
+            status: 'failed',
+          },
+        });
+      } else {
+        res.json({
+          success: true,
+          message: 'Transacción confirmada',
+          data: {
+            transactionId: transaction.id,
+            status: transactionStatus,
+          },
+        });
+      }
+    } catch (err) {
+      console.error('Error al confirmar pago de cargo:', err);
+      res.status(500).json({
+        success: false,
+        error: 'Error al confirmar el pago',
+        details:
+          process.env.NODE_ENV === 'development' ? err.message : undefined,
+      });
     }
   }
 );

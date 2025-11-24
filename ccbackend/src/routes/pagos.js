@@ -6,6 +6,48 @@ const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
+// ============================================
+// HELPER: Obtener comunidades del usuario
+// ============================================
+// eslint-disable-next-line no-unused-vars
+async function obtenerComunidadesUsuario(
+  usuarioId,
+  personaId,
+  isSuperAdmin = false
+) {
+  if (isSuperAdmin) {
+    const [all] = await db.query(`SELECT id FROM comunidad`);
+    return Array.isArray(all) ? all.map((r) => Number(r.id)) : [];
+  }
+
+  // por rol en usuario_rol_comunidad
+  const [porRol] = await db.query(
+    `SELECT DISTINCT comunidad_id
+     FROM usuario_rol_comunidad
+     WHERE usuario_id = ?
+       AND activo = 1
+       AND (desde <= CURDATE())
+       AND (hasta IS NULL OR hasta >= CURDATE())`,
+    [usuarioId]
+  );
+
+  // por pertenencia como miembro
+  const [porMiembro] = await db.query(
+    `SELECT DISTINCT comunidad_id
+     FROM usuario_miembro_comunidad
+     WHERE persona_id = ?
+       AND activo = 1
+       AND (desde <= CURDATE())
+       AND (hasta IS NULL OR hasta >= CURDATE())`,
+    [personaId]
+  );
+
+  const ids = new Set();
+  porRol.forEach((r) => ids.add(Number(r.comunidad_id)));
+  porMiembro.forEach((r) => ids.add(Number(r.comunidad_id)));
+  return Array.from(ids);
+}
+
 /**
  * @swagger
  * tags:
@@ -392,6 +434,47 @@ router.get(
     `;
 
       const params = [comunidadId];
+
+      // Verificar si es superadmin (de tabla usuario)
+      const usuarioId = req.user.sub;
+      const isSuper = Boolean(req.user.is_superadmin === true);
+
+      // Verificar si es admin de la comunidad
+      let isAdmin = false;
+      if (!isSuper && usuarioId) {
+        const [adminCheck] = await db.query(
+          `SELECT 1 FROM usuario_rol_comunidad urc
+           JOIN rol_sistema rs ON urc.rol_id = rs.id
+           WHERE urc.usuario_id = ?
+             AND urc.comunidad_id = ?
+             AND urc.activo = 1
+             AND rs.codigo IN ('admin_comunidad', 'tesorero', 'presidente_comite')
+           LIMIT 1`,
+          [usuarioId, comunidadId]
+        );
+        isAdmin = adminCheck && adminCheck.length > 0;
+      }
+
+      // Si NO es superadmin NI admin, filtrar solo SUS pagos
+      if (!isSuper && !isAdmin && usuarioId) {
+        // Buscar persona_id del usuario
+        const [personaRows] = await db.query(
+          'SELECT id FROM persona WHERE usuario_id = ? LIMIT 1',
+          [usuarioId]
+        );
+
+        if (personaRows && personaRows.length > 0) {
+          const personaId = personaRows[0].id;
+          query += ` AND p.persona_id = ?`;
+          params.push(personaId);
+        } else {
+          // Si no tiene persona asociada, no puede ver nada
+          return res.json({
+            data: [],
+            pagination: { total: 0, limit, offset, hasMore: false },
+          });
+        }
+      }
 
       if (estado) {
         query += ` AND p.estado = ?`;

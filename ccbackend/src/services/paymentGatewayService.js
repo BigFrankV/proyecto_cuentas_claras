@@ -51,7 +51,13 @@ class PaymentGatewayService {
    */
   async createWebpayTransaction(orderData) {
     try {
-      const { amount, orderId, sessionId } = orderData;
+      const { amount, orderId, sessionId, cargoId, multaId } = orderData;
+
+      // Determinar URL de retorno según el tipo de pago
+      let returnUrl = `${this.baseUrl}/multas/pago/resultado`;
+      if (cargoId) {
+        returnUrl = `${this.baseUrl}/cargos/pago/resultado`;
+      }
 
       // Configurar Webpay
       const tx = new WebpayPlus.Transaction(
@@ -67,7 +73,7 @@ class PaymentGatewayService {
         orderId,
         sessionId,
         amount,
-        `${this.baseUrl}/multas/pago/resultado`
+        returnUrl
       );
 
       // Para Webpay, la transacción ya está guardada en multas.js, solo devolver respuesta

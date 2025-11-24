@@ -5,6 +5,48 @@ const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 
+// ============================================
+// HELPER: Obtener comunidades del usuario
+// ============================================
+// eslint-disable-next-line no-unused-vars
+async function obtenerComunidadesUsuario(
+  usuarioId,
+  personaId,
+  isSuperAdmin = false
+) {
+  if (isSuperAdmin) {
+    const [all] = await db.query(`SELECT id FROM comunidad`);
+    return Array.isArray(all) ? all.map((r) => Number(r.id)) : [];
+  }
+
+  // por rol en usuario_rol_comunidad
+  const [porRol] = await db.query(
+    `SELECT DISTINCT comunidad_id
+     FROM usuario_rol_comunidad
+     WHERE usuario_id = ?
+       AND activo = 1
+       AND (desde <= CURDATE())
+       AND (hasta IS NULL OR hasta >= CURDATE())`,
+    [usuarioId]
+  );
+
+  // por pertenencia como miembro
+  const [porMiembro] = await db.query(
+    `SELECT DISTINCT comunidad_id
+     FROM usuario_miembro_comunidad
+     WHERE persona_id = ?
+       AND activo = 1
+       AND (desde <= CURDATE())
+       AND (hasta IS NULL OR hasta >= CURDATE())`,
+    [personaId]
+  );
+
+  const ids = new Set();
+  porRol.forEach((r) => ids.add(Number(r.comunidad_id)));
+  porMiembro.forEach((r) => ids.add(Number(r.comunidad_id)));
+  return Array.from(ids);
+}
+
 /**
  * @swagger
  * tags:
@@ -82,7 +124,6 @@ router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
   const comunidadId = req.params.comunidadId;
   const { page = 1, limit = 100 } = req.query;
   const offset = (page - 1) * limit;
-  
   try {
     const [rows] = await db.query(
       `SELECT 
@@ -154,14 +195,95 @@ router.get('/comunidad/:comunidadId/count', authenticate, async (req, res) => {
 
 /**
  * @swagger
+ * /emisiones/todas/resumen:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Obtener resumen de TODAS las emisiones (Solo Superadmin)
+ *     description: |
+ *       Obtiene un resumen detallado de TODAS las emisiones de TODAS las comunidades.
+ *       **SOLO SUPERADMIN** puede acceder.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Resumen de todas las emisiones
+ *       403:
+ *         description: Solo superadmin puede acceder
+ */
+router.get('/todas/resumen', authenticate, async (req, res) => {
+  try {
+    const isSuper = Boolean(req.user.is_superadmin === true);
+
+    // SOLO superadmin puede ver todas las emisiones
+    if (!isSuper) {
+      return res.status(403).json({ error: 'forbidden - superadmin only' });
+    }
+
+    const [rows] = await db.query(
+      `
+      SELECT
+        e.id AS emision_id,
+        e.periodo,
+        'Gastos Comunes' AS tipo_emision,
+        CASE
+          WHEN e.estado = 'borrador' THEN 'borrador'
+          WHEN e.estado = 'emitido' THEN 'emitida'
+          WHEN e.estado = 'cerrado' THEN 'cerrada'
+          WHEN e.estado = 'anulado' THEN 'anulada'
+          ELSE 'lista'
+        END as estado,
+        DATE(e.created_at) AS fecha_emision,
+        DATE(e.fecha_vencimiento) AS fecha_vencimiento,
+        c.razon_social AS nombre_comunidad,
+        e.comunidad_id,
+        COUNT(ccu.unidad_id) AS total_unidades_impactadas,
+        COALESCE(SUM(ccu.monto_total), 0.00) AS monto_total_liquidado,
+        COALESCE(SUM(ccu.monto_total - ccu.saldo), 0.00) AS monto_pagado_aplicado
+      FROM
+        emision_gastos_comunes e
+      INNER JOIN
+        comunidad c ON e.comunidad_id = c.id
+      LEFT JOIN
+        cuenta_cobro_unidad ccu ON e.id = ccu.emision_id
+      GROUP BY
+        e.id, e.periodo, e.estado, e.created_at, e.fecha_vencimiento, c.razon_social, e.comunidad_id
+      ORDER BY
+        e.created_at DESC, e.periodo DESC
+    `
+    );
+
+    const emisiones = rows.map((row) => ({
+      id: row.emision_id.toString(),
+      periodo: row.periodo,
+      tipo: row.tipo_emision,
+      estado: row.estado,
+      fecha_emision: row.fecha_emision,
+      fecha_vencimiento: row.fecha_vencimiento,
+      nombre_comunidad: row.nombre_comunidad,
+      comunidad_id: row.comunidad_id,
+      total_unidades: row.total_unidades_impactadas,
+      monto_total: parseFloat(row.monto_total_liquidado),
+      monto_pagado: parseFloat(row.monto_pagado_aplicado),
+    }));
+
+    res.json({ emisiones });
+  } catch (err) {
+    console.error('Error en /todas/resumen:', err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
  * /emisiones/comunidad/{comunidadId}/resumen:
  *   get:
  *     tags: [Emisiones]
- *     summary: Obtener resumen de emisiones con métricas consolidadas
+ *     summary: Obtener resumen de emisiones con métricas consolidadas (Solo Admin)
  *     description: |
  *       Obtiene un resumen detallado de todas las emisiones de una comunidad,
  *       incluyendo métricas consolidadas como total de unidades impactadas,
  *       montos totales y pagos aplicados.
+ *       **SOLO ADMIN, TESORERO O PRESIDENTE** pueden acceder.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -212,15 +334,40 @@ router.get('/comunidad/:comunidadId/count', authenticate, async (req, res) => {
  *                     description: Suma de los pagos aplicados a las cuentas de cobro
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         description: Solo admin, tesorero o presidente pueden acceder
  */
 
-// resumen de emisiones con métricas consolidadas
+// resumen de emisiones con métricas consolidadas (solo admin)
 router.get(
   '/comunidad/:comunidadId/resumen',
   authenticate,
   async (req, res) => {
-    const comunidadId = req.params.comunidadId;
     try {
+      const comunidadId = Number(req.params.comunidadId);
+      const usuarioId = req.user.sub;
+
+      // Verificar si es superadmin (de tabla usuario)
+      const isSuper = Boolean(req.user.is_superadmin === true);
+
+      // Si NO es superadmin, verificar que sea admin de la comunidad
+      if (!isSuper && usuarioId) {
+        const [adminCheck] = await db.query(
+          `SELECT 1 FROM usuario_rol_comunidad urc
+           JOIN rol_sistema rs ON urc.rol_id = rs.id
+           WHERE urc.usuario_id = ?
+             AND urc.comunidad_id = ?
+             AND urc.activo = 1
+             AND rs.codigo IN ('admin_comunidad', 'tesorero', 'presidente_comite')
+           LIMIT 1`,
+          [usuarioId, comunidadId]
+        );
+
+        if (!adminCheck || !adminCheck.length) {
+          return res.status(403).json({ error: 'forbidden - admin only' });
+        }
+      }
+
       const [rows] = await db.query(
         `
       SELECT
